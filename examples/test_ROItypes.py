@@ -1,13 +1,17 @@
 #!/usr/bin/python -i
 # -*- coding: utf-8 -*-
+## Add path to library (just for examples; you do not need this)
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from scipy import zeros
-from graphicsWindows import *
-from graphicsItems import *
-from widgets import *
-from PlotWidget import *
+from pyqtgraph.graphicsWindows import *
+from pyqtgraph.graphicsItems import *
+from pyqtgraph.widgets import *
+from pyqtgraph.PlotWidget import *
 from PyQt4 import QtCore, QtGui
 
-qapp = QtGui.QApplication([])
+app = QtGui.QApplication([])
 
 #i = PlotWindow(array([0,1,2,1,2]), parent=None, title='')
 
@@ -86,3 +90,4 @@ mlroi.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(mlroi))
 v.setRange(QtCore.QRect(-2, -2, 220, 220))
 
 w.show()
+app.exec_()

@@ -1,10 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+## Add path to library (just for examples; you do not need this)
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from scipy import random
 from PyQt4 import QtGui, QtCore
-from PlotWidget import *
-from graphicsItems import *
+from pyqtgraph.PlotWidget import *
+from pyqtgraph.graphicsItems import *
 
 
 app = QtGui.QApplication([])
@@ -77,4 +80,4 @@ for i in range(0, 5):
         yd, xd = rand(10000)
         pw2.plot(yd*(j+1), xd, params={'iter': i, 'val': j})
     
-#app.exec_()
+app.exec_()

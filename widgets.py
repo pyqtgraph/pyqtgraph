@@ -631,14 +631,14 @@ class Handle(QtGui.QGraphicsItem):
         return self.bounds
         
     def mousePressEvent(self, ev):
-        print "handle press"
+        #print "handle press"
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
             return
         self.cursorOffset = self.scenePos() - ev.scenePos()
         for r in self.roi:
             r[0].pointPressEvent(r[1], ev)
-        print "  accepted."
+        #print "  accepted."
         ev.accept()
         
     def mouseReleaseEvent(self, ev):
