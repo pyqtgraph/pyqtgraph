@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ImageViewTemplate.ui'
 #
-# Created: Fri Nov 20 08:22:10 2009
+# Created: Mon Mar 29 22:40:48 2010
 #      by: PyQt4 UI code generator 4.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -134,9 +134,6 @@ class Ui_Form(object):
         self.label_10.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_10.setObjectName("label_10")
         self.gridLayout_2.addWidget(self.label_10, 4, 5, 1, 1)
-        self.normTBlurSpin = QtGui.QDoubleSpinBox(self.normGroup)
-        self.normTBlurSpin.setObjectName("normTBlurSpin")
-        self.gridLayout_2.addWidget(self.normTBlurSpin, 4, 6, 1, 1)
         self.normStopLabel = QtGui.QLabel(self.normGroup)
         self.normStopLabel.setObjectName("normStopLabel")
         self.gridLayout_2.addWidget(self.normStopLabel, 3, 6, 1, 1)
@@ -153,6 +150,9 @@ class Ui_Form(object):
         self.normFrameCheck = QtGui.QCheckBox(self.normGroup)
         self.normFrameCheck.setObjectName("normFrameCheck")
         self.gridLayout_2.addWidget(self.normFrameCheck, 1, 2, 1, 1)
+        self.normTBlurSpin = QtGui.QDoubleSpinBox(self.normGroup)
+        self.normTBlurSpin.setObjectName("normTBlurSpin")
+        self.gridLayout_2.addWidget(self.normTBlurSpin, 4, 6, 1, 1)
         self.gridLayout.addWidget(self.normGroup, 5, 0, 1, 4)
         self.roiPlot = PlotWidget(self.splitter)
         self.roiPlot.setMinimumSize(QtCore.QSize(0, 40))

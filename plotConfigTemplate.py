@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'plotConfigTemplate.ui'
 #
-# Created: Tue Jan 12 14:23:16 2010
-#      by: PyQt4 UI code generator 4.5.4
+# Created: Mon Mar 29 22:40:47 2010
+#      by: PyQt4 UI code generator 4.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(210, 320)
+        Form.resize(210, 340)
         Form.setMaximumSize(QtCore.QSize(250, 350))
         self.gridLayout_3 = QtGui.QGridLayout(Form)
         self.gridLayout_3.setMargin(0)
@@ -51,7 +51,7 @@ class Ui_Form(object):
         self.xAutoPercentSpin.setMinimum(1)
         self.xAutoPercentSpin.setMaximum(100)
         self.xAutoPercentSpin.setSingleStep(1)
-        self.xAutoPercentSpin.setProperty("value", QtCore.QVariant(100))
+        self.xAutoPercentSpin.setProperty("value", 100)
         self.xAutoPercentSpin.setObjectName("xAutoPercentSpin")
         self.gridLayout.addWidget(self.xAutoPercentSpin, 1, 1, 1, 2)
         self.xLinkCombo = QtGui.QComboBox(self.groupBox)
@@ -92,7 +92,7 @@ class Ui_Form(object):
         self.yAutoPercentSpin.setMinimum(1)
         self.yAutoPercentSpin.setMaximum(100)
         self.yAutoPercentSpin.setSingleStep(1)
-        self.yAutoPercentSpin.setProperty("value", QtCore.QVariant(100))
+        self.yAutoPercentSpin.setProperty("value", 100)
         self.yAutoPercentSpin.setObjectName("yAutoPercentSpin")
         self.gridLayout_2.addWidget(self.yAutoPercentSpin, 1, 1, 1, 2)
         self.yLinkCombo = QtGui.QComboBox(self.groupBox_2)
@@ -129,13 +129,17 @@ class Ui_Form(object):
         self.gridLayout_4.setSpacing(0)
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.manualDecimateRadio = QtGui.QRadioButton(self.decimateGroup)
+        self.manualDecimateRadio.setChecked(True)
         self.manualDecimateRadio.setObjectName("manualDecimateRadio")
         self.gridLayout_4.addWidget(self.manualDecimateRadio, 0, 0, 1, 1)
-        self.decimateSpin = QtGui.QSpinBox(self.decimateGroup)
-        self.decimateSpin.setObjectName("decimateSpin")
-        self.gridLayout_4.addWidget(self.decimateSpin, 0, 1, 1, 1)
+        self.downsampleSpin = QtGui.QSpinBox(self.decimateGroup)
+        self.downsampleSpin.setMinimum(1)
+        self.downsampleSpin.setMaximum(100000)
+        self.downsampleSpin.setProperty("value", 1)
+        self.downsampleSpin.setObjectName("downsampleSpin")
+        self.gridLayout_4.addWidget(self.downsampleSpin, 0, 1, 1, 1)
         self.autoDecimateRadio = QtGui.QRadioButton(self.decimateGroup)
-        self.autoDecimateRadio.setChecked(True)
+        self.autoDecimateRadio.setChecked(False)
         self.autoDecimateRadio.setObjectName("autoDecimateRadio")
         self.gridLayout_4.addWidget(self.autoDecimateRadio, 1, 0, 1, 1)
         self.maxTracesCheck = QtGui.QCheckBox(self.decimateGroup)
@@ -176,7 +180,7 @@ class Ui_Form(object):
         self.horizontalLayout.addWidget(self.autoAlphaCheck)
         self.alphaSlider = QtGui.QSlider(self.alphaGroup)
         self.alphaSlider.setMaximum(1000)
-        self.alphaSlider.setProperty("value", QtCore.QVariant(1000))
+        self.alphaSlider.setProperty("value", 1000)
         self.alphaSlider.setOrientation(QtCore.Qt.Horizontal)
         self.alphaSlider.setObjectName("alphaSlider")
         self.horizontalLayout.addWidget(self.alphaSlider)
@@ -188,7 +192,7 @@ class Ui_Form(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.gridAlphaSlider = QtGui.QSlider(self.gridGroup)
         self.gridAlphaSlider.setMaximum(255)
-        self.gridAlphaSlider.setProperty("value", QtCore.QVariant(70))
+        self.gridAlphaSlider.setProperty("value", 70)
         self.gridAlphaSlider.setOrientation(QtCore.Qt.Horizontal)
         self.gridAlphaSlider.setObjectName("gridAlphaSlider")
         self.verticalLayout_4.addWidget(self.gridAlphaSlider)
@@ -257,11 +261,15 @@ class Ui_Form(object):
         self.label_2.setText(QtGui.QApplication.translate("Form", "Link with:", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtGui.QApplication.translate("Form", "Scale", None, QtGui.QApplication.UnicodeUTF8))
         self.powerSpectrumGroup.setTitle(QtGui.QApplication.translate("Form", "Power Spectrum", None, QtGui.QApplication.UnicodeUTF8))
-        self.decimateGroup.setTitle(QtGui.QApplication.translate("Form", "Decimate", None, QtGui.QApplication.UnicodeUTF8))
+        self.decimateGroup.setTitle(QtGui.QApplication.translate("Form", "Downsample", None, QtGui.QApplication.UnicodeUTF8))
         self.manualDecimateRadio.setText(QtGui.QApplication.translate("Form", "Manual", None, QtGui.QApplication.UnicodeUTF8))
         self.autoDecimateRadio.setText(QtGui.QApplication.translate("Form", "Auto", None, QtGui.QApplication.UnicodeUTF8))
+        self.maxTracesCheck.setToolTip(QtGui.QApplication.translate("Form", "If multiple curves are displayed in this plot, check this box to limit the number of traces that are displayed.", None, QtGui.QApplication.UnicodeUTF8))
         self.maxTracesCheck.setText(QtGui.QApplication.translate("Form", "Max Traces:", None, QtGui.QApplication.UnicodeUTF8))
+        self.maxTracesSpin.setToolTip(QtGui.QApplication.translate("Form", "If multiple curves are displayed in this plot, check \"Max Traces\" and set this value to limit the number of traces that are displayed.", None, QtGui.QApplication.UnicodeUTF8))
+        self.forgetTracesCheck.setToolTip(QtGui.QApplication.translate("Form", "If MaxTraces is checked, remove curves from memory after they are hidden (saves memory, but traces can not be un-hidden).", None, QtGui.QApplication.UnicodeUTF8))
         self.forgetTracesCheck.setText(QtGui.QApplication.translate("Form", "Forget hidden traces", None, QtGui.QApplication.UnicodeUTF8))
+        self.averageGroup.setToolTip(QtGui.QApplication.translate("Form", "Display averages of the curves displayed in this plot. The parameter list allows you to choose parameters to average over (if any are available).", None, QtGui.QApplication.UnicodeUTF8))
         self.averageGroup.setTitle(QtGui.QApplication.translate("Form", "Average", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtGui.QApplication.translate("Form", "Data", None, QtGui.QApplication.UnicodeUTF8))
         self.alphaGroup.setTitle(QtGui.QApplication.translate("Form", "Alpha", None, QtGui.QApplication.UnicodeUTF8))

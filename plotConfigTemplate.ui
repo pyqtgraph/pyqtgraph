@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>210</width>
-    <height>320</height>
+    <height>340</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -35,7 +35,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -267,7 +267,7 @@
        <item>
         <widget class="QGroupBox" name="decimateGroup">
          <property name="title">
-          <string>Decimate</string>
+          <string>Downsample</string>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -284,10 +284,23 @@
             <property name="text">
              <string>Manual</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QSpinBox" name="decimateSpin"/>
+           <widget class="QSpinBox" name="downsampleSpin">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>100000</number>
+            </property>
+            <property name="value">
+             <number>1</number>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0">
            <widget class="QRadioButton" name="autoDecimateRadio">
@@ -295,22 +308,32 @@
              <string>Auto</string>
             </property>
             <property name="checked">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
           <item row="2" column="0">
            <widget class="QCheckBox" name="maxTracesCheck">
+            <property name="toolTip">
+             <string>If multiple curves are displayed in this plot, check this box to limit the number of traces that are displayed.</string>
+            </property>
             <property name="text">
              <string>Max Traces:</string>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QSpinBox" name="maxTracesSpin"/>
+           <widget class="QSpinBox" name="maxTracesSpin">
+            <property name="toolTip">
+             <string>If multiple curves are displayed in this plot, check &quot;Max Traces&quot; and set this value to limit the number of traces that are displayed.</string>
+            </property>
+           </widget>
           </item>
           <item row="3" column="0" colspan="2">
            <widget class="QCheckBox" name="forgetTracesCheck">
+            <property name="toolTip">
+             <string>If MaxTraces is checked, remove curves from memory after they are hidden (saves memory, but traces can not be un-hidden).</string>
+            </property>
             <property name="text">
              <string>Forget hidden traces</string>
             </property>
@@ -321,6 +344,9 @@
        </item>
        <item>
         <widget class="QGroupBox" name="averageGroup">
+         <property name="toolTip">
+          <string>Display averages of the curves displayed in this plot. The parameter list allows you to choose parameters to average over (if any are available).</string>
+         </property>
          <property name="title">
           <string>Average</string>
          </property>

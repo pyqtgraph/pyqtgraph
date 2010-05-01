@@ -13,6 +13,7 @@ from numpy import *
 import scipy.weave as weave
 from scipy.weave import converters
 from scipy.fftpack import fft
+from scipy.signal import resample
 #from metaarray import MetaArray
 from Point import *
 from functions import *
@@ -232,7 +233,7 @@ class PlotCurveItem(QtGui.QGraphicsWidget):
             'logMode': [False, False],
             'pointMode': False,
             'pointStyle': None,
-            'decimation': False,
+            'downsample': False,
             'alphaHint': 1.0,
             'alphaMode': False
         }
@@ -245,6 +246,10 @@ class PlotCurveItem(QtGui.QGraphicsWidget):
         if self.xDisp is None:
             x = self.xData
             y = self.yData
+            ds = self.opts['downsample']
+            if ds > 1:
+                x = x[::ds]
+                y = resample(y[:len(x)*ds], len(x))
             if self.opts['spectrumMode']:
                 f = fft(y) / len(y)
                 y = abs(f[1:len(f)/2])
@@ -341,6 +346,13 @@ class PlotCurveItem(QtGui.QGraphicsWidget):
     def setShadowPen(self, pen):
         self.shadow = pen
         self.update()
+
+    def setDownsampling(self, ds):
+        if self.opts['downsample'] != ds:
+            self.opts['downsample'] = ds
+            self.xDisp = self.yDisp = None
+            self.path = None
+            self.update()
 
     def setData(self, x, y, copy=False):
         """For Qwt compatibility"""

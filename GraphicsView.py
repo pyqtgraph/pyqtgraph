@@ -234,11 +234,14 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def mousePressEvent(self, ev):
         QtGui.QGraphicsView.mousePressEvent(self, ev)
+
         #print "Press over:"
         #for i in self.items(ev.pos()):
-            #print i.zValue(), int(i.acceptedMouseButtons()), i, i.scenePos()
+        #    print i.zValue(), int(i.acceptedMouseButtons()), i, i.scenePos()
         #print "Event accepted:", ev.isAccepted()
         #print "Grabber:", self.scene().mouseGrabberItem()
+        
+
         if not self.mouseEnabled:
             return
         self.lastMousePos = Point(ev.pos())

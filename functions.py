@@ -28,7 +28,7 @@ def siScale(x, minVal=1e-25):
 
 
 
-def mkPen(color=None, hsv=None, width=1, style=None, cosmetic=True):
+def mkPen(color=None, width=1, style=None, cosmetic=True, hsv=None, ):
     if color is None:
         color = [255, 255, 255]
     if hsv is not None:

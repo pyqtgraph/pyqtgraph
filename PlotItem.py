@@ -187,7 +187,9 @@ class PlotItem(QtGui.QGraphicsWidget):
         
         QtCore.QObject.connect(self.ctrl.xLinkCombo, QtCore.SIGNAL('currentIndexChanged(int)'), self.xLinkComboChanged)
         QtCore.QObject.connect(self.ctrl.yLinkCombo, QtCore.SIGNAL('currentIndexChanged(int)'), self.yLinkComboChanged)
-        
+
+        QtCore.QObject.connect(c.downsampleSpin, QtCore.SIGNAL('valueChanged(int)'), self.updateDownsampling)
+
         QtCore.QObject.connect(self.ctrl.avgParamList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.avgParamListClicked)
         QtCore.QObject.connect(self.ctrl.averageGroup, QtCore.SIGNAL('toggled(bool)'), self.avgToggled)
         
@@ -348,18 +350,21 @@ class PlotItem(QtGui.QGraphicsWidget):
     def addAvgCurve(self, curve):
         """Add a single curve into the pool of curves averaged together"""
         
-        ### First determine the key of the curve to which this new data should be averaged
+        ## If there are plot parameters, then we need to determine which to average together.
         remKeys = []
         addKeys = []
-        for i in range(self.ctrl.avgParamList.count()):
-            item = self.ctrl.avgParamList.item(i)
-            if item.checkState() == QtCore.Qt.Checked:
-                remKeys.append(str(item.text()))
-            else:
-                addKeys.append(str(item.text()))
-                
-        if len(remKeys) < 1:  ## In this case, there would be 1 average plot for each data plot; not useful.
-            return
+        if self.ctrl.avgParamList.count() > 0:
+        
+            ### First determine the key of the curve to which this new data should be averaged
+            for i in range(self.ctrl.avgParamList.count()):
+                item = self.ctrl.avgParamList.item(i)
+                if item.checkState() == QtCore.Qt.Checked:
+                    remKeys.append(str(item.text()))
+                else:
+                    addKeys.append(str(item.text()))
+                    
+            if len(remKeys) < 1:  ## In this case, there would be 1 average plot for each data plot; not useful.
+                return
                 
         p = curve.meta().copy()
         for k in p:
@@ -438,6 +443,8 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.ctrl.xAutoRadio.setChecked(True)
         self.ctrl.yAutoRadio.setChecked(True)
         self.autoBtn.hide()
+        self.updateXScale()
+        self.updateYScale()
         self.replot()
       
     def updateXScale(self):
@@ -551,6 +558,7 @@ class PlotItem(QtGui.QGraphicsWidget):
         (alpha, auto) = self.alphaState()
         c.setAlpha(alpha, auto)
         c.setSpectrumMode(self.ctrl.powerSpectrumGroup.isChecked())
+        c.setDownsampling(self.downsampleMode())
         c.setPointMode(self.pointMode())
         
         ## Hide older plots if needed
@@ -621,16 +629,22 @@ class PlotItem(QtGui.QGraphicsWidget):
         #print "paramList:", self.paramList
 
     def writeSvg(self, fileName=None):
-        print "writeSvg"
         if fileName is None:
             fileName = QtGui.QFileDialog.getSaveFileName()
         fileName = str(fileName)
+        
+        
         self.svg = QtSvg.QSvgGenerator()
         self.svg.setFileName(fileName)
+        res = 120.
+        self.svg.setResolution(res)
         self.svg.setSize(QtCore.QSize(self.size().width(), self.size().height()))
-        self.svg.setResolution(600)
         painter = QtGui.QPainter(self.svg)
-        self.scene().render(painter, QtCore.QRectF(), self.mapRectToScene(self.boundingRect()))
+        #self.scene().render(painter, QtCore.QRectF(), self.mapRectToScene(self.boundingRect()))
+        items = self.scene().items()
+        self.scene().views()[0].drawItems(painter, len(items), items)
+        
+        
         
     def writeImage(self, fileName=None):
         if fileName is None:
@@ -678,6 +692,25 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.enableAutoScale()
         self.recomputeAverages()
             
+        
+    def updateDownsampling(self):
+        ds = self.downsampleMode()
+        for c in self.curves:
+            c.setDownsampling(ds)
+        self.recomputeAverages()
+        #for c in self.avgCurves.values():
+            #c[1].setDownsampling(ds)
+        
+        
+    def downsampleMode(self):
+        if self.ctrl.decimateGroup.isChecked():
+            if self.ctrl.manualDecimateRadio.isChecked():
+                ds = self.ctrl.downsampleSpin.value()
+            else:
+                ds = True
+        else:
+            ds = False
+        return ds
         
     def updateDecimation(self):
         if self.ctrl.maxTracesCheck.isChecked():
