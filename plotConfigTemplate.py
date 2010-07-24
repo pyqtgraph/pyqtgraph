@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'plotConfigTemplate.ui'
 #
-# Created: Mon Mar 29 22:40:47 2010
-#      by: PyQt4 UI code generator 4.6
+# Created: Sat Jul 17 00:28:43 2010
+#      by: PyQt4 UI code generator 4.7.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(210, 340)
+        Form.resize(250, 340)
         Form.setMaximumSize(QtCore.QSize(250, 350))
         self.gridLayout_3 = QtGui.QGridLayout(Form)
         self.gridLayout_3.setMargin(0)
@@ -187,6 +187,7 @@ class Ui_Form(object):
         self.verticalLayout_3.addWidget(self.alphaGroup)
         self.gridGroup = QtGui.QGroupBox(self.tab_3)
         self.gridGroup.setCheckable(True)
+        self.gridGroup.setChecked(False)
         self.gridGroup.setObjectName("gridGroup")
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.gridGroup)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -227,6 +228,9 @@ class Ui_Form(object):
         self.saveMaBtn = QtGui.QPushButton(self.tab_4)
         self.saveMaBtn.setObjectName("saveMaBtn")
         self.gridLayout_6.addWidget(self.saveMaBtn, 2, 0, 1, 1)
+        self.saveCsvBtn = QtGui.QPushButton(self.tab_4)
+        self.saveCsvBtn.setObjectName("saveCsvBtn")
+        self.gridLayout_6.addWidget(self.saveCsvBtn, 3, 0, 1, 1)
         self.gridLayout_7.addLayout(self.gridLayout_6, 0, 1, 1, 1)
         spacerItem2 = QtGui.QSpacerItem(59, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.gridLayout_7.addItem(spacerItem2, 0, 2, 1, 1)
@@ -281,5 +285,6 @@ class Ui_Form(object):
         self.saveSvgBtn.setText(QtGui.QApplication.translate("Form", "SVG", None, QtGui.QApplication.UnicodeUTF8))
         self.saveImgBtn.setText(QtGui.QApplication.translate("Form", "Image", None, QtGui.QApplication.UnicodeUTF8))
         self.saveMaBtn.setText(QtGui.QApplication.translate("Form", "MetaArray", None, QtGui.QApplication.UnicodeUTF8))
+        self.saveCsvBtn.setText(QtGui.QApplication.translate("Form", "CSV", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), QtGui.QApplication.translate("Form", "Save", None, QtGui.QApplication.UnicodeUTF8))
 

@@ -30,7 +30,30 @@ vb = ViewBox()
 p1 = PlotCurveItem()
 vb.addItem(p1)
 vl.addWidget(gv)
-rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 1))
+
+class movableRect(QtGui.QGraphicsRectItem):
+    def __init__(self, *args):
+        QtGui.QGraphicsRectItem.__init__(self, *args)
+        self.setAcceptHoverEvents(True)
+    def hoverEnterEvent(self, ev):
+        self.savedPen = self.pen()
+        self.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
+        ev.ignore()
+    def hoverLeaveEvent(self, ev):
+        self.setPen(self.savedPen)
+        ev.ignore()
+    def mousePressEvent(self, ev):
+        if ev.button() == QtCore.Qt.LeftButton:
+            ev.accept()
+            self.pressDelta = self.mapToParent(ev.pos()) - self.pos()
+        else:
+            ev.ignore()     
+    def mouseMoveEvent(self, ev):
+        self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
+        
+
+#rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 1))
+rect = movableRect(QtCore.QRectF(0, 0, 1, 1))
 rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
 vb.addItem(rect)
 
@@ -67,4 +90,4 @@ t = QtCore.QTimer()
 QtCore.QObject.connect(t, QtCore.SIGNAL('timeout()'), updateData)
 t.start(50)
 
-app.exec_()
+#app.exec_()

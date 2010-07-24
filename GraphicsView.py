@@ -10,11 +10,11 @@ from PyQt4 import QtCore, QtGui, QtOpenGL, QtSvg
 #import time
 from Point import *
 #from vector import *
-
+import sys
             
         
 class GraphicsView(QtGui.QGraphicsView):
-    def __init__(self, *args):
+    def __init__(self, parent=None, useOpenGL=True):
         """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
         viewed coordinate range. Also automatically creates a QGraphicsScene and a central QGraphicsWidget
         that is automatically scaled to the full view geometry.
@@ -26,8 +26,9 @@ class GraphicsView(QtGui.QGraphicsView):
         The view can be panned using the middle mouse button and scaled using the right mouse button if
         enabled via enableMouse()."""
         
-        QtGui.QGraphicsView.__init__(self, *args)
-        self.setViewport(QtOpenGL.QGLWidget())
+        QtGui.QGraphicsView.__init__(self, parent)
+        self.useOpenGL(useOpenGL)
+        
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(0,0,0))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -49,6 +50,7 @@ class GraphicsView(QtGui.QGraphicsView):
         #self.setResizeAnchor(QtGui.QGraphicsView.NoAnchor)
         self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
         self.setSceneRect(QtCore.QRectF(-1e10, -1e10, 2e10, 2e10))
+        #self.setSceneRect(1, 1, 0, 0) ## Set an empty (but non-zero) scene rect so that the view doesn't try to automatically update for us.
         #self.setInteractive(False)
         self.lockedViewports = []
         self.lastMousePos = None
@@ -68,6 +70,18 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
         
+    def useOpenGL(self, b=True):
+        if b:
+            v = QtOpenGL.QGLWidget()
+        else:
+            v = QtGui.QWidget()
+            
+        #v.setStyleSheet("background-color: #000000;")
+        self.setViewport(v)
+            
+    def keyPressEvent(self, ev):
+        ev.ignore()
+        
     def setCentralItem(self, item):
         if self.centralWidget is not None:
             self.scene().removeItem(self.centralWidget)
@@ -76,6 +90,9 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def addItem(self, *args):
         return self.scene().addItem(*args)
+        
+    def removeItem(self, *args):
+        return self.scene().removeItem(*args)
         
     def enableMouse(self, b=True):
         self.mouseEnabled = b
@@ -128,6 +145,8 @@ class GraphicsView(QtGui.QGraphicsView):
                 v.setXRange(self.range, padding=0)
         
     def visibleRange(self):
+        """Return the boundaries of the view in scene coordinates"""
+        ## easier to just return self.range ?
         r = QtCore.QRectF(self.rect())
         return self.viewportTransform().inverted()[0].mapRect(r)
 
@@ -346,6 +365,16 @@ class GraphicsView(QtGui.QGraphicsView):
         self.render(painter)
         self.setRenderHints(rh)
         self.png.save(fileName)
+        
+    def writePs(self, fileName=None):
+        if fileName is None:
+            fileName = str(QtGui.QFileDialog.getSaveFileName())
+        printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
+        printer.setOutputFileName(fileName)
+        painter = QtGui.QPainter(printer)
+        self.render(painter)
+        painter.end()
+        
         
     #def getFreehandLine(self):
         

@@ -19,7 +19,7 @@ class Win(QtGui.QMainWindow):
   pass
 
 w = Win()
-v = GraphicsView()
+v = GraphicsView(useOpenGL=False)
 v.invertY(True)
 v.setAspectLocked(True)
 v.enableMouse(True)
@@ -72,6 +72,9 @@ elroi = EllipseROI([110, 10], [30, 20])
 s.addItem(elroi)
 croi = CircleROI([110, 50], [20, 20])
 s.addItem(croi)
+troi = PolygonROI([[0,0], [1,0], [0,1]])
+s.addItem(troi)
+
 
 def updateImg(roi):
   global im1, im2, im3, im4, arr
@@ -80,11 +83,11 @@ def updateImg(roi):
   arr2 = roi.getArrayRegion(arr, img=im2)
   im4.updateImage(arr2, autoRange=True)
 
-roi.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(roi))
-roi2.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(roi2))
-croi.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(croi))
-elroi.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(elroi))
-mlroi.connect(QtCore.SIGNAL('regionChanged'), lambda: updateImg(mlroi))
+roi.connect(roi, QtCore.SIGNAL('regionChanged'), lambda: updateImg(roi))
+roi2.connect(roi2, QtCore.SIGNAL('regionChanged'), lambda: updateImg(roi2))
+croi.connect(croi, QtCore.SIGNAL('regionChanged'), lambda: updateImg(croi))
+elroi.connect(elroi, QtCore.SIGNAL('regionChanged'), lambda: updateImg(elroi))
+mlroi.connect(mlroi, QtCore.SIGNAL('regionChanged'), lambda: updateImg(mlroi))
 
 
 v.setRange(QtCore.QRect(-2, -2, 220, 220))

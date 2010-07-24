@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>210</width>
+    <width>250</width>
     <height>340</height>
    </rect>
   </property>
@@ -35,7 +35,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -419,6 +419,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
            <widget class="QSlider" name="gridAlphaSlider">
@@ -511,6 +514,13 @@
           <widget class="QPushButton" name="saveMaBtn">
            <property name="text">
             <string>MetaArray</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QPushButton" name="saveCsvBtn">
+           <property name="text">
+            <string>CSV</string>
            </property>
           </widget>
          </item>
