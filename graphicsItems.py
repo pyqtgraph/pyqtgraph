@@ -376,8 +376,9 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
         if self.xDisp is None:
-            x = self.xData
-            y = self.yData
+            nanMask = isnan(self.xData) | isnan(self.yData)
+            x = self.xData[~nanMask]
+            y = self.yData[~nanMask]
             ds = self.opts['downsample']
             if ds > 1:
                 x = x[::ds]
@@ -592,6 +593,8 @@ class PlotCurveItem(GraphicsObject):
         xmax = x.max() + pixels[0].x() * lineWidth
         ymin = y.min() - abs(pixels[1].y()) * lineWidth
         ymax = y.max() + abs(pixels[1].y()) * lineWidth
+        
+            
         return QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
 
     def paint(self, p, opt, widget):
