@@ -27,6 +27,8 @@ class GraphicsView(QtGui.QGraphicsView):
         enabled via enableMouse()."""
         
         QtGui.QGraphicsView.__init__(self, parent)
+        if 'linux' in sys.platform:  ## linux has bugs in opengl implementation
+            useOpenGL = False
         self.useOpenGL(useOpenGL)
         
         palette = QtGui.QPalette()
@@ -139,6 +141,7 @@ class GraphicsView(QtGui.QGraphicsView):
         #print "  translate:", st
         self.setMatrix(m)
         self.currentScale = scale
+        self.emit(QtCore.SIGNAL('viewChanged'), self.range)
         
         if propagate:
             for v in self.lockedViewports:
@@ -190,7 +193,6 @@ class GraphicsView(QtGui.QGraphicsView):
         #print "New Range:", self.range
         self.centralWidget.setGeometry(self.range)
         self.updateMatrix(propagate)
-        self.emit(QtCore.SIGNAL('viewChanged'), self.range)
         
         
     def lockXRange(self, v1):

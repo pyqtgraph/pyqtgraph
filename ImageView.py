@@ -18,8 +18,9 @@ from graphicsItems import *
 from widgets import ROI
 from PyQt4 import QtCore, QtGui
 import sys
-from numpy import ndarray
+#from numpy import ndarray
 import ptime
+import numpy as np
 
 from SignalProxy import proxyConnect
 
@@ -52,7 +53,7 @@ class ImageView(QtGui.QWidget):
         self.ui.graphicsView.invertY()
         self.ui.graphicsView.enableMouse()
         
-        self. ticks = [t[0] for t in self.ui.gradientWidget.listTicks()]
+        self.ticks = [t[0] for t in self.ui.gradientWidget.listTicks()]
         self.ticks[0].colorChangeAllowed = False
         self.ticks[1].colorChangeAllowed = False
         self.ui.gradientWidget.allowAdd = False
@@ -301,14 +302,14 @@ class ImageView(QtGui.QWidget):
             axes = (1, 2)
         else:
             return
-        data = self.roi.getArrayRegion(image.view(ndarray), self.imageItem, axes)
+        data = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes)
         if data is not None:
             while data.ndim > 1:
                 data = data.mean(axis=1)
             self.roiCurve.setData(y=data, x=self.tVals)
             #self.ui.roiPlot.replot()
 
-    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None):
+    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None):
         """Set the image to be displayed in the widget.
         Options are:
           img:         ndarray; the image to be displayed.
@@ -319,16 +320,19 @@ class ImageView(QtGui.QWidget):
                        This is only needed to override the default guess.
         """
         
-        if not isinstance(img, ndarray):
+        if not isinstance(img, np.ndarray):
             raise Exception("Image must be specified as ndarray.")
         self.image = img
         
         if xvals is not None:
             self.tVals = xvals
         elif hasattr(img, 'xvals'):
-            self.tVals = img.xvals(0)
+            try:
+                self.tVals = img.xvals(0)
+            except:
+                self.tVals = np.arange(img.shape[0])
         else:
-            self.tVals = arange(img.shape[0])
+            self.tVals = np.arange(img.shape[0])
         #self.ui.timeSlider.setValue(0)
         #self.ui.normStartSlider.setValue(0)
         #self.ui.timeSlider.setMaximum(img.shape[0]-1)
@@ -346,13 +350,13 @@ class ImageView(QtGui.QWidget):
 
             
         self.imageDisp = None
-        if autoRange:
-            self.autoRange()
         if autoLevels:
             self.autoLevels()
         if levels is not None:
             self.levelMax = levels[1]
             self.levelMin = levels[0]
+            
+        self.currentIndex = 0
         self.updateImage()
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
@@ -361,6 +365,7 @@ class ImageView(QtGui.QWidget):
         if self.axes['t'] is not None:
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setXRange(self.tVals.min(), self.tVals.max())
+            self.timeLine.setValue(0)
             #self.ui.roiPlot.setMouseEnabled(False, False)
             if len(self.tVals) > 1:
                 start = self.tVals.min()
@@ -376,6 +381,14 @@ class ImageView(QtGui.QWidget):
         #else:
             #self.ui.roiPlot.hide()
             
+        self.imageItem.resetTransform()
+        if scale is not None:
+            self.imageItem.scale(*scale)
+        if scale is not None:
+            self.imageItem.setPos(*pos)
+            
+        if autoRange:
+            self.autoRange()
         self.roiClicked()
             
             
@@ -389,10 +402,12 @@ class ImageView(QtGui.QWidget):
         self.ui.gradientWidget.setTickValue(self.ticks[1], 1.0)
         self.imageItem.setLevels(white=self.whiteLevel(), black=self.blackLevel())
             
+
     def autoRange(self):
         image = self.getProcessedImage()
         
-        self.ui.graphicsView.setRange(QtCore.QRectF(0, 0, image.shape[self.axes['x']], image.shape[self.axes['y']]), padding=0., lockAspect=True)        
+        #self.ui.graphicsView.setRange(QtCore.QRectF(0, 0, image.shape[self.axes['x']], image.shape[self.axes['y']]), padding=0., lockAspect=True)        
+        self.ui.graphicsView.setRange(self.imageItem.sceneBoundingRect(), padding=0., lockAspect=True)
         
     def getProcessedImage(self):
         if self.imageDisp is None:
@@ -408,7 +423,7 @@ class ImageView(QtGui.QWidget):
             return image
             
         div = self.ui.normDivideRadio.isChecked()
-        norm = image.view(ndarray).copy()
+        norm = image.view(np.ndarray).copy()
         #if div:
             #norm = ones(image.shape)
         #else:
@@ -498,7 +513,7 @@ class ImageView(QtGui.QWidget):
                 return (0,0)
             totTime = xv[-1] + (xv[-1]-xv[-2])
             #t = f * totTime
-            inds = argwhere(xv < t)
+            inds = np.argwhere(xv < t)
             if len(inds) < 1:
                 return (0,t)
             ind = inds[-1,0]

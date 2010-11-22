@@ -23,6 +23,7 @@ from PyQt4 import QtGui, QtCore, QtSvg
 #from ObjectWorkaround import *
 #tryWorkaround(QtCore, QtGui)
 import weakref
+import numpy as np
 
 try:
     from WidgetGroup import *
@@ -35,8 +36,6 @@ try:
     HAVE_METAARRAY = True
 except:
     HAVE_METAARRAY = False
-
-
 
 
 class PlotItem(QtGui.QGraphicsWidget):
@@ -132,6 +131,7 @@ class PlotItem(QtGui.QGraphicsWidget):
             
         self.items = []
         self.curves = []
+        self.dataItems = []
         self.paramList = {}
         self.avgCurves = {}
         
@@ -436,7 +436,7 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.vb.setMouseEnabled(*state)
         
     def xRangeChanged(self, _, range):
-        if any(isnan(range)) or any(isinf(range)):
+        if any(np.isnan(range)) or any(np.isinf(range)):
             raise Exception("yRange invalid: %s. Signal came from %s" % (str(range), str(self.sender())))
         self.ctrl.xMinText.setText('%0.5g' % range[0])
         self.ctrl.xMaxText.setText('%0.5g' % range[1])
@@ -455,7 +455,7 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.emit(QtCore.SIGNAL('xRangeChanged'), self, range)
 
     def yRangeChanged(self, _, range):
-        if any(isnan(range)) or any(isinf(range)):
+        if any(np.isnan(range)) or any(np.isinf(range)):
             raise Exception("yRange invalid: %s. Signal came from %s" % (str(range), str(self.sender())))
         self.ctrl.yMinText.setText('%0.5g' % range[0])
         self.ctrl.yMaxText.setText('%0.5g' % range[1])
@@ -545,6 +545,9 @@ class PlotItem(QtGui.QGraphicsWidget):
         if not item in self.items:
             return
         self.items.remove(item)
+        if item in self.dataItems:
+            self.dataItems.remove(item)
+            
         if item.scene() is not None:
             self.vb.removeItem(item)
         if item in self.curves:
@@ -571,12 +574,12 @@ class PlotItem(QtGui.QGraphicsWidget):
             params = {}
         if HAVE_METAARRAY and isinstance(data, MetaArray):
             curve = self._plotMetaArray(data, x=x)
-        elif isinstance(data, ndarray):
+        elif isinstance(data, np.ndarray):
             curve = self._plotArray(data, x=x)
         elif isinstance(data, list):
             if x is not None:
-                x = array(x)
-            curve = self._plotArray(array(data), x=x)
+                x = np.array(x)
+            curve = self._plotArray(np.array(data), x=x)
         elif data is None:
             curve = PlotCurveItem()
         else:
@@ -589,6 +592,10 @@ class PlotItem(QtGui.QGraphicsWidget):
         
         return curve
 
+    def addDataItem(self, item):
+        self.addItem(item)
+        self.dataItems.append(item)
+    
     def addCurve(self, c, params=None):
         if params is None:
             params = {}
@@ -622,7 +629,7 @@ class PlotItem(QtGui.QGraphicsWidget):
                 percentScale = [self.ctrl.xAutoPercentSpin.value(), self.ctrl.yAutoPercentSpin.value()][ax] * 0.01
                 mn = None
                 mx = None
-                for c in self.curves + [c[1] for c in self.avgCurves.values()]:
+                for c in self.curves + [c[1] for c in self.avgCurves.values()] + self.dataItems:
                     if not c.isVisible():
                         continue
                     cmn, cmx = c.getRange(ax, percentScale)
@@ -630,7 +637,7 @@ class PlotItem(QtGui.QGraphicsWidget):
                         mn = cmn
                     if mx is None or cmx > mx:
                         mx = cmx
-                if mn is None or mx is None or any(isnan([mn, mx])) or any(isinf([mn, mx])):
+                if mn is None or mx is None or any(np.isnan([mn, mx])) or any(np.isinf([mn, mx])):
                     continue
                 if mn == mx:
                     mn -= 1
@@ -1013,7 +1020,7 @@ class PlotItem(QtGui.QGraphicsWidget):
             else:
                 xv = x
         c = PlotCurveItem()
-        c.setData(x=xv, y=arr.view(ndarray))
+        c.setData(x=xv, y=arr.view(np.ndarray))
         
         if autoLabel:
             name = arr._info[0].get('name', None)

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 ## Add path to library (just for examples; you do not need this)
 import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path = [os.path.join(os.path.dirname(__file__), '..', '..')] + sys.path
 
 from pyqtgraph.GraphicsView import *
 from pyqtgraph.graphicsItems import *
-from numpy import random
+#from numpy import random
 from PyQt4 import QtCore, QtGui
 from scipy.ndimage import *
+import numpy as np
 
 app = QtGui.QApplication([])
 
@@ -25,26 +26,13 @@ view.enableMouse()
 view.setAspectLocked(True)
 
 ## Create image item
-img = ImageItem()
+img = ImageItem(np.zeros((200,200)))
 view.scene().addItem(img)
 
 ## Set initial view bounds
 view.setRange(QtCore.QRectF(0, 0, 200, 200))
 
-def updateData():
-    global img
-    ## Create random image
-    data = random.random((200, 200))
+img.setDrawKernel(1)
+img.setLevels(10,0)
 
-    ## Display the data
-    img.updateImage(data)
-    
-
-# update image data every 20ms (or so)
-t = QtCore.QTimer()
-QtCore.QObject.connect(t, QtCore.SIGNAL('timeout()'), updateData)
-t.start(20)
-
-
-
-app.exec_()
+#app.exec_()

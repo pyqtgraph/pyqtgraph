@@ -24,14 +24,17 @@ class SignalProxy(QtCore.QObject):
         self.args = None
         self.timers = 0
         self.signal = signal
+        self.block = False
         
     def setDelay(self, delay):
         self.delay = delay
         
     def flush(self):
         """If there is a signal queued up, send it now."""
-        if self.args is None:
+        if self.args is None or self.block:
             return False
+        if self.block:
+            return
         self.emit(self.signal, *self.args)
         self.args = None
         return True
@@ -39,6 +42,8 @@ class SignalProxy(QtCore.QObject):
         
     def signal(self, *args):
         """Received signal, queue to be forwarded later."""
+        if self.block:
+            return
         self.waitUntil = time() + self.delay
         self.args = args
         self.timers += 1
@@ -46,7 +51,7 @@ class SignalProxy(QtCore.QObject):
         
     def tryEmit(self):
         """Emit signal if it has been long enougn since receiving the last signal."""
-        if self.args is None:
+        if self.args is None or self.block:
             return False
         self.timers -= 1
         t = time()
@@ -59,4 +64,6 @@ class SignalProxy(QtCore.QObject):
         return True
                 
         
+    def disconnect(self):
+        self.block = True
     
