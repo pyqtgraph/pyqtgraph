@@ -573,7 +573,7 @@ class PlotCurveItem(GraphicsObject):
             self.xData = x
         
         if x is None:
-            self.xData = arange(0, self.yData.shape[0])
+            self.xData = np.arange(0, self.yData.shape[0])
 
         if self.xData.shape != self.yData.shape:
             raise Exception("X and Y arrays must be the same shape--got %s and %s." % (str(x.shape), str(y.shape)))

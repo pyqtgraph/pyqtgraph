@@ -5,6 +5,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from scipy import random
+from numpy import array, arange
 from PyQt4 import QtGui, QtCore
 from pyqtgraph.PlotWidget import *
 from pyqtgraph.graphicsItems import *
@@ -90,4 +91,4 @@ for i in range(0, 5):
         yd, xd = rand(10000)
         pw2.plot(yd*(j+1), xd, params={'iter': i, 'val': j})
     
-#app.exec_()
+app.exec_()
