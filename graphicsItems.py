@@ -1491,7 +1491,16 @@ class ViewBox(QtGui.QGraphicsWidget):
         #self.replot(autoRange=False)
         #self.updateMatrix()
         
-        
+    def wheelEvent(self, ev):
+        mask = np.array(self.mouseEnabled, dtype=np.float)
+        degree = ev.delta() / 8.0;
+        dif = np.array([degree, degree])
+        s = ((mask * 0.02) + 1) ** dif
+        center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
+        self.scaleBy(s, center)
+        self.emit(QtCore.SIGNAL('rangeChangedManually'), self.mouseEnabled)
+        ev.accept()
+
     def mouseMoveEvent(self, ev):
         pos = np.array([ev.pos().x(), ev.pos().y()])
         dif = pos - self.mousePos
