@@ -1221,8 +1221,10 @@ class ScaleItem(QtGui.QGraphicsWidget):
         else:
             xs = bounds.width() / dif
             
+        tickPositions = set() # remembers positions of previously drawn ticks
         ## draw ticks and text
-        for i in [i1, i1+1, i1+2]:  ## draw three different intervals
+        ## draw three different intervals, long ticks first
+        for i in reversed([i1, i1+1, i1+2]):
             if i > len(intervals):
                 continue
             ## spacing for this interval
@@ -1266,7 +1268,11 @@ class ScaleItem(QtGui.QGraphicsWidget):
                 if p1[1-axis] < 0:
                     continue
                 p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100, a)))
-                p.drawLine(Point(p1), Point(p2))
+                # draw tick only if there is none
+                tickPos = p1[1-axis]
+                if tickPos not in tickPositions:
+                    p.drawLine(Point(p1), Point(p2))
+                    tickPositions.add(tickPos)
                 if i == textLevel:
                     if abs(v) < .001 or abs(v) >= 10000:
                         vstr = "%g" % (v * self.scale)
