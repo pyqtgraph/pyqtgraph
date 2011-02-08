@@ -52,3 +52,6 @@ class PlotWidget(GraphicsView):
         
     def getPlotItem(self):
         return self.plotItem
+        
+        
+        
