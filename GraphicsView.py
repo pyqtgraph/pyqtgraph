@@ -226,14 +226,13 @@ class GraphicsView(QtGui.QGraphicsView):
     
     
     def wheelEvent(self, ev):
+        QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
             return
-        QtGui.QGraphicsView.wheelEvent(self, ev)
         sc = 1.001 ** ev.delta()
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
-        
         
     def setAspectLocked(self, s):
         self.aspectLocked = s
