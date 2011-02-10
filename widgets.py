@@ -53,6 +53,7 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         self.setPos(pos)
         self.rotate(-angle * 180. / np.pi)
         self.setZValue(10)
+        self.isMoving = False
         
         self.handleSize = 5
         self.invertible = invertible
@@ -208,15 +209,23 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         if ev.button() == QtCore.Qt.LeftButton:
             self.setSelected(True)
             if self.translatable:
+                self.isMoving = True
+                self.preMoveState = self.getState()
                 self.cursorOffset = self.scenePos() - ev.scenePos()
                 self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
                 ev.accept()
+        elif ev.button() == QtCore.Qt.RightButton:
+            if self.isMoving:
+                ev.accept()
+                self.cancelMove()
+            else:
+                ev.ignore()
         else:
             ev.ignore()
         
     def mouseMoveEvent(self, ev):
         #print "mouse move", ev.pos()
-        if self.translatable:
+        if self.translatable and self.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
             snap = None
             if self.translateSnap or (ev.modifiers() & QtCore.Qt.ControlModifier):
                 snap = Point(self.snapSize, self.snapSize)
@@ -226,18 +235,25 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
     
     def mouseReleaseEvent(self, ev):
         if self.translatable:
+            self.isMoving = False
             self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
     
-    
+    def cancelMove(self):
+        self.isMoving = False
+        self.setState(self.preMoveState)
     
     def pointPressEvent(self, pt, ev):
         #print "press"
+        self.isMoving = True
+        self.preMoveState = self.getState()
+        
         self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
         #self.pressPos = self.mapFromScene(ev.scenePos())
         #self.pressHandlePos = self.handles[pt]['item'].pos()
     
     def pointReleaseEvent(self, pt, ev):
         #print "release"
+        self.isMoving = False
         self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
     
     def stateCopy(self):
@@ -718,6 +734,16 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         
 
 class Handle(QtGui.QGraphicsItem):
+    
+    types = {   ## defines number of sides, start angle for each handle type
+        't': (4, np.pi/4),
+        'f': (4, np.pi/4), 
+        's': (4, 0),
+        'r': (12, 0),
+        'sr': (12, 0),
+        'rf': (12, 0),
+    }
+    
     def __init__(self, radius, typ=None, pen=QtGui.QPen(QtGui.QColor(200, 200, 220)), parent=None):
         #print "   create item with parent", parent
         self.bounds = QtCore.QRectF(-1e-10, -1e-10, 2e-10, 2e-10)
@@ -731,27 +757,8 @@ class Handle(QtGui.QGraphicsItem):
         self.pen = pen
         self.pen.setWidth(0)
         self.pen.setCosmetic(True)
-        if typ == 't':
-            self.sides = 4
-            self.startAng = np.pi/4
-        elif typ == 'f':
-            self.sides = 4
-            self.startAng = np.pi/4
-        elif typ == 's':
-            self.sides = 4
-            self.startAng = 0
-        elif typ == 'r':
-            self.sides = 12
-            self.startAng = 0
-        elif typ == 'sr':
-            self.sides = 12
-            self.startAng = 0
-        elif typ == 'rf':
-            self.sides = 12
-            self.startAng = 0
-        else:
-            self.sides = 4
-            self.startAng = np.pi/4
+        self.isMoving = False
+        self.sides, self.startAng = self.types[typ]
             
     def connectROI(self, roi, i):
         self.roi.append((roi, i))
@@ -761,24 +768,37 @@ class Handle(QtGui.QGraphicsItem):
         
     def mousePressEvent(self, ev):
         #print "handle press"
-        if ev.button() != QtCore.Qt.LeftButton:
+        if ev.button() == QtCore.Qt.LeftButton:
+            self.isMoving = True
+            self.cursorOffset = self.scenePos() - ev.scenePos()
+            for r in self.roi:
+                r[0].pointPressEvent(r[1], ev)
+            #print "  accepted."
+            ev.accept()
+        elif ev.button() == QtCore.Qt.RightButton:
+            if self.isMoving:
+                self.isMoving = False  ## prevents any further motion
+                for r in self.roi:
+                    r[0].cancelMove()
+                ev.accept()
+            else:
+                ev.ignore()
+        else:
             ev.ignore()
-            return
-        self.cursorOffset = self.scenePos() - ev.scenePos()
-        for r in self.roi:
-            r[0].pointPressEvent(r[1], ev)
-        #print "  accepted."
-        ev.accept()
+            
         
     def mouseReleaseEvent(self, ev):
         #print "release"
-        for r in self.roi:
-            r[0].pointReleaseEvent(r[1], ev)
+        if ev.button() == QtCore.Qt.LeftButton:
+            self.isMoving = False
+            for r in self.roi:
+                r[0].pointReleaseEvent(r[1], ev)
                 
     def mouseMoveEvent(self, ev):
         #print "handle mouseMove", ev.pos()
-        pos = ev.scenePos() + self.cursorOffset
-        self.movePoint(pos, ev.modifiers())
+        if self.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
+            pos = ev.scenePos() + self.cursorOffset
+            self.movePoint(pos, ev.modifiers())
         
     def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier()):
         for r in self.roi:

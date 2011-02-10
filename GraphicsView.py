@@ -226,13 +226,14 @@ class GraphicsView(QtGui.QGraphicsView):
     
     
     def wheelEvent(self, ev):
-        QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
             return
+        QtGui.QGraphicsView.wheelEvent(self, ev)
         sc = 1.001 ** ev.delta()
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
+        
         
     def setAspectLocked(self, s):
         self.aspectLocked = s
@@ -311,13 +312,11 @@ class GraphicsView(QtGui.QGraphicsView):
             #self.currentItem = None
 
     def mouseMoveEvent(self, ev):
-        #if self.lastMousePos is None:
-            #self.lastMousePos = Point(ev.pos())
-        #delta = Point(ev.pos()) - self.lastMousePos
-        #if abs(delta[0]) > 100 or abs(delta[1]) > 100:   ## Weird bug generating extra events..
-            #return
-        #self.lastMousePos = Point(ev.pos())
-        #print "move", delta
+        if self.lastMousePos is None:
+            self.lastMousePos = Point(ev.pos())
+        delta = Point(ev.pos()) - self.lastMousePos
+        self.lastMousePos = Point(ev.pos())
+
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)
         if not self.mouseEnabled:
             return
@@ -327,8 +326,6 @@ class GraphicsView(QtGui.QGraphicsView):
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
-            
-        
         
         if ev.buttons() == QtCore.Qt.RightButton:
             delta = Point(clip(delta[0], -50, 50), clip(-delta[1], -50, 50))
@@ -337,7 +334,6 @@ class GraphicsView(QtGui.QGraphicsView):
                 #scale[0] = 1. / scale[0]
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.emit(QtCore.SIGNAL('regionChanged(QRectF)'), self.range)
-
 
         elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             tr = -delta / self.currentScale
