@@ -876,7 +876,9 @@ class PlotItem(QtGui.QGraphicsWidget):
             mode = False
         return mode
         
-        
+    def wheelEvent(self, ev):
+        # disables panning the whole scene by mousewheel
+        ev.accept()
 
     #def mousePressEvent(self, ev):
         #self.mousePos = array([ev.pos().x(), ev.pos().y()])
