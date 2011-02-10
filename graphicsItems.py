@@ -1338,11 +1338,15 @@ class ScaleItem(QtGui.QGraphicsWidget):
         else:
             self.setHeight(0)
         QtGui.QGraphicsWidget.hide(self)
-        
-    
-        
-        
-        
+
+    def wheelEvent(self, ev):
+        if self.linkedView is None: return
+        if self.orientation in ['left', 'right']:
+            self.linkedView.wheelEvent(ev, axis=1)
+        else:
+            self.linkedView.wheelEvent(ev, axis=0)
+        ev.accept()
+
 
 
 class ViewBox(QtGui.QGraphicsWidget):
@@ -1497,11 +1501,18 @@ class ViewBox(QtGui.QGraphicsWidget):
         #self.replot(autoRange=False)
         #self.updateMatrix()
         
-    def wheelEvent(self, ev):
+    def wheelEvent(self, ev, axis=None):
         mask = np.array(self.mouseEnabled, dtype=np.float)
         degree = ev.delta() / 8.0;
-        dif = np.array([degree, degree])
-        s = ((mask * 0.02) + 1) ** dif
+        dif = np.zeros(2) # FIXME: insert axis count here ..
+        if axis is not None and axis >= 0 and axis < len(dif):
+            # set axis for asymmetric scaling
+            dif.itemset(axis, 1.0)
+        else:
+            dif += 1.0 # scale symmetrical by default
+        dif *= degree
+        s = ((mask * 0.02) + 1) ** dif # actual scaling factor
+        # scale 'around' mouse cursor position
         center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
         self.scaleBy(s, center)
         self.emit(QtCore.SIGNAL('rangeChangedManually'), self.mouseEnabled)
