@@ -92,20 +92,24 @@ class Point(QtCore.QPointF):
             return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
     
     def length(self):
+        """Returns the vector length of this Point."""
         return (self[0]**2 + self[1]**2) ** 0.5
     
     def angle(self, a):
+        """Returns the angle between this vector and the vector a."""
         n1 = self.length()
         n2 = a.length()
         if n1 == 0. or n2 == 0.:
             return None
-        ang = acos(clip(self.dot(a) / (n1 * n2), -1.0, 1.0))
+        ## Probably this should be done with arctan2 instead..
+        ang = acos(clip(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
         c = self.cross(a)
         if c > 0:
             ang *= -1.
         return ang
     
     def dot(self, a):
+        """Returns the dot product of a and this Point."""
         a = Point(a)
         return self[0]*a[0] + self[1]*a[1]
     

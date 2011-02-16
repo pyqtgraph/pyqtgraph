@@ -89,6 +89,6 @@ t.start(50)
 for i in range(0, 5):
     for j in range(0, 3):
         yd, xd = rand(10000)
-        pw2.plot(yd*(j+1), xd, params={'iter': i, 'val': j})
+        pw2.plot(y=yd*(j+1), x=xd, params={'iter': i, 'val': j})
     
 app.exec_()

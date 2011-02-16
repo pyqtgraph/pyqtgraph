@@ -66,8 +66,14 @@ class GraphicsView(QtGui.QGraphicsView):
         self.updateMatrix()
         self.sceneObj = QtGui.QGraphicsScene()
         self.setScene(self.sceneObj)
+        
+        ## by default we set up a central widget with a grid layout.
+        ## this can be replaced if needed.
         self.centralWidget = None
         self.setCentralItem(QtGui.QGraphicsWidget())
+        self.centralLayout = QtGui.QGraphicsGridLayout()
+        self.centralWidget.setLayout(self.centralLayout)
+        
         self.mouseEnabled = False
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
@@ -85,6 +91,7 @@ class GraphicsView(QtGui.QGraphicsView):
         ev.ignore()
         
     def setCentralItem(self, item):
+        """Sets a QGraphicsWidget to automatically fill the entire view."""
         if self.centralWidget is not None:
             self.scene().removeItem(self.centralWidget)
         self.centralWidget = item
@@ -304,21 +311,20 @@ class GraphicsView(QtGui.QGraphicsView):
             #self.currentItem = None
 
     def mouseMoveEvent(self, ev):
+        if self.lastMousePos is None:
+            self.lastMousePos = Point(ev.pos())
+        delta = Point(ev.pos()) - self.lastMousePos
+        self.lastMousePos = Point(ev.pos())
+
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)
         if not self.mouseEnabled:
             return
         self.emit(QtCore.SIGNAL("sceneMouseMoved(PyQt_PyObject)"), self.mapToScene(ev.pos()))
         #print "moved. Grabber:", self.scene().mouseGrabberItem()
         
-        if self.lastMousePos is None:
-            self.lastMousePos = Point(ev.pos())
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
-            
-        delta = Point(ev.pos()) - self.lastMousePos
-        
-        self.lastMousePos = Point(ev.pos())
         
         if ev.buttons() == QtCore.Qt.RightButton:
             delta = Point(clip(delta[0], -50, 50), clip(-delta[1], -50, 50))
@@ -327,7 +333,6 @@ class GraphicsView(QtGui.QGraphicsView):
                 #scale[0] = 1. / scale[0]
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.emit(QtCore.SIGNAL('regionChanged(QRectF)'), self.range)
-
 
         elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             tr = -delta / self.currentScale
@@ -375,6 +380,10 @@ class GraphicsView(QtGui.QGraphicsView):
         painter = QtGui.QPainter(printer)
         self.render(painter)
         painter.end()
+        
+    def dragEnterEvent(self, ev):
+        ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
+        
         
         
     #def getFreehandLine(self):
