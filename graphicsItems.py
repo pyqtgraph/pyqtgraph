@@ -1524,8 +1524,10 @@ class ScaleItem(QtGui.QGraphicsWidget):
         else:
             xs = bounds.width() / dif
             
+        tickPositions = set() # remembers positions of previously drawn ticks
         ## draw ticks and text
-        for i in [i1, i1+1, i1+2]:  ## draw three different intervals
+        ## draw three different intervals, long ticks first
+        for i in reversed([i1, i1+1, i1+2]):
             if i > len(intervals):
                 continue
             ## spacing for this interval
@@ -1569,7 +1571,11 @@ class ScaleItem(QtGui.QGraphicsWidget):
                 if p1[1-axis] < 0:
                     continue
                 p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100, a)))
-                p.drawLine(Point(p1), Point(p2))
+                # draw tick only if there is none
+                tickPos = p1[1-axis]
+                if tickPos not in tickPositions:
+                    p.drawLine(Point(p1), Point(p2))
+                    tickPositions.add(tickPos)
                 if i == textLevel:
                     if abs(v) < .001 or abs(v) >= 10000:
                         vstr = "%g" % (v * self.scale)
@@ -1635,11 +1641,15 @@ class ScaleItem(QtGui.QGraphicsWidget):
         else:
             self.setHeight(0)
         QtGui.QGraphicsWidget.hide(self)
-        
-    
-        
-        
-        
+
+    def wheelEvent(self, ev):
+        if self.linkedView is None or self.linkedView() is None: return
+        if self.orientation in ['left', 'right']:
+            self.linkedView().wheelEvent(ev, axis=1)
+        else:
+            self.linkedView().wheelEvent(ev, axis=0)
+        ev.accept()
+
 
 
 class ViewBox(QtGui.QGraphicsWidget):
@@ -1655,7 +1665,7 @@ class ViewBox(QtGui.QGraphicsWidget):
         #self.gView = view
         #self.showGrid = showGrid
         self.range = [[0,1], [0,1]]   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
-        
+        self.wheelScaleFactor = -1.0 / 8.0
         self.aspectLocked = False
         self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
         #self.setFlag(QtGui.QGraphicsItem.ItemClipsToShape)
@@ -1800,7 +1810,19 @@ class ViewBox(QtGui.QGraphicsWidget):
         #self.replot(autoRange=False)
         #self.updateMatrix()
         
-        
+    def wheelEvent(self, ev, axis=None):
+        mask = np.array(self.mouseEnabled, dtype=np.float)
+        if axis is not None and axis >= 0 and axis < len(mask):
+            mv = mask[axis]
+            mask[:] = 0
+            mask[axis] = mv
+        s = ((mask * 0.02) + 1) ** (ev.delta() * self.wheelScaleFactor) # actual scaling factor
+        # scale 'around' mouse cursor position
+        center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
+        self.scaleBy(s, center)
+        self.emit(QtCore.SIGNAL('rangeChangedManually'), self.mouseEnabled)
+        ev.accept()
+
     def mouseMoveEvent(self, ev):
         QtGui.QGraphicsWidget.mouseMoveEvent(self, ev)
         pos = np.array([ev.pos().x(), ev.pos().y()])
@@ -1812,7 +1834,7 @@ class ViewBox(QtGui.QGraphicsWidget):
         mask = np.array(self.mouseEnabled, dtype=np.float)
         
         ## Scale or translate based on mouse button
-        if ev.buttons() & QtCore.Qt.LeftButton:
+        if ev.buttons() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
             if not self.yInverted:
                 mask *= np.array([1, -1])
             tr = dif*mask

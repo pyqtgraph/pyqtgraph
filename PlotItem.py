@@ -1037,6 +1037,10 @@ class PlotItem(QtGui.QGraphicsWidget):
             mode = False
         return mode
         
+    #def wheelEvent(self, ev):
+        # disables panning the whole scene by mousewheel
+        #ev.accept()
+
     def resizeEvent(self, ev):
         self.ctrlBtn.move(0, self.size().height() - self.ctrlBtn.size().height())
         self.autoBtn.move(self.ctrlBtn.width(), self.size().height() - self.autoBtn.size().height())
@@ -1088,7 +1092,7 @@ class PlotItem(QtGui.QGraphicsWidget):
         if arr.ndim != 1:
             raise Exception("Array must be 1D to plot (shape is %s)" % arr.shape)
         if x is None:
-            x = arange(arr.shape[0])
+            x = np.arange(arr.shape[0])
         if x.ndim != 1:
             raise Exception("X array must be 1D to plot (shape is %s)" % x.shape)
         c = PlotCurveItem(arr, x=x)
