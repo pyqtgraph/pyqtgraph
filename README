@@ -1,0 +1,18 @@
+PyQtGraph - A pure-Python graphics library for PyQt/PySide
+Copyright 2011 University of North Carolina at Chapel Hill
+
+Authors:
+    Luke Campagnola   ('luke.campagnola@%s.com' % 'gmail')
+    Megan Kratz
+    Ingo Breßler
+
+Requirements:
+    PyQt 4.5+ or (coming soon) PySide
+    python 2.6+
+    numpy, scipy
+
+    Known to run on Windows, Linux, and Mac.
+
+Documentation:
+    None. 
+    You can look around in the examples directory or pester Luke to write some.
