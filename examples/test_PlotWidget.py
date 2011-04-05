@@ -4,11 +4,10 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from scipy import random
-from PyQt4 import QtGui, QtCore
-from pyqtgraph.PlotWidget import *
-from pyqtgraph.graphicsItems import *
 
+from PyQt4 import QtGui, QtCore
+import numpy as np
+import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
@@ -17,77 +16,56 @@ mw.setCentralWidget(cw)
 l = QtGui.QVBoxLayout()
 cw.setLayout(l)
 
-pw = PlotWidget()
+pw = pg.PlotWidget(name='Plot1')  ## giving the plots names allows us to link their axes together
 l.addWidget(pw)
-pw2 = PlotWidget()
+pw2 = pg.PlotWidget(name='Plot2')
 l.addWidget(pw2)
-pw3 = PlotWidget()
+pw3 = pg.PlotWidget()
 l.addWidget(pw3)
 
-pw.registerPlot('Plot1')
-pw2.registerPlot('Plot2')
+mw.show()
 
-#p1 = PlotCurveItem()
-#pw.addItem(p1)
+## Create an empty plot curve to be filled later, set its pen
 p1 = pw.plot()
+p1.setPen((200,200,100))
+
+## Add in some extra graphics
 rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 1))
 rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
 pw.addItem(rect)
 
-#pen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(255, 255, 255, 50)), 5)
-#pen.setCosmetic(True)
-#pen.setJoinStyle(QtCore.Qt.MiterJoin)
-#p1.setShadowPen(pen)
-p1.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
-
-#l1 = QtGui.QGraphicsLineItem(0, 2, 2, 3)
-#l1.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
-
-#l2 = InfiniteLine(pw2, 1.5, 90, movable=True)
-#
-#lr1 = LinearRegionItem(pw2, 'vertical', [1.1, 1.3])
-#pw2.addItem(lr1)
-#lr2 = LinearRegionItem(pw2, 'horizontal', [50, 100])
-#pw2.addItem(lr2)
-
-
-#l3 = InfiniteLine(pw, [1.5, 1.5], 45)
-#pw.addItem(l1)
-#pw2.addItem(l2)
-#pw.addItem(l3)
-
-pw3.plot(array([100000]*100))
-
-
-mw.show()
-
 
 def rand(n):
-    data = random.random(n)
+    data = np.random.random(n)
     data[int(n*0.1):int(n*0.13)] += .5
     data[int(n*0.18)] += 2
     data[int(n*0.1):int(n*0.13)] *= 5
     data[int(n*0.18)] *= 20
-    return data, arange(n, n+len(data)) / float(n)
+    data *= 1e-12
+    return data, np.arange(n, n+len(data)) / float(n)
     
 
 def updateData():
     yd, xd = rand(10000)
     p1.updateData(yd, x=xd)
 
-yd, xd = rand(10000)
-updateData()
-pw.autoRange()
-
+## Start a timer to rapidly update the plot in pw
 t = QtCore.QTimer()
-
-QtCore.QObject.connect(t, QtCore.SIGNAL('timeout()'), updateData)
+t.timeout.connect(updateData)
 t.start(50)
 
-
+## Multiple parameterized plots--we can autogenerate averages for these.
 for i in range(0, 5):
     for j in range(0, 3):
         yd, xd = rand(10000)
         pw2.plot(y=yd*(j+1), x=xd, params={'iter': i, 'val': j})
-    
-#app.exec_()
+
+## Test large numbers
+curve = pw3.plot(np.random.normal(size=100)*1e6)
+curve.setPen('w')  ## white pen
+curve.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
+
+
+## Start Qt event loop unless running in interactive mode.
+if sys.flags.interactive != 1:
+    app.exec_()

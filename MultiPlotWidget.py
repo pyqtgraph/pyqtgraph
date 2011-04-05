@@ -37,3 +37,7 @@ class MultiPlotWidget(GraphicsView):
     def restoreState(self, state):
         pass
         #return self.plotItem.restoreState(state)
+
+    def close(self):
+        self.mPlotItem.close()
+        self.setParent(None)

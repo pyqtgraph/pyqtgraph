@@ -16,7 +16,8 @@ from numpy.linalg import norm
 import scipy.ndimage as ndimage
 from Point import *
 from math import cos, sin
-from ObjectWorkaround import *
+import functions as fn
+#from ObjectWorkaround import *
 
 def rectStr(r):
     return "[%f, %f] + [%f, %f]" % (r.x(), r.y(), r.width(), r.height())
@@ -33,10 +34,15 @@ def rectStr(r):
         #return QtCore.QObject.connect(self._qObj_, *args)
 
 
-class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
+class ROI(QtGui.QGraphicsObject):
+    
+    sigRegionChangeFinished = QtCore.Signal(object)
+    sigRegionChangeStarted = QtCore.Signal(object)
+    sigRegionChanged = QtCore.Signal(object)
+    
     def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None):
-        QObjectWorkaround.__init__(self)
-        QtGui.QGraphicsItem.__init__(self, parent)
+        #QObjectWorkaround.__init__(self)
+        QtGui.QGraphicsObject.__init__(self, parent)
         pos = Point(pos)
         size = Point(size)
         self.aspectLocked = False
@@ -45,7 +51,7 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         if pen is None:
             self.pen = QtGui.QPen(QtGui.QColor(255, 255, 255))
         else:
-            self.pen = pen
+            self.pen = fn.mkPen(pen)
         self.handlePen = QtGui.QPen(QtGui.QColor(150, 255, 255))
         self.handles = []
         self.state = {'pos': pos, 'size': size, 'angle': angle}
@@ -212,7 +218,8 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
                 self.isMoving = True
                 self.preMoveState = self.getState()
                 self.cursorOffset = self.scenePos() - ev.scenePos()
-                self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+                #self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+                self.sigRegionChangeStarted.emit(self)
                 ev.accept()
         elif ev.button() == QtCore.Qt.RightButton:
             if self.isMoving:
@@ -236,7 +243,8 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
     def mouseReleaseEvent(self, ev):
         if self.translatable:
             self.isMoving = False
-            self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+            #self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+            self.sigRegionChangeFinished.emit(self)
     
     def cancelMove(self):
         self.isMoving = False
@@ -247,14 +255,16 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         self.isMoving = True
         self.preMoveState = self.getState()
         
-        self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+        #self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+        self.sigRegionChangeStarted.emit(self)
         #self.pressPos = self.mapFromScene(ev.scenePos())
         #self.pressHandlePos = self.handles[pt]['item'].pos()
     
     def pointReleaseEvent(self, pt, ev):
         #print "release"
         self.isMoving = False
-        self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+        #self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+        self.sigRegionChangeFinished.emit(self)
     
     def stateCopy(self):
         sc = {}
@@ -316,7 +326,8 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         
         elif h['type'] == 'f':
             h['item'].setPos(self.mapFromScene(pos))
-            self.emit(QtCore.SIGNAL('regionChanged'), self)
+            #self.emit(QtCore.SIGNAL('regionChanged'), self)
+            self.sigRegionChanged.emit(self)
             
         elif h['type'] == 's':
             #c = h['center']
@@ -509,7 +520,8 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
         if changed:
             #print "handle changed."
             self.update()
-            self.emit(QtCore.SIGNAL('regionChanged'), self)
+            #self.emit(QtCore.SIGNAL('regionChanged'), self)
+            self.sigRegionChanged.emit(self)
             
     
     def scale(self, s, center=[0,0]):
@@ -628,104 +640,116 @@ class ROI(QtGui.QGraphicsItem, QObjectWorkaround):
 
 
     def getArrayRegion(self, data, img, axes=(0,1)):
+        shape = self.state['size']
         
-        ## transpose data so x and y are the first 2 axes
-        trAx = range(0, data.ndim)
-        trAx.remove(axes[0])
-        trAx.remove(axes[1])
-        tr1 = tuple(axes) + tuple(trAx)
-        arr = data.transpose(tr1)
+        origin = self.mapToItem(img, QtCore.QPointF(0, 0))
         
-        ## Determine the minimal area of the data we will need
-        (dataBounds, roiDataTransform) = self.getArraySlice(data, img, returnSlice=False, axes=axes)
+        vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
+        vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
+        vectors = ((vx.x(), vx.y()), (vy.x(), vy.y()))
+        origin = (origin.x(), origin.y())
+        
+        #print "shape", shape, "vectors", vectors, "origin", origin
+        
+        return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, order=1)
+        
+        ### transpose data so x and y are the first 2 axes
+        #trAx = range(0, data.ndim)
+        #trAx.remove(axes[0])
+        #trAx.remove(axes[1])
+        #tr1 = tuple(axes) + tuple(trAx)
+        #arr = data.transpose(tr1)
+        
+        ### Determine the minimal area of the data we will need
+        #(dataBounds, roiDataTransform) = self.getArraySlice(data, img, returnSlice=False, axes=axes)
 
-        ## Pad data boundaries by 1px if possible
-        dataBounds = (
-            (max(dataBounds[0][0]-1, 0), min(dataBounds[0][1]+1, arr.shape[0])),
-            (max(dataBounds[1][0]-1, 0), min(dataBounds[1][1]+1, arr.shape[1]))
-        )
+        ### Pad data boundaries by 1px if possible
+        #dataBounds = (
+            #(max(dataBounds[0][0]-1, 0), min(dataBounds[0][1]+1, arr.shape[0])),
+            #(max(dataBounds[1][0]-1, 0), min(dataBounds[1][1]+1, arr.shape[1]))
+        #)
 
-        ## Extract minimal data from array
-        arr1 = arr[dataBounds[0][0]:dataBounds[0][1], dataBounds[1][0]:dataBounds[1][1]]
+        ### Extract minimal data from array
+        #arr1 = arr[dataBounds[0][0]:dataBounds[0][1], dataBounds[1][0]:dataBounds[1][1]]
         
-        ## Update roiDataTransform to reflect this extraction
-        roiDataTransform *= QtGui.QTransform().translate(-dataBounds[0][0], -dataBounds[1][0]) 
-        ### (roiDataTransform now maps from ROI coords to extracted data coords)
+        ### Update roiDataTransform to reflect this extraction
+        #roiDataTransform *= QtGui.QTransform().translate(-dataBounds[0][0], -dataBounds[1][0]) 
+        #### (roiDataTransform now maps from ROI coords to extracted data coords)
         
         
-        ## Rotate array
-        if abs(self.state['angle']) > 1e-5:
-            arr2 = ndimage.rotate(arr1, self.state['angle'] * 180 / np.pi, order=1)
+        ### Rotate array
+        #if abs(self.state['angle']) > 1e-5:
+            #arr2 = ndimage.rotate(arr1, self.state['angle'] * 180 / np.pi, order=1)
             
-            ## update data transforms to reflect this rotation
-            rot = QtGui.QTransform().rotate(self.state['angle'] * 180 / np.pi)
-            roiDataTransform *= rot
+            ### update data transforms to reflect this rotation
+            #rot = QtGui.QTransform().rotate(self.state['angle'] * 180 / np.pi)
+            #roiDataTransform *= rot
             
-            ## The rotation also causes a shift which must be accounted for:
-            dataBound = QtCore.QRectF(0, 0, arr1.shape[0], arr1.shape[1])
-            rotBound = rot.mapRect(dataBound)
-            roiDataTransform *= QtGui.QTransform().translate(-rotBound.left(), -rotBound.top())
+            ### The rotation also causes a shift which must be accounted for:
+            #dataBound = QtCore.QRectF(0, 0, arr1.shape[0], arr1.shape[1])
+            #rotBound = rot.mapRect(dataBound)
+            #roiDataTransform *= QtGui.QTransform().translate(-rotBound.left(), -rotBound.top())
             
-        else:
-            arr2 = arr1
+        #else:
+            #arr2 = arr1
         
         
         
-        ### Shift off partial pixels
-        # 1. map ROI into current data space
-        roiBounds = roiDataTransform.mapRect(self.boundingRect())
+        #### Shift off partial pixels
+        ## 1. map ROI into current data space
+        #roiBounds = roiDataTransform.mapRect(self.boundingRect())
         
-        # 2. Determine amount to shift data
-        shift = (int(roiBounds.left()) - roiBounds.left(), int(roiBounds.bottom()) - roiBounds.bottom())
-        if abs(shift[0]) > 1e-6 or abs(shift[1]) > 1e-6:
-            # 3. pad array with 0s before shifting
-            arr2a = np.zeros((arr2.shape[0]+2, arr2.shape[1]+2) + arr2.shape[2:], dtype=arr2.dtype)
-            arr2a[1:-1, 1:-1] = arr2
+        ## 2. Determine amount to shift data
+        #shift = (int(roiBounds.left()) - roiBounds.left(), int(roiBounds.bottom()) - roiBounds.bottom())
+        #if abs(shift[0]) > 1e-6 or abs(shift[1]) > 1e-6:
+            ## 3. pad array with 0s before shifting
+            #arr2a = np.zeros((arr2.shape[0]+2, arr2.shape[1]+2) + arr2.shape[2:], dtype=arr2.dtype)
+            #arr2a[1:-1, 1:-1] = arr2
             
-            # 4. shift array and udpate transforms
-            arr3 = ndimage.shift(arr2a, shift + (0,)*(arr2.ndim-2), order=1)
-            roiDataTransform *= QtGui.QTransform().translate(1+shift[0], 1+shift[1]) 
-        else:
-            arr3 = arr2
+            ## 4. shift array and udpate transforms
+            #arr3 = ndimage.shift(arr2a, shift + (0,)*(arr2.ndim-2), order=1)
+            #roiDataTransform *= QtGui.QTransform().translate(1+shift[0], 1+shift[1]) 
+        #else:
+            #arr3 = arr2
         
         
-        ### Extract needed region from rotated/shifted array
-        # 1. map ROI into current data space (round these values off--they should be exact integer values at this point)
-        roiBounds = roiDataTransform.mapRect(self.boundingRect())
-        #print self, roiBounds.height()
-        #import traceback
-        #traceback.print_stack()
+        #### Extract needed region from rotated/shifted array
+        ## 1. map ROI into current data space (round these values off--they should be exact integer values at this point)
+        #roiBounds = roiDataTransform.mapRect(self.boundingRect())
+        ##print self, roiBounds.height()
+        ##import traceback
+        ##traceback.print_stack()
         
-        roiBounds = QtCore.QRect(round(roiBounds.left()), round(roiBounds.top()), round(roiBounds.width()), round(roiBounds.height()))
+        #roiBounds = QtCore.QRect(round(roiBounds.left()), round(roiBounds.top()), round(roiBounds.width()), round(roiBounds.height()))
         
-        #2. intersect ROI with data bounds
-        dataBounds = roiBounds.intersect(QtCore.QRect(0, 0, arr3.shape[0], arr3.shape[1]))
+        ##2. intersect ROI with data bounds
+        #dataBounds = roiBounds.intersect(QtCore.QRect(0, 0, arr3.shape[0], arr3.shape[1]))
         
-        #3. Extract data from array
-        db = dataBounds
-        bounds = (
-            (db.left(), db.right()+1),
-            (db.top(), db.bottom()+1)
-        )
-        arr4 = arr3[bounds[0][0]:bounds[0][1], bounds[1][0]:bounds[1][1]]
+        ##3. Extract data from array
+        #db = dataBounds
+        #bounds = (
+            #(db.left(), db.right()+1),
+            #(db.top(), db.bottom()+1)
+        #)
+        #arr4 = arr3[bounds[0][0]:bounds[0][1], bounds[1][0]:bounds[1][1]]
 
-        ### Create zero array in size of ROI
-        arr5 = np.zeros((roiBounds.width(), roiBounds.height()) + arr4.shape[2:], dtype=arr4.dtype)
+        #### Create zero array in size of ROI
+        #arr5 = np.zeros((roiBounds.width(), roiBounds.height()) + arr4.shape[2:], dtype=arr4.dtype)
         
-        ## Fill array with ROI data
-        orig = Point(dataBounds.topLeft() - roiBounds.topLeft())
-        subArr = arr5[orig[0]:orig[0]+arr4.shape[0], orig[1]:orig[1]+arr4.shape[1]]
-        subArr[:] = arr4[:subArr.shape[0], :subArr.shape[1]]
+        ### Fill array with ROI data
+        #orig = Point(dataBounds.topLeft() - roiBounds.topLeft())
+        #subArr = arr5[orig[0]:orig[0]+arr4.shape[0], orig[1]:orig[1]+arr4.shape[1]]
+        #subArr[:] = arr4[:subArr.shape[0], :subArr.shape[1]]
         
         
-        ## figure out the reverse transpose order
-        tr2 = np.array(tr1)
-        for i in range(0, len(tr2)):
-            tr2[tr1[i]] = i
-        tr2 = tuple(tr2)
+        ### figure out the reverse transpose order
+        #tr2 = np.array(tr1)
+        #for i in range(0, len(tr2)):
+            #tr2[tr1[i]] = i
+        #tr2 = tuple(tr2)
         
-        ## Untranspose array before returning
-        return arr5.transpose(tr2)
+        ### Untranspose array before returning
+        #return arr5.transpose(tr2)
 
     
 
@@ -887,10 +911,14 @@ class LineROI(ROI):
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
         
         
-class MultiLineROI(QtGui.QGraphicsItem, QObjectWorkaround):
+class MultiLineROI(QtGui.QGraphicsObject):
+    
+    sigRegionChangeFinished = QtCore.Signal(object)
+    sigRegionChangeStarted = QtCore.Signal(object)
+    sigRegionChanged = QtCore.Signal(object)
+    
     def __init__(self, points, width, pen=None, **args):
-        QObjectWorkaround.__init__(self)
-        QtGui.QGraphicsItem.__init__(self)
+        QtGui.QGraphicsObject.__init__(self)
         self.pen = pen
         self.roiArgs = args
         if len(points) < 2:
@@ -912,9 +940,12 @@ class MultiLineROI(QtGui.QGraphicsItem, QObjectWorkaround):
         for l in self.lines:
             l.translatable = False
             #self.addToGroup(l)
-            l.connect(l, QtCore.SIGNAL('regionChanged'), self.roiChangedEvent)
-            l.connect(l, QtCore.SIGNAL('regionChangeStarted'), self.roiChangeStartedEvent)
-            l.connect(l, QtCore.SIGNAL('regionChangeFinished'), self.roiChangeFinishedEvent)
+            #l.connect(l, QtCore.SIGNAL('regionChanged'), self.roiChangedEvent)
+            l.sigRegionChanged.connect(self.roiChangedEvent)
+            #l.connect(l, QtCore.SIGNAL('regionChangeStarted'), self.roiChangeStartedEvent)
+            l.sigRegionChangeStarted.connect(self.roiChangeStartedEvent)
+            #l.connect(l, QtCore.SIGNAL('regionChangeFinished'), self.roiChangeFinishedEvent)
+            l.sigRegionChangeFinished.connect(self.roiChangeFinishedEvent)
         
     def paint(self, *args):
         pass
@@ -927,13 +958,16 @@ class MultiLineROI(QtGui.QGraphicsItem, QObjectWorkaround):
         for l in self.lines[1:]:
             w0 = l.state['size'][1]
             l.scale([1.0, w/w0], center=[0.5,0.5])
-        self.emit(QtCore.SIGNAL('regionChanged'), self)
+        #self.emit(QtCore.SIGNAL('regionChanged'), self)
+        self.sigRegionChanged.emit(self)
             
     def roiChangeStartedEvent(self):
-        self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+        #self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
+        self.sigRegionChangeStarted.emit(self)
         
     def roiChangeFinishedEvent(self):
-        self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+        #self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
+        self.sigRegionChangeFinished.emit(self)
         
             
     def getArrayRegion(self, arr, img=None):
@@ -1037,7 +1071,58 @@ class PolygonROI(ROI):
         sc['angle'] = self.state['angle']
         #sc['handles'] = self.handles
         return sc
+
+
+class LineSegmentROI(ROI):
+    def __init__(self, positions, pos=None, **args):
+        if pos is None:
+            pos = [0,0]
+        ROI.__init__(self, pos, [1,1], **args)
+        #ROI.__init__(self, positions[0])
+        for p in positions:
+            self.addFreeHandle(p)
+        self.setZValue(1000)
+            
+    def listPoints(self):
+        return [p['item'].pos() for p in self.handles]
+            
+    def movePoint(self, *args, **kargs):
+        ROI.movePoint(self, *args, **kargs)
+        self.prepareGeometryChange()
+        for h in self.handles:
+            h['pos'] = h['item'].pos()
+            
+    def paint(self, p, *args):
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setPen(self.pen)
+        for i in range(len(self.handles)-1):
+            h1 = self.handles[i]['item'].pos()
+            h2 = self.handles[i-1]['item'].pos()
+            p.drawLine(h1, h2)
+        
+    def boundingRect(self):
+        r = QtCore.QRectF()
+        for h in self.handles:
+            r |= self.mapFromItem(h['item'], h['item'].boundingRect()).boundingRect()   ## |= gives the union of the two QRectFs
+        return r
     
+    def shape(self):
+        p = QtGui.QPainterPath()
+        p.moveTo(self.handles[0]['item'].pos())
+        for i in range(len(self.handles)):
+            p.lineTo(self.handles[i]['item'].pos())
+        return p
+    
+    def stateCopy(self):
+        sc = {}
+        sc['pos'] = Point(self.state['pos'])
+        sc['size'] = Point(self.state['size'])
+        sc['angle'] = self.state['angle']
+        #sc['handles'] = self.handles
+        return sc
+
+
+
 class SpiralROI(ROI):
     def __init__(self, pos=None, size=None, **args):
         if size == None:

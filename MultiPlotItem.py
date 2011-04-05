@@ -63,4 +63,7 @@ class MultiPlotItem(QtGui.QGraphicsWidget):
         else:
             raise Exception("Data type %s not (yet?) supported for MultiPlot." % type(data))
             
+    def close(self):
+        for p in self.plots:
+            p[0].close()
         
