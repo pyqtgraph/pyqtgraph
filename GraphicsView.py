@@ -141,7 +141,7 @@ class GraphicsView(QtGui.QGraphicsView):
             return
         scale = Point(self.size().width()/self.range.width(), self.size().height()/self.range.height())
         
-        m = QtGui.QMatrix()
+        m = QtGui.QTransform()
         
         ## First center the viewport at 0
         self.resetMatrix()
@@ -163,7 +163,7 @@ class GraphicsView(QtGui.QGraphicsView):
         st = translate
         m.translate(-st[0], -st[1])
         #print "  translate:", st
-        self.setMatrix(m)
+        self.setTransform(m)
         self.currentScale = scale
         #self.emit(QtCore.SIGNAL('viewChanged'), self.range)
         self.sigRangeChanged.emit(self, self.range)

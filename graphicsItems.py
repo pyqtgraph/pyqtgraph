@@ -1719,7 +1719,7 @@ class ViewBox(QtGui.QGraphicsWidget):
             return
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
         #print "  scale:", scale
-        m = QtGui.QMatrix()
+        m = QtGui.QTransform()
         
         ## First center the viewport at 0
         self.childGroup.resetMatrix()
@@ -1742,7 +1742,7 @@ class ViewBox(QtGui.QGraphicsWidget):
         st = translate
         m.translate(-st[0], -st[1])
         #print "  translate:", st
-        self.childGroup.setMatrix(m)
+        self.childGroup.setTransform(m)
         self.currentScale = scale
         
     def invertY(self, b=True):
