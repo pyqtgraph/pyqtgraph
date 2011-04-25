@@ -40,4 +40,6 @@ class MultiPlotWidget(GraphicsView):
 
     def close(self):
         self.mPlotItem.close()
+        self.mPlotItem = None
         self.setParent(None)
+        GraphicsView.close(self)

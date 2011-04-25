@@ -9,8 +9,8 @@ class ColorButton(QtGui.QPushButton):
     sigColorChanging = QtCore.Signal(object)  ## emitted whenever a new color is picked in the color dialog
     sigColorChanged = QtCore.Signal(object)   ## emitted when the selected color is accepted (user clicks OK)
     
-    def __init__(self, color=(128,128,128)):
-        QtGui.QPushButton.__init__(self)
+    def __init__(self, parent=None, color=(128,128,128)):
+        QtGui.QPushButton.__init__(self, parent)
         self.setColor(color)
         self.colorDialog = QtGui.QColorDialog()
         self.colorDialog.setOption(QtGui.QColorDialog.ShowAlphaChannel, True)

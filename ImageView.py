@@ -152,6 +152,7 @@ class ImageView(QtGui.QWidget):
         #QtGui.QWidget.__dtor__(self)
         
     def close(self):
+        self.ui.roiPlot.close()
         self.ui.graphicsView.close()
         self.ui.gradientWidget.sigGradientChanged.disconnect(self.updateImage)
         self.scene.clear()
@@ -159,7 +160,6 @@ class ImageView(QtGui.QWidget):
         del self.imageDisp
         #self.image = None
         #self.imageDisp = None
-        self.ui.roiPlot.close()
         self.setParent(None)
         
     def keyPressEvent(self, ev):

@@ -60,12 +60,13 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.autoBtn = QtGui.QToolButton()
         self.autoBtn.setText('A')
         self.autoBtn.hide()
-        
+        self.proxies = []
         for b in [self.ctrlBtn, self.autoBtn]:
             proxy = QtGui.QGraphicsProxyWidget(self)
             proxy.setWidget(b)
             proxy.setAcceptHoverEvents(False)
             b.setStyleSheet("background-color: #000000; color: #888; font-size: 6pt")
+            self.proxies.append(proxy)
         #QtCore.QObject.connect(self.ctrlBtn, QtCore.SIGNAL('clicked()'), self.ctrlBtnClicked)
         self.ctrlBtn.clicked.connect(self.ctrlBtnClicked)
         #QtCore.QObject.connect(self.autoBtn, QtCore.SIGNAL('clicked()'), self.enableAutoScale)
@@ -155,9 +156,9 @@ class PlotItem(QtGui.QGraphicsWidget):
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
         self.ctrlMenu = QtGui.QMenu()
-        ac = QtGui.QWidgetAction(self)
-        ac.setDefaultWidget(w)
-        self.ctrlMenu.addAction(ac)
+        self.menuAction = QtGui.QWidgetAction(self)
+        self.menuAction.setDefaultWidget(w)
+        self.ctrlMenu.addAction(self.menuAction)
         
         if HAVE_WIDGETGROUP:
             self.stateGroup = WidgetGroup(self.ctrlMenu)
@@ -284,9 +285,46 @@ class PlotItem(QtGui.QGraphicsWidget):
         
     def close(self):
         #print "delete", self
+        ## All this crap is needed to avoid PySide trouble. 
+        ## The problem seems to be whenever scene.clear() leads to deletion of widgets (either through proxies or qgraphicswidgets)
+        ## the solution is to manually remove all widgets before scene.clear() is called
+        if self.ctrlMenu is None: ## already shut down
+            return
+        self.ctrlMenu.setParent(None)
+        self.ctrlMenu = None
+        
+        self.ctrlBtn.setParent(None)
+        self.ctrlBtn = None
+        self.autoBtn.setParent(None)
+        self.autoBtn = None
+        
+        for k in self.scales:
+            i = self.scales[k]['item']
+            i.close()
+            
+        self.scales = None
+        self.scene().removeItem(self.vb)
+        self.vb = None
+        for i in range(self.layout.count()):
+            self.layout.removeAt(i)
+            
+        for p in self.proxies:
+            try:
+                p.setWidget(None)
+            except RuntimeError:
+                break
+            self.scene().removeItem(p)
+        self.proxies = []
+        
+        self.menuAction.releaseWidget(self.menuAction.defaultWidget())
+        self.menuAction.setParent(None)
+        self.menuAction = None
+        
         if self.manager is not None:
             self.manager.sigWidgetListChanged.disconnect(self.updatePlotList)
             self.manager.removeWidget(self.name)
+        #else:
+            #print "no manager"
 
     def registerPlot(self, name):
         self.name = name
@@ -1042,6 +1080,8 @@ class PlotItem(QtGui.QGraphicsWidget):
         #ev.accept()
 
     def resizeEvent(self, ev):
+        if self.ctrlBtn is None:  ## already closed down
+            return
         self.ctrlBtn.move(0, self.size().height() - self.ctrlBtn.size().height())
         self.autoBtn.move(self.ctrlBtn.width(), self.size().height() - self.autoBtn.size().height())
         
@@ -1190,6 +1230,8 @@ class PlotWidgetManager(QtCore.QObject):
             del self.widgets[name]
             #self.emit(QtCore.SIGNAL('widgetListChanged'), self.widgets.keys())
             self.sigWidgetListChanged.emit(self.widgets.keys())
+        else:
+            print "plot %s not managed" % name
         
         
     def listWidgets(self):

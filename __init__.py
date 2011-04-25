@@ -7,6 +7,8 @@ from graphicsWindows import *
 #import PlotWidget
 #import ImageView
 from PyQt4 import QtGui
+from Point import Point
+from Transform import Transform
 
 plots = []
 images = []

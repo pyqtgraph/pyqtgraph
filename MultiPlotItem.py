@@ -66,4 +66,6 @@ class MultiPlotItem(QtGui.QGraphicsWidget):
     def close(self):
         for p in self.plots:
             p[0].close()
-        
+        self.plots = None
+        for i in range(self.layout.count()):
+            self.layout.removeAt(i)

@@ -91,6 +91,11 @@ class GraphicsView(QtGui.QGraphicsView):
         #prof.finish()
         
     def close(self):
+        self.centralWidget = None
+        self.scene().clear()
+        #print "  ", self.scene().itemCount()
+        self.currentItem = None
+        self.sceneObj = None
         self.closed = True
         
     def useOpenGL(self, b=True):
