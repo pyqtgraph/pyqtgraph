@@ -113,6 +113,7 @@ class ImageWindow(ImageView):
     def __init__(self, *args, **kargs):
         mkQApp()
         self.win = QtGui.QMainWindow()
+        self.win.resize(800,600)
         if 'title' in kargs:
             self.win.setWindowTitle(kargs['title'])
             del kargs['title']

@@ -11,7 +11,7 @@ import exceptions
 
 class PlotWidget(GraphicsView):
     
-    sigRangeChanged = QtCore.Signal(object, object)
+    #sigRangeChanged = QtCore.Signal(object, object)  ## already defined in GraphicsView
     
     """Widget implementing a graphicsView with a single PlotItem inside."""
     def __init__(self, parent=None, **kargs):

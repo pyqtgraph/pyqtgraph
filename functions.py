@@ -17,7 +17,7 @@ colorAbbrev = {
 }
 
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import numpy as np
 import scipy.ndimage
 
@@ -40,21 +40,27 @@ def siScale(x, minVal=1e-25):
     return (p, pref)
 
 def mkBrush(color):
+    if isinstance(color, QtGui.QBrush):
+        return color
     return QtGui.QBrush(mkColor(color))
 
-def mkPen(arg=None, color=None, width=1, style=None, cosmetic=True, hsv=None, ):
+def mkPen(arg='default', color=None, width=1, style=None, cosmetic=True, hsv=None, ):
     """Convenience function for making pens. Examples:
     mkPen(color)
     mkPen(color, width=2)
     mkPen(cosmetic=False, width=4.5, color='r')
     mkPen({'color': "FF0", width: 2})
+    mkPen(None)   (no pen)
     """
     if isinstance(arg, dict):
         return mkPen(**arg)
-    elif arg is not None:
+    elif arg != 'default':
         if isinstance(arg, QtGui.QPen):
             return arg
-        color = arg
+        elif arg is None:
+            style = QtCore.Qt.NoPen
+        else:
+            color = arg
         
     if color is None:
         color = mkColor(200, 200, 200)

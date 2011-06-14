@@ -13,6 +13,7 @@ app = QtGui.QApplication([])
 
 ## Create window with ImageView widget
 win = QtGui.QMainWindow()
+win.resize(800,800)
 imv = pg.ImageView()
 win.setCentralWidget(imv)
 win.show()

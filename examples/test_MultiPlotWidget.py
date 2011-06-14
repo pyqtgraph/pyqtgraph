@@ -18,6 +18,7 @@ except:
     
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
+mw.resize(800,800)
 pw = MultiPlotWidget()
 mw.setCentralWidget(pw)
 mw.show()

@@ -21,6 +21,7 @@ import sys
 #from numpy import ndarray
 import ptime
 import numpy as np
+import debug
 
 from SignalProxy import proxyConnect
 
@@ -53,7 +54,7 @@ class ImageView(QtGui.QWidget):
         self.ui.graphicsView.enableMouse(True)
         self.ui.graphicsView.autoPixelRange = False
         self.ui.graphicsView.setAspectLocked(True)
-        self.ui.graphicsView.invertY()
+        #self.ui.graphicsView.invertY()
         self.ui.graphicsView.enableMouse()
         
         self.ticks = [t[0] for t in self.ui.gradientWidget.listTicks()]
@@ -209,12 +210,13 @@ class ImageView(QtGui.QWidget):
             key = self.keysPressed.keys()[0]
             if key == QtCore.Qt.Key_Right:
                 self.play(20)
-                self.lastPlayTime = ptime.time() + 0.2  ## 2ms wait before start
                 self.jumpFrames(1)
+                self.lastPlayTime = ptime.time() + 0.2  ## 2ms wait before start
+                                                        ## This happens *after* jumpFrames, since it might take longer than 2ms
             elif key == QtCore.Qt.Key_Left:
                 self.play(-20)
-                self.lastPlayTime = ptime.time() + 0.2
                 self.jumpFrames(-1)
+                self.lastPlayTime = ptime.time() + 0.2
             elif key == QtCore.Qt.Key_Up:
                 self.play(-100)
             elif key == QtCore.Qt.Key_Down:
@@ -340,6 +342,8 @@ class ImageView(QtGui.QWidget):
           axes:        {'t':0, 'x':1, 'y':2, 'c':3}; Dictionary indicating the interpretation for each axis.
                        This is only needed to override the default guess.
         """
+        prof = debug.Profiler('ImageView.setImage', disabled=True)
+        
         if not isinstance(img, np.ndarray):
             raise Exception("Image must be specified as ndarray.")
         self.image = img
@@ -356,6 +360,7 @@ class ImageView(QtGui.QWidget):
         #self.ui.timeSlider.setValue(0)
         #self.ui.normStartSlider.setValue(0)
         #self.ui.timeSlider.setMaximum(img.shape[0]-1)
+        prof.mark('1')
         
         if axes is None:
             if img.ndim == 2:
@@ -380,18 +385,23 @@ class ImageView(QtGui.QWidget):
             
         for x in ['t', 'x', 'y', 'c']:
             self.axes[x] = self.axes.get(x, None)
+        prof.mark('2')
             
         self.imageDisp = None
-        if autoLevels:
+        
+        
+        if levels is None and autoLevels:
             self.autoLevels()
-        if levels is not None:
+        if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
             self.levelMax = levels[1]
             self.levelMin = levels[0]
+        prof.mark('3')
             
         self.currentIndex = 0
         self.updateImage()
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
+        prof.mark('4')
             
             
         if self.axes['t'] is not None:
@@ -412,17 +422,20 @@ class ImageView(QtGui.QWidget):
                 s.setBounds([start, stop])
         #else:
             #self.ui.roiPlot.hide()
+        prof.mark('5')
             
         self.imageItem.resetTransform()
         if scale is not None:
             self.imageItem.scale(*scale)
-        if scale is not None:
+        if pos is not None:
             self.imageItem.setPos(*pos)
+        prof.mark('6')
             
         if autoRange:
             self.autoRange()
         self.roiClicked()
-            
+        prof.mark('7')
+        prof.finish()
             
     def autoLevels(self):
         image = self.getProcessedImage()
@@ -445,10 +458,18 @@ class ImageView(QtGui.QWidget):
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
-            self.levelMax = float(image.max())
-            self.levelMin = float(image.min())
+            self.levelMin, self.levelMax = map(float, ImageView.quickMinMax(self.imageDisp))
         return self.imageDisp
-        
+
+    @staticmethod
+    def quickMinMax(data):
+        while data.size > 1e6:
+            ax = np.argmax(data.shape)
+            sl = [slice(None)] * data.ndim
+            sl[ax] = slice(None, None, 2)
+            data = data[sl]
+        return data.min(), data.max()
+
     def normalize(self, image):
         
         if self.ui.normOffRadio.isChecked():

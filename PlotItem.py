@@ -285,7 +285,7 @@ class PlotItem(QtGui.QGraphicsWidget):
         
     def close(self):
         #print "delete", self
-        ## All this crap is needed to avoid PySide trouble. 
+        ## Most of this crap is needed to avoid PySide trouble. 
         ## The problem seems to be whenever scene.clear() leads to deletion of widgets (either through proxies or qgraphicswidgets)
         ## the solution is to manually remove all widgets before scene.clear() is called
         if self.ctrlMenu is None: ## already shut down
@@ -305,8 +305,10 @@ class PlotItem(QtGui.QGraphicsWidget):
         self.scales = None
         self.scene().removeItem(self.vb)
         self.vb = None
-        for i in range(self.layout.count()):
-            self.layout.removeAt(i)
+        
+        ## causes invalid index errors:
+        #for i in range(self.layout.count()):
+            #self.layout.removeAt(i)
             
         for p in self.proxies:
             try:
@@ -708,6 +710,11 @@ class PlotItem(QtGui.QGraphicsWidget):
         
         return curve
 
+    def scatterPlot(self, *args, **kargs):
+        sp = ScatterPlotItem(*args, **kargs)
+        self.addDataItem(sp)
+        return sp
+
     def addDataItem(self, item):
         self.addItem(item)
         self.dataItems.append(item)
@@ -1075,9 +1082,9 @@ class PlotItem(QtGui.QGraphicsWidget):
             mode = False
         return mode
         
-    #def wheelEvent(self, ev):
-        # disables panning the whole scene by mousewheel
-        #ev.accept()
+    def wheelEvent(self, ev):
+        # disables default panning the whole scene by mousewheel
+        ev.accept()
 
     def resizeEvent(self, ev):
         if self.ctrlBtn is None:  ## already closed down
@@ -1168,16 +1175,21 @@ class PlotItem(QtGui.QGraphicsWidget):
         return c
 
     def saveSvgClicked(self):
-        self.fileDialog = QtGui.QFileDialog()
+        fileName = QtGui.QFileDialog.getSaveFileName()        
+        self.writeSvg(fileName)
+
+        ## QFileDialog seems to be broken under OSX
+        #self.fileDialog = QtGui.QFileDialog()
+        ##if PlotItem.lastFileDir is not None:
+            ##self.fileDialog.setDirectory(PlotItem.lastFileDir)
+        #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+        #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
         #if PlotItem.lastFileDir is not None:
             #self.fileDialog.setDirectory(PlotItem.lastFileDir)
-        self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-        if PlotItem.lastFileDir is not None:
-            self.fileDialog.setDirectory(PlotItem.lastFileDir)
-        self.fileDialog.show()
-        #QtCore.QObject.connect(self.fileDialog, QtCore.SIGNAL('fileSelected(const QString)'), self.writeSvg)
-        self.fileDialog.fileSelected.connect(self.writeSvg)
+        
+        #self.fileDialog.show()
+        ##QtCore.QObject.connect(self.fileDialog, QtCore.SIGNAL('fileSelected(const QString)'), self.writeSvg)
+        #self.fileDialog.fileSelected.connect(self.writeSvg)
             
     #def svgFileSelected(self, fileName):
         ##PlotWidget.lastFileDir = os.path.split(fileName)[0]

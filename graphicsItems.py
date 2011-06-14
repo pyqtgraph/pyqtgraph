@@ -21,14 +21,14 @@ try:
 except:
     pass
 from scipy.fftpack import fft
-from scipy.signal import resample
+#from scipy.signal import resample
 import scipy.stats
 #from metaarray import MetaArray
 from Point import *
 from functions import *
 import types, sys, struct
 import weakref
-#import debug
+import debug
 #from debug import *
 
 ## QGraphicsObject didn't appear until 4.6; this is for compatibility with 4.5
@@ -191,12 +191,13 @@ class ImageItem(QtGui.QGraphicsObject):
     else:
         useWeave = False
     
-    def __init__(self, image=None, copy=True, parent=None, border=None, *args):
+    def __init__(self, image=None, copy=True, parent=None, border=None, mode=None, *args):
         #QObjectWorkaround.__init__(self)
         QtGui.QGraphicsObject.__init__(self)
         #self.pixmapItem = QtGui.QGraphicsPixmapItem(self)
         self.qimage = QtGui.QImage()
         self.pixmap = None
+        self.paintMode = mode
         #self.useWeave = True
         self.blackLevel = None
         self.whiteLevel = None
@@ -213,7 +214,11 @@ class ImageItem(QtGui.QGraphicsObject):
         if image is not None:
             self.updateImage(image, copy, autoRange=True)
         #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
-        
+
+    def setCompositionMode(self, mode):
+        self.paintMode = mode
+        self.update()
+
     def setAlpha(self, alpha):
         self.alpha = alpha
         self.updateImage()
@@ -257,6 +262,8 @@ class ImageItem(QtGui.QGraphicsObject):
         return self.whiteLevel, self.blackLevel
 
     def updateImage(self, image=None, copy=True, autoRange=False, clipMask=None, white=None, black=None, axes=None):
+        prof = debug.Profiler('ImageItem.updateImage 0x%x' %id(self), disabled=True)
+        #debug.printTrace()
         if axes is None:
             axh = {'x': 0, 'y': 1, 'c': 2}
         else:
@@ -280,6 +287,7 @@ class ImageItem(QtGui.QGraphicsObject):
             else:
                 self.image = image.view(np.ndarray)
         #print "  image max:", self.image.max(), "min:", self.image.min()
+        prof.mark('1')
         
         # Determine scale factors
         if autoRange or self.blackLevel is None:
@@ -296,41 +304,49 @@ class ImageItem(QtGui.QGraphicsObject):
         else:
             scale = 0.
         
+        prof.mark('2')
         
         ## Recolor and convert to 8 bit per channel
         # Try using weave, then fall back to python
         shape = self.image.shape
         black = float(self.blackLevel)
-        try:
-            if not ImageItem.useWeave:
-                raise Exception('Skipping weave compile')
-            sim = np.ascontiguousarray(self.image)
-            sim.shape = sim.size
-            im = np.empty(sim.shape, dtype=np.ubyte)
-            n = im.size
+        white = float(self.whiteLevel)
+        
+        if black == 0 and white == 255 and self.image.dtype == np.ubyte:
+            im = self.image
             
-            code = """
-            for( int i=0; i<n; i++ ) {
-                float a = (sim(i)-black) * (float)scale;
-                if( a > 255.0 )
-                    a = 255.0;
-                else if( a < 0.0 )
-                    a = 0.0;
-                im(i) = a;
-            }
-            """
-            
-            weave.inline(code, ['sim', 'im', 'n', 'black', 'scale'], type_converters=converters.blitz, compiler = 'gcc')
-            sim.shape = shape
-            im.shape = shape
-        except:
-            if ImageItem.useWeave:
-                ImageItem.useWeave = False
-                #sys.excepthook(*sys.exc_info())
-                #print "=============================================================================="
-                print "Weave compile failed, falling back to slower version."
-            self.image.shape = shape
-            im = ((self.image - black) * scale).clip(0.,255.).astype(np.ubyte)
+        else:
+            try:
+                if not ImageItem.useWeave:
+                    raise Exception('Skipping weave compile')
+                sim = np.ascontiguousarray(self.image)
+                sim.shape = sim.size
+                im = np.empty(sim.shape, dtype=np.ubyte)
+                n = im.size
+                
+                code = """
+                for( int i=0; i<n; i++ ) {
+                    float a = (sim(i)-black) * (float)scale;
+                    if( a > 255.0 )
+                        a = 255.0;
+                    else if( a < 0.0 )
+                        a = 0.0;
+                    im(i) = a;
+                }
+                """
+                
+                weave.inline(code, ['sim', 'im', 'n', 'black', 'scale'], type_converters=converters.blitz, compiler = 'gcc')
+                sim.shape = shape
+                im.shape = shape
+            except:
+                if ImageItem.useWeave:
+                    ImageItem.useWeave = False
+                    #sys.excepthook(*sys.exc_info())
+                    #print "=============================================================================="
+                    print "Weave compile failed, falling back to slower version."
+                self.image.shape = shape
+                im = ((self.image - black) * scale).clip(0.,255.).astype(np.ubyte)
+        prof.mark('3')
 
         try:
             im1 = np.empty((im.shape[axh['y']], im.shape[axh['x']], 4), dtype=np.ubyte)
@@ -338,6 +354,7 @@ class ImageItem(QtGui.QGraphicsObject):
             print im.shape, axh
             raise
         alpha = np.clip(int(255 * self.alpha), 0, 255)
+        prof.mark('4')
         # Fill image 
         if im.ndim == 2:
             im2 = im.transpose(axh['y'], axh['x'])
@@ -363,33 +380,40 @@ class ImageItem(QtGui.QGraphicsObject):
             raise Exception("Image must be 2 or 3 dimensions")
         #self.im1 = im1
         # Display image
-        
+        prof.mark('5')
         if self.clipLevel is not None or clipMask is not None:
-                if clipMask is not None:
-                        mask = clipMask.transpose()
-                else:
-                        mask = (self.image < self.clipLevel).transpose()
-                im1[..., 0][mask] *= 0.5
-                im1[..., 1][mask] *= 0.5
-                im1[..., 2][mask] = 255
+            if clipMask is not None:
+                mask = clipMask.transpose()
+            else:
+                mask = (self.image < self.clipLevel).transpose()
+            im1[..., 0][mask] *= 0.5
+            im1[..., 1][mask] *= 0.5
+            im1[..., 2][mask] = 255
+        prof.mark('6')
         #print "Final image:", im1.dtype, im1.min(), im1.max(), im1.shape
         self.ims = im1.tostring()  ## Must be held in memory here because qImage won't do it for us :(
+        prof.mark('7')
         qimage = QtGui.QImage(buffer(self.ims), im1.shape[1], im1.shape[0], QtGui.QImage.Format_ARGB32)
+        prof.mark('8')
         self.pixmap = QtGui.QPixmap.fromImage(qimage)
+        prof.mark('9')
         ##del self.ims
         #self.pixmapItem.setPixmap(self.pixmap)
         
         self.update()
+        prof.mark('10')
         
         if gotNewData:
             #self.emit(QtCore.SIGNAL('imageChanged'))
             self.sigImageChanged.emit()
+            
+        prof.finish()
         
     def getPixmap(self):
         return self.pixmap.copy()
 
     def getHistogram(self, bins=500, step=3):
-        """returns an x and y arrays containing the histogram values for the current image.
+        """returns x and y arrays containing the histogram values for the current image.
         The step argument causes pixels to be skipped when computing the histogram to save time."""
         stepData = self.image[::step, ::step]
         hist = np.histogram(stepData, bins=bins)
@@ -397,7 +421,7 @@ class ImageItem(QtGui.QGraphicsObject):
         
     def mousePressEvent(self, ev):
         if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
-            self.drawAt(ev.pos())
+            self.drawAt(ev.pos(), ev)
             ev.accept()
         else:
             ev.ignore()
@@ -405,24 +429,80 @@ class ImageItem(QtGui.QGraphicsObject):
     def mouseMoveEvent(self, ev):
         #print "mouse move", ev.pos()
         if self.drawKernel is not None:
-            self.drawAt(ev.pos())
+            self.drawAt(ev.pos(), ev)
     
     def mouseReleaseEvent(self, ev):
         pass
     
-    def drawAt(self, pos):
-        self.image[int(pos.x()), int(pos.y())] += 1
-        self.updateImage()
+    def tabletEvent(self, ev):
+        print ev.device()
+        print ev.pointerType()
+        print ev.pressure()
+    
+    def drawAt(self, pos, ev=None):
+        pos = [int(pos.x()), int(pos.y())]
+        dk = self.drawKernel
+        kc = self.drawKernelCenter
+        sx = [0,dk.shape[0]]
+        sy = [0,dk.shape[1]]
+        tx = [pos[0] - kc[0], pos[0] - kc[0]+ dk.shape[0]]
+        ty = [pos[1] - kc[1], pos[1] - kc[1]+ dk.shape[1]]
         
-    def setDrawKernel(self, kernel=None):
+        for i in [0,1]:
+            dx1 = -min(0, tx[i])
+            dx2 = min(0, self.image.shape[0]-tx[i])
+            tx[i] += dx1+dx2
+            sx[i] += dx1+dx2
+
+            dy1 = -min(0, ty[i])
+            dy2 = min(0, self.image.shape[1]-ty[i])
+            ty[i] += dy1+dy2
+            sy[i] += dy1+dy2
+
+        #print sx
+        #print sy
+        #print tx
+        #print ty
+        #print self.image.shape
+        #print self.image[tx[0]:tx[1], ty[0]:ty[1]].shape
+        #print dk[sx[0]:sx[1], sy[0]:sy[1]].shape
+        ts = (slice(tx[0],tx[1]), slice(ty[0],ty[1]))
+        ss = (slice(sx[0],sx[1]), slice(sy[0],sy[1]))
+        #src = dk[sx[0]:sx[1], sy[0]:sy[1]]
+        #mask = self.drawMask[sx[0]:sx[1], sy[0]:sy[1]]
+        mask = self.drawMask
+        src = dk
+        #print self.image[ts].shape, src.shape
+        
+        if callable(self.drawMode):
+            self.drawMode(dk, self.image, mask, ss, ts, ev)
+        else:
+            mask = mask[ss]
+            src = src[ss]
+            if self.drawMode == 'set':
+                if mask is not None:
+                    self.image[ts] = self.image[ts] * (1-mask) + src * mask
+                else:
+                    self.image[ts] = src
+            elif self.drawMode == 'add':
+                self.image[ts] += src
+            else:
+                raise Exception("Unknown draw mode '%s'" % self.drawMode)
+            self.updateImage()
+        
+    def setDrawKernel(self, kernel=None, mask=None, center=(0,0), mode='set'):
         self.drawKernel = kernel
+        self.drawKernelCenter = center
+        self.drawMode = mode
+        self.drawMask = mask
     
     def paint(self, p, *args):
         
         #QtGui.QGraphicsPixmapItem.paint(self, p, *args)
         if self.pixmap is None:
             return
-            
+        if self.paintMode is not None:
+            p.setCompositionMode(self.paintMode)
         p.drawPixmap(self.boundingRect(), self.pixmap, QtCore.QRectF(0, 0, self.pixmap.width(), self.pixmap.height()))
         if self.border is not None:
             p.setPen(self.border)
@@ -492,7 +572,8 @@ class PlotCurveItem(GraphicsObject):
             ds = self.opts['downsample']
             if ds > 1:
                 x = x[::ds]
-                y = resample(y[:len(x)*ds], len(x))
+                #y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
+                y = y[::ds]
             if self.opts['spectrumMode']:
                 f = fft(y) / len(y)
                 y = abs(f[1:len(f)/2])
@@ -603,7 +684,7 @@ class PlotCurveItem(GraphicsObject):
         self.updateData(y, x, copy)
         
     def updateData(self, data, x=None, copy=False):
-        #prof = debug.Profiler('PlotCurveItem.updateData', disabled=True)
+        prof = debug.Profiler('PlotCurveItem.updateData', disabled=True)
         if isinstance(data, list):
             data = np.array(data)
         if isinstance(x, list):
@@ -630,7 +711,11 @@ class PlotCurveItem(GraphicsObject):
             x = data[tuple(ind)]
         elif data.ndim == 1:
             y = data
-        #prof.mark("data checks")
+        prof.mark("data checks")
+        
+        self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
+                                                        ##    Test this bug with test_PlotWidget and zoom in on the animated plot
+        
         self.prepareGeometryChange()
         if copy:
             self.yData = y.copy()
@@ -641,7 +726,7 @@ class PlotCurveItem(GraphicsObject):
             self.xData = x.copy()
         else:
             self.xData = x
-        #prof.mark('copy')
+        prof.mark('copy')
         
         if x is None:
             self.xData = np.arange(0, self.yData.shape[0])
@@ -652,15 +737,19 @@ class PlotCurveItem(GraphicsObject):
         self.path = None
         self.xDisp = self.yDisp = None
         
-        #prof.mark('set')
+        prof.mark('set')
         self.update()
-        #prof.mark('update')
+        prof.mark('update')
         #self.emit(QtCore.SIGNAL('plotChanged'), self)
         self.sigPlotChanged.emit(self)
-        #prof.mark('emit')
+        prof.mark('emit')
         #prof.finish()
+        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
+        prof.mark('set cache mode')
+        prof.finish()
         
     def generatePath(self, x, y):
+        prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
         path = QtGui.QPainterPath()
         
         ## Create all vertices in path. The method used below creates a binary format so that all 
@@ -680,31 +769,31 @@ class PlotCurveItem(GraphicsObject):
         ##
         ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
         
-        #prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
-        
         n = x.shape[0]
         # create empty array, pad with extra space on either end
         arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
-        #prof.mark('create empty')
         # write first two integers
+        prof.mark('allocate empty')
         arr.data[12:20] = struct.pack('>ii', n, 0)
+        prof.mark('pack header')
         # Fill array with vertex values
         arr[1:-1]['x'] = x
         arr[1:-1]['y'] = y
         arr[1:-1]['c'] = 1
-        #prof.mark('fill array')
+        prof.mark('fill array')
         # write last 0
         lastInd = 20*(n+1) 
         arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-        
+        prof.mark('footer')
         # create datastream object and stream into path
         buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-        #prof.mark('create buffer')
+        prof.mark('create buffer')
         ds = QtCore.QDataStream(buf)
-        #prof.mark('create dataStream')
+        prof.mark('create datastream')
         ds >> path
-        #prof.mark('load path')
-        #prof.finish()
+        prof.mark('load')
+        
+        prof.finish()
         return path
         
     def boundingRect(self):
@@ -729,7 +818,7 @@ class PlotCurveItem(GraphicsObject):
         return QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
 
     def paint(self, p, opt, widget):
-        #prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
+        prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
         if self.xData is None:
             return
         #if self.opts['spectrumMode']:
@@ -741,7 +830,7 @@ class PlotCurveItem(GraphicsObject):
         if self.path is None:
             self.path = self.generatePath(*self.getData())
         path = self.path
-        #prof.mark('generate path')
+        prof.mark('generate path')
             
         if self.shadow is not None:
             sp = QtGui.QPen(self.shadow)
@@ -763,9 +852,9 @@ class PlotCurveItem(GraphicsObject):
             p.drawPath(path)
         p.setPen(cp)
         p.drawPath(path)
-        #prof.mark('drawPath')
+        prof.mark('drawPath')
         
-        #prof.finish()
+        prof.finish()
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
         #p.drawRect(self.boundingRect())
         
@@ -822,10 +911,10 @@ class CurvePoint(QtGui.QGraphicsObject):
             self.setIndex(index)
             
     def setPos(self, pos):
-        self.setProperty('position', pos)
+        self.setProperty('position', float(pos))## cannot use numpy types here, MUST be python float.
         
     def setIndex(self, index):
-        self.setProperty('index', index)
+        self.setProperty('index', int(index))  ## cannot use numpy types here, MUST be python int.
         
     def event(self, ev):
         if not isinstance(ev, QtCore.QDynamicPropertyChangeEvent) or self.curve() is None:
@@ -840,7 +929,7 @@ class CurvePoint(QtGui.QGraphicsObject):
             
         (x, y) = self.curve().getData()
         if index is None:
-            #print self.property('position').toDouble()[0], self.property('position').typeName()
+            #print ev.propertyName(), self.property('position').toDouble()[0], self.property('position').typeName()
             index = (len(x)-1) * clip(self.property('position').toDouble()[0], 0.0, 1.0)
             
         if index != int(index):  ## interpolate floating-point values
@@ -947,28 +1036,54 @@ class CurveArrow(CurvePoint):
         
         
 
-class ScatterPlotItem(QtGui.QGraphicsWidget):
+class ScatterPlotItem(GraphicsObject):
     
-    sigPointClicked = QtCore.Signal(object, object)
+    #sigPointClicked = QtCore.Signal(object, object)
+    sigClicked = QtCore.Signal(object, object)  ## self, points
     
-    def __init__(self, spots=None, pxMode=True, pen=None, brush=None, size=5):
-        QtGui.QGraphicsWidget.__init__(self)
+    def __init__(self, spots=None, x=None, y=None, pxMode=True, pen='default', brush='default', size=5, identical=False, data=None):
+        """
+        Arguments:
+            spots: list of dicts. Each dict specifies parameters for a single spot.
+            x,y: array of x,y values. Alternatively, specify spots['pos'] = (x,y)
+            pxMode: If True, spots are always the same size regardless of scaling
+            identical: If True, all spots are forced to look identical. 
+                       This can result in performance enhancement."""
+        GraphicsObject.__init__(self)
         self.spots = []
         self.range = [[0,0], [0,0]]
+        self.identical = identical
+        self._spotPixmap = None
         
-        if brush is None:
-            brush = QtGui.QBrush(QtGui.QColor(100, 100, 150))
-        self.brush = brush
+        if brush == 'default':
+            self.brush = QtGui.QBrush(QtGui.QColor(100, 100, 150))
+        else:
+            self.brush = mkBrush(brush)
         
-        if pen is None:
-            pen = QtGui.QPen(QtGui.QColor(200, 200, 200))
-        self.pen = pen
+        if pen == 'default':
+            self.pen = QtGui.QPen(QtGui.QColor(200, 200, 200))
+        else:
+            self.pen = mkPen(pen)
         
         self.size = size
         
         self.pxMode = pxMode
-        if spots is not None:
-            self.setPoints(spots)
+        if spots is not None or x is not None:
+            self.setPoints(spots, x, y, data)
+            
+        #self.optimize = optimize
+        #if optimize:
+            #self.spotImage = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32_Premultiplied)
+            #self.spotImage.fill(0)
+            #p = QtGui.QPainter(self.spotImage)
+            #p.setRenderHint(p.Antialiasing)
+            #p.setBrush(brush)
+            #p.setPen(pen)
+            #p.drawEllipse(0, 0, size, size)
+            #p.end()
+            #self.optimizePixmap = QtGui.QPixmap(self.spotImage)
+            #self.optimizeFragments = []
+            #self.setFlags(self.flags() | self.ItemIgnoresTransformations)
             
     def setPxMode(self, mode):
         self.pxMode = mode
@@ -985,15 +1100,28 @@ class ScatterPlotItem(QtGui.QGraphicsWidget):
     def getRange(self, ax, percent):
         return self.range[ax]
         
-    def setPoints(self, spots):
+    def setPoints(self, spots=None, x=None, y=None, data=None):
         self.clear()
         self.range = [[0,0],[0,0]]
-        self.addPoints(spots)
+        self.addPoints(spots, x, y, data)
 
-    def addPoints(self, spots):
+    def addPoints(self, spots=None, x=None, y=None, data=None):
         xmn = ymn = xmx = ymx = None
-        for s in spots:
-            pos = Point(s['pos'])
+        if spots is not None:
+            n = len(spots)
+        else:
+            n = len(x)
+        
+        for i in range(n):
+            if spots is not None:
+                s = spots[i]
+                pos = Point(s['pos'])
+            else:
+                s = {}
+                pos = Point(x[i], y[i])
+            if data is not None:
+                s['data'] = data[i]
+                
             size = s.get('size', self.size)
             if self.pxMode:
                 psize = 0
@@ -1013,17 +1141,40 @@ class ScatterPlotItem(QtGui.QGraphicsWidget):
             brush = s.get('brush', self.brush)
             pen = s.get('pen', self.pen)
             pen.setCosmetic(True)
-            data = s.get('data', None)
-            item = self.mkSpot(pos, size, self.pxMode, brush, pen, data)
+            data2 = s.get('data', None)
+            item = self.mkSpot(pos, size, self.pxMode, brush, pen, data2, index=len(self.spots))
             self.spots.append(item)
+            #if self.optimize:
+                #item.hide()
+                #frag = QtGui.QPainter.PixmapFragment.create(pos, QtCore.QRectF(0, 0, size, size))
+                #self.optimizeFragments.append(frag)
         self.range = [[xmn, xmx], [ymn, ymx]]
                 
+    #def paint(self, p, *args):
+        #if not self.optimize:
+            #return
+        ##p.setClipRegion(self.boundingRect())
+        #p.drawPixmapFragments(self.optimizeFragments, self.optimizePixmap)
 
-    def mkSpot(self, pos, size, pxMode, brush, pen, data):
-        item = SpotItem(size, pxMode, brush, pen, data)
+    def paint(self, *args):
+        pass
+
+    def spotPixmap(self):
+        if not self.identical:
+            return None
+        if self._spotPixmap is None:
+            self._spotPixmap = PixmapSpotItem.makeSpotImage(self.size, self.pen, self.brush)
+        return self._spotPixmap
+
+    def mkSpot(self, pos, size, pxMode, brush, pen, data, index=None):
+        if pxMode:
+            img = self.spotPixmap()
+            item = PixmapSpotItem(size, brush, pen, data, image=img, index=index)
+        else:
+            item = SpotItem(size, pxMode, brush, pen, data, index=index)
         item.setParentItem(self)
         item.setPos(pos)
-        item.sigClicked.connect(self.pointClicked)
+        #item.sigClicked.connect(self.pointClicked)
         return item
         
     def boundingRect(self):
@@ -1031,32 +1182,92 @@ class ScatterPlotItem(QtGui.QGraphicsWidget):
         if xmn is None or xmx is None or ymn is None or ymx is None:
             return QtCore.QRectF()
         return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
+        return QtCore.QRectF(xmn-1, ymn-1, xmx-xmn+2, ymx-ymn+2)
         
-    def paint(self, p, *args):
-        pass
-
-    def pointClicked(self, point):
-        self.sigPointClicked.emit(self, point)
+    #def pointClicked(self, point):
+        #self.sigPointClicked.emit(self, point)
 
     def points(self):
         return self.spots[:]
 
-class SpotItem(QtGui.QGraphicsWidget):
-    sigClicked = QtCore.Signal(object)
+    def pointsAt(self, pos):
+        x = pos.x()
+        y = pos.y()
+        pw = self.pixelWidth()
+        ph = self.pixelHeight()
+        pts = []
+        for s in self.spots:
+            sp = s.pos()
+            ss = s.size
+            sx = sp.x()
+            sy = sp.y()
+            s2x = s2y = ss * 0.5
+            if self.pxMode:
+                s2x *= pw
+                s2y *= ph
+            if x > sx-s2x and x < sx+s2x and y > sy-s2y and y < sy+s2y:
+                pts.append(s)
+                #print "HIT:", x, y, sx, sy, s2x, s2y
+            #else:
+                #print "No hit:", (x, y), (sx, sy)
+                #print "       ", (sx-s2x, sy-s2y), (sx+s2x, sy+s2y)
+        pts.sort(lambda a,b: cmp(b.zValue(), a.zValue()))
+        return pts
+            
+
+    def mousePressEvent(self, ev):
+        QtGui.QGraphicsItem.mousePressEvent(self, ev)
+        if ev.button() == QtCore.Qt.LeftButton:
+            pts = self.pointsAt(ev.pos())
+            if len(pts) > 0:
+                self.mouseMoved = False
+                self.ptsClicked = pts
+                ev.accept()
+            else:
+                #print "no spots"
+                ev.ignore()
+        else:
+            ev.ignore()
+        
+    def mouseMoveEvent(self, ev):
+        QtGui.QGraphicsItem.mouseMoveEvent(self, ev)
+        self.mouseMoved = True
+        pass
     
-    def __init__(self, size, pxMode, brush, pen, data):
+    def mouseReleaseEvent(self, ev):
+        QtGui.QGraphicsItem.mouseReleaseEvent(self, ev)
+        if not self.mouseMoved:
+            self.sigClicked.emit(self, self.ptsClicked)
+
+
+class SpotItem(QtGui.QGraphicsWidget):
+    #sigClicked = QtCore.Signal(object)
+    
+    def __init__(self, size, pxMode, brush, pen, data, index=None):
         QtGui.QGraphicsWidget.__init__(self)
-        if pxMode:
-            self.setCacheMode(self.DeviceCoordinateCache)
-            self.setFlags(self.flags() | self.ItemIgnoresTransformations)
-            #self.setCacheMode(self.DeviceCoordinateCache)  ## causes crash on linux
+        self.pxMode = pxMode
+            
         self.pen = pen
         self.brush = brush
-        self.path = QtGui.QPainterPath()
         self.size = size
+        self.index = index
         #s2 = size/2.
+        self.path = QtGui.QPainterPath()
         self.path.addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
-        self.scale(size, size)
+        if pxMode:
+            #self.setCacheMode(self.DeviceCoordinateCache)   ## broken.
+            self.setFlags(self.flags() | self.ItemIgnoresTransformations)
+            self.spotImage = QtGui.QImage(size, size, QtGui.QImage.Format_ARGB32_Premultiplied)
+            self.spotImage.fill(0)
+            p = QtGui.QPainter(self.spotImage)
+            p.setRenderHint(p.Antialiasing)
+            p.setBrush(brush)
+            p.setPen(pen)
+            p.drawEllipse(0, 0, size, size)
+            p.end()
+            self.pixmap = QtGui.QPixmap(self.spotImage)
+        else:
+            self.scale(size, size)
         self.data = data
         
     def setBrush(self, brush):
@@ -1074,31 +1285,104 @@ class SpotItem(QtGui.QGraphicsWidget):
         return self.path
         
     def paint(self, p, *opts):
-        p.setPen(self.pen)
-        p.setBrush(self.brush)
-        p.drawPath(self.path)
-        
-    def mousePressEvent(self, ev):
-        QtGui.QGraphicsItem.mousePressEvent(self, ev)
-        if ev.button() == QtCore.Qt.LeftButton:
-            self.mouseMoved = False
-            ev.accept()
+        if self.pxMode:
+            p.drawPixmap(QtCore.QPoint(int(-0.5*self.size), int(-0.5*self.size)), self.pixmap)
         else:
-            ev.ignore()
+            p.setPen(self.pen)
+            p.setBrush(self.brush)
+            p.drawPath(self.path)
+        
+    #def mousePressEvent(self, ev):
+        #QtGui.QGraphicsItem.mousePressEvent(self, ev)
+        #if ev.button() == QtCore.Qt.LeftButton:
+            #self.mouseMoved = False
+            #ev.accept()
+        #else:
+            #ev.ignore()
 
         
         
-    def mouseMoveEvent(self, ev):
-        QtGui.QGraphicsItem.mouseMoveEvent(self, ev)
-        self.mouseMoved = True
-        pass
+    #def mouseMoveEvent(self, ev):
+        #QtGui.QGraphicsItem.mouseMoveEvent(self, ev)
+        #self.mouseMoved = True
+        #pass
     
-    def mouseReleaseEvent(self, ev):
-        QtGui.QGraphicsItem.mouseReleaseEvent(self, ev)
-        if not self.mouseMoved:
-            self.sigClicked.emit(self)
+    #def mouseReleaseEvent(self, ev):
+        #QtGui.QGraphicsItem.mouseReleaseEvent(self, ev)
+        #if not self.mouseMoved:
+            #self.sigClicked.emit(self)
+        
+class PixmapSpotItem(QtGui.QGraphicsItem):
+    #sigClicked = QtCore.Signal(object)
+    
+    def __init__(self, size, brush, pen, data, image=None, index=None):
+        """This class draws a scale-invariant image centered at 0,0.
+        If no image is specified, then an antialiased circle is constructed instead.
+        It should be quite fast, but large spots will use a lot of memory."""
+        
+        QtGui.QGraphicsItem.__init__(self)
+        self.pen = pen
+        self.brush = brush
+        self.size = size
+        self.index = index
+        self.setFlags(self.flags() | self.ItemIgnoresTransformations | self.ItemHasNoContents)
+        if image is None:
+            self.image = self.makeSpotImage(self.size, self.pen, self.brush)
+        else:
+            self.image = image
+        self.pixmap = QtGui.QPixmap(self.image)
+        #self.setPixmap(self.pixmap)
+        self.data = data
+        self.pi = QtGui.QGraphicsPixmapItem(self.pixmap, self)
+        self.pi.setPos(-0.5*size, -0.5*size)
+        
+        #self.translate(-0.5, -0.5)
+    def boundingRect(self):
+        return self.pi.boundingRect()
+        
+    @staticmethod
+    def makeSpotImage(size, pen, brush):
+        img = QtGui.QImage(size+2, size+2, QtGui.QImage.Format_ARGB32_Premultiplied)
+        img.fill(0)
+        p = QtGui.QPainter(img)
+        try:
+            p.setRenderHint(p.Antialiasing)
+            p.setBrush(brush)
+            p.setPen(pen)
+            p.drawEllipse(1, 1, size, size)
+        finally:
+            p.end()  ## failure to end a painter properly causes crash.
+        return img
         
         
+        
+    #def paint(self, p, *args):
+        #p.setCompositionMode(p.CompositionMode_Plus)
+        #QtGui.QGraphicsPixmapItem.paint(self, p, *args)
+        
+    #def setBrush(self, brush):
+        #self.brush = mkBrush(brush)
+        #self.update()
+        
+    #def setPen(self, pen):
+        #self.pen = mkPen(pen)
+        #self.update()
+        
+    #def boundingRect(self):
+        #return self.path.boundingRect()
+        
+    #def shape(self):
+        #return self.path
+        
+    #def paint(self, p, *opts):
+        #if self.pxMode:
+            #p.drawPixmap(QtCore.QPoint(int(-0.5*self.size), int(-0.5*self.size)), self.pixmap)
+        #else:
+            #p.setPen(self.pen)
+            #p.setBrush(self.brush)
+            #p.drawPath(self.path)
+
+
 
 class ROIPlotItem(PlotCurveItem):
     """Plot curve that monitors an ROI and image for changes to automatically replot."""
@@ -1190,12 +1474,16 @@ class UIGraphicsItem(GraphicsObject):
         pass
 
 
-
+class DebugText(QtGui.QGraphicsTextItem):
+    def paint(self, *args):
+        p = debug.Profiler("DebugText.paint", disabled=True)
+        QtGui.QGraphicsTextItem.paint(self, *args)
+        p.finish()
 
 class LabelItem(QtGui.QGraphicsWidget):
     def __init__(self, text, parent=None, **args):
         QtGui.QGraphicsWidget.__init__(self, parent)
-        self.item = QtGui.QGraphicsTextItem(self)
+        self.item = DebugText(self)
         self.opts = args
         if 'color' not in args:
             self.opts['color'] = 'CCC'
@@ -1319,7 +1607,7 @@ class ScaleItem(QtGui.QGraphicsWidget):
         self.showLabel(False)
         
         self.grid = False
-            
+        self.setCacheMode(self.DeviceCoordinateCache)
             
     def close(self):
         self.scene().removeItem(self.label)
@@ -1478,6 +1766,7 @@ class ScaleItem(QtGui.QGraphicsWidget):
             return self.mapRectFromParent(self.geometry()) | self.mapRectFromScene(self.linkedView().mapRectToScene(self.linkedView().boundingRect()))
         
     def paint(self, p, opt, widget):
+        prof = debug.Profiler("ScaleItem.paint", disabled=True)
         p.setPen(self.pen)
         
         #bounds = self.boundingRect()
@@ -1538,10 +1827,14 @@ class ScaleItem(QtGui.QGraphicsWidget):
             xs = -bounds.height() / dif
         else:
             xs = bounds.width() / dif
+        
+        prof.mark('init')
             
         tickPositions = set() # remembers positions of previously drawn ticks
-        ## draw ticks and text
+        ## draw ticks and generate list of texts to draw
+        ## (to improve performance, we do not interleave line and text drawing, since this causes unnecessary pipeline switching)
         ## draw three different intervals, long ticks first
+        texts = []
         for i in reversed([i1, i1+1, i1+2]):
             if i > len(intervals):
                 continue
@@ -1614,33 +1907,14 @@ class ScaleItem(QtGui.QGraphicsWidget):
                         rect = QtCore.QRectF(x-100, tickStop+self.tickLength, 200, height)
                     
                     p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
-                    p.drawText(rect, textFlags, vstr)
-                    #p.drawRect(rect)
-        
-        ## Draw label
-        #if self.drawLabel:
-            #height = self.size().height()
-            #width = self.size().width()
-            #if self.orientation == 'left':
-                #p.translate(0, height)
-                #p.rotate(-90)
-                #rect = QtCore.QRectF(0, 0, height, self.textHeight)
-                #textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
-            #elif self.orientation == 'right':
-                #p.rotate(10)
-                #rect = QtCore.QRectF(0, 0, height, width)
-                #textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
-                ##rect = QtCore.QRectF(tickStart+self.tickLength, x-(height/2), 100-self.tickLength, height)
-            #elif self.orientation == 'top':
-                #rect = QtCore.QRectF(0, 0, width, height)
-                #textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
-                ##rect = QtCore.QRectF(x-100, tickStart-self.tickLength-height, 200, height)
-            #elif self.orientation == 'bottom':
-                #rect = QtCore.QRectF(0, 0, width, height)
-                #textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
-                ##rect = QtCore.QRectF(x-100, tickStart+self.tickLength, 200, height)
-            #p.drawText(rect, textFlags, self.labelString())
-            ##p.drawRect(rect)
+                    #p.drawText(rect, textFlags, vstr)
+                    texts.append((rect, textFlags, vstr))
+                    
+        prof.mark('draw ticks')
+        for args in texts:
+            p.drawText(*args)
+        prof.mark('draw text')
+        prof.finish()
         
     def show(self):
         
@@ -1675,15 +1949,21 @@ class ViewBox(QtGui.QGraphicsWidget):
     sigRangeChanged = QtCore.Signal(object, object)
     
     """Box that allows internal scaling/panning of children by mouse drag. Not compatible with GraphicsView having the same functionality."""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, border=None):
         QtGui.QGraphicsWidget.__init__(self, parent)
         #self.gView = view
         #self.showGrid = showGrid
-        self.range = [[0,1], [0,1]]   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
+        
+        ## separating targetRange and viewRange allows the view to be resized
+        ## while keeping all previously viewed contents visible
+        self.targetRange = [[0,1], [0,1]]   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
+        self.viewRange = [[0,1], [0,1]]     ## actual range viewed
+        
         self.wheelScaleFactor = -1.0 / 8.0
         self.aspectLocked = False
         self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
         #self.setFlag(QtGui.QGraphicsItem.ItemClipsToShape)
+        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
         
         #self.childGroup = QtGui.QGraphicsItemGroup(self)
         self.childGroup = ItemGroup(self)
@@ -1695,7 +1975,7 @@ class ViewBox(QtGui.QGraphicsWidget):
         #self.picture = None
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
         
-        self.drawFrame = False
+        self.border = border
         
         self.mouseEnabled = [True, True]
     
@@ -1718,51 +1998,44 @@ class ViewBox(QtGui.QGraphicsWidget):
 
     def viewRect(self):
         try:
-            return QtCore.QRectF(self.range[0][0], self.range[1][0], self.range[0][1]-self.range[0][0], self.range[1][1] - self.range[1][0])
+            vr0 = self.viewRange[0]
+            vr1 = self.viewRange[1]
+            return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
         except:
-            print "make qrectf failed:", self.range
+            print "make qrectf failed:", self.viewRange
             raise
     
-    def updateMatrix(self):
-        #print "udpateMatrix:"
-        #print "  range:", self.range
-        vr = self.viewRect()
-        translate = Point(vr.center())
-        bounds = self.boundingRect()
-        #print "  bounds:", bounds
-        if vr.height() == 0 or vr.width() == 0:
-            return
-        scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
-        #print "  scale:", scale
-        m = QtGui.QTransform()
-        
-        ## First center the viewport at 0
-        self.childGroup.resetTransform()
-        center = self.transform().inverted()[0].map(bounds.center())
-        #print "  transform to center:", center
-        if self.yInverted:
-            m.translate(center.x(), -center.y())
-            #print "  inverted; translate", center.x(), center.y()
-        else:
-            m.translate(center.x(), center.y())
-            #print "  not inverted; translate", center.x(), -center.y()
-            
-        ## Now scale and translate properly
-        if self.aspectLocked:
-            scale = Point(scale.min())
-        if not self.yInverted:
-            scale = scale * Point(1, -1)
-        m.scale(scale[0], scale[1])
-        #print "  scale:", scale
-        st = translate
-        m.translate(-st[0], -st[1])
-        #print "  translate:", st
-        self.childGroup.setTransform(m)
-        self.currentScale = scale
-        
+    def targetRect(self):  
+        """Return the region which has been requested to be visible. 
+        (this is not necessarily the same as the region that is *actually* visible)"""
+        try:
+            tr0 = self.targetRange[0]
+            tr1 = self.targetRange[1]
+            return QtCore.QRectF(tr0[0], tr1[0], tr0[1]-tr0[0], tr1[1] - tr1[0])
+        except:
+            print "make qrectf failed:", self.targetRange
+            raise
+    
     def invertY(self, b=True):
         self.yInverted = b
         self.updateMatrix()
+        
+    def setAspectLocked(self, lock=True, ratio=1):
+        """If the aspect ratio is locked, view scaling is always forced to be isotropic.
+        By default, the ratio is set to 1; x and y both have the same scaling.
+        This ratio can be overridden (width/height), or use None to lock in the current ratio.
+        """
+        if not lock:
+            self.aspectLocked = False
+        else:
+            vr = self.viewRect()
+            currentRatio = vr.width() / vr.height()
+            if ratio is None:
+                ratio = currentRatio
+            self.aspectLocked = ratio
+            if ratio != currentRatio:  ## If this would change the current range, do that now
+                #self.setRange(0, self.viewRange[0][0], self.viewRange[0][1])
+                self.updateMatrix()
         
     def childTransform(self):
         m = self.childGroup.transform()
@@ -1770,14 +2043,12 @@ class ViewBox(QtGui.QGraphicsWidget):
         m1.translate(self.childGroup.pos().x(), self.childGroup.pos().y())
         return m*m1
     
-    def setAspectLocked(self, s):
-        self.aspectLocked = s
 
     def viewScale(self):
-        pr = self.range
+        vr = self.viewRect()
         #print "viewScale:", self.range
-        xd = pr[0][1] - pr[0][0]
-        yd = pr[1][1] - pr[1][0]
+        xd = vr.width()
+        yd = vr.height()
         if xd == 0 or yd == 0:
             print "Warning: 0 range in view:", xd, yd
             return np.array([1,1])
@@ -1789,41 +2060,54 @@ class ViewBox(QtGui.QGraphicsWidget):
         return scale
 
     def scaleBy(self, s, center=None):
+        """Scale by s around given center point (or center of view)"""
         #print "scaleBy", s, center
-        xr, yr = self.range
+        #if self.aspectLocked:
+            #s[0] = s[1]
+        scale = Point(s)
+        if self.aspectLocked is not False:
+            scale[0] = self.aspectLocked * scale[1]
+            
+            
+        #xr, yr = self.range
+        vr = self.viewRect()
         if center is None:
-            xc = (xr[1] + xr[0]) * 0.5
-            yc = (yr[1] + yr[0]) * 0.5
+            center = Point(vr.center())
+            #xc = (xr[1] + xr[0]) * 0.5
+            #yc = (yr[1] + yr[0]) * 0.5
         else:
-            (xc, yc) = center
+            center = Point(center)
+            #(xc, yc) = center
         
-        x1 = xc + (xr[0]-xc) * s[0]
-        x2 = xc + (xr[1]-xc) * s[0]
-        y1 = yc + (yr[0]-yc) * s[1]
-        y2 = yc + (yr[1]-yc) * s[1]
-        
+        #x1 = xc + (xr[0]-xc) * s[0]
+        #x2 = xc + (xr[1]-xc) * s[0]
+        #y1 = yc + (yr[0]-yc) * s[1]
+        #y2 = yc + (yr[1]-yc) * s[1]
+        tl = center + (vr.topLeft()-center) * scale
+        br = center + (vr.bottomRight()-center) * scale
+       
         #print xr, xc, s, (xr[0]-xc) * s[0], (xr[1]-xc) * s[0]
         #print [[x1, x2], [y1, y2]]
         
-        
-        
-        self.setXRange(x1, x2, update=False, padding=0)
-        self.setYRange(y1, y2, padding=0)
+        #if not self.aspectLocked:
+            #self.setXRange(x1, x2, update=False, padding=0)
+        #self.setYRange(y1, y2, padding=0)
         #print self.range
+        
+        self.setRange(QtCore.QRectF(tl, br), padding=0)
         
     def translateBy(self, t, viewCoords=False):
         t = t.astype(np.float)
         #print "translate:", t, self.viewScale()
         if viewCoords:  ## scale from pixels
             t /= self.viewScale()
-        xr, yr = self.range
-        #self.setAxisScale(self.xBottom, xr[0] + t[0], xr[1] + t[0])
-        #self.setAxisScale(self.yLeft, yr[0] + t[1], yr[1] + t[1])
+        #xr, yr = self.range
+        
+        vr = self.viewRect()
         #print xr, yr, t
-        self.setXRange(xr[0] + t[0], xr[1] + t[0], update=False, padding=0)
-        self.setYRange(yr[0] + t[1], yr[1] + t[1], padding=0)
-        #self.replot(autoRange=False)
-        #self.updateMatrix()
+        #self.setXRange(xr[0] + t[0], xr[1] + t[0], update=False, padding=0)
+        #self.setYRange(yr[0] + t[1], yr[1] + t[1], padding=0)
+        self.setRange(vr.translated(Point(t)), padding=0)
         
     def wheelEvent(self, ev, axis=None):
         mask = np.array(self.mouseEnabled, dtype=np.float)
@@ -1835,7 +2119,8 @@ class ViewBox(QtGui.QGraphicsWidget):
         # scale 'around' mouse cursor position
         center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
         self.scaleBy(s, center)
-        self.emit(QtCore.SIGNAL('rangeChangedManually'), self.mouseEnabled)
+        #self.emit(QtCore.SIGNAL('rangeChangedManually'), self.mouseEnabled)
+        self.sigRangeChangedManually.emit(self.mouseEnabled)
         ev.accept()
 
     def mouseMoveEvent(self, ev):
@@ -1858,6 +2143,8 @@ class ViewBox(QtGui.QGraphicsWidget):
             self.sigRangeChangedManually.emit(self.mouseEnabled)
             ev.accept()
         elif ev.buttons() & QtCore.Qt.RightButton:
+            if self.aspectLocked is not False:
+                mask[0] = 0
             dif = ev.screenPos() - ev.lastScreenPos()
             dif = np.array([dif.x(), dif.y()])
             dif[0] *= -1
@@ -1887,81 +2174,145 @@ class ViewBox(QtGui.QGraphicsWidget):
         self.mousePos = pos
         ev.accept()
         
-    def setRange(self, ax, min, max, padding=0.02, update=True):
-        if ax == 0:
-            self.setXRange(min, max, update=update, padding=padding)
+    def setRange(self, ax, min=None, max=None, padding=0.02, update=True):
+        if isinstance(ax, QtCore.QRectF):
+            changes = {0: [ax.left(), ax.right()], 1: [ax.top(), ax.bottom()]}
+            #if self.aspectLocked is not False:
+                #sbr = self.boundingRect()
+                #if sbr.width() == 0 or (ax.height()/ax.width()) > (sbr.height()/sbr.width()):
+                    #chax = 0
+                #else:
+                    #chax = 1
+                    
+                
+                    
+            
+        elif ax in [1,0]:
+            changes = {ax: [min,max]}
+            #if self.aspectLocked is not False:
+                #ax2 = 1 - ax
+                #ratio = self.aspectLocked
+                #r2 = self.range[ax2]
+                #d = ratio * (max-min) * 0.5
+                #c = (self.range[ax2][1] + self.range[ax2][0]) * 0.5
+                #changes[ax2] = [c-d, c+d]
+           
         else:
-            self.setYRange(min, max, update=update, padding=padding)
+            print ax
+            raise Exception("argument 'ax' must be 0, 1, or QRectF.")
+        
+        
+        changed = [False, False]
+        for ax, range in changes.iteritems():
+            min, max = range
+            if min == max:   ## If we requested 0 range, try to preserve previous scale. Otherwise just pick an arbitrary scale.
+                dy = self.viewRange[ax][1] - self.viewRange[ax][0]
+                if dy == 0:
+                    dy = 1
+                min -= dy*0.5
+                max += dy*0.5
+                padding = 0.0
+            if any(np.isnan([min, max])) or any(np.isinf([min, max])):
+                raise Exception("Not setting range [%s, %s]" % (str(min), str(max)))
+                
+            p = (max-min) * padding
+            min -= p
+            max += p
+            
+            if self.targetRange[ax] != [min, max]:
+                self.targetRange[ax] = [min, max]
+                changed[ax] = True
+            
+        if update:
+            self.updateMatrix(changed)
+            
+        
+            
             
     def setYRange(self, min, max, update=True, padding=0.02):
-        #print "setYRange:", min, max
-        if min == max:   ## If we requested no range, try to preserve previous scale. Otherwise just pick an arbitrary scale.
-            dy = self.range[1][1] - self.range[1][0]
-            if dy == 0:
-                dy = 1
-            min -= dy*0.5
-            max += dy*0.5
-            #raise Exception("Tried to set range with 0 width.")
-        if any(np.isnan([min, max])) or any(np.isinf([min, max])):
-            raise Exception("Not setting range [%s, %s]" % (str(min), str(max)))
-            
-        padding = (max-min) * padding
-        min -= padding
-        max += padding
-        if self.range[1] != [min, max]:
-            #self.setAxisScale(self.yLeft, min, max)
-            self.range[1] = [min, max]
-            #self.ctrl.yMinText.setText('%g' % min)
-            #self.ctrl.yMaxText.setText('%g' % max)
-            #self.emit(QtCore.SIGNAL('yRangeChanged'), self, (min, max))
-            self.sigYRangeChanged.emit(self, (min, max))
-            #self.emit(QtCore.SIGNAL('viewChanged'), self)
-            self.sigRangeChanged.emit(self, self.range)
-        if update:
-            self.updateMatrix()
+        self.setRange(1, min, max, update=update, padding=padding)
         
     def setXRange(self, min, max, update=True, padding=0.02):
-        #print "setXRange:", min, max
-        if min == max:
-            dx = self.range[0][1] - self.range[0][0]
-            if dx == 0:
-                dx = 1
-            min -= dx*0.5
-            max += dx*0.5
-            #print "Warning: Tried to set range with 0 width."
-            #raise Exception("Tried to set range with 0 width.")
-        if any(np.isnan([min, max])) or any(np.isinf([min, max])):
-            raise Exception("Not setting range [%s, %s]" % (str(min), str(max)))
-        padding = (max-min) * padding
-        min -= padding
-        max += padding
-        if self.range[0] != [min, max]:
-            #self.setAxisScale(self.xBottom, min, max)
-            self.range[0] = [min, max]
-            #self.ctrl.xMinText.setText('%g' % min)
-            #self.ctrl.xMaxText.setText('%g' % max)
-            #self.emit(QtCore.SIGNAL('xRangeChanged'), self, (min, max))
-            self.sigXRangeChanged.emit(self, (min, max))
-            #self.emit(QtCore.SIGNAL('viewChanged'), self)
-            self.sigRangeChanged.emit(self, self.range)
-        if update:
-            self.updateMatrix()
+        self.setRange(0, min, max, update=update, padding=padding)
 
     def autoRange(self, padding=0.02):
         br = self.childGroup.childrenBoundingRect()
-        #print br
-        #px = br.width() * padding
-        #py = br.height() * padding
-        self.setXRange(br.left(), br.right(), padding=padding, update=False)
-        self.setYRange(br.top(), br.bottom(), padding=padding)
+        self.setRange(br, padding=padding)
+
+
+    def updateMatrix(self, changed=None):
+        if changed is None:
+            changed = [False, False]
+        #print "udpateMatrix:"
+        #print "  range:", self.range
+        tr = self.targetRect()
+        bounds = self.boundingRect()
         
+        ## set viewRect, given targetRect and possibly aspect ratio constraint
+        if self.aspectLocked is False or bounds.height() == 0:
+            self.viewRange = [self.targetRange[0][:], self.targetRange[1][:]]
+        else:
+            viewRatio = bounds.width() / bounds.height()
+            targetRatio = self.aspectLocked * tr.width() / tr.height()
+            if targetRatio > viewRatio:  
+                ## target is wider than view
+                dy = 0.5 * (tr.width() / (self.aspectLocked * viewRatio) - tr.height())
+                if dy != 0:
+                    changed[1] = True
+                self.viewRange = [self.targetRange[0][:], [self.targetRange[1][0] - dy, self.targetRange[1][1] + dy]]
+            else:
+                dx = 0.5 * (tr.height() * viewRatio * self.aspectLocked - tr.width())
+                if dx != 0:
+                    changed[0] = True
+                self.viewRange = [[self.targetRange[0][0] - dx, self.targetRange[0][1] + dx], self.targetRange[1][:]]
+        
+        
+        vr = self.viewRect()
+        translate = Point(vr.center())
+        #print "  bounds:", bounds
+        if vr.height() == 0 or vr.width() == 0:
+            return
+        scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+        #print "  scale:", scale
+        m = QtGui.QTransform()
+        
+        ## First center the viewport at 0
+        self.childGroup.resetTransform()
+        center = self.transform().inverted()[0].map(bounds.center())
+        #print "  transform to center:", center
+        if self.yInverted:
+            m.translate(center.x(), -center.y())
+            #print "  inverted; translate", center.x(), center.y()
+        else:
+            m.translate(center.x(), center.y())
+            #print "  not inverted; translate", center.x(), -center.y()
+            
+        ## Now scale and translate properly
+        if not self.yInverted:
+            scale = scale * Point(1, -1)
+        m.scale(scale[0], scale[1])
+        st = translate
+        m.translate(-st[0], -st[1])
+        self.childGroup.setTransform(m)
+        self.currentScale = scale
+        
+        
+        if changed[0]:
+            self.sigXRangeChanged.emit(self, tuple(self.viewRange[0]))
+        if changed[1]:
+            self.sigYRangeChanged.emit(self, tuple(self.viewRange[1]))
+        if any(changed):
+            self.sigRangeChanged.emit(self, self.viewRange)
+            
+
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.size().width(), self.size().height())
         
     def paint(self, p, opt, widget):
-        if self.drawFrame:
+        if self.border is not None:
             bounds = self.boundingRect()
-            p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
+            p.setPen(self.border)
             #p.fillRect(bounds, QtGui.QColor(0, 0, 0))
             p.drawRect(bounds)
 
@@ -2429,7 +2780,7 @@ class GridItem(UIGraphicsItem):
             #print "no pic, draw.."
             self.generatePicture()
         p.drawPicture(0, 0, self.picture)
-        #print "draw"
+        #print "drawing Grid."
         
         
     def generatePicture(self):
@@ -2465,9 +2816,15 @@ class GridItem(UIGraphicsItem):
                 c = np.clip(3.*(ppl-3), 0., 30.)
                 linePen = QtGui.QPen(QtGui.QColor(255, 255, 255, c)) 
                 textPen = QtGui.QPen(QtGui.QColor(255, 255, 255, c*2)) 
-                
+                #linePen.setCosmetic(True)
+                #linePen.setWidth(1)
                 bx = (ax+1) % 2
                 for x in range(0, int(nl[ax])):
+                    linePen.setCosmetic(False)
+                    if ax == 0:
+                        linePen.setWidthF(self.pixelHeight())
+                    else:
+                        linePen.setWidthF(self.pixelWidth())
                     p.setPen(linePen)
                     p1 = np.array([0.,0.])
                     p2 = np.array([0.,0.])

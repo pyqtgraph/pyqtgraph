@@ -88,11 +88,14 @@ class Point(QtCore.QPointF):
     
     def _math_(self, op, x):
         #print "point math:", op
-        try:
-            return Point(getattr(QtCore.QPointF, op)(self, x))
-        except:
-            x = Point(x)
-            return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
+        #try:
+            #fn  = getattr(QtCore.QPointF, op)
+            #pt = fn(self, x)
+            #print fn, pt, self, x
+            #return Point(pt)
+        #except AttributeError:
+        x = Point(x)
+        return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
     
     def length(self):
         """Returns the vector length of this Point."""

@@ -487,7 +487,7 @@ class ROI(QtGui.QGraphicsObject):
             if lp1.length() == 0 or lp0.length() == 0:
                 return
             
-            ang = newState['angle'] + lp0.angle(lp1)
+            ang = newState['angle'] - lp0.angle(lp1)
             if ang is None:
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
@@ -504,7 +504,7 @@ class ROI(QtGui.QGraphicsObject):
             c1 = c * newState['size']
             tr = QtGui.QTransform()
             #tr.rotate(-ang * 180. / np.pi)
-            tr.rotate(-ang)
+            tr.rotate(ang)
             
             cc = self.mapToParent(cs) - (tr.map(c1) + self.state['pos'])
             newState['angle'] = ang
@@ -665,9 +665,20 @@ class ROI(QtGui.QGraphicsObject):
         
         origin = self.mapToItem(img, QtCore.QPointF(0, 0))
         
+        ## vx and vy point in the directions of the slice axes, but must be scaled properly
         vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
         vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
-        vectors = ((vx.x(), vx.y()), (vy.x(), vy.y()))
+        
+        lvx = np.sqrt(vx.x()**2 + vx.y()**2)
+        lvy = np.sqrt(vy.x()**2 + vy.y()**2)
+        pxLen = img.width() / data.shape[axes[0]]
+        sx =  pxLen / lvx
+        sy =  pxLen / lvy
+        
+        vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
+        shape = self.state['size']
+        shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
+        
         origin = (origin.x(), origin.y())
         
         #print "shape", shape, "vectors", vectors, "origin", origin
@@ -812,16 +823,9 @@ class ROI(QtGui.QGraphicsObject):
 
     def applyGlobalTransform(self, tr):
         st = self.getState()
+        
         st['scale'] = st['size']
         st = Transform(st)
-        #trans = QtGui.QTransform()
-        #trans.translate(*translate)
-        #trans.rotate(-rotate)
-        
-        #x2, y2 = trans.map(*st['pos'])
-        
-        #self.setAngle(st['angle']+rotate*np.pi/180.)
-        #self.setPos([x2, y2])
         st = (st * tr).saveState()
         st['size'] = st['scale']
         self.setState(st)

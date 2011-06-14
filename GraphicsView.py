@@ -10,8 +10,8 @@ from PyQt4 import QtCore, QtGui, QtOpenGL, QtSvg
 #import time
 from Point import *
 #from vector import *
-import sys
-#import debug    
+import sys, os
+import debug    
         
 class GraphicsView(QtGui.QGraphicsView):
     
@@ -19,8 +19,9 @@ class GraphicsView(QtGui.QGraphicsView):
     sigMouseReleased = QtCore.Signal(object)
     sigSceneMouseMoved = QtCore.Signal(object)
     #sigRegionChanged = QtCore.Signal(object)
+    lastFileDir = None
     
-    def __init__(self, parent=None, useOpenGL=True):
+    def __init__(self, parent=None, useOpenGL=False):
         """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
         viewed coordinate range. Also automatically creates a QGraphicsScene and a central QGraphicsWidget
         that is automatically scaled to the full view geometry.
@@ -38,34 +39,27 @@ class GraphicsView(QtGui.QGraphicsView):
             useOpenGL = False
         self.useOpenGL(useOpenGL)
         
-        palette = QtGui.QPalette()
+        self.setCacheMode(self.CacheBackground)
+        
         brush = QtGui.QBrush(QtGui.QColor(0,0,0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active,QtGui.QPalette.Base,brush)
-        brush = QtGui.QBrush(QtGui.QColor(0,0,0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive,QtGui.QPalette.Base,brush)
-        brush = QtGui.QBrush(QtGui.QColor(244,244,244))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled,QtGui.QPalette.Base,brush)
-        self.setPalette(palette)
-        #self.setProperty("cursor",QtCore.QVariant(QtCore.Qt.ArrowCursor))
+        self.setBackgroundBrush(brush)
+        
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFrameShape(QtGui.QFrame.NoFrame)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setTransformationAnchor(QtGui.QGraphicsView.NoAnchor)
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
-        #self.setResizeAnchor(QtGui.QGraphicsView.NoAnchor)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
-        self.setSceneRect(QtCore.QRectF(-1e10, -1e10, 2e10, 2e10))
-        #self.setSceneRect(1, 1, 0, 0) ## Set an empty (but non-zero) scene rect so that the view doesn't try to automatically update for us.
-        #self.setInteractive(False)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        
+        
+        #self.setSceneRect(QtCore.QRectF(-1e10, -1e10, 2e10, 2e10))
+        
         self.lockedViewports = []
         self.lastMousePos = None
         #self.setMouseTracking(False)
         self.aspectLocked = False
-        self.yInverted = True
+        #self.yInverted = True
         self.range = QtCore.QRectF(0, 0, 1, 1)
         self.autoPixelRange = True
         self.currentItem = None
@@ -86,7 +80,7 @@ class GraphicsView(QtGui.QGraphicsView):
         self.clickAccepted = False
         
     #def paintEvent(self, *args):
-        #prof = debug.Profiler('GraphicsView.paintEvent '+str(id(self)), disabled=True)
+        #prof = debug.Profiler('GraphicsView.paintEvent '+str(id(self)), disabled=False)
         #QtGui.QGraphicsView.paintEvent(self, *args)
         #prof.finish()
         
@@ -97,6 +91,7 @@ class GraphicsView(QtGui.QGraphicsView):
         self.currentItem = None
         self.sceneObj = None
         self.closed = True
+        self.setViewport(None)
         
     def useOpenGL(self, b=True):
         if b:
@@ -116,6 +111,7 @@ class GraphicsView(QtGui.QGraphicsView):
             self.scene().removeItem(self.centralWidget)
         self.centralWidget = item
         self.sceneObj.addItem(item)
+        self.resizeEvent(None)
         
     def addItem(self, *args):
         return self.scene().addItem(*args)
@@ -140,37 +136,43 @@ class GraphicsView(QtGui.QGraphicsView):
         self.updateMatrix()
     
     def updateMatrix(self, propagate=True):
-        #print "udpateMatrix:"
-        translate = Point(self.range.center())
-        if self.range.width() == 0 or self.range.height() == 0:
-            return
-        scale = Point(self.size().width()/self.range.width(), self.size().height()/self.range.height())
-        
-        m = QtGui.QTransform()
-        
-        ## First center the viewport at 0
-        self.resetMatrix()
-        center = self.viewportTransform().inverted()[0].map(Point(self.width()/2., self.height()/2.))
-        if self.yInverted:
-            m.translate(center.x(), center.y())
-            #print "  inverted; translate", center.x(), center.y()
-        else:
-            m.translate(center.x(), -center.y())
-            #print "  not inverted; translate", center.x(), -center.y()
-            
-        ## Now scale and translate properly
+        self.setSceneRect(self.range)
         if self.aspectLocked:
-            scale = Point(scale.min())
-        if not self.yInverted:
-            scale = scale * Point(1, -1)
-        m.scale(scale[0], scale[1])
-        #print "  scale:", scale
-        st = translate
-        m.translate(-st[0], -st[1])
-        #print "  translate:", st
-        self.setTransform(m)
-        self.currentScale = scale
-        #self.emit(QtCore.SIGNAL('viewChanged'), self.range)
+            self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+        else:
+            self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
+            
+        ##print "udpateMatrix:"
+        #translate = Point(self.range.center())
+        #if self.range.width() == 0 or self.range.height() == 0:
+            #return
+        #scale = Point(self.size().width()/self.range.width(), self.size().height()/self.range.height())
+        
+        #m = QtGui.QTransform()
+        
+        ### First center the viewport at 0
+        #self.resetMatrix()
+        #center = self.viewportTransform().inverted()[0].map(Point(self.width()/2., self.height()/2.))
+        #if self.yInverted:
+            #m.translate(center.x(), center.y())
+            ##print "  inverted; translate", center.x(), center.y()
+        #else:
+            #m.translate(center.x(), -center.y())
+            ##print "  not inverted; translate", center.x(), -center.y()
+            
+        ### Now scale and translate properly
+        #if self.aspectLocked:
+            #scale = Point(scale.min())
+        #if not self.yInverted:
+            #scale = scale * Point(1, -1)
+        #m.scale(scale[0], scale[1])
+        ##print "  scale:", scale
+        #st = translate
+        #m.translate(-st[0], -st[1])
+        ##print "  translate:", st
+        #self.setTransform(m)
+        #self.currentScale = scale
+        ##self.emit(QtCore.SIGNAL('viewChanged'), self.range)
         self.sigRangeChanged.emit(self, self.range)
         
         if propagate:
@@ -251,11 +253,11 @@ class GraphicsView(QtGui.QGraphicsView):
         r1.setBottom(r.bottom())
         self.setRange(r1, padding=[0, padding], propagate=False)
         
-    def invertY(self, invert=True):
-        #if self.yInverted != invert:
-            #self.scale[1] *= -1.
-        self.yInverted = invert
-        self.updateMatrix()
+    #def invertY(self, invert=True):
+        ##if self.yInverted != invert:
+            ##self.scale[1] *= -1.
+        #self.yInverted = invert
+        #self.updateMatrix()
     
     
     def wheelEvent(self, ev):
@@ -347,7 +349,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def mouseMoveEvent(self, ev):
         if self.lastMousePos is None:
             self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos()) - self.lastMousePos
+        delta = Point(ev.pos() - self.lastMousePos)
         self.lastMousePos = Point(ev.pos())
 
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)
@@ -371,7 +373,8 @@ class GraphicsView(QtGui.QGraphicsView):
             self.sigRangeChanged.emit(self, self.range)
 
         elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
-            tr = -delta / self.currentScale
+            px = self.pixelSize()
+            tr = -delta * px
             
             self.translate(tr[0], tr[1])
             #self.emit(QtCore.SIGNAL('regionChanged(QRectF)'), self.range)
@@ -386,11 +389,28 @@ class GraphicsView(QtGui.QGraphicsView):
             #self.currentItem.mouseMoveEvent(pev)
         
         
-    
+    def pixelSize(self):
+        """Return vector with the length and width of one view pixel in scene coordinates"""
+        p0 = Point(0,0)
+        p1 = Point(1,1)
+        tr = self.transform().inverted()[0]
+        p01 = tr.map(p0)
+        p11 = tr.map(p1)
+        return Point(p11 - p01)
+        
         
     def writeSvg(self, fileName=None):
         if fileName is None:
-            fileName = str(QtGui.QFileDialog.getSaveFileName())
+            self.fileDialog = QtGui.QFileDialog()
+            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+            if GraphicsView.lastFileDir is not None:
+                self.fileDialog.setDirectory(GraphicsView.lastFileDir)
+            self.fileDialog.show()
+            self.fileDialog.fileSelected.connect(self.writeSvg)
+            return
+        fileName = str(fileName)
+        GraphicsView.lastFileDir = os.path.split(fileName)[0]
         self.svg = QtSvg.QSvgGenerator()
         self.svg.setFileName(fileName)
         self.svg.setSize(self.size())
@@ -400,7 +420,16 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def writeImage(self, fileName=None):
         if fileName is None:
-            fileName = str(QtGui.QFileDialog.getSaveFileName())
+            self.fileDialog = QtGui.QFileDialog()
+            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+            if GraphicsView.lastFileDir is not None:
+                self.fileDialog.setDirectory(GraphicsView.lastFileDir)
+            self.fileDialog.show()
+            self.fileDialog.fileSelected.connect(self.writePng)
+            return
+        fileName = str(fileName)
+        GraphicsView.lastFileDir = os.path.split(fileName)[0]
         self.png = QtGui.QImage(self.size(), QtGui.QImage.Format_ARGB32)
         painter = QtGui.QPainter(self.png)
         rh = self.renderHints()

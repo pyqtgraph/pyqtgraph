@@ -12,8 +12,9 @@ import pyqtgraph as pg
 ## create GUI
 app = QtGui.QApplication([])
 w = QtGui.QMainWindow()
+w.resize(800,800)
 v = pg.GraphicsView()
-v.invertY(True)  ## Images usually have their Y-axis pointing downward
+#v.invertY(True)  ## Images usually have their Y-axis pointing downward
 v.setAspectLocked(True)
 v.enableMouse(True)
 v.autoPixelScale = False
