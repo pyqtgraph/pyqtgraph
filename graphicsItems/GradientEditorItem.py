@@ -315,7 +315,7 @@ class GradientEditorItem(TickSliderItem):
     def showMenu(self, ev):
         self.menu.popup(ev.screenPos().toQPoint())
     
-    def contextMenuClicked(self, b):
+    def contextMenuClicked(self, b=None):
         global Gradients
         act = self.sender()
         self.loadPreset(act.name)
