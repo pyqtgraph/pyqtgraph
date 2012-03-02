@@ -51,7 +51,6 @@ class GraphicsItemMethods(object):
                 if hasattr(p, 'implements') and p.implements('ViewBox'):
                     self._viewBox = weakref.ref(p)
                     break
-                    
         return self._viewBox()  ## If we made it this far, _viewBox is definitely not None
 
     def forgetViewBox(self):
@@ -78,7 +77,10 @@ class GraphicsItemMethods(object):
         if view is None:
             return None
         if hasattr(view, 'implements') and view.implements('ViewBox'):
-            return self.itemTransform(view.innerSceneItem())[0]
+            tr = self.itemTransform(view.innerSceneItem())
+            if isinstance(tr, tuple):
+                tr = tr[0]   ## difference between pyside and pyqt
+            return tr
         else:
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
@@ -102,7 +104,11 @@ class GraphicsItemMethods(object):
         view = self.getViewBox()
         if view is None:
             return None
-        bounds = self.mapRectFromView(view.viewRect()).normalized()
+        bounds = self.mapRectFromView(view.viewRect())
+        if bounds is None:
+            return None
+
+        bounds = bounds.normalized()
         
         ## nah.
         #for p in self.getBoundingParents():
@@ -246,7 +252,10 @@ class GraphicsItemMethods(object):
         if relativeItem is None:
             relativeItem = self.parentItem()
             
-        tr = self.itemTransform(relativeItem)[0]
+
+        tr = self.itemTransform(relativeItem)
+        if isinstance(tr, tuple):  ## difference between pyside and pyqt
+            tr = tr[0]  
         vec = tr.map(Point(1,0)) - tr.map(Point(0,0))
         return Point(vec).angle(Point(1,0))
         

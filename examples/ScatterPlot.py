@@ -3,7 +3,7 @@ import sys, os
 ## Add path to library (just for examples; you do not need this)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from PyQt4 import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
