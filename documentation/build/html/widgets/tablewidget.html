@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>TableWidget &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Widgets" href="index.html" />
+    <link rel="next" title="GradientWidget" href="gradientwidget.html" />
+    <link rel="prev" title="CheckTable" href="checktable.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gradientwidget.html" title="GradientWidget"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="checktable.html" title="CheckTable"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tablewidget">
+<h1>TableWidget<a class="headerlink" href="#tablewidget" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.TableWidget">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">TableWidget</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyqtgraph.TableWidget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends QTableWidget with some useful functions for automatic data handling.
+Can automatically format and display:</p>
+<blockquote>
+<p>numpy arrays
+numpy record arrays 
+metaarrays
+list-of-lists  [[1,2,3], [4,5,6]]
+dict-of-lists  {&#8216;x&#8217;: [1,2,3], &#8216;y&#8217;: [4,5,6]}
+list-of-dicts  [</p>
+<blockquote>
+<blockquote>
+{&#8216;x&#8217;: 1, &#8216;y&#8217;: 4}, 
+{&#8216;x&#8217;: 2, &#8216;y&#8217;: 5}, 
+{&#8216;x&#8217;: 3, &#8216;y&#8217;: 6}</blockquote>
+<p>]</p>
+</blockquote>
+</blockquote>
+<dl class="method">
+<dt id="pyqtgraph.TableWidget.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#pyqtgraph.TableWidget.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.TableWidget.appendData">
+<tt class="descname">appendData</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#pyqtgraph.TableWidget.appendData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Types allowed:
+1 or 2D numpy array or metaArray
+1D numpy record array
+list-of-lists, list-of-dicts or dict-of-lists</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.TableWidget.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.TableWidget.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy selected data to clipboard.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.TableWidget.iteratorFn">
+<tt class="descname">iteratorFn</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#pyqtgraph.TableWidget.iteratorFn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 1) a function that will provide an iterator for data and 2) a list of header strings</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="checktable.html"
+                        title="previous chapter">CheckTable</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gradientwidget.html"
+                        title="next chapter">GradientWidget</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/widgets/tablewidget.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gradientwidget.html" title="GradientWidget"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="checktable.html" title="CheckTable"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

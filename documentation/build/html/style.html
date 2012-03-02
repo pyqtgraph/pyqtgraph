@@ -1,0 +1,127 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Line, Fill, and Color &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="index.html" />
+    <link rel="next" title="Region-of-interest controls" href="region_of_interest.html" />
+    <link rel="prev" title="Displaying images and video" href="images.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="region_of_interest.html" title="Region-of-interest controls"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="images.html" title="Displaying images and video"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="line-fill-and-color">
+<h1>Line, Fill, and Color<a class="headerlink" href="#line-fill-and-color" title="Permalink to this headline">¶</a></h1>
+<p>Many functions and methods in pyqtgraph accept arguments specifying the line style (pen), fill style (brush), or color.</p>
+<p>For these function arguments, the following values may be used:</p>
+<ul class="simple">
+<li>single-character string representing color (b, g, r, c, m, y, k, w)</li>
+<li>(r, g, b) or (r, g, b, a) tuple</li>
+<li>single greyscale value (0.0 - 1.0)</li>
+<li>(index, maximum) tuple for automatically iterating through colors (see functions.intColor)</li>
+<li>QColor</li>
+<li>QPen / QBrush where appropriate</li>
+</ul>
+<p>Notably, more complex pens and brushes can be easily built using the mkPen() / mkBrush() functions or with Qt&#8217;s QPen and QBrush classes.</p>
+<p>Colors can also be built using mkColor(), intColor(), hsvColor(), or Qt&#8217;s QColor class</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="images.html"
+                        title="previous chapter">Displaying images and video</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="region_of_interest.html"
+                        title="next chapter">Region-of-interest controls</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/style.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="region_of_interest.html" title="Region-of-interest controls"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="images.html" title="Displaying images and video"
+             >previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

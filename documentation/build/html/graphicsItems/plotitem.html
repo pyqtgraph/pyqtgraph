@@ -1,0 +1,245 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PlotItem &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Graphics Items" href="index.html" />
+    <link rel="next" title="ImageItem" href="imageitem.html" />
+    <link rel="prev" title="ScatterPlotItem" href="scatterplotitem.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="imageitem.html" title="ImageItem"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="scatterplotitem.html" title="ScatterPlotItem"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Graphics Items</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="plotitem">
+<h1>PlotItem<a class="headerlink" href="#plotitem" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.PlotItem">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">PlotItem</tt><big>(</big><em>parent=None</em>, <em>name=None</em>, <em>labels=None</em>, <em>title=None</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="pyqtgraph.PlotItem.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>parent=None</em>, <em>name=None</em>, <em>labels=None</em>, <em>title=None</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.addAvgCurve">
+<tt class="descname">addAvgCurve</tt><big>(</big><em>curve</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.addAvgCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a single curve into the pool of curves averaged together</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.enableAutoScale">
+<tt class="descname">enableAutoScale</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.enableAutoScale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.linkXChanged">
+<tt class="descname">linkXChanged</tt><big>(</big><em>plot</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.linkXChanged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a linked plot has changed its X scale</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.linkYChanged">
+<tt class="descname">linkYChanged</tt><big>(</big><em>plot</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.linkYChanged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a linked plot has changed its Y scale</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.plot">
+<tt class="descname">plot</tt><big>(</big><em>*args</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add and return a new plot.
+See PlotDataItem.__init__ for data arguments</p>
+<dl class="docutils">
+<dt>Extra allowed arguments are:</dt>
+<dd>clear    - clear all plots before displaying new data
+params   - meta-parameters to associate with this data</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.setLabel">
+<tt class="descname">setLabel</tt><big>(</big><em>axis</em>, <em>text=None</em>, <em>units=None</em>, <em>unitPrefix=None</em>, <em>**args</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.setLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the label for an axis. Basic HTML formatting is allowed.
+Arguments:</p>
+<blockquote>
+<p>axis  - must be one of &#8216;left&#8217;, &#8216;bottom&#8217;, &#8216;right&#8217;, or &#8216;top&#8217;
+text  - text to display along the axis. HTML allowed.
+units - units to display after the title. If units are given,</p>
+<blockquote>
+then an SI prefix will be automatically appended
+and the axis values will be scaled accordingly.
+(ie, use &#8216;V&#8217; instead of &#8216;mV&#8217;; &#8216;m&#8217; will be added automatically)</blockquote>
+</blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.setTitle">
+<tt class="descname">setTitle</tt><big>(</big><em>title=None</em>, <em>**args</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.setTitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the title of the plot. Basic HTML formatting is allowed.
+If title is None, then the title will be hidden.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.setXLink">
+<tt class="descname">setXLink</tt><big>(</big><em>plot=None</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.setXLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link this plot&#8217;s X axis to another plot (pass either the PlotItem/PlotWidget or the registered name of the plot)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.setYLink">
+<tt class="descname">setYLink</tt><big>(</big><em>plot=None</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.setYLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link this plot&#8217;s Y axis to another plot (pass either the PlotItem/PlotWidget or the registered name of the plot)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.showAxis">
+<tt class="descname">showAxis</tt><big>(</big><em>axis</em>, <em>show=True</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.showAxis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show or hide one of the plot&#8217;s axes.
+axis must be one of &#8216;left&#8217;, &#8216;bottom&#8217;, &#8216;right&#8217;, or &#8216;top&#8217;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.showLabel">
+<tt class="descname">showLabel</tt><big>(</big><em>axis</em>, <em>show=True</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.showLabel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show or hide one of the plot&#8217;s axis labels (the axis itself will be unaffected).
+axis must be one of &#8216;left&#8217;, &#8216;bottom&#8217;, &#8216;right&#8217;, or &#8216;top&#8217;</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqtgraph.PlotItem.sigRangeChanged">
+<tt class="descname">sigRangeChanged</tt><a class="headerlink" href="#pyqtgraph.PlotItem.sigRangeChanged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot graphics item that can be added to any graphics scene. Implements axis titles, scales, interactive viewbox.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.updatePlotList">
+<tt class="descname">updatePlotList</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.updatePlotList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the list of all plotWidgets in the &#8220;link&#8221; combos</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.updateXScale">
+<tt class="descname">updateXScale</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.updateXScale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set plot to autoscale or not depending on state of radio buttons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.updateYScale">
+<tt class="descname">updateYScale</tt><big>(</big><em>b=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.updateYScale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set plot to autoscale or not depending on state of radio buttons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.PlotItem.viewGeometry">
+<tt class="descname">viewGeometry</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.PlotItem.viewGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the screen geometry of the viewbox</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="scatterplotitem.html"
+                        title="previous chapter">ScatterPlotItem</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="imageitem.html"
+                        title="next chapter">ImageItem</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/graphicsItems/plotitem.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="imageitem.html" title="ImageItem"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="scatterplotitem.html" title="ScatterPlotItem"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Graphics Items</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

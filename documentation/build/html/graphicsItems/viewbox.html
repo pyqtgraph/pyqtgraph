@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ViewBox &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Graphics Items" href="index.html" />
+    <link rel="next" title="LinearRegionItem" href="linearregionitem.html" />
+    <link rel="prev" title="ImageItem" href="imageitem.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linearregionitem.html" title="LinearRegionItem"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="imageitem.html" title="ImageItem"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Graphics Items</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="viewbox">
+<h1>ViewBox<a class="headerlink" href="#viewbox" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.ViewBox">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">ViewBox</tt><big>(</big><em>parent=None</em>, <em>border=None</em>, <em>lockAspect=False</em>, <em>enableMouse=True</em>, <em>invertY=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Box that allows internal scaling/panning of children by mouse drag. 
+Not really compatible with GraphicsView having the same functionality.</p>
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>parent=None</em>, <em>border=None</em>, <em>lockAspect=False</em>, <em>enableMouse=True</em>, <em>invertY=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.childTransform">
+<tt class="descname">childTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.childTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
+(This maps from inside the viewbox to outside)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.childrenBoundingRect">
+<tt class="descname">childrenBoundingRect</tt><big>(</big><em>item=None</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.childrenBoundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the bounding rect of all children. Returns None if there are no bounded children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.itemBoundingRect">
+<tt class="descname">itemBoundingRect</tt><big>(</big><em>item</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.itemBoundingRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the bounding rect of the item in view coordinates</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.keyPressEvent">
+<tt class="descname">keyPressEvent</tt><big>(</big><em>ev</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.keyPressEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>This routine should capture key presses in the current view box.
+Key presses are used only when self.useLeftButtonPan is false
+The following events are implemented:
+ctrl-A : zooms out to the default &#8220;full&#8221; view of the plot
+ctrl-+ : moves forward in the zooming stack (if it exists)
+ctrl&#8211; : moves backward in the zooming stack (if it exists)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.mapFromView">
+<tt class="descname">mapFromView</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.mapFromView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps from the coordinate system displayed inside the ViewBox to the local coordinates of the ViewBox</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.mapSceneToView">
+<tt class="descname">mapSceneToView</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.mapSceneToView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps from scene coordinates to the coordinate system displayed inside the ViewBox</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.mapToView">
+<tt class="descname">mapToView</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.mapToView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.mapViewToScene">
+<tt class="descname">mapViewToScene</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.mapViewToScene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps from the coordinate system displayed inside the ViewBox to scene coordinates</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.scaleBy">
+<tt class="descname">scaleBy</tt><big>(</big><em>s</em>, <em>center=None</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.scaleBy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale by s around given center point (or center of view)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.setAspectLocked">
+<tt class="descname">setAspectLocked</tt><big>(</big><em>lock=True</em>, <em>ratio=1</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.setAspectLocked" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the aspect ratio is locked, view scaling is always forced to be isotropic.
+By default, the ratio is set to 1; x and y both have the same scaling.
+This ratio can be overridden (width/height), or use None to lock in the current ratio.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.setRange">
+<tt class="descname">setRange</tt><big>(</big><em>ax</em>, <em>minimum=None</em>, <em>maximum=None</em>, <em>padding=0.02</em>, <em>update=True</em><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.setRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the visible range of the ViewBox.
+Can be called with a QRectF:</p>
+<blockquote>
+setRange(QRectF(x, y, w, h))</blockquote>
+<dl class="docutils">
+<dt>Or with axis, min, max:</dt>
+<dd>setRange(0, xMin, xMax)
+setRange(1, yMin, yMax)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.targetRect">
+<tt class="descname">targetRect</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.targetRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the region which has been requested to be visible. 
+(this is not necessarily the same as the region that is <em>actually</em> visible)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ViewBox.viewRect">
+<tt class="descname">viewRect</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.ViewBox.viewRect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a QRectF bounding the region visible within the ViewBox</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="imageitem.html"
+                        title="previous chapter">ImageItem</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="linearregionitem.html"
+                        title="next chapter">LinearRegionItem</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/graphicsItems/viewbox.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linearregionitem.html" title="LinearRegionItem"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="imageitem.html" title="ImageItem"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Graphics Items</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

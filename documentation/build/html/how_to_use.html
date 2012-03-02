@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How to use pyqtgraph &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="index.html" />
+    <link rel="next" title="Plotting in pyqtgraph" href="plotting.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting in pyqtgraph"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="how-to-use-pyqtgraph">
+<h1>How to use pyqtgraph<a class="headerlink" href="#how-to-use-pyqtgraph" title="Permalink to this headline">¶</a></h1>
+<p>There are a few suggested ways to use pyqtgraph:</p>
+<ul class="simple">
+<li>From the interactive shell (python -i, ipython, etc)</li>
+<li>Displaying pop-up windows from an application</li>
+<li>Embedding widgets in a PyQt application</li>
+</ul>
+<div class="section" id="command-line-use">
+<h2>Command-line use<a class="headerlink" href="#command-line-use" title="Permalink to this headline">¶</a></h2>
+<p>Pyqtgraph makes it very easy to visualize data from the command line. Observe:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="kn">as</span> <span class="nn">pg</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>   <span class="c"># data can be a list of values or a numpy array</span>
+</pre></div>
+</div>
+<p>The example above would open a window displaying a line plot of the data given. I don&#8217;t think it could reasonably be any simpler than that. The call to pg.plot returns a handle to the plot widget that is created, allowing more data to be added to the same window.</p>
+<p>Further examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">pw</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xVals</span><span class="p">,</span> <span class="n">yVals</span><span class="p">,</span> <span class="n">pen</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">)</span>  <span class="c"># plot x vs y in red</span>
+<span class="n">pw</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xVals</span><span class="p">,</span> <span class="n">yVals2</span><span class="p">,</span> <span class="n">pen</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="n">win</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">GraphicsWindow</span><span class="p">()</span>  <span class="c"># Automatically generates grids with multiple items</span>
+<span class="n">win</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">win</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">win</span><span class="o">.</span><span class="n">addPlot</span><span class="p">(</span><span class="n">data3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">colspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">pg</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">imageData</span><span class="p">)</span>  <span class="c"># imageData must be a numpy array with 2 to 4 dimensions</span>
+</pre></div>
+</div>
+<p>We&#8217;re only scratching the surface here&#8211;these functions accept many different data formats and options for customizing the appearance of your data.</p>
+</div>
+<div class="section" id="displaying-windows-from-within-an-application">
+<h2>Displaying windows from within an application<a class="headerlink" href="#displaying-windows-from-within-an-application" title="Permalink to this headline">¶</a></h2>
+<p>While I consider this approach somewhat lazy, it is often the case that &#8216;lazy&#8217; is indistinguishable from &#8216;highly efficient&#8217;. The approach here is simply to use the very same functions that would be used on the command line, but from within an existing application. I often use this when I simply want to get a immediate feedback about the state of data in my application without taking the time to build a user interface for it.</p>
+</div>
+<div class="section" id="embedding-widgets-inside-pyqt-applications">
+<h2>Embedding widgets inside PyQt applications<a class="headerlink" href="#embedding-widgets-inside-pyqt-applications" title="Permalink to this headline">¶</a></h2>
+<p>For the serious application developer, all of the functionality in pyqtgraph is available via widgets that can be embedded just like any other Qt widgets. Most importantly, see: PlotWidget, ImageView, GraphicsView, GraphicsLayoutWidget. Pyqtgraph&#8217;s widgets can be included in Designer&#8217;s ui files via the &#8220;Promote To...&#8221; functionality.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">How to use pyqtgraph</a><ul>
+<li><a class="reference internal" href="#command-line-use">Command-line use</a></li>
+<li><a class="reference internal" href="#displaying-windows-from-within-an-application">Displaying windows from within an application</a></li>
+<li><a class="reference internal" href="#embedding-widgets-inside-pyqt-applications">Embedding widgets inside PyQt applications</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="plotting.html"
+                        title="next chapter">Plotting in pyqtgraph</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/how_to_use.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting in pyqtgraph"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

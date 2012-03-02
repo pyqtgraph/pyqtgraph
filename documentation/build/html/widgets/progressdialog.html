@@ -1,0 +1,153 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ProgressDialog &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Widgets" href="index.html" />
+    <link rel="next" title="SpinBox" href="spinbox.html" />
+    <link rel="prev" title="HistogramLUTWidget" href="histogramlutwidget.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spinbox.html" title="SpinBox"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="histogramlutwidget.html" title="HistogramLUTWidget"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="progressdialog">
+<h1>ProgressDialog<a class="headerlink" href="#progressdialog" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.ProgressDialog">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">ProgressDialog</tt><big>(</big><em>labelText</em>, <em>minimum=0</em>, <em>maximum=100</em>, <em>cancelText='Cancel'</em>, <em>parent=None</em>, <em>wait=250</em>, <em>busyCursor=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.ProgressDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends QProgressDialog for use in &#8216;with&#8217; statements.
+Arguments:</p>
+<blockquote>
+labelText   (required)
+cancelText   Text to display on cancel button, or None to disable it.
+minimum
+maximum
+parent       
+wait         Length of time (im ms) to wait before displaying dialog
+busyCursor   If True, show busy cursor until dialog finishes</blockquote>
+<dl class="docutils">
+<dt>Example:</dt>
+<dd><dl class="first last docutils">
+<dt>with ProgressDialog(&#8220;Processing..&#8221;, minVal, maxVal) as dlg:</dt>
+<dd><p class="first"># do stuff
+dlg.setValue(i)   ## could also use dlg += 1
+if dlg.wasCanceled():</p>
+<blockquote class="last">
+raise Exception(&#8220;Processing canceled by user&#8221;)</blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="pyqtgraph.ProgressDialog.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>labelText</em>, <em>minimum=0</em>, <em>maximum=100</em>, <em>cancelText='Cancel'</em>, <em>parent=None</em>, <em>wait=250</em>, <em>busyCursor=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.ProgressDialog.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="histogramlutwidget.html"
+                        title="previous chapter">HistogramLUTWidget</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spinbox.html"
+                        title="next chapter">SpinBox</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/widgets/progressdialog.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spinbox.html" title="SpinBox"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="histogramlutwidget.html" title="HistogramLUTWidget"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

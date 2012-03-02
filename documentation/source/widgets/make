@@ -1,0 +1,31 @@
+files = """CheckTable
+ColorButton
+DataTreeWidget
+FileDialog
+GradientWidget
+GraphicsLayoutWidget
+GraphicsView
+HistogramLUTWidget
+JoystickButton
+MultiPlotWidget
+PlotWidget
+ProgressDialog
+RawImageWidget
+SpinBox
+TableWidget
+TreeWidget
+VerticalLabel""".split('\n')
+
+for f in files:
+    print f
+    fh = open(f.lower()+'.rst', 'w')
+    fh.write(
+"""%s
+%s
+
+.. autoclass:: pyqtgraph.%s
+    :members:
+
+    .. automethod:: pyqtgraph.%s.__init__
+
+""" % (f, '='*len(f), f, f))

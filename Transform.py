@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtGui
 from Point import Point
 import numpy as np
 
@@ -108,8 +108,8 @@ class Transform(QtGui.QTransform):
     def saveState(self):
         p = self._state['pos']
         s = self._state['scale']
-        if s[0] == 0:
-            raise Exception('Invalid scale')
+        #if s[0] == 0:
+            #raise Exception('Invalid scale: %s' % str(s))
         return {'pos': (p[0], p[1]), 'scale': (s[0], s[1]), 'angle': self._state['angle']}
 
     def restoreState(self, state):

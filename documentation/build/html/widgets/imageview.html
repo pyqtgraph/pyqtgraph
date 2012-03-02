@@ -1,0 +1,158 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ImageView &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Widgets" href="index.html" />
+    <link rel="next" title="DataTreeWidget" href="datatreewidget.html" />
+    <link rel="prev" title="PlotWidget" href="plotwidget.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="datatreewidget.html" title="DataTreeWidget"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="plotwidget.html" title="PlotWidget"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="imageview">
+<h1>ImageView<a class="headerlink" href="#imageview" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.ImageView">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">ImageView</tt><big>(</big><em>parent=None</em>, <em>name='ImageView'</em>, <em>*args</em><big>)</big><a class="headerlink" href="#pyqtgraph.ImageView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="pyqtgraph.ImageView.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>parent=None</em>, <em>name='ImageView'</em>, <em>*args</em><big>)</big><a class="headerlink" href="#pyqtgraph.ImageView.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ImageView.jumpFrames">
+<tt class="descname">jumpFrames</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#pyqtgraph.ImageView.jumpFrames" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this is a video, move ahead n frames</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ImageView.setImage">
+<tt class="descname">setImage</tt><big>(</big><em>img</em>, <em>autoRange=True</em>, <em>autoLevels=True</em>, <em>levels=None</em>, <em>axes=None</em>, <em>xvals=None</em>, <em>pos=None</em>, <em>scale=None</em><big>)</big><a class="headerlink" href="#pyqtgraph.ImageView.setImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the image to be displayed in the widget.
+Options are:</p>
+<blockquote>
+<p>img:         ndarray; the image to be displayed.
+autoRange:   bool; whether to scale/pan the view to fit the image.
+autoLevels:  bool; whether to update the white/black levels to fit the image.
+levels:      (min, max); the white and black level values to use.
+axes:        {&#8216;t&#8217;:0, &#8216;x&#8217;:1, &#8216;y&#8217;:2, &#8216;c&#8217;:3}; Dictionary indicating the interpretation for each axis.</p>
+<blockquote>
+This is only needed to override the default guess.</blockquote>
+</blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.ImageView.timeIndex">
+<tt class="descname">timeIndex</tt><big>(</big><em>slider</em><big>)</big><a class="headerlink" href="#pyqtgraph.ImageView.timeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the time and frame index indicated by a slider</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="plotwidget.html"
+                        title="previous chapter">PlotWidget</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="datatreewidget.html"
+                        title="next chapter">DataTreeWidget</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/widgets/imageview.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="datatreewidget.html" title="DataTreeWidget"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="plotwidget.html" title="PlotWidget"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SpinBox &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="../index.html" />
+    <link rel="up" title="Pyqtgraph’s Widgets" href="index.html" />
+    <link rel="next" title="FileDialog" href="filedialog.html" />
+    <link rel="prev" title="ProgressDialog" href="progressdialog.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filedialog.html" title="FileDialog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="progressdialog.html" title="ProgressDialog"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="spinbox">
+<h1>SpinBox<a class="headerlink" href="#spinbox" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyqtgraph.SpinBox">
+<em class="property">class </em><tt class="descclassname">pyqtgraph.</tt><tt class="descname">SpinBox</tt><big>(</big><em>parent=None</em>, <em>value=0.0</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>QSpinBox widget on steroids. Allows selection of numerical value, with extra features:
+- SI prefix notation
+- Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
+- Option for unbounded values
+- Delayed signals (allows multiple rapid changes with only one change signal)</p>
+<dl class="method">
+<dt id="pyqtgraph.SpinBox.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>parent=None</em>, <em>value=0.0</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.SpinBox.editingFinishedEvent">
+<tt class="descname">editingFinishedEvent</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox.editingFinishedEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edit has finished; set value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.SpinBox.interpret">
+<tt class="descname">interpret</tt><big>(</big><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox.interpret" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return value of text. Return False if text is invalid, raise exception if text is intermediate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.SpinBox.setProperty">
+<tt class="descname">setProperty</tt><big>(</big><em>prop</em>, <em>val</em><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox.setProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>setProperty is just for compatibility with QSpinBox</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqtgraph.SpinBox.setValue">
+<tt class="descname">setValue</tt><big>(</big><em>value=None</em>, <em>update=True</em>, <em>delaySignal=False</em><big>)</big><a class="headerlink" href="#pyqtgraph.SpinBox.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of this spin. 
+If the value is out of bounds, it will be moved to the nearest boundary
+If the spin is integer type, the value will be coerced to int
+Returns the actual value set.</p>
+<p>If value is None, then the current value is used (this is for resetting
+the value after bounds, etc. have changed)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="progressdialog.html"
+                        title="previous chapter">ProgressDialog</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="filedialog.html"
+                        title="next chapter">FileDialog</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/widgets/spinbox.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filedialog.html" title="FileDialog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="progressdialog.html" title="ProgressDialog"
+             >previous</a> |</li>
+        <li><a href="../index.html">pyqtgraph v1.8 documentation</a> &raquo;</li>
+          <li><a href="../apireference.html" >API Reference</a> &raquo;</li>
+          <li><a href="index.html" >Pyqtgraph&#8217;s Widgets</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

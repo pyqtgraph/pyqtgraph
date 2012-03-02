@@ -1,0 +1,217 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Plotting in pyqtgraph &mdash; pyqtgraph v1.8 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pyqtgraph v1.8 documentation" href="index.html" />
+    <link rel="next" title="Displaying images and video" href="images.html" />
+    <link rel="prev" title="How to use pyqtgraph" href="how_to_use.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="images.html" title="Displaying images and video"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="how_to_use.html" title="How to use pyqtgraph"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="plotting-in-pyqtgraph">
+<h1>Plotting in pyqtgraph<a class="headerlink" href="#plotting-in-pyqtgraph" title="Permalink to this headline">¶</a></h1>
+<p>There are a few basic ways to plot data in pyqtgraph:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="functions.html#pyqtgraph.plot" title="pyqtgraph.plot"><tt class="xref py py-func docutils literal"><span class="pre">pyqtgraph.plot()</span></tt></a></td>
+<td>Create a new plot window showing your data</td>
+</tr>
+<tr><td><tt class="xref py py-func docutils literal"><span class="pre">PlotWidget.plot()</span></tt></td>
+<td>Add a new set of data to an existing plot widget</td>
+</tr>
+<tr><td><a class="reference internal" href="graphicsItems/plotitem.html#pyqtgraph.PlotItem.plot" title="pyqtgraph.PlotItem.plot"><tt class="xref py py-func docutils literal"><span class="pre">PlotItem.plot()</span></tt></a></td>
+<td>Add a new set of data to an existing plot widget</td>
+</tr>
+<tr><td><tt class="xref py py-func docutils literal"><span class="pre">GraphicsWindow.addPlot()</span></tt></td>
+<td>Add a new plot to a grid of plots</td>
+</tr>
+</tbody>
+</table>
+<p>All of these will accept the same basic arguments which control how the plot data is interpreted and displayed:</p>
+<ul class="simple">
+<li>x - Optional X data; if not specified, then a range of integers will be generated automatically.</li>
+<li>y - Y data.</li>
+<li>pen - The pen to use when drawing plot lines, or None to disable lines.</li>
+<li>symbol - A string describing the shape of symbols to use for each point. Optionally, this may also be a sequence of strings with a different symbol for each point.</li>
+<li>symbolPen - The pen (or sequence of pens) to use when drawing the symbol outline.</li>
+<li>symbolBrush - The brush (or sequence of brushes) to use when filling the symbol.</li>
+<li>fillLevel - Fills the area under the plot curve to this Y-value.</li>
+<li>brush - The brush to use when filling under the curve.</li>
+</ul>
+<p>See the &#8216;plotting&#8217; <a class="reference internal" href="introduction.html#examples"><em>example</em></a> for a demonstration of these arguments.</p>
+<p>All of the above functions also return handles to the objects that are created, allowing the plots and data to be further modified.</p>
+<div class="section" id="organization-of-plotting-classes">
+<h2>Organization of Plotting Classes<a class="headerlink" href="#organization-of-plotting-classes" title="Permalink to this headline">¶</a></h2>
+<p>There are several classes invloved in displaying plot data. Most of these classes are instantiated automatically, but it is useful to understand how they are organized and relate to each other. Pyqtgraph is based heavily on Qt&#8217;s GraphicsView framework&#8211;if you are not already familiar with this, it&#8217;s worth reading about (but not essential). Most importantly: 1) Qt GUIs are composed of QWidgets, 2) A special widget called QGraphicsView is used for displaying complex graphics, and 3) QGraphicsItems define the objects that are displayed within a QGraphicsView.</p>
+<ul>
+<li><dl class="first docutils">
+<dt>Data Classes (all subclasses of QGraphicsItem)</dt>
+<dd><ul class="first last simple">
+<li>PlotCurveItem - Displays a plot line given x,y data</li>
+<li>ScatterPlotItem - Displays points given x,y data</li>
+<li><tt class="xref py py-class docutils literal"><span class="pre">PlotDataItem</span></tt> - Combines PlotCurveItem and ScatterPlotItem. The plotting functions discussed above create objects of this type.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Container Classes (subclasses of QGraphicsItem; contain other QGraphicsItem objects and must be viewed from within a GraphicsView)</dt>
+<dd><ul class="first last simple">
+<li>PlotItem - Contains a ViewBox for displaying data as well as AxisItems and labels for displaying the axes and title. This is a QGraphicsItem subclass and thus may only be used from within a GraphicsView</li>
+<li>GraphicsLayoutItem - QGraphicsItem subclass which displays a grid of items. This is used to display multiple PlotItems together.</li>
+<li>ViewBox - A QGraphicsItem subclass for displaying data. The user may scale/pan the contents of a ViewBox using the mouse. Typically all PlotData/PlotCurve/ScatterPlotItems are displayed from within a ViewBox.</li>
+<li>AxisItem - Displays axis values, ticks, and labels. Most commonly used with PlotItem.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Container Classes (subclasses of QWidget; may be embedded in PyQt GUIs)</dt>
+<dd><ul class="first last simple">
+<li>PlotWidget - A subclass of GraphicsView with a single PlotItem displayed. Most of the methods provided by PlotItem are also available through PlotWidget.</li>
+<li>GraphicsLayoutWidget - QWidget subclass displaying a single GraphicsLayoutItem. Most of the methods provided by GraphicsLayoutItem are also available through GraphicsLayoutWidget.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<img alt="_images/plottingClasses.png" src="_images/plottingClasses.png" />
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>See the &#8216;plotting&#8217; and &#8216;PlotWidget&#8217; <a class="reference internal" href="introduction.html#examples"><em>examples included with pyqtgraph</em></a> for more information.</p>
+<p>Show x,y data as scatter plot:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="kn">as</span> <span class="nn">pg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">pg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pen</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">)</span>  <span class="c">## setting pen=None disables line drawing</span>
+</pre></div>
+</div>
+<p>Create/show a plot widget, display three data curves:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyqtgraph</span> <span class="kn">as</span> <span class="nn">pg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
+<span class="n">plotWidget</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s">&quot;Three plot curves&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">plotWidget</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pen</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  <span class="c">## setting pen=(i,3) automaticaly creates three different-colored pens</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Plotting in pyqtgraph</a><ul>
+<li><a class="reference internal" href="#organization-of-plotting-classes">Organization of Plotting Classes</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="how_to_use.html"
+                        title="previous chapter">How to use pyqtgraph</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="images.html"
+                        title="next chapter">Displaying images and video</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/plotting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="images.html" title="Displaying images and video"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="how_to_use.html" title="How to use pyqtgraph"
+             >previous</a> |</li>
+        <li><a href="index.html">pyqtgraph v1.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Luke Campagnola.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

@@ -5,7 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from PyQt4 import QtCore
+from Qt import QtCore
 import numpy as np
 
 def clip(x, mn, mx):
@@ -23,11 +23,11 @@ class Point(QtCore.QPointF):
             if isinstance(args[0], QtCore.QSizeF):
                 QtCore.QPointF.__init__(self, float(args[0].width()), float(args[0].height()))
                 return
+            elif isinstance(args[0], float) or isinstance(args[0], int):
+                QtCore.QPointF.__init__(self, float(args[0]), float(args[0]))
+                return
             elif hasattr(args[0], '__getitem__'):
                 QtCore.QPointF.__init__(self, float(args[0][0]), float(args[0][1]))
-                return
-            elif type(args[0]) in [float, int]:
-                QtCore.QPointF.__init__(self, float(args[0]), float(args[0]))
                 return
         elif len(args) == 2:
             QtCore.QPointF.__init__(self, args[0], args[1])
@@ -101,6 +101,10 @@ class Point(QtCore.QPointF):
         """Returns the vector length of this Point."""
         return (self[0]**2 + self[1]**2) ** 0.5
     
+    def norm(self):
+        """Returns a vector in the same direction with unit length."""
+        return self / self.length()
+    
     def angle(self, a):
         """Returns the angle in degrees between this vector and the vector a."""
         n1 = self.length()
@@ -140,3 +144,6 @@ class Point(QtCore.QPointF):
         
     def copy(self):
         return Point(self)
+        
+    def toQPoint(self):
+        return QtCore.QPoint(*self)

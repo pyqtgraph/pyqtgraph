@@ -8,7 +8,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile
 import ptime
 from numpy import ndarray
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtGui
 
 __ftraceDepth = 0
 def ftrace(func):

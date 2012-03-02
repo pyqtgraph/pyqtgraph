@@ -1,0 +1,37 @@
+files = """ArrowItem
+AxisItem
+ButtonItem
+CurvePoint
+GradientEditorItem
+GradientLegend
+GraphicsLayout
+GraphicsObject
+GraphicsWidget
+GridItem
+HistogramLUTItem
+ImageItem
+InfiniteLine
+LabelItem
+LinearRegionItem
+PlotCurveItem
+PlotDataItem
+ROI
+ScaleBar
+ScatterPlotItem
+UIGraphicsItem
+ViewBox
+VTickGroup""".split('\n')
+
+for f in files:
+    print f
+    fh = open(f.lower()+'.rst', 'w')
+    fh.write(
+"""%s
+%s
+
+.. autoclass:: pyqtgraph.%s
+    :members:
+
+    .. automethod:: pyqtgraph.%s.__init__
+
+""" % (f, '='*len(f), f, f))
