@@ -3,7 +3,7 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Point import Point
 import weakref
 
-class GraphicsItemMethods:
+class GraphicsItemMethods(object):
     """
     Class providing useful methods to GraphicsObject and GraphicsWidget.
     """

@@ -24,6 +24,7 @@ from pyqtgraph.widgets.FileDialog import FileDialog
 import weakref
 #from types import *
 import numpy as np
+import os
 #from .. PlotCurveItem import PlotCurveItem
 #from .. ScatterPlotItem import ScatterPlotItem
 from .. PlotDataItem import PlotDataItem
