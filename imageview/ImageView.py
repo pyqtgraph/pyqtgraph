@@ -23,9 +23,9 @@ from pyqtgraph.graphicsItems.ViewBox import *
 from pyqtgraph.Qt import QtCore, QtGui
 import sys
 #from numpy import ndarray
-import ptime
+import pyqtgraph.ptime as ptime
 import numpy as np
-import debug
+import pyqtgraph.debug as debug
 
 from pyqtgraph.SignalProxy import SignalProxy
 

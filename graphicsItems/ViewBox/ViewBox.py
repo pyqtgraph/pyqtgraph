@@ -206,7 +206,10 @@ class ViewBox(GraphicsWidget):
         #print "addItem:", item, item.boundingRect()
         
     def removeItem(self, item):
-        self.addedItems.remove(item)
+        try:
+            self.addedItems.remove(item)
+        except:
+            pass
         self.scene().removeItem(item)
         self.updateAutoRange()
 

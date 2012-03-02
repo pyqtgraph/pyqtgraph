@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL, QtSvg
 from pyqtgraph.Point import Point
 #from vector import *
 import sys, os
-import debug    
+#import debug    
 from FileDialog import FileDialog
 from pyqtgraph.GraphicsScene import GraphicsScene
 import numpy as np

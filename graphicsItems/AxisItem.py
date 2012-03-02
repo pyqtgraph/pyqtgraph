@@ -284,7 +284,7 @@ class AxisItem(GraphicsWidget):
         lengthInPixels = Point(points[1] - points[0]).length()
 
         ## decide optimal tick spacing in pixels
-        pixelSpacing = np.log(lengthInPixels+10) * 3
+        pixelSpacing = np.log(lengthInPixels+10) * 2
         optimalTickCount = lengthInPixels / pixelSpacing
 
         ## Determine optimal tick spacing
@@ -328,9 +328,11 @@ class AxisItem(GraphicsWidget):
         ## draw three different intervals, long ticks first
         texts = []
         for i in [2,1,0]:
-            if i1+i > len(intervals):
+            if i1+i >= len(intervals) or i1+i < 0:
+                print "AxisItem.paint error: i1=%d, i=%d, len(intervals)=%d" % (i1, i, len(intervals))
                 continue
             ## spacing for this interval
+            
             sp = pw*intervals[i1+i]
             
             ## determine starting tick

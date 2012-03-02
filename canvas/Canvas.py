@@ -298,6 +298,7 @@ class Canvas(QtGui.QWidget):
         Common options are name, pos, scale, and z
         """
         citem = CanvasItem(item, **opts)
+        item._canvasItem = citem
         self.addItem(citem)
         return citem
             
@@ -493,12 +494,13 @@ class Canvas(QtGui.QWidget):
     def removeItem(self, item):
         if isinstance(item, CanvasItem):
             item.setCanvas(None)
-            #self.view.scene().removeItem(item.item)
             self.itemList.removeTopLevelItem(item.listItem)
-            #del self.items[item.name]
             self.items.remove(item)
         else:
-            self.view.removeItem(item)
+            if hasattr(item, '_canvasItem'):
+                self.removeItem(item._canvasItem)
+            else:
+                self.view.removeItem(item)
         
         ## disconnect signals, remove from list, etc..
         

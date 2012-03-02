@@ -37,7 +37,8 @@ def rectStr(r):
 
 class ROI(GraphicsObject):
     """Generic region-of-interest widget. 
-    Can be used for implementing many types of selection box with rotate/translate/scale handles."""
+    Can be used for implementing many types of selection box with rotate/translate/scale handles.
+    """
     
     sigRegionChangeFinished = QtCore.Signal(object)
     sigRegionChangeStarted = QtCore.Signal(object)
@@ -52,6 +53,8 @@ class ROI(GraphicsObject):
         self.aspectLocked = False
         self.translatable = movable
         self.rotateAllowed = True
+        
+        self.freeHandleMoved = False ## keep track of whether free handles have moved since last change signal was emitted.
         
         if pen is None:
             pen = (255, 255, 255)
@@ -78,29 +81,33 @@ class ROI(GraphicsObject):
         #self.setFlag(self.ItemIsSelectable, True)
     
     def getState(self):
-        return self.state.copy()
+        return self.stateCopy()
+
+    def stateCopy(self):
+        sc = {}
+        sc['pos'] = Point(self.state['pos'])
+        sc['size'] = Point(self.state['size'])
+        sc['angle'] = self.state['angle']
+        return sc
         
     def saveState(self):
-        """Return the state of the widget in a format suitable for storing to disk."""
+        """Return the state of the widget in a format suitable for storing to disk. (Points are converted to tuple)"""
         state = {}
         state['pos'] = tuple(self.state['pos'])
         state['size'] = tuple(self.state['size'])
         state['angle'] = self.state['angle']
         return state
     
-    def setState(self, state):
+    def setState(self, state, update=True):
         self.setPos(state['pos'], update=False)
         self.setSize(state['size'], update=False)
-        self.setAngle(state['angle'])
+        self.setAngle(state['angle'], update=update)
     
     def setZValue(self, z):
         QtGui.QGraphicsItem.setZValue(self, z)
         for h in self.handles:
             h['item'].setZValue(z+1)
         
-    def sceneBounds(self):
-        return self.sceneTransform().mapRect(self.boundingRect())
-    
     def parentBounds(self):
         return self.mapToParent(self.boundingRect()).boundingRect()
 
@@ -118,34 +125,123 @@ class ROI(GraphicsObject):
     def angle(self):
         return self.getState()['angle']
         
-    def setPos(self, pos, update=True):
-        #print "setPos() called."
+    def setPos(self, pos, update=True, finish=True):
+        """Set the position of the ROI (in the parent's coordinate system).
+        By default, this will cause both sigStateChanged and sigStateChangeFinished to be emitted.
+        
+        If finish is False, then sigStateChangeFinished will not be emitted. You can then use 
+        stateChangeFinished() to cause the signal to be emitted after a series of state changes.
+        
+        If update is False, the state change will be remembered but not processed and no signals 
+        will be emitted. You can then use stateChanged() to complete the state change. This allows
+        multiple change functions to be called sequentially while minimizing processing overhead
+        and repeated signals. Setting update=False also forces finish=False.
+        """
+        
         pos = Point(pos)
         self.state['pos'] = pos
         QtGui.QGraphicsItem.setPos(self, pos)
         if update:
-            self.updateHandles()
-            self.handleChange()
+            self.stateChanged(finish=finish)
         
-    def setSize(self, size, update=True):
+    def setSize(self, size, update=True, finish=True):
+        """Set the size of the ROI. May be specified as a QPoint, Point, or list of two values.
+        See setPos() for an explanation of the update and finish arguments.
+        """
         size = Point(size)
         self.prepareGeometryChange()
         self.state['size'] = size
         if update:
-            self.updateHandles()
-            self.handleChange()
+            self.stateChanged(finish=finish)
         
-    def setAngle(self, angle, update=True):
+    def setAngle(self, angle, update=True, finish=True):
+        """Set the angle of rotation (in degrees) for this ROI.
+        See setPos() for an explanation of the update and finish arguments.
+        """
         self.state['angle'] = angle
         tr = QtGui.QTransform()
         #tr.rotate(-angle * 180 / np.pi)
         tr.rotate(angle)
         self.setTransform(tr)
         if update:
-            self.updateHandles()
-            self.handleChange()
+            self.stateChanged(finish=finish)
         
+    def scale(self, s, center=[0,0], update=True, finish=True):
+        """
+        Resize the ROI by scaling relative to *center*.
+        See setPos() for an explanation of the *update* and *finish* arguments.
+        """
+        c = self.mapToScene(Point(center) * self.state['size'])
+        self.prepareGeometryChange()
+        newSize = self.state['size'] * s
+        c1 = self.mapToScene(Point(center) * newSize)
+        newPos = self.state['pos'] + c - c1
         
+        self.setSize(newSize, update=False)
+        self.setPos(self.state['pos'], update=update, finish=finish)
+        
+   
+    def translate(self, *args, **kargs):
+        """
+        Move the ROI to a new position.
+        Accepts either (x, y, snap) or ([x,y], snap) as arguments
+        If the ROI is bounded and the move would exceed boundaries, then the ROI
+        is moved to the nearest acceptable position instead.
+        
+        snap can be:
+           None (default): use self.translateSnap and self.snapSize to determine whether/how to snap
+           False:          do not snap
+           Point(w,h)      snap to rectangular grid with spacing (w,h)
+           True:           snap using self.snapSize (and ignoring self.translateSnap)
+           
+        Also accepts *update* and *finish* arguments (see setPos() for a description of these).
+        """
+
+        if len(args) == 1:
+            pt = args[0]
+        else:
+            pt = args
+            
+        newState = self.stateCopy()
+        newState['pos'] = newState['pos'] + pt
+        
+        ## snap position
+        #snap = kargs.get('snap', None)
+        #if (snap is not False)   and   not (snap is None and self.translateSnap is False):
+        
+        snap = kargs.get('snap', None)
+        if snap is None:
+            snap = self.translateSnap
+        if snap is not False:
+            newState['pos'] = self.getSnapPosition(newState['pos'], snap=snap)
+        
+        #d = ev.scenePos() - self.mapToScene(self.pressPos)
+        if self.maxBounds is not None:
+            r = self.stateRect(newState)
+            #r0 = self.sceneTransform().mapRect(self.boundingRect())
+            d = Point(0,0)
+            if self.maxBounds.left() > r.left():
+                d[0] = self.maxBounds.left() - r.left()
+            elif self.maxBounds.right() < r.right():
+                d[0] = self.maxBounds.right() - r.right()
+            if self.maxBounds.top() > r.top():
+                d[1] = self.maxBounds.top() - r.top()
+            elif self.maxBounds.bottom() < r.bottom():
+                d[1] = self.maxBounds.bottom() - r.bottom()
+            newState['pos'] += d
+        
+        #self.state['pos'] = newState['pos']
+        update = kargs.get('update', True)
+        finish = kargs.get('finish', True)
+        self.setPos(newState['pos'], update=update, finish=finish)
+        #if 'update' not in kargs or kargs['update'] is True:
+        #self.stateChanged()
+
+    def rotate(self, angle, center=(0,0), angleSnap=False, update=True, finish=True):
+        pass
+        #self.setAngle(self.angle()+angle, update=update, finish=finish)
+
+    
     def addTranslateHandle(self, pos, axes=None, item=None, name=None):
         pos = Point(pos)
         return self.addHandle({'name': name, 'type': 't', 'pos': pos, 'item': item})
@@ -236,47 +332,6 @@ class ROI(GraphicsObject):
             for h in self.handles:
                 h['item'].hide()
 
-    #def mousePressEvent(self, ev):
-        ### Bug: sometimes we get events we shouldn't.
-        #p = ev.pos()
-        #if not self.isMoving and not self.shape().contains(p):
-            #ev.ignore()
-            #return        
-        #if ev.button() == QtCore.Qt.LeftButton:
-            #self.setSelected(True)
-            #if self.translatable:
-                #self.isMoving = True
-                #self.preMoveState = self.getState()
-                #self.cursorOffset = self.scenePos() - ev.scenePos()
-                ##self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
-                #self.sigRegionChangeStarted.emit(self)
-                #ev.accept()
-            #else:
-                #ev.ignore()
-        #elif ev.button() == QtCore.Qt.RightButton:
-            #if self.isMoving:
-                #ev.accept()
-                #self.cancelMove()
-            #else:
-                #ev.ignore()
-        #else:
-            #ev.ignore()
-        
-    #def mouseMoveEvent(self, ev):
-        ##print "mouse move", ev.pos()
-        #if self.translatable and self.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
-            #snap = True if (ev.modifiers() & QtCore.Qt.ControlModifier) else None
-            ##if self.translateSnap or (ev.modifiers() & QtCore.Qt.ControlModifier):
-                ##snap = Point(self.snapSize, self.snapSize)
-            #newPos = ev.scenePos() + self.cursorOffset
-            #newPos = self.mapSceneToParent(newPos)
-            #self.translate(newPos - self.pos(), snap=snap)
-    
-    #def mouseReleaseEvent(self, ev):
-        #if self.translatable:
-            #self.isMoving = False
-            ##self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
-            #self.sigRegionChangeFinished.emit(self)
 
     def hoverEvent(self, ev):
         if self.translatable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
@@ -288,7 +343,7 @@ class ROI(GraphicsObject):
             
     def mouseDragEvent(self, ev):
         if ev.isStart():
-            p = ev.pos()
+            #p = ev.pos()
             #if not self.isMoving and not self.shape().contains(p):
                 #ev.ignore()
                 #return        
@@ -298,7 +353,6 @@ class ROI(GraphicsObject):
                     self.isMoving = True
                     self.preMoveState = self.getState()
                     self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
-                    #self.emit(QtCore.SIGNAL('regionChangeStarted'), self)
                     self.sigRegionChangeStarted.emit(self)
                     ev.accept()
                 else:
@@ -306,21 +360,16 @@ class ROI(GraphicsObject):
 
         elif ev.isFinish():
             if self.translatable:
+                if self.isMoving:
+                    self.stateChangeFinished()
                 self.isMoving = False
-                #self.emit(QtCore.SIGNAL('regionChangeFinished'), self)
-                self.sigRegionChangeFinished.emit(self)
             return
 
         if self.translatable and self.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
             snap = True if (ev.modifiers() & QtCore.Qt.ControlModifier) else None
-            #if self.translateSnap or (ev.modifiers() & QtCore.Qt.ControlModifier):
-                #snap = Point(self.snapSize, self.snapSize)
             newPos = self.mapToParent(ev.pos()) + self.cursorOffset
-            #newPos = self.mapSceneToParent(newPos)
-            self.translate(newPos - self.pos(), snap=snap)
+            self.translate(newPos - self.pos(), snap=snap, finish=False)
         
-        
-
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
             if self.isMoving:
@@ -329,24 +378,24 @@ class ROI(GraphicsObject):
             else:
                 ev.ignore()
 
-
     def cancelMove(self):
         self.isMoving = False
         self.setState(self.preMoveState)
 
 
-    def pointDragEvent(self, pt, ev):
-        if ev.isStart():
-            self.isMoving = True
-            self.preMoveState = self.getState()
+    #def pointDragEvent(self, pt, ev):
+        ### just for handling drag start/stop.
+        ### drag moves are handled through movePoint()
+        
+        #if ev.isStart():
+            #self.isMoving = True
+            #self.preMoveState = self.getState()
             
-            self.sigRegionChangeStarted.emit(self)
-        elif ev.isFinish():
-            self.isMoving = False
-            self.sigRegionChangeFinished.emit(self)
-            return
-            
-        #self.movePoint(pt, ev.scenePos(), ev.modifiers())
+            #self.sigRegionChangeStarted.emit(self)
+        #elif ev.isFinish():
+            #self.isMoving = False
+            #self.sigRegionChangeFinished.emit(self)
+            #return
         
         
     #def pointPressEvent(self, pt, ev):
@@ -368,37 +417,20 @@ class ROI(GraphicsObject):
     #def pointMoveEvent(self, pt, ev):
         #self.movePoint(pt, ev.scenePos(), ev.modifiers())
         
-    def stateCopy(self):
-        sc = {}
-        sc['pos'] = Point(self.state['pos'])
-        sc['size'] = Point(self.state['size'])
-        sc['angle'] = self.state['angle']
-        return sc
-    
-    def updateHandles(self):
-        #print "update", self.handles
-        for h in self.handles:
-            #print "  try", h
-            if h['item'] in self.childItems():
-                p = h['pos']
-                #print h['pos'] * self.state['size']
-                h['item'].setPos(h['pos'] * self.state['size'])
-            #else:
-                #print "    Not child!", self.childItems()
-        
     
     def checkPointMove(self, pt, pos, modifiers):
+        """When handles move, they must ask the ROI if the move is acceptable.
+        By default, this always returns True. Subclasses may wish override.
+        """
         return True
     
-        
-    def movePoint(self, pt, pos, modifiers=QtCore.Qt.KeyboardModifier()):
-        #print "movePoint() called."
+
+    def movePoint(self, pt, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
+        ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
         
         newState = self.stateCopy()
         h = self.handles[pt]
-        #p0 = self.mapToScene(h['item'].pos())
-        ## p0 is current (before move) position of handle in scene coords
         p0 = self.mapToScene(h['pos'] * self.state['size'])
         p1 = Point(pos)
         
@@ -410,15 +442,10 @@ class ROI(GraphicsObject):
         if h.has_key('center'):
             c = h['center']
             cs = c * self.state['size']
-            #lpOrig = h['pos'] - 
-            #lp0 = self.mapFromScene(p0) - cs
-            #lp1 = self.mapFromScene(p1) - cs
             lp0 = self.mapFromParent(p0) - cs
             lp1 = self.mapFromParent(p1) - cs
         
         if h['type'] == 't':
-            #p0 = Point(self.mapToScene(h['item'].pos()))
-            #p1 = Point(pos + self.mapToScene(self.pressHandlePos) - self.mapToScene(self.pressPos))
             snap = True if (modifiers & QtCore.Qt.ControlModifier) else None
             #if self.translateSnap or ():
                 #snap = Point(self.snapSize, self.snapSize)
@@ -426,14 +453,10 @@ class ROI(GraphicsObject):
         
         elif h['type'] == 'f':
             h['item'].setPos(self.mapFromScene(pos))
-            #self.emit(QtCore.SIGNAL('regionChanged'), self)
-            self.sigRegionChanged.emit(self)
+            self.freeHandleMoved = True
+            #self.sigRegionChanged.emit(self)  ## should be taken care of by call to stateChanged()
             
         elif h['type'] == 's':
-            #c = h['center']
-            #cs = c * self.state['size']
-            #p1 = (self.mapFromScene(ev.scenePos()) + self.pressHandlePos - self.pressPos) - cs
-            
             ## If a handle and its center have the same x or y value, we can't scale across that axis.
             if h['center'][0] == h['pos'][0]:
                 lp1[0] = 0
@@ -485,13 +508,12 @@ class ROI(GraphicsObject):
                     return
             
             self.setPos(newState['pos'], update=False)
-            self.prepareGeometryChange()
-            self.state = newState
-            
-            ## move handles to their new locations
-            self.updateHandles()
+            self.setSize(newState['size'], update=False)
         
         elif h['type'] in ['r', 'rf']:
+            if h['type'] == 'rf':
+                self.freeHandleMoved = True
+            
             if not self.rotateAllowed:
                 return
             ## If the handle is directly over its center point, we can't compute an angle.
@@ -507,10 +529,9 @@ class ROI(GraphicsObject):
             
             ## create rotation transform
             tr = QtGui.QTransform()
-            #tr.rotate(-ang * 180. / np.pi)
             tr.rotate(ang)
             
-            ## mvoe ROI so that center point remains stationary after rotate
+            ## move ROI so that center point remains stationary after rotate
             cc = self.mapToParent(cs) - (tr.map(cs) + self.state['pos'])
             newState['angle'] = ang
             newState['pos'] = newState['pos'] + cc
@@ -520,60 +541,22 @@ class ROI(GraphicsObject):
                 r = self.stateRect(newState)
                 if not self.maxBounds.contains(r):
                     return
-            self.setTransform(tr)
+            #self.setTransform(tr)
             self.setPos(newState['pos'], update=False)
-            self.state = newState
+            self.setAngle(ang, update=False)
+            #self.state = newState
             
             ## If this is a free-rotate handle, its distance from the center may change.
             
             if h['type'] == 'rf':
                 h['item'].setPos(self.mapFromScene(p1))  ## changes ROI coordinates of handle
                 
-            
-        #elif h['type'] == 'rf':
-            ### If the handle is directly over its center point, we can't compute an angle.
-            #if lp1.length() == 0 or lp0.length() == 0:
-                #return
-            
-            ### determine new rotation angle, constrained if necessary
-            #pos = Point(pos)
-            #ang = newState['angle'] + lp0.angle(lp1)
-            #if ang is None:
-                ##h['item'].setPos(self.mapFromScene(Point(pos[0], 0.0)))  ## changes ROI coordinates of handle
-                #h['item'].setPos(self.mapFromScene(pos))
-                #return
-            #if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
-                #ang = round(ang / (np.pi/12.)) * (np.pi/12.)
-            
-            
-            #tr = QtGui.QTransform()
-            #tr.rotate(-ang * 180. / np.pi)
-            
-            #cc = self.mapToParent(cs) - (tr.map(cs) + self.state['pos'])
-            #newState['angle'] = ang
-            #newState['pos'] = newState['pos'] + cc
-            #if self.maxBounds is not None:
-                #r = self.stateRect(newState)
-                #if not self.maxBounds.contains(r):
-                    #return
-            #self.setTransform(tr)
-            #self.setPos(newState['pos'], update=False)
-            #self.state = newState
-            
-            #h['item'].setPos(self.mapFromScene(pos))  ## changes ROI coordinates of handle
-            ##self.emit(QtCore.SIGNAL('regionChanged'), self)
-        
         elif h['type'] == 'sr':
-            #newState = self.stateCopy()
             if h['center'][0] == h['pos'][0]:
                 scaleAxis = 1
             else:
                 scaleAxis = 0
             
-            #c = h['center']
-            #cs = c * self.state['size']
-            #p0 = Point(h['item'].pos()) - cs
-            #p1 = (self.mapFromScene(ev.scenePos()) + self.pressHandlePos - self.pressPos) - cs
             if lp1.length() == 0 or lp0.length() == 0:
                 return
             
@@ -586,14 +569,14 @@ class ROI(GraphicsObject):
             
             hs = abs(h['pos'][scaleAxis] - c[scaleAxis])
             newState['size'][scaleAxis] = lp1.length() / hs
-            if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
+            #if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
+            if self.scaleSnap:  ## use CTRL only for angular snap here.
                 newState['size'][scaleAxis] = round(newState['size'][scaleAxis] / self.snapSize) * self.snapSize
             if newState['size'][scaleAxis] == 0:
                 newState['size'][scaleAxis] = 1
                 
             c1 = c * newState['size']
             tr = QtGui.QTransform()
-            #tr.rotate(-ang * 180. / np.pi)
             tr.rotate(ang)
             
             cc = self.mapToParent(cs) - (tr.map(c1) + self.state['pos'])
@@ -603,94 +586,48 @@ class ROI(GraphicsObject):
                 r = self.stateRect(newState)
                 if not self.maxBounds.contains(r):
                     return
-            self.setTransform(tr)
-            self.setPos(newState['pos'], update=False)
-            self.prepareGeometryChange()
-            self.state = newState
+            #self.setTransform(tr)
+            #self.setPos(newState['pos'], update=False)
+            #self.prepareGeometryChange()
+            #self.state = newState
+            self.setState(newState, update=False)
         
-            self.updateHandles()
-        
-        self.handleChange()
+        self.stateChanged(finish=finish)
     
-    def handleChange(self):
-        """The state of the ROI has changed; redraw if needed."""
-        #print "handleChange() called."
+    def stateChanged(self, finish=True):
+        """Process changes to the state of the ROI.
+        If there are any changes, then the positions of handles are updated accordingly
+        and sigRegionChanged is emitted. If finish is True, then 
+        sigRegionChangeFinished will also be emitted."""
+        
         changed = False
-        #print "self.lastState:", self.lastState
         if self.lastState is None:
             changed = True
         else:
             for k in self.state.keys():
-                #print k, self.state[k], self.lastState[k]
                 if self.state[k] != self.lastState[k]:
-                    #print "state %s has changed; emit signal" % k
                     changed = True
         self.lastState = self.stateCopy()
-        #print "changed =", changed
+        
         if changed:
-            #print "handle changed."
+            ## Move all handles to match the current configuration of the ROI
+            for h in self.handles:
+                if h['item'] in self.childItems():
+                    p = h['pos']
+                    h['item'].setPos(h['pos'] * self.state['size'])
+                    
             self.update()
-            #self.emit(QtCore.SIGNAL('regionChanged'), self)
+            self.sigRegionChanged.emit(self)
+        elif self.freeHandleMoved:
             self.sigRegionChanged.emit(self)
             
-    
-    def scale(self, s, center=[0,0]):
-        c = self.mapToScene(Point(center) * self.state['size'])
-        self.prepareGeometryChange()
-        self.state['size'] = self.state['size'] * s
-        c1 = self.mapToScene(Point(center) * self.state['size'])
-        self.state['pos'] = self.state['pos'] + c - c1
-        self.setPos(self.state['pos'])
-        self.updateHandles()
-        
-   
-    def translate(self, *args, **kargs):
-        """accepts either (x, y, snap) or ([x,y], snap) as arguments
-        
-        snap can be:
-           None (default): use self.translateSnap and self.snapSize to determine whether/how to snap
-           False:          do no snap
-           Point(w,h)      snap to rectangular grid with spacing (w,h)
-           True:           snap using self.snapSize (and ignoring self.translateSnap)
-        """
-
-        if len(args) == 1:
-            pt = args[0]
-        else:
-            pt = args
+        self.freeHandleMoved = False
             
-        newState = self.stateCopy()
-        newState['pos'] = newState['pos'] + pt
-        
-        ## snap position
-        #snap = kargs.get('snap', None)
-        #if (snap is not False)   and   not (snap is None and self.translateSnap is False):
-        
-        snap = kargs.get('snap', None)
-        if snap is None:
-            snap = self.translateSnap
-        if snap is not False:
-            newState['pos'] = self.getSnapPosition(newState['pos'], snap=snap)
-        
-        #d = ev.scenePos() - self.mapToScene(self.pressPos)
-        if self.maxBounds is not None:
-            r = self.stateRect(newState)
-            #r0 = self.sceneTransform().mapRect(self.boundingRect())
-            d = Point(0,0)
-            if self.maxBounds.left() > r.left():
-                d[0] = self.maxBounds.left() - r.left()
-            elif self.maxBounds.right() < r.right():
-                d[0] = self.maxBounds.right() - r.right()
-            if self.maxBounds.top() > r.top():
-                d[1] = self.maxBounds.top() - r.top()
-            elif self.maxBounds.bottom() < r.bottom():
-                d[1] = self.maxBounds.bottom() - r.bottom()
-            newState['pos'] += d
-        
-        self.state['pos'] = newState['pos']
-        self.setPos(self.state['pos'])
-        #if 'update' not in kargs or kargs['update'] is True:
-        self.handleChange()
+        if finish:
+            self.stateChangeFinished()
+    
+    def stateChangeFinished(self):
+        self.sigRegionChangeFinished.emit(self)
     
     def stateRect(self, state):
         r = QtCore.QRectF(0, 0, state['size'][0], state['size'][1])
@@ -950,166 +887,6 @@ class ROI(GraphicsObject):
         self.setState(st)
 
 
-#class Handle(QtGui.QGraphicsItem):
-    
-    #types = {   ## defines number of sides, start angle for each handle type
-        #'t': (4, np.pi/4),
-        #'f': (4, np.pi/4), 
-        #'s': (4, 0),
-        #'r': (12, 0),
-        #'sr': (12, 0),
-        #'rf': (12, 0),
-    #}
-    
-    #def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None):
-        ##print "   create item with parent", parent
-        #self.bounds = QtCore.QRectF(-1e-10, -1e-10, 2e-10, 2e-10)
-        #QtGui.QGraphicsItem.__init__(self, parent)
-        #self.setFlags(self.flags()  | self.ItemIgnoresTransformations | self.ItemSendsScenePositionChanges)
-        #self.setZValue(11)
-        #self.roi = []
-        #self.radius = radius
-        #self.typ = typ
-        #self.pen = fn.mkPen(pen)
-        #self.currentPen = self.pen
-        #self.pen.setWidth(0)
-        #self.pen.setCosmetic(True)
-        #self.isMoving = False
-        #self.sides, self.startAng = self.types[typ]
-        #self.buildPath()
-        #self.updateShape()
-            
-    #def connectROI(self, roi, i):
-        #self.roi.append((roi, i))
-    
-    ##def boundingRect(self):
-        ##return self.bounds
-        
-
-    #def hoverEvent(self, ev):
-        #if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
-            #self.currentPen = fn.mkPen(255, 0,0)
-        #else:
-            #self.currentPen = self.pen
-        #self.update()
-            
-
-
-    #def mouseClickEvent(self, ev):
-        ### right-click cancels drag
-        #if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            #self.isMoving = False  ## prevents any further motion
-            #for r in self.roi:
-                #r[0].cancelMove()
-            #ev.accept()
-        
-
-    #def mouseDragEvent(self, ev):
-        #if ev.button() != QtCore.Qt.LeftButton:
-            #return
-        #ev.accept()
-        
-        ### Inform ROIs that a drag is happening 
-        ###  note: the ROI is informed that the handle has moved using ROI.movePoint
-        ###  this is for other (more nefarious) purposes.
-        #for r in self.roi:
-            #r[0].pointDragEvent(r[1], ev)
-            
-        #if ev.isFinish():
-            #self.isMoving = False
-        #elif ev.isStart():
-            #self.isMoving = True
-            #self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
-            
-        #if self.isMoving:  ## note: isMoving may become False in mid-drag due to right-click.
-            #pos = ev.scenePos() + self.cursorOffset
-            #self.movePoint(pos, ev.modifiers())
-
-
-
-    #def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier()):
-        #for r in self.roi:
-            #if not r[0].checkPointMove(r[1], pos, modifiers):
-                #return
-        ##print "point moved; inform %d ROIs" % len(self.roi)
-        ## A handle can be used by multiple ROIs; tell each to update its handle position
-        #for r in self.roi:
-            #r[0].movePoint(r[1], pos, modifiers)
-        
-    #def buildPath(self):
-        #size = self.radius
-        #self.path = QtGui.QPainterPath()
-        #ang = self.startAng
-        #dt = 2*np.pi / self.sides
-        #for i in range(0, self.sides+1):
-            #x = size * cos(ang)
-            #y = size * sin(ang)
-            #ang += dt
-            #if i == 0:
-                #self.path.moveTo(x, y)
-            #else:
-                #self.path.lineTo(x, y)            
-            
-    #def paint(self, p, opt, widget):
-        #### determine rotation of transform
-        ##m = self.sceneTransform()
-        ###mi = m.inverted()[0]
-        ##v = m.map(QtCore.QPointF(1, 0)) - m.map(QtCore.QPointF(0, 0))
-        ##va = np.arctan2(v.y(), v.x())
-        
-        #### Determine length of unit vector in painter's coords
-        ###size = mi.map(Point(self.radius, self.radius)) - mi.map(Point(0, 0))
-        ###size = (size.x()*size.x() + size.y() * size.y()) ** 0.5
-        ##size = self.radius
-        
-        ##bounds = QtCore.QRectF(-size, -size, size*2, size*2)
-        ##if bounds != self.bounds:
-            ##self.bounds = bounds
-            ##self.prepareGeometryChange()
-        #p.setRenderHints(p.Antialiasing, True)
-        #p.setPen(self.currentPen)
-        
-        ##p.rotate(va * 180. / 3.1415926)
-        ##p.drawPath(self.path)        
-        #p.drawPath(self.shape())
-        
-        ##ang = self.startAng + va
-        ##dt = 2*np.pi / self.sides
-        ##for i in range(0, self.sides):
-            ##x1 = size * cos(ang)
-            ##y1 = size * sin(ang)
-            ##x2 = size * cos(ang+dt)
-            ##y2 = size * sin(ang+dt)
-            ##ang += dt
-            ##p.drawLine(Point(x1, y1), Point(x2, y2))
-            
-    #def shape(self):
-        #return self._shape
-    
-    #def boundingRect(self):
-        #return self.shape().boundingRect()
-            
-    #def updateShape(self):
-        ### determine rotation of transform
-        #m = self.sceneTransform()
-        ##mi = m.inverted()[0]
-        #v = m.map(QtCore.QPointF(1, 0)) - m.map(QtCore.QPointF(0, 0))
-        #va = np.arctan2(v.y(), v.x())
-        
-        #tr = QtGui.QTransform()
-        #tr.rotate(va * 180. / 3.1415926)
-        ##tr.scale(self.radius, self.radius)
-        #self._shape = tr.map(self.path)
-        #self.prepareGeometryChange()
-        
-        
-        
-    #def itemChange(self, change, value):
-        #ret = QtGui.QGraphicsItem.itemChange(self, change, value)
-        #if change == self.ItemScenePositionHasChanged:
-            #self.updateShape()
-        #return ret
-
 class Handle(UIGraphicsItem):
     
     types = {   ## defines number of sides, start angle for each handle type
@@ -1160,8 +937,9 @@ class Handle(UIGraphicsItem):
         ## right-click cancels drag
         if ev.button() == QtCore.Qt.RightButton and self.isMoving:
             self.isMoving = False  ## prevents any further motion
-            for r in self.roi:
-                r[0].cancelMove()
+            self.movePoint(self.startPos, finish=True)
+            #for r in self.roi:
+                #r[0].cancelMove()
             ev.accept()
         
 
@@ -1173,29 +951,31 @@ class Handle(UIGraphicsItem):
         ## Inform ROIs that a drag is happening 
         ##  note: the ROI is informed that the handle has moved using ROI.movePoint
         ##  this is for other (more nefarious) purposes.
-        for r in self.roi:
-            r[0].pointDragEvent(r[1], ev)
+        #for r in self.roi:
+            #r[0].pointDragEvent(r[1], ev)
             
         if ev.isFinish():
+            if self.isMoving:
+                for r in self.roi:
+                    r[0].stateChangeFinished()
             self.isMoving = False
         elif ev.isStart():
             self.isMoving = True
+            self.startPos = self.scenePos()
             self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
             
         if self.isMoving:  ## note: isMoving may become False in mid-drag due to right-click.
             pos = ev.scenePos() + self.cursorOffset
-            self.movePoint(pos, ev.modifiers())
+            self.movePoint(pos, ev.modifiers(), finish=False)
 
-
-
-    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier()):
+    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
         for r in self.roi:
             if not r[0].checkPointMove(r[1], pos, modifiers):
                 return
         #print "point moved; inform %d ROIs" % len(self.roi)
         # A handle can be used by multiple ROIs; tell each to update its handle position
         for r in self.roi:
-            r[0].movePoint(r[1], pos, modifiers)
+            r[0].movePoint(r[1], pos, modifiers, finish=finish)
         
     def buildPath(self):
         size = self.radius
@@ -1629,8 +1409,8 @@ class SpiralROI(ROI):
         for h in self.handles:
             h['pos'] = h['item'].pos()/self.state['size'][0]
             
-    def handleChange(self):
-        ROI.handleChange(self)
+    def stateChanged(self):
+        ROI.stateChanged(self)
         if len(self.handles) > 1:
             self.path = QtGui.QPainterPath()
             h0 = Point(self.handles[0]['item'].pos()).length()

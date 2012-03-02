@@ -11,14 +11,14 @@ class ArrowItem(QtGui.QGraphicsPolygonItem):
     
     
     def __init__(self, **opts):
-        QtGui.QGraphicsPolygonItem.__init__(self)
+        QtGui.QGraphicsPolygonItem.__init__(self, opts.get('parent', None))
         defOpts = {
             'style': 'tri',
             'pxMode': True,
             'size': 20,
-            'angle': -150,
+            'angle': -150,   ## If the angle is 0, the arrow points left
             'pos': (0,0),
-            'width': 8,
+            'width': None,  ## width is automatically size / 2.
             'tipAngle': 25,
             'baseAngle': 90,
             'pen': (200,200,200),
@@ -38,10 +38,15 @@ class ArrowItem(QtGui.QGraphicsPolygonItem):
         self.opts = opts
         
         if opts['style'] == 'tri':
+            if opts['width'] is None:
+                width = opts['size'] / 2.
+            else:
+                width = opts['width']
+                
             points = [
                 QtCore.QPointF(0,0),
-                QtCore.QPointF(opts['size'],-opts['width']/2.),
-                QtCore.QPointF(opts['size'],opts['width']/2.),
+                QtCore.QPointF(opts['size'],-width/2.),
+                QtCore.QPointF(opts['size'],width/2.),
             ]
             poly = QtGui.QPolygonF(points)
             
