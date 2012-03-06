@@ -6,7 +6,7 @@ import TransformGuiTemplate
 import debug
 
 class SelectBox(ROI):
-    def __init__(self, scalable=False):
+    def __init__(self, scalable=False, rotatable=True):
         #QtGui.QGraphicsRectItem.__init__(self, 0, 0, size[0], size[1])
         ROI.__init__(self, [0,0], [1,1], invertible=True)
         center = [0.5, 0.5]
@@ -14,8 +14,9 @@ class SelectBox(ROI):
         if scalable:
             self.addScaleHandle([1, 1], center, lockAspect=True)
             self.addScaleHandle([0, 0], center, lockAspect=True)
-        self.addRotateHandle([0, 1], center)
-        self.addRotateHandle([1, 0], center)
+        if rotatable:
+            self.addRotateHandle([0, 1], center)
+            self.addRotateHandle([1, 0], center)
 
 class CanvasItem(QtCore.QObject):
     
@@ -30,7 +31,7 @@ class CanvasItem(QtCore.QObject):
     transformCopyBuffer = None
     
     def __init__(self, item, **opts):
-        defOpts = {'name': None, 'z': None, 'movable': True, 'scalable': False, 'visible': True, 'parent':None} #'pos': [0,0], 'scale': [1,1], 'angle':0,
+        defOpts = {'name': None, 'z': None, 'movable': True, 'scalable': False, 'rotatable': True, 'visible': True, 'parent':None} #'pos': [0,0], 'scale': [1,1], 'angle':0,
         defOpts.update(opts)
         self.opts = defOpts
         self.selectedAlone = False  ## whether this item is the only one selected
@@ -105,7 +106,7 @@ class CanvasItem(QtCore.QObject):
             
         ## every CanvasItem implements its own individual selection box 
         ## so that subclasses are free to make their own.
-        self.selectBox = SelectBox(scalable=self.opts['scalable'])
+        self.selectBox = SelectBox(scalable=self.opts['scalable'], rotatable=self.opts['rotatable'])
         #self.canvas.scene().addItem(self.selectBox)
         self.selectBox.hide()
         self.selectBox.setZValue(1e6)
