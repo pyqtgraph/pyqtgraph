@@ -46,7 +46,7 @@ class Point(QtCore.QPointF):
         elif i == 1:
             return self.y()
         else:
-            raise IndexError("Point has no index %d" % i)
+            raise IndexError("Point has no index %s" % str(i))
         
     def __setitem__(self, i, x):
         if i == 0:
@@ -54,7 +54,7 @@ class Point(QtCore.QPointF):
         elif i == 1:
             return self.setY(x)
         else:
-            raise IndexError("Point has no index %d" % i)
+            raise IndexError("Point has no index %s" % str(i))
         
     def __radd__(self, a):
         return self._math_('__radd__', a)
