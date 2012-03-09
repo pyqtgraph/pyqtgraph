@@ -33,14 +33,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #print "set view", item, self, item.view()
         self.updateGL()
         
+    def removeItem(self, item):
+        self.items.remove(item)
+        item._setView(None)
+        self.updateGL()
+        
+        
     def initializeGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
-        glEnable(GL_DEPTH_TEST)
-
-        glEnable( GL_ALPHA_TEST )
         self.resizeGL(self.width(), self.height())
-        self.generateAxes()
-        #self.generatePoints()
         
     def resizeGL(self, w, h):
         glViewport(0, 0, w, h)
@@ -75,15 +76,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def paintGL(self):
         self.setProjection()
         self.setModelview()
-
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
-        glDisable( GL_DEPTH_TEST )
-        #print "draw list:", self.axisList
-        glCallList(self.axisList)  ## draw axes
-        #glCallList(self.pointList)
-        #self.drawPoints()
-        #self.drawAxes()
-        
         self.drawItemTree()
         
     def drawItemTree(self, item=None):
@@ -94,14 +87,19 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             items.append(item)
         items.sort(lambda a,b: cmp(a.depthValue(), b.depthValue()))
         for i in items:
+            if not i.visible():
+                continue
             if i is item:
+                i.paint()
+            else:
                 glMatrixMode(GL_MODELVIEW)
                 glPushMatrix()
-                i.paint()
+                tr = i.transform()
+                a = np.array(tr.copyDataTo()).reshape((4,4))
+                glMultMatrixf(a.transpose())
+                self.drawItemTree(i)
                 glMatrixMode(GL_MODELVIEW)
                 glPopMatrix()
-            else:
-                self.drawItemTree(i)
             
         
     def cameraPosition(self):
@@ -118,65 +116,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         )
         
         return pos
-        
-        
 
-    def generateAxes(self):
-        self.axisList = glGenLists(1)
-        glNewList(self.axisList, GL_COMPILE)
-
-        #glShadeModel(GL_FLAT)
-        #glFrontFace(GL_CCW)
-        #glEnable( GL_LIGHT_MODEL_TWO_SIDE )
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
-        #glAlphaFunc( GL_ALWAYS,0.5 )
-        glEnable( GL_POINT_SMOOTH )
-        glDisable( GL_DEPTH_TEST )
-        glBegin( GL_LINES )
-        
-        glColor4f(1, 1, 1, .3)
-        for x in range(-10, 11):
-            glVertex3f(x, -10, 0)
-            glVertex3f(x,  10, 0)
-        for y in range(-10, 11):
-            glVertex3f(-10, y, 0)
-            glVertex3f( 10, y, 0)
-        
-        
-        glColor4f(0, 1, 0, .6)  # z is green
-        glVertex3f(0, 0, 0)
-        glVertex3f(0, 0, 5)
-
-        glColor4f(1, 1, 0, .6)  # y is yellow
-        glVertex3f(0, 0, 0)
-        glVertex3f(0, 5, 0)
-
-        glColor4f(0, 0, 1, .6)  # x is blue
-        glVertex3f(0, 0, 0)
-        glVertex3f(5, 0, 0)
-        glEnd()
-        glEndList()
-        
-    def generatePoints(self):
-        self.pointList = glGenLists(1)
-        glNewList(self.pointList, GL_COMPILE)
-        width = 7
-        alpha = 0.02
-        n = 40
-        glPointSize( width )
-        glBegin(GL_POINTS)
-        for x in range(-n, n+1):
-            r = (n-x)/(2.*n)
-            glColor4f(r, r, r, alpha)
-            for y in range(-n, n+1):
-                for z in range(-n, n+1):
-                    glVertex3f(x, y, z)
-        glEnd()
-        glEndList()
-        
-        
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
         

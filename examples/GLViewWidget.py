@@ -8,12 +8,21 @@ import pyqtgraph.opengl as gl
 
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
+w.opts['distance'] = 20
 w.show()
 
+ax = gl.GLAxisItem()
+ax.setSize(5,5,5)
+w.addItem(ax)
 
 b = gl.GLBoxItem()
 w.addItem(b)
 
-v = gl.GLVolumeItem()
-w.addItem(v)
+ax2 = gl.GLAxisItem()
+ax2.setParentItem(b)
 
+b.translate(1,1,1)
+
+## Start Qt event loop unless running in interactive mode.
+if sys.flags.interactive != 1:
+    app.exec_()

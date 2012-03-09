@@ -67,6 +67,21 @@ y = np.sin(np.linspace(0, 10, 1000)) + np.random.normal(size=1000, scale=0.1)
 p7.plot(y, fillLevel=-0.3, brush=(50,50,200,100))
 
 
+x2 = np.linspace(-100, 100, 1000)
+data2 = np.sin(x2) / x2
+p8 = win.addPlot(title="Region Selection")
+p8.plot(data2, pen=(255,255,255,200))
+lr = pg.LinearRegionItem([400,700])
+lr.setZValue(-10)
+p8.addItem(lr)
+
+p9 = win.addPlot(title="Zoom on selected region")
+p9.plot(data2)
+def update():
+    p9.setXRange(*lr.getRegion())
+lr.sigRegionChanged.connect(update)
+update()
+
 ## Start Qt event loop unless running in interactive mode.
 if sys.flags.interactive != 1:
     app.exec_()

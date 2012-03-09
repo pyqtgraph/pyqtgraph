@@ -6,23 +6,28 @@ import numpy as np
 __all__ = ['GLVolumeItem']
 
 class GLVolumeItem(GLGraphicsItem):
+    def __init__(self, data, sliceDensity=1, smooth=True):
+        self.sliceDensity = sliceDensity
+        self.smooth = smooth
+        self.data = data
+        GLGraphicsItem.__init__(self)
+        
     def initializeGL(self):
-        n = 128
-        self.data = np.random.randint(0, 255, size=4*n**3).astype(np.uint8).reshape((n,n,n,4))
-        self.data[...,3] *= 0.1
-        for i in range(n):
-            self.data[i,:,:,0] = i*256./n
         glEnable(GL_TEXTURE_3D)
         self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_3D, self.texture)
-        #glTexImage3D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, void *data );
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        if self.smooth:
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        else:
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
-        #glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, )  ## black/transparent by default
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, n, n, n, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data)
+        shape = self.data.shape
+        
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape[0], shape[1], shape[2], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.data.transpose((2,1,0,3)))
         glDisable(GL_TEXTURE_3D)
         
         self.lists = {}
@@ -40,14 +45,16 @@ class GLVolumeItem(GLGraphicsItem):
         glEnable(GL_TEXTURE_3D)
         glBindTexture(GL_TEXTURE_3D, self.texture)
         
-        glDisable(GL_DEPTH_TEST)
+        glEnable(GL_DEPTH_TEST)
         #glDisable(GL_CULL_FACE)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable( GL_BLEND )
         glEnable( GL_ALPHA_TEST )
+        glColor4f(1,1,1,1)
 
         view = self.view()
-        cam = view.cameraPosition()
+        center = QtGui.QVector3D(*[x/2. for x in self.data.shape[:3]])
+        cam = self.mapFromParent(view.cameraPosition()) - center
         cam = np.array([cam.x(), cam.y(), cam.z()])
         ax = np.argmax(abs(cam))
         d = 1 if cam[ax] > 0 else -1
@@ -55,7 +62,6 @@ class GLVolumeItem(GLGraphicsItem):
         glDisable(GL_TEXTURE_3D)
                 
     def drawVolume(self, ax, d):
-        slices = 256
         N = 5
         
         imax = [0,1,2]
@@ -63,31 +69,35 @@ class GLVolumeItem(GLGraphicsItem):
         
         tp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
         vp = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        tp[0][imax[0]] = 0
-        tp[0][imax[1]] = 0
-        tp[1][imax[0]] = 1
-        tp[1][imax[1]] = 0
-        tp[2][imax[0]] = 1
-        tp[2][imax[1]] = 1
-        tp[3][imax[0]] = 0
-        tp[3][imax[1]] = 1
+        nudge = [0.5/x for x in self.data.shape]
+        tp[0][imax[0]] = 0+nudge[imax[0]]
+        tp[0][imax[1]] = 0+nudge[imax[1]]
+        tp[1][imax[0]] = 1-nudge[imax[0]]
+        tp[1][imax[1]] = 0+nudge[imax[1]]
+        tp[2][imax[0]] = 1-nudge[imax[0]]
+        tp[2][imax[1]] = 1-nudge[imax[1]]
+        tp[3][imax[0]] = 0+nudge[imax[0]]
+        tp[3][imax[1]] = 1-nudge[imax[1]]
         
-        vp[0][imax[0]] = -N
-        vp[0][imax[1]] = -N
-        vp[1][imax[0]] = N
-        vp[1][imax[1]] = -N
-        vp[2][imax[0]] = N
-        vp[2][imax[1]] = N
-        vp[3][imax[0]] = -N
-        vp[3][imax[1]] = N
+        vp[0][imax[0]] = 0
+        vp[0][imax[1]] = 0
+        vp[1][imax[0]] = self.data.shape[imax[0]]
+        vp[1][imax[1]] = 0
+        vp[2][imax[0]] = self.data.shape[imax[0]]
+        vp[2][imax[1]] = self.data.shape[imax[1]]
+        vp[3][imax[0]] = 0
+        vp[3][imax[1]] = self.data.shape[imax[1]]
+        slices = self.data.shape[ax] * self.sliceDensity
         r = range(slices)
         if d == -1:
             r = r[::-1]
             
         glBegin(GL_QUADS)
+        tzVals = np.linspace(nudge[ax], 1.0-nudge[ax], slices)
+        vzVals = np.linspace(0, self.data.shape[ax], slices)
         for i in r:
-            z = float(i)/(slices-1.)
-            w = float(i)*10./(slices-1.) - 5.
+            z = tzVals[i]
+            w = vzVals[i]
             
             tp[0][ax] = z
             tp[1][ax] = z

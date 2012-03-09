@@ -6,6 +6,8 @@ class GLGraphicsItem(QtCore.QObject):
         self.__parent = None
         self.__view = None
         self.__children = set()
+        self.__transform = QtGui.QMatrix4x4()
+        self.__visible = True
         self.setParentItem(parentItem)
         self.setDepthValue(0)
         
@@ -15,6 +17,11 @@ class GLGraphicsItem(QtCore.QObject):
         if item is not None:
             item.__children.add(self)
         self.__parent = item
+        
+        if self.__parent is not None and self.view() is not self.__parent.view():
+            if self.view() is not None:
+                self.view().removeItem(self)
+            self.__parent.view().addItem(self)
         
     def parentItem(self):
         return self.__parent
@@ -42,6 +49,69 @@ class GLGraphicsItem(QtCore.QObject):
         """Return the depth value of this item. See setDepthValue for mode information."""
         return self.__depthValue
         
+    def setTransform(self, tr):
+        self.__transform = tr
+        self.update()
+        
+    def applyTransform(self, tr, local):
+        """
+        Multiply this object's transform by *tr*. 
+        If local is True, then *tr* is multiplied on the right of the current transform:
+            newTransform = transform * tr
+        If local is False, then *tr* is instead multiplied on the left:
+            newTransform = tr * transform
+        """
+        if local:
+            self.setTransform(self.transform() * tr)
+        else:
+            self.setTransform(tr * self.transform())
+        
+    def transform(self):
+        return self.__transform
+        
+    def translate(self, dx, dy, dz, local=False):
+        """
+        Translate the object by (*dx*, *dy*, *dz*) in its parent's coordinate system.
+        If *local* is True, then translation takes place in local coordinates.
+        """
+        tr = QtGui.QMatrix4x4()
+        tr.translate(dx, dy, dz)
+        self.applyTransform(tr, local=local)
+        
+    def rotate(self, angle, x, y, z, local=False):
+        """
+        Rotate the object around the axis specified by (x,y,z).
+        *angle* is in degrees.
+        
+        """
+        tr = QtGui.QMatrix4x4()
+        tr.rotate(angle, x, y, z)
+        self.applyTransform(tr, local=local)
+    
+    def scale(self, x, y, z, local=True):
+        """
+        Scale the object by (*dx*, *dy*, *dz*) in its local coordinate system.
+        If *local* is False, then scale takes place in the parent's coordinates.
+        """
+        tr = QtGui.QMatrix4x4()
+        tr.scale(x, y, z)
+        self.applyTransform(tr, local=local)
+    
+    
+    def hide(self):
+        self.setVisible(False)
+        
+    def show(self):
+        self.setVisible(True)
+    
+    def setVisible(self, vis):
+        self.__visible = vis
+        self.update()
+        
+    def visible(self):
+        return self.__visible
+    
+    
     def initializeGL(self):
         """
         Called after an item is added to a GLViewWidget. 
@@ -58,3 +128,14 @@ class GLGraphicsItem(QtCore.QObject):
         """
         pass
         
+    def update(self):
+        v = self.view()
+        if v is None:
+            return
+        v.updateGL()
+        
+    def mapFromParent(self, point):
+        tr = self.transform()
+        if tr is None:
+            return point
+        return tr.inverted()[0].map(point)
