@@ -411,60 +411,60 @@ class GraphicsView(QtGui.QGraphicsView):
         return Point(p11 - p01)
         
         
-    def writeSvg(self, fileName=None):
-        if fileName is None:
-            self.fileDialog = FileDialog()
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-            if GraphicsView.lastFileDir is not None:
-                self.fileDialog.setDirectory(GraphicsView.lastFileDir)
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeSvg)
-            return
-        fileName = str(fileName)
-        GraphicsView.lastFileDir = os.path.split(fileName)[0]
-        self.svg = QtSvg.QSvgGenerator()
-        self.svg.setFileName(fileName)
-        self.svg.setSize(self.size())
-        self.svg.setResolution(600)
-        painter = QtGui.QPainter(self.svg)
-        self.render(painter)
-        
-    def writeImage(self, fileName=None):
-        if fileName is None:
-            self.fileDialog = FileDialog()
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) ## this is the line that makes the fileDialog not show on mac
-            if GraphicsView.lastFileDir is not None:
-                self.fileDialog.setDirectory(GraphicsView.lastFileDir)
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeImage)
-            return
-        fileName = str(fileName)
-        GraphicsView.lastFileDir = os.path.split(fileName)[0]
-        self.png = QtGui.QImage(self.size(), QtGui.QImage.Format_ARGB32)
-        painter = QtGui.QPainter(self.png)
-        rh = self.renderHints()
-        self.setRenderHints(QtGui.QPainter.Antialiasing)
-        self.render(painter)
-        self.setRenderHints(rh)
-        self.png.save(fileName)
-        
-    def writePs(self, fileName=None):
-        if fileName is None:
-            self.fileDialog = FileDialog()
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writePs)
-            return
+    #def writeSvg(self, fileName=None):
         #if fileName is None:
-        #    fileName = str(QtGui.QFileDialog.getSaveFileName())
-        printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
-        printer.setOutputFileName(fileName)
-        painter = QtGui.QPainter(printer)
-        self.render(painter)
-        painter.end()
+            #self.fileDialog = FileDialog()
+            #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+            #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+            #if GraphicsView.lastFileDir is not None:
+                #self.fileDialog.setDirectory(GraphicsView.lastFileDir)
+            #self.fileDialog.show()
+            #self.fileDialog.fileSelected.connect(self.writeSvg)
+            #return
+        #fileName = str(fileName)
+        #GraphicsView.lastFileDir = os.path.split(fileName)[0]
+        #self.svg = QtSvg.QSvgGenerator()
+        #self.svg.setFileName(fileName)
+        #self.svg.setSize(self.size())
+        #self.svg.setResolution(600)
+        #painter = QtGui.QPainter(self.svg)
+        #self.render(painter)
+        
+    #def writeImage(self, fileName=None):
+        #if fileName is None:
+            #self.fileDialog = FileDialog()
+            #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+            #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) ## this is the line that makes the fileDialog not show on mac
+            #if GraphicsView.lastFileDir is not None:
+                #self.fileDialog.setDirectory(GraphicsView.lastFileDir)
+            #self.fileDialog.show()
+            #self.fileDialog.fileSelected.connect(self.writeImage)
+            #return
+        #fileName = str(fileName)
+        #GraphicsView.lastFileDir = os.path.split(fileName)[0]
+        #self.png = QtGui.QImage(self.size(), QtGui.QImage.Format_ARGB32)
+        #painter = QtGui.QPainter(self.png)
+        #rh = self.renderHints()
+        #self.setRenderHints(QtGui.QPainter.Antialiasing)
+        #self.render(painter)
+        #self.setRenderHints(rh)
+        #self.png.save(fileName)
+        
+    #def writePs(self, fileName=None):
+        #if fileName is None:
+            #self.fileDialog = FileDialog()
+            #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+            #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
+            #self.fileDialog.show()
+            #self.fileDialog.fileSelected.connect(self.writePs)
+            #return
+        ##if fileName is None:
+        ##    fileName = str(QtGui.QFileDialog.getSaveFileName())
+        #printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
+        #printer.setOutputFileName(fileName)
+        #painter = QtGui.QPainter(printer)
+        #self.render(painter)
+        #painter.end()
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events

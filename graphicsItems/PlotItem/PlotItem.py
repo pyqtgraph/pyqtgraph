@@ -173,19 +173,16 @@ class PlotItem(GraphicsWidget):
             self.subMenus.append(sm)
             self.ctrlMenu.addMenu(sm)
         
+        ## exporting is handled by GraphicsScene now
+        #exportOpts = collections.OrderedDict([
+            #('SVG - Full Plot', self.saveSvgClicked),
+            #('SVG - Curves Only', self.saveSvgCurvesClicked),
+            #('Image', self.saveImgClicked),
+            #('CSV', self.saveCsvClicked),
+        #])
         
-        exportOpts = collections.OrderedDict([
-            ('SVG - Full Plot', self.saveSvgClicked),
-            ('SVG - Curves Only', self.saveSvgCurvesClicked),
-            ('Image', self.saveImgClicked),
-            ('CSV', self.saveCsvClicked),
-        ])
+        #self.vb.menu.setExportMethods(exportOpts)
         
-        self.vb.menu.setExportMethods(exportOpts)
-        
-        #self.menuAction = QtGui.QWidgetAction(self)
-        #self.menuAction.setDefaultWidget(w)
-        #self.ctrlMenu.addAction(self.menuAction)
         
         #if HAVE_WIDGETGROUP:
         self.stateGroup = WidgetGroup()

@@ -19,11 +19,44 @@ def setConfigOption(opt, value):
 def getConfigOption(opt):
     return CONFIG_OPTIONS[opt]
 
+
+## Rename orphaned .pyc files. This is *probably* safe :)
+
+def renamePyc(startDir):
+    ### Used to rename orphaned .pyc files
+    ### When a python file changes its location in the repository, usually the .pyc file
+    ### is left behind, possibly causing mysterious and difficult to track bugs. 
+    
+    printed = False
+    startDir = os.path.abspath(startDir)
+    for path, dirs, files in os.walk(startDir):
+        for f in files:
+            fileName = os.path.join(path, f)
+            base, ext = os.path.splitext(fileName)
+            py = base + ".py"
+            if ext == '.pyc' and not os.path.isfile(py):
+                if not printed:
+                    print "NOTE: Renaming orphaned .pyc files:"
+                    printed = True
+                n = 1
+                while True:
+                    name2 = fileName + ".renamed%d" % n
+                    if not os.path.exists(name2):
+                        break
+                    n += 1
+                print "  " + fileName + "  ==>"
+                print "  " + name2
+                os.rename(fileName, name2)
+                
+import os
+path = os.path.split(__file__)[0]
+renamePyc(path)
+
+
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
 ## these must be imported separately.
 
-import os
 def importAll(path):
     d = os.path.join(os.path.split(__file__)[0], path)
     files = []
@@ -102,3 +135,5 @@ def mkQApp():
     if QtGui.QApplication.instance() is None:
         global QAPP
         QAPP = QtGui.QApplication([])
+        
+        

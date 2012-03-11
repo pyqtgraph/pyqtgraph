@@ -160,6 +160,7 @@ class GraphicsItemMethods(object):
     def mapToDevice(self, obj):
         """
         Return *obj* mapped from local coordinates to device coordinates (pixels).
+        If there is no device mapping available, return None.
         """
         vt = self.deviceTransform()
         if vt is None:
@@ -169,6 +170,7 @@ class GraphicsItemMethods(object):
     def mapFromDevice(self, obj):
         """
         Return *obj* mapped from device coordinates (pixels) to local coordinates.
+        If there is no device mapping available, return None.
         """
         vt = self.deviceTransform()
         if vt is None:
@@ -176,6 +178,27 @@ class GraphicsItemMethods(object):
         vt = vt.inverted()[0]
         return vt.map(obj)
 
+    def mapRectToDevice(self, rect):
+        """
+        Return *rect* mapped from local coordinates to device coordinates (pixels).
+        If there is no device mapping available, return None.
+        """
+        vt = self.deviceTransform()
+        if vt is None:
+            return None
+        return vt.mapRect(rect)
+
+    def mapRectFromDevice(self, rect):
+        """
+        Return *rect* mapped from device coordinates (pixels) to local coordinates.
+        If there is no device mapping available, return None.
+        """
+        vt = self.deviceTransform()
+        if vt is None:
+            return None
+        vt = vt.inverted()[0]
+        return vt.mapRect(rect)
+    
     def mapToView(self, obj):
         vt = self.viewTransform()
         if vt is None:

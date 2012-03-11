@@ -3,6 +3,7 @@ from Parameter import Parameter, registerParameterType
 from ParameterItem import ParameterItem
 from pyqtgraph.widgets.SpinBox import SpinBox
 from pyqtgraph.widgets.ColorButton import ColorButton
+import pyqtgraph as pg
 import os, collections
 
 class WidgetParameterItem(ParameterItem):
@@ -262,6 +263,14 @@ class EventProxy(QtCore.QObject):
 
 class SimpleParameter(Parameter):
     itemClass = WidgetParameterItem
+    
+    def __init__(self, *args, **kargs):
+        Parameter.__init__(self, *args, **kargs)
+        if self.opts['type'] == 'color':
+            self.value = self.colorValue
+    
+    def colorValue(self):
+        return pg.mkColor(Parameter.value(self))
     
 registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)

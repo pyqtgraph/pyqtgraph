@@ -46,9 +46,10 @@ class ViewBoxMenu(QtGui.QMenu):
             for sig, fn in connects:
                 sig.connect(getattr(self, axis.lower()+fn))
             
-        self.export = QtGui.QMenu("Export")
-        self.setExportMethods(view.exportMethods)
-        self.addMenu(self.export)
+        ## exporting is handled by GraphicsScene now
+        #self.export = QtGui.QMenu("Export")
+        #self.setExportMethods(view.exportMethods)
+        #self.addMenu(self.export)
         
         self.leftMenu = QtGui.QMenu("Mouse Mode")
         group = QtGui.QActionGroup(self)
@@ -78,7 +79,7 @@ class ViewBoxMenu(QtGui.QMenu):
     def subMenus(self):
         if not self.valid:
             self.updateState()
-        return [self.viewAll] + self.axes + [self.export, self.leftMenu]
+        return [self.viewAll] + self.axes + [self.leftMenu]
 
 
     def setExportMethods(self, methods):
