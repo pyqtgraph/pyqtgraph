@@ -19,6 +19,7 @@ class AxisItem(GraphicsWidget):
         GraphicsWidget.__init__(self, parent)
         self.label = QtGui.QGraphicsTextItem(self)
         self.showValues = showValues
+        self.picture = None
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
@@ -53,7 +54,7 @@ class AxisItem(GraphicsWidget):
             pen = QtGui.QPen(QtGui.QColor(100, 100, 100))
         self.setPen(pen)
         
-        self.linkedView = None
+        self._linkedView = None
         if linkView is not None:
             self.linkToView(linkView)
             
@@ -70,6 +71,8 @@ class AxisItem(GraphicsWidget):
     def setGrid(self, grid):
         """Set the alpha value for the grid, or False to disable."""
         self.grid = grid
+        self.picture = None
+        self.prepareGeometryChange()
         self.update()
         
         
@@ -98,6 +101,7 @@ class AxisItem(GraphicsWidget):
             p.setY(int(self.size().height()-br.height()+nudge))
         #self.label.resize(s)
         self.label.setPos(p)
+        self.picture = None
         
     def showLabel(self, show=True):
         #self.drawLabel = show
@@ -122,6 +126,7 @@ class AxisItem(GraphicsWidget):
             self.labelStyle = args
         self.label.setHtml(self.labelString())
         self.resizeEvent()
+        self.picture = None
         self.update()
             
     def labelString(self):
@@ -147,6 +152,7 @@ class AxisItem(GraphicsWidget):
                 h += self.textHeight
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
+        self.picture = None
         
         
     def setWidth(self, w=None):
@@ -159,6 +165,7 @@ class AxisItem(GraphicsWidget):
         
     def setPen(self, pen):
         self.pen = pen
+        self.picture = None
         self.update()
         
     def setScale(self, scale=None):
@@ -191,6 +198,7 @@ class AxisItem(GraphicsWidget):
         if scale != self.scale:
             self.scale = scale
             self.setLabel()
+            self.picture = None
             self.update()
         
     def setRange(self, mn, mx):
@@ -199,32 +207,34 @@ class AxisItem(GraphicsWidget):
         self.range = [mn, mx]
         if self.autoScale:
             self.setScale()
+        self.picture = None
         self.update()
         
-    def linkToView(self, view):
-        if self.orientation in ['right', 'left']:
-            if self.linkedView is not None and self.linkedView() is not None:
-                #view.sigYRangeChanged.disconnect(self.linkedViewChanged)
-                ## should be this instead?
-                self.linkedView().sigYRangeChanged.disconnect(self.linkedViewChanged)
-            self.linkedView = weakref.ref(view)
-            view.sigYRangeChanged.connect(self.linkedViewChanged)
-            #signal = QtCore.SIGNAL('yRangeChanged')
+    def linkedView(self):
+        """Return the ViewBox this axis is linked to"""
+        if self._linkedView is None:
+            return None
         else:
-            if self.linkedView is not None and self.linkedView() is not None:
-                #view.sigYRangeChanged.disconnect(self.linkedViewChanged)
-                ## should be this instead?
-                self.linkedView().sigXRangeChanged.disconnect(self.linkedViewChanged)
-            self.linkedView = weakref.ref(view)
+            return self._linkedView()
+        
+    def linkToView(self, view):
+        oldView = self.linkedView()
+        self._linkedView = weakref.ref(view)
+        if self.orientation in ['right', 'left']:
+            if oldView is not None:
+                oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
+            view.sigYRangeChanged.connect(self.linkedViewChanged)
+        else:
+            if oldView is not None:
+                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
             view.sigXRangeChanged.connect(self.linkedViewChanged)
-            #signal = QtCore.SIGNAL('xRangeChanged')
-            
         
     def linkedViewChanged(self, view, newRange):
         self.setRange(*newRange)
         
     def boundingRect(self):
-        if self.linkedView is None or self.linkedView() is None or self.grid is False:
+        linkedView = self.linkedView()
+        if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
             ## extend rect if ticks go in negative direction
             if self.orientation == 'left':
@@ -237,19 +247,32 @@ class AxisItem(GraphicsWidget):
                 rect.setTop(rect.top() + min(0,self.tickLength))
             return rect
         else:
-            return self.mapRectFromParent(self.geometry()) | self.mapRectFromScene(self.linkedView().mapRectToScene(self.linkedView().boundingRect()))
+            return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
         
     def paint(self, p, opt, widget):
+        if self.picture is None:
+            self.picture = QtGui.QPicture()
+            painter = QtGui.QPainter(self.picture)
+            try:
+                self.drawPicture(painter)
+            finally:
+                painter.end()
+        self.picture.play(p)
+        
+        
+    def drawPicture(self, p):
+        
         prof = debug.Profiler("AxisItem.paint", disabled=True)
         p.setPen(self.pen)
         
         #bounds = self.boundingRect()
         bounds = self.mapRectFromParent(self.geometry())
         
-        if self.linkedView is None or self.linkedView() is None or self.grid is False:
+        linkedView = self.linkedView()
+        if linkedView is None or self.grid is False:
             tbounds = bounds
         else:
-            tbounds = self.mapRectFromScene(self.linkedView().mapRectToScene(self.linkedView().boundingRect()))
+            tbounds = linkedView.mapRectToItem(self, linkedView.boundingRect())
         
         if self.orientation == 'left':
             span = (bounds.topRight(), bounds.bottomRight())
@@ -372,6 +395,13 @@ class AxisItem(GraphicsWidget):
                 a = 255 * distBetweenIntervals
             else:
                 a = 255
+                
+            lineAlpha = a
+            textAlpha = a
+                
+            if self.grid is not False:
+                print self.grid
+                lineAlpha = int(lineAlpha * self.grid / 255.)
             
             if axis == 0:
                 offset = self.range[0] * xs - bounds.height()
@@ -384,14 +414,16 @@ class AxisItem(GraphicsWidget):
                 p1 = [0, 0]
                 p2 = [0, 0]
                 p1[axis] = tickStart
-                p2[axis] = tickStop + h*tickDir
+                p2[axis] = tickStop
+                if self.grid is False:
+                    p2[axis] += h*tickDir
                 p1[1-axis] = p2[1-axis] = x
                 
                 if p1[1-axis] > [bounds.width(), bounds.height()][1-axis]:
                     continue
                 if p1[1-axis] < 0:
                     continue
-                p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, a)))
+                p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, lineAlpha)))
                 # draw tick only if there is none
                 tickPos = p1[1-axis]
                 if tickPos not in tickPositions:
@@ -421,7 +453,7 @@ class AxisItem(GraphicsWidget):
                         
                         #p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, a)))
                         #p.drawText(rect, textFlags, vstr)
-                        texts.append((rect, textFlags, vstr, a))
+                        texts.append((rect, textFlags, vstr, textAlpha))
                     
         prof.mark('draw ticks')
         for args in texts:
@@ -446,9 +478,23 @@ class AxisItem(GraphicsWidget):
         GraphicsWidget.hide(self)
 
     def wheelEvent(self, ev):
-        if self.linkedView is None or self.linkedView() is None: return
+        if self.linkedView() is None: 
+            return
         if self.orientation in ['left', 'right']:
             self.linkedView().wheelEvent(ev, axis=1)
         else:
             self.linkedView().wheelEvent(ev, axis=0)
         ev.accept()
+        
+    def mouseDragEvent(self, event):
+        if self.linkedView() is None: 
+            return
+        if self.orientation in ['left', 'right']:
+            return self.linkedView().mouseDragEvent(event, axis=1)
+        else:
+            return self.linkedView().mouseDragEvent(event, axis=0)
+        
+    def mouseClickEvent(self, event):
+        if self.linkedView() is None: 
+            return
+        return self.linkedView().mouseClickEvent(event)

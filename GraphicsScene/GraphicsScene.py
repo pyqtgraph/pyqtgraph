@@ -4,7 +4,7 @@ from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import pyqtgraph.ptime as ptime
 from mouseEvents import *
-import debug
+import pyqtgraph.debug as debug
 import exportDialog
 
 try:

@@ -662,7 +662,8 @@ class ViewBox(GraphicsWidget):
         #return [self.getMenu(event)]
         
 
-    def mouseDragEvent(self, ev):
+    def mouseDragEvent(self, ev, axis=None):
+        ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
         
         pos = ev.pos()
@@ -672,6 +673,8 @@ class ViewBox(GraphicsWidget):
 
         ## Ignore axes if mouse is disabled
         mask = np.array(self.state['mouseEnabled'], dtype=np.float)
+        if axis is not None:
+            mask[1-axis] = 0.0
 
         ## Scale or translate based on mouse button
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
