@@ -51,7 +51,7 @@ s1.sigClicked.connect(clicked)
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
 pos = np.random.normal(size=(2,n), scale=1e-5)
-spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'style': i%5, 'size': 5+i/10.} for i in xrange(n)]
+spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': i%5, 'size': 5+i/10.} for i in xrange(n)]
 s2.addPoints(spots)
 w2.addItem(s2)
 w2.setRange(s2.boundingRect())

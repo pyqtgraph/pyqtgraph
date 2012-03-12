@@ -11,7 +11,7 @@ examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', 'Plotting.py'),
     ('GraphicsItems', OrderedDict([
-        ('PlotItem', 'PlotItem.py'),
+        #('PlotItem', 'PlotItem.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROItypes.py'),

@@ -10,7 +10,7 @@ import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
-mw.resize(800,800)
+mw.resize(300,300)
 
 p = pg.PlotWidget()
 mw.setCentralWidget(p)

@@ -23,7 +23,7 @@ class PlotWidget(GraphicsView):
         self.plotItem = PlotItem(**kargs)
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
-        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 'setYRange']:
+        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 'setYRange', 'setRange']:
             setattr(self, m, getattr(self.plotItem, m))
         #QtCore.QObject.connect(self.plotItem, QtCore.SIGNAL('viewChanged'), self.viewChanged)
         self.plotItem.sigRangeChanged.connect(self.viewRangeChanged)

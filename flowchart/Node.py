@@ -5,7 +5,7 @@ from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 from Terminal import *
 from collections import OrderedDict
-from debug import *
+from pyqtgraph.debug import *
 import numpy as np
 #from pyqtgraph.ObjectWorkaround import QObjectWorkaround
 from eq import *

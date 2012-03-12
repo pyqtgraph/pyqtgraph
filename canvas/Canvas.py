@@ -15,7 +15,7 @@ from pyqtgraph.graphicsItems.ViewBox import ViewBox
 from pyqtgraph.graphicsItems.GridItem import GridItem
 #import DataManager
 import numpy as np
-import debug
+from pyqtgraph import debug
 #import pyqtgraph as pg
 import weakref
 from CanvasManager import CanvasManager

@@ -12,6 +12,7 @@ Contents:
     :maxdepth: 2
 
     introduction
+    mouse_interaction
     how_to_use
     plotting
     images

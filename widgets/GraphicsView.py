@@ -154,7 +154,7 @@ class GraphicsView(QtGui.QGraphicsView):
             return
         if self.autoPixelRange:
             self.range = QtCore.QRectF(0, 0, self.size().width(), self.size().height())
-        self.setRange(self.range, padding=0, disableAutoPixel=False)
+        GraphicsView.setRange(self, self.range, padding=0, disableAutoPixel=False)
         self.updateMatrix()
     
     def updateMatrix(self, propagate=True):
@@ -241,7 +241,7 @@ class GraphicsView(QtGui.QGraphicsView):
         w = self.size().width() * pxSize[0]
         h = self.size().height() * pxSize[1]
         range = QtCore.QRectF(tl.x(), tl.y(), w, h)
-        self.setRange(range, padding=0)
+        GraphicsView.setRange(self, range, padding=0)
         self.sigScaleChanged.connect(image.setScaledMode)
         
         
@@ -254,13 +254,13 @@ class GraphicsView(QtGui.QGraphicsView):
         r1 = QtCore.QRectF(self.range)
         r1.setLeft(r.left())
         r1.setRight(r.right())
-        self.setRange(r1, padding=[padding, 0], propagate=False)
+        GraphicsView.setRange(self, r1, padding=[padding, 0], propagate=False)
         
     def setYRange(self, r, padding=0.05):
         r1 = QtCore.QRectF(self.range)
         r1.setTop(r.top())
         r1.setBottom(r.bottom())
-        self.setRange(r1, padding=[0, padding], propagate=False)
+        GraphicsView.setRange(self, r1, padding=[0, padding], propagate=False)
         
     #def invertY(self, invert=True):
         ##if self.yInverted != invert:

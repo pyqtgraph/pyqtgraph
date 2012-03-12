@@ -15,9 +15,10 @@ app = QtGui.QApplication([])
 #mw.resize(800,800)
 
 p = pg.plot()
-
+p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
+p.setLabel('bottom', 'Index', units='B')
 curve = p.plot()
-data = np.random.normal(size=(10,50000))
+data = np.random.normal(size=(50,5000))
 ptr = 0
 lastTime = time.time()
 fps = None

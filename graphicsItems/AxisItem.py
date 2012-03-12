@@ -184,9 +184,8 @@ class AxisItem(GraphicsWidget):
             #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
             if self.label.isVisible():
                 d = self.range[1] - self.range[0]
-                #pl = 1-int(log10(d))
-                #scale = 10 ** pl
-                (scale, prefix) = fn.siScale(d / 2.)
+                #(scale, prefix) = fn.siScale(d / 2.)
+                (scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
                 if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
                     scale = 1.0
                     prefix = ''
@@ -342,7 +341,7 @@ class AxisItem(GraphicsWidget):
             #if dif / (pw*intervals[i]) < 10:
                 #break
         
-        textLevel = 0  ## draw text at this scale level
+        textLevel = 1  ## draw text at this scale level
         
         #print "range: %s   dif: %f   power: %f  interval: %f   spacing: %f" % (str(self.range), dif, pw, intervals[i1], sp)
         
@@ -365,8 +364,8 @@ class AxisItem(GraphicsWidget):
             if i1+i >= len(intervals) or i1+i < 0:
                 print "AxisItem.paint error: i1=%d, i=%d, len(intervals)=%d" % (i1, i, len(intervals))
                 continue
-            ## spacing for this interval
             
+            ## spacing for this interval
             sp = pw*intervals[i1+i]
             
             ## determine starting tick
@@ -380,7 +379,8 @@ class AxisItem(GraphicsWidget):
             
             ## Number of decimal places to print
             maxVal = max(abs(start), abs(last))
-            places = max(0, 1-int(np.log10(sp*self.scale)))
+            places = max(0, np.ceil(-np.log10(sp*self.scale)))
+            #print i, sp, sp*self.scale, np.log10(sp*self.scale), places
         
             ## length of tick
             #h = np.clip((self.tickLength*3 / num) - 1., min(0, self.tickLength), max(0, self.tickLength))
@@ -424,36 +424,39 @@ class AxisItem(GraphicsWidget):
                 if p1[1-axis] < 0:
                     continue
                 p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, lineAlpha)))
+                
                 # draw tick only if there is none
                 tickPos = p1[1-axis]
-                if tickPos not in tickPositions:
-                    p.drawLine(Point(p1), Point(p2))
-                    tickPositions.add(tickPos)
-                    if i >= textLevel:
-                        if abs(v) < .001 or abs(v) >= 10000:
-                            vstr = "%g" % (v * self.scale)
-                        else:
-                            vstr = ("%%0.%df" % places) % (v * self.scale)
-                            
-                        textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
-                        height = textRect.height()
-                        self.textHeight = height
-                        if self.orientation == 'left':
-                            textFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
-                            rect = QtCore.QRectF(tickStop-100, x-(height/2), 99-max(0,self.tickLength), height)
-                        elif self.orientation == 'right':
-                            textFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
-                            rect = QtCore.QRectF(tickStop+max(0,self.tickLength)+1, x-(height/2), 100-max(0,self.tickLength), height)
-                        elif self.orientation == 'top':
-                            textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
-                            rect = QtCore.QRectF(x-100, tickStop-max(0,self.tickLength)-height, 200, height)
-                        elif self.orientation == 'bottom':
-                            textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
-                            rect = QtCore.QRectF(x-100, tickStop+max(0,self.tickLength), 200, height)
+                
+                #if tickPos not in tickPositions:
+                p.drawLine(Point(p1), Point(p2))
+                #tickPositions.add(tickPos)
+                if i == textLevel:
+                    if abs(v*self.scale) < .001 or abs(v*self.scale) >= 10000:
+                        vstr = "%g" % (v * self.scale)
+                    else:
+                        vstr = ("%%0.%df" % places) % (v * self.scale)
+                    #print "    ", v*self.scale, places, vstr
                         
-                        #p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, a)))
-                        #p.drawText(rect, textFlags, vstr)
-                        texts.append((rect, textFlags, vstr, textAlpha))
+                    textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
+                    height = textRect.height()
+                    self.textHeight = height
+                    if self.orientation == 'left':
+                        textFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                        rect = QtCore.QRectF(tickStop-100, x-(height/2), 99-max(0,self.tickLength), height)
+                    elif self.orientation == 'right':
+                        textFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                        rect = QtCore.QRectF(tickStop+max(0,self.tickLength)+1, x-(height/2), 100-max(0,self.tickLength), height)
+                    elif self.orientation == 'top':
+                        textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
+                        rect = QtCore.QRectF(x-100, tickStop-max(0,self.tickLength)-height, 200, height)
+                    elif self.orientation == 'bottom':
+                        textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
+                        rect = QtCore.QRectF(x-100, tickStop+max(0,self.tickLength), 200, height)
+                    
+                    #p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, a)))
+                    #p.drawText(rect, textFlags, vstr)
+                    texts.append((rect, textFlags, vstr, textAlpha))
                     
         prof.mark('draw ticks')
         for args in texts:

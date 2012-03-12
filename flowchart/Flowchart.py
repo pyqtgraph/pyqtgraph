@@ -13,7 +13,7 @@ import FlowchartCtrlTemplate
 from Terminal import Terminal
 from numpy import ndarray
 import library
-from debug import printExc
+from pyqtgraph.debug import printExc
 import configfile
 import pyqtgraph.dockarea as dockarea
 import pyqtgraph as pg
