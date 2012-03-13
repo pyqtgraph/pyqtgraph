@@ -400,7 +400,6 @@ class AxisItem(GraphicsWidget):
             textAlpha = a
                 
             if self.grid is not False:
-                print self.grid
                 lineAlpha = int(lineAlpha * self.grid / 255.)
             
             if axis == 0:
