@@ -1,7 +1,4 @@
-## Add path to library (just for examples; you do not need this)
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
+import initExample ## Add path to library (just for examples; you do not need this)
 
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
@@ -17,6 +14,7 @@ data = np.random.normal(size=(500,500))
 pg.show(data, title="Simplest possible image example")
 
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+## Start Qt event loop unless running in interactive mode or using pyside.
+import sys
+if sys.flags.interactive != 1 or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()

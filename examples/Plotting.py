@@ -1,8 +1,11 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-## Add path to library (just for examples; you do not need this)
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+## This example demonstrates many of the 2D plotting capabilities
+## in pyqtgraph. All of the plots may be panned/scaled by dragging with 
+## the left/right mouse buttons. Right click on any plot to show a context menu.
+
+
+import initExample ## Add path to library (just for examples; you do not need this)
 
 
 from pyqtgraph.Qt import QtGui, QtCore
@@ -82,6 +85,8 @@ def update():
 lr.sigRegionChanged.connect(update)
 update()
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+## Start Qt event loop unless running in interactive mode or using pyside.
+import sys
+if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()
+

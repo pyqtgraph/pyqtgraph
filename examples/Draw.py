@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-## Add path to library (just for examples; you do not need this)
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import initExample ## Add path to library (just for examples; you do not need this)
 
 
 from pyqtgraph.Qt import QtCore, QtGui
@@ -39,6 +37,6 @@ kern = np.array([
 img.setDrawKernel(kern, mask=kern, center=(1,1), mode='add')
 img.setLevels([0, 10])
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+## Start Qt event loop unless running in interactive mode or using pyside.
+if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()

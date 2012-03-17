@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
+
+## Display an animated arrowhead following a curve.
+## This example uses the CurveArrow class, which is a combination
+## of ArrowItem and CurvePoint. 
+##
+## To place a static arrow anywhere in a scene, use ArrowItem.
+## To attach other types of item to a curve, use CurvePoint.
+
+
 ## Add path to library (just for examples; you do not need this)                                                                           
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import numpy as np
 from pyqtgraph.Qt import QtGui, QtCore
@@ -23,6 +31,6 @@ mw.show()
 anim = a.makeAnimation(loop=-1)
 anim.start()
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+## Start Qt event loop unless running in interactive mode or using pyside.
+if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()

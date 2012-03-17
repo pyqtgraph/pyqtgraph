@@ -1,8 +1,5 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-## Add path to library (just for examples; you do not need this)
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import initExample ## Add path to library (just for examples; you do not need this)
 
 
 from pyqtgraph.Qt import QtGui, QtCore
@@ -82,6 +79,9 @@ line = pg.InfiniteLine(angle=90, movable=True)
 pw3.addItem(line)
 line.setBounds([0,200])
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+import initExample ## Add path to library (just for examples; you do not need this)
+
+## Start Qt event loop unless running in interactive mode or using pyside.
+import sys
+if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()
