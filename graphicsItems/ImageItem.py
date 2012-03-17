@@ -128,8 +128,8 @@ class ImageItem(GraphicsObject):
     def setRect(self, rect):
         """Scale and translate the image to fit within rect."""
         self.resetTransform()
-        self.scale(rect.width() / self.width(), rect.height() / self.height())
         self.translate(rect.left(), rect.top())
+        self.scale(rect.width() / self.width(), rect.height() / self.height())
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """

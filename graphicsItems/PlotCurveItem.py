@@ -35,7 +35,8 @@ class PlotCurveItem(GraphicsObject):
         else:
             self.setPen(pen)
         
-        self.shadowPen = shadowPen
+        self.setShadowPen(shadowPen)
+        
         if y is not None:
             self.updateData(y, x, copy)
             
@@ -159,7 +160,7 @@ class PlotCurveItem(GraphicsObject):
         self.update()
         
     def setShadowPen(self, pen):
-        self.shadowPen = pen
+        self.shadowPen = fn.mkPen(pen)
         self.update()
 
     def setDownsampling(self, ds):

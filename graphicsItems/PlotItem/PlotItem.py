@@ -134,7 +134,7 @@ class PlotItem(GraphicsWidget):
         for m in [
             'setXRange', 'setYRange', 'setXLink', 'setYLink', 
             'setRange', 'autoRange', 'viewRect', 'setMouseEnabled',
-            'enableAutoRange', 'disableAutoRange']:
+            'enableAutoRange', 'disableAutoRange', 'setAspectLocked']:
             setattr(self, m, getattr(self.vb, m))
             
         self.items = []
