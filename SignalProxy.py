@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from Qt import QtCore
 from ptime import time
+import ThreadsafeTimer
 
 __all__ = ['SignalProxy']
 
@@ -27,7 +28,7 @@ class SignalProxy(QtCore.QObject):
         self.signal = signal
         self.delay = delay
         self.args = None
-        self.timer = QtCore.QTimer()
+        self.timer = ThreadsafeTimer.ThreadsafeTimer()
         self.timer.timeout.connect(self.flush)
         self.block = False
         self.slot = slot
