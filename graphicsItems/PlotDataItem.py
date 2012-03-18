@@ -78,9 +78,16 @@ class PlotDataItem(GraphicsObject):
         self.setFlag(self.ItemHasNoContents)
         self.xData = None
         self.yData = None
-        self.curves = []
-        self.scatters = []
-        self.clear()
+        self.xDisp = None
+        self.yDisp = None
+        #self.curves = []
+        #self.scatters = []
+        self.curve = PlotCurveItem()
+        self.scatter = ScatterPlotItem()
+        self.curve.setParentItem(self)
+        self.scatter.setParentItem(self)
+        
+        #self.clear()
         self.opts = {
             'fftMode': False,
             'logMode': [False, False],
@@ -130,17 +137,20 @@ class PlotDataItem(GraphicsObject):
         self.opts['pointMode'] = mode
         self.update()
         
-    def setPen(self, pen):
+    def setPen(self, *args, **kargs):
         """
         | Sets the pen used to draw lines between points.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
         """
-        self.opts['pen'] = fn.mkPen(pen)
-        for c in self.curves:
-            c.setPen(pen)
-        self.update()
+        pen = fn.mkPen(*args, **kargs)
+        self.opts['pen'] = pen
+        #self.curve.setPen(pen)
+        #for c in self.curves:
+            #c.setPen(pen)
+        #self.update()
+        self.updateItems()
         
-    def setShadowPen(self, pen):
+    def setShadowPen(self, *args, **kargs):
         """
         | Sets the shadow pen used to draw lines between points (this is for enhancing contrast or 
           emphacizing data). 
@@ -148,10 +158,46 @@ class PlotDataItem(GraphicsObject):
           and should generally be assigned greater width than the primary pen.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
         """
+        pen = fn.mkPen(*args, **kargs)
         self.opts['shadowPen'] = pen
-        for c in self.curves:
-            c.setPen(pen)
-        self.update()
+        #for c in self.curves:
+            #c.setPen(pen)
+        #self.update()
+        self.updateItems()
+        
+    def setBrush(self, *args, **kargs):
+        brush = fn.mkBrush(*args, **kargs)
+        self.opts['brush'] = brush
+        self.updateItems()
+    
+    def setFillLevel(self, level):
+        self.opts['fillLevel'] = level
+        self.updateItems()
+
+    def setSymbol(self, symbol):
+        self.opts['symbol'] = symbol
+        #self.scatter.setSymbol(symbol)
+        self.updateItems()
+        
+    def setSymbolPen(self, *args, **kargs):
+        pen = fn.mkPen(*args, **kargs)
+        self.opts['symbolPen'] = pen
+        #self.scatter.setSymbolPen(pen)
+        self.updateItems()
+        
+    
+    
+    def setSymbolBrush(self, *args, **kargs):
+        brush = fn.mkBrush(*args, **kargs)
+        self.opts['symbolBrush'] = brush
+        #self.scatter.setSymbolBrush(brush)
+        self.updateItems()
+    
+    
+    def setSymbolSize(self, size):
+        self.opts['symbolSize'] = size
+        #self.scatter.setSymbolSize(symbolSize)
+        self.updateItems()
 
     def setDownsampling(self, ds):
         if self.opts['downsample'] != ds:
@@ -165,7 +211,7 @@ class PlotDataItem(GraphicsObject):
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
         
-        self.clear()
+        #self.clear()
         
         y = None
         x = None
@@ -219,7 +265,7 @@ class PlotDataItem(GraphicsObject):
         
 
         ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
-        if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs):
+        if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
             kargs['symbol'] = 'o'
             
         for k in self.opts.keys():
@@ -251,6 +297,8 @@ class PlotDataItem(GraphicsObject):
         
         self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
         self.yData = y.view(np.ndarray)
+        self.xDisp = None
+        self.yDisp = None
         
         self.updateItems()
         view = self.getViewBox()
@@ -260,29 +308,37 @@ class PlotDataItem(GraphicsObject):
 
 
     def updateItems(self):
-        for c in self.curves+self.scatters:
-            if c.scene() is not None:
-                c.scene().removeItem(c)
+        #for c in self.curves+self.scatters:
+            #if c.scene() is not None:
+                #c.scene().removeItem(c)
             
         curveArgs = {}
         for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
             curveArgs[k] = self.opts[k]
         
         scatterArgs = {}
-        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol')]:
+        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size')]:
             scatterArgs[v] = self.opts[k]
         
         x,y = self.getData()
         
+        self.curve.setData(x=x, y=y, **curveArgs)
         if curveArgs['pen'] is not None or curveArgs['brush'] is not None:
-            curve = PlotCurveItem(x=x, y=y, **curveArgs)
-            curve.setParentItem(self)
-            self.curves.append(curve)
+            self.curve.show()
+        else:
+            self.curve.hide()
+            #curve = PlotCurveItem(x=x, y=y, **curveArgs)
+            #curve.setParentItem(self)
+            #self.curves.append(curve)
         
+        self.scatter.setData(x=x, y=y, **scatterArgs)
         if scatterArgs['symbol'] is not None:
-            sp = ScatterPlotItem(x=x, y=y, **scatterArgs)
-            sp.setParentItem(self)
-            self.scatters.append(sp)
+            self.scatter.show()
+        else:
+            self.scatter.hide()
+            #sp = ScatterPlotItem(x=x, y=y, **scatterArgs)
+            #sp.setParentItem(self)
+            #self.scatters.append(sp)
 
 
     def getData(self):
@@ -335,15 +391,17 @@ class PlotDataItem(GraphicsObject):
 
 
     def clear(self):
-        for i in self.curves+self.scatters:
-            if i.scene() is not None:
-                i.scene().removeItem(i)
-        self.curves = []
-        self.scatters = []
+        #for i in self.curves+self.scatters:
+            #if i.scene() is not None:
+                #i.scene().removeItem(i)
+        #self.curves = []
+        #self.scatters = []
         self.xData = None
         self.yData = None
         self.xDisp = None
         self.yDisp = None
+        self.curve.setData([])
+        self.scatter.setData([])
             
     def appendData(self, *args, **kargs):
         pass

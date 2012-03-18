@@ -22,41 +22,34 @@ class PlotCurveItem(GraphicsObject):
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
     
-    def __init__(self, y=None, x=None, fillLevel=None, copy=False, pen=None, shadowPen=None, brush=None, parent=None, color=None, clickable=False):
+    def __init__(self, y=None, x=None, fillLevel=None, copy=False, pen=None, shadowPen=None, brush=None, parent=None, clickable=False):
         GraphicsObject.__init__(self, parent)
         self.clear()
         self.path = None
         self.fillPath = None
-        if pen is None:
-            if color is None:
-                self.setPen((200,200,200))
-            else:
-                self.setPen(color)
-        else:
-            self.setPen(pen)
-        
-        self.setShadowPen(shadowPen)
         
         if y is not None:
-            self.updateData(y, x, copy)
+            self.updateData(y, x)
             
         ## this is disastrous for performance.
         #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
         
-        self.fillLevel = fillLevel
-        self.brush = brush
-        
         self.metaData = {}
         self.opts = {
-            'spectrumMode': False,
-            'logMode': [False, False],
-            'pointMode': False,
-            'pointStyle': None,
-            'downsample': False,
-            'alphaHint': 1.0,
-            'alphaMode': False
+            #'spectrumMode': False,
+            #'logMode': [False, False],
+            #'downsample': False,
+            #'alphaHint': 1.0,
+            #'alphaMode': False,
+            'pen': 'w',
+            'shadowPen': None,
+            'fillLevel': fillLevel,
+            'brush': brush,
         }
-            
+        self.setPen(pen)
+        self.setShadowPen(shadowPen)
+        self.setFillLevel(fillLevel)
+        self.setBrush(brush)
         self.setClickable(clickable)
         #self.fps = None
         
@@ -71,35 +64,36 @@ class PlotCurveItem(GraphicsObject):
         
         
     def getData(self):
-        if self.xData is None:
-            return (None, None)
-        if self.xDisp is None:
-            nanMask = np.isnan(self.xData) | np.isnan(self.yData)
-            if any(nanMask):
-                x = self.xData[~nanMask]
-                y = self.yData[~nanMask]
-            else:
-                x = self.xData
-                y = self.yData
-            ds = self.opts['downsample']
-            if ds > 1:
-                x = x[::ds]
-                #y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
-                y = y[::ds]
-            if self.opts['spectrumMode']:
-                f = fft(y) / len(y)
-                y = abs(f[1:len(f)/2])
-                dt = x[-1] - x[0]
-                x = np.linspace(0, 0.5*len(x)/dt, len(y))
-            if self.opts['logMode'][0]:
-                x = np.log10(x)
-            if self.opts['logMode'][1]:
-                y = np.log10(y)
-            self.xDisp = x
-            self.yDisp = y
-        #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
-        #print self.xDisp.shape, self.xDisp.min(), self.xDisp.max()
-        return self.xDisp, self.yDisp
+        return self.xData, self.yData
+        #if self.xData is None:
+            #return (None, None)
+        #if self.xDisp is None:
+            #nanMask = np.isnan(self.xData) | np.isnan(self.yData)
+            #if any(nanMask):
+                #x = self.xData[~nanMask]
+                #y = self.yData[~nanMask]
+            #else:
+                #x = self.xData
+                #y = self.yData
+            #ds = self.opts['downsample']
+            #if ds > 1:
+                #x = x[::ds]
+                ##y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
+                #y = y[::ds]
+            #if self.opts['spectrumMode']:
+                #f = fft(y) / len(y)
+                #y = abs(f[1:len(f)/2])
+                #dt = x[-1] - x[0]
+                #x = np.linspace(0, 0.5*len(x)/dt, len(y))
+            #if self.opts['logMode'][0]:
+                #x = np.log10(x)
+            #if self.opts['logMode'][1]:
+                #y = np.log10(y)
+            #self.xDisp = x
+            #self.yDisp = y
+        ##print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
+        ##print self.xDisp.shape, self.xDisp.min(), self.xDisp.max()
+        #return self.xDisp, self.yDisp
             
     #def generateSpecData(self):
         #f = fft(self.yData) / len(self.yData)
@@ -124,120 +118,121 @@ class PlotCurveItem(GraphicsObject):
         else:
             return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
             
-    def setMeta(self, data):
-        self.metaData = data
+    #def setMeta(self, data):
+        #self.metaData = data
         
-    def meta(self):
-        return self.metaData
+    #def meta(self):
+        #return self.metaData
         
-    def setPen(self, pen):
-        self.pen = fn.mkPen(pen)
+    def setPen(self, *args, **kargs):
+        self.opts['pen'] = fn.mkPen(*args, **kargs)
         self.update()
         
-    def setColor(self, color):
-        self.pen.setColor(color)
-        self.update()
-        
-    def setAlpha(self, alpha, auto):
-        self.opts['alphaHint'] = alpha
-        self.opts['alphaMode'] = auto
-        self.update()
-        
-    def setSpectrumMode(self, mode):
-        self.opts['spectrumMode'] = mode
-        self.xDisp = self.yDisp = None
-        self.path = None
-        self.update()
-    
-    def setLogMode(self, mode):
-        self.opts['logMode'] = mode
-        self.xDisp = self.yDisp = None
-        self.path = None
-        self.update()
-    
-    def setPointMode(self, mode):
-        self.opts['pointMode'] = mode
-        self.update()
-        
-    def setShadowPen(self, pen):
-        self.shadowPen = fn.mkPen(pen)
+    def setShadowPen(self, *args, **kargs):
+        self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
         self.update()
 
-    def setDownsampling(self, ds):
-        if self.opts['downsample'] != ds:
-            self.opts['downsample'] = ds
-            self.xDisp = self.yDisp = None
-            self.path = None
-            self.update()
-
-    def setData(self, x, y, copy=False):
-        """For Qwt compatibility"""
-        self.updateData(y, x, copy)
+    def setBrush(self, *args, **kargs):
+        self.opts['brush'] = fn.mkBrush(*args, **kargs)
+        self.update()
         
-    def updateData(self, data, x=None, copy=False):
+    def setFillLevel(self, level):
+        self.opts['fillLevel'] = level
+        self.fillPath = None
+        self.update()
+
+    #def setColor(self, color):
+        #self.pen.setColor(color)
+        #self.update()
+        
+    #def setAlpha(self, alpha, auto):
+        #self.opts['alphaHint'] = alpha
+        #self.opts['alphaMode'] = auto
+        #self.update()
+        
+    #def setSpectrumMode(self, mode):
+        #self.opts['spectrumMode'] = mode
+        #self.xDisp = self.yDisp = None
+        #self.path = None
+        #self.update()
+    
+    #def setLogMode(self, mode):
+        #self.opts['logMode'] = mode
+        #self.xDisp = self.yDisp = None
+        #self.path = None
+        #self.update()
+    
+    #def setPointMode(self, mode):
+        #self.opts['pointMode'] = mode
+        #self.update()
+        
+
+    #def setDownsampling(self, ds):
+        #if self.opts['downsample'] != ds:
+            #self.opts['downsample'] = ds
+            #self.xDisp = self.yDisp = None
+            #self.path = None
+            #self.update()
+
+    def setData(self, *args, **kargs):
+        """Same as updateData()"""
+        self.updateData(*args, **kargs)
+        
+    def updateData(self, *args, **kargs):
         prof = debug.Profiler('PlotCurveItem.updateData', disabled=True)
-        if isinstance(data, list):
-            data = np.array(data)
-        if isinstance(x, list):
-            x = np.array(x)
-        if not isinstance(data, np.ndarray) or data.ndim > 2:
-            raise Exception("Plot data must be 1 or 2D ndarray (data shape is %s)" % str(data.shape))
-        if x == None:
+
+        if len(args) == 1:
+            kargs['y'] = args[0]
+        elif len(args) == 2:
+            kargs['x'] = args[0]
+            kargs['y'] = args[1]
+        
+        if 'y' not in kargs or kargs['y'] is None:
+            kargs['y'] = np.array([])
+        if 'x' not in kargs or kargs['x'] is None:
+            kargs['x'] = np.arange(len(kargs['y']))
+            
+        for k in ['x', 'y']:
+            data = kargs[k]
+            if isinstance(data, list):
+                kargs['k'] = np.array(data)
+            if not isinstance(data, np.ndarray) or data.ndim > 1:
+                raise Exception("Plot data must be 1D ndarray.")
             if 'complex' in str(data.dtype):
                 raise Exception("Can not plot complex data types.")
-        else:
-            if 'complex' in str(data.dtype)+str(x.dtype):
-                raise Exception("Can not plot complex data types.")
-        
-        if data.ndim == 2:  ### If data is 2D array, then assume x and y values are in first two columns or rows.
-            if x is not None:
-                raise Exception("Plot data may be 2D only if no x argument is supplied.")
-            ax = 0
-            if data.shape[0] > 2 and data.shape[1] == 2:
-                ax = 1
-            ind = [slice(None), slice(None)]
-            ind[ax] = 0
-            y = data[tuple(ind)]
-            ind[ax] = 1
-            x = data[tuple(ind)]
-        elif data.ndim == 1:
-            y = data
+            
         prof.mark("data checks")
         
-        self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
+        #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
-        
         self.prepareGeometryChange()
-        if copy:
-            self.yData = y.view(np.ndarray).copy()
-        else:
-            self.yData = y.view(np.ndarray)
-            
-        if x is None:
-            self.xData = np.arange(0, self.yData.shape[0])
-        else:
-            if copy:
-                self.xData = x.view(np.ndarray).copy()
-            else:
-                self.xData = x.view(np.ndarray)
+        self.yData = kargs['y'].view(np.ndarray)
+        self.xData = kargs['x'].view(np.ndarray)
+        
         prof.mark('copy')
         
-
         if self.xData.shape != self.yData.shape:
             raise Exception("X and Y arrays must be the same shape--got %s and %s." % (str(x.shape), str(y.shape)))
         
         self.path = None
-        self.xDisp = self.yDisp = None
+        self.fillPath = None
+        #self.xDisp = self.yDisp = None
+        
+        if 'pen' in kargs:
+            self.setPen(kargs['pen'])
+        if 'shadowPen' in kargs:
+            self.setShadowPen(kargs['shadowPen'])
+        if 'fillLevel' in kargs:
+            self.setFillLevel(kargs['fillLevel'])
+        if 'brush' in kargs:
+            self.setBrush(kargs['brush'])
+        
         
         prof.mark('set')
         self.update()
         prof.mark('update')
-        #self.emit(QtCore.SIGNAL('plotChanged'), self)
         self.sigPlotChanged.emit(self)
         prof.mark('emit')
-        #prof.finish()
-        #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
-        prof.mark('set cache mode')
         prof.finish()
         
     def generatePath(self, x, y):
@@ -303,10 +298,10 @@ class PlotCurveItem(GraphicsObject):
             return QtCore.QRectF()
             
             
-        if self.shadowPen is not None:
-            lineWidth = (max(self.pen.width(), self.shadowPen.width()) + 1)
+        if self.opts['shadowPen'] is not None:
+            lineWidth = (max(self.opts['pen'].width(), self.opts['shadowPen'].width()) + 1)
         else:
-            lineWidth = (self.pen.width()+1)
+            lineWidth = (self.opts['pen'].width()+1)
             
         
         pixels = self.pixelVectors()
@@ -343,34 +338,32 @@ class PlotCurveItem(GraphicsObject):
         path = self.path
         prof.mark('generate path')
             
-        if self.brush is not None:
+        if self.opts['brush'] is not None and self.opts['fillLevel'] is not None:
             if self.fillPath is None:
                 if x is None:
                     x,y = self.getData()
                 p2 = QtGui.QPainterPath(self.path)
-                p2.lineTo(x[-1], self.fillLevel)
-                p2.lineTo(x[0], self.fillLevel)
+                p2.lineTo(x[-1], self.opts['fillLevel'])
+                p2.lineTo(x[0], self.opts['fillLevel'])
+                p2.lineTo(x[0], y[0])
                 p2.closeSubpath()
                 self.fillPath = p2
                 
-            p.fillPath(self.fillPath, fn.mkBrush(self.brush))
+            p.fillPath(self.fillPath, self.opts['brush'])
             
-        if self.shadowPen is not None:
-            sp = QtGui.QPen(self.shadowPen)
-        else:
-            sp = None
 
         ## Copy pens and apply alpha adjustment
-        cp = QtGui.QPen(self.pen)
-        for pen in [sp, cp]:
-            if pen is None:
-                continue
-            c = pen.color()
-            c.setAlpha(c.alpha() * self.opts['alphaHint'])
-            pen.setColor(c)
-            #pen.setCosmetic(True)
+        sp = QtGui.QPen(self.opts['shadowPen'])
+        cp = QtGui.QPen(self.opts['pen'])
+        #for pen in [sp, cp]:
+            #if pen is None:
+                #continue
+            #c = pen.color()
+            #c.setAlpha(c.alpha() * self.opts['alphaHint'])
+            #pen.setColor(c)
+            ##pen.setCosmetic(True)
             
-        if self.shadowPen is not None:
+        if sp is not None:
             p.setPen(sp)
             p.drawPath(path)
         p.setPen(cp)
