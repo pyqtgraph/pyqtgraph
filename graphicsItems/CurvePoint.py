@@ -14,12 +14,15 @@ class CurvePoint(GraphicsObject):
     Note: This class does not display anything; see CurveArrow for an applied example
     """
     
-    def __init__(self, curve, index=0, pos=None):
+    def __init__(self, curve, index=0, pos=None, rotate=True):
         """Position can be set either as an index referring to the sample number or
-        the position 0.0 - 1.0"""
+        the position 0.0 - 1.0
+        If *rotate* is True, then the item rotates to match the tangent of the curve.
+        """
         
         GraphicsObject.__init__(self)
         #QObjectWorkaround.__init__(self)
+        self._rotate = rotate
         self.curve = weakref.ref(curve)
         self.setParentItem(curve)
         self.setProperty('position', 0.0)
@@ -76,7 +79,8 @@ class CurvePoint(GraphicsObject):
         p2 = self.parentItem().mapToScene(QtCore.QPointF(x[i2], y[i2]))
         ang = np.arctan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
         self.resetTransform()
-        self.rotate(180+ ang * 180 / np.pi) ## takes degrees
+        if self._rotate:
+            self.rotate(180+ ang * 180 / np.pi) ## takes degrees
         QtGui.QGraphicsItem.setPos(self, *newPos)
         return True
         

@@ -17,6 +17,7 @@ examples = OrderedDict([
         ('Region-of-Interest', 'ROItypes.py'),
         ('GraphicsLayout', 'GraphicsLayout.py'),
         ('Scatter Plot', 'ScatterPlot.py'),
+        ('Text Item', 'text.py'),
         ('ViewBox', 'ViewBox.py'),
         ('Arrow', 'Arrow.py'),
     ])),
