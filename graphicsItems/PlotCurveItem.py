@@ -195,7 +195,8 @@ class PlotCurveItem(GraphicsObject):
         for k in ['x', 'y']:
             data = kargs[k]
             if isinstance(data, list):
-                kargs['k'] = np.array(data)
+                data = np.array(data)
+                kargs[k] = data
             if not isinstance(data, np.ndarray) or data.ndim > 1:
                 raise Exception("Plot data must be 1D ndarray.")
             if 'complex' in str(data.dtype):

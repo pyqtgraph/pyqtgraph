@@ -322,8 +322,8 @@ class PlotDataItem(GraphicsObject):
         
         x,y = self.getData()
         
-        self.curve.setData(x=x, y=y, **curveArgs)
-        if curveArgs['pen'] is not None or curveArgs['brush'] is not None:
+        if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
+            self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
         else:
             self.curve.hide()
@@ -331,8 +331,8 @@ class PlotDataItem(GraphicsObject):
             #curve.setParentItem(self)
             #self.curves.append(curve)
         
-        self.scatter.setData(x=x, y=y, **scatterArgs)
         if scatterArgs['symbol'] is not None:
+            self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
         else:
             self.scatter.hide()
