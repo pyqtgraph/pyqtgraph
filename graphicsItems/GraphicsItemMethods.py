@@ -229,7 +229,7 @@ class GraphicsItemMethods(object):
         return Point(QtGui.QGraphicsObject.pos(self))
     
     def viewPos(self):
-        return self.mapToView(self.pos())
+        return self.mapToView(self.mapFromParent(self.pos()))
     
     #def itemChange(self, change, value):
         #ret = QtGui.QGraphicsObject.itemChange(self, change, value)

@@ -38,7 +38,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             flags |= QtCore.Qt.ItemIsEditable
             self.contextMenu.addAction('Rename').triggered.connect(self.editName)
         if opts.get('removable', False):
-            self.contextMenu.addAction("Remove").triggered.connect(self.param.remove)
+            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
@@ -144,5 +144,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         """Called when this item has been selected (sel=True) OR deselected (sel=False)"""
         pass
 
-
+    def requestRemove(self):
+        ## called when remove is selected from the context menu.
+        ## we need to delay removal until the action is complete
+        ## since destroying the menu in mid-action will cause a crash.
+        QtCore.QTimer.singleShot(0, self.param.remove)
 

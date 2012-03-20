@@ -255,7 +255,14 @@ class WidgetGroup(QtCore.QObject):
         if getFunc is None:
             return None
             
-        val = getFunc(w)
+        ## if the getter function provided in the interface is a bound method,
+        ## then just call the method directly. Otherwise, pass in the widget as the first arg
+        ## to the function.
+        if inspect.ismethod(getFunc) and getFunc.im_self is not None:  
+            val = getFunc()
+        else:
+            val = getFunc(w)
+            
         if self.scales[w] is not None:
             val /= self.scales[w]
         #if isinstance(val, QtCore.QString):
@@ -273,7 +280,15 @@ class WidgetGroup(QtCore.QObject):
             setFunc = WidgetGroup.classes[type(w)][2]
         else:
             setFunc = w.widgetGroupInterface()[2]
-        setFunc(w, v)
+            
+        ## if the setter function provided in the interface is a bound method,
+        ## then just call the method directly. Otherwise, pass in the widget as the first arg
+        ## to the function.
+        if inspect.ismethod(setFunc) and setFunc.im_self is not None:  
+            setFunc(v)
+        else:
+            setFunc(w, v)
+            
         #name = self.widgetList[w]
         #if name in self.cache and (self.cache[name] != v1):
             #print "%s: Cached value %s != set value %s" % (name, str(self.cache[name]), str(v1))

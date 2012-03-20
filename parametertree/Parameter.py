@@ -284,6 +284,10 @@ class Parameter(QtCore.QObject):
         for ch in self.childs[:]:
             self.removeChild(ch)
 
+    def children(self):  
+        ## warning -- this overrides QObject.children
+        return self.childs[:]
+
     def parentChanged(self, parent):
         self._parent = parent
         self.sigParentChanged.emit(self, parent)
