@@ -62,11 +62,11 @@ class ROI(GraphicsObject):
         
         self.handlePen = QtGui.QPen(QtGui.QColor(150, 255, 255))
         self.handles = []
-        self.state = {'pos': pos, 'size': size, 'angle': angle}  ## angle is in degrees for ease of Qt integration
+        self.state = {'pos': Point(0,0), 'size': Point(1,1), 'angle': 0}  ## angle is in degrees for ease of Qt integration
         self.lastState = None
         self.setPos(pos)
-        #self.rotate(-angle * 180. / np.pi)
-        self.rotate(angle)
+        self.setAngle(angle)
+        self.setSize(size)
         self.setZValue(10)
         self.isMoving = False
         
@@ -237,9 +237,8 @@ class ROI(GraphicsObject):
         #if 'update' not in kargs or kargs['update'] is True:
         #self.stateChanged()
 
-    def rotate(self, angle, center=(0,0), angleSnap=False, update=True, finish=True):
-        pass
-        #self.setAngle(self.angle()+angle, update=update, finish=finish)
+    def rotate(self, angle, update=True, finish=True):
+        self.setAngle(self.angle()+angle, update=update, finish=finish)
 
     
     def addTranslateHandle(self, pos, axes=None, item=None, name=None):
