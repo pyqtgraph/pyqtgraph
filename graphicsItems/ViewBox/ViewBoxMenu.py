@@ -118,7 +118,12 @@ class ViewBoxMenu(QtGui.QMenu):
                 view = state['linkedViews'][i]
                 if view is None:
                     view = ''
-                ind = c.findText(view)
+                    
+                if isinstance(view, basestring):
+                    ind = c.findText(view)
+                else:
+                    ind = c.findText(view.name)
+                    
                 if ind == -1:
                     ind = 0
                 c.setCurrentIndex(ind)
