@@ -480,11 +480,13 @@ class ViewBox(GraphicsWidget):
         self.linksBlocked = b  ## prevents recursive plot-change propagation
 
     def linkedXChanged(self):
+        ## called when x range of linked view has changed
         view = self.state['linkedViews'][0]
         self.linkedViewChanged(view, ViewBox.XAxis)
 
     def linkedYChanged(self):
-        view = self.state['linkedViews'][0]
+        ## called when y range of linked view has changed
+        view = self.state['linkedViews'][1]
         self.linkedViewChanged(view, ViewBox.YAxis)
         
 
@@ -502,15 +504,27 @@ class ViewBox(GraphicsWidget):
         view.blockLink(True)
         try:
             if axis == ViewBox.XAxis:
-                upp = float(vr.width()) / vg.width()
-                x1 = vr.left() + (sg.x()-vg.x()) * upp
-                x2 = x1 + sg.width() * upp
+                overlap = min(sg.right(), vg.right()) - max(sg.left(), vg.left())
+                if overlap < min(vg.width()/3, sg.width()/3):  ## if less than 1/3 of views overlap, 
+                                                               ## then just replicate the view
+                    x1 = vr.left()
+                    x2 = vr.right()
+                else:  ## views overlap; line them up
+                    upp = float(vr.width()) / vg.width()
+                    x1 = vr.left() + (sg.x()-vg.x()) * upp
+                    x2 = x1 + sg.width() * upp
                 self.enableAutoRange(ViewBox.XAxis, False)
                 self.setXRange(x1, x2, padding=0)
             else:
-                upp = float(vr.height()) / vg.height()
-                x1 = vr.bottom() + (sg.y()-vg.y()) * upp
-                x2 = x1 + sg.height() * upp
+                overlap = min(sg.bottom(), vg.bottom()) - max(sg.top(), vg.top())
+                if overlap < min(vg.height()/3, sg.height()/3):  ## if less than 1/3 of views overlap, 
+                                                               ## then just replicate the view
+                    x1 = vr.top()
+                    x2 = vr.bottom()
+                else:  ## views overlap; line them up
+                    upp = float(vr.height()) / vg.height()
+                    x1 = vr.top() + (sg.y()-vg.y()) * upp
+                    x2 = x1 + sg.height() * upp
                 self.enableAutoRange(ViewBox.YAxis, False)
                 self.setYRange(x1, x2, padding=0)
         finally:

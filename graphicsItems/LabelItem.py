@@ -10,12 +10,11 @@ class LabelItem(GraphicsWidget):
     GraphicsWidget displaying text.
     Used mainly as axis labels, titles, etc.
     
-    Note: To display text inside a scaled view (ViewBox, PlotWidget, etc) use QGraphicsTextItem
-          with the flag ItemIgnoresTransformations set.
+    Note: To display text inside a scaled view (ViewBox, PlotWidget, etc) use TextItem
     """
     
     
-    def __init__(self, text, parent=None, **args):
+    def __init__(self, text, parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
         self.item = QtGui.QGraphicsTextItem(self)
         self.opts = args
@@ -26,6 +25,7 @@ class LabelItem(GraphicsWidget):
                 self.opts['color'] = fn.colorStr(args['color'])[:6]
         self.sizeHint = {}
         self.setText(text)
+        self.setAngle(angle)
         
             
     def setAttr(self, attr, value):

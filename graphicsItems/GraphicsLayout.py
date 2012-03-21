@@ -33,7 +33,6 @@ class GraphicsLayout(GraphicsWidget):
         return self.currentCol-colspan
         
     def addPlot(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
-        from PlotItem import PlotItem
         plot = PlotItem(**kargs)
         self.addItem(plot, row, col, rowspan, colspan)
         return plot
@@ -42,6 +41,11 @@ class GraphicsLayout(GraphicsWidget):
         vb = ViewBox(**kargs)
         self.addItem(vb, row, col, rowspan, colspan)
         return vb
+        
+    def addLabel(self, text, row=None, col=None, rowspan=1, colspan=1, **kargs):
+        text = LabelItem(text, **kargs)
+        self.addItem(text, row, col, rowspan, colspan)
+        return text
         
 
     def addItem(self, item, row=None, col=None, rowspan=1, colspan=1):
@@ -95,3 +99,4 @@ class GraphicsLayout(GraphicsWidget):
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from ViewBox import ViewBox
 from PlotItem import PlotItem
+from LabelItem import LabelItem

@@ -19,6 +19,7 @@ examples = OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         ('Text Item', 'text.py'),
         ('ViewBox', 'ViewBox.py'),
+        ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
     ])),
     ('Widgets', OrderedDict([

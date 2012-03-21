@@ -7,6 +7,6 @@ class GraphicsLayoutWidget(GraphicsView):
     def __init__(self, parent=None, **kargs):
         GraphicsView.__init__(self, parent)
         self.ci = GraphicsLayout(**kargs)
-        for n in ['nextRow', 'nextCol', 'addPlot', 'addViewBox', 'addItem', 'getItem']:
+        for n in ['nextRow', 'nextCol', 'addPlot', 'addViewBox', 'addItem', 'getItem', 'addLabel']:
             setattr(self, n, getattr(self.ci, n))
         self.setCentralItem(self.ci)
