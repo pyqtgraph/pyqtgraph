@@ -101,8 +101,8 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
         self.rbScaleBox.setPen(fn.mkPen((255,0,0), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
-        self.addItem(self.rbScaleBox)
         self.rbScaleBox.hide()
+        self.addItem(self.rbScaleBox)
         
         self.axHistory = [] # maintain a history of zoom locations
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
@@ -218,6 +218,8 @@ class ViewBox(GraphicsWidget):
         self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
+        #self.linkedXChanged()
+        #self.linkedYChanged()
         
     def viewRange(self):
         return [x[:] for x in self.state['viewRange']]  ## return copy
@@ -467,7 +469,7 @@ class ViewBox(GraphicsWidget):
         
         if view is not None:
             getattr(view, signal).connect(slot)
-            if view.autoRangeEnabled()[axis] is True:
+            if view.autoRangeEnabled()[axis] is not False:
                 self.enableAutoRange(axis, False)
                 slot()
             else:
@@ -491,7 +493,7 @@ class ViewBox(GraphicsWidget):
         
 
     def linkedViewChanged(self, view, axis):
-        if self.linksBlocked:
+        if self.linksBlocked or view is None:
             return
         
         vr = view.viewRect()
