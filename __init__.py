@@ -105,13 +105,14 @@ def plot(*args, **kargs):
     | All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
-    if 'title' in kargs:
-        w = PlotWindow(title=kargs['title'])
-        del kargs['title']
-    else:
-        w = PlotWindow()
-    if len(args)+len(kargs) > 0:
-        w.plot(*args, **kargs)
+    #if 'title' in kargs:
+        #w = PlotWindow(title=kargs['title'])
+        #del kargs['title']
+    #else:
+        #w = PlotWindow()
+    #if len(args)+len(kargs) > 0:
+        #w.plot(*args, **kargs)
+    w = PlotWindow(*args, **kargs)
     plots.append(w)
     w.show()
     return w
