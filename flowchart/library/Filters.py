@@ -187,7 +187,7 @@ class HistogramDetrend(CtrlNode):
     """Removes baseline from data by computing mode (from histogram) of beginning and end of data."""
     nodeName = 'HistogramDetrend'
     uiTemplate = [
-        ('windowSize', 'intSpin', {'value': 500, 'min': 10, 'max': 1000000}),
+        ('windowSize', 'intSpin', {'value': 500, 'min': 10, 'max': 1000000, 'suffix': 'pts'}),
         ('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000})
     ]
     

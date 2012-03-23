@@ -55,6 +55,7 @@ class GradientWidget(GraphicsView):
             self.setMaximumHeight(16777215)
         
     def __getattr__(self, attr):
+        ### wrap methods from GradientEditorItem
         return getattr(self.item, attr)
 
 
