@@ -26,11 +26,14 @@ class GraphicsLayout(GraphicsWidget):
         self.currentRow += 1
         self.currentCol = 0
         
-    def nextCol(self, colspan=1):
+    def nextColumn(self, colspan=1):
         """Advance to next column, while returning the current column number 
         (generally only for internal use--called by addItem)"""
         self.currentCol += colspan
         return self.currentCol-colspan
+        
+    def nextCol(self, *args, **kargs):
+        return self.nextColumn(*args, **kargs)
         
     def addPlot(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
         plot = PlotItem(**kargs)
@@ -47,7 +50,11 @@ class GraphicsLayout(GraphicsWidget):
         self.addItem(text, row, col, rowspan, colspan)
         return text
         
-
+    def addLayout(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
+        layout = GraphicsLayout(**kargs)
+        self.addItem(layout, row, col, rowspan, colspan)
+        return layout
+        
     def addItem(self, item, row=None, col=None, rowspan=1, colspan=1):
         if row is None:
             row = self.currentRow
