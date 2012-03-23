@@ -261,6 +261,9 @@ class AxisItem(GraphicsWidget):
         
     def drawPicture(self, p):
         
+        p.setRenderHint(p.Antialiasing, False)
+        p.setRenderHint(p.TextAntialiasing, True)
+        
         prof = debug.Profiler("AxisItem.paint", disabled=True)
         p.setPen(self.pen)
         

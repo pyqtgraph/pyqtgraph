@@ -57,6 +57,12 @@ class ImageExporter(Exporter):
         bg[:,:,3] = color.alpha()
         self.png = pg.makeQImage(bg, alpha=True)
         painter = QtGui.QPainter(self.png)
-        self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
+        try:
+            self.setExportMode(True, {'antialias': self.params['antialias'], 'background': self.params['background']})
+            self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
+        finally:
+            self.setExportMode(False)
         self.png.save(fileName)
         painter.end()
+        
+        

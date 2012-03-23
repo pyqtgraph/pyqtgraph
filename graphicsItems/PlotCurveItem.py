@@ -27,6 +27,8 @@ class PlotCurveItem(GraphicsObject):
         self.clear()
         self.path = None
         self.fillPath = None
+        self.exportOpts = False
+        self.antialias = False
         
         if y is not None:
             self.updateData(y, x)
@@ -364,6 +366,14 @@ class PlotCurveItem(GraphicsObject):
             #pen.setColor(c)
             ##pen.setCosmetic(True)
             
+        if self.exportOpts is not False:
+            aa = self.exportOpts['antialias']
+        else:
+            aa = self.antialias
+        
+        p.setRenderHint(p.Antialiasing, aa)
+            
+            
         if sp is not None:
             p.setPen(sp)
             p.drawPath(path)
@@ -410,7 +420,13 @@ class PlotCurveItem(GraphicsObject):
         ev.accept()
         self.sigClicked.emit(self)
 
-
+    def setExportMode(self, export, opts):
+        if export:
+            self.exportOpts = opts
+            if 'antialias' not in opts:
+                self.exportOpts['antialias'] = True
+        else:
+            self.exportOpts = False
 
 class ROIPlotItem(PlotCurveItem):
     """Plot curve that monitors an ROI and image for changes to automatically replot."""

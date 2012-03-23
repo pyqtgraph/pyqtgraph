@@ -42,7 +42,11 @@ class SVGExporter(Exporter):
         targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
         sourceRect = self.getSourceRect()
         painter = QtGui.QPainter(self.svg)
-        self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
+        try:
+            self.setExportMode(True)
+            self.render(painter, QtCore.QRectF(targetRect), sourceRect)
+        finally:
+            self.setExportMode(False)
         painter.end()
 
         ## Workaround to set pen widths correctly

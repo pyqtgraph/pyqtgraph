@@ -59,11 +59,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
        move in a drag.
     """
     
-    
-    _addressCache = weakref.WeakValueDictionary()
     sigMouseHover = QtCore.Signal(object)   ## emits a list of objects hovered over
     sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
     sigMouseClicked = QtCore.Signal(object)   ## emitted when MouseClickEvent is not accepted by any items under the click.
+    
+    _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
     
