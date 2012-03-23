@@ -100,8 +100,7 @@ def run():
     app = QtGui.QApplication([])
     loader = ExampleLoader()
     
-    if sys.flags.interactive != 1:
-        app.exec_()
+    app.exec_()
 
 if __name__ == '__main__':
     run()

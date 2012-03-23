@@ -22,7 +22,7 @@ y = np.sin(x) / x
 win = pg.GraphicsWindow(title="View Linking Examples")
 win.resize(800,600)
 
-win.addLabel("Views linked at runtime:", colspan=2)
+win.addLabel("Linked Views", colspan=2)
 win.nextRow()
 
 p1 = win.addPlot(x=x, y=y, name="Plot1", title="Plot1")

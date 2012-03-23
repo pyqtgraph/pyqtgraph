@@ -215,7 +215,7 @@ class ViewBox(GraphicsWidget):
 
     def resizeEvent(self, ev):
         #self.setRange(self.range, padding=0)
-        self.updateAutoRange()
+        #self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
         #self.linkedXChanged()
@@ -609,10 +609,12 @@ class ViewBox(GraphicsWidget):
         return self.mapToScene(self.mapFromView(obj))
     
     def mapFromItemToView(self, item, obj):
-        return self.mapSceneToView(item.mapToScene(obj))
+        return self.childGroup.mapFromItem(item, obj)
+        #return self.mapSceneToView(item.mapToScene(obj))
 
     def mapFromViewToItem(self, item, obj):
-        return item.mapFromScene(self.mapViewToScene(obj))
+        return self.childGroup.mapToItem(item, obj)
+        #return item.mapFromScene(self.mapViewToScene(obj))
 
     def itemBoundingRect(self, item):
         """Return the bounding rect of the item in view coordinates"""
