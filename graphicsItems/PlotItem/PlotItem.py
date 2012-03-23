@@ -99,8 +99,9 @@ class PlotItem(GraphicsWidget):
         self.layout.setVerticalSpacing(0)
         
         self.vb = ViewBox(name=name)
-        #self.vb.sigXRangeChanged.connect(self.xRangeChanged)
-        #self.vb.sigYRangeChanged.connect(self.yRangeChanged)
+        self.vb.sigRangeChanged.connect(self.sigRangeChanged)
+        self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
+        self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
         #self.vb.sigRangeChangedManually.connect(self.enableManualScale)
         #self.vb.sigRangeChanged.connect(self.viewRangeChanged)
         
