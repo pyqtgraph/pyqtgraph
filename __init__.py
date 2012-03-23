@@ -112,7 +112,18 @@ def plot(*args, **kargs):
         #w = PlotWindow()
     #if len(args)+len(kargs) > 0:
         #w.plot(*args, **kargs)
-    w = PlotWindow(*args, **kargs)
+        
+    pwArgList = ['title', 'label', 'name', 'left', 'right', 'top', 'bottom']
+    pwArgs = {}
+    dataArgs = {}
+    for k in kargs:
+        if k in pwArgList:
+            pwArgs[k] = kargs[k]
+        else:
+            dataArgs[k] = kargs[k]
+        
+    w = PlotWindow(**pwArgs)
+    w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w

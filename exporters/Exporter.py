@@ -115,7 +115,7 @@ class Exporter(object):
                 
         return preItems + rootItem + postItems
 
-    def render(self, painter, sourcRect, targetRect, item=None):
+    def render(self, painter, targetRect, sourceRect, item=None):
     
         #if item is None:
             #item = self.item

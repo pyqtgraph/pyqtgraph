@@ -38,5 +38,6 @@ img.setDrawKernel(kern, mask=kern, center=(1,1), mode='add')
 img.setLevels([0, 10])
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
+import sys
 if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()

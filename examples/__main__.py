@@ -24,22 +24,22 @@ examples = OrderedDict([
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
-        ('SpinBox', '../widgets/SpinBox.py'),
+        #('SpinBox', '../widgets/SpinBox.py'),
         ('TreeWidget', '../widgets/TreeWidget.py'),
         ('DataTreeWidget', '../widgets/DataTreeWidget.py'),
         ('GradientWidget', '../widgets/GradientWidget.py'),
-        ('TableWidget', '../widgets/TableWidget.py'),
+        #('TableWidget', '../widgets/TableWidget.py'),
         ('ColorButton', '../widgets/ColorButton.py'),
-        ('CheckTable', '../widgets/CheckTable.py'),
-        ('VerticalLabel', '../widgets/VerticalLabel.py'),
+        #('CheckTable', '../widgets/CheckTable.py'),
+        #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', '../widgets/JoystickButton.py'),
     ])),
     ('ImageView', 'ImageView.py'),
     ('GraphicsScene', 'GraphicsScene.py'),
     ('Flowcharts', 'Flowchart.py'),
     ('ParameterTree', '../parametertree'),
-    ('Canvas', '../canvas'),
-    ('MultiPlotWidget', 'MultiPlotWidget.py'),
+    #('Canvas', '../canvas'),
+    #('MultiPlotWidget', 'MultiPlotWidget.py'),
 ])
 
 path = os.path.abspath(os.path.dirname(__file__))
