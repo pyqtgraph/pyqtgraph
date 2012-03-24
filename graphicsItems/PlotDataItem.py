@@ -98,7 +98,7 @@ class PlotDataItem(GraphicsObject):
             'pen': (200,200,200),
             'shadowPen': None,
             'fillLevel': None,
-            'brush': None,
+            'fillBrush': None,
             
             'symbol': None,
             'symbolSize': 10,
@@ -165,10 +165,13 @@ class PlotDataItem(GraphicsObject):
         #self.update()
         self.updateItems()
         
-    def setBrush(self, *args, **kargs):
+    def setFillBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
-        self.opts['brush'] = brush
+        self.opts['fillBrush'] = brush
         self.updateItems()
+        
+    def setBrush(self, *args, **kargs):
+        return self.setFillBrush(*args, **kargs)
     
     def setFillLevel(self, level):
         self.opts['fillLevel'] = level
@@ -268,6 +271,9 @@ class PlotDataItem(GraphicsObject):
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
             kargs['symbol'] = 'o'
             
+        if 'brush' in kargs:
+            kargs['fillBrush'] = kargs['brush']
+            
         for k in self.opts.keys():
             if k in kargs:
                 self.opts[k] = kargs[k]
@@ -313,8 +319,8 @@ class PlotDataItem(GraphicsObject):
                 #c.scene().removeItem(c)
             
         curveArgs = {}
-        for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
-            curveArgs[k] = self.opts[k]
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush')]:
+            curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
         for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size')]:

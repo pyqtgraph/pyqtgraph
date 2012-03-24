@@ -146,11 +146,11 @@ class PlotItem(GraphicsWidget):
         
 
         ## Wrap a few methods from viewBox
-        for m in [
-            'setXRange', 'setYRange', 'setXLink', 'setYLink', 
-            'setRange', 'autoRange', 'viewRect', 'setMouseEnabled',
-            'enableAutoRange', 'disableAutoRange', 'setAspectLocked']:
-            setattr(self, m, getattr(self.vb, m))
+        #for m in [
+            #'setXRange', 'setYRange', 'setXLink', 'setYLink', 
+            #'setRange', 'autoRange', 'viewRect', 'setMouseEnabled',
+            #'enableAutoRange', 'disableAutoRange', 'setAspectLocked']:
+            #setattr(self, m, getattr(self.vb, m))
             
         self.items = []
         self.curves = []
@@ -296,6 +296,8 @@ class PlotItem(GraphicsWidget):
         #QtGui.QGraphicsWidget.paint(self, *args)
         #prof.finish()
         
+    def __getattr__(self, attr):  ## wrap ms
+        return getattr(self.vb, attr)
         
     def close(self):
         #print "delete", self

@@ -409,12 +409,12 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
 
 
 
-def makeARGB(data, lut=None, levels=None, useRGBA=False): 
+def makeARGB(data, lut=None, levels=None):
     """
     Convert a 2D or 3D array into an ARGB array suitable for building QImages
     Will optionally do scaling and/or table lookups to determine final colors.
     
-    Returns the ARGB array (values 0-255) and a boolean indicating whether there is alpha channel data.
+    Returns the ARGB array and a boolean indicating whether there is alpha channel data.
     
     Arguments:
         data  - 2D or 3D numpy array of int/float types
@@ -433,8 +433,6 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
                 Lookup tables can be built using GradientWidget.
         levels - List [min, max]; optionally rescale data before converting through the
                 lookup table.   rescaled = (data-min) * len(lut) / (max-min)
-        useRGBA - If True, the data is returned in RGBA order. The default is 
-                  False, which returns in BGRA order for use with QImage.
                 
     """
     
@@ -582,11 +580,8 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
 
     prof.mark('4')
 
-    if useRGBA:
-        order = [0,1,2,3] ## array comes out RGBA
-    else:
-        order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
-        
+
+    order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
     if data.shape[2] == 1:
         for i in xrange(3):
             imgData[..., order[i]] = data[..., 0]    
@@ -737,85 +732,7 @@ def rescaleData(data, scale, offset):
     #return facets
     
 
-def isocurve(data, level):
-    """
-        Generate isocurve from 2D data using marching squares algorithm.
-        
-        *data*   2D numpy array of scalar values
-        *level*  The level at which to generate an isosurface
-        
-        This function is SLOW; plenty of room for optimization here.
-        """    
     
-    sideTable = [
-    [],
-    [0,1],
-    [1,2],
-    [0,2],
-    [0,3],
-    [1,3],
-    [0,1,2,3],
-    [2,3],
-    [2,3],
-    [0,1,2,3],
-    [1,3],
-    [0,3],
-    [0,2],
-    [1,2],
-    [0,1],
-    []
-    ]
-    
-    edgeKey=[
-    [(0,1),(0,0)],
-    [(0,0), (1,0)],
-    [(1,0), (1,1)],
-    [(1,1), (0,1)]
-    ]
-    
-    
-    lines = []
-    
-    ## mark everything below the isosurface level
-    mask = data < level
-    
-    ### make four sub-fields and compute indexes for grid cells
-    index = np.zeros([x-1 for x in data.shape], dtype=np.ubyte)
-    fields = np.empty((2,2), dtype=object)
-    slices = [slice(0,-1), slice(1,None)]
-    for i in [0,1]:
-        for j in [0,1]:
-            fields[i,j] = mask[slices[i], slices[j]]
-            #vertIndex = i - 2*j*i + 3*j + 4*k  ## this is just to match Bourk's vertex numbering scheme
-            vertIndex = i+2*j
-            #print i,j,k," : ", fields[i,j,k], 2**vertIndex
-            index += fields[i,j] * 2**vertIndex
-            #print index
-    #print index
-    
-    ## add lines
-    for i in xrange(index.shape[0]):                 # data x-axis
-        for j in xrange(index.shape[1]):             # data y-axis     
-            sides = sideTable[index[i,j]]
-            for l in range(0, len(sides), 2):     ## faces for this grid cell
-                edges = sides[l:l+2]
-                pts = []
-                for m in [0,1]:      # points in this face
-                    p1 = edgeKey[edges[m]][0] # p1, p2 are points at either side of an edge
-                    p2 = edgeKey[edges[m]][1]
-                    v1 = data[i+p1[0], j+p1[1]] # v1 and v2 are the values at p1 and p2
-                    v2 = data[i+p2[0], j+p2[1]]
-                    f = (level-v1) / (v2-v1)
-                    fi = 1.0 - f
-                    p = (    ## interpolate between corners
-                        p1[0]*fi + p2[0]*f + i + 0.5, 
-                        p1[1]*fi + p2[1]*f + j + 0.5
-                        )
-                    pts.append(p)
-                lines.append(pts)
-
-    return lines ## a list of pairs of points
-
     
 def isosurface(data, level):
     """
@@ -1193,55 +1110,55 @@ def isosurface(data, level):
 
     return facets
 
+## code has moved to opengl/MeshData.py    
+#def meshNormals(data):
+    #"""
+    #Return list of normal vectors and list of faces which reference the normals
+    #data must be list of triangles; each triangle is a list of three points
+        #[ [(x,y,z), (x,y,z), (x,y,z)], ...]
+    #Return values are
+        #normals:   [(x,y,z), ...]
+        #faces:     [(n1, n2, n3), ...]
+    #"""
     
-def meshNormals(data):
-    """
-    Return list of normal vectors and list of faces which reference the normals
-    data must be list of triangles; each triangle is a list of three points
-        [ [(x,y,z), (x,y,z), (x,y,z)], ...]
-    Return values are
-        normals:   [(x,y,z), ...]
-        faces:     [(n1, n2, n3), ...]
-    """
-    
-    normals = []
-    points = {}
-    for i, face in enumerate(data):
-        ## compute face normal
-        pts = [QtGui.QVector3D(*x) for x in face]
-        norm = QtGui.QVector3D.crossProduct(pts[1]-pts[0], pts[2]-pts[0])
-        normals.append(norm)
+    #normals = []
+    #points = {}
+    #for i, face in enumerate(data):
+        ### compute face normal
+        #pts = [QtGui.QVector3D(*x) for x in face]
+        #norm = QtGui.QVector3D.crossProduct(pts[1]-pts[0], pts[2]-pts[0])
+        #normals.append(norm)
         
-        ## remember each point was associated with this normal
-        for p in face:
-            p = tuple(map(lambda x: np.round(x, 8), p))
-            if p not in points:
-                points[p] = []
-            points[p].append(i)
+        ### remember each point was associated with this normal
+        #for p in face:
+            #p = tuple(map(lambda x: np.round(x, 8), p))
+            #if p not in points:
+                #points[p] = []
+            #points[p].append(i)
         
-    ## compute averages
-    avgLookup = {}
-    avgNorms = []
-    for k,v in points.iteritems():
-        norms = [normals[i] for i in v]
-        a = norms[0]
-        if len(v) > 1:
-            for n in norms[1:]:
-                a = a + n
-            a = a / len(v)
-        avgLookup[k] = len(avgNorms)
-        avgNorms.append(a)
+    ### compute averages
+    #avgLookup = {}
+    #avgNorms = []
+    #for k,v in points.iteritems():
+        #norms = [normals[i] for i in v]
+        #a = norms[0]
+        #if len(v) > 1:
+            #for n in norms[1:]:
+                #a = a + n
+            #a = a / len(v)
+        #avgLookup[k] = len(avgNorms)
+        #avgNorms.append(a)
 
-    ## generate return array
-    faces = []
-    for i, face in enumerate(data):
-        f = []
-        for p in face:
-            p = tuple(map(lambda x: np.round(x, 8), p))
-            f.append(avgLookup[p])
-        faces.append(tuple(f))
+    ### generate return array
+    #faces = []
+    #for i, face in enumerate(data):
+        #f = []
+        #for p in face:
+            #p = tuple(map(lambda x: np.round(x, 8), p))
+            #f.append(avgLookup[p])
+        #faces.append(tuple(f))
         
-    return avgNorms, faces
+    #return avgNorms, faces
         
     
     
