@@ -1,3 +1,5 @@
+from pyqtgraph.Qt import QtGui
+
 class MeshData(object):
     """
     Class for storing 3D mesh data. May contain:
@@ -9,15 +11,16 @@ class MeshData(object):
     """
 
     def __init__(self):
-        self.vertexes = []
-        self.edges = None
-        self.faces = []
-        self.vertexFaces = None  ## maps vertex ID to a list of face IDs
-        self.vertexNormals = None
-        self.faceNormals = None
-        self.vertexColors = None
-        self.edgeColors = None
-        self.faceColors = None
+        self._vertexes = []
+        self._edges = None
+        self._faces = []
+        self._vertexFaces = None  ## maps vertex ID to a list of face IDs
+        self._vertexNormals = None
+        self._faceNormals = None
+        self._vertexColors = None
+        self._edgeColors = None
+        self._faceColors = None
+        self._meshColor = (1, 1, 1, 0.1)  # default color to use if no face/edge/vertex colors are given
         
     def setFaces(self, faces, vertexes=None):
         """
@@ -30,84 +33,111 @@ class MeshData(object):
         """
         
         if vertexes is None:
-            self._setUnindexedFaces(self, faces)
+            self._setUnindexedFaces(faces)
         else:
-            self._setIndexedFaces(self, faces)
-            
+            self._setIndexedFaces(faces, vertexes)
+    
+    
     def _setUnindexedFaces(self, faces):
         verts = {}
-        self.faces = []
-        self.vertexes = []
-        self.vertexFaces = []
-        self.faceNormals = None
-        self.vertexNormals = None
+        self._faces = []
+        self._vertexes = []
+        self._vertexFaces = []
+        self._faceNormals = None
+        self._vertexNormals = None
         for face in faces:
             inds = []
             for pt in face:
-                pt2 = tuple([int(x*1e14) for x in pt])  ## quantize to be sure that nearly-identical points will be merged
+                pt2 = tuple([round(x*1e14) for x in pt])  ## quantize to be sure that nearly-identical points will be merged
                 index = verts.get(pt2, None)
                 if index is None:
-                    self.vertexes.append(tuple(pt))
-                    self.vertexFaces.append([])
-                    index = len(self.vertexes)-1
+                    self._vertexes.append(QtGui.QVector3D(*pt))
+                    self._vertexFaces.append([])
+                    index = len(self._vertexes)-1
                     verts[pt2] = index
-                self.vertexFaces[index].append(face)
+                self._vertexFaces[index].append(len(self._faces))
                 inds.append(index)
-            self.faces.append(tuple(inds))
+            self._faces.append(tuple(inds))
     
     def _setIndexedFaces(self, faces, vertexes):
-        self.vertexes = vertexes
-        self.faces = faces
-        self.edges = None
-        self.vertexFaces = None
-        self.faceNormals = None
-        self.vertexNormals = None
+        self._vertexes = [QtGui.QVector3D(*v) for v in vertexes]
+        self._faces = faces
+        self._edges = None
+        self._vertexFaces = None
+        self._faceNormals = None
+        self._vertexNormals = None
 
-    def getVertexFaces(self):
+    def vertexFaces(self):
         """
         Return list mapping each vertex index to a list of face indexes that use the vertex.
         """
-        if self.vertexFaces is None:
-            self.vertexFaces = [[]] * len(self.vertexes)
-            for i, face in enumerate(self.faces):
+        if self._vertexFaces is None:
+            self._vertexFaces = [[]] * len(self._vertexes)
+            for i, face in enumerate(self._faces):
                 for ind in face:
-                    if len(self.vertexFaces[ind]) == 0:
-                        self.vertexFaces[ind] = []  ## need a unique/empty list to fill
-                    self.vertexFaces[ind].append(i)
-        return self.vertexFaces
+                    if len(self._vertexFaces[ind]) == 0:
+                        self._vertexFaces[ind] = []  ## need a unique/empty list to fill
+                    self._vertexFaces[ind].append(i)
+        return self._vertexFaces
         
-        
-    def getFaceNormals(self):
+    def __iter__(self):
+        """Iterate over all faces, yielding a list of three tuples [(position, normal, color), ...] for each face."""
+        vnorms = self.vertexNormals()
+        vcolors = self.vertexColors()
+        for i in range(len(self._faces)):
+            face = []
+            for j in [0,1,2]:
+                vind = self._faces[i][j]
+                pos = self._vertexes[vind]
+                norm = vnorms[vind]
+                if vcolors is None:
+                    color = self._meshColor
+                else:
+                    color = vcolors[vind]
+                face.append((pos, norm, color))
+            yield face
+    
+    
+    def faceNormals(self):
         """
         Computes and stores normal of each face.
         """
-        if self.faceNormals is None:
-            self.faceNormals = []
-            for i, face in enumerate(self.faces):
+        if self._faceNormals is None:
+            self._faceNormals = []
+            for i, face in enumerate(self._faces):
                 ## compute face normal
-                pts = [QtGui.QVector3D(*self.vertexes[vind]) for vind in face]
-                norm = QtGui.QVector3D.crossProduct(pts[1]-pts[0], pts[2]-pts[0])
-                self.faceNormals.append(norm)
-        return self.faceNormals
+                pts = [self._vertexes[vind] for vind in face]
+                norm = QtGui.QVector3D.crossProduct(pts[1]-pts[0], pts[2]-pts[0]).normalized()
+                self._faceNormals.append(norm)
+        return self._faceNormals
     
-    def getVertexNormals(self):
+    def vertexNormals(self):
         """
         Assigns each vertex the average of its connected face normals.
         If face normals have not been computed yet, then generateFaceNormals will be called.
         """
-        if self.vertexNormals is None:
-            faceNorms = self.getFaceNormals()
-            vertFaces = self.getVertexFaces()
-            self.vertexNormals = []
-            for vindex in xrange(len(self.vertexes)):
+        if self._vertexNormals is None:
+            faceNorms = self.faceNormals()
+            vertFaces = self.vertexFaces()
+            self._vertexNormals = []
+            for vindex in xrange(len(self._vertexes)):
+                #print vertFaces[vindex]
                 norms = [faceNorms[findex] for findex in vertFaces[vindex]]
-                if len(norms) == 0:
-                    norm = QtGui.QVector3D()
-                else:
-                    norm = reduce(QtGui.QVector3D.__add__, facenorms) / float(len(norms))
-                self.vertexNormals.append(norm)
-        return self.vertexNormals
+                norm = QtGui.QVector3D()
+                for fn in norms:
+                    norm += fn
+                norm.normalize()
+                self._vertexNormals.append(norm)
+        return self._vertexNormals
         
+    def vertexColors(self):
+        return self._vertexColors
+        
+    def faceColors(self):
+        return self._faceColors
+        
+    def edgeColors(self):
+        return self._edgeColors
         
     def reverseNormals(self):
         """
