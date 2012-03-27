@@ -586,7 +586,6 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
     else:
         order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
         
-    order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
     if data.shape[2] == 1:
         for i in xrange(3):
             imgData[..., order[i]] = data[..., 0]    
