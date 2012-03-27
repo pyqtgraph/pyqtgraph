@@ -820,13 +820,13 @@ class ViewBox(GraphicsWidget):
                     frac = (1.0, 1.0)
                 xr = item.dataBounds(0, frac=frac[0])
                 yr = item.dataBounds(1, frac=frac[1])
-                if xr is None:
+                if xr is None or xr == (None, None):
                     useX = False
                     xr = (0,0)
-                if yr is None:
+                if yr is None or yr == (None, None):
                     useY = False
                     yr = (0,0)
-                
+
                 bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
                 #print "   item real:", bounds
             else:

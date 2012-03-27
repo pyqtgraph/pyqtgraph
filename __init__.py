@@ -9,7 +9,19 @@ from Qt import QtGui
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
 
+## in general openGL is poorly supported in Qt. 
+## we only enable it where the performance benefit is critical.
+## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
+import sys
+if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
+    useOpenGL = False
+elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
+    useOpenGL = True
+else:
+    useOpenGL = True  ## on windows there's a more even performance / bugginess tradeoff. 
+                
 CONFIG_OPTIONS = {
+    'useOpenGL': None,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True  ## if false, left button drags a rubber band for zooming in viewbox
 }
 

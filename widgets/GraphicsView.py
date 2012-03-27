@@ -16,6 +16,7 @@ from FileDialog import FileDialog
 from pyqtgraph.GraphicsScene import GraphicsScene
 import numpy as np
 import pyqtgraph.functions as fn
+import pyqtgraph 
 
 __all__ = ['GraphicsView']
 
@@ -38,20 +39,14 @@ class GraphicsView(QtGui.QGraphicsView):
         autoPixelRange=False. The exact visible range can be set with setRange().
         
         The view can be panned using the middle mouse button and scaled using the right mouse button if
-        enabled via enableMouse()."""
+        enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
         self.closed = False
         
         QtGui.QGraphicsView.__init__(self, parent)
         
-        ## in general openGL is poorly supported in Qt. 
-        ## we only enable it where the performance benefit is critical.
         if useOpenGL is None:
-            if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
-                useOpenGL = False
-            elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
-                useOpenGL = True
-            else:
-                useOpenGL = False
+            useOpenGL = pyqtgraph.getConfigOption('useOpenGL')
+        
         self.useOpenGL(useOpenGL)
         
         self.setCacheMode(self.CacheBackground)

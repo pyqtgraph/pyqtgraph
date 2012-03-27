@@ -405,7 +405,7 @@ class ListParameterItem(WidgetParameterItem):
             #return vals[key]
         #else:
             #return key
-        print key, self.forward
+        #print key, self.forward
         return self.forward[key]
             
     def setValue(self, val):
