@@ -90,7 +90,7 @@ class ExampleLoader(QtGui.QMainWindow):
         fn = self.currentFile()
         if fn is None:
             return
-        os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn)
+        os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"')
         
             
     def showFile(self):
