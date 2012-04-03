@@ -221,7 +221,7 @@ class InfiniteLine(UIGraphicsItem):
             self.sigPositionChangeFinished.emit(self)
 
     def hoverEvent(self, ev):
-        if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.LeftButton):
             self.currentPen = fn.mkPen(255, 0,0)
         else:
             self.currentPen = self.pen

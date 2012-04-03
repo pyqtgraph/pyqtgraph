@@ -690,7 +690,10 @@ class PlotItem(GraphicsWidget):
 
     def addItem(self, item, *args, **kargs):
         self.items.append(item)
-        self.vb.addItem(item, *args)
+        vbargs = {}
+        if 'ignoreBounds' in kargs:
+            vbargs['ignoreBounds'] = kargs['ignoreBounds']
+        self.vb.addItem(item, *args, **vbargs)
         if hasattr(item, 'implements') and item.implements('plotData'):
             self.dataItems.append(item)
             #self.plotChanged()

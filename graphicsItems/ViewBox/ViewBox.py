@@ -197,11 +197,12 @@ class ViewBox(GraphicsWidget):
     def mouseEnabled(self):
         return self.state['mouseEnabled'][:]
     
-    def addItem(self, item):
+    def addItem(self, item, ignoreBounds=False):
         if item.zValue() < self.zValue():
             item.setZValue(self.zValue()+1)
         item.setParentItem(self.childGroup)
-        self.addedItems.append(item)
+        if not ignoreBounds:
+            self.addedItems.append(item)
         self.updateAutoRange()
         #print "addItem:", item, item.boundingRect()
         

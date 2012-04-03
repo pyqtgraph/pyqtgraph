@@ -5,8 +5,7 @@ import numpy as np
 
 class Transform(QtGui.QTransform):
     """Transform that can always be represented as a combination of 3 matrices: scale * rotate * translate
-    
-    This transform always has 0 shear.
+    This transform has no shear; angles are always preserved.
     """
     def __init__(self, init=None):
         QtGui.QTransform.__init__(self)
@@ -24,6 +23,16 @@ class Transform(QtGui.QTransform):
         elif isinstance(init, QtGui.QTransform):
             self.setFromQTransform(init)
 
+        
+    def getScale(self):
+        return self._state['scale']
+        
+    def getAngle(self):
+        return self._state['angle']
+        
+    def getTranslation(self):
+        return self._state['pos']
+    
     def reset(self):
         self._state = {
             'pos': Point(0,0),

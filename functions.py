@@ -72,7 +72,6 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
     Return the number x formatted in engineering notation with SI prefix.
     
     Example::
-    
         siFormat(0.0001, suffix='V')  # returns "100 μV"
     """
     
@@ -90,8 +89,11 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         fmt = "%." + str(precision) + "g%s%s"
         return fmt % (x*p, pref, suffix)
     else:
-        plusminus = space + u"±" + space
-        fmt = "%." + str(precision) + u"g%s%s%s%s"
+        if allowUnicode:
+            plusminus = space + u"±" + space
+        else:
+            plusminus = " +/- "
+        fmt = "%." + str(precision) + "g%s%s%s%s"
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
     
 def siEval(s):
