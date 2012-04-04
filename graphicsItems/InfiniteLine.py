@@ -35,6 +35,7 @@ class InfiniteLine(UIGraphicsItem):
             self.maxRange = bounds
         self.moving = False
         self.setMovable(movable)
+        self.mouseHovering = False
         self.p = [0, 0]
         self.setAngle(angle)
         if pos is None:
@@ -222,6 +223,16 @@ class InfiniteLine(UIGraphicsItem):
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and self.movable and ev.acceptDrags(QtCore.Qt.LeftButton):
+            self.setMouseHover(True)
+        else:
+            self.setMouseHover(False)
+
+    def setMouseHover(self, hover):
+        ## Inform the item that the mouse is(not) hovering over it
+        if self.mouseHovering == hover:
+            return
+        self.mouseHovering = hover
+        if hover:
             self.currentPen = fn.mkPen(255, 0,0)
         else:
             self.currentPen = self.pen

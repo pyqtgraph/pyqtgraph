@@ -25,6 +25,8 @@ win.show()
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
 
+#ui.graphicsView.useOpenGL()  ## buggy, but you can try it if you need extra speed.
+
 vb = pg.ViewBox()
 ui.graphicsView.setCentralItem(vb)
 vb.setAspectLocked()

@@ -18,10 +18,10 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
 elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
     useOpenGL = True
 else:
-    useOpenGL = True  ## on windows there's a more even performance / bugginess tradeoff. 
+    useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
 CONFIG_OPTIONS = {
-    'useOpenGL': None,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
+    'useOpenGL': useOpenGL,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True  ## if false, left button drags a rubber band for zooming in viewbox
 }
 

@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ## Add path to library (just for examples; you do not need this)
-import sys, os, time
+import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
-
+from pyqtgraph.ptime import time
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
@@ -18,15 +18,22 @@ p = pg.plot()
 p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
 p.setLabel('bottom', 'Index', units='B')
 curve = p.plot()
+
+#curve.setFillBrush((0, 0, 100, 100))
+#curve.setFillLevel(0)
+
+#lr = pg.LinearRegionItem([100, 4900])
+#p.addItem(lr)
+
 data = np.random.normal(size=(50,5000))
 ptr = 0
-lastTime = time.time()
+lastTime = time()
 fps = None
 def update():
     global curve, data, ptr, p, lastTime, fps
     curve.setData(data[ptr%10])
     ptr += 1
-    now = time.time()
+    now = time()
     dt = now - lastTime
     lastTime = now
     if fps is None:

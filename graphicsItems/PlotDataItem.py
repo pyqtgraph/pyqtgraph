@@ -11,6 +11,7 @@ from ScatterPlotItem import ScatterPlotItem
 import numpy as np
 import scipy
 import pyqtgraph.functions as fn
+import pyqtgraph.debug as debug
 
 class PlotDataItem(GraphicsObject):
     """GraphicsItem for displaying plot curves, scatter plots, or both."""
@@ -215,7 +216,7 @@ class PlotDataItem(GraphicsObject):
         """
         
         #self.clear()
-        
+        prof = debug.Profiler('PlotDataItem.setData (0x%x)' % id(self), disabled=True)
         y = None
         x = None
         if len(args) == 1:
@@ -262,7 +263,7 @@ class PlotDataItem(GraphicsObject):
         if 'y' in kargs:
             y = kargs['y']
 
-
+        prof.mark('interpret data')
         ## pull in all style arguments. 
         ## Use self.opts to fill in anything not present in kargs.
         
@@ -305,12 +306,16 @@ class PlotDataItem(GraphicsObject):
         self.yData = y.view(np.ndarray)
         self.xDisp = None
         self.yDisp = None
+        prof.mark('set data')
         
         self.updateItems()
+        prof.mark('update items')
         view = self.getViewBox()
         if view is not None:
             view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
         self.sigPlotChanged.emit(self)
+        prof.mark('emit')
+        prof.finish()
 
 
     def updateItems(self):

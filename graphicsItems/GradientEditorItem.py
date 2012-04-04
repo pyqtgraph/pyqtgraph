@@ -467,7 +467,19 @@ class GradientEditorItem(TickSliderItem):
             
         return table
             
-            
+    def isLookupTrivial(self):
+        """Return true if the gradient has exactly two stops in it: black at 0.0 and white at 1.0"""
+        ticks = self.listTicks()
+        if len(ticks) != 2:
+            return False
+        if ticks[0][1] != 0.0 or ticks[1][1] != 1.0:
+            return False
+        c1 = fn.colorTuple(ticks[0][0].color)
+        c2 = fn.colorTuple(ticks[1][0].color)
+        if c1 != (0,0,0,255) or c2 != (255,255,255,255):
+            return False
+        return True
+
 
     def mouseReleaseEvent(self, ev):
         TickSliderItem.mouseReleaseEvent(self, ev)

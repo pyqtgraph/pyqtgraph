@@ -16,6 +16,7 @@ from FileDialog import FileDialog
 from pyqtgraph.GraphicsScene import GraphicsScene
 import numpy as np
 import pyqtgraph.functions as fn
+import pyqtgraph.debug as debug
 import pyqtgraph 
 
 __all__ = ['GraphicsView']
@@ -394,6 +395,11 @@ class GraphicsView(QtGui.QGraphicsView):
             #pev = self.graphicsSceneEvent(ev, self.pev, self.fev)
             #self.pev = pev
             #self.currentItem.mouseMoveEvent(pev)
+        
+    #def paintEvent(self, ev):
+        #prof = debug.Profiler('GraphicsView.paintEvent (0x%x)' % id(self))
+        #QtGui.QGraphicsView.paintEvent(self, ev)
+        #prof.finish()
         
         
     def pixelSize(self):

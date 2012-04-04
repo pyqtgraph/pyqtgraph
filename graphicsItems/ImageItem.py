@@ -224,10 +224,13 @@ class ImageItem(GraphicsObject):
             return
         if self.qimage is None:
             self.render()
+            prof.mark('render QImage')
         if self.paintMode is not None:
             p.setCompositionMode(self.paintMode)
+            prof.mark('set comp mode')
         
         p.drawImage(QtCore.QPointF(0,0), self.qimage)
+        prof.mark('p.drawImage')
         if self.border is not None:
             p.setPen(self.border)
             p.drawRect(self.boundingRect())

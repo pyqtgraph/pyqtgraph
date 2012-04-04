@@ -15,17 +15,30 @@ from GridItem import *
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import numpy as np
+import pyqtgraph.debug as debug
 
 
 __all__ = ['HistogramLUTItem']
 
 
 class HistogramLUTItem(GraphicsWidget):
+    """
+    This is a graphicsWidget which provides controls for adjusting the display of an image.
+    Includes:
+       - Image histogram 
+       - Movable region over histogram to select black/white levels
+       - Gradient editor to define color lookup table for single-channel images
+    """
+    
     sigLookupTableChanged = QtCore.Signal(object)
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, image=None):
+    def __init__(self, image=None, fillHistogram=True):
+        """
+        If *image* (ImageItem) is provided, then the control will be automatically linked to the image and changes to the control will be immediately reflected in the image's appearance.
+        By default, the histogram is rendered with a fill. For performance, set *fillHistogram* = False.
+        """
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = None
@@ -61,6 +74,8 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.viewRangeChanged)
         self.plot = PlotDataItem()
         self.plot.rotate(90)
+        self.fillHistogram(fillHistogram)
+            
         self.vb.addItem(self.plot)
         self.autoHistogramRange()
         
@@ -68,7 +83,13 @@ class HistogramLUTItem(GraphicsWidget):
             self.setImageItem(image)
         #self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
         
-
+    def fillHistogram(self, fill=True, level=0.0, color=(100, 100, 200)):
+        if fill:
+            self.plot.setFillLevel(level)
+            self.plot.setFillBrush(color)
+        else:
+            self.plot.setFillLevel(None)
+        
     #def sizeHint(self, *args):
         #return QtCore.QSizeF(115, 200)
         
@@ -129,21 +150,24 @@ class HistogramLUTItem(GraphicsWidget):
     
     def gradientChanged(self):
         if self.imageItem is not None:
-            self.imageItem.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+            if self.gradient.isLookupTrivial():
+                self.imageItem.setLookupTable(None) #lambda x: x.astype(np.uint8))
+            else:
+                self.imageItem.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
             
         self.lut = None
         #if self.imageItem is not None:
             #self.imageItem.setLookupTable(self.gradient.getLookupTable(512))
         self.sigLookupTableChanged.emit(self)
 
-    def getLookupTable(self, img=None, n=None):
+    def getLookupTable(self, img=None, n=None, alpha=False):
         if n is None:
             if img.dtype == np.uint8:
                 n = 256
             else:
                 n = 512
         if self.lut is None:
-            self.lut = self.gradient.getLookupTable(n)
+            self.lut = self.gradient.getLookupTable(n, alpha=alpha)
         return self.lut
 
     def regionChanged(self):
@@ -159,17 +183,19 @@ class HistogramLUTItem(GraphicsWidget):
         self.update()
 
     def imageChanged(self, autoLevel=False, autoRange=False):
+        prof = debug.Profiler('HistogramLUTItem.imageChanged', disabled=True)
         h = self.imageItem.getHistogram()
+        prof.mark('get histogram')
         if h[0] is None:
             return
-        self.plot.setData(*h, fillLevel=0.0, brush=(100, 100, 200))
+        self.plot.setData(*h)
+        prof.mark('set plot')
         if autoLevel:
             mn = h[0][0]
             mx = h[0][-1]
             self.region.setRegion([mn, mx])
-            #self.updateRange()
-        #if autoRange:
-            #self.updateRange()
+            prof.mark('set region')
+        prof.finish()
             
     def getLevels(self):
         return self.region.getRegion()

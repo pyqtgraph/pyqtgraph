@@ -55,7 +55,7 @@ class ROI(GraphicsObject):
         self.rotateAllowed = True
         
         self.freeHandleMoved = False ## keep track of whether free handles have moved since last change signal was emitted.
-        
+        self.mouseHovering = False
         if pen is None:
             pen = (255, 255, 255)
         self.setPen(pen)
@@ -334,11 +334,22 @@ class ROI(GraphicsObject):
 
     def hoverEvent(self, ev):
         if self.translatable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
-            self.currentPen = fn.mkPen(255, 255, 0)
+            self.setMouseHover(True)
             self.sigHoverEvent.emit(self)
+        else:
+            self.setMouseHover(False)
+
+    def setMouseHover(self, hover):
+        ## Inform the ROI that the mouse is(not) hovering over it
+        if self.mouseHovering == hover:
+            return
+        self.mouseHovering = hover
+        if hover:
+            self.currentPen = fn.mkPen(255, 255, 0)
         else:
             self.currentPen = self.pen
         self.update()
+        
             
     def mouseDragEvent(self, ev):
         if ev.isStart():

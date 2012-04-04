@@ -352,7 +352,9 @@ class PlotCurveItem(GraphicsObject):
                 p2.closeSubpath()
                 self.fillPath = p2
                 
+            prof.mark('generate fill path')
             p.fillPath(self.fillPath, self.opts['brush'])
+            prof.mark('draw fill path')
             
 
         ## Copy pens and apply alpha adjustment

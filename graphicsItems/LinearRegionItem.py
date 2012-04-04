@@ -2,6 +2,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 from UIGraphicsItem import UIGraphicsItem
 from InfiniteLine import InfiniteLine
 import pyqtgraph.functions as fn
+import pyqtgraph.debug as debug
 
 __all__ = ['LinearRegionItem']
 
@@ -24,6 +25,7 @@ class LinearRegionItem(UIGraphicsItem):
         self.bounds = QtCore.QRectF()
         self.blockLineSignal = False
         self.moving = False
+        self.mouseHovering = False
         
         if orientation == LinearRegionItem.Horizontal:
             self.lines = [
@@ -94,9 +96,11 @@ class LinearRegionItem(UIGraphicsItem):
         return br.normalized()
         
     def paint(self, p, *args):
+        #prof = debug.Profiler('LinearRegionItem.paint')
         UIGraphicsItem.paint(self, p, *args)
         p.setBrush(self.currentBrush)
         p.drawRect(self.boundingRect())
+        #prof.finish()
 
     def dataBounds(self, axis, frac=1.0):
         if axis == self.orientation:
@@ -197,13 +201,23 @@ class LinearRegionItem(UIGraphicsItem):
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+            self.setMouseHover(True)
+        else:
+            self.setMouseHover(False)
+            
+    def setMouseHover(self, hover):
+        ## Inform the item that the mouse is(not) hovering over it
+        if self.mouseHovering == hover:
+            return
+        self.mouseHovering = hover
+        if hover:
             c = self.brush.color()
             c.setAlpha(c.alpha() * 2)
             self.currentBrush = fn.mkBrush(c)
         else:
             self.currentBrush = self.brush
         self.update()
-            
+
     #def hoverEnterEvent(self, ev):
         #print "rgn hover enter"
         #ev.ignore()
