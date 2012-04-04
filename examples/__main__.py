@@ -12,9 +12,13 @@ examples = OrderedDict([
     ('Basic Plotting', 'Plotting.py'),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', '../parametertree'),
+    ('Crosshair / Mouse interaction', 'crosshair.py'),
+    ('Video speed test', 'VideoSpeedTest.py'),
+    ('Plot speed test', 'PlotSpeedTest.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
+        ('IsocurveItem', 'isocurve.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROItypes.py'),
@@ -90,7 +94,10 @@ class ExampleLoader(QtGui.QMainWindow):
         fn = self.currentFile()
         if fn is None:
             return
-        os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"')
+        if sys.platform.startswith('win'):
+            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"')
+        else:
+            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn)
         
             
     def showFile(self):

@@ -1,8 +1,13 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-## Add path to library (just for examples; you do not need this)
-import sys, os, time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+"""
+Tests the speed of image updates for an ImageItem and RawImageWidget.
+The speed will generally depend on the type of data being shown, whether
+it is being scaled and/or converted by lookup table, and whether OpenGL
+is used by the view widget
+"""
+
+
+import initExample ## Add path to library (just for examples; you do not need this)
 
 
 from pyqtgraph.Qt import QtGui, QtCore
@@ -136,6 +141,7 @@ timer.start(0)
     
 
 
-## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
+## Start Qt event loop unless running in interactive mode or using pyside.
+import sys
+if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     app.exec_()
