@@ -112,7 +112,7 @@
   <customwidget>
    <class>FeedbackButton</class>
    <extends>QPushButton</extends>
-   <header>FeedbackButton</header>
+   <header>pyqtgraph.widgets.FeedbackButton</header>
   </customwidget>
  </customwidgets>
  <resources/>

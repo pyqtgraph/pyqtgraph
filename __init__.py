@@ -13,6 +13,11 @@ from Qt import QtGui
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
 import sys
+
+## check python version
+if sys.version_info[0] != 2 or sys.version_info[1] != 7:
+    raise Exception("Pyqtgraph requires Python version 2.7 (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
+
 if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
