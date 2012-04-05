@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+This example demonstrates a very basic use of flowcharts: filter data,
+displaying both the input and output of the filter. The behavior of
+he filter can be reprogrammed by the user.
+
+Basic steps are:
+  - create a flowchart and two plots
+  - input noisy data to the flowchart
+  - flowchart connects data to the first plot, where it is displayed
+  - add a gaussian filter to lowpass the data, then display it in the second plot.
+"""
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
@@ -45,6 +56,7 @@ pw2Node = fc.createNode('PlotWidget', pos=(150, -150))
 pw2Node.setPlot(pw2)
 
 fNode = fc.createNode('GaussianFilter', pos=(0, 0))
+fNode.ctrls['sigma'].setValue(5)
 fc.connectTerminals(fc.dataIn, fNode.In)
 fc.connectTerminals(fc.dataIn, pw1Node.In)
 fc.connectTerminals(fNode.Out, pw2Node.In)
