@@ -3,7 +3,7 @@ import initExample ## Add path to library (just for examples; you do not need th
 
 
 from pyqtgraph.flowchart import Flowchart
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 

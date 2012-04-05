@@ -1,3 +1,7 @@
+import scipy
+import numpy as np
+from pyqtgraph.metaarray import MetaArray
+
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
     If multiple axes are specified, runs once per axis.
@@ -7,7 +11,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     ma = None
     if isinstance(data, MetaArray):
         ma = data
-        data = data.view(ndarray)
+        data = data.view(np.ndarray)
         
     
     if hasattr(axis, '__len__'):
@@ -43,10 +47,10 @@ def downsample(data, n, axis=0, xvals='subsample'):
 def applyFilter(data, b, a, padding=100, bidir=True):
     """Apply a linear filter with coefficients a, b. Optionally pad the data before filtering
     and/or run the filter in both directions."""
-    d1 = data.view(ndarray)
+    d1 = data.view(np.ndarray)
     
     if padding > 0:
-        d1 = numpy.hstack([d1[:padding], d1, d1[-padding:]])
+        d1 = np.hstack([d1[:padding], d1, d1[-padding:]])
     
     if bidir:
         d1 = scipy.signal.lfilter(b, a, scipy.signal.lfilter(b, a, d1)[::-1])[::-1]
@@ -68,7 +72,7 @@ def besselFilter(data, cutoff, order=1, dt=None, btype='low', bidir=True):
             tvals = data.xvals('Time')
             dt = (tvals[-1]-tvals[0]) / (len(tvals)-1)
         except:
-            raise Exception('Must specify dt for this data.')
+            dt = 1.0
     
     b,a = scipy.signal.bessel(order, cutoff * dt, btype=btype) 
     
@@ -86,7 +90,7 @@ def butterworthFilter(data, wPass, wStop=None, gPass=2.0, gStop=20.0, order=1, d
             tvals = data.xvals('Time')
             dt = (tvals[-1]-tvals[0]) / (len(tvals)-1)
         except:
-            raise Exception('Must specify dt for this data.')
+            dt = 1.0
     
     if wStop is None:
         wStop = wPass * 2.0
@@ -148,7 +152,7 @@ def denoise(data, radius=2, threshold=4):
     
     
     r2 = radius * 2
-    d1 = data.view(ndarray)
+    d1 = data.view(np.ndarray)
     d2 = data[radius:] - data[:-radius] #a derivative
     #d3 = data[r2:] - data[:-r2]
     #d4 = d2 - d3
@@ -174,7 +178,7 @@ def adaptiveDetrend(data, x=None, threshold=3.0):
     if x is None:
         x = data.xvals(0)
     
-    d = data.view(ndarray)
+    d = data.view(np.ndarray)
     
     d2 = scipy.signal.detrend(d)
     
