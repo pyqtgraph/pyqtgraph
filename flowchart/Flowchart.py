@@ -14,7 +14,7 @@ from Terminal import Terminal
 from numpy import ndarray
 import library
 from pyqtgraph.debug import printExc
-import configfile
+import pyqtgraph.configfile as configfile
 import pyqtgraph.dockarea as dockarea
 import pyqtgraph as pg
 import FlowchartGraphicsView

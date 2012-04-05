@@ -3,7 +3,7 @@ from collections import OrderedDict
 import os, types
 from pyqtgraph.debug import printExc
 from ..Node import Node
-import reload
+import pyqtgraph.reload as reload
 
 
 NODE_LIST = OrderedDict()  ## maps name:class for all registered Node subclasses
