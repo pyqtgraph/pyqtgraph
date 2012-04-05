@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.Qt import QtCore, QtGui
+
+__all__ = ['FeedbackButton']
+
 class FeedbackButton(QtGui.QPushButton):
     """
     QPushButton which flashes success/failure indication for slow or asynchronous procedures.

@@ -95,6 +95,7 @@ def parseString(lines, start=0):
     data = OrderedDict()
     if isinstance(lines, basestring):
         lines = lines.split('\n')
+        lines = filter(lambda l: re.search(r'\S', l) and not re.match(r'\s*#', l), lines)  ## remove empty lines
         
     indent = measureIndent(lines[start])
     ln = start - 1
@@ -179,14 +180,20 @@ if __name__ == '__main__':
     tf = open(fn, 'w')
     cf = """
 key: 'value'
-key2:
-    key21: 'value'
+key2:              ##comment
+                   ##comment
+    key21: 'value' ## comment
+                   ##comment
     key22: [1,2,3]
     key23: 234  #comment
     """
     tf.write(cf)
     tf.close()
     print "=== Test:==="
+    num = 1
+    for line in cf.split('\n'):
+        print "%02d   %s" % (num, line)
+        num += 1
     print cf
     print "============"
     data = readConfigFile(fn)
