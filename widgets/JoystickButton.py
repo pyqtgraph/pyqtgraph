@@ -4,7 +4,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 __all__ = ['JoystickButton']
 
 class JoystickButton(QtGui.QPushButton):
-    sigStateChanged = QtCore.Signal(object, object)
+    sigStateChanged = QtCore.Signal(object, object)  ## self, state
     
     def __init__(self, parent=None):
         QtGui.QPushButton.__init__(self, parent)
@@ -33,6 +33,9 @@ class JoystickButton(QtGui.QPushButton):
         
     def doubleClickEvent(self, ev):
         ev.accept()
+        
+    def getState(self):
+        return self.state
         
     def setState(self, *xy):
         xy = list(xy)
