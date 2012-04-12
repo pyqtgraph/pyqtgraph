@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-
-## Display an animated arrowhead following a curve.
-## This example uses the CurveArrow class, which is a combination
-## of ArrowItem and CurvePoint. 
-##
-## To place a static arrow anywhere in a scene, use ArrowItem.
-## To attach other types of item to a curve, use CurvePoint.
+"""
+JoystickButton is a button with x/y values. When the button is depressed and the mouse dragged, the x/y values change to follow the mouse.
+When the mouse button is released, the x/y values change to 0,0 (rather like litting go of the joystick).
+"""
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
