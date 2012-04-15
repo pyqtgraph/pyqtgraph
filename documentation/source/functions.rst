@@ -51,3 +51,21 @@ SI Unit Conversion Functions
 
 .. autofunction:: pyqtgraph.siEval
 
+
+Image Preparation Functions
+---------------------------
+
+.. autofunction:: pyqtgraph.makeARGB
+
+.. autofunction:: pyqtgraph.makeQImage
+
+
+Mesh Generation Functions
+-------------------------
+
+.. autofunction:: pyqtgraph.isocurve
+
+.. autofunction:: pyqtgraph.isosurface
+
+
+

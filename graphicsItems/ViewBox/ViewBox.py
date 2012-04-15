@@ -28,6 +28,15 @@ class ChildGroup(ItemGroup):
 class ViewBox(GraphicsWidget):
     """
     Box that allows internal scaling/panning of children by mouse drag. 
+    This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :class:`Canvas <pyqtgraph.canvas.Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
+    
+    Features:
+    
+        - Scaling contents by mouse or auto-scale when contents change
+        - View linking--multiple views display the same data ranges
+        - Configurable by context menu
+        - Item coordinate mapping methods
+    
     Not really compatible with GraphicsView having the same functionality.
     """
     
@@ -53,6 +62,21 @@ class ViewBox(GraphicsWidget):
     
     
     def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, name=None):
+        """
+        =============  =============================================================
+        **Arguments**
+        *parent*       (QGraphicsWidget) Optional parent widget
+        *border*       (QPen) Do draw a border around the view, give any 
+                       single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
+        *lockAspect*   (False or float) The aspect ratio to lock the view 
+                       coorinates to. (or False to allow the ratio to change)
+        *enableMouse*  (bool) Whether mouse can be used to scale/pan the view 
+        *invertY*      (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
+        =============  =============================================================
+        """
+        
+        
+        
         GraphicsWidget.__init__(self, parent)
         self.name = None
         self.linksBlocked = False
@@ -112,7 +136,7 @@ class ViewBox(GraphicsWidget):
         
         self.setAspectLocked(lockAspect)
         
-        self.border = border
+        self.border = fn.mkPen(border)
         self.menu = ViewBoxMenu(self)
         
         self.register(name)
@@ -134,6 +158,9 @@ class ViewBox(GraphicsWidget):
             ViewBox.updateAllViewLists()
 
     def unregister(self):
+        """
+        Remove this ViewBox forom the list of linkable views. (see :func:`register() <pyqtgraph.ViewBox.register>`)
+        """
         del ViewBox.AllViews[self]
         if self.name is not None:
             del ViewBox.NamedViews[self.name]
@@ -165,6 +192,11 @@ class ViewBox(GraphicsWidget):
 
 
     def setMouseMode(self, mode):
+        """
+        Set the mouse interaction mode. *mode* must be either ViewBox.PanMode or ViewBox.RectMode.
+        In PanMode, the left mouse button pans the view and the right button scales.
+        In RectMode, the left button draws a rectangle which updates the visible region (this mode is more suitable for single-button mice)
+        """
         if mode not in [ViewBox.PanMode, ViewBox.RectMode]:
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
@@ -188,6 +220,10 @@ class ViewBox(GraphicsWidget):
         return self.childGroup
     
     def setMouseEnabled(self, x=None, y=None):
+        """
+        Set whether each axis is enabled for mouse interaction. *x*, *y* arguments must be True or False.
+        This allows the user to pan/scale one axis of the view while leaving the other axis unchanged.
+        """
         if x is not None:
             self.state['mouseEnabled'][0] = x
         if y is not None:
@@ -198,6 +234,10 @@ class ViewBox(GraphicsWidget):
         return self.state['mouseEnabled'][:]
     
     def addItem(self, item, ignoreBounds=False):
+        """
+        Add a QGraphicsItem to this view. The view will include this item when determining how to set its range
+        automatically unless *ignoreBounds* is True.
+        """
         if item.zValue() < self.zValue():
             item.setZValue(self.zValue()+1)
         item.setParentItem(self.childGroup)
@@ -207,6 +247,7 @@ class ViewBox(GraphicsWidget):
         #print "addItem:", item, item.boundingRect()
         
     def removeItem(self, item):
+        """Remove an item from this view."""
         try:
             self.addedItems.remove(item)
         except:
@@ -223,6 +264,7 @@ class ViewBox(GraphicsWidget):
         #self.linkedYChanged()
         
     def viewRange(self):
+        """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
         return [x[:] for x in self.state['viewRange']]  ## return copy
 
     def viewRect(self):
@@ -261,12 +303,14 @@ class ViewBox(GraphicsWidget):
         Set the visible range of the ViewBox.
         Must specify at least one of *range*, *xRange*, or *yRange*. 
         
-        Arguments:
-            *rect* (QRectF)    - The full range that should be visible in the view box.
-            *xRange* (min,max) - The range that should be visible along the x-axis.
-            *yRange* (min,max) - The range that should be visible along the y-axis.
-            *padding* (float)  - Expand the view by a fraction of the requested range
-                                 By default, this value is 0.02 (2%)
+        ============= =====================================================================
+        **Arguments**
+        *rect*        (QRectF) The full range that should be visible in the view box.
+        *xRange*      (min,max) The range that should be visible along the x-axis.
+        *yRange*      (min,max) The range that should be visible along the y-axis.
+        *padding*     (float) Expand the view by a fraction of the requested range. 
+                      By default, this value is 0.02 (2%)
+        ============= =====================================================================
         
         """
         changes = {}
@@ -326,14 +370,24 @@ class ViewBox(GraphicsWidget):
 
             
     def setYRange(self, min, max, padding=0.02, update=True):
+        """
+        Set the visible Y range of the view to [*min*, *max*]. 
+        The *padding* argument causes the range to be set larger by the fraction specified.
+        """
         self.setRange(yRange=[min, max], update=update, padding=padding)
         
     def setXRange(self, min, max, padding=0.02, update=True):
+        """
+        Set the visible X range of the view to [*min*, *max*]. 
+        The *padding* argument causes the range to be set larger by the fraction specified.
+        """
         self.setRange(xRange=[min, max], update=update, padding=padding)
 
     def autoRange(self, padding=0.02):
         """
         Set the range of the view box to make all children visible.
+        Note that this is not the same as enableAutoRange, which causes the view to 
+        automatically auto-range whenever its contents are changed.
         """
         bounds = self.childrenBoundingRect()
         if bounds is not None:
@@ -404,6 +458,7 @@ class ViewBox(GraphicsWidget):
         self.sigStateChanged.emit(self)
 
     def disableAutoRange(self, axis=None):
+        """Disables auto-range. (See enableAutoRange)"""
         self.enableAutoRange(axis, enable=False)
 
     def autoRangeEnabled(self):
@@ -433,9 +488,11 @@ class ViewBox(GraphicsWidget):
         self.setRange(tr, padding=0, disableAutoRange=False)
         
     def setXLink(self, view):
+        """Link this view's X axis to another view. (see LinkView)"""
         self.linkView(self.XAxis, view)
         
     def setYLink(self, view):
+        """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
         
         
@@ -610,10 +667,12 @@ class ViewBox(GraphicsWidget):
         return self.mapToScene(self.mapFromView(obj))
     
     def mapFromItemToView(self, item, obj):
+        """Maps *obj* from the local coordinate system of *item* to the view coordinates"""
         return self.childGroup.mapFromItem(item, obj)
         #return self.mapSceneToView(item.mapToScene(obj))
 
     def mapFromViewToItem(self, item, obj):
+        """Maps *obj* from view coordinates to the local coordinate system of *item*."""
         return self.childGroup.mapToItem(item, obj)
         #return item.mapFromScene(self.mapViewToScene(obj))
 
@@ -963,19 +1022,19 @@ class ViewBox(GraphicsWidget):
             #p.fillRect(bounds, QtGui.QColor(0, 0, 0))
             p.drawPath(bounds)
 
-    def saveSvg(self):
-        pass
+    #def saveSvg(self):
+        #pass
         
-    def saveImage(self):
-        pass
+    #def saveImage(self):
+        #pass
 
-    def savePrint(self):
-        printer = QtGui.QPrinter()
-        if QtGui.QPrintDialog(printer).exec_() == QtGui.QDialog.Accepted:
-            p = QtGui.QPainter(printer)
-            p.setRenderHint(p.Antialiasing)
-            self.scene().render(p)
-            p.end()
+    #def savePrint(self):
+        #printer = QtGui.QPrinter()
+        #if QtGui.QPrintDialog(printer).exec_() == QtGui.QDialog.Accepted:
+            #p = QtGui.QPainter(printer)
+            #p.setRenderHint(p.Antialiasing)
+            #self.scene().render(p)
+            #p.end()
 
     def updateViewLists(self):
         def cmpViews(a, b):
