@@ -1221,9 +1221,9 @@ class PlotItem(GraphicsWidget):
             mode = False
         return mode
         
-    def wheelEvent(self, ev):
-        # disables default panning the whole scene by mousewheel
-        ev.accept()
+    #def wheelEvent(self, ev):
+        ## disables default panning the whole scene by mousewheel
+        #ev.accept()
 
     def resizeEvent(self, ev):
         if self.autoBtn is None:  ## already closed down
