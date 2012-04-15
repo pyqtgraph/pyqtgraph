@@ -124,6 +124,13 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #print "mouseGrabberItem: ", self.mouseGrabberItem()
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             self.clickEvents.append(MouseClickEvent(ev))
+            
+            ## set focus on the topmost focusable item under this click
+            items = self.items(ev.scenePos())
+            for i in items:
+                if i.isEnabled() and i.isVisible() and int(i.flags() & i.ItemIsFocusable) > 0:
+                    i.setFocus(QtCore.Qt.MouseFocusReason)
+                    break
         #else:
             #addr = sip.unwrapinstance(sip.cast(self.mouseGrabberItem(), QtGui.QGraphicsItem))
             #item = GraphicsScene._addressCache.get(addr, self.mouseGrabberItem())            
@@ -134,11 +141,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         ## First allow QGraphicsScene to deliver hoverEnter/Move/ExitEvents
         QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-
-    
+        
         ## Next deliver our own HoverEvents
         self.sendHoverEvents(ev)
-        
         
         if int(ev.buttons()) != 0:  ## button is pressed; send mouseMoveEvents and mouseDragEvents
             QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
@@ -266,6 +271,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 #print "drag -> new item"
                 for item in self.itemsNearEvent(event):
                     #print "check item:", item
+                    if not item.isVisible() or not item.isEnabled():
+                        continue
                     if hasattr(item, 'mouseDragEvent'):
                         event.currentItem = item
                         try:
@@ -275,6 +282,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
+                            if int(item.flags() & item.ItemIsFocusable) > 0:
+                                item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
         elif self.dragItem is not None:
             event.currentItem = self.dragItem
@@ -309,6 +318,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     debug.printExc("Error sending click event:")
             else:
                 for item in self.itemsNearEvent(ev):
+                    if not item.isVisible() or not item.isEnabled():
+                        continue
                     if hasattr(item, 'mouseClickEvent'):
                         ev.currentItem = item
                         try:
@@ -317,6 +328,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
+                            if int(item.flags() & item.ItemIsFocusable) > 0:
+                                item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
                 if not ev.isAccepted() and ev.button() is QtCore.Qt.RightButton:
                     #print "GraphicsScene emitting sigSceneContextMenu"
