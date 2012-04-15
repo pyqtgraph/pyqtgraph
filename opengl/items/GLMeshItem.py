@@ -20,8 +20,11 @@ class GLMeshItem(GLGraphicsItem):
         """
         See MeshData for initialization arguments.
         """
-        self.data = MeshData()
-        self.data.setFaces(faces, vertexes)
+        if isinstance(faces, MeshData):
+            self.data = faces
+        else:
+            self.data = MeshData()
+            self.data.setFaces(faces, vertexes)
         GLGraphicsItem.__init__(self)
         
     def initializeGL(self):
