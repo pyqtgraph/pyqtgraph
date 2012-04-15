@@ -59,7 +59,20 @@ class PlotItem(GraphicsWidget):
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChanged = QtCore.Signal(object, object)
     
-    """Plot graphics item that can be added to any graphics scene. Implements axis titles, scales, interactive viewbox."""
+    """
+    Plot graphics item that can be added to any graphics scene. Implements axis titles, scales, interactive viewbox.
+    
+    Use plot(...) to create a new PlotDataItem and add it to the view.
+    Use addItem(...) add any QGraphicsItem to the view
+    
+    This class wraps several methods from its internal ViewBox:
+    setXRange, setYRange, setXLink, setYLink, 
+    setRange, autoRange, viewRect, setMouseEnabled,
+    enableAutoRange, disableAutoRange, setAspectLocked,
+    register, unregister. 
+    
+    The ViewBox itself can be accessed by calling getVewBox()    
+    """
     lastFileDir = None
     managers = {}
     
@@ -76,6 +89,8 @@ class PlotItem(GraphicsWidget):
                         Optionally, PlotItem my also be initialized with the keyword arguments left,
                         right, top, or bottom to achieve the same effect.
             *name*    - Registers a name for this view so that others may link to it  
+            
+            
         """
         
         GraphicsWidget.__init__(self, parent)
@@ -289,6 +304,7 @@ class PlotItem(GraphicsWidget):
         return interface in ['ViewBoxWrapper']
 
     def getViewBox(self):
+        """Return the ViewBox within."""
         return self.vb
     
         
@@ -346,7 +362,7 @@ class PlotItem(GraphicsWidget):
         #else:
             #print "no manager"
 
-    def registerPlot(self, name):
+    def registerPlot(self, name):   ## for backward compatibility
         self.vb.register(name)
         #self.name = name
         #win = str(self.window())
@@ -398,7 +414,7 @@ class PlotItem(GraphicsWidget):
             self.scales[k]['item'].setGrid(g)
 
     def viewGeometry(self):
-        """return the screen geometry of the viewbox"""
+        """Return the screen geometry of the viewbox"""
         v = self.scene().views()[0]
         b = self.vb.mapRectToScene(self.vb.boundingRect())
         wr = v.mapFromScene(b).boundingRect()
@@ -514,7 +530,7 @@ class PlotItem(GraphicsWidget):
         self.replot()
         
     def addAvgCurve(self, curve):
-        """Add a single curve into the pool of curves averaged together"""
+        ## Add a single curve into the pool of curves averaged together
         
         ## If there are plot parameters, then we need to determine which to average together.
         remKeys = []

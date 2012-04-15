@@ -15,7 +15,13 @@ class PlotWidget(GraphicsView):
     
     #sigRangeChanged = QtCore.Signal(object, object)  ## already defined in GraphicsView
     
-    """Widget implementing a graphicsView with a single PlotItem inside."""
+    """
+    Widget implementing a graphicsView with a single PlotItem inside.
+    
+    The following methods are wrapped directly from PlotItem: addItem, removeItem, 
+    clear, setXRange, setYRange, setRange, setAspectLocked, setMouseEnabled. For all 
+    other methods, use getPlotItem.
+    """
     def __init__(self, parent=None, **kargs):
         GraphicsView.__init__(self, parent)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
@@ -27,14 +33,7 @@ class PlotWidget(GraphicsView):
             setattr(self, m, getattr(self.plotItem, m))
         #QtCore.QObject.connect(self.plotItem, QtCore.SIGNAL('viewChanged'), self.viewChanged)
         self.plotItem.sigRangeChanged.connect(self.viewRangeChanged)
-                
-    #def __dtor__(self):
-        ##print "Called plotWidget sip destructor"
-        #self.quit()
-        
-        
-    #def quit(self):
-
+    
     def close(self):
         self.plotItem.close()
         self.plotItem = None
@@ -49,7 +48,7 @@ class PlotWidget(GraphicsView):
             if hasattr(m, '__call__'):
                 return m
         raise exceptions.NameError(attr)
-            
+    
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
         self.sigRangeChanged.emit(self, range)
@@ -64,6 +63,7 @@ class PlotWidget(GraphicsView):
         return self.plotItem.restoreState(state)
         
     def getPlotItem(self):
+        """Return the PlotItem contained within."""
         return self.plotItem
         
         
