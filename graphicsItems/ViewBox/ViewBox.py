@@ -103,11 +103,11 @@ class ViewBox(GraphicsWidget):
         }
         
         
-        self.exportMethods = collections.OrderedDict([
-            ('SVG', self.saveSvg),
-            ('Image', self.saveImage),
-            ('Print', self.savePrint),
-        ])
+        #self.exportMethods = collections.OrderedDict([
+            #('SVG', self.saveSvg),
+            #('Image', self.saveImage),
+            #('Print', self.savePrint),
+        #])
         
         self.setFlag(self.ItemClipsChildrenToShape)
         self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
