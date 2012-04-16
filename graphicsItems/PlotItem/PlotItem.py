@@ -776,8 +776,7 @@ class PlotItem(GraphicsWidget):
         
     def addCurve(self, c, params=None):
         print "PlotItem.addCurve is deprecated. Use addItem instead."
-        self.addItem(item, params)
-
+        self.addItem(c, params)
 
     def removeItem(self, item):
         if not item in self.items:
