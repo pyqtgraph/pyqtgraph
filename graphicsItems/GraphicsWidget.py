@@ -1,16 +1,19 @@
 from pyqtgraph.Qt import QtGui, QtCore  
 from pyqtgraph.GraphicsScene import GraphicsScene
-from GraphicsItemMethods import GraphicsItemMethods
+from GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']
-class GraphicsWidget(GraphicsItemMethods, QtGui.QGraphicsWidget):
+
+class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     def __init__(self, *args, **kargs):
         """
+        **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtGui.QGraphicsWidget`
+        
         Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs. 
-        Most of the extra functionality is inherited from GraphicsObjectSuperclass.
+        Most of the extra functionality is inherited from :class:`GraphicsItem <pyqtgraph.GraphicsItem>`.
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
-        GraphicsItemMethods.__init__(self)
+        GraphicsItem.__init__(self)
         GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
     #def getMenu(self):

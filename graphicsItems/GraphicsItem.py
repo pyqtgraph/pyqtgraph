@@ -3,9 +3,12 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Point import Point
 import weakref
 
-class GraphicsItemMethods(object):
+class GraphicsItem(object):
     """
-    Class providing useful methods to GraphicsObject and GraphicsWidget.
+    **Bases:** :class:`object`
+
+    Abstract class providing useful methods to GraphicsObject and GraphicsWidget.
+    (This is required because we cannot have multiple inheritance with QObject subclasses.)
     """
     def __init__(self):
         self._viewWidget = None

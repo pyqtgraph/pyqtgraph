@@ -12,8 +12,19 @@ from GraphicsObject import GraphicsObject
 __all__ = ['ImageItem']
 class ImageItem(GraphicsObject):
     """
-    GraphicsObject displaying an image. Optimized for rapid update (ie video display)
+    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     
+    GraphicsObject displaying an image. Optimized for rapid update (ie video display).
+    This item displays either a 2D numpy array (height, width) or
+    a 3D array (height, width, RGBa). This array is optionally scaled (see 
+    :func:`setLevels <pyqtgraph.ImageItem.setLevels>`) and/or colored
+    with a lookup table (see :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`)
+    before being displayed.
+    
+    ImageItem is frequently used in conjunction with 
+    :class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>` or 
+    :class:`HistogramLUTWidget <pyqtgraph.HistogramLUTWidget>` to provide a GUI
+    for controlling the levels and lookup table used to display the image.
     """
     
     
@@ -24,7 +35,7 @@ class ImageItem(GraphicsObject):
     
     def __init__(self, image=None, **kargs):
         """
-        See setImage for all allowed arguments.
+        See :func:`setImage <pyqtgraph.ImageItem.setImage>` for all allowed initialization arguments.
         """
         GraphicsObject.__init__(self)
         #self.pixmapItem = QtGui.QGraphicsPixmapItem(self)
@@ -51,6 +62,21 @@ class ImageItem(GraphicsObject):
             self.setOpts(**kargs)
 
     def setCompositionMode(self, mode):
+        """Change the composition mode of the item (see QPainter::CompositionMode
+        in the Qt documentation). This is useful when overlaying multiple ImageItems.
+        
+        ============================================  ============================================================
+        **Most common arguments:**
+        QtGui.QPainter.CompositionMode_SourceOver     Default; image replaces the background if it
+                                                      is opaque. Otherwise, it uses the alpha channel to blend
+                                                      the image with the background.
+        QtGui.QPainter.CompositionMode_Overlay        The image color is mixed with the background color to 
+                                                      reflect the lightness or darkness of the background.
+        QtGui.QPainter.CompositionMode_Plus           Both the alpha and color of the image and background pixels 
+                                                      are added together.
+        QtGui.QPainter.CompositionMode_Multiply       The output is the image color multiplied by the background.
+        ============================================  ============================================================
+        """
         self.paintMode = mode
         self.update()
 
@@ -90,10 +116,13 @@ class ImageItem(GraphicsObject):
 
     def setLevels(self, levels, update=True):
         """
-        Set image scaling levels. Can be one of: 
-            [blackLevel, whiteLevel]
-            [[minRed, maxRed], [minGreen, maxGreen], [minBlue, maxBlue]]
-        Only the first format is compatible with lookup tables.
+        Set image scaling levels. Can be one of:
+        
+        * [blackLevel, whiteLevel]
+        * [[minRed, maxRed], [minGreen, maxGreen], [minBlue, maxBlue]]
+            
+        Only the first format is compatible with lookup tables. See :func:`makeARGB <pyqtgraph.makeARGB>`
+        for more details on how levels are applied.
         """
         self.levels = levels
         if update:
@@ -105,8 +134,14 @@ class ImageItem(GraphicsObject):
 
     def setLookupTable(self, lut, update=True):
         """
-        Set the lookup table to use for this image. (see functions.makeARGB for more information on how this is used)
-        Optionally, lut can be a callable that accepts the current image as an argument and returns the lookup table to use."""
+        Set the lookup table (numpy array) to use for this image. (see 
+        :func:`makeARGB <pyqtgraph.makeARGB>` for more information on how this is used).
+        Optionally, lut can be a callable that accepts the current image as an 
+        argument and returns the lookup table to use.
+        
+        Ordinarily, this table is supplied by a :class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>`
+        or :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
+        """
         self.lut = lut
         if update:
             self.updateImage()
@@ -126,23 +161,35 @@ class ImageItem(GraphicsObject):
             self.setBorder(kargs['border'])
 
     def setRect(self, rect):
-        """Scale and translate the image to fit within rect."""
+        """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
         self.resetTransform()
         self.translate(rect.left(), rect.top())
         self.scale(rect.width() / self.width(), rect.height() / self.height())
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
-        Update the image displayed by this item.
-        Arguments:
-            image
-            autoLevels
-            lut
-            levels
-            opacity
-            compositionMode
-            border
+        Update the image displayed by this item. For more information on how the image
+        is processed before displaying, see :func:`makeARGB <pyqtgraph.makeARGB>`
         
+        =================  =========================================================================
+        **Arguments:**
+        image              (numpy array) Specifies the image data. May be 2D (width, height) or 
+                           3D (width, height, RGBa). The array dtype must be integer or floating
+                           point of any bit depth. For 3D arrays, the third dimension must
+                           be of length 3 (RGB) or 4 (RGBA).
+        autoLevels         (bool) If True, this forces the image to automatically select 
+                           levels based on the maximum and minimum values in the data.
+                           By default, this argument is true unless the levels argument is
+                           given.
+        lut                (numpy array) The color lookup table to use when displaying the image.
+                           See :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`.
+        levels             (min, max) The minimum and maximum values to use when rescaling the image
+                           data. By default, this will be set to the minimum and maximum values 
+                           in the image. If the image array has dtype uint8, no rescaling is necessary.
+        opacity            (float 0.0-1.0)
+        compositionMode    see :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
+        border             Sets the pen used when drawing the image border. Default is None.
+        =================  =========================================================================
         """
         prof = debug.Profiler('ImageItem.setImage', disabled=True)
         
@@ -238,8 +285,10 @@ class ImageItem(GraphicsObject):
 
 
     def getHistogram(self, bins=500, step=3):
-        """returns x and y arrays containing the histogram values for the current image.
-        The step argument causes pixels to be skipped when computing the histogram to save time."""
+        """Returns x and y arrays containing the histogram values for the current image.
+        The step argument causes pixels to be skipped when computing the histogram to save time.
+        This method is also used when automatically computing levels.
+        """
         if self.image is None:
             return None,None
         stepData = self.image[::step, ::step]
@@ -247,7 +296,12 @@ class ImageItem(GraphicsObject):
         return hist[1][:-1], hist[0]
 
     def setPxMode(self, b):
-        """Set whether the item ignores transformations and draws directly to screen pixels."""
+        """
+        Set whether the item ignores transformations and draws directly to screen pixels.
+        If True, the item will not inherit any scale or rotation transformations from its
+        parent items, but its position will be transformed as usual.
+        (see GraphicsItem::ItemIgnoresTransformations in the Qt documentation)
+        """
         self.setFlag(self.ItemIgnoresTransformations, b)
     
     def setScaledMode(self):

@@ -8,8 +8,18 @@ __all__ = ['LinearRegionItem']
 
 class LinearRegionItem(UIGraphicsItem):
     """
+    **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
+    
     Used for marking a horizontal or vertical region in plots.
     The region can be dragged and is bounded by lines which can be dragged individually.
+    
+    ===============================  =============================================================================
+    **Signals:**
+    sigRegionChangeFinished(self)    Emitted when the user has finished dragging the region (or one of its lines)
+                                     and when the region is changed programatically.
+    sigRegionChanged(self)           Emitted while the user is dragging the region (or one of its lines)
+                                     and when the region is changed programatically.
+    ===============================  =============================================================================
     """
     
     sigRegionChangeFinished = QtCore.Signal(object)

@@ -14,7 +14,22 @@ import pyqtgraph.functions as fn
 import pyqtgraph.debug as debug
 
 class PlotDataItem(GraphicsObject):
-    """GraphicsItem for displaying plot curves, scatter plots, or both."""
+    """
+    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
+    
+    GraphicsItem for displaying plot curves, scatter plots, or both. 
+    While it is possible to use :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` or
+    :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` individually, this class
+    provides a unified interface to both. Inspances of :class:`PlotDataItem` are 
+    usually created by plot() methods such as :func:`pyqtgraph.plot` and
+    :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
+    
+    ===================== ==============================================
+    **Signals:**
+    sigPlotChanged(self)  Emitted when the data in this item is updated.  
+    sigClicked(self)      Emitted when the item is clicked.
+    ===================== ==============================================
+    """
     
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
@@ -23,7 +38,7 @@ class PlotDataItem(GraphicsObject):
         """
         There are many different ways to create a PlotDataItem:
         
-        Data initialization: (x,y data only)
+        **Data initialization arguments:** (x,y data only)
         
             =================================== ======================================
             PlotDataItem(xValues, yValues)      x and y values may be any sequence (including ndarray) of real numbers
@@ -32,7 +47,7 @@ class PlotDataItem(GraphicsObject):
             PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where x=data[:,0] and y=data[:,1]
             =================================== ======================================
         
-        Data initialization: (x,y data AND may include spot style)
+        **Data initialization arguments:** (x,y data AND may include spot style)
         
             ===========================   =========================================
             PlotDataItem(recarray)        numpy array with dtype=[('x', float), ('y', float), ...]
@@ -42,34 +57,40 @@ class PlotDataItem(GraphicsObject):
                                           OR 2D array with a column 'y' and extra columns as needed.
             ===========================   =========================================
         
-        Line style keyword         
+        **Line style keyword arguments:**
             ==========   ================================================
-            pen          pen to use for drawing line between points. Default is solid grey, 1px width. Use None to disable line drawing.
+            pen          pen to use for drawing line between points. 
+                         Default is solid grey, 1px width. Use None to disable line drawing.
+                         May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             shadowPen    pen for secondary line to draw behind the primary line. disabled by default.
+                         May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    fill the area between the curve and fillLevel
             fillBrush    fill to use when fillLevel is specified
+                         May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             ==========   ================================================
         
-        Point style keyword arguments:
+        **Point style keyword arguments:**
         
             ============   ================================================
-            symbol         symbol to use for drawing points OR list of symbols, one per point. Default is no symbol.
+            symbol         (str) symbol to use for drawing points OR list of symbols, one per point. Default is no symbol.
                            options are o, s, t, d, +
             symbolPen      outline pen for drawing points OR list of pens, one per point
+                           May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             symbolBrush    brush for filling points OR list of brushes, one per point
+                           May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             symbolSize     diameter of symbols OR list of diameters
             pxMode         (bool) If True, then symbolSize is specified in pixels. If False, then symbolSize is 
                            specified in data coordinates.
             ============   ================================================
         
-        Optimization keyword arguments:
+        **Optimization keyword arguments:**
         
             ==========   ================================================
             identical    spots are all identical. The spot image will be rendered only once and repeated for every point
             decimate     (int) decimate data
             ==========   ================================================
         
-        Meta-info keyword arguments:
+        **Meta-info keyword arguments:**
         
             ==========   ================================================
             name         name of dataset. This would appear in a legend

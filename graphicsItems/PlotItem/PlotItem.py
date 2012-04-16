@@ -56,10 +56,12 @@ except:
 class PlotItem(GraphicsWidget):
     
     """
-    Plot graphics item that can be added to any graphics scene. Implements axis titles, scales, interactive viewbox.
+    **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
     
+    Plot graphics item that can be added to any graphics scene. Implements axes, titles, and interactive viewbox. 
+    PlotItem also provides some basic analysis functionality that may be accessed from the context menu.
     Use :func:`plot() <pyqtgraph.PlotItem.plot>` to create a new PlotDataItem and add it to the view.
-    Use :func:`addItem() <pyqtgraph.PlotItem.addItem>` to add any QGraphicsItem to the view
+    Use :func:`addItem() <pyqtgraph.PlotItem.addItem>` to add any QGraphicsItem to the view.
     
     This class wraps several methods from its internal ViewBox:
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
@@ -77,6 +79,13 @@ class PlotItem(GraphicsWidget):
     :func:`unregister <pyqtgraph.ViewBox.unregister>`
     
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
+    
+    ==================== =======================================================================
+    **Signals**
+    sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
+    ==================== =======================================================================
     """
     
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
@@ -99,7 +108,8 @@ class PlotItem(GraphicsWidget):
                    
                            {'left': (args), 'bottom': (args), ...}
                      
-                       The name of each axis and the corresponding arguments are passed to PlotItem.setLabel()
+                       The name of each axis and the corresponding arguments are passed to 
+                       :func:`PlotItem.setLabel() <pyqtgraph.PlotItem.setLabel>`
                        Optionally, PlotItem my also be initialized with the keyword arguments left,
                        right, top, or bottom to achieve the same effect.
         *name*         Registers a name for this view so that others may link to it  
@@ -720,6 +730,11 @@ class PlotItem(GraphicsWidget):
         ##self.replot()
 
     def addItem(self, item, *args, **kargs):
+        """
+        Add a graphics item to the view box. 
+        If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
+        be included in analysis performed by the PlotItem.
+        """
         self.items.append(item)
         vbargs = {}
         if 'ignoreBounds' in kargs:
