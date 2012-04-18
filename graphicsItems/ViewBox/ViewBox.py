@@ -27,6 +27,8 @@ class ChildGroup(ItemGroup):
 
 class ViewBox(GraphicsWidget):
     """
+    **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
+    
     Box that allows internal scaling/panning of children by mouse drag. 
     This class is usually created automatically as part of a :class:`PlotItem <pyqtgraph.PlotItem>` or :class:`Canvas <pyqtgraph.canvas.Canvas>` or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
     

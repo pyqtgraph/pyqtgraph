@@ -18,7 +18,6 @@ Contents:
     images
     style
     region_of_interest
-    graphicswindow
     parametertree
     internals
     apireference

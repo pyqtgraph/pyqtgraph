@@ -18,7 +18,7 @@ If the data is 3D (time, x, y), then a time axis will be shown with a slider tha
 There are a few other methods for displaying images as well:
    
 * The :class:`~pyqtgraph.ImageView` class can also be instantiated directly and embedded in Qt applications.
-* Instances of :class:`~pyqtgraph.ImageItem` can be used inside a GraphicsView.
+* Instances of :class:`~pyqtgraph.ImageItem` can be used inside a :class:`ViewBox <pyqtgraph.ViewBox>` or :class:`GraphicsView <pyqtgraph.GraphicsView>`.
 * For higher performance, use :class:`~pyqtgraph.RawImageWidget`.
 
 Any of these classes are acceptable for displaying video by calling setImage() to display a new frame. To increase performance, the image processing system uses scipy.weave to produce compiled libraries. If your computer has a compiler available, weave will automatically attempt to build the libraries it needs on demand. If this fails, then the slower pure-python methods will be used instead. 
