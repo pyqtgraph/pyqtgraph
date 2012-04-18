@@ -17,7 +17,7 @@ Pyqtgraph makes it very easy to visualize data from the command line. Observe::
     import pyqtgraph as pg
     pg.plot(data)   # data can be a list of values or a numpy array
 
-The example above would open a window displaying a line plot of the data given. I don't think it could reasonably be any simpler than that. The call to pg.plot returns a handle to the plot widget that is created, allowing more data to be added to the same window.
+The example above would open a window displaying a line plot of the data given. The call to :func:`pg.plot <pyqtgraph.plot>` returns a handle to the :class:`plot widget <pyqtgraph.PlotWidget>` that is created, allowing more data to be added to the same window.
 
 Further examples::
     
@@ -43,5 +43,5 @@ While I consider this approach somewhat lazy, it is often the case that 'lazy' i
 Embedding widgets inside PyQt applications
 ------------------------------------------
 
-For the serious application developer, all of the functionality in pyqtgraph is available via widgets that can be embedded just like any other Qt widgets. Most importantly, see: PlotWidget, ImageView, GraphicsView, GraphicsLayoutWidget. Pyqtgraph's widgets can be included in Designer's ui files via the "Promote To..." functionality.
+For the serious application developer, all of the functionality in pyqtgraph is available via widgets that can be embedded just like any other Qt widgets. Most importantly, see: :class:`PlotWidget <pyqtgraph.PlotWidget>`, :class:`ImageView <pyqtgraph.ImageView>`, :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`, and :class:`GraphicsView <pyqtgraph.GraphicsView>`. Pyqtgraph's widgets can be included in Designer's ui files via the "Promote To..." functionality.
 

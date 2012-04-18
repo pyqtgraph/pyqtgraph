@@ -9,3 +9,4 @@ Contents:
     functions
     graphicsItems/index
     widgets/index
+    graphicsscene/index

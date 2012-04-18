@@ -44,8 +44,8 @@ This will start a launcher with a list of available examples. Select an item fro
 How does it compare to...
 -------------------------
 
-* matplotlib: For plotting and making publication-quality graphics, matplotlib is far more mature than pyqtgraph. However, matplotlib is also much slower and not suitable for applications requiring realtime update of plots/video or rapid interactivity. It also does not provide any of the GUI tools and image interaction/slicing functionality in pyqtgraph.
+* matplotlib: For plotting, pyqtgraph is not nearly as complete/mature as matplotlib, but runs much faster. Matplotlib is more aimed toward making publication-quality graphics, whereas pyqtgraph is intended for use in data acquisition and analysis applications. Matplotlib is more intuitive for matlab programmers; pyqtgraph is more intuitive for python/qt programmers. Matplotlib (to my knowledge) does not include many of pyqtgraph's features such as image interaction, volumetric rendering, parameter trees, flowcharts, etc.
 
-* pyqwt5: pyqwt is generally more mature than pyqtgraph for plotting and is about as fast. The major differences are 1) pyqtgraph is written in pure python, so it is somewhat more portable than pyqwt, which often lags behind pyqt in development (and can be a pain to install on some platforms) and 2) like matplotlib, pyqwt does not provide any of the GUI tools and image interaction/slicing functionality in pyqtgraph.
+* pyqwt5: About as fast as pyqwt5, but not quite as complete for plotting functionality. Image handling in pyqtgraph is much more complete (again, no ROI widgets in qwt). Also, pyqtgraph is written in pure python, so it is more portable than pyqwt, which often lags behind pyqt in development (I originally used pyqwt, but decided it was too much trouble to rely on it as a dependency in my projects). Like matplotlib, pyqwt (to my knowledge) does not include many of pyqtgraph's features such as image interaction, volumetric rendering, parameter trees, flowcharts, etc.
 
 (My experience with these libraries is somewhat outdated; please correct me if I am wrong here)

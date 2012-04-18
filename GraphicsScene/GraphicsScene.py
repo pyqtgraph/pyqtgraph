@@ -23,36 +23,37 @@ class GraphicsScene(QtGui.QGraphicsScene):
     events, but this turned out to be impossible because the constructor for QGraphicsMouseEvent
     is private)
     
-    -  Generates MouseClicked events in addition to the usual press/move/release events. 
+    *  Generates MouseClicked events in addition to the usual press/move/release events. 
        (This works around a problem where it is impossible to have one item respond to a 
        drag if another is watching for a click.)
-    -  Adjustable radius around click that will catch objects so you don't have to click *exactly* over small/thin objects
-    -  Global context menu--if an item implements a context menu, then its parent(s) may also add items to the menu.
-    -  Allows items to decide _before_ a mouse click which item will be the recipient of mouse events.
+    *  Adjustable radius around click that will catch objects so you don't have to click *exactly* over small/thin objects
+    *  Global context menu--if an item implements a context menu, then its parent(s) may also add items to the menu.
+    *  Allows items to decide _before_ a mouse click which item will be the recipient of mouse events.
        This lets us indicate unambiguously to the user which item they are about to click/drag on
-    -  Eats mouseMove events that occur too soon after a mouse press.
-    -  Reimplements items() and itemAt() to circumvent PyQt bug
+    *  Eats mouseMove events that occur too soon after a mouse press.
+    *  Reimplements items() and itemAt() to circumvent PyQt bug
     
     Mouse interaction is as follows:
+    
     1) Every time the mouse moves, the scene delivers both the standard hoverEnter/Move/LeaveEvents 
        as well as custom HoverEvents. 
     2) Items are sent HoverEvents in Z-order and each item may optionally call event.acceptClicks(button), 
        acceptDrags(button) or both. If this method call returns True, this informs the item that _if_ 
        the user clicks/drags the specified mouse button, the item is guaranteed to be the 
        recipient of click/drag events (the item may wish to change its appearance to indicate this).
-       If the call to acceptClicks/Drags returns False, then the item is guaranteed to NOT receive
+       If the call to acceptClicks/Drags returns False, then the item is guaranteed to *not* receive
        the requested event (because another item has already accepted it). 
     3) If the mouse is clicked, a mousePressEvent is generated as usual. If any items accept this press event, then
        No click/drag events will be generated and mouse interaction proceeds as defined by Qt. This allows
        items to function properly if they are expecting the usual press/move/release sequence of events.
        (It is recommended that items do NOT accept press events, and instead use click/drag events)
-       Note: The default implementation of QGraphicsItem.mousePressEvent will ACCEPT the event if the 
+       Note: The default implementation of QGraphicsItem.mousePressEvent will *accept* the event if the 
        item is has its Selectable or Movable flags enabled. You may need to override this behavior.
-    3) If no item accepts the mousePressEvent, then the scene will begin delivering mouseDrag and/or mouseClick events.
+    4) If no item accepts the mousePressEvent, then the scene will begin delivering mouseDrag and/or mouseClick events.
        If the mouse is moved a sufficient distance (or moved slowly enough) before the button is released, 
        then a mouseDragEvent is generated.
        If no drag events are generated before the button is released, then a mouseClickEvent is generated. 
-    4) Click/drag events are delivered to the item that called acceptClicks/acceptDrags on the HoverEvent
+    5) Click/drag events are delivered to the item that called acceptClicks/acceptDrags on the HoverEvent
        in step 1. If no such items exist, then the scene attempts to deliver the events to items near the event. 
        ClickEvents may be delivered in this way even if no
        item originally claimed it could accept the click. DragEvents may only be delivered this way if it is the initial
@@ -470,23 +471,25 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         The final menu will look like:
         
-            Original Item 1
-            Original Item 2
-            ...
-            Original Item N
-            ------------------
-            Parent Item 1
-            Parent Item 2
-            ...
-            Grandparent Item 1
-            ...
+            |    Original Item 1
+            |    Original Item 2
+            |    ...
+            |    Original Item N
+            |    ------------------
+            |    Parent Item 1
+            |    Parent Item 2
+            |    ...
+            |    Grandparent Item 1
+            |    ...
             
         
-        Arguments:
-            item   - The item that initially created the context menu 
-                     (This is probably the item making the call to this function)
-            menu   - The context menu being shown by the item
-            event  - The original event that triggered the menu to appear.
+        ==============  ==================================================
+        **Arguments:**
+        item            The item that initially created the context menu 
+                        (This is probably the item making the call to this function)
+        menu            The context menu being shown by the item
+        event           The original event that triggered the menu to appear.
+        ==============  ==================================================
         """
         
         #items = self.itemsNearEvent(ev)

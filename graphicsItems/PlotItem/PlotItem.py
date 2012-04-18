@@ -780,6 +780,9 @@ class PlotItem(GraphicsWidget):
 
 
     def removeItem(self, item):
+        """
+        Remove an item from the internal ViewBox.
+        """
         if not item in self.items:
             return
         self.items.remove(item)
@@ -796,6 +799,9 @@ class PlotItem(GraphicsWidget):
             #item.sigPlotChanged.connect(self.plotChanged)
 
     def clear(self):
+        """
+        Remove all items from the ViewBox.
+        """
         for i in self.items[:]:
             self.removeItem(i)
         self.avgCurves = {}

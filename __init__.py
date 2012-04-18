@@ -119,9 +119,10 @@ QAPP = None
 
 def plot(*args, **kargs):
     """
-    | Create and return a PlotWindow (this is just a window with PlotWidget inside), plot data in it.
-    | Accepts a *title* argument to set the title of the window.
-    | All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
+    Create and return a :class:`PlotWindow <pyqtgraph.PlotWindow>` 
+    (this is just a window with :class:`PlotWidget <pyqtgraph.PlotWidget>` inside), plot data in it.
+    Accepts a *title* argument to set the title of the window.
+    All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
     #if 'title' in kargs:
@@ -149,10 +150,11 @@ def plot(*args, **kargs):
     
 def image(*args, **kargs):
     """
-    | Create and return an ImageWindow (this is just a window with ImageView widget inside), show image data inside.
-    | Will show 2D or 3D image data.
-    | Accepts a *title* argument to set the title of the window.
-    | All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
+    Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
+    (this is just a window with :class:`ImageView <pyqtgraph.ImageView>` widget inside), show image data inside.
+    Will show 2D or 3D image data.
+    Accepts a *title* argument to set the title of the window.
+    All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
     """
     mkQApp()
     w = ImageWindow(*args, **kargs)
