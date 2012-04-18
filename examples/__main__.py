@@ -15,6 +15,7 @@ examples = OrderedDict([
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Video speed test', 'VideoSpeedTest.py'),
     ('Plot speed test', 'PlotSpeedTest.py'),
+    ('Data Slicing', 'DataSlicing.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),

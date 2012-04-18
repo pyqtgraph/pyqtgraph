@@ -46,7 +46,8 @@ roi.sigRegionChanged.connect(update)
 
 ## Display the data
 imv1.setImage(data)
-imv1.setHistogramRange(data.min(), data.max())
+imv1.setHistogramRange(-0.01, 0.01)
+imv1.setLevels(-0.003, 0.003)
 
 update()
 
