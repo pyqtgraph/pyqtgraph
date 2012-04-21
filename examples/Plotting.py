@@ -35,18 +35,20 @@ p3.plot(np.random.normal(size=100), pen=(200,200,200), symbolBrush=(255,0,0), sy
 
 win.nextRow()
 
-p4 = win.addPlot(title="Parametric")
+p4 = win.addPlot(title="Parametric, grid enabled")
 x = np.cos(np.linspace(0, 2*np.pi, 1000))
 y = np.sin(np.linspace(0, 4*np.pi, 1000))
 p4.plot(x, y)
+p4.showGrid(x=True, y=True)
 
-p5 = win.addPlot(title="Scatter plot with labels")
+p5 = win.addPlot(title="Scatter plot, axis labels, log scale")
 x = np.random.normal(size=1000) * 1e-5
 y = x*1000 + 0.005 * np.random.normal(size=1000)
+y -= y.min()-1.0
 p5.plot(x, y, pen=None, symbol='t', symbolPen=None, symbolSize=10, symbolBrush=(100, 100, 255, 50))
 p5.setLabel('left', "Y Axis", units='A')
 p5.setLabel('bottom', "Y Axis", units='s')
-
+p5.setLogMode(x=True, y=False)
 
 p6 = win.addPlot(title="Updating plot")
 curve = p6.plot(pen='y')
@@ -65,9 +67,10 @@ timer.start(50)
 
 win.nextRow()
 
-p7 = win.addPlot(title="Filled plot")
+p7 = win.addPlot(title="Filled plot, axis disabled")
 y = np.sin(np.linspace(0, 10, 1000)) + np.random.normal(size=1000, scale=0.1)
 p7.plot(y, fillLevel=-0.3, brush=(50,50,200,100))
+p7.showAxis('bottom', False)
 
 
 x2 = np.linspace(-100, 100, 1000)

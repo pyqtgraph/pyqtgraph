@@ -208,7 +208,7 @@ class PlotItem(GraphicsWidget):
         dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
-            ('Fourier Transform', c.powerSpectrumGroup),
+            ('Transforms', c.transformGroup),
             ('Downsample', c.decimateGroup),
             ('Average', c.averageGroup),
             ('Alpha', c.alphaGroup),
@@ -272,10 +272,13 @@ class PlotItem(GraphicsWidget):
         c.alphaSlider.valueChanged.connect(self.updateAlpha)
         c.autoAlphaCheck.toggled.connect(self.updateAlpha)
 
-        c.gridGroup.toggled.connect(self.updateGrid)
+        c.xGridCheck.toggled.connect(self.updateGrid)
+        c.yGridCheck.toggled.connect(self.updateGrid)
         c.gridAlphaSlider.valueChanged.connect(self.updateGrid)
 
-        c.powerSpectrumGroup.toggled.connect(self.updateSpectrumMode)
+        c.fftCheck.toggled.connect(self.updateSpectrumMode)
+        c.logXCheck.toggled.connect(self.updateLogMode)
+        c.logYCheck.toggled.connect(self.updateLogMode)
         #c.saveSvgBtn.clicked.connect(self.saveSvgClicked)
         #c.saveSvgCurvesBtn.clicked.connect(self.saveSvgCurvesClicked)
         #c.saveImgBtn.clicked.connect(self.saveImgClicked)
@@ -332,6 +335,40 @@ class PlotItem(GraphicsWidget):
         """Return the ViewBox within."""
         return self.vb
     
+    def setLogMode(self, x, y):
+        """
+        Set log scaling for x and y axes.
+        This informs PlotDataItems to transform logarithmically and switches
+        the axes to use log ticking. 
+        
+        Note that *no other items* in the scene will be affected by
+        this; there is no generic way to redisplay a GraphicsItem
+        with log coordinates.
+        
+        """
+        self.ctrl.logXCheck.setChecked(x)
+        self.ctrl.logYCheck.setChecked(y)
+        
+    def showGrid(self, x=None, y=None, alpha=None):
+        """
+        Show or hide the grid for either axis.
+        
+        ==============  =====================================
+        **Arguments:**
+        x               (bool) Whether to show the X grid
+        y               (bool) Whether to show the Y grid
+        alpha           (0.0-1.0) Opacity of the grid
+        """
+        if x is None and y is None and alpha is None:
+            raise Exception("Must specify at least one of x, y, or alpha.")  ## prevent people getting confused if they just call showGrid()
+        
+        if x is not None:
+            self.ctrl.xGridCheck.setChecked(x)
+        if y is not None:
+            self.ctrl.yGridCheck.setChecked(y)
+        if alpha is not None:
+            v = np.clip(alpha, 0, 1)*self.ctrl.gridAlphaSlider.maximum()
+            self.ctrl.gridAlphaSlider.setValue(v)
         
     #def paint(self, *args):
         #prof = debug.Profiler('PlotItem.paint', disabled=True)
@@ -432,11 +469,13 @@ class PlotItem(GraphicsWidget):
         
         
     def updateGrid(self, *args):
-        g = self.ctrl.gridGroup.isChecked()
-        if g:
-            g = self.ctrl.gridAlphaSlider.value()
-        for k in self.scales:
-            self.scales[k]['item'].setGrid(g)
+        alpha = self.ctrl.gridAlphaSlider.value()
+        x = alpha if self.ctrl.xGridCheck.isChecked() else False
+        y = alpha if self.ctrl.xGridCheck.isChecked() else False
+        self.getAxis('top').setGrid(x)
+        self.getAxis('bottom').setGrid(x)
+        self.getAxis('left').setGrid(y)
+        self.getAxis('right').setGrid(y)
 
     def viewGeometry(self):
         """Return the screen geometry of the viewbox"""
@@ -754,7 +793,8 @@ class PlotItem(GraphicsWidget):
             ## configure curve for this plot
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
-            item.setFftMode(self.ctrl.powerSpectrumGroup.isChecked())
+            item.setFftMode(self.ctrl.fftCheck.isChecked())
+            item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
             item.setDownsampling(self.downsampleMode())
             item.setPointMode(self.pointMode())
             
@@ -864,7 +904,18 @@ class PlotItem(GraphicsWidget):
         return item
 
     def scatterPlot(self, *args, **kargs):
-        print "PlotItem.scatterPlot is deprecated. Use PlotItem.plot instead."
+        if 'pen' in kargs:
+            kargs['symbolPen'] = kargs['pen']
+        kargs['pen'] = None
+            
+        if 'brush' in kargs:
+            kargs['symbolBrush'] = kargs['brush']
+            del kargs['brush']
+            
+        if 'size' in kargs:
+            kargs['symbolSize'] = kargs['size']
+            del kargs['size']
+
         return self.plot(*args, **kargs)
         #sp = ScatterPlotItem(*args, **kargs)
         #self.addItem(sp)
@@ -1155,6 +1206,12 @@ class PlotItem(GraphicsWidget):
         self.updateAlpha()
         self.updateDecimation()
         
+        if 'powerSpectrumGroup' in state:
+            state['fftCheck'] = state['powerSpectrumGroup']
+        if 'gridGroup' in state:
+            state['xGridCheck'] = state['gridGroup']
+            state['yGridCheck'] = state['gridGroup']
+            
         self.stateGroup.setState(state)
         #self.updateXScale()
         #self.updateYScale()
@@ -1183,12 +1240,24 @@ class PlotItem(GraphicsWidget):
       
     def updateSpectrumMode(self, b=None):
         if b is None:
-            b = self.ctrl.powerSpectrumGroup.isChecked()
+            b = self.ctrl.fftCheck.isChecked()
         for c in self.curves:
             c.setFftMode(b)
         self.enableAutoRange()
         self.recomputeAverages()
             
+    def updateLogMode(self):
+        x = self.ctrl.logXCheck.isChecked()
+        y = self.ctrl.logYCheck.isChecked()
+        for c in self.curves:
+            c.setLogMode(x,y)
+        self.getAxis('bottom').setLogMode(x)
+        self.getAxis('top').setLogMode(x)
+        self.getAxis('left').setLogMode(y)
+        self.getAxis('right').setLogMode(y)
+        self.enableAutoRange()
+        self.recomputeAverages()
+        
         
     def updateDownsampling(self):
         ds = self.downsampleMode()
@@ -1291,8 +1360,13 @@ class PlotItem(GraphicsWidget):
             raise Exception("Scale '%s' not found. Scales are: %s" % (key, str(self.scales.keys())))
         
     def getScale(self, key):
-        self._checkScaleKey(key)
-        return self.scales[key]['item']
+        return self.getAxis(key)
+        
+    def getAxis(self, name):
+        """Return the specified AxisItem. 
+        *name* should be 'left', 'bottom', 'top', or 'right'."""
+        self._checkScaleKey(name)
+        return self.scales[name]['item']
         
     def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
         """

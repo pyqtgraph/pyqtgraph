@@ -43,6 +43,7 @@ class AxisItem(GraphicsWidget):
         self.labelUnits = ''
         self.labelUnitPrefix=''
         self.labelStyle = {'color': '#CCC'}
+        self.logMode = False
         
         self.textHeight = 18
         self.tickLength = maxTickLength
@@ -76,6 +77,10 @@ class AxisItem(GraphicsWidget):
         self.prepareGeometryChange()
         self.update()
         
+    def setLogMode(self, log):
+        self.logMode = log
+        self.picture = None
+        self.update()
         
     def resizeEvent(self, ev=None):
         #s = self.size()
@@ -316,6 +321,9 @@ class AxisItem(GraphicsWidget):
         By default, this method calls tickSpacing to determine the correct tick locations.
         This is a good method to override in subclasses.
         """
+        if self.logMode:
+            return self.logTickValues(minVal, maxVal, size)
+            
         ticks = []
         tickLevels = self.tickSpacing(minVal, maxVal, size)
         for i in range(len(tickLevels)):
@@ -329,6 +337,16 @@ class AxisItem(GraphicsWidget):
             ticks.append((spacing, np.arange(num) * spacing + start))
         return ticks
     
+    def logTickValues(self, minVal, maxVal, size):
+        v1 = int(np.floor(minVal))
+        v2 = int(np.ceil(maxVal))
+        major = range(v1+1, v2)
+        
+        minor = []
+        for v in range(v1, v2):
+            minor.extend(v + np.log10(np.arange(1, 10)))
+        minor = filter(lambda x: x>minVal and x<maxVal, minor)
+        return [(1.0, major), (None, minor)]
 
     def tickStrings(self, values, scale, spacing):
         """Return the strings that should be placed next to ticks. This method is called 
@@ -343,6 +361,9 @@ class AxisItem(GraphicsWidget):
         be accompanied by a scale value of 1000. This indicates that the label is displaying 'mV', and 
         thus the tick should display 0.001 * 1000 = 1.
         """
+        if self.logMode:
+            return self.logTickStrings(values, scale, spacing)
+        
         places = max(0, np.ceil(-np.log10(spacing*scale)))
         strings = []
         for v in values:
@@ -353,6 +374,9 @@ class AxisItem(GraphicsWidget):
                 vstr = ("%%0.%df" % places) % vs
             strings.append(vstr)
         return strings
+        
+    def logTickStrings(self, values, scale, spacing):
+        return ["%0.1g"%x for x in 10 ** np.array(values).astype(float)]
         
     def drawPicture(self, p):
         
@@ -458,6 +482,8 @@ class AxisItem(GraphicsWidget):
             ## take a small sample of strings and measure their rendered text
             spacing, values = tickLevels[i]
             strings = self.tickStrings(values[:2], self.scale, spacing)
+            if len(strings) == 0:
+                continue
             textRects = [p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings]
             if axis == 0:
                 textSize = np.max([r.height() for r in textRects])

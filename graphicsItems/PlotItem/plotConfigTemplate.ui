@@ -50,7 +50,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>30</y>
+     <y>70</y>
      <width>242</width>
      <height>160</height>
     </rect>
@@ -130,30 +130,44 @@
     </item>
    </layout>
   </widget>
-  <widget class="QGroupBox" name="powerSpectrumGroup">
+  <widget class="QFrame" name="transformGroup">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>242</width>
-     <height>41</height>
+     <width>154</width>
+     <height>79</height>
     </rect>
    </property>
-   <property name="title">
-    <string>Power Spectrum</string>
-   </property>
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QCheckBox" name="fftCheck">
+      <property name="text">
+       <string>Power Spectrum (FFT)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QCheckBox" name="logXCheck">
+      <property name="text">
+       <string>Log X</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QCheckBox" name="logYCheck">
+      <property name="text">
+       <string>Log Y</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QGroupBox" name="pointsGroup">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>520</y>
+     <y>550</y>
      <width>234</width>
      <height>58</height>
     </rect>
@@ -177,26 +191,31 @@
     </item>
    </layout>
   </widget>
-  <widget class="QGroupBox" name="gridGroup">
+  <widget class="QFrame" name="gridGroup">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>460</y>
-     <width>234</width>
-     <height>60</height>
+     <width>221</width>
+     <height>81</height>
     </rect>
    </property>
-   <property name="title">
-    <string>Grid</string>
-   </property>
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_4">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0" colspan="2">
+     <widget class="QCheckBox" name="xGridCheck">
+      <property name="text">
+       <string>Show X Grid</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="2">
+     <widget class="QCheckBox" name="yGridCheck">
+      <property name="text">
+       <string>Show Y Grid</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
      <widget class="QSlider" name="gridAlphaSlider">
       <property name="maximum">
        <number>255</number>
@@ -206,6 +225,13 @@
       </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Opacity</string>
       </property>
      </widget>
     </item>
