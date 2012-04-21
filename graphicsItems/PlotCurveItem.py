@@ -12,17 +12,50 @@ __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
     
     
-    """Class representing a single plot curve. Provides:
-        - Fast data update
-        - FFT display mode
-        - shadow pen
-        - mouse interaction
+    """
+    Class representing a single plot curve. Instances of this class are created
+    automatically as part of PlotDataItem; these rarely need to be instantiated
+    directly.
+    
+    Features:
+    
+    - Fast data update
+    - FFT display mode (accessed via PlotItem context menu)
+    - Fill under curve
+    - Mouse interaction
+    
+    ====================  ===============================================
+    **Signals:**
+    sigPlotChanged(self)  Emitted when the data being plotted has changed
+    sigClicked(self)      Emitted when the curve is clicked
+    ====================  ===============================================
     """
     
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
     
     def __init__(self, y=None, x=None, fillLevel=None, copy=False, pen=None, shadowPen=None, brush=None, parent=None, clickable=False):
+        """
+        ==============  =======================================================
+        **Arguments:**
+        x, y            (numpy arrays) Data to show 
+        pen             Pen to use when drawing. Any single argument accepted by
+                        :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        shadowPen       Pen for drawing behind the primary pen. Usually this
+                        is used to emphasize the curve by providing a 
+                        high-contrast border. Any single argument accepted by
+                        :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        fillLevel       (float or None) Fill the area 'under' the curve to
+                        *fillLevel*
+        brush           QBrush to use when filling. Any single argument accepted
+                        by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
+        clickable       If True, the item will emit sigClicked when it is 
+                        clicked on.
+        ==============  =======================================================
+        
+        
+        
+        """
         GraphicsObject.__init__(self, parent)
         self.clear()
         self.path = None
@@ -62,6 +95,7 @@ class PlotCurveItem(GraphicsObject):
         return interface in ints
     
     def setClickable(self, s):
+        """Sets whether the item responds to mouse clicks."""
         self.clickable = s
         
         
@@ -127,18 +161,25 @@ class PlotCurveItem(GraphicsObject):
         #return self.metaData
         
     def setPen(self, *args, **kargs):
+        """Set the pen used to draw the curve."""
         self.opts['pen'] = fn.mkPen(*args, **kargs)
         self.update()
         
     def setShadowPen(self, *args, **kargs):
+        """Set the shadow pen used to draw behind tyhe primary pen.
+        This pen must have a larger width than the primary 
+        pen to be visible.
+        """
         self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
         self.update()
 
     def setBrush(self, *args, **kargs):
+        """Set the brush used when filling the area under the curve"""
         self.opts['brush'] = fn.mkBrush(*args, **kargs)
         self.update()
         
     def setFillLevel(self, level):
+        """Set the level filled to when filling under the curve"""
         self.opts['fillLevel'] = level
         self.fillPath = None
         self.update()
@@ -177,7 +218,9 @@ class PlotCurveItem(GraphicsObject):
             #self.update()
 
     def setData(self, *args, **kargs):
-        """Same as updateData()"""
+        """
+        Accepts most of the same arguments as __init__.
+        """
         self.updateData(*args, **kargs)
         
     def updateData(self, *args, **kargs):

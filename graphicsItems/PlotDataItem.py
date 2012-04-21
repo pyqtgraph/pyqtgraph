@@ -24,15 +24,18 @@ class PlotDataItem(GraphicsObject):
     usually created by plot() methods such as :func:`pyqtgraph.plot` and
     :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
     
-    ===================== ==============================================
+    ============================== ==============================================
     **Signals:**
-    sigPlotChanged(self)  Emitted when the data in this item is updated.  
-    sigClicked(self)      Emitted when the item is clicked.
-    ===================== ==============================================
+    sigPlotChanged(self)           Emitted when the data in this item is updated.  
+    sigClicked(self)               Emitted when the item is clicked.
+    sigPointsClicked(self, points) Emitted when a plot point is clicked
+                                   Sends the list of points under the mouse.
+    ============================== ==============================================
     """
     
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
+    sigPointsClicked = QtCore.Signal(object, object)
     
     def __init__(self, *args, **kargs):
         """
@@ -109,6 +112,10 @@ class PlotDataItem(GraphicsObject):
         self.curve.setParentItem(self)
         self.scatter.setParentItem(self)
         
+        self.curve.sigClicked.connect(self.curveClicked)
+        self.scatter.sigClicked.connect(self.scatterClicked)
+        
+        
         #self.clear()
         self.opts = {
             'fftMode': False,
@@ -127,6 +134,8 @@ class PlotDataItem(GraphicsObject):
             'symbolPen': (200,200,200),
             'symbolBrush': (50, 50, 150),
             'identical': False,
+            
+            'data': None,
         }
         self.setData(*args, **kargs)
     
@@ -150,8 +159,8 @@ class PlotDataItem(GraphicsObject):
         self.xDisp = self.yDisp = None
         self.updateItems()
     
-    def setLogMode(self, mode):
-        self.opts['logMode'] = mode
+    def setLogMode(self, xMode, yMode):
+        self.opts['logMode'] = (xMode, yMode)
         self.xDisp = self.yDisp = None
         self.updateItems()
     
@@ -244,7 +253,7 @@ class PlotDataItem(GraphicsObject):
             data = args[0]
             dt = dataType(data)
             if dt == 'empty':
-                return
+                pass
             elif dt == 'listOfValues':
                 y = np.array(data)
             elif dt == 'Nx2array':
@@ -260,6 +269,8 @@ class PlotDataItem(GraphicsObject):
                     x = np.array([d.get('x',None) for d in data])
                 if 'y' in data[0]:
                     y = np.array([d.get('y',None) for d in data])
+                for k in ['data', 'symbolSize', 'symbolPen', 'symbolBrush', 'symbolShape']:
+                    kargs[k] = [d.get(k, None) for d in data]
             elif dt == 'MetaArray':
                 y = data.view(np.ndarray)
                 x = data.xvals(0).view(np.ndarray)
@@ -349,8 +360,9 @@ class PlotDataItem(GraphicsObject):
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
-        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size')]:
-            scatterArgs[v] = self.opts[k]
+        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data')]:
+            if k in self.opts:
+                scatterArgs[v] = self.opts[k]
         
         x,y = self.getData()
         
@@ -398,6 +410,11 @@ class PlotDataItem(GraphicsObject):
                 x = np.log10(x)
             if self.opts['logMode'][1]:
                 y = np.log10(y)
+            if any(self.opts['logMode']):  ## re-check for NANs after log
+                nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
+                if any(nanMask):
+                    x = x[~nanMask]
+                    y = y[~nanMask]
             self.xDisp = x
             self.yDisp = y
         #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
@@ -437,6 +454,13 @@ class PlotDataItem(GraphicsObject):
             
     def appendData(self, *args, **kargs):
         pass
+    
+    def curveClicked(self):
+        self.sigClicked.emit(self)
+        
+    def scatterClicked(self, plt, points):
+        self.sigClicked.emit(self)
+        self.sigPointsClicked.emit(self, points)
     
     
 def dataType(obj):

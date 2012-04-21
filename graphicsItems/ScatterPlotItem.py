@@ -7,7 +7,23 @@ import scipy.stats
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 class ScatterPlotItem(GraphicsObject):
+    """
+    Displays a set of x/y points. Instances of this class are created
+    automatically as part of PlotDataItem; these rarely need to be instantiated
+    directly.
     
+    The size, shape, pen, and fill brush may be set for each point individually 
+    or for all points. 
+    
+    
+    ========================  ===============================================
+    **Signals:**
+    sigPlotChanged(self)      Emitted when the data being plotted has changed
+    sigClicked(self, points)  Emitted when the curve is clicked. Sends a list
+                              of all the points under the mouse pointer.
+    ========================  ===============================================
+    
+    """
     #sigPointClicked = QtCore.Signal(object, object)
     sigClicked = QtCore.Signal(object, object)  ## self, points
     sigPlotChanged = QtCore.Signal(object)
@@ -37,35 +53,37 @@ class ScatterPlotItem(GraphicsObject):
         
     def setData(self, *args, **kargs):
         """
-        Ordered Arguments:
-            If there is only one unnamed argument, it will be interpreted like the 'spots' argument.
-            
-            If there are two unnamed arguments, they will be interpreted as sequences of x and y values.
+        **Ordered Arguments:**
         
-        Keyword Arguments:
-            *spots*: Optional list of dicts. Each dict specifies parameters for a single spot:
-                   {'pos': (x,y), 'size', 'pen', 'brush', 'symbol'}. This is just an alternate method
-                   of passing in data for the corresponding arguments.
-            *x*,*y*: 1D arrays of x,y values.
-            *pos*:   2D structure of x,y pairs (such as Nx2 array or list of tuples)
-            *pxMode*: If True, spots are always the same size regardless of scaling, and size is given in px.
-                    Otherwise, size is in scene coordinates and the spots scale with the view.
-                    Default is True
-            *identical*: If True, all spots are forced to look identical. 
-                       This can result in performance enhancement.
-                       Default is False
-            *symbol* can be one (or a list) of:
-                'o'  circle (default)
-                's'  square
-                't'  triangle
-                'd'  diamond
-                '+'  plus
-                
-            *pen*: The pen (or list of pens) to use for drawing spot outlines.
-            *brush*: The brush (or list of brushes) to use for filling spots.
-            *size*: The size (or list of sizes) of spots. If *pxMode* is True, this value is in pixels. Otherwise,
-                    it is in the item's local coordinate system.
-            *data*: a list of python objects used to uniquely identify each spot.
+        * If there is only one unnamed argument, it will be interpreted like the 'spots' argument.
+        * If there are two unnamed arguments, they will be interpreted as sequences of x and y values.
+        
+        ====================== =================================================
+        **Keyword Arguments:**
+        *spots*                Optional list of dicts. Each dict specifies parameters for a single spot:
+                               {'pos': (x,y), 'size', 'pen', 'brush', 'symbol'}. This is just an alternate method
+                               of passing in data for the corresponding arguments.
+        *x*,*y*                1D arrays of x,y values.
+        *pos*                  2D structure of x,y pairs (such as Nx2 array or list of tuples)
+        *pxMode*               If True, spots are always the same size regardless of scaling, and size is given in px.
+                               Otherwise, size is in scene coordinates and the spots scale with the view.
+                               Default is True
+        *identical*            If True, all spots are forced to look identical. 
+                               This can result in performance enhancement.
+                               Default is False
+        *symbol*               can be one (or a list) of:
+                               
+                               * 'o'  circle (default)
+                               * 's'  square
+                               * 't'  triangle
+                               * 'd'  diamond
+                               * '+'  plus
+        *pen*                  The pen (or list of pens) to use for drawing spot outlines.
+        *brush*                The brush (or list of brushes) to use for filling spots.
+        *size*                 The size (or list of sizes) of spots. If *pxMode* is True, this value is in pixels. Otherwise,
+                               it is in the item's local coordinate system.
+        *data*                 a list of python objects used to uniquely identify each spot.
+        ====================== =================================================
         """
         
         self.clear()
@@ -148,6 +166,9 @@ class ScatterPlotItem(GraphicsObject):
             if k in kargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
                 setMethod(kargs[k])
+                
+        if 'data' in kargs:  
+            self.setPointData(kargs['data'])
             
         self.updateSpots()
         
@@ -183,7 +204,7 @@ class ScatterPlotItem(GraphicsObject):
                     #self.data[k].append(v)
         
     def setPoints(self, *args, **kargs):
-        """Deprecated; use setData"""
+        ##Deprecated; use setData
         return self.setData(*args, **kargs)
         
     #def setPoints(self, spots=None, x=None, y=None, data=None):
@@ -258,6 +279,16 @@ class ScatterPlotItem(GraphicsObject):
         else:
             self.opts['size'] = size
         self.updateSpots()
+        
+    def setPointData(self, data):
+        if isinstance(data, np.ndarray) or isinstance(data, list):
+            if self.data is None:
+                raise Exception("Must set xy data before setting meta data.")
+            if len(data) != len(self.data):
+                raise Exception("Length of meta data does not match number of points (%d != %d)" % (len(data), len(self.data)))
+        self.data['data'] = data
+        self.updateSpots()
+        
         
     def setIdentical(self, ident):
         self.opts['identical'] = ident
@@ -353,6 +384,12 @@ class ScatterPlotItem(GraphicsObject):
         
         symbol = self.data['symbol'].copy()
         symbol[symbol==''] = self.opts['symbol']
+
+        data = self.data['data'].copy()
+        if 'data' in self.opts:
+            data[data==None] = self.opts['data']
+
+        
         
         for i in xrange(len(self.data)):
             s = self.data[i]
@@ -373,7 +410,7 @@ class ScatterPlotItem(GraphicsObject):
                 #ymn = min(ymn, pos[1]-psize)
                 #ymx = max(ymx, pos[1]+psize)
                 
-            item = self.mkSpot(pos, size[i], self.opts['pxMode'], brush[i], pen[i], s['data'], symbol=symbol[i], index=len(self.spots))
+            item = self.mkSpot(pos, size[i], self.opts['pxMode'], brush[i], pen[i], data[i], symbol=symbol[i], index=len(self.spots))
             self.spots.append(item)
             self.data[i]['spot'] = item
             #if self.optimize:
