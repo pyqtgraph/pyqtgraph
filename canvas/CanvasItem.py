@@ -73,6 +73,7 @@ class CanvasItem(QtCore.QObject):
         self.transformGui.setupUi(self.transformWidget)
         self.layout.addWidget(self.transformWidget, 3, 0, 1, 2)
         self.transformGui.mirrorImageBtn.clicked.connect(self.mirrorY)
+        self.transformGui.reflectImageBtn.clicked.connect(self.mirrorXY)
         
         self.layout.addWidget(self.resetTransformBtn, 1, 0, 1, 2)
         self.layout.addWidget(self.copyBtn, 2, 0, 1, 1)
@@ -221,6 +222,18 @@ class CanvasItem(QtCore.QObject):
                 #self.selectBoxFromUser()
                 #return
 
+    def mirrorXY(self):
+        if not self.isMovable():
+            return
+        self.rotate(180.)
+        # inv = pg.Transform()
+        # inv.scale(-1, -1)
+        # self.userTransform = self.userTransform * inv #flip lr/ud
+        # s=self.updateTransform()
+        # self.setTranslate(-2*s['pos'][0], -2*s['pos'][1])
+        # self.selectBoxFromUser()
+        
+ 
     def hasUserTransform(self):
         #print self.userRotate, self.userTranslate
         return not self.userTransform.isIdentity()
@@ -307,7 +320,6 @@ class CanvasItem(QtCore.QObject):
     def updateTransform(self):
         """Regenerate the item position from the base, user, and temp transforms"""
         transform = self.baseTransform * self.userTransform * self.tempTransform ## order is important
-        
         s = transform.saveState()
         self._graphicsItem.setPos(*s['pos'])
         
@@ -316,6 +328,7 @@ class CanvasItem(QtCore.QObject):
         self.itemScale.setYScale(s['scale'][1])
 
         self.displayTransform(transform)
+        return(s) # return the transform state
         
     def displayTransform(self, transform):
         """Updates transform numbers in the ctrl widget."""

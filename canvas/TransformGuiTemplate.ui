@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>169</width>
-    <height>82</height>
+    <width>224</width>
+    <height>117</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -48,14 +48,25 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="mirrorImageBtn">
-     <property name="toolTip">
-      <string extracomment="Mirror the item across the global Y axis"/>
-     </property>
-     <property name="text">
-      <string>Mirror</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="mirrorImageBtn">
+       <property name="toolTip">
+        <string extracomment="Mirror the item across the global Y axis"/>
+       </property>
+       <property name="text">
+        <string>Mirror</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="reflectImageBtn">
+       <property name="text">
+        <string>Reflect</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

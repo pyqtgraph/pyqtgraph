@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>466</width>
-    <height>422</height>
+    <width>490</width>
+    <height>414</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,44 +28,6 @@
      <widget class="GraphicsView" name="view"/>
      <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="3" column="0" colspan="2">
-        <widget class="QPushButton" name="autoRangeBtn">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>1</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Auto Range</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="TreeWidget" name="itemList">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>100</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="headerHidden">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string notr="true">1</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item row="10" column="0" colspan="2">
-        <layout class="QGridLayout" name="ctrlLayout">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-        </layout>
-       </item>
        <item row="1" column="0">
         <widget class="QPushButton" name="storeSvgBtn">
          <property name="text">
@@ -77,6 +39,19 @@
         <widget class="QPushButton" name="storePngBtn">
          <property name="text">
           <string>Store PNG</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QPushButton" name="autoRangeBtn">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Auto Range</string>
          </property>
         </widget>
        </item>
@@ -100,17 +75,49 @@
          </item>
         </layout>
        </item>
+       <item row="7" column="0" colspan="2">
+        <widget class="TreeWidget" name="itemList">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>100</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="headerHidden">
+          <bool>true</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item row="11" column="0" colspan="2">
+        <layout class="QGridLayout" name="ctrlLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+        </layout>
+       </item>
        <item row="8" column="0">
+        <widget class="QPushButton" name="resetTransformsBtn">
+         <property name="text">
+          <string>Reset Transforms</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
         <widget class="QPushButton" name="mirrorSelectionBtn">
          <property name="text">
           <string>Mirror Selection</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="1">
-        <widget class="QPushButton" name="resetTransformsBtn">
+       <item row="4" column="1">
+        <widget class="QPushButton" name="reflectSelectionBtn">
          <property name="text">
-          <string>Reset Transforms</string>
+          <string>MirrorXY</string>
          </property>
         </widget>
        </item>
