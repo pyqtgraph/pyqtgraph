@@ -199,6 +199,7 @@ class EvalNode(Node):
         self.addOutBtn = QtGui.QPushButton('+Output')
         self.text = QtGui.QTextEdit()
         self.text.setTabStopWidth(30)
+        self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
         self.layout.addWidget(self.addInBtn, 0, 0)
         self.layout.addWidget(self.addOutBtn, 0, 1)
         self.layout.addWidget(self.text, 1, 0, 1, 2)
@@ -208,7 +209,7 @@ class EvalNode(Node):
         self.addInBtn.clicked.connect(self.addInput)
         #QtCore.QObject.connect(self.addOutBtn, QtCore.SIGNAL('clicked()'), self.addOutput)
         self.addOutBtn.clicked.connect(self.addOutput)
-        self.ui.focusOutEvent = lambda ev: self.focusOutEvent(ev)
+        self.text.focusOutEvent = self.focusOutEvent
         self.lastText = None
         
     def ctrlWidget(self):
@@ -226,6 +227,7 @@ class EvalNode(Node):
             self.lastText = text
             print "eval node update"
             self.update()
+        return QtGui.QTextEdit.focusOutEvent(self.text, ev)
         
     def process(self, display=True, **args):
         l = locals()
