@@ -398,7 +398,7 @@ class ScatterPlotItem(GraphicsObject):
                 psize = size[i]
                 
             if self.pointData is None or self.pointData[i] is None:
-                data = self.opts['data']
+                data = self.opts.get('data', None)
             else:
                 data = self.pointData[i]
                 
