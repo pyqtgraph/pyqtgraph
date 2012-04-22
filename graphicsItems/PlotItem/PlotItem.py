@@ -471,7 +471,7 @@ class PlotItem(GraphicsWidget):
     def updateGrid(self, *args):
         alpha = self.ctrl.gridAlphaSlider.value()
         x = alpha if self.ctrl.xGridCheck.isChecked() else False
-        y = alpha if self.ctrl.xGridCheck.isChecked() else False
+        y = alpha if self.ctrl.yGridCheck.isChecked() else False
         self.getAxis('top').setGrid(x)
         self.getAxis('bottom').setGrid(x)
         self.getAxis('left').setGrid(y)
