@@ -10,7 +10,8 @@ except:
 
 __all__ = ['TableWidget']
 class TableWidget(QtGui.QTableWidget):
-    """Extends QTableWidget with some useful functions for automatic data handling.
+    """Extends QTableWidget with some useful functions for automatic data handling
+    and copy / export context menu.
     Can automatically format and display:
         numpy arrays
         numpy record arrays 
