@@ -358,6 +358,7 @@ class PlotItem(GraphicsWidget):
         x               (bool) Whether to show the X grid
         y               (bool) Whether to show the Y grid
         alpha           (0.0-1.0) Opacity of the grid
+        ==============  =====================================
         """
         if x is None and y is None and alpha is None:
             raise Exception("Must specify at least one of x, y, or alpha.")  ## prevent people getting confused if they just call showGrid()
