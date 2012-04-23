@@ -488,9 +488,13 @@ class ScatterPlotItem(GraphicsObject):
         #self.sigPointClicked.emit(self, point)
 
     def points(self):
+        if not self.spotsValid:
+            self.generateSpots()
         return self.spots[:]
 
     def pointsAt(self, pos):
+        if not self.spotsValid:
+            self.generateSpots()
         x = pos.x()
         y = pos.y()
         pw = self.pixelWidth()
