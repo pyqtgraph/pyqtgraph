@@ -83,10 +83,13 @@ p8.addItem(lr)
 
 p9 = win.addPlot(title="Zoom on selected region")
 p9.plot(data2)
-def update():
-    p9.setXRange(*lr.getRegion())
-lr.sigRegionChanged.connect(update)
-update()
+def updatePlot():
+    p9.setXRange(*lr.getRegion(), padding=0)
+def updateRegion():
+    lr.setRegion(p9.getViewBox().viewRange()[0])
+lr.sigRegionChanged.connect(updatePlot)
+p9.sigXRangeChanged.connect(updateRegion)
+updatePlot()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 import sys
