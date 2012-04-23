@@ -195,31 +195,31 @@ class EvalNode(Node):
         
         self.ui = QtGui.QWidget()
         self.layout = QtGui.QGridLayout()
-        self.addInBtn = QtGui.QPushButton('+Input')
-        self.addOutBtn = QtGui.QPushButton('+Output')
+        #self.addInBtn = QtGui.QPushButton('+Input')
+        #self.addOutBtn = QtGui.QPushButton('+Output')
         self.text = QtGui.QTextEdit()
         self.text.setTabStopWidth(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
-        self.layout.addWidget(self.addInBtn, 0, 0)
-        self.layout.addWidget(self.addOutBtn, 0, 1)
+        #self.layout.addWidget(self.addInBtn, 0, 0)
+        #self.layout.addWidget(self.addOutBtn, 0, 1)
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)
         
         #QtCore.QObject.connect(self.addInBtn, QtCore.SIGNAL('clicked()'), self.addInput)
-        self.addInBtn.clicked.connect(self.addInput)
+        #self.addInBtn.clicked.connect(self.addInput)
         #QtCore.QObject.connect(self.addOutBtn, QtCore.SIGNAL('clicked()'), self.addOutput)
-        self.addOutBtn.clicked.connect(self.addOutput)
+        #self.addOutBtn.clicked.connect(self.addOutput)
         self.text.focusOutEvent = self.focusOutEvent
         self.lastText = None
         
     def ctrlWidget(self):
         return self.ui
         
-    def addInput(self):
-        Node.addInput(self, 'input', renamable=True)
+    #def addInput(self):
+        #Node.addInput(self, 'input', renamable=True)
         
-    def addOutput(self):
-        Node.addOutput(self, 'output', renamable=True)
+    #def addOutput(self):
+        #Node.addOutput(self, 'output', renamable=True)
         
     def focusOutEvent(self, ev):
         text = str(self.text.toPlainText())

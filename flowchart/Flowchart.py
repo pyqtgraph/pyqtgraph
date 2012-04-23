@@ -84,14 +84,18 @@ class Flowchart(Node):
         
         self.widget()
         
-        self.inputNode = Node('Input', allowRemove=False)
-        self.outputNode = Node('Output', allowRemove=False)
+        self.inputNode = Node('Input', allowRemove=False, allowAddOutput=True)
+        self.outputNode = Node('Output', allowRemove=False, allowAddInput=True)
         self.addNode(self.inputNode, 'Input', [-150, 0])
         self.addNode(self.outputNode, 'Output', [300, 0])
         
         self.outputNode.sigOutputChanged.connect(self.outputChanged)
         self.outputNode.sigTerminalRenamed.connect(self.internalTerminalRenamed)
         self.inputNode.sigTerminalRenamed.connect(self.internalTerminalRenamed)
+        self.outputNode.sigTerminalRemoved.connect(self.internalTerminalRemoved)
+        self.inputNode.sigTerminalRemoved.connect(self.internalTerminalRemoved)
+        self.outputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
+        self.inputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
         
         self.viewBox.autoRange(padding = 0.04)
             
@@ -121,11 +125,20 @@ class Flowchart(Node):
         if opts['io'] == 'in':  ## inputs to the flowchart become outputs on the input node
             opts['io'] = 'out'
             opts['multi'] = False
-            term2 = self.inputNode.addTerminal(name, **opts)
+            self.inputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
+            try:
+                term2 = self.inputNode.addTerminal(name, **opts)
+            finally:
+                self.inputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
+                
         else:
             opts['io'] = 'in'
             #opts['multi'] = False
-            term2 = self.outputNode.addTerminal(name, **opts)
+            self.outputNode.sigTerminalAdded.disconnect(self.internalTerminalAdded)
+            try:
+                term2 = self.outputNode.addTerminal(name, **opts)
+            finally:
+                self.outputNode.sigTerminalAdded.connect(self.internalTerminalAdded)
         return term
 
     def removeTerminal(self, name):
@@ -137,6 +150,16 @@ class Flowchart(Node):
         
     def internalTerminalRenamed(self, term, oldName):
         self[oldName].rename(term.name())
+        
+    def internalTerminalAdded(self, node, term):
+        if term._io == 'in':
+            io = 'out'
+        else:
+            io = 'in'
+        Node.addTerminal(self, term.name(), io=io, renamable=term.isRenamable(), removable=term.isRemovable(), multiable=term.isMultiable())
+        
+    def internalTerminalRemoved(self, node, term):
+        Node.removeTerminal(self, term.name())
         
     def terminalRenamed(self, term, oldName):
         newName = term.name()
@@ -475,7 +498,7 @@ class Flowchart(Node):
             self.inputNode.restoreState(state.get('inputNode', {}))
             self.outputNode.restoreState(state.get('outputNode', {}))
                 
-            #self.restoreTerminals(state['terminals'])
+            self.restoreTerminals(state['terminals'])
             for n1, t1, n2, t2 in state['connects']:
                 try:
                     self.connectTerminals(self._nodes[n1][t1], self._nodes[n2][t2])

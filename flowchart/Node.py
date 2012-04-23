@@ -20,7 +20,9 @@ class Node(QtCore.QObject):
     sigOutputChanged = QtCore.Signal(object)   # self
     sigClosed = QtCore.Signal(object)
     sigRenamed = QtCore.Signal(object, object)
-    sigTerminalRenamed = QtCore.Signal(object, object)
+    sigTerminalRenamed = QtCore.Signal(object, object)  # term, oldName
+    sigTerminalAdded = QtCore.Signal(object, object)  # self, term
+    sigTerminalRemoved = QtCore.Signal(object, object)  # self, term
 
     
     def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
@@ -77,6 +79,8 @@ class Node(QtCore.QObject):
         if name in self._outputs:
             del self._outputs[name]
         self.graphicsItem().updateTerminals()
+        self.sigTerminalRemoved.emit(self, term)
+        
         
     def terminalRenamed(self, term, oldName):
         """Called after a terminal has been renamed"""
@@ -107,6 +111,7 @@ class Node(QtCore.QObject):
         elif term.isOutput():
             self._outputs[name] = term
         self.graphicsItem().updateTerminals()
+        self.sigTerminalAdded.emit(self, term)
         return term
 
         
@@ -527,15 +532,21 @@ class NodeGraphicsItem(GraphicsObject):
     def buildMenu(self):
         self.menu = QtGui.QMenu()
         self.menu.setTitle("Node")
-        a = self.menu.addAction("Add input", self.node.addInput)
+        a = self.menu.addAction("Add input", self.addInputFromMenu)
         if not self.node._allowAddInput:
             a.setEnabled(False)
-        a = self.menu.addAction("Add output", self.node.addOutput)
+        a = self.menu.addAction("Add output", self.addOutputFromMenu)
         if not self.node._allowAddOutput:
             a.setEnabled(False)
         a = self.menu.addAction("Remove node", self.node.close)
         if not self.node._allowRemove:
             a.setEnabled(False)
+        
+    def addInputFromMenu(self):  ## called when add input is clicked in context menu
+        self.node.addInput(renamable=True, removable=True, multiable=True)
+        
+    def addOutputFromMenu(self):  ## called when add output is clicked in context menu
+        self.node.addOutput(renamable=True, removable=True, multiable=False)
         
     #def menuTriggered(self, action):
         ##print "node.menuTriggered called. action:", action

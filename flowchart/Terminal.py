@@ -8,15 +8,23 @@ from pyqtgraph.Point import Point
 from eq import *
 
 class Terminal:
-    def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, bypass=None):
-        """Construct a new terminal. Optiona are:
-        node     - the node to which this terminal belongs
-        name     - string, the name of the terminal
-        io       - 'in' or 'out'
-        optional - bool, whether the node may process without connection to this terminal
-        multi    - bool, for inputs: whether this terminal may make multiple connections
-                   for outputs: whether this terminal creates a different value for each connection
-        pos      - [x, y], the position of the terminal within its node's boundaries
+    def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, removable=False, multiable=False, bypass=None):
+        """
+        Construct a new terminal. 
+        
+        ==============  =================================================================================
+        **Arguments:**
+        node            the node to which this terminal belongs
+        name            string, the name of the terminal
+        io              'in' or 'out'
+        optional        bool, whether the node may process without connection to this terminal
+        multi           bool, for inputs: whether this terminal may make multiple connections
+                        for outputs: whether this terminal creates a different value for each connection
+        pos             [x, y], the position of the terminal within its node's boundaries
+        renamable       (bool) Whether the terminal can be renamed by the user
+        removable       (bool) Whether the terminal can be removed by the user
+        multiable       (bool) Whether the user may toggle the *multi* option for this terminal
+        ==============  =================================================================================
         """
         self._io = io
         #self._isOutput = opts[0] in ['out', 'io']
@@ -27,6 +35,8 @@ class Terminal:
         self._node = weakref.ref(node)
         self._name = name
         self._renamable = renamable
+        self._removable = removable
+        self._multiable = multiable
         self._connections = {}
         self._graphicsItem = TerminalGraphicsItem(self, parent=self._node().graphicsItem())
         self._bypass = bypass
@@ -121,12 +131,22 @@ class Terminal:
     
     def isMultiValue(self):
         return self._multi
+    
+    def setMultiValue(self, b):
+        """Set whether this is a multi-value terminal."""
+        self._multi = b
 
     def isOutput(self):
         return self._io == 'out'
         
     def isRenamable(self):
         return self._renamable
+
+    def isRemovable(self):
+        return self._removable
+
+    def isMultiable(self):
+        return self._multiable
 
     def name(self):
         return self._name
@@ -278,7 +298,7 @@ class Terminal:
             item.scene().removeItem(item)
         
     def saveState(self):
-        return {'io': self._io, 'multi': self._multi, 'optional': self._optional}
+        return {'io': self._io, 'multi': self._multi, 'optional': self._optional, 'renamable': self._renamable, 'removable': self._removable, 'multiable': self._multiable}
 
 
 #class TerminalGraphicsItem(QtGui.QGraphicsItem):
@@ -357,40 +377,46 @@ class TerminalGraphicsItem(GraphicsObject):
             
     def mousePressEvent(self, ev):
         #ev.accept()
-        ev.ignore()
+        ev.ignore() ## necessary to allow click/drag events to process correctly
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
             ev.accept()
             self.label.setFocus(QtCore.Qt.MouseFocusReason)
-        if ev.button() == QtCore.Qt.RightButton:
-            if self.raiseContextMenu(ev):
-                ev.accept()
+        elif ev.button() == QtCore.Qt.RightButton:
+            ev.accept()
+            self.raiseContextMenu(ev)
             
     def raiseContextMenu(self, ev):
         ## only raise menu if this terminal is removable
         menu = self.getMenu()
-        if menu is None:
-            return False
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
-        return True
         
     def getMenu(self):
         if self.menu is None:
-            if self.removable():
-                self.menu = QtGui.QMenu()
-                self.menu.setTitle("Terminal")
-                self.menu.addAction("Remove terminal", self.removeSelf)
-            else:
-                return None
+            self.menu = QtGui.QMenu()
+            self.menu.setTitle("Terminal")
+            remAct = QtGui.QAction("Remove terminal", self.menu)
+            remAct.triggered.connect(self.removeSelf)
+            self.menu.addAction(remAct)
+            self.menu.remAct = remAct
+            if not self.term.isRemovable():
+                remAct.setEnabled(False)
+            multiAct = QtGui.QAction("Multi-value", self.menu)
+            multiAct.setCheckable(True)
+            multiAct.setChecked(self.term.isMultiValue())
+            multiAct.triggered.connect(self.toggleMulti)
+            self.menu.addAction(multiAct)
+            self.menu.multiAct = multiAct
+            if self.term.isMultiable():
+                multiAct.setEnabled = False
         return self.menu
 
-    def removable(self):
-        return (
-            (self.term.isOutput() and self.term.node()._allowAddOutput) or 
-            (self.term.isInput()  and self.term.node()._allowAddInput))
+    def toggleMulti(self):
+        multi = self.menu.multiAct.isChecked()
+        self.term.setMultiValue(multi)
         
     ## probably never need this
     #def getContextMenus(self, ev):
@@ -441,6 +467,7 @@ class TerminalGraphicsItem(GraphicsObject):
     def hoverEvent(self, ev):
         if not ev.isExit() and ev.acceptDrags(QtCore.Qt.LeftButton):
             ev.acceptClicks(QtCore.Qt.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(QtCore.Qt.RightButton)
             self.box.setBrush(fn.mkBrush('w'))
         else:
             self.box.setBrush(self.brush)

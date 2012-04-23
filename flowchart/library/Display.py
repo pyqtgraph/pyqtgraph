@@ -5,6 +5,7 @@ import weakref
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.graphicsItems.ScatterPlotItem import ScatterPlotItem
 from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
+from pyqtgraph import PlotDataItem
 
 from common import *
 import numpy as np
@@ -117,6 +118,30 @@ class CanvasNode(Node):
                     del self.items[vid]
 
 
+class PlotCurve(CtrlNode):
+    """Generates a plot curve from x/y data"""
+    nodeName = 'PlotCurve'
+    uiTemplate = [
+        ('color', 'color'),
+    ]
+    
+    def __init__(self, name):
+        CtrlNode.__init__(self, name, terminals={
+            'x': {'io': 'in'},
+            'y': {'io': 'in'},
+            'plot': {'io': 'out'}
+        })
+        self.item = PlotDataItem()
+    
+    def process(self, x, y, display=True):
+        #print "scatterplot process"
+        if not display:
+            return {'plot': None}
+        
+        self.item.setData(x, y, pen=self.ctrls['color'].color())
+        return {'plot': self.item}
+        
+        
 
 
 class ScatterPlot(CtrlNode):
