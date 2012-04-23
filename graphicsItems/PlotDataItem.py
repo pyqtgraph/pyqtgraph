@@ -389,7 +389,7 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
         if self.xDisp is None:
-            nanMask = np.isnan(self.xData) | np.isnan(self.yData)
+            nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
             if any(nanMask):
                 x = self.xData[~nanMask]
                 y = self.yData[~nanMask]
