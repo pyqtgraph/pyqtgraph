@@ -34,7 +34,7 @@ class PlotCurveItem(GraphicsObject):
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
     
-    def __init__(self, y=None, x=None, fillLevel=None, copy=False, pen=None, shadowPen=None, brush=None, parent=None, clickable=False):
+    def __init__(self, x=None, y=None, fillLevel=None, copy=False, pen=None, shadowPen=None, brush=None, parent=None, clickable=False):
         """
         ==============  =======================================================
         **Arguments:**

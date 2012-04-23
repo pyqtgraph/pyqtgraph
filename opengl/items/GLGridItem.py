@@ -5,6 +5,12 @@ from pyqtgraph import QtGui
 __all__ = ['GLGridItem']
 
 class GLGridItem(GLGraphicsItem):
+    """
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    
+    Displays a wire-grame grid. 
+    """
+    
     def __init__(self, size=None, color=None):
         GLGraphicsItem.__init__(self)
         if size is None:

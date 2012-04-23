@@ -9,4 +9,5 @@ Contents:
     functions
     graphicsItems/index
     widgets/index
+    3dgraphics/index
     graphicsscene/index

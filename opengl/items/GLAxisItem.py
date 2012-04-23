@@ -5,6 +5,13 @@ from pyqtgraph import QtGui
 __all__ = ['GLAxisItem']
 
 class GLAxisItem(GLGraphicsItem):
+    """
+    **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
+    
+    Displays three lines indicating origin and orientation of local coordinate system. 
+    
+    """
+    
     def __init__(self, size=None):
         GLGraphicsItem.__init__(self)
         if size is None:
