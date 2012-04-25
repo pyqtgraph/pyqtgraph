@@ -28,6 +28,23 @@ class LinearRegionItem(UIGraphicsItem):
     Horizontal = 1
     
     def __init__(self, values=[0,1], orientation=None, brush=None, movable=True, bounds=None):
+        """Create a new LinearRegionItem.
+        
+        ============= =====================================================================
+        **Arguments**
+        values        A list of the positions of the lines in the region. These are not 
+                      limits; limits can be set by specifying bounds.
+        orientation   Options are LinearRegionItem.Vertical or LinearRegionItem.Horizontal.
+                      If not specified it will be vertical.
+        brush         Defines the brush that fills the region. Can be any arguments that 
+                      are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is 
+                      transparent blue.
+        movable       If True, the region and individual lines are movable by the user; if 
+                      False, they are static.
+        bounds        Optional [min, max] bounding values for the region
+        ============= =====================================================================
+        """
+        
         UIGraphicsItem.__init__(self)
         if orientation is None:
             orientation = LinearRegionItem.Vertical
@@ -70,6 +87,13 @@ class LinearRegionItem(UIGraphicsItem):
         return (min(r), max(r))
 
     def setRegion(self, rgn):
+        """Set the values for the edges of the region.
+        
+        ============= ==============================================
+        **Arguments** 
+        rgn           A list or tuple of the lower and upper values.
+        ============= ==============================================
+        """
         if self.lines[0].value() == rgn[0] and self.lines[1].value() == rgn[1]:
             return
         self.blockLineSignal = True
@@ -80,15 +104,25 @@ class LinearRegionItem(UIGraphicsItem):
         self.lineMoved()
         self.lineMoveFinished()
 
-    def setBrush(self, br):
-        self.brush = fn.mkBrush(br)
+    def setBrush(self, *br, **kargs):
+        """Set the brush that fills the region. Can have any arguments that are valid
+        for :func:`mkBrush <pyqtgraph.mkBrush>`.
+        """
+        self.brush = fn.mkBrush(*br, **kargs)
         self.currentBrush = self.brush
 
     def setBounds(self, bounds):
+        """Optional [min, max] bounding values for the region. To have no bounds on the
+        region use [None, None].
+        Does not affect the current position of the region unless it is outside the new bounds. 
+        See :func:`setRegion <pyqtgraph.LinearRegionItem.setRegion>` to set the position 
+        of the region."""
         for l in self.lines:
             l.setBounds(bounds)
         
     def setMovable(self, m):
+        """Set lines to be movable by the user, or not. If lines are movable, they will 
+        also accept HoverEvents."""
         for l in self.lines:
             l.setMovable(m)
         self.movable = m

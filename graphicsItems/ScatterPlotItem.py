@@ -58,7 +58,7 @@ class ScatterPlotItem(GraphicsObject):
         * If there is only one unnamed argument, it will be interpreted like the 'spots' argument.
         * If there are two unnamed arguments, they will be interpreted as sequences of x and y values.
         
-        ====================== =================================================================================================
+        ====================== ===============================================================================================
         **Keyword Arguments:**
         *spots*                Optional list of dicts. Each dict specifies parameters for a single spot:
                                {'pos': (x,y), 'size', 'pen', 'brush', 'symbol'}. This is just an alternate method
@@ -83,7 +83,7 @@ class ScatterPlotItem(GraphicsObject):
         *size*                 The size (or list of sizes) of spots. If *pxMode* is True, this value is in pixels. Otherwise,
                                it is in the item's local coordinate system.
         *data*                 a list of python objects used to uniquely identify each spot.
-        ====================== =================================================================================================
+        ====================== ===============================================================================================
         """
         
         self.clear()

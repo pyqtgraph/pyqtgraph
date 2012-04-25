@@ -45,7 +45,7 @@ class PlotWidgetNode(Node):
                     
                 for val in vals:
                     vid = id(val)
-                    if vid in self.items:
+                    if vid in self.items and self.items[vid].scene() is self.plot.scene():
                         items.add(vid)
                     else:
                         #if isinstance(val, PlotCurveItem):
@@ -67,6 +67,11 @@ class PlotWidgetNode(Node):
                     self.plot.removeItem(self.items[vid])
                     del self.items[vid]
             
+    def processBypassed(self, args):
+        for item in self.items.values():
+            self.plot.removeItem(item)
+        self.items = {}
+        
     #def setInput(self, **args):
         #for k in args:
             #self.plot.plot(args[k])

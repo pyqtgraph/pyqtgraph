@@ -9,8 +9,17 @@ import weakref
 __all__ = ['InfiniteLine']
 class InfiniteLine(UIGraphicsItem):
     """
+    **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
+    
     Displays a line of infinite length.
     This line may be dragged to indicate a position in data coordinates.
+    
+    =============================== ===================================================
+    **Signals**
+    sigDragged(self)
+    sigPositionChangeFinished(self)
+    sigPositionChanged(self)
+    =============================== ===================================================
     """
     
     sigDragged = QtCore.Signal(object)
@@ -19,12 +28,18 @@ class InfiniteLine(UIGraphicsItem):
     
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None):
         """
-        Initialization options:
-            pos      - Position of the line. This can be a QPointF or a single value for vertical/horizontal lines.
-            angle    - Angle of line in degrees. 0 is horizontal, 90 is vertical.
-            pen      - Pen to use when drawing line
-            movable  - If True, the line can be dragged to a new position by the user
-            bounds   - Optional [min, max] bounding values. Bounds are only valid if the line is vertical or horizontal.
+        ============= ==================================================================
+        **Arguments**
+        pos           Position of the line. This can be a QPointF or a single value for
+                      vertical/horizontal lines.
+        angle         Angle of line in degrees. 0 is horizontal, 90 is vertical.
+        pen           Pen to use when drawing line. Can be any arguments that are valid 
+                      for :func:`mkPen <pyqtgraph.mkPen>`. Default pen is transparent 
+                      yellow.
+        movable       If True, the line can be dragged to a new position by the user.
+        bounds        Optional [min, max] bounding values. Bounds are only valid if the
+                      line is vertical or horizontal.
+        ============= ==================================================================
         """
         
         UIGraphicsItem.__init__(self)
@@ -49,6 +64,7 @@ class InfiniteLine(UIGraphicsItem):
         #self.setFlag(self.ItemSendsScenePositionChanges)
       
     def setMovable(self, m):
+        """Set whether the line is movable by the user."""
         self.movable = m
         self.setAcceptHoverEvents(m)
       
@@ -58,6 +74,8 @@ class InfiniteLine(UIGraphicsItem):
         self.setValue(self.value())
         
     def setPen(self, pen):
+        """Set the pen for drawing the line. Allowable arguments are any that are valid 
+        for :func:`mkPen <pyqtgraph.mkPen>`."""
         self.pen = fn.mkPen(pen)
         self.currentPen = self.pen
         self.update()
@@ -76,6 +94,7 @@ class InfiniteLine(UIGraphicsItem):
         self.update()
         
     def setPos(self, pos):
+        
         if type(pos) in [list, tuple]:
             newPos = pos
         elif isinstance(pos, QtCore.QPointF):
@@ -116,6 +135,8 @@ class InfiniteLine(UIGraphicsItem):
         return self.p
 
     def value(self):
+        """Return the value of the line. Will be a single number for horizontal and 
+        vertical lines, and a list of [x,y] values for diagonal lines."""
         if self.angle%180 == 0:
             return self.getYPos()
         elif self.angle%180 == 90:
@@ -124,6 +145,9 @@ class InfiniteLine(UIGraphicsItem):
             return self.getPos()
                 
     def setValue(self, v):
+        """Set the position of the line. If line is horizontal or vertical, v can be 
+        a single value. Otherwise, a 2D coordinate must be specified (list, tuple and 
+        QPointF are all acceptable)."""
         self.setPos(v)
 
     ## broken in 4.7

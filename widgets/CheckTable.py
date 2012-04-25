@@ -24,6 +24,7 @@ class CheckTable(QtGui.QWidget):
         
         self.rowNames = []
         self.rowWidgets = []
+        self.oldRows = {}  ## remember settings from removed rows; reapply if they reappear.
         
 
     def updateRows(self, rows):
@@ -47,6 +48,8 @@ class CheckTable(QtGui.QWidget):
             self.layout.addWidget(check, row, col)
             checks.append(check)
             col += 1
+            if name in self.oldRows:
+                check.setChecked(self.oldRows[name])
             #QtCore.QObject.connect(check, QtCore.SIGNAL('stateChanged(int)'), self.checkChanged)
             check.stateChanged.connect(self.checkChanged)
         self.rowNames.append(name)
@@ -54,6 +57,7 @@ class CheckTable(QtGui.QWidget):
         
     def removeRow(self, name):
         row = self.rowNames.index(name)
+        self.oldRows[name] = self.saveState['rows'][name]  ## save for later
         self.rowNames.pop(row)
         for w in self.rowWidgets[row]:
             w.setParent(None)

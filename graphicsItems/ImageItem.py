@@ -258,6 +258,8 @@ class ImageItem(GraphicsObject):
             lut = self.lut(self.image)
         else:
             lut = self.lut
+        #print lut.shape
+        #print self.lut
             
         argb, alpha = fn.makeARGB(self.image, lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha)

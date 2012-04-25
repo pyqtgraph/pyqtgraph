@@ -19,6 +19,7 @@ Contents:
     graphicslayout
     plotcurveitem
     scatterplotitem
+    isocurveitem
     axisitem
     arrowitem
     curvepoint
