@@ -3,12 +3,13 @@ import pyqtgraph.functions as fn
 
 class MeshData(object):
     """
-    Class for storing 3D mesh data. May contain:
-        - list of vertex locations
-        - list of edges
-        - list of triangles
-        - colors per vertex, edge, or tri
-        - normals per vertex or tri
+    Class for storing and operating on 3D mesh data. May contain:
+    
+    - list of vertex locations
+    - list of edges
+    - list of triangles
+    - colors per vertex, edge, or tri
+    - normals per vertex or tri
     """
 
     def __init__(self):
@@ -26,11 +27,15 @@ class MeshData(object):
     def setFaces(self, faces, vertexes=None):
         """
         Set the faces in this data set.
-        Data may be provided either as an Nx3x3 list of floats (9 float coordinate values per face)
-            *faces* = [ [(x, y, z), (x, y, z), (x, y, z)], ... ] 
-        or as an Nx3 list of ints (vertex integers) AND an Mx3 list of floats (3 float coordinate values per vertex)
-            *faces* = [ (p1, p2, p3), ... ]
-            *vertexes* = [ (x, y, z), ... ]
+        Data may be provided either as an Nx3x3 list of floats (9 float coordinate values per face)::
+        
+            faces = [ [(x, y, z), (x, y, z), (x, y, z)], ... ] 
+            
+        or as an Nx3 list of ints (vertex integers) AND an Mx3 list of floats (3 float coordinate values per vertex)::
+        
+            faces = [ (p1, p2, p3), ... ]
+            vertexes = [ (x, y, z), ... ]
+            
         """
         
         if vertexes is None:
@@ -147,18 +152,18 @@ class MeshData(object):
     def edgeColors(self):
         return self._edgeColors
         
-    def reverseNormals(self):
-        """
-        Reverses the direction of all normal vectors.
-        """
-        pass
+    #def reverseNormals(self):
+        #"""
+        #Reverses the direction of all normal vectors.
+        #"""
+        #pass
         
-    def generateEdgesFromFaces(self):
-        """
-        Generate a set of edges by listing all the edges of faces and removing any duplicates.
-        Useful for displaying wireframe meshes.
-        """
-        pass
+    #def generateEdgesFromFaces(self):
+        #"""
+        #Generate a set of edges by listing all the edges of faces and removing any duplicates.
+        #Useful for displaying wireframe meshes.
+        #"""
+        #pass
         
     def save(self):
         """Serialize this mesh to a string appropriate for disk storage"""
