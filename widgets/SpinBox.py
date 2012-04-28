@@ -10,11 +10,25 @@ import weakref
 
 __all__ = ['SpinBox']
 class SpinBox(QtGui.QAbstractSpinBox):
-    """QSpinBox widget on steroids. Allows selection of numerical value, with extra features:
-      - SI prefix notation
-      - Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
-      - Option for unbounded values
-      - Delayed signals (allows multiple rapid changes with only one change signal)
+    """
+    **Bases:** QtGui.QAbstractSpinBox
+    
+    QSpinBox widget on steroids. Allows selection of numerical value, with extra features:
+    
+    - SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
+    - Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
+    - Option for unbounded values
+    - Delayed signals (allows multiple rapid changes with only one change signal)
+    
+    =============================  ==============================================
+    **Signals:**
+    valueChanged(value)            Same as QSpinBox; emitted every time the value 
+                                   has changed.
+    sigValueChanged(self)          Emitted when value has changed, but also combines
+                                   multiple rapid changes into one signal (eg, 
+                                   when rolling the mouse wheel).
+    sigValueChanging(self, value)  Emitted immediately for all value changes.
+    =============================  ==============================================
     """
     
     ## There's a PyQt bug that leaks a reference to the 
@@ -29,6 +43,34 @@ class SpinBox(QtGui.QAbstractSpinBox):
     sigValueChanging = QtCore.Signal(object, object)  # (self, value)  sent immediately; no delay.
     
     def __init__(self, parent=None, value=0.0, **kwargs):
+        """
+        ============== ========================================================================
+        **Arguments:**
+        parent         Sets the parent widget for this SpinBox (optional)
+        value          (float/int) initial value
+        bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
+                       Either may be None to leave the value unbounded.
+        suffix         (str) suffix (units) to display after the numerical value
+        siPrefix       (bool) If True, then an SI prefix is automatically prepended
+                       to the units and the value is scaled accordingly. For example,
+                       if value=0.003 and suffix='V', then the SpinBox will display
+                       "300 mV" (but a call to SpinBox.value will still return 0.003).
+        step           (float) The size of a single step. This is used when clicking the up/
+                       down arrows, when rolling the mouse wheel, or when pressing 
+                       keyboard arrows while the widget has keyboard focus. Note that
+                       the interpretation of this value is different when specifying
+                       the 'dec' argument.
+        dec            (bool) If True, then the step value will be adjusted to match 
+                       the current size of the variable (for example, a value of 15
+                       might step in increments of 1 whereas a value of 1500 would
+                       step in increments of 100). In this case, the 'step' argument
+                       is interpreted *relative* to the current value. The most common
+                       'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0.
+        minStep        (float) When dec=True, this specifies the minimum allowable step size.
+        int            (bool) if True, the value is forced to integer type
+        decimals       (int) Number of decimal values to display
+        ============== ========================================================================
+        """
         QtGui.QAbstractSpinBox.__init__(self, parent)
         self.lastValEmitted = None
         self.lastText = ''
@@ -86,6 +128,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
     ##lots of config options, just gonna stuff 'em all in here rather than do the get/set crap.
     def setOpts(self, **opts):
+        """
+        Changes the behavior of the SpinBox. Accepts most of the arguments 
+        allowed in :func:`__init__ <pyqtgraph.SpinBox.__init__>`.
+        
+        """
         for k in opts:
             if k == 'bounds':
                 #print opts[k]
@@ -121,6 +168,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
 
     def setMaximum(self, m, update=True):
+        """Set the maximum allowed value (or None for no limit)"""
         if m is not None:
             m = D(unicode(m))
         self.opts['bounds'][1] = m
@@ -128,6 +176,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             self.setValue()
     
     def setMinimum(self, m, update=True):
+        """Set the minimum allowed value (or None for no limit)"""
         if m is not None:
             m = D(unicode(m))
         self.opts['bounds'][0] = m
@@ -141,7 +190,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setOpts(bounds = [r0,r1])
         
     def setProperty(self, prop, val):
-        """setProperty is just for compatibility with QSpinBox"""
+        ## for QSpinBox compatibility
         if prop == 'value':
             #if type(val) is QtCore.QVariant:
                 #val = val.toDouble()[0]
@@ -159,6 +208,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setOpts(decimals=decimals)
 
     def value(self):
+        """
+        Return the value of this SpinBox.
+        
+        """
         if self.opts['int']:
             return int(self.val)
         else:
@@ -167,8 +220,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setValue(self, value=None, update=True, delaySignal=False):
         """
         Set the value of this spin. 
-        If the value is out of bounds, it will be moved to the nearest boundary
-        If the spin is integer type, the value will be coerced to int
+        If the value is out of bounds, it will be clipped to the nearest boundary.
+        If the spin is integer type, the value will be coerced to int.
         Returns the actual value set.
         
         If value is None, then the current value is used (this is for resetting
@@ -202,25 +255,25 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         return value
 
-            
+    
     def emitChanged(self):
         self.lastValEmitted = self.val
         self.valueChanged.emit(float(self.val))
         self.sigValueChanged.emit(self)
-        
+    
     def delayedChange(self):
         try:
             if self.val != self.lastValEmitted:
                 self.emitChanged()
         except RuntimeError:
             pass  ## This can happen if we try to handle a delayed signal after someone else has already deleted the underlying C++ object.
-        
+    
     def widgetGroupInterface(self):
         return (self.valueChanged, SpinBox.value, SpinBox.setValue)
-        
+    
     def sizeHint(self):
         return QtCore.QSize(120, 0)
-        
+    
     
     def stepEnabled(self):
         return self.StepUpEnabled | self.StepDownEnabled        
