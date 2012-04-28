@@ -369,10 +369,16 @@ class Canvas(QtGui.QWidget):
         z = citem.zValue()
         if z is None:
             zvals = [i.zValue() for i in siblings]
-            if len(zvals) == 0:
-                z = 0
+            if parent == self.itemList.invisibleRootItem():
+                if len(zvals) == 0:
+                    z = 0
+                else:
+                    z = max(zvals)+10
             else:
-                z = max(zvals)+10
+                if len(zvals) == 0:
+                    z = parent.canvasItem.zValue()
+                else:
+                    z = max(zvals)+1
             citem.setZValue(z)
             
         ## determine location to insert item relative to its siblings

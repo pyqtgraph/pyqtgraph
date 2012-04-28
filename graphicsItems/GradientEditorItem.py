@@ -334,7 +334,7 @@ class GradientEditorItem(TickSliderItem):
     **Bases:** :class:`TickSliderItem <pyqtgraph.TickSliderItem>`
     
     An item that can be used to define a color gradient. Implements common pre-defined gradients that are 
-    customizable by the user. :class: `GradientWidget <pyqtgraph.widgets.GradientWidget>` provides a widget
+    customizable by the user. :class: `GradientWidget <pyqtgraph.GradientWidget>` provides a widget
     with a GradientEditorItem that can be added to a GUI. 
     
     ======================== ===========================================================
@@ -359,7 +359,7 @@ class GradientEditorItem(TickSliderItem):
                       'top', and 'bottom'.
         allowAdd      Default is True. Specifies whether ticks can be added to the item.
         tickPen       Default is white. Specifies the color of the outline of the ticks.
-                      Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>'
+                      Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
         ============= =================================================================================
         """
         self.currentTick = None
