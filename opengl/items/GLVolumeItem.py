@@ -71,6 +71,7 @@ class GLVolumeItem(GLGraphicsItem):
         view = self.view()
         center = QtGui.QVector3D(*[x/2. for x in self.data.shape[:3]])
         cam = self.mapFromParent(view.cameraPosition()) - center
+        #print "center", center, "cam", view.cameraPosition(), self.mapFromParent(view.cameraPosition()), "diff", cam
         cam = np.array([cam.x(), cam.y(), cam.z()])
         ax = np.argmax(abs(cam))
         d = 1 if cam[ax] > 0 else -1

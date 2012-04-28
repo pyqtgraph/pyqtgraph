@@ -53,6 +53,10 @@ class GLGraphicsItem(QtCore.QObject):
         self.__transform = tr
         self.update()
         
+    def resetTransform(self):
+        self.__transform.setToIdentity()
+        self.update()
+        
     def applyTransform(self, tr, local):
         """
         Multiply this object's transform by *tr*. 

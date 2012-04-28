@@ -14,6 +14,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     """
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+        
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
             'distance': 10.0,         ## distance of camera from center
@@ -23,6 +25,10 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                                       ## (rotation around z-axis 0 points along x-axis)
         }
         self.items = []
+        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
+        self.keysPressed = {}
+        self.keyTimer = QtCore.QTimer()
+        self.keyTimer.timeout.connect(self.evalKeyState)
 
     def addItem(self, item):
         self.items.append(item)
@@ -31,12 +37,12 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             item.initializeGL()
         item._setView(self)
         #print "set view", item, self, item.view()
-        self.updateGL()
+        self.update()
         
     def removeItem(self, item):
         self.items.remove(item)
         item._setView(None)
-        self.updateGL()
+        self.update()
         
         
     def initializeGL(self):
@@ -45,7 +51,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
     def resizeGL(self, w, h):
         glViewport(0, 0, w, h)
-        #self.updateGL()
+        #self.update()
 
     def setProjection(self):
         ## Create the projection matrix
@@ -59,7 +65,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         nearClip = dist * 0.001
         farClip = dist * 1000.
         
-        r = nearClip * np.tan(fov)
+        r = nearClip * np.tan(fov * 0.5 * np.pi / 180.)
         t = r * h / w
         glFrustum( -r, r, -t, t, nearClip, farClip)
         
@@ -70,7 +76,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         glRotatef(self.opts['elevation']-90, 1, 0, 0)
         glRotatef(self.opts['azimuth']+90, 0, 0, -1)
         center = self.opts['center']
-        glTranslatef(center.x(), center.y(), center.z())
+        glTranslatef(-center.x(), -center.y(), -center.z())
         
         
     def paintGL(self):
@@ -90,7 +96,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             if not i.visible():
                 continue
             if i is item:
-                i.paint()
+                try:
+                    glPushAttrib(GL_ALL_ATTRIB_BITS)
+                    i.paint()
+                except:
+                    import sys
+                    sys.excepthook(*sys.exc_info())
+                    print "Error while drawing item", i
+                finally:
+                    glPopAttrib(GL_ALL_ATTRIB_BITS)
             else:
                 glMatrixMode(GL_MODELVIEW)
                 glPushMatrix()
@@ -117,23 +131,110 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         return pos
 
+    def orbit(self, azim, elev):
+        """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
+        self.opts['azimuth'] += azim
+        self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+        self.update()
+        
+    def pan(self, dx, dy, dz, relative=False):
+        """
+        Moves the center (look-at) position while holding the camera in place. 
+        
+        If relative=True, then the coordinates are interpreted such that x
+        if in the global xy plane and points to the right side of the view, y is
+        in the global xy plane and orthogonal to x, and z points in the global z
+        direction. Distances are scaled roughly such that a value of 1.0 moves
+        by one pixel on screen.
+        
+        """
+        if not relative:
+            self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
+        else:
+            cPos = self.cameraPosition()
+            cVec = self.opts['center'] - cPos
+            dist = cVec.length()  ## distance from camera to center
+            xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)  ## approx. width of view at distance of center point
+            xScale = xDist / self.width()
+            zVec = QtGui.QVector3D(0,0,1)
+            xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
+            yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
+            self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
+        self.update()
+        
+    def pixelSize(self, pos):
+        """
+        Return the approximate size of a screen pixel at the location pos
+        
+        """
+        cam = self.cameraPosition()
+        dist = (pos-cam).length()
+        xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
+        return xDist / self.width()
+        
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
         
     def mouseMoveEvent(self, ev):
         diff = ev.pos() - self.mousePos
         self.mousePos = ev.pos()
-        self.opts['azimuth'] -= diff.x()
-        self.opts['elevation'] = np.clip(self.opts['elevation'] + diff.y(), -90, 90)
-        #print self.opts['azimuth'], self.opts['elevation']
-        self.updateGL()
+        
+        if ev.buttons() == QtCore.Qt.LeftButton:
+            self.orbit(-diff.x(), diff.y())
+            #print self.opts['azimuth'], self.opts['elevation']
+        elif ev.buttons() == QtCore.Qt.MidButton:
+            if (ev.modifiers() & QtCore.Qt.ControlModifier):
+                self.pan(diff.x(), 0, diff.y(), relative=True)
+            else:
+                self.pan(diff.x(), diff.y(), 0, relative=True)
         
     def mouseReleaseEvent(self, ev):
         pass
         
     def wheelEvent(self, ev):
-        self.opts['distance'] *= 0.999**ev.delta()
-        self.updateGL()
+        if (ev.modifiers() & QtCore.Qt.ControlModifier):
+            self.opts['fov'] *= 0.999**ev.delta()
+        else:
+            self.opts['distance'] *= 0.999**ev.delta()
+        self.update()
 
+    def keyPressEvent(self, ev):
+        if ev.key() in self.noRepeatKeys:
+            ev.accept()
+            if ev.isAutoRepeat():
+                return
+            self.keysPressed[ev.key()] = 1
+            self.evalKeyState()
+      
+    def keyReleaseEvent(self, ev):
+        if ev.key() in self.noRepeatKeys:
+            ev.accept()
+            if ev.isAutoRepeat():
+                return
+            try:
+                del self.keysPressed[ev.key()]
+            except:
+                self.keysPressed = {}
+            self.evalKeyState()
+        
+    def evalKeyState(self):
+        speed = 2.0
+        if len(self.keysPressed) > 0:
+            for key in self.keysPressed:
+                if key == QtCore.Qt.Key_Right:
+                    self.orbit(azim=-speed, elev=0)
+                elif key == QtCore.Qt.Key_Left:
+                    self.orbit(azim=speed, elev=0)
+                elif key == QtCore.Qt.Key_Up:
+                    self.orbit(azim=0, elev=-speed)
+                elif key == QtCore.Qt.Key_Down:
+                    self.orbit(azim=0, elev=speed)
+                elif key == QtCore.Qt.Key_PageUp:
+                    pass
+                elif key == QtCore.Qt.Key_PageDown:
+                    pass
+                self.keyTimer.start(16)
+        else:
+            self.keyTimer.stop()
 
-
+        

@@ -46,11 +46,17 @@ d2[..., 1] = negative * (255./negative.max())
 d2[..., 2] = d2[...,1]
 d2[..., 3] = d2[..., 0]*0.3 + d2[..., 1]*0.3
 d2[..., 3] = (d2[..., 3].astype(float) / 255.) **2 * 255
-    
+
+d2[:, 0, 0] = [255,0,0,100]
+d2[0, :, 0] = [0,255,0,100]
+d2[0, 0, :] = [0,0,255,100]
+
 v = gl.GLVolumeItem(d2)
 v.translate(-50,-50,-100)
 w.addItem(v)
 
+ax = gl.GLAxisItem()
+w.addItem(ax)
 
 ## Start Qt event loop unless running in interactive mode.
 if sys.flags.interactive != 1:

@@ -316,6 +316,13 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     c.setAlpha(alpha)
     return c
 
+def glColor(*args, **kargs):
+    """
+    Convert a color to OpenGL color format (r,g,b,a) floats 0.0-1.0
+    Accepts same arguments as :func:`mkColor <pyqtgraph.mkColor>`.
+    """
+    c = mkColor(*args, **kargs)
+    return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
 
 def affineSlice(data, shape, origin, vectors, axes, **kargs):
     """
