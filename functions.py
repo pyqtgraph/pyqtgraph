@@ -277,10 +277,10 @@ def mkPen(*args, **kargs):
         pen.setStyle(style)
     return pen
 
-def hsvColor(h, s=1.0, v=1.0, a=1.0):
-    """Generate a QColor from HSVa values."""
+def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
+    """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
     c = QtGui.QColor()
-    c.setHsvF(h, s, v, a)
+    c.setHsvF(hue, sat, val, alpha)
     return c
 
     

@@ -6,6 +6,30 @@ import numpy as np
 import scipy.stats
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
+
+
+## Build all symbol paths
+Symbols = {name: QtGui.QPainterPath() for name in ['o', 's', 't', 'd', '+']}
+
+Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
+Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
+coords = {
+    't': [(-0.5, -0.5), (0, 0.5), (0.5, -0.5)],
+    'd': [(0., -0.5), (-0.4, 0.), (0, 0.5), (0.4, 0)],
+    '+': [
+        (-0.5, -0.05), (-0.5, 0.05), (-0.05, 0.05), (-0.05, 0.5),
+        (0.05, 0.5), (0.05, 0.05), (0.5, 0.05), (0.5, -0.05), 
+        (0.05, -0.05), (0.05, -0.5), (-0.05, -0.5), (-0.05, -0.05)
+    ],
+}
+for k, c in coords.iteritems():
+    Symbols[k].moveTo(*c[0])
+    for x,y in c[1:]:
+        Symbols[k].lineTo(x, y)
+    Symbols[k].closeSubpath()
+
+
+
 class ScatterPlotItem(GraphicsObject):
     """
     Displays a set of x/y points. Instances of this class are created
@@ -372,7 +396,13 @@ class ScatterPlotItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
     
     
-    def generateSpots(self):
+    def generateSpots(self, clear=True):
+        if clear:
+            for spot in self.spots:
+                self.scene().removeItem(spot)
+            self.spots = []
+        
+        
         xmn = ymn = xmx = ymx = None
         
         ## apply defaults
@@ -585,44 +615,7 @@ class SpotItem(GraphicsObject):
         self.index = index
         self.symbol = symbol
         #s2 = size/2.
-        self.path = QtGui.QPainterPath()
-        
-        if symbol == 'o':
-            self.path.addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
-        elif symbol == 's':
-            self.path.addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
-        elif symbol == 't' or symbol == '^':
-            self.path.moveTo(-0.5, -0.5)
-            self.path.lineTo(0, 0.5)
-            self.path.lineTo(0.5, -0.5)
-            self.path.closeSubpath()
-            #self.path.connectPath(self.path)
-        elif symbol == 'd':
-            self.path.moveTo(0., -0.5)
-            self.path.lineTo(-0.4, 0.)
-            self.path.lineTo(0, 0.5)
-            self.path.lineTo(0.4, 0)
-            self.path.closeSubpath()
-            #self.path.connectPath(self.path)
-        elif symbol == '+':
-            self.path.moveTo(-0.5, -0.01)
-            self.path.lineTo(-0.5, 0.01)
-            self.path.lineTo(-0.01, 0.01)
-            self.path.lineTo(-0.01, 0.5)
-            self.path.lineTo(0.01, 0.5)
-            self.path.lineTo(0.01, 0.01)
-            self.path.lineTo(0.5, 0.01)
-            self.path.lineTo(0.5, -0.01)
-            self.path.lineTo(0.01, -0.01)
-            self.path.lineTo(0.01, -0.5)
-            self.path.lineTo(-0.01, -0.5)
-            self.path.lineTo(-0.01, -0.01)
-            self.path.closeSubpath()
-            #self.path.connectPath(self.path)
-        #elif symbol == 'x':
-        else:
-            raise Exception("Unknown spot symbol '%s' (type=%s)" % (str(symbol), str(type(symbol))))
-            #self.path.addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
+        self.path = Symbols[symbol]
         
         if pxMode:
             ## pre-render an image of the spot and display this rather than redrawing every time.

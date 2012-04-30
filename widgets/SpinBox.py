@@ -158,10 +158,22 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
         ## sanity checks:
         if self.opts['int']:
-            step = self.opts['step']
-            mStep = self.opts['minStep']
-            if (int(step) != step) or (self.opts['dec'] and (int(mStep) != mStep)):
-                raise Exception("Integer SpinBox may only have integer step and minStep.")
+            if 'step' in opts:
+                step = opts['step']
+                if int(step) != step:
+                    raise Exception('Integer SpinBox must have integer step size.')
+            else:
+                self.opts['step'] = int(self.opts['step'])
+            
+            if 'minStep' in opts:
+                step = opts['minStep']
+                if int(step) != step:
+                    raise Exception('Integer SpinBox must have integer minStep size.')
+            else:
+                ms = int(self.opts.get('minStep', 1))
+                if ms < 1:
+                    ms = 1
+                self.opts['minStep'] = ms
             
         self.updateText()
 

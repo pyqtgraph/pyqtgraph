@@ -41,6 +41,8 @@ class ViewBoxMenu(QtGui.QMenu):
                 (ui.autoRadio.clicked, 'AutoClicked'),
                 (ui.autoPercentSpin.valueChanged, 'AutoSpinChanged'),
                 (ui.linkCombo.currentIndexChanged, 'LinkComboChanged'),
+                (ui.autoPanCheck.toggled, 'AutoPanToggled'),
+                (ui.visibleOnlyCheck.toggled, 'VisibleOnlyToggled')
             ]
             
             for sig, fn in connects:
@@ -162,6 +164,11 @@ class ViewBoxMenu(QtGui.QMenu):
     def xLinkComboChanged(self, ind):
         self.view.setXLink(str(self.ctrl[0].linkCombo.currentText()))
 
+    def xAutoPanToggled(self, b):
+        pass
+    
+    def xVisibleOnlyToggled(self, b):
+        pass
 
 
     def yMouseToggled(self, b):
@@ -188,6 +195,13 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def yLinkComboChanged(self, ind):
         self.view.setYLink(str(self.ctrl[1].linkCombo.currentText()))
+
+    def yAutoPanToggled(self, b):
+        pass
+    
+    def yVisibleOnlyToggled(self, b):
+        pass
+
 
 
     def exportMethod(self):
