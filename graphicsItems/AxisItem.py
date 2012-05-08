@@ -505,7 +505,7 @@ class AxisItem(GraphicsWidget):
         for i in range(len(tickLevels)):
             ## take a small sample of strings and measure their rendered text
             spacing, values = tickLevels[i]
-            strings = self.tickStrings(values[:2], self.scale, spacing)
+            strings = self.tickStrings(values, self.scale, spacing)
             if len(strings) == 0:
                 continue
             textRects = [p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings]
