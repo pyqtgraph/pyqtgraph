@@ -104,6 +104,7 @@ class TickSliderItem(GraphicsWidget):
                       and 'left') or horizontal ('top' and 'bottom').
         ============= ===================================================================
         """
+        self.orientation = orientation
         self.setMaxDim()
         self.resetTransform()
         ort = orientation
