@@ -105,7 +105,7 @@ from Transform import Transform
 from functions import *
 from graphicsWindows import *
 from SignalProxy import *
-
+from ptime import time
 
 
 
