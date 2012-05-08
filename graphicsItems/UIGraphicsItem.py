@@ -4,7 +4,8 @@ from GraphicsObject import GraphicsObject
 
 __all__ = ['UIGraphicsItem']
 class UIGraphicsItem(GraphicsObject):
-    """Base class for graphics items with boundaries relative to a GraphicsView or ViewBox.
+    """
+    Base class for graphics items with boundaries relative to a GraphicsView or ViewBox.
     The purpose of this class is to allow the creation of GraphicsItems which live inside 
     a scalable view, but whose boundaries will always stay fixed relative to the view's boundaries.
     For example: GridItem, InfiniteLine
@@ -19,10 +20,11 @@ class UIGraphicsItem(GraphicsObject):
     
     def __init__(self, bounds=None, parent=None):
         """
-        Initialization Arguments:
-            #view: The view box whose bounds will be used as a reference vor this item's bounds
-            bounds: QRectF with coordinates relative to view box. The default is QRectF(0,0,1,1),
-                    which means the item will have the same bounds as the view.
+        ============== =============================================================================
+        **Arguments:**
+        bounds         QRectF with coordinates relative to view box. The default is QRectF(0,0,1,1),
+                       which means the item will have the same bounds as the view.
+        ============== =============================================================================
         """
         GraphicsObject.__init__(self, parent)
         self.setFlag(self.ItemSendsScenePositionChanges)

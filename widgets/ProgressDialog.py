@@ -3,18 +3,23 @@ from pyqtgraph.Qt import QtGui, QtCore
 
 __all__ = ['ProgressDialog']
 class ProgressDialog(QtGui.QProgressDialog):
-    """Extends QProgressDialog for use in 'with' statements.
-    Arguments:
-        labelText   (required)
-        cancelText   Text to display on cancel button, or None to disable it.
-        minimum
-        maximum
-        parent       
-        wait         Length of time (im ms) to wait before displaying dialog
-        busyCursor   If True, show busy cursor until dialog finishes
+    """
+    Extends QProgressDialog for use in 'with' statements.
+
+    ============== ================================================================
+    **Arguments:**
+    labelText      (required)
+    cancelText     Text to display on cancel button, or None to disable it.
+    minimum
+    maximum
+    parent       
+    wait           Length of time (im ms) to wait before displaying dialog
+    busyCursor     If True, show busy cursor until dialog finishes
+    ============== ================================================================
     
     
-    Example:
+    Example::
+
         with ProgressDialog("Processing..", minVal, maxVal) as dlg:
             # do stuff
             dlg.setValue(i)   ## could also use dlg += 1

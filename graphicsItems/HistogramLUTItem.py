@@ -25,9 +25,10 @@ class HistogramLUTItem(GraphicsWidget):
     """
     This is a graphicsWidget which provides controls for adjusting the display of an image.
     Includes:
-       - Image histogram 
-       - Movable region over histogram to select black/white levels
-       - Gradient editor to define color lookup table for single-channel images
+
+    - Image histogram 
+    - Movable region over histogram to select black/white levels
+    - Gradient editor to define color lookup table for single-channel images
     """
     
     sigLookupTableChanged = QtCore.Signal(object)

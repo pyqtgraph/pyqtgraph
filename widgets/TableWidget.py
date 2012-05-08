@@ -11,18 +11,14 @@ except:
 __all__ = ['TableWidget']
 class TableWidget(QtGui.QTableWidget):
     """Extends QTableWidget with some useful functions for automatic data handling
-    and copy / export context menu.
-    Can automatically format and display:
-        numpy arrays
-        numpy record arrays 
-        metaarrays
-        list-of-lists  [[1,2,3], [4,5,6]]
-        dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
-        list-of-dicts  [
-                         {'x': 1, 'y': 4}, 
-                         {'x': 2, 'y': 5}, 
-                         {'x': 3, 'y': 6}
-                       ]
+    and copy / export context menu. Can automatically format and display:
+
+    - numpy arrays
+    - numpy record arrays 
+    - metaarrays
+    - list-of-lists  [[1,2,3], [4,5,6]]
+    - dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
+    - list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
     """
     
     def __init__(self, *args):

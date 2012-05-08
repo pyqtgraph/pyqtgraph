@@ -34,11 +34,15 @@ class LabelItem(GraphicsWidget):
     def setText(self, text, **args):
         """Set the text and text properties in the label. Accepts optional arguments for auto-generating
         a CSS style string:
-           color:   string (example: 'CCFF00')
-           size:    string (example: '8pt')
-           bold:    boolean
-           italic:  boolean
-           """
+
+        ==================== ==============================
+        **Style Arguments:**
+        color                (str) example: 'CCFF00'
+        size                 (str) example: '8pt'
+        bold                 (bool)
+        italic               (bool)
+        ==================== ==============================
+        """
         self.text = text
         opts = self.opts.copy()
         for k in args:
