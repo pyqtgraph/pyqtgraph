@@ -424,7 +424,8 @@ class PlotDataItem(GraphicsObject):
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         """
         Returns the range occupied by the data (along a specific axis) in this item.
-        Tis method is called by ViewBox when auto-scaling.
+        This method is called by ViewBox when auto-scaling.
+
         =============== =============================================================
         **Arguments:**
         ax              (0 or 1) the axis for which to return this item's data range

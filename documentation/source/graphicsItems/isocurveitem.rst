@@ -1,5 +1,5 @@
 IsocurveItem
-========
+============
 
 .. autoclass:: pyqtgraph.IsocurveItem
     :members:
