@@ -14,6 +14,7 @@ Contents:
     introduction
     mouse_interaction
     how_to_use
+    installation
     plotting
     images
     3dgraphics
