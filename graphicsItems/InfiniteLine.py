@@ -191,7 +191,7 @@ class InfiniteLine(UIGraphicsItem):
         p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
         #p.drawRect(self.boundingRect())
         
-    def dataBounds(self, axis, frac=1.0):
+    def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
             return None   ## x axis should never be auto-scaled
         else:

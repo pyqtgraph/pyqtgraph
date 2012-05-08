@@ -421,15 +421,39 @@ class PlotDataItem(GraphicsObject):
         #print self.xDisp.shape, self.xDisp.min(), self.xDisp.max()
         return self.xDisp, self.yDisp
 
-    def dataBounds(self, ax, frac=1.0):
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        """
+        Returns the range occupied by the data (along a specific axis) in this item.
+        Tis method is called by ViewBox when auto-scaling.
+        =============== =============================================================
+        **Arguments:**
+        ax              (0 or 1) the axis for which to return this item's data range
+        frac            (float 0.0-1.0) Specifies what fraction of the total data 
+                        range to return. By default, the entire range is returned.
+                        This allows the ViewBox to ignore large spikes in the data
+                        when auto-scaling.
+        orthoRange      ([min,max] or None) Specifies that only the data within the
+                        given range (orthogonal to *ax*) should me measured when 
+                        returning the data range. (For example, a ViewBox might ask
+                        what is the y-range of all data with x-values between min
+                        and max)
+        =============== =============================================================
+        """
         (x, y) = self.getData()
         if x is None or len(x) == 0:
             return (0, 0)
             
         if ax == 0:
             d = x
+            d2 = y
         elif ax == 1:
             d = y
+            d2 = x
+            
+        if orthoRange is not None:
+            mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
+            d = d[mask]
+            d2 = d2[mask]
             
         if frac >= 1.0:
             return (np.min(d), np.max(d))

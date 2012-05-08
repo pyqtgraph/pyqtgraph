@@ -341,7 +341,7 @@ class ScatterPlotItem(GraphicsObject):
         self.bounds = [None, None]
         
 
-    def dataBounds(self, ax, frac=1.0):
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
         if frac >= 1.0 and self.bounds[ax] is not None:
             return self.bounds[ax]
         
@@ -350,8 +350,15 @@ class ScatterPlotItem(GraphicsObject):
         
         if ax == 0:
             d = self.data['x']
+            d2 = self.data['y']
         elif ax == 1:
             d = self.data['y']
+            d2 = self.data['x']
+        
+        if orthoRange is not None:
+            mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
+            d = d[mask]
+            d2 = d2[mask]
             
         if frac >= 1.0:
             minIndex = np.argmin(d)

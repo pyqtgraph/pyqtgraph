@@ -97,6 +97,8 @@ class ViewBox(GraphicsWidget):
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled, 
                                           ## otherwise float gives the fraction of data that is visible
+            'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
+            'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot 
             'linkedViews': [None, None],
             
             'mouseEnabled': [enableMouse, enableMouse],
@@ -368,8 +370,11 @@ class ViewBox(GraphicsWidget):
             link = self.state['linkedViews'][ax]
             if link is not None:
                 link.linkedViewChanged(self, ax)
-        
 
+        if changed[0] and self.state['autoVisibleOnly'][1]:
+            self.updateAutoRange()
+        elif changed[1] and self.state['autoVisibleOnly'][0]:
+            self.updateAutoRange()
             
     def setYRange(self, min, max, padding=0.02, update=True):
         """
@@ -466,8 +471,29 @@ class ViewBox(GraphicsWidget):
     def autoRangeEnabled(self):
         return self.state['autoRange'][:]
 
+    def setAutoPan(self, x=None, y=None):
+        if x is not None:
+            self.state['autoPan'][0] = x
+        if y is not None:
+            self.state['autoPan'][1] = y
+        if None not in [x,y]:
+            self.updateAutoRange()
+
+    def setAutoVisible(self, x=None, y=None):
+        if x is not None:
+            self.state['autoVisibleOnly'][0] = x
+            if x is True:
+                self.state['autoVisibleOnly'][1] = False
+        if y is not None:
+            self.state['autoVisibleOnly'][1] = y
+            if y is True:
+                self.state['autoVisibleOnly'][0] = False
+        
+        if x is not None or y is not None:
+            self.updateAutoRange()
+
     def updateAutoRange(self):
-        tr = self.viewRect()
+        targetRect = self.viewRange()
         if not any(self.state['autoRange']):
             return
             
@@ -475,19 +501,53 @@ class ViewBox(GraphicsWidget):
         for i in [0,1]:
             if type(fractionVisible[i]) is bool:
                 fractionVisible[i] = 1.0
-        cr = self.childrenBoundingRect(frac=fractionVisible)
-        wp = cr.width() * 0.02
-        hp = cr.height() * 0.02
-        cr = cr.adjusted(-wp, -hp, wp, hp)
-        
-        if self.state['autoRange'][0] is not False:
-            tr.setLeft(cr.left())
-            tr.setRight(cr.right())
-        if self.state['autoRange'][1] is not False:
-            tr.setTop(cr.top())
-            tr.setBottom(cr.bottom())
+
+        childRect = None
+
+        order = [0,1]
+        if self.state['autoVisibleOnly'][0] is True:
+            order = [1,0]
+
+        for ax in order:
+            if self.state['autoRange'][ax] is False:
+                continue
+            if self.state['autoVisibleOnly'][ax]:
+                oRange = [None, None]
+                oRange[ax] = targetRect[1-ax]
+                childRect = self.childrenBoundingRect(frac=fractionVisible, orthoRange=oRange)
+                
+            else:
+                if childRect is None:
+                    childRect = self.childrenBoundingRect(frac=fractionVisible)
+
+            if ax == 0:
+                ## Make corrections to X range
+                if self.state['autoPan'][0]:
+                    x = childRect.center().x()
+                    w2 = (targetRect[0][1]-targetRect[0][0]) / 2.
+                    childRect.setLeft(x-w2)
+                    childRect.setRight(x+w2)
+                else:
+                    wp = childRect.width() * 0.02
+                    childRect = childRect.adjusted(-wp, 0, wp, 0)
+                    
+                targetRect[0][0] = childRect.left()
+                targetRect[0][1] = childRect.right()
+            else:
+                ## Make corrections to Y range
+                if self.state['autoPan'][1]:
+                    y = childRect.center().y()
+                    h2 = (targetRect[1][1]-targetRect[1][0]) / 2.
+                    childRect.setTop(y-h2)
+                    childRect.setBottom(y+h2)
+                else:
+                    hp = childRect.height() * 0.02
+                    childRect = childRect.adjusted(0, -hp, 0, hp)
+                    
+                targetRect[1][0] = childRect.top()
+                targetRect[1][1] = childRect.bottom()
             
-        self.setRange(tr, padding=0, disableAutoRange=False)
+        self.setRange(xRange=targetRect[0], yRange=targetRect[1], padding=0, disableAutoRange=False)
         
     def setXLink(self, view):
         """Link this view's X axis to another view. (see LinkView)"""
@@ -855,7 +915,7 @@ class ViewBox(GraphicsWidget):
         
         
         
-    def childrenBoundingRect(self, frac=None):
+    def childrenBoundingRect(self, frac=None, orthoRange=(None,None)):
         """Return the bounding range of all children.
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
@@ -880,8 +940,8 @@ class ViewBox(GraphicsWidget):
             if hasattr(item, 'dataBounds'):
                 if frac is None:
                     frac = (1.0, 1.0)
-                xr = item.dataBounds(0, frac=frac[0])
-                yr = item.dataBounds(1, frac=frac[1])
+                xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
+                yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 if xr is None or xr == (None, None):
                     useX = False
                     xr = (0,0)

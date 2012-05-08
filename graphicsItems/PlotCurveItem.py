@@ -82,15 +82,23 @@ class PlotCurveItem(GraphicsObject):
     def getData(self):
         return self.xData, self.yData
         
-    def dataBounds(self, ax, frac=1.0):
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
         (x, y) = self.getData()
         if x is None or len(x) == 0:
             return (0, 0)
             
         if ax == 0:
             d = x
+            d2 = y
         elif ax == 1:
             d = y
+            d2 = x
+
+        if orthoRange is not None:
+            mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
+            d = d[mask]
+            d2 = d2[mask]
+
             
         if frac >= 1.0:
             return (d.min(), d.max())

@@ -85,7 +85,7 @@ class UIGraphicsItem(GraphicsObject):
                 self._boundingRect = br
         return QtCore.QRectF(self._boundingRect)
     
-    def dataBounds(self, axis, frac=1.0):
+    def dataBounds(self, axis, frac=1.0, orthoRange=None):
         """Called by ViewBox for determining the auto-range bounds.
         By default, UIGraphicsItems are excluded from autoRange."""
         return None

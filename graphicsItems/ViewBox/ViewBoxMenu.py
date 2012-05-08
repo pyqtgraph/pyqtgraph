@@ -110,6 +110,8 @@ class ViewBoxMenu(QtGui.QMenu):
             self.ctrl[i].maxText.setText("%0.5g" % tr[1])
             if state['autoRange'][i] is not False:
                 self.ctrl[i].autoRadio.setChecked(True)
+                if state['autoRange'][i] is not True:
+                    self.ctrl[i].autoPercentSpin.setValue(state['autoRange'][i]*100)
             else:
                 self.ctrl[i].manualRadio.setChecked(True)
             self.ctrl[i].mouseCheck.setChecked(state['mouseEnabled'][i])
@@ -132,6 +134,8 @@ class ViewBoxMenu(QtGui.QMenu):
             finally:
                 c.blockSignals(False)
             
+            self.ctrl[i].autoPanCheck.setChecked(state['autoPan'][i])
+            self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
             
         self.valid = True
         
@@ -165,10 +169,10 @@ class ViewBoxMenu(QtGui.QMenu):
         self.view.setXLink(str(self.ctrl[0].linkCombo.currentText()))
 
     def xAutoPanToggled(self, b):
-        pass
+        self.view.setAutoPan(x=b)
     
     def xVisibleOnlyToggled(self, b):
-        pass
+        self.view.setAutoVisible(x=b)
 
 
     def yMouseToggled(self, b):
@@ -197,10 +201,10 @@ class ViewBoxMenu(QtGui.QMenu):
         self.view.setYLink(str(self.ctrl[1].linkCombo.currentText()))
 
     def yAutoPanToggled(self, b):
-        pass
+        self.view.setAutoPan(y=b)
     
     def yVisibleOnlyToggled(self, b):
-        pass
+        self.view.setAutoVisible(y=b)
 
 
 
