@@ -60,6 +60,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.__init__(self)
         self.data = None
         self.spots = []
+        #self.fragments = None
         self.bounds = [None, None]
         self.opts = {}
         self.spotsValid = False
@@ -409,7 +410,18 @@ class ScatterPlotItem(GraphicsObject):
                 self.scene().removeItem(spot)
             self.spots = []
         
-        
+        #if self.opts['identical'] and self.opts['pxMode']:
+            #pm = self.spotPixmap()
+            #sr = QtCore.QRectF(0, 0, pm.width(), pm.height())
+            #self.fragments = []
+            #for i in range(len(self.data)):
+                #self.fragments.append(QtGui.QPainter.PixmapFragment.create(QtCore.QPointF(self.data[i]['x'], self.data[i]['y']), sr))
+            #self.spotsValid = True
+            #self.sigPlotChanged.emit(self)
+            #return
+        #else:
+            #self.fragments = None
+            
         xmn = ymn = xmx = ymx = None
         
         ## apply defaults
@@ -475,9 +487,12 @@ class ScatterPlotItem(GraphicsObject):
         ##p.setClipRegion(self.boundingRect())
         #p.drawPixmapFragments(self.optimizeFragments, self.optimizePixmap)
 
-    def paint(self, *args):
+    def paint(self, p, *args):
         if not self.spotsValid:
             self.generateSpots()
+        #if self.fragments is not None:
+            #pm = self.spotPixmap()
+            #p.drawPixmapFragments(self.fragments, pm)
 
     def spotPixmap(self):
         ## If all spots are identical, return the pixmap to use for all spots
