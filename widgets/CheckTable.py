@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.Qt import QtGui, QtCore
-import VerticalLabel
+from . import VerticalLabel
 
 __all__ = ['CheckTable']
 

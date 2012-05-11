@@ -56,7 +56,7 @@ class TableWidget(QtGui.QTableWidget):
             return
         it0 = fn0(data)
         try:
-            first = it0.next()
+            first = next(it0)
         except StopIteration:
             return
         #if type(first) == type(np.float64(1)):
@@ -93,26 +93,26 @@ class TableWidget(QtGui.QTableWidget):
         if isinstance(data, list):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
-            return lambda d: d.itervalues(), map(str, data.keys())
+            return lambda d: iter(d.values()), list(map(str, data.keys()))
         elif HAVE_METAARRAY and isinstance(data, metaarray.MetaArray):
             if data.axisHasColumns(0):
-                header = [str(data.columnName(0, i)) for i in xrange(data.shape[0])]
+                header = [str(data.columnName(0, i)) for i in range(data.shape[0])]
             elif data.axisHasValues(0):
-                header = map(str, data.xvals(0))
+                header = list(map(str, data.xvals(0)))
             else:
                 header = None
             return self.iterFirstAxis, header
         elif isinstance(data, np.ndarray):
             return self.iterFirstAxis, None
         elif isinstance(data, np.void):
-            return self.iterate, map(str, data.dtype.names)
+            return self.iterate, list(map(str, data.dtype.names))
         elif data is None:
             return (None,None)
         else:
             raise Exception("Don't know how to iterate over data type: %s" % str(type(data)))
         
     def iterFirstAxis(self, data):
-        for i in xrange(data.shape[0]):
+        for i in range(data.shape[0]):
             yield data[i]
             
     def iterate(self, data):  ## for numpy.void, which can be iterated but mysteriously has no __iter__ (??)
@@ -131,7 +131,7 @@ class TableWidget(QtGui.QTableWidget):
     def setRow(self, row, vals):
         if row > self.rowCount()-1:
             self.setRowCount(row+1)
-        for col in xrange(self.columnCount()):
+        for col in range(self.columnCount()):
             val = vals[col]
             if isinstance(val, float) or isinstance(val, np.floating):
                 s = "%0.3g" % val
@@ -147,38 +147,38 @@ class TableWidget(QtGui.QTableWidget):
         """Convert entire table (or just selected area) into tab-separated text values"""
         if useSelection:
             selection = self.selectedRanges()[0]
-            rows = range(selection.topRow(), selection.bottomRow()+1)
-            columns = range(selection.leftColumn(), selection.rightColumn()+1)        
+            rows = list(range(selection.topRow(), selection.bottomRow()+1))
+            columns = list(range(selection.leftColumn(), selection.rightColumn()+1))        
         else:
-            rows = range(self.rowCount())
-            columns = range(self.columnCount())
+            rows = list(range(self.rowCount()))
+            columns = list(range(self.columnCount()))
 
 
         data = []
         if self.horizontalHeadersSet:
             row = []
             if self.verticalHeadersSet:
-                row.append(u'')
+                row.append(asUnicode(''))
             
             for c in columns:
-                row.append(unicode(self.horizontalHeaderItem(c).text()))
+                row.append(asUnicode(self.horizontalHeaderItem(c).text()))
             data.append(row)
         
         for r in rows:
             row = []
             if self.verticalHeadersSet:
-                row.append(unicode(self.verticalHeaderItem(r).text()))
+                row.append(asUnicode(self.verticalHeaderItem(r).text()))
             for c in columns:
                 item = self.item(r, c)
                 if item is not None:
-                    row.append(unicode(item.value))
+                    row.append(asUnicode(item.value))
                 else:
-                    row.append(u'')
+                    row.append(asUnicode(''))
             data.append(row)
             
-        s = u''
+        s = ''
         for row in data:
-            s += (u'\t'.join(row) + u'\n')
+            s += ('\t'.join(row) + '\n')
         return s
 
     def copySel(self):
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     
     ll = [[1,2,3,4,5]] * 20
     ld = [{'x': 1, 'y': 2, 'z': 3}] * 20
-    dl = {'x': range(20), 'y': range(20), 'z': range(20)}
+    dl = {'x': list(range(20)), 'y': list(range(20)), 'z': list(range(20))}
     
     a = np.ones((20, 5))
     ra = np.ones((20,), dtype=[('x', int), ('y', int), ('z', int)])

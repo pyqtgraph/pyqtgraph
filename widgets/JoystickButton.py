@@ -82,7 +82,7 @@ if __name__ == '__main__':
     w.resize(100, 100)
     
     def fn(b, s):
-        print "state changed:", s
+        print("state changed:", s)
         
     b.sigStateChanged.connect(fn)
         

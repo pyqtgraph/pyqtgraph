@@ -67,7 +67,7 @@ def loadLibrary(reloadLibs=False, libPath=None):
     
     for f in os.listdir(libPath):
         pathName, ext = os.path.splitext(f)
-        if ext != '.py' or '__init__' in pathName:
+        if ext != '.py' or '__init__' in pathName or '__pycache__' in pathName:
             continue
         try:
             #print "importing from", f

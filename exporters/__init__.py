@@ -4,7 +4,7 @@ import os, sys
 d = os.path.split(__file__)[0]
 files = []
 for f in os.listdir(d):
-    if os.path.isdir(os.path.join(d, f)):
+    if os.path.isdir(os.path.join(d, f)) and f != '__pycache__':
         files.append(f)
     elif f[-3:] == '.py' and f not in ['__init__.py', 'Exporter.py']:
         files.append(f[:-3])

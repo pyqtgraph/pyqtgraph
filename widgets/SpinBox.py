@@ -115,7 +115,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.decOpts = ['step', 'minStep']
         
-        self.val = D(unicode(value))  ## Value is precise decimal. Ordinary math not allowed.
+        self.val = D(asUnicode(value))  ## Value is precise decimal. Ordinary math not allowed.
         self.updateText()
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectToPreviousValue)
@@ -144,7 +144,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                     #else:
                         #self.opts[k][i] = D(unicode(opts[k][i]))
             elif k in ['step', 'minStep']:
-                self.opts[k] = D(unicode(opts[k]))
+                self.opts[k] = D(asUnicode(opts[k]))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
             else:
@@ -182,7 +182,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMaximum(self, m, update=True):
         """Set the maximum allowed value (or None for no limit)"""
         if m is not None:
-            m = D(unicode(m))
+            m = D(asUnicode(m))
         self.opts['bounds'][1] = m
         if update:
             self.setValue()
@@ -190,7 +190,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def setMinimum(self, m, update=True):
         """Set the minimum allowed value (or None for no limit)"""
         if m is not None:
-            m = D(unicode(m))
+            m = D(asUnicode(m))
         self.opts['bounds'][0] = m
         if update:
             self.setValue()
@@ -208,7 +208,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 #val = val.toDouble()[0]
             self.setValue(val)
         else:
-            print "Warning: SpinBox.setProperty('%s', ..) not supported." % prop
+            print("Warning: SpinBox.setProperty('%s', ..) not supported." % prop)
 
     def setSuffix(self, suf):
         self.setOpts(suffix=suf)
@@ -252,7 +252,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if self.opts['int']:
             value = int(value)
 
-        value = D(unicode(value))
+        value = D(asUnicode(value))
         if value == self.val:
             return
         prev = self.val
@@ -364,7 +364,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             try:
                 ## first make sure we didn't mess with the suffix
                 suff = self.opts.get('suffix', '')
-                if len(suff) > 0 and unicode(strn)[-len(suff):] != suff:
+                if len(suff) > 0 and asUnicode(strn)[-len(suff):] != suff:
                     #print '"%s" != "%s"' % (unicode(strn)[-len(suff):], suff)
                     ret = QtGui.QValidator.Invalid
                     
@@ -452,7 +452,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         #print "Edit finished."
-        if unicode(self.lineEdit().text()) == self.lastText:
+        if asUnicode(self.lineEdit().text()) == self.lastText:
             #print "no text change."
             return
         try:
@@ -493,11 +493,11 @@ if __name__ == '__main__':
     
     def valueChanged(sb):
         #sb = QtCore.QObject.sender()
-        print str(sb) + " valueChanged: %s" % str(sb.value())
+        print(str(sb) + " valueChanged: %s" % str(sb.value()))
     
     def valueChanging(sb, value):
         #sb = QtCore.QObject.sender()
-        print str(sb) + " valueChanging: %s" % str(sb.value())
+        print(str(sb) + " valueChanging: %s" % str(sb.value()))
     
     def mkWin():
         win = QtGui.QMainWindow()

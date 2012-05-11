@@ -1,5 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore  
-from GraphicsItem import GraphicsItem
+from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
 class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):

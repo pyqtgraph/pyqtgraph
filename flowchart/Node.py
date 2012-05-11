@@ -3,17 +3,17 @@ from pyqtgraph.Qt import QtCore, QtGui
 #from PySide import QtCore, QtGui
 from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
-from Terminal import *
+from .Terminal import *
 from collections import OrderedDict
 from pyqtgraph.debug import *
 import numpy as np
 #from pyqtgraph.ObjectWorkaround import QObjectWorkaround
-from eq import *
+from .eq import *
 
 #TETRACYCLINE = True
 
 def strDict(d):
-    return dict([(str(k), v) for k, v in d.iteritems()])
+    return dict([(str(k), v) for k, v in d.items()])
 
 class Node(QtCore.QObject):
     
@@ -41,7 +41,7 @@ class Node(QtCore.QObject):
         self.exception = None
         if terminals is None:
             return
-        for name, opts in terminals.iteritems():
+        for name, opts in terminals.items():
             self.addTerminal(name, **opts)
 
         
@@ -156,7 +156,7 @@ class Node(QtCore.QObject):
     def dependentNodes(self):
         """Return the list of nodes which provide direct input to this node"""
         nodes = set()
-        for t in self.inputs().itervalues():
+        for t in self.inputs().values():
             nodes |= set([i.node() for i in t.inputTerminals()])
         return nodes
         #return set([t.inputTerminals().node() for t in self.listInputs().itervalues()])
@@ -180,7 +180,7 @@ class Node(QtCore.QObject):
         """Set the values on input terminals. For most nodes, this will happen automatically through Terminal.inputChanged.
         This is normally only used for nodes with no connected inputs."""
         changed = False
-        for k, v in args.iteritems():
+        for k, v in args.items():
             term = self._inputs[k]
             oldVal = term.value()
             if not eq(oldVal, v):
@@ -191,13 +191,13 @@ class Node(QtCore.QObject):
         
     def inputValues(self):
         vals = {}
-        for n, t in self.inputs().iteritems():
+        for n, t in self.inputs().items():
             vals[n] = t.value()
         return vals
             
     def outputValues(self):
         vals = {}
-        for n, t in self.outputs().iteritems():
+        for n, t in self.outputs().items():
             vals[n] = t.value()
         return vals
             
@@ -224,12 +224,12 @@ class Node(QtCore.QObject):
                     self.setOutput(**out)
                 else:
                     self.setOutputNoSignal(**out)
-            for n,t in self.inputs().iteritems():
+            for n,t in self.inputs().items():
                 t.setValueAcceptable(True)
             self.clearException()
         except:
             #printExc( "Exception while processing %s:" % self.name())
-            for n,t in self.outputs().iteritems():
+            for n,t in self.outputs().items():
                 t.setValue(None)
             self.setException(sys.exc_info())
             
@@ -239,7 +239,7 @@ class Node(QtCore.QObject):
 
     def processBypassed(self, args):
         result = {}
-        for term in self.outputs().values():
+        for term in list(self.outputs().values()):
             byp = term.bypassValue()
             if byp is None:
                 result[term.name()] = None
@@ -253,7 +253,7 @@ class Node(QtCore.QObject):
         self.sigOutputChanged.emit(self)  ## triggers flowchart to propagate new data
 
     def setOutputNoSignal(self, **vals):
-        for k, v in vals.iteritems():
+        for k, v in vals.items():
             term = self.outputs()[k]
             term.setValue(v)
             #targets = term.connections()
@@ -287,15 +287,15 @@ class Node(QtCore.QObject):
 
     def saveTerminals(self):
         terms = OrderedDict()
-        for n, t in self.terminals.iteritems():
+        for n, t in self.terminals.items():
             terms[n] = (t.saveState())
         return terms
         
     def restoreTerminals(self, state):
-        for name in self.terminals.keys():
+        for name in list(self.terminals.keys()):
             if name not in state:
                 self.removeTerminal(name)
-        for name, opts in state.iteritems():
+        for name, opts in state.items():
             if name in self.terminals:
                 continue
             try:
@@ -306,7 +306,7 @@ class Node(QtCore.QObject):
                 
         
     def clearTerminals(self):
-        for t in self.terminals.itervalues():
+        for t in self.terminals.values():
             t.close()
         self.terminals = OrderedDict()
         self._inputs = {}
@@ -410,7 +410,7 @@ class NodeGraphicsItem(GraphicsObject):
         inp = self.node.inputs()
         dy = bounds.height() / (len(inp)+1)
         y = dy
-        for i, t in inp.iteritems():
+        for i, t in inp.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             #item.setZValue(self.zValue()+1)
@@ -422,7 +422,7 @@ class NodeGraphicsItem(GraphicsObject):
         out = self.node.outputs()
         dy = bounds.height() / (len(out)+1)
         y = dy
-        for i, t in out.iteritems():
+        for i, t in out.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             item.setZValue(self.zValue())
@@ -508,7 +508,7 @@ class NodeGraphicsItem(GraphicsObject):
 
     def itemChange(self, change, val):
         if change == self.ItemPositionHasChanged:
-            for k, t in self.terminals.iteritems():
+            for k, t in self.terminals.items():
                 t[1].nodeMoved()
         return QtGui.QGraphicsItem.itemChange(self, change, val)
             

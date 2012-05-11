@@ -71,7 +71,7 @@ l.addItem(xScale, 1, 1)
 yScale = pg.AxisItem(orientation='left', linkView=vb)
 l.addItem(yScale, 0, 0)
 
-xScale.setLabel(text=u"<span style='color: #ff0000; font-weight: bold'>X</span> <i>Axis</i>", units="s")
+xScale.setLabel(text="<span style='color: #ff0000; font-weight: bold'>X</span> <i>Axis</i>", units="s")
 yScale.setLabel('Y Axis', units='V')
 
 def rand(n):

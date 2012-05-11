@@ -21,7 +21,7 @@ w2.setAspectLocked(True)
 view.nextRow()
 w3 = view.addPlot()
 w4 = view.addPlot()
-print "Generating data, this takes a few seconds..."
+print("Generating data, this takes a few seconds...")
 
 ## There are a few different ways we can draw scatter plots; each is optimized for different types of data:
 
@@ -43,7 +43,7 @@ def clicked(plot, points):
     global lastClicked
     for p in lastClicked:
         p.resetPen()
-    print "clicked points", points
+    print("clicked points", points)
     for p in points:
         p.setPen('b', width=2)
     lastClicked = points
@@ -57,7 +57,7 @@ s1.sigClicked.connect(clicked)
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
 pos = np.random.normal(size=(2,n), scale=1e-5)
-spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': i%5, 'size': 5+i/10.} for i in xrange(n)]
+spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': i%5, 'size': 5+i/10.} for i in range(n)]
 s2.addPoints(spots)
 w2.addItem(s2)
 w2.setRange(s2.boundingRect())

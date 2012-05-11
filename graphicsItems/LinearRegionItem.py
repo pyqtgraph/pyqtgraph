@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
-from UIGraphicsItem import UIGraphicsItem
-from InfiniteLine import InfiniteLine
+from .UIGraphicsItem import UIGraphicsItem
+from .InfiniteLine import InfiniteLine
 import pyqtgraph.functions as fn
 import pyqtgraph.debug as debug
 

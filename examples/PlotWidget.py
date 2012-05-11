@@ -70,7 +70,7 @@ curve.setPen('w')  ## white pen
 curve.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
 
 def clicked():
-    print "curve clicked"
+    print("curve clicked")
 curve.sigClicked.connect(clicked)
 
 lr = pg.LinearRegionItem([1, 30], bounds=[0,100], movable=True)
@@ -78,8 +78,6 @@ pw3.addItem(lr)
 line = pg.InfiniteLine(angle=90, movable=True)
 pw3.addItem(line)
 line.setBounds([0,200])
-
-import initExample ## Add path to library (just for examples; you do not need this)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 import sys

@@ -36,7 +36,7 @@ class CanvasManager(QtCore.QObject):
         self.sigCanvasListChanged.emit()
         
     def listCanvases(self):
-        return self.canvases.keys()
+        return list(self.canvases.keys())
         
     def getCanvas(self, name):
         return self.canvases[name]

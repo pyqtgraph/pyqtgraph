@@ -12,7 +12,7 @@ as it can be converted to/from a string using repr and eval.
 import re, os, sys
 from collections import OrderedDict
 GLOBAL_PATH = None # so not thread safe.
-import units
+from . import units
 
 class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):
@@ -51,7 +51,7 @@ def readConfigFile(fname):
     try:
         #os.chdir(newDir)  ## bad.
         fd = open(fname)
-        s = unicode(fd.read(), 'UTF-8')
+        s = asUnicode(fd.read(), 'UTF-8')
         fd.close()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
@@ -60,7 +60,7 @@ def readConfigFile(fname):
         sys.exc_info()[1].fileName = fname
         raise
     except:
-        print "Error while reading config file %s:"% fname
+        print("Error while reading config file %s:"% fname)
         raise
     #finally:
         #os.chdir(cwd)
@@ -78,10 +78,10 @@ def genString(data, indent=''):
     for k in data:
         sk = str(k)
         if len(sk) == 0:
-            print data
+            print(data)
             raise Exception('blank dict keys not allowed (see data above)')
         if sk[0] == ' ' or ':' in sk:
-            print data
+            print(data)
             raise Exception('dict keys must not contain ":" or start with spaces [offending key is "%s"]' % sk)
         if isinstance(data[k], dict):
             s += indent + sk + ':\n'
@@ -95,7 +95,7 @@ def parseString(lines, start=0):
     data = OrderedDict()
     if isinstance(lines, basestring):
         lines = lines.split('\n')
-        lines = filter(lambda l: re.search(r'\S', l) and not re.match(r'\s*#', l), lines)  ## remove empty lines
+        lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
         
     indent = measureIndent(lines[start])
     ln = start - 1
@@ -189,13 +189,13 @@ key2:              ##comment
     """
     tf.write(cf)
     tf.close()
-    print "=== Test:==="
+    print("=== Test:===")
     num = 1
     for line in cf.split('\n'):
-        print "%02d   %s" % (num, line)
+        print("%02d   %s" % (num, line))
         num += 1
-    print cf
-    print "============"
+    print(cf)
+    print("============")
     data = readConfigFile(fn)
-    print data
+    print(data)
     os.remove(fn)

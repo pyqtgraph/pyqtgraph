@@ -2,13 +2,13 @@
 from ..Node import Node
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
-from common import *
+from .common import *
 from pyqtgraph.Transform import Transform
 from pyqtgraph.Point import Point
 from pyqtgraph.widgets.TreeWidget import TreeWidget
 from pyqtgraph.graphicsItems.LinearRegionItem import LinearRegionItem
 
-import functions
+from . import functions
 
 try:
     import metaarray
@@ -55,7 +55,7 @@ class ColumnSelectNode(Node):
                     cols = set(cols[ax])
                     break
         else:
-            cols = data.dtype.fields.keys()
+            cols = list(data.dtype.fields.keys())
                 
         rem = set()
         for c in self.columns:
@@ -124,11 +124,11 @@ class RegionSelectNode(CtrlNode):
         self.ctrls['movable'].toggled.connect(self.movableToggled)
         
     def displayToggled(self, b):
-        for item in self.items.itervalues():
+        for item in self.items.values():
             item.setVisible(b)
             
     def movableToggled(self, b):
-        for item in self.items.itervalues():
+        for item in self.items.values():
             item.setMovable(b)
             
         
@@ -225,7 +225,7 @@ class EvalNode(Node):
         text = str(self.text.toPlainText())
         if text != self.lastText:
             self.lastText = text
-            print "eval node update"
+            print("eval node update")
             self.update()
         return QtGui.QTextEdit.focusOutEvent(self.text, ev)
         

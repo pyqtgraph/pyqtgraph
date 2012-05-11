@@ -1,7 +1,7 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
-from GraphicsObject import GraphicsObject
-from GraphicsWidget import GraphicsWidget
+from .GraphicsObject import GraphicsObject
+from .GraphicsWidget import GraphicsWidget
 import weakref, collections
 import numpy as np
 
@@ -185,7 +185,7 @@ class TickSliderItem(GraphicsWidget):
         
     def setLength(self, newLen):
         #private
-        for t, x in self.ticks.items():
+        for t, x in list(self.ticks.items()):
             t.setPos(x * newLen, t.pos().y())
         self.length = float(newLen)
         
@@ -325,8 +325,8 @@ class TickSliderItem(GraphicsWidget):
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
         ## public
-        ticks = self.ticks.items()
-        ticks.sort(lambda a,b: cmp(a[1], b[1]))
+        ticks = list(self.ticks.items())
+        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  ## see pyqtgraph.python2_3.sortList
         return ticks
 
 
@@ -420,7 +420,7 @@ class GradientEditorItem(TickSliderItem):
         self.menu.addAction(self.hsvAction)
         
         
-        for t in self.ticks.keys():
+        for t in list(self.ticks.keys()):
             self.removeTick(t)
         self.addTick(0, QtGui.QColor(0,0,0), True)
         self.addTick(1, QtGui.QColor(255,0,0), True)
@@ -720,7 +720,7 @@ class GradientEditorItem(TickSliderItem):
         """
         ## public
         self.setColorMode(state['mode'])
-        for t in self.ticks.keys():
+        for t in list(self.ticks.keys()):
             self.removeTick(t)
         for t in state['ticks']:
             c = QtGui.QColor(*t[1])

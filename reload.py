@@ -22,15 +22,19 @@ Does NOT:
 """
 
 
-import inspect, os, sys, __builtin__, gc, traceback
-from debug import printExc
+import inspect, os, sys, gc, traceback
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
+from .debug import printExc
 
 def reloadAll(prefix=None, debug=False):
     """Automatically reload everything whose __file__ begins with prefix.
     - Skips reload if the file has not been updated (if .pyc is newer than .py)
     - if prefix is None, checks all loaded modules
     """
-    for modName, mod in sys.modules.items():  ## don't use iteritems; size may change during reload
+    for modName, mod in list(sys.modules.items()):  ## don't use iteritems; size may change during reload
         if not inspect.ismodule(mod):
             continue
         if modName == '__main__':
@@ -65,11 +69,11 @@ def reload(module, debug=False, lists=False, dicts=False):
     - Requires that class and function names have not changed
     """
     if debug:
-        print "Reloading", module
+        print("Reloading", module)
         
     ## make a copy of the old module dictionary, reload, then grab the new module dictionary for comparison
     oldDict = module.__dict__.copy()
-    __builtin__.reload(module)
+    builtins.reload(module)
     newDict = module.__dict__
     
     ## Allow modules access to the old dictionary after they reload
@@ -85,7 +89,7 @@ def reload(module, debug=False, lists=False, dicts=False):
         
         if inspect.isclass(old):
             if debug:
-                print "  Updating class %s.%s (0x%x -> 0x%x)" % (module.__name__, k, id(old), id(new))
+                print("  Updating class %s.%s (0x%x -> 0x%x)" % (module.__name__, k, id(old), id(new)))
             updateClass(old, new, debug)
                     
         elif inspect.isfunction(old):
@@ -94,7 +98,7 @@ def reload(module, debug=False, lists=False, dicts=False):
                 extra = ""
                 if depth > 0:
                     extra = " (and %d previous versions)" % depth
-                print "  Updating function %s.%s%s" % (module.__name__, k, extra)
+                print("  Updating function %s.%s%s" % (module.__name__, k, extra))
         elif lists and isinstance(old, list):
             l = old.len()
             old.extend(new)
@@ -150,7 +154,7 @@ def updateClass(old, new, debug):
             if isinstance(ref, old) and ref.__class__ is old:
                 ref.__class__ = new
                 if debug:
-                    print "    Changed class for", safeStr(ref)
+                    print("    Changed class for", safeStr(ref))
             elif inspect.isclass(ref) and issubclass(ref, old) and old in ref.__bases__:
                 ind = ref.__bases__.index(old)
                 
@@ -166,12 +170,12 @@ def updateClass(old, new, debug):
                 ## (and I presume this may slow things down?)
                 ref.__bases__ = ref.__bases__[:ind] + (new,old) + ref.__bases__[ind+1:]
                 if debug:
-                    print "    Changed superclass for", safeStr(ref)
+                    print("    Changed superclass for", safeStr(ref))
             #else:
                 #if debug:
                     #print "    Ignoring reference", type(ref)
         except:
-            print "Error updating reference (%s) for class change (%s -> %s)" % (safeStr(ref), safeStr(old), safeStr(new))
+            print("Error updating reference (%s) for class change (%s -> %s)" % (safeStr(ref), safeStr(old), safeStr(new)))
             raise
         
     ## update all class methods to use new code.
@@ -184,23 +188,23 @@ def updateClass(old, new, debug):
                 na = getattr(new, attr)
             except AttributeError:
                 if debug:
-                    print "    Skipping method update for %s; new class does not have this attribute" % attr
+                    print("    Skipping method update for %s; new class does not have this attribute" % attr)
                 continue
                 
-            if hasattr(oa, 'im_func') and hasattr(na, 'im_func') and oa.im_func is not na.im_func:
-                depth = updateFunction(oa.im_func, na.im_func, debug)
+            if hasattr(oa, 'im_func') and hasattr(na, 'im_func') and oa.__func__ is not na.__func__:
+                depth = updateFunction(oa.__func__, na.__func__, debug)
                 #oa.im_class = new  ## bind old method to new class  ## not allowed
                 if debug:
                     extra = ""
                     if depth > 0:
                         extra = " (and %d previous versions)" % depth
-                    print "    Updating method %s%s" % (attr, extra)
+                    print("    Updating method %s%s" % (attr, extra))
                 
     ## And copy in new functions that didn't exist previously
     for attr in dir(new):
         if not hasattr(old, attr):
             if debug:
-                print "    Adding missing attribute", attr
+                print("    Adding missing attribute", attr)
             setattr(old, attr, getattr(new, attr))
             
     ## finally, update any previous versions still hanging around..
@@ -240,7 +244,7 @@ if __name__ == '__main__':
         btn = Btn()
     except:
         raise
-        print "Error; skipping Qt tests"
+        print("Error; skipping Qt tests")
         doQtTest = False
 
 
@@ -291,7 +295,7 @@ def fn():
     open(modFile2, 'w').write(modCode2%"message 1")
     import test1.test1 as test1
     import test2
-    print "Test 1 originals:"
+    print("Test 1 originals:")
     A1 = test1.A
     B1 = test1.B
     a1 = test1.A("a1")
@@ -304,17 +308,17 @@ def fn():
     from test2 import fn, C
     
     if doQtTest:
-        print "Button test before:"
+        print("Button test before:")
         btn.sig.connect(fn)
         btn.sig.connect(a1.fn)
         btn.emit()
         #btn.sig.emit()
-        print ""
+        print("")
     
     #print "a1.fn referrers:", sys.getrefcount(a1.fn.im_func), gc.get_referrers(a1.fn.im_func)
     
     
-    print "Test2 before reload:"
+    print("Test2 before reload:")
     
     fn()
     oldfn = fn
@@ -325,39 +329,39 @@ def fn():
     
     os.remove(modFile1+'c')
     open(modFile1, 'w').write(modCode1%(2,2))
-    print "\n----RELOAD test1-----\n"
+    print("\n----RELOAD test1-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)
     
     
-    print "Subclass test:"
+    print("Subclass test:")
     c2 = test2.C('c2')
     c2.fn()
     
     
     os.remove(modFile2+'c')
     open(modFile2, 'w').write(modCode2%"message 2")
-    print "\n----RELOAD test2-----\n"
+    print("\n----RELOAD test2-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)
 
     if doQtTest:
-        print "Button test after:"
+        print("Button test after:")
         btn.emit()
         #btn.sig.emit()
 
     #print "a1.fn referrers:", sys.getrefcount(a1.fn.im_func), gc.get_referrers(a1.fn.im_func)
 
-    print "Test2 after reload:"
+    print("Test2 after reload:")
     fn()
     test2.a1.fn()
     test2.b1.fn()
     
-    print "\n==> Test 1 Old instances:"
+    print("\n==> Test 1 Old instances:")
     a1.fn()
     b1.fn()
     c1.fn()
     #print "function IDs  a1 bound method: %d a1 func: %d  a1 class: %d  b1 func: %d  b1 class: %d" % (id(a1.fn), id(a1.fn.im_func), id(a1.fn.im_class), id(b1.fn.im_func), id(b1.fn.im_class))
 
-    print "\n==> Test 1 New instances:"
+    print("\n==> Test 1 New instances:")
     a2 = test1.A("a2")
     b2 = test1.B("b2")
     a2.fn()
@@ -374,32 +378,32 @@ def fn():
     open(modFile1, 'w').write(modCode1%(3,3))
     open(modFile2, 'w').write(modCode2%"message 3")
     
-    print "\n----RELOAD-----\n"
+    print("\n----RELOAD-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)
 
     if doQtTest:
-        print "Button test after:"
+        print("Button test after:")
         btn.emit()
         #btn.sig.emit()
 
     #print "a1.fn referrers:", sys.getrefcount(a1.fn.im_func), gc.get_referrers(a1.fn.im_func)
 
-    print "Test2 after reload:"
+    print("Test2 after reload:")
     fn()
     test2.a1.fn()
     test2.b1.fn()
     
-    print "\n==> Test 1 Old instances:"
+    print("\n==> Test 1 Old instances:")
     a1.fn()
     b1.fn()
-    print "function IDs  a1 bound method: %d a1 func: %d  a1 class: %d  b1 func: %d  b1 class: %d" % (id(a1.fn), id(a1.fn.im_func), id(a1.fn.im_class), id(b1.fn.im_func), id(b1.fn.im_class))
+    print("function IDs  a1 bound method: %d a1 func: %d  a1 class: %d  b1 func: %d  b1 class: %d" % (id(a1.fn), id(a1.fn.__func__), id(a1.fn.__self__.__class__), id(b1.fn.__func__), id(b1.fn.__self__.__class__)))
 
-    print "\n==> Test 1 New instances:"
+    print("\n==> Test 1 New instances:")
     a2 = test1.A("a2")
     b2 = test1.B("b2")
     a2.fn()
     b2.fn()
-    print "function IDs  a1 bound method: %d a1 func: %d  a1 class: %d  b1 func: %d  b1 class: %d" % (id(a1.fn), id(a1.fn.im_func), id(a1.fn.im_class), id(b1.fn.im_func), id(b1.fn.im_class))
+    print("function IDs  a1 bound method: %d a1 func: %d  a1 class: %d  b1 func: %d  b1 class: %d" % (id(a1.fn), id(a1.fn.__func__), id(a1.fn.__self__.__class__), id(b1.fn.__func__), id(b1.fn.__self__.__class__)))
 
 
     os.remove(modFile1)

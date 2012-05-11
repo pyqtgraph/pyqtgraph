@@ -49,7 +49,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             parent.addChild(node)
         
         if isinstance(data, types.TracebackType):  ## convert traceback to a list of strings
-            data = map(str.strip, traceback.format_list(traceback.extract_tb(data)))
+            data = list(map(str.strip, traceback.format_list(traceback.extract_tb(data))))
         elif HAVE_METAARRAY and isinstance(data, metaarray.MetaArray):
             data = {
                 'data': data.view(np.ndarray),

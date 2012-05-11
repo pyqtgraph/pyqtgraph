@@ -4,7 +4,7 @@ from pyqtgraph.Point import Point
 import pyqtgraph.debug as debug
 import weakref
 import pyqtgraph.functions as fn
-from GraphicsWidget import GraphicsWidget
+from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -159,16 +159,16 @@ class AxisItem(GraphicsWidget):
             if self.scale == 1.0:
                 units = ''
             else:
-                units = u'(x%g)' % (1.0/self.scale)
+                units = asUnicode('(x%g)') % (1.0/self.scale)
         else:
             #print repr(self.labelUnitPrefix), repr(self.labelUnits)
-            units = u'(%s%s)' % (self.labelUnitPrefix, self.labelUnits)
+            units = asUnicode('(%s%s)') % (self.labelUnitPrefix, self.labelUnits)
             
-        s = u'%s %s' % (self.labelText, units)
+        s = asUnicode('%s %s') % (self.labelText, units)
         
         style = ';'.join(['%s: "%s"' % (k, self.labelStyle[k]) for k in self.labelStyle])
         
-        return u"<span style='%s'>%s</span>" % (style, s)
+        return asUnicode("<span style='%s'>%s</span>") % (style, s)
         
     def setHeight(self, h=None):
         if h is None:
@@ -364,12 +364,12 @@ class AxisItem(GraphicsWidget):
     def logTickValues(self, minVal, maxVal, size):
         v1 = int(np.floor(minVal))
         v2 = int(np.ceil(maxVal))
-        major = range(v1+1, v2)
+        major = list(range(v1+1, v2))
         
         minor = []
         for v in range(v1, v2):
             minor.extend(v + np.log10(np.arange(1, 10)))
-        minor = filter(lambda x: x>minVal and x<maxVal, minor)
+        minor = [x for x in minor if x>minVal and x<maxVal]
         return [(1.0, major), (None, minor)]
 
     def tickStrings(self, values, scale, spacing):
@@ -450,7 +450,7 @@ class AxisItem(GraphicsWidget):
         p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## determine size of this item in pixels
-        points = map(self.mapToDevice, span)
+        points = list(map(self.mapToDevice, span))
         lengthInPixels = Point(points[1] - points[0]).length()
         if lengthInPixels == 0:
             return

@@ -258,9 +258,9 @@ def concatenateColumns(data):
                 try:
                     out[name] = element[name]
                 except:
-                    print "Column:", name
-                    print "Input shape:", element.shape, element.dtype
-                    print "Output shape:", out.shape, out.dtype
+                    print("Column:", name)
+                    print("Input shape:", element.shape, element.dtype)
+                    print("Output shape:", out.shape, out.dtype)
                     raise
         else:
             name, type, d = element
@@ -279,7 +279,7 @@ def suggestDType(x):
         return x.dtype
     elif isinstance(x, float):
         return float
-    elif isinstance(x, int) or isinstance(x, long):
+    elif isinstance(x, int):
         return int
     #elif isinstance(x, basestring):  ## don't try to guess correct string length; use object instead.
         #return '<U%d' % len(x)

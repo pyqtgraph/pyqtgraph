@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from Qt import QtCore
-from ptime import time
-import ThreadsafeTimer
+from .Qt import QtCore
+from .ptime import time
+from . import ThreadsafeTimer
 
 __all__ = ['SignalProxy']
 
@@ -99,7 +99,7 @@ class SignalProxy(QtCore.QObject):
     
     
 if __name__ == '__main__':
-    from Qt import QtGui
+    from .Qt import QtGui
     app = QtGui.QApplication([])
     win = QtGui.QMainWindow()
     spin = QtGui.QSpinBox()
@@ -107,9 +107,9 @@ if __name__ == '__main__':
     win.show()
     
     def fn(*args):
-        print "Raw signal:", args
+        print("Raw signal:", args)
     def fn2(*args):
-        print "Delayed signal:", args
+        print("Delayed signal:", args)
     
     
     spin.valueChanged.connect(fn)

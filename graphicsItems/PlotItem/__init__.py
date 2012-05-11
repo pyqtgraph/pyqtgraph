@@ -1,1 +1,1 @@
-from PlotItem import PlotItem
+from .PlotItem import PlotItem

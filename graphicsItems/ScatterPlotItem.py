@@ -1,8 +1,8 @@
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
-from GraphicsItem import GraphicsItem
-from GraphicsObject import GraphicsObject
+from .GraphicsItem import GraphicsItem
+from .GraphicsObject import GraphicsObject
 import numpy as np
 import scipy.stats
 import weakref
@@ -26,7 +26,7 @@ coords = {
         (0.05, -0.05), (0.05, -0.5), (-0.05, -0.5), (-0.05, -0.05)
     ],
 }
-for k, c in coords.iteritems():
+for k, c in coords.items():
     Symbols[k].moveTo(*c[0])
     for x,y in c[1:]:
         Symbols[k].lineTo(x, y)
@@ -190,7 +190,7 @@ class ScatterPlotItem(GraphicsObject):
         
         if 'spots' in kargs:
             spots = kargs['spots']
-            for i in xrange(len(spots)):
+            for i in range(len(spots)):
                 spot = spots[i]
                 for k in spot:
                     #if k == 'pen':
@@ -518,7 +518,7 @@ class SpotItem(GraphicsItem):
             symbol = self._plot.opts['symbol']
         try:
             n = int(symbol)
-            symbol = Symbols.keys()[n % len(Symbols)]
+            symbol = list(Symbols.keys())[n % len(Symbols)]
         except:
             pass
         return symbol

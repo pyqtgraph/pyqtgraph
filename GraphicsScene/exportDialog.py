@@ -1,4 +1,4 @@
-import exportDialogTemplate
+from . import exportDialogTemplate
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.exporters as exporters

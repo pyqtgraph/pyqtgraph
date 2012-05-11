@@ -10,8 +10,8 @@ def eq(a, b):
     except AttributeError: 
         return False
     except:
-        print "a:", str(type(a)), str(a)
-        print "b:", str(type(b)), str(b)
+        print("a:", str(type(a)), str(a))
+        print("b:", str(type(b)), str(b))
         raise
     t = type(e)
     if t is bool:

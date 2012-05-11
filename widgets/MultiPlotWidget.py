@@ -5,9 +5,8 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from GraphicsView import GraphicsView
+from .GraphicsView import GraphicsView
 import pyqtgraph.graphicsItems.MultiPlotItem as MultiPlotItem
-import exceptions
 
 __all__ = ['MultiPlotWidget']
 class MultiPlotWidget(GraphicsView):
@@ -26,7 +25,7 @@ class MultiPlotWidget(GraphicsView):
             m = getattr(self.mPlotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise exceptions.NameError(attr)
+        raise NameError(attr)
 
     def widgetGroupInterface(self):
         return (None, MultiPlotWidget.saveState, MultiPlotWidget.restoreState)

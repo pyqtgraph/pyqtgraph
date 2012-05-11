@@ -7,7 +7,7 @@ from pyqtgraph.graphicsItems.ScatterPlotItem import ScatterPlotItem
 from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
 from pyqtgraph import PlotDataItem
 
-from common import *
+from .common import *
 import numpy as np
 
 class PlotWidgetNode(Node):
@@ -37,7 +37,7 @@ class PlotWidgetNode(Node):
         if display:
             #self.plot.clearPlots()
             items = set()
-            for name, vals in In.iteritems():
+            for name, vals in In.items():
                 if vals is None:
                     continue
                 if type(vals) is not list:
@@ -61,14 +61,14 @@ class PlotWidgetNode(Node):
                             item = self.plot.plot(val)
                         self.items[vid] = item
                         items.add(vid)
-            for vid in self.items.keys():
+            for vid in list(self.items.keys()):
                 if vid not in items:
                     #print "remove", self.items[vid]
                     self.plot.removeItem(self.items[vid])
                     del self.items[vid]
             
     def processBypassed(self, args):
-        for item in self.items.values():
+        for item in list(self.items.values()):
             self.plot.removeItem(item)
         self.items = {}
         
@@ -101,7 +101,7 @@ class CanvasNode(Node):
     def process(self, In, display=True):
         if display:
             items = set()
-            for name, vals in In.iteritems():
+            for name, vals in In.items():
                 if vals is None:
                     continue
                 if type(vals) is not list:
@@ -116,7 +116,7 @@ class CanvasNode(Node):
                         item = val
                         self.items[vid] = item
                         items.add(vid)
-            for vid in self.items.keys():
+            for vid in list(self.items.keys()):
                 if vid not in items:
                     #print "remove", self.items[vid]
                     self.canvas.removeItem(self.items[vid])
@@ -214,16 +214,16 @@ class ScatterPlot(CtrlNode):
 
     def updateKeys(self, data):
         if isinstance(data, dict):
-            keys = data.keys()
+            keys = list(data.keys())
         elif isinstance(data, list) or isinstance(data, tuple):
             keys = data
         elif isinstance(data, np.ndarray) or isinstance(data, np.void):
             keys = data.dtype.names
         else:
-            print "Unknown data type:", type(data), data
+            print("Unknown data type:", type(data), data)
             return
             
-        for c in self.ctrls.itervalues():
+        for c in self.ctrls.values():
             c.blockSignals(True)
         for c in [self.ctrls['x'], self.ctrls['y'], self.ctrls['size']]:
             cur = str(c.currentText())
@@ -234,7 +234,7 @@ class ScatterPlot(CtrlNode):
                     c.setCurrentIndex(c.count()-1)
         for c in [self.ctrls['color'], self.ctrls['border']]:
             c.setArgList(keys)
-        for c in self.ctrls.itervalues():
+        for c in self.ctrls.values():
             c.blockSignals(False)
                 
         self.keys = keys

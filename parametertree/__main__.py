@@ -111,9 +111,9 @@ params = [
 #p = pTypes.ParameterSet("params", params)
 p = Parameter(name='params', type='group', children=params)
 def change(param, changes):
-    print "tree changes:"
+    print("tree changes:")
     for param, change, data in changes:
-        print "  [" + '.'.join(p.childPath(param))+ "]   ", change, data
+        print("  [" + '.'.join(p.childPath(param))+ "]   ", change, data)
     
 p.sigTreeStateChanged.connect(change)
 

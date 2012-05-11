@@ -7,15 +7,15 @@ sys.path.insert(0, p)
 
 from pyqtgraph.Qt import QtCore, QtGui
 
-from DockArea import *
-from Dock import *
+from .DockArea import *
+from .Dock import *
 
 app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.resize(800,800)
-from Dock import Dock
+from .Dock import Dock
 d1 = Dock("Dock1", size=(200,200))
 d2 = Dock("Dock2", size=(100,100))
 d3 = Dock("Dock3", size=(1,1))
@@ -32,7 +32,7 @@ area.addDock(d6, 'top', d4)
 area.moveDock(d6, 'above', d4)
 d3.hideTitleBar()
 
-print "===build complete===="
+print("===build complete====")
 
 for d in [d1, d2, d3, d4, d5]:
     w = QtGui.QWidget()
@@ -51,7 +51,7 @@ import pyqtgraph as pg
 p = pg.PlotWidget()
 d6.addWidget(p)
 
-print "===widgets added==="
+print("===widgets added===")
 
 
 #s = area.saveState()

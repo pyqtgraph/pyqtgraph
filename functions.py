@@ -16,18 +16,22 @@ Colors = {
     'w': (255,255,255,255),
 }  
 
-SI_PREFIXES = u'yzafpnµm kMGTPEZY'
+SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
-USE_WEAVE = True
 
 
-from Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore
 import numpy as np
 import scipy.ndimage
 import decimal, re
-import scipy.weave
-import debug
+try:
+    import scipy.weave
+    USE_WEAVE = True
+except ImportError:
+    USE_WEAVE = False
+
+from . import debug
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
@@ -46,7 +50,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
         if np.isnan(x) or np.isinf(x):
             return(1, '')
     except:
-        print x, type(x)
+        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
@@ -90,7 +94,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix)
     else:
         if allowUnicode:
-            plusminus = space + u"±" + space
+            plusminus = space + asUnicode("±") + space
         else:
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
@@ -105,7 +109,7 @@ def siEval(s):
         siEval("100 μV")  # returns 0.0001
     """
     
-    s = unicode(s)
+    s = asUnicode(s)
     m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?)$', s)
     if m is None:
         raise Exception("Can't convert string '%s' to number." % s)
@@ -208,8 +212,8 @@ def mkColor(*args):
         raise Exception(err)
     
     args = [r,g,b,a]
-    args = map(lambda a: 0 if np.isnan(a) or np.isinf(a) else a, args)
-    args = map(int, args)
+    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
+    args = list(map(int, args))
     return QtGui.QColor(*args)
 
 
@@ -371,10 +375,10 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
         if len(v) != len(axes):
             raise Exception("each vector must be same length as axes.")
         
-    shape = map(np.ceil, shape)
+    shape = list(map(np.ceil, shape))
 
     ## transpose data so slice axes come first
-    trAx = range(data.ndim)
+    trAx = list(range(data.ndim))
     for x in axes:
         trAx.remove(x)
     tr1 = tuple(axes) + tuple(trAx)
@@ -403,7 +407,7 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
         #print data[ind].shape, x.shape, output[ind].shape, output.shape
         output[ind] = scipy.ndimage.map_coordinates(data[ind], x, **kargs)
     
-    tr = range(output.ndim)
+    tr = list(range(output.ndim))
     trb = []
     for i in range(min(axes)):
         ind = tr1.index(i) + (len(shape)-len(axes))
@@ -503,13 +507,13 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
             else:
                 if data.ndim == 2:
                     newData = np.empty(data.shape+(levels.shape[0],), dtype=np.uint32)
-                    for i in xrange(levels.shape[0]):
+                    for i in range(levels.shape[0]):
                         scale = float(lutLength / (levels[i,1]-levels[i,0]))
                         offset = float(levels[i,0])
                         newData[...,i] = rescaleData(data, scale, offset)
                 elif data.ndim == 3:
                     newData = np.empty(data.shape, dtype=np.uint32)
-                    for i in xrange(data.shape[2]):
+                    for i in range(data.shape[2]):
                         scale = float(lutLength / (levels[i,1]-levels[i,0]))
                         offset = float(levels[i,0])
                         #print scale, offset, data.shape, newData.shape, levels.shape
@@ -596,10 +600,10 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
         order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
         
     if data.shape[2] == 1:
-        for i in xrange(3):
+        for i in range(3):
             imgData[..., order[i]] = data[..., 0]    
     else:
-        for i in xrange(0, data.shape[2]):
+        for i in range(0, data.shape[2]):
             imgData[..., order[i]] = data[..., i]    
         
     prof.mark('5')
@@ -802,8 +806,8 @@ def isocurve(data, level):
     #print index
     
     ## add lines
-    for i in xrange(index.shape[0]):                 # data x-axis
-        for j in xrange(index.shape[1]):             # data y-axis     
+    for i in range(index.shape[0]):                 # data x-axis
+        for j in range(index.shape[1]):             # data y-axis     
             sides = sideTable[index[i,j]]
             for l in range(0, len(sides), 2):     ## faces for this grid cell
                 edges = sides[l:l+2]
@@ -1179,9 +1183,9 @@ def isosurface(data, level):
     #print index
     
     ## add facets
-    for i in xrange(index.shape[0]):                 # data x-axis
-        for j in xrange(index.shape[1]):             # data y-axis
-            for k in xrange(index.shape[2]):         # data z-axis
+    for i in range(index.shape[0]):                 # data x-axis
+        for j in range(index.shape[1]):             # data y-axis
+            for k in range(index.shape[2]):         # data z-axis
                 tris = triTable[index[i,j,k]]
                 for l in range(0, len(tris), 3):     ## faces for this grid cell
                     edges = tris[l:l+3]

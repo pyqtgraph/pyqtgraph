@@ -1,4 +1,4 @@
-from Exporter import Exporter
+from .Exporter import Exporter
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import re
@@ -57,7 +57,7 @@ class SVGExporter(Exporter):
             if m is not None:
                 #print "Matched group:", line
                 g = m.groups()
-                matrix = map(float, g[2].split(','))
+                matrix = list(map(float, g[2].split(',')))
                 #print "matrix:", matrix
                 scale = max(abs(matrix[0]), abs(matrix[3]))
                 if scale == 0 or scale == 1.0:

@@ -4,7 +4,7 @@ This is a wrapper around HistogramLUTItem
 """
 
 from pyqtgraph.Qt import QtGui, QtCore
-from GraphicsView import GraphicsView
+from .GraphicsView import GraphicsView
 from pyqtgraph.graphicsItems.HistogramLUTItem import HistogramLUTItem
 
 __all__ = ['HistogramLUTWidget']

@@ -3,21 +3,25 @@
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from Qt import QtGui 
+from .Qt import QtGui 
 
-## not really safe.
+## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
 
-## in general openGL is poorly supported in Qt. 
-## we only enable it where the performance benefit is critical.
-## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
 import sys
 
 ## check python version
-if sys.version_info[0] != 2 or sys.version_info[1] != 7:
+if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] != 7):
     raise Exception("Pyqtgraph requires Python version 2.7 (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
 
+## helpers for 2/3 compatibility
+from . import python2_3
+
+    
+## in general openGL is poorly supported in Qt.
+## we only enable it where the performance benefit is critical.
+## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
 if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
@@ -27,8 +31,11 @@ else:
                 
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
-    'leftButtonPan': True  ## if false, left button drags a rubber band for zooming in viewbox
-}
+    'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
+    'foregroundColor': (200,200,200),
+    'backgroundColor': (0,0,0),
+    'antialias': False,
+} 
 
 def setConfigOption(opt, value):
     CONFIG_OPTIONS[opt] = value
@@ -47,13 +54,15 @@ def renamePyc(startDir):
     printed = False
     startDir = os.path.abspath(startDir)
     for path, dirs, files in os.walk(startDir):
+        if '__pycache__' in path:
+            continue
         for f in files:
             fileName = os.path.join(path, f)
             base, ext = os.path.splitext(fileName)
             py = base + ".py"
             if ext == '.pyc' and not os.path.isfile(py):
                 if not printed:
-                    print "NOTE: Renaming orphaned .pyc files:"
+                    print("NOTE: Renaming orphaned .pyc files:")
                     printed = True
                 n = 1
                 while True:
@@ -61,8 +70,8 @@ def renamePyc(startDir):
                     if not os.path.exists(name2):
                         break
                     n += 1
-                print "  " + fileName + "  ==>"
-                print "  " + name2
+                print("  " + fileName + "  ==>")
+                print("  " + name2)
                 os.rename(fileName, name2)
                 
 import os
@@ -78,7 +87,7 @@ def importAll(path, excludes=()):
     d = os.path.join(os.path.split(__file__)[0], path)
     files = []
     for f in os.listdir(d):
-        if os.path.isdir(os.path.join(d, f)):
+        if os.path.isdir(os.path.join(d, f)) and f != '__pycache__':
             files.append(f)
         elif f[-3:] == '.py' and f != '__init__.py':
             files.append(f[:-3])
@@ -98,14 +107,14 @@ def importAll(path, excludes=()):
 importAll('graphicsItems')
 importAll('widgets', excludes=['MatplotlibWidget'])
 
-from imageview import *
-from WidgetGroup import *
-from Point import Point
-from Transform import Transform
-from functions import *
-from graphicsWindows import *
-from SignalProxy import *
-from ptime import time
+from .imageview import *
+from .WidgetGroup import *
+from .Point import Point
+from .Transform import Transform
+from .functions import *
+from .graphicsWindows import *
+from .SignalProxy import *
+from .ptime import time
 
 
 

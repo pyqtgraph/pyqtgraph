@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from numpy import ndarray
-import GraphicsLayout
+from . import GraphicsLayout
 
 try:
     from metaarray import *

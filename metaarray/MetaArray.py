@@ -13,6 +13,7 @@ More info at http://www.scipy.org/Cookbook/MetaArray
 import numpy as np
 import types, copy, threading, os, re
 import pickle
+from functools import reduce
 #import traceback
 
 ## By default, the library will use HDF5 when writing files.
@@ -39,7 +40,7 @@ def axis(name=None, cols=None, values=None, units=None):
     if cols is not None:
         ax['cols'] = []
         for c in cols:
-            if type(c) != types.ListType and type(c) != types.TupleType:
+            if type(c) != list and type(c) != tuple:
                 c = [c]
             col = {}
             for i in range(0,len(c)):
@@ -111,7 +112,7 @@ class MetaArray(np.ndarray):
   
     def __new__(subtype, data=None, file=None, info=None, dtype=None, copy=False, **kwargs):
         if data is not None:
-            if type(data) is types.TupleType:
+            if type(data) is tuple:
                 subarr = np.empty(data, dtype=dtype)
             else:
                 subarr = np.array(data, dtype=dtype, copy=copy)
@@ -134,14 +135,14 @@ class MetaArray(np.ndarray):
                             info[i] = {}
                         else:
                             raise Exception("Axis specification must be Dict or None")
-                    if i < subarr.ndim and info[i].has_key('values'):
-                        if type(info[i]['values']) is types.ListType:
+                    if i < subarr.ndim and 'values' in info[i]:
+                        if type(info[i]['values']) is list:
                             info[i]['values'] = np.array(info[i]['values'])
                         elif type(info[i]['values']) is not np.ndarray:
                             raise Exception("Axis values must be specified as list or ndarray")
                         if info[i]['values'].ndim != 1 or info[i]['values'].shape[0] != subarr.shape[i]:
                             raise Exception("Values array for axis %d has incorrect shape. (given %s, but should be %s)" % (i, str(info[i]['values'].shape), str((subarr.shape[i],))))
-                    if i < subarr.ndim and info[i].has_key('cols'):
+                    if i < subarr.ndim and 'cols' in info[i]:
                         if not isinstance(info[i]['cols'], list):
                             info[i]['cols'] = list(info[i]['cols'])
                         if len(info[i]['cols']) != subarr.shape[i]:
@@ -272,7 +273,7 @@ class MetaArray(np.ndarray):
         try:
             return np.ndarray.__setitem__(self.view(np.ndarray), nInd, val)
         except:
-            print self, nInd, val
+            print(self, nInd, val)
             raise
         
     #def __getattr__(self, attr):
@@ -283,7 +284,7 @@ class MetaArray(np.ndarray):
     def axisValues(self, axis):
         """Return the list of values for an axis"""
         ax = self._interpretAxis(axis)
-        if self._info[ax].has_key('values'):
+        if 'values' in self._info[ax]:
             return self._info[ax]['values']
         else:
             raise Exception('Array axis %s (%d) has no associated values.' % (str(axis), ax))
@@ -294,21 +295,21 @@ class MetaArray(np.ndarray):
         
     def axisHasValues(self, axis):
         ax = self._interpretAxis(axis)
-        return self._info[ax].has_key('values')
+        return 'values' in self._info[ax]
         
     def axisHasColumns(self, axis):
         ax = self._interpretAxis(axis)
-        return self._info[ax].has_key('cols')
+        return 'cols' in self._info[ax]
   
     def axisUnits(self, axis):
         """Return the units for axis"""
         ax = self._info[self._interpretAxis(axis)]
-        if ax.has_key('units'):
+        if 'units' in ax:
             return ax['units']
         
     def hasColumn(self, axis, col):
         ax = self._info[self._interpretAxis(axis)]
-        if ax.has_key('cols'):
+        if 'cols' in ax:
             for c in ax['cols']:
                 if c['name'] == col:
                     return True
@@ -339,7 +340,7 @@ class MetaArray(np.ndarray):
     def columnUnits(self, axis, column):
         """Return the units for column in axis"""
         ax = self._info[self._interpretAxis(axis)]
-        if ax.has_key('cols'):
+        if 'cols' in ax:
             for c in ax['cols']:
                 if c['name'] == column:
                     return c['units']
@@ -353,10 +354,10 @@ class MetaArray(np.ndarray):
     
         keyList = self[key]
         order = keyList.argsort()
-        if type(axis) == types.IntType:
+        if type(axis) == int:
             ind = [slice(None)]*axis
             ind.append(order)
-        elif type(axis) == types.StringType:
+        elif isinstance(axis, basestring):
             ind = (slice(axis, order),)
         return self[tuple(ind)]
   
@@ -422,7 +423,7 @@ class MetaArray(np.ndarray):
         return tuple(nInd)
       
     def _interpretAxis(self, axis):
-        if type(axis) in [types.StringType, types.TupleType]:
+        if isinstance(axis, basestring) or isinstance(axis, tuple):
             return self._getAxis(axis)
         else:
             return axis
@@ -510,15 +511,15 @@ class MetaArray(np.ndarray):
     def _getAxis(self, name):
         for i in range(0, len(self._info)):
             axis = self._info[i]
-            if axis.has_key('name') and axis['name'] == name:
+            if 'name' in axis and axis['name'] == name:
                 return i
         raise Exception("No axis named %s.\n  info=%s" % (name, self._info))
   
     def _getIndex(self, axis, name):
         ax = self._info[axis]
-        if ax is not None and ax.has_key('cols'):
+        if ax is not None and 'cols' in ax:
             for i in range(0, len(ax['cols'])):
-                if ax['cols'][i].has_key('name') and ax['cols'][i]['name'] == name:
+                if 'name' in ax['cols'][i] and ax['cols'][i]['name'] == name:
                     return i
         raise Exception("Axis %d has no column named %s.\n  info=%s" % (axis, name, self._info))
   
@@ -527,16 +528,16 @@ class MetaArray(np.ndarray):
   
     def _axisSlice(self, i, cols):
         #print "axisSlice", i, cols
-        if self._info[i].has_key('cols') or self._info[i].has_key('values'):
+        if 'cols' in self._info[i] or 'values' in self._info[i]:
             ax = self._axisCopy(i)
-            if ax.has_key('cols'):
+            if 'cols' in ax:
                 #print "  slicing columns..", array(ax['cols']), cols
                 sl = np.array(ax['cols'])[cols]
                 if isinstance(sl, np.ndarray):
                     sl = list(sl)
                 ax['cols'] = sl
                 #print "  result:", ax['cols']
-            if ax.has_key('values'):
+            if 'values' in ax:
                 ax['values'] = np.array(ax['values'])[cols]
         else:
             ax = self._info[i]
@@ -617,14 +618,14 @@ class MetaArray(np.ndarray):
             order = args
         
         order = [self._interpretAxis(ax) for ax in order]
-        infoOrder = order  + range(len(order), len(self._info))
+        infoOrder = order  + list(range(len(order), len(self._info)))
         info = [self._info[i] for i in infoOrder]
-        order = order + range(len(order), self.ndim)
+        order = order + list(range(len(order), self.ndim))
         
         try:
             return MetaArray(self.view(np.ndarray).transpose(order), info=info)
         except:
-            print order
+            print(order)
             raise
 
     #### File I/O Routines
@@ -652,7 +653,7 @@ class MetaArray(np.ndarray):
         ## read in axis values for any axis that specifies a length
         frameSize = 1
         for ax in meta['info']:
-            if ax.has_key('values_len'):
+            if 'values_len' in ax:
                 ax['values'] = np.fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
                 frameSize *= ax['values_len']
                 del ax['values_len']
@@ -675,7 +676,7 @@ class MetaArray(np.ndarray):
         ## read in axis values for any axis that specifies a length
         for i in range(len(meta['info'])):
             ax = meta['info'][i]
-            if ax.has_key('values_len'):
+            if 'values_len' in ax:
                 if ax['values_len'] == 'dynamic':
                     if dynAxis is not None:
                         raise Exception("MetaArray has more than one dynamic axis! (this is not allowed)")
@@ -779,7 +780,7 @@ class MetaArray(np.ndarray):
         f = h5py.File(fileName, 'r')
         ver = f.attrs['MetaArray']
         if ver > MetaArray.version:
-            print "Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version))
+            print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
         
         if mmap:
@@ -974,12 +975,12 @@ class MetaArray(np.ndarray):
             else:
                 gr.attrs['_metaType_'] = 'tuple'
             #n = int(np.log10(len(data))) + 1
-            for i in xrange(len(data)):
+            for i in range(len(data)):
                 self.writeHDF5Meta(gr, str(i), data[i], **dsOpts)
         elif isinstance(data, dict):
             gr = root.create_group(name)
             gr.attrs['_metaType_'] = 'dict'
-            for k, v in data.iteritems():
+            for k, v in data.items():
                 self.writeHDF5Meta(gr, k, v, **dsOpts)
         elif isinstance(data, int) or isinstance(data, float) or isinstance(data, np.integer) or isinstance(data, np.floating):
             root.attrs[name] = data
@@ -987,7 +988,7 @@ class MetaArray(np.ndarray):
             try:   ## strings, bools, None are stored as repr() strings
                 root.attrs[name] = repr(data)
             except:
-                print "Can not store meta data of type '%s' in HDF5. (key is '%s')" % (str(type(data)), str(name))
+                print("Can not store meta data of type '%s' in HDF5. (key is '%s')" % (str(type(data)), str(name)))
                 raise 
 
         
@@ -1053,7 +1054,7 @@ class MetaArray(np.ndarray):
         if fileName is not None:
             file = open(fileName, 'w')
         ret = ''
-        if self._info[0].has_key('cols'):
+        if 'cols' in self._info[0]:
             s = ','.join([x['name'] for x in self._info[0]['cols']]) + '\n'
             if fileName is not None:
                 file.write(s)
@@ -1177,91 +1178,91 @@ if __name__ == '__main__':
     
     ma = MetaArray(arr, info=info)
     
-    print "====  Original Array ======="
-    print ma
-    print "\n\n"
+    print("====  Original Array =======")
+    print(ma)
+    print("\n\n")
     
     #### Tests follow:
     
     
     #### Index/slice tests: check that all values and meta info are correct after slice
-    print "\n -- normal integer indexing\n"
+    print("\n -- normal integer indexing\n")
     
-    print "\n  ma[1]"
-    print ma[1]
+    print("\n  ma[1]")
+    print(ma[1])
     
-    print "\n  ma[1, 2:4]"
-    print ma[1, 2:4]
+    print("\n  ma[1, 2:4]")
+    print(ma[1, 2:4])
     
-    print "\n  ma[1, 1:5:2]"
-    print ma[1, 1:5:2]
+    print("\n  ma[1, 1:5:2]")
+    print(ma[1, 1:5:2])
     
-    print "\n -- named axis indexing\n"
+    print("\n -- named axis indexing\n")
     
-    print "\n  ma['Axis2':3]"
-    print ma['Axis2':3]
+    print("\n  ma['Axis2':3]")
+    print(ma['Axis2':3])
     
-    print "\n  ma['Axis2':3:5]"
-    print ma['Axis2':3:5]
+    print("\n  ma['Axis2':3:5]")
+    print(ma['Axis2':3:5])
     
-    print "\n  ma[1, 'Axis2':3]"
-    print ma[1, 'Axis2':3]
+    print("\n  ma[1, 'Axis2':3]")
+    print(ma[1, 'Axis2':3])
     
-    print "\n  ma[:, 'Axis2':3]"
-    print ma[:, 'Axis2':3]
+    print("\n  ma[:, 'Axis2':3]")
+    print(ma[:, 'Axis2':3])
     
-    print "\n  ma['Axis2':3, 'Axis4':0:2]"
-    print ma['Axis2':3, 'Axis4':0:2]
-    
-    
-    print "\n -- column name indexing\n"
-    
-    print "\n  ma['Axis3':'Ax3Col1']"
-    print ma['Axis3':'Ax3Col1']
-    
-    print "\n  ma['Axis3':('Ax3','Col3')]"
-    print ma['Axis3':('Ax3','Col3')]
-    
-    print "\n  ma[:, :, 'Ax3Col2']"
-    print ma[:, :, 'Ax3Col2']
-    
-    print "\n  ma[:, :, ('Ax3','Col3')]"
-    print ma[:, :, ('Ax3','Col3')]
+    print("\n  ma['Axis2':3, 'Axis4':0:2]")
+    print(ma['Axis2':3, 'Axis4':0:2])
     
     
-    print "\n -- axis value range indexing\n"
+    print("\n -- column name indexing\n")
     
-    print "\n  ma['Axis2':1.5:4.5]"
-    print ma['Axis2':1.5:4.5]
+    print("\n  ma['Axis3':'Ax3Col1']")
+    print(ma['Axis3':'Ax3Col1'])
     
-    print "\n  ma['Axis4':1.15:1.45]"
-    print ma['Axis4':1.15:1.45]
+    print("\n  ma['Axis3':('Ax3','Col3')]")
+    print(ma['Axis3':('Ax3','Col3')])
     
-    print "\n  ma['Axis4':1.15:1.25]"
-    print ma['Axis4':1.15:1.25]
+    print("\n  ma[:, :, 'Ax3Col2']")
+    print(ma[:, :, 'Ax3Col2'])
+    
+    print("\n  ma[:, :, ('Ax3','Col3')]")
+    print(ma[:, :, ('Ax3','Col3')])
     
     
+    print("\n -- axis value range indexing\n")
     
-    print "\n -- list indexing\n"
+    print("\n  ma['Axis2':1.5:4.5]")
+    print(ma['Axis2':1.5:4.5])
     
-    print "\n  ma[:, [0,2,4]]"
-    print ma[:, [0,2,4]]
+    print("\n  ma['Axis4':1.15:1.45]")
+    print(ma['Axis4':1.15:1.45])
     
-    print "\n  ma['Axis4':[0,2,4]]"
-    print ma['Axis4':[0,2,4]]
-    
-    print "\n  ma['Axis3':[0, ('Ax3','Col3')]]"
-    print ma['Axis3':[0, ('Ax3','Col3')]]
+    print("\n  ma['Axis4':1.15:1.25]")
+    print(ma['Axis4':1.15:1.25])
     
     
     
-    print "\n -- boolean indexing\n"
+    print("\n -- list indexing\n")
     
-    print "\n  ma[:, array([True, True, False, True, False])]"
-    print ma[:, np.array([True, True, False, True, False])]
+    print("\n  ma[:, [0,2,4]]")
+    print(ma[:, [0,2,4]])
     
-    print "\n  ma['Axis4':array([True, False, False, False])]"
-    print ma['Axis4':np.array([True, False, False, False])]
+    print("\n  ma['Axis4':[0,2,4]]")
+    print(ma['Axis4':[0,2,4]])
+    
+    print("\n  ma['Axis3':[0, ('Ax3','Col3')]]")
+    print(ma['Axis3':[0, ('Ax3','Col3')]])
+    
+    
+    
+    print("\n -- boolean indexing\n")
+    
+    print("\n  ma[:, array([True, True, False, True, False])]")
+    print(ma[:, np.array([True, True, False, True, False])])
+    
+    print("\n  ma['Axis4':array([True, False, False, False])]")
+    print(ma['Axis4':np.array([True, False, False, False])])
     
     
     
@@ -1278,18 +1279,18 @@ if __name__ == '__main__':
     
     #### File I/O tests
     
-    print "\n================  File I/O Tests  ===================\n"
+    print("\n================  File I/O Tests  ===================\n")
     import tempfile
     tf = tempfile.mktemp()
     tf = 'test.ma'
     # write whole array
     
-    print "\n  -- write/read test"
+    print("\n  -- write/read test")
     ma.write(tf)
     ma2 = MetaArray(file=tf)
     
     #print ma2
-    print "\nArrays are equivalent:", (ma == ma2).all()
+    print("\nArrays are equivalent:", (ma == ma2).all())
     #print "Meta info is equivalent:", ma.infoCopy() == ma2.infoCopy()
     os.remove(tf)
     
@@ -1298,7 +1299,7 @@ if __name__ == '__main__':
     # append mode
     
     
-    print "\n================append test (%s)===============" % tf
+    print("\n================append test (%s)===============" % tf)
     ma['Axis2':0:2].write(tf, appendAxis='Axis2')
     for i in range(2,ma.shape[1]):
         ma['Axis2':[i]].write(tf, appendAxis='Axis2')
@@ -1306,7 +1307,7 @@ if __name__ == '__main__':
     ma2 = MetaArray(file=tf)
     
     #print ma2
-    print "\nArrays are equivalent:", (ma == ma2).all()
+    print("\nArrays are equivalent:", (ma == ma2).all())
     #print "Meta info is equivalent:", ma.infoCopy() == ma2.infoCopy()
     
     os.remove(tf)    
@@ -1314,9 +1315,9 @@ if __name__ == '__main__':
     
     
     ## memmap test
-    print "\n==========Memmap test============"
+    print("\n==========Memmap test============")
     ma.write(tf, mappable=True)
     ma2 = MetaArray(file=tf, mmap=True)
-    print "\nArrays are equivalent:", (ma == ma2).all()
+    print("\nArrays are equivalent:", (ma == ma2).all())
     os.remove(tf)    
     

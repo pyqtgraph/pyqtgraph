@@ -6,7 +6,7 @@ if __name__ == '__main__':
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
 import weakref
-from UIGraphicsItem import UIGraphicsItem
+from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = ['VTickGroup']
 class VTickGroup(UIGraphicsItem):

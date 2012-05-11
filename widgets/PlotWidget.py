@@ -6,9 +6,8 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from pyqtgraph.Qt import QtCore, QtGui
-from GraphicsView import *
+from .GraphicsView import *
 from pyqtgraph.graphicsItems.PlotItem import *
-import exceptions
 
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
@@ -67,7 +66,7 @@ class PlotWidget(GraphicsView):
             m = getattr(self.plotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise exceptions.NameError(attr)
+        raise NameError(attr)
     
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)

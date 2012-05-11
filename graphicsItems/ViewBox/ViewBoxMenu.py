@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.WidgetGroup import WidgetGroup
-from axisCtrlTemplate import Ui_Form as AxisCtrlTemplate
+from .axisCtrlTemplate import Ui_Form as AxisCtrlTemplate
 
 class ViewBoxMenu(QtGui.QMenu):
     def __init__(self, view):
@@ -87,7 +87,7 @@ class ViewBoxMenu(QtGui.QMenu):
     def setExportMethods(self, methods):
         self.exportMethods = methods
         self.export.clear()
-        for opt, fn in methods.iteritems():
+        for opt, fn in methods.items():
             self.export.addAction(opt, self.exportMethod)
         
 
@@ -224,7 +224,7 @@ class ViewBoxMenu(QtGui.QMenu):
         views = [''] + views
         for i in [0,1]:
             c = self.ctrl[i].linkCombo
-            current = unicode(c.currentText())
+            current = asUnicode(c.currentText())
             c.blockSignals(True)
             changed = True
             try:
@@ -241,6 +241,6 @@ class ViewBoxMenu(QtGui.QMenu):
                 c.setCurrentIndex(0)
                 c.currentIndexChanged.emit(c.currentIndex())
         
-from ViewBox import ViewBox
+from .ViewBox import ViewBox
         
     

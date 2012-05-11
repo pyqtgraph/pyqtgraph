@@ -17,7 +17,7 @@ This class is very heavily featured:
     display, power spectrum, svg/png export, plot linking, and more.
 """
 #from graphicsItems import *
-from plotConfigTemplate import *
+from .plotConfigTemplate import *
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import pyqtgraph.functions as fn
 from pyqtgraph.widgets.FileDialog import FileDialog
@@ -314,7 +314,7 @@ class PlotItem(GraphicsWidget):
             #self.registerPlot(name)
         if labels is None:
             labels = {}
-        for label in self.scales.keys():
+        for label in list(self.scales.keys()):
             if label in kargs:
                 labels[label] = kargs[label]
                 del kargs[label]
@@ -703,7 +703,7 @@ class PlotItem(GraphicsWidget):
         """
         Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.
         """
-        print "Warning: enableAutoScale is deprecated. Use enableAutoRange(axis, enable) instead."
+        print("Warning: enableAutoScale is deprecated. Use enableAutoRange(axis, enable) instead.")
         self.vb.enableAutoRange(self.vb.XYAxes)
         #self.ctrl.xAutoRadio.setChecked(True)
         #self.ctrl.yAutoRadio.setChecked(True)
@@ -815,11 +815,11 @@ class PlotItem(GraphicsWidget):
             #self.plotChanged()
 
     def addDataItem(self, item, *args):
-        print "PlotItem.addDataItem is deprecated. Use addItem instead."
+        print("PlotItem.addDataItem is deprecated. Use addItem instead.")
         self.addItem(item, *args)
         
     def addCurve(self, c, params=None):
-        print "PlotItem.addCurve is deprecated. Use addItem instead."
+        print("PlotItem.addCurve is deprecated. Use addItem instead.")
         self.addItem(c, params)
 
     def removeItem(self, item):
@@ -970,7 +970,7 @@ class PlotItem(GraphicsWidget):
         #print "paramList:", self.paramList
         for c in self.curves:
             #print "  curve:", c
-            for p in self.itemMeta.get(c, {}).keys():
+            for p in list(self.itemMeta.get(c, {}).keys()):
                 #print "    param:", p
                 if type(p) is tuple:
                     p = '.'.join(p)
@@ -1054,7 +1054,7 @@ class PlotItem(GraphicsWidget):
                 
                 #fh.write('<g fill="none" stroke="#%s" stroke-opacity="1" stroke-width="1">\n' % color)
                 fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                for i in xrange(1, len(x)):
+                for i in range(1, len(x)):
                     fh.write('L%f,%f ' % (x[i], y[i]))
                 
                 fh.write('"/>')
@@ -1121,7 +1121,7 @@ class PlotItem(GraphicsWidget):
             if m is not None:
                 #print "Matched group:", line
                 g = m.groups()
-                matrix = map(float, g[2].split(','))
+                matrix = list(map(float, g[2].split(',')))
                 #print "matrix:", matrix
                 scale = max(abs(matrix[0]), abs(matrix[3]))
                 if scale == 0 or scale == 1.0:
@@ -1361,7 +1361,7 @@ class PlotItem(GraphicsWidget):
         
     def _checkScaleKey(self, key):
         if key not in self.scales:
-            raise Exception("Scale '%s' not found. Scales are: %s" % (key, str(self.scales.keys())))
+            raise Exception("Scale '%s' not found. Scales are: %s" % (key, str(list(self.scales.keys()))))
         
     def getScale(self, key):
         return self.getAxis(key)
@@ -1426,7 +1426,7 @@ class PlotItem(GraphicsWidget):
         self.showAxis(axis, False)
             
     def showScale(self, *args, **kargs):
-        print "Deprecated. use showAxis() instead"
+        print("Deprecated. use showAxis() instead")
         return self.showAxis(*args, **kargs)
             
     def hideButtons(self):

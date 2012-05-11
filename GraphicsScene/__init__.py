@@ -1,1 +1,1 @@
-from GraphicsScene import *
+from .GraphicsScene import *

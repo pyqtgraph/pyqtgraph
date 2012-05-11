@@ -264,4 +264,4 @@ class TContainer(Container, QtGui.QWidget):
         QtGui.QStackedWidget.childEvent(self.stack, ev)
         Container.childEvent(self, ev)
         
-import Dock
+from . import Dock

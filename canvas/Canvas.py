@@ -5,7 +5,7 @@ if __name__ == '__main__':
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
     #print md
     
-from CanvasTemplate import *
+from .CanvasTemplate import *
 #from pyqtgraph.GraphicsView import GraphicsView
 #import pyqtgraph.graphicsItems as graphicsItems
 #from pyqtgraph.PlotWidget import PlotWidget
@@ -18,9 +18,9 @@ import numpy as np
 from pyqtgraph import debug
 #import pyqtgraph as pg
 import weakref
-from CanvasManager import CanvasManager
+from .CanvasManager import CanvasManager
 #import items
-from CanvasItem import CanvasItem, GroupCanvasItem
+from .CanvasItem import CanvasItem, GroupCanvasItem
 
 class Canvas(QtGui.QWidget):
     
@@ -154,7 +154,7 @@ class Canvas(QtGui.QWidget):
             if parent is None:
                 tree = li.treeWidget()
                 if tree is None:
-                    print "Skipping item", i, i.name
+                    print("Skipping item", i, i.name)
                     continue
                 tree.removeTopLevelItem(li)
             else:
@@ -365,7 +365,7 @@ class Canvas(QtGui.QWidget):
             parent = parent.listItem
         
         ## set Z value above all other siblings if none was specified
-        siblings = [parent.child(i).canvasItem for i in xrange(parent.childCount())]
+        siblings = [parent.child(i).canvasItem for i in range(parent.childCount())]
         z = citem.zValue()
         if z is None:
             zvals = [i.zValue() for i in siblings]
@@ -462,7 +462,7 @@ class Canvas(QtGui.QWidget):
             item.canvasItem.setParentItem(self.view.childGroup)
         else:
             item.canvasItem.setParentItem(parent.canvasItem)
-        siblings = [parent.child(i).canvasItem for i in xrange(parent.childCount())]
+        siblings = [parent.child(i).canvasItem for i in range(parent.childCount())]
         
         zvals = [i.zValue() for i in siblings]
         zvals.sort(reverse=True)

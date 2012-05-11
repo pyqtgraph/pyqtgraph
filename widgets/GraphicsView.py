@@ -5,14 +5,21 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL, QtSvg
+from pyqtgraph.Qt import QtCore, QtGui
+
+try:
+    from pyqtgraph.Qt import QtOpenGL
+    HAVE_OPENGL = True
+except ImportError:
+    HAVE_OPENGL = False
+
 #from numpy import vstack
 #import time
 from pyqtgraph.Point import Point
 #from vector import *
 import sys, os
 #import debug    
-from FileDialog import FileDialog
+from .FileDialog import FileDialog
 from pyqtgraph.GraphicsScene import GraphicsScene
 import numpy as np
 import pyqtgraph.functions as fn
@@ -110,6 +117,8 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def useOpenGL(self, b=True):
         if b:
+            if not HAVE_OPENGL:
+                raise Exception("Requested to use OpenGL with QGraphicsView, but QtOpenGL module is not available.")
             v = QtOpenGL.QGLWidget()
         else:
             v = QtGui.QWidget()

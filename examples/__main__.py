@@ -38,7 +38,7 @@ examples = OrderedDict([
         #('SpinBox', '../widgets/SpinBox.py'),
         ('TreeWidget', '../widgets/TreeWidget.py'),
         ('DataTreeWidget', '../widgets/DataTreeWidget.py'),
-        ('GradientWidget', '../widgets/GradientWidget.py'),
+        ('GradientWidget', 'GradientWidget.py'),
         #('TableWidget', '../widgets/TableWidget.py'),
         ('ColorButton', '../widgets/ColorButton.py'),
         #('CheckTable', '../widgets/CheckTable.py'),
@@ -75,7 +75,7 @@ class ExampleLoader(QtGui.QMainWindow):
 
 
     def populateTree(self, root, examples):
-        for key, val in examples.iteritems():
+        for key, val in examples.items():
             item = QtGui.QTreeWidgetItem([key])
             if isinstance(val, basestring):
                 item.file = val

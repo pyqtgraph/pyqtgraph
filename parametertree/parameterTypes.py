@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtCore, QtGui
-from Parameter import Parameter, registerParameterType
-from ParameterItem import ParameterItem
+from .Parameter import Parameter, registerParameterType
+from .ParameterItem import ParameterItem
 from pyqtgraph.widgets.SpinBox import SpinBox
 from pyqtgraph.widgets.ColorButton import ColorButton
 import pyqtgraph as pg
@@ -105,8 +105,8 @@ class WidgetParameterItem(ParameterItem):
         elif t == 'str':
             w = QtGui.QLineEdit()
             w.sigChanged = w.editingFinished
-            w.value = lambda: unicode(w.text())
-            w.setValue = lambda v: w.setText(unicode(v))
+            w.value = lambda: asUnicode(w.text())
+            w.setValue = lambda v: w.setText(asUnicode(v))
             w.sigChanging = w.textChanged
         elif t == 'color':
             w = ColorButton()
@@ -117,7 +117,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
             w.setFlat(True)
         else:
-            raise Exception("Unknown type '%s'" % unicode(t))
+            raise Exception("Unknown type '%s'" % asUnicode(t))
         return w
         
     def widgetEventFilter(self, obj, ev):
@@ -165,11 +165,11 @@ class WidgetParameterItem(ParameterItem):
             value = self.param.value()
         opts = self.param.opts
         if isinstance(self.widget, QtGui.QAbstractSpinBox):
-            text = unicode(self.widget.lineEdit().text())
+            text = asUnicode(self.widget.lineEdit().text())
         elif isinstance(self.widget, QtGui.QComboBox):
             text = self.widget.currentText()
         else:
-            text = unicode(value)
+            text = asUnicode(value)
         self.displayLabel.setText(text)
 
     def widgetValueChanged(self):
@@ -342,7 +342,7 @@ class GroupParameterItem(ParameterItem):
         """
         if self.addWidget.currentIndex() == 0:
             return
-        typ = unicode(self.addWidget.currentText())
+        typ = asUnicode(self.addWidget.currentText())
         self.param.addNew(typ)
         self.addWidget.setCurrentIndex(0)
 
@@ -400,7 +400,7 @@ class ListParameterItem(WidgetParameterItem):
         
     def value(self):
         #vals = self.param.opts['limits']
-        key = unicode(self.widget.currentText())
+        key = asUnicode(self.widget.currentText())
         #if isinstance(vals, dict):
             #return vals[key]
         #else:
@@ -431,18 +431,18 @@ class ListParameterItem(WidgetParameterItem):
         self.forward = collections.OrderedDict()  ## name: value
         self.reverse = collections.OrderedDict()  ## value: name
         if isinstance(limits, dict):
-            for k, v in limits.iteritems():
+            for k, v in limits.items():
                 self.forward[k] = v
                 self.reverse[v] = k
         else:
             for v in limits:
-                n = unicode(v)
+                n = asUnicode(v)
                 self.forward[n] = v
                 self.reverse[v] = n
         
         try:
             self.widget.blockSignals(True)
-            val = unicode(self.widget.currentText())
+            val = asUnicode(self.widget.currentText())
             self.widget.clear()
             for k in self.forward:
                 self.widget.addItem(k)
@@ -469,19 +469,19 @@ class ListParameter(Parameter):
         self.forward = collections.OrderedDict()  ## name: value
         self.reverse = collections.OrderedDict()  ## value: name
         if isinstance(limits, dict):
-            for k, v in limits.iteritems():
+            for k, v in limits.items():
                 self.forward[k] = v
                 self.reverse[v] = k
         else:
             for v in limits:
-                n = unicode(v)
+                n = asUnicode(v)
                 self.forward[n] = v
                 self.reverse[v] = n
         
         Parameter.setLimits(self, limits)
         #print self.name(), self.value(), limits
         if self.value() not in self.reverse and len(self.reverse) > 0:
-            self.setValue(self.reverse.keys()[0])
+            self.setValue(list(self.reverse.keys())[0])
             
 
 registerParameterType('list', ListParameter, override=True)

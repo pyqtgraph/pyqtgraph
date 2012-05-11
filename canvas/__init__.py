@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-from Canvas import *
-from CanvasItem import *
+from .Canvas import *
+from .CanvasItem import *

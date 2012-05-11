@@ -1,6 +1,6 @@
 
 
-from GraphicsObject import *
+from .GraphicsObject import *
 import pyqtgraph.functions as fn
 from pyqtgraph.Qt import QtGui, QtCore
 

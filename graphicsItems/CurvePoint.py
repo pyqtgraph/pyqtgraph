@@ -1,9 +1,9 @@
 from pyqtgraph.Qt import QtGui, QtCore
-import ArrowItem
+from . import ArrowItem
 import numpy as np
 from pyqtgraph.Point import Point
 import weakref
-from GraphicsObject import GraphicsObject
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['CurvePoint', 'CurveArrow']
 class CurvePoint(GraphicsObject):

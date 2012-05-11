@@ -22,8 +22,8 @@ from pyqtgraph.Point import *
 from pyqtgraph.Transform import Transform
 from math import cos, sin
 import pyqtgraph.functions as fn
-from GraphicsObject import GraphicsObject
-from UIGraphicsItem import UIGraphicsItem
+from .GraphicsObject import GraphicsObject
+from .UIGraphicsItem import UIGraphicsItem
 
 __all__ = [
     'ROI', 
@@ -277,7 +277,7 @@ class ROI(GraphicsObject):
         return self.addHandle({'name': name, 'type': 'rf', 'center': center, 'pos': pos, 'item': item})
     
     def addHandle(self, info):
-        if not info.has_key('item') or info['item'] is None:
+        if 'item' not in info or info['item'] is None:
             #print "BEFORE ADD CHILD:", self.childItems()
             h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen, parent=self)
             #print "AFTER ADD CHILD:", self.childItems()
@@ -449,7 +449,7 @@ class ROI(GraphicsObject):
         p1 = self.mapSceneToParent(p1)
 
         ## Handles with a 'center' need to know their local position relative to the center point (lp0, lp1)
-        if h.has_key('center'):
+        if 'center' in h:
             c = h['center']
             cs = c * self.state['size']
             lp0 = self.mapFromParent(p0) - cs
@@ -614,7 +614,7 @@ class ROI(GraphicsObject):
         if self.lastState is None:
             changed = True
         else:
-            for k in self.state.keys():
+            for k in list(self.state.keys()):
                 if self.state[k] != self.lastState[k]:
                     changed = True
         self.lastState = self.stateCopy()

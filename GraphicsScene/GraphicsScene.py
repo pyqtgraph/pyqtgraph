@@ -1,11 +1,17 @@
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL, QtSvg
+from pyqtgraph.Qt import QtCore, QtGui
+#try:
+    #from PyQt4 import QtOpenGL
+    #HAVE_OPENGL = True
+#except ImportError:
+    #HAVE_OPENGL = False
+
 import weakref
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import pyqtgraph.ptime as ptime
-from mouseEvents import *
+from .mouseEvents import *
 import pyqtgraph.debug as debug
-import exportDialog
+from . import exportDialog
 
 try:
     import sip
@@ -216,7 +222,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             items = self.itemsNearEvent(event)
             self.sigMouseHover.emit(items)
             
-        prevItems = self.hoverItems.keys()
+        prevItems = list(self.hoverItems.keys())
             
         for item in items:
             if hasattr(item, 'hoverEvent'):
@@ -352,7 +358,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         items = QtGui.QGraphicsScene.items(self, *args)
         ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
         ## then the object returned will be different than the actual item that was originally added to the scene
-        items2 = map(self.translateGraphicsItem, items)
+        items2 = list(map(self.translateGraphicsItem, items))
         #if HAVE_SIP and isinstance(self, sip.wrapper):
             #items2 = []
             #for i in items:
@@ -374,7 +380,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 #i2 = GraphicsScene._addressCache.get(addr, i)
                 ##print i, "==>", i2
                 #items2.append(i2)
-        items2 = map(self.translateGraphicsItem, items)
+        items2 = list(map(self.translateGraphicsItem, items))
 
         #print 'items:', items
         return items2
@@ -430,7 +436,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 return 0
             return item.zValue() + absZValue(item.parentItem())
         
-        items2.sort(lambda a,b: cmp(absZValue(b), absZValue(a)))
+        sortList(items2, lambda a,b: cmp(absZValue(b), absZValue(a)))
         
         return items2
         
@@ -543,7 +549,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     @staticmethod
     def translateGraphicsItems(items):
-        return map(GraphicsScene.translateGraphicsItem, items)
+        return list(map(GraphicsScene.translateGraphicsItem, items))
 
 
 

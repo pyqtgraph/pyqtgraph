@@ -105,7 +105,7 @@ class GLVolumeItem(GLGraphicsItem):
         vp[3][imax[0]] = 0
         vp[3][imax[1]] = self.data.shape[imax[1]]
         slices = self.data.shape[ax] * self.sliceDensity
-        r = range(slices)
+        r = list(range(slices))
         if d == -1:
             r = r[::-1]
             

@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
-from UIGraphicsItem import UIGraphicsItem
+from .UIGraphicsItem import UIGraphicsItem
 import pyqtgraph.functions as fn
 import numpy as np
 import weakref

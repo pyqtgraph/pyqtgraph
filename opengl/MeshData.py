@@ -133,7 +133,7 @@ class MeshData(object):
             faceNorms = self.faceNormals()
             vertFaces = self.vertexFaces()
             self._vertexNormals = []
-            for vindex in xrange(len(self._vertexes)):
+            for vindex in range(len(self._vertexes)):
                 #print vertFaces[vindex]
                 norms = [faceNorms[findex] for findex in vertFaces[vindex]]
                 norm = QtGui.QVector3D()

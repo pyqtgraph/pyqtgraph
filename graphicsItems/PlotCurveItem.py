@@ -2,11 +2,11 @@ from pyqtgraph.Qt import QtGui, QtCore
 from scipy.fftpack import fft
 import numpy as np
 import scipy.stats
-from GraphicsObject import GraphicsObject
+from .GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 from pyqtgraph import debug
 from pyqtgraph.Point import Point
-import struct
+import struct, sys
 
 __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
@@ -267,32 +267,37 @@ class PlotCurveItem(GraphicsObject):
         ##    0(i4)
         ##
         ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+        if sys.version_info.major == 2:
+            n = x.shape[0]
+            # create empty array, pad with extra space on either end
+            arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+            # write first two integers
+            prof.mark('allocate empty')
+            arr.data[12:20] = struct.pack('>ii', n, 0)
+            prof.mark('pack header')
+            # Fill array with vertex values
+            arr[1:-1]['x'] = x
+            arr[1:-1]['y'] = y
+            arr[1:-1]['c'] = 1
+            prof.mark('fill array')
+            # write last 0
+            lastInd = 20*(n+1)
+            arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+            prof.mark('footer')
+            # create datastream object and stream into path
+            buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+            prof.mark('create buffer')
+            ds = QtCore.QDataStream(buf)
+            prof.mark('create datastream')
+            ds >> path
+            prof.mark('load')
+            
+            prof.finish()
+        else:
+            path.moveTo(x[0], y[0])
+            for i in range(1, y.shape[0]):
+                path.lineTo(x[i], y[i])
         
-        n = x.shape[0]
-        # create empty array, pad with extra space on either end
-        arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
-        # write first two integers
-        prof.mark('allocate empty')
-        arr.data[12:20] = struct.pack('>ii', n, 0)
-        prof.mark('pack header')
-        # Fill array with vertex values
-        arr[1:-1]['x'] = x
-        arr[1:-1]['y'] = y
-        arr[1:-1]['c'] = 1
-        prof.mark('fill array')
-        # write last 0
-        lastInd = 20*(n+1) 
-        arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-        prof.mark('footer')
-        # create datastream object and stream into path
-        buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-        prof.mark('create buffer')
-        ds = QtCore.QDataStream(buf)
-        prof.mark('create datastream')
-        ds >> path
-        prof.mark('load')
-        
-        prof.finish()
         return path
 
 

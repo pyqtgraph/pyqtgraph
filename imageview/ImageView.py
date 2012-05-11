@@ -13,7 +13,7 @@ Widget used for displaying 2D or 3D data. Features:
   - Image normalization through a variety of methods
 """
 
-from ImageViewTemplate import *
+from .ImageViewTemplate import *
 from pyqtgraph.graphicsItems.ImageItem import *
 from pyqtgraph.graphicsItems.ROI import *
 from pyqtgraph.graphicsItems.LinearRegionItem import *
@@ -322,7 +322,7 @@ class ImageView(QtGui.QWidget):
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
-            self.levelMin, self.levelMax = map(float, ImageView.quickMinMax(self.imageDisp))
+            self.levelMin, self.levelMax = list(map(float, ImageView.quickMinMax(self.imageDisp)))
             self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
             
         return self.imageDisp
@@ -383,7 +383,7 @@ class ImageView(QtGui.QWidget):
         
     def evalKeyState(self):
         if len(self.keysPressed) == 1:
-            key = self.keysPressed.keys()[0]
+            key = list(self.keysPressed.keys())[0]
             if key == QtCore.Qt.Key_Right:
                 self.play(20)
                 self.jumpFrames(1)
@@ -526,7 +526,7 @@ class ImageView(QtGui.QWidget):
             if image.ndim == 3:
                 self.roiCurve.setData(y=data, x=self.tVals)
             else:
-                self.roiCurve.setData(y=data, x=range(len(data)))
+                self.roiCurve.setData(y=data, x=list(range(len(data))))
                 
             #self.ui.roiPlot.replot()
 

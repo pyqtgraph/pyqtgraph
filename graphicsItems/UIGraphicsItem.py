@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import weakref
-from GraphicsObject import GraphicsObject
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['UIGraphicsItem']
 class UIGraphicsItem(GraphicsObject):

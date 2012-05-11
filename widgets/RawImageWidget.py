@@ -1,4 +1,9 @@
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
+from pyqtgraph.Qt import QtCore, QtGui
+try:
+    from pyqtgraph.Qt import QtOpenGL
+    HAVE_OPENGL = True
+except ImportError:
+    HAVE_OPENGL = False
 
 import pyqtgraph.functions as fn
 import numpy as np
@@ -53,27 +58,27 @@ class RawImageWidget(QtGui.QWidget):
         #p.drawPixmap(self.rect(), self.pixmap)
         p.end()
 
+if HAVE_OPENGL:
+    class RawImageGLWidget(QtOpenGL.QGLWidget):
+        """
+        Similar to RawImageWidget, but uses a GL widget to do all drawing.
+        Generally this will be about as fast as using GraphicsView + ImageItem,
+        but performance may vary on some platforms.
+        """
+        def __init__(self, parent=None, scaled=False):
+            QtOpenGL.QGLWidget.__init__(self, parent=None)
+            self.scaled = scaled
+            self.image = None
 
-class RawImageGLWidget(QtOpenGL.QGLWidget):
-    """
-    Similar to RawImageWidget, but uses a GL widget to do all drawing. 
-    Generally this will be about as fast as using GraphicsView + ImageItem,
-    but performance may vary on some platforms.
-    """
-    def __init__(self, parent=None, scaled=False):
-        QtOpenGL.QGLWidget.__init__(self, parent=None)
-        self.scaled = scaled
-        self.image = None
-    
-    def setImage(self, img):
-        self.image = fn.makeQImage(img)
-        self.update()
+        def setImage(self, img):
+            self.image = fn.makeQImage(img)
+            self.update()
 
-    def paintEvent(self, ev):
-        if self.image is None:
-            return
-        p = QtGui.QPainter(self)
-        p.drawImage(self.rect(), self.image)
-        p.end()
+        def paintEvent(self, ev):
+            if self.image is None:
+                return
+            p = QtGui.QPainter(self)
+            p.drawImage(self.rect(), self.image)
+            p.end()
 
 

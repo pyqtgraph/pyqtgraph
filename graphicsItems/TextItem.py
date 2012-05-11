@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
-from UIGraphicsItem import *
+from .UIGraphicsItem import *
 
 class TextItem(UIGraphicsItem):
     """

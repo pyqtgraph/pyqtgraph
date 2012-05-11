@@ -102,7 +102,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 except:
                     import sys
                     sys.excepthook(*sys.exc_info())
-                    print "Error while drawing item", i
+                    print("Error while drawing item", i)
                 finally:
                     glPopAttrib(GL_ALL_ATTRIB_BITS)
             else:

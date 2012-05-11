@@ -5,13 +5,13 @@ GraphicsWidget displaying an image histogram along with gradient editor. Can be 
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
-from GraphicsWidget import GraphicsWidget
-from ViewBox import *
-from GradientEditorItem import *
-from LinearRegionItem import *
-from PlotDataItem import *
-from AxisItem import *
-from GridItem import *
+from .GraphicsWidget import GraphicsWidget
+from .ViewBox import *
+from .GradientEditorItem import *
+from .LinearRegionItem import *
+from .PlotDataItem import *
+from .AxisItem import *
+from .GridItem import *
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import numpy as np

@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import collections, os, weakref, re
-from ParameterItem import ParameterItem
+from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
 

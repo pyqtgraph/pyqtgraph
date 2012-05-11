@@ -1,5 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
+import collections
 try:
     import scipy.weave as weave
     from scipy.weave import converters
@@ -7,7 +8,7 @@ except:
     pass
 import pyqtgraph.functions as fn
 import pyqtgraph.debug as debug
-from GraphicsObject import GraphicsObject
+from .GraphicsObject import GraphicsObject
 
 __all__ = ['ImageItem']
 class ImageItem(GraphicsObject):
@@ -254,7 +255,7 @@ class ImageItem(GraphicsObject):
         prof = debug.Profiler('ImageItem.render', disabled=True)
         if self.image is None:
             return
-        if callable(self.lut):
+        if isinstance(self.lut, collections.Callable):
             lut = self.lut(self.image)
         else:
             lut = self.lut
@@ -339,9 +340,9 @@ class ImageItem(GraphicsObject):
         pass
     
     def tabletEvent(self, ev):
-        print ev.device()
-        print ev.pointerType()
-        print ev.pressure()
+        print(ev.device())
+        print(ev.pointerType())
+        print(ev.pressure())
     
     def drawAt(self, pos, ev=None):
         pos = [int(pos.x()), int(pos.y())]
@@ -378,7 +379,7 @@ class ImageItem(GraphicsObject):
         src = dk
         #print self.image[ts].shape, src.shape
         
-        if callable(self.drawMode):
+        if isinstance(self.drawMode, collections.Callable):
             self.drawMode(dk, self.image, mask, ss, ts, ev)
         else:
             src = src[ss]

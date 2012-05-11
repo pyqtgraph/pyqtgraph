@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
-from GraphicsWidget import GraphicsWidget
+from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):
@@ -127,11 +127,11 @@ class GraphicsLayout(GraphicsWidget):
     
     def clear(self):
         items = []
-        for i in self.items.keys():
+        for i in list(self.items.keys()):
             self.removeItem(i)
 
 
 ## Must be imported at the end to avoid cyclic-dependency hell:
-from ViewBox import ViewBox
-from PlotItem import PlotItem
-from LabelItem import LabelItem
+from .ViewBox import ViewBox
+from .PlotItem import PlotItem
+from .LabelItem import LabelItem

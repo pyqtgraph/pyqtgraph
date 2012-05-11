@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.ptime import time
 import pyqtgraph as pg
+from functools import reduce
 
 __all__ = ['ValueLabel']
 

@@ -1,2 +1,2 @@
-from DockArea import DockArea
-from Dock import Dock
+from .DockArea import DockArea
+from .Dock import Dock

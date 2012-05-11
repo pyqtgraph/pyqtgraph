@@ -1,4 +1,4 @@
-from Exporter import Exporter
+from .Exporter import Exporter
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import re

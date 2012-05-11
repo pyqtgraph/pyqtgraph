@@ -96,5 +96,5 @@ class Ui_Form(object):
         self.reflectSelectionBtn.setText(QtGui.QApplication.translate("Form", "MirrorXY", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph.widgets.GraphicsView import GraphicsView
-from CanvasManager import CanvasCombo
+from .CanvasManager import CanvasCombo
 from pyqtgraph.widgets.TreeWidget import TreeWidget

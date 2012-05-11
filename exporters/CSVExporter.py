@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
-from Exporter import Exporter
+from .Exporter import Exporter
 from pyqtgraph.parametertree import Parameter
 
 

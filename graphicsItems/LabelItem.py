@@ -1,6 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
-from GraphicsWidget import GraphicsWidget
+from .GraphicsWidget import GraphicsWidget
 
 
 __all__ = ['LabelItem']

@@ -126,4 +126,4 @@ class DropAreaOverlay(QtGui.QWidget):
         p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 150), 3))
         p.drawRect(rgn)
 
-import Dock
+from . import Dock

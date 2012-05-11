@@ -1,1 +1,1 @@
-from MetaArray import *
+from .MetaArray import *

@@ -1,11 +1,11 @@
-from GLViewWidget import GLViewWidget
+from .GLViewWidget import GLViewWidget
 
 import os
 def importAll(path):
     d = os.path.join(os.path.split(__file__)[0], path)
     files = []
     for f in os.listdir(d):
-        if os.path.isdir(os.path.join(d, f)):
+        if os.path.isdir(os.path.join(d, f)) and f != '__pycache__':
             files.append(f)
         elif f[-3:] == '.py' and f != '__init__.py':
             files.append(f[:-3])

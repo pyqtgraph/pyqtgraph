@@ -278,7 +278,7 @@ class ViewBox(GraphicsWidget):
             vr1 = self.state['viewRange'][1]
             return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
         except:
-            print "make qrectf failed:", self.state['viewRange']
+            print("make qrectf failed:", self.state['viewRange'])
             raise
     
     #def viewportTransform(self):
@@ -299,7 +299,7 @@ class ViewBox(GraphicsWidget):
             tr1 = self.state['targetRange'][1]
             return QtCore.QRectF(tr0[0], tr1[0], tr0[1]-tr0[0], tr1[1] - tr1[0])
         except:
-            print "make qrectf failed:", self.state['targetRange']
+            print("make qrectf failed:", self.state['targetRange'])
             raise
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=0.02, update=True, disableAutoRange=True):
@@ -330,7 +330,7 @@ class ViewBox(GraphicsWidget):
             raise Exception("Must specify at least one of rect, xRange, or yRange.")
         
         changed = [False, False]
-        for ax, range in changes.iteritems():
+        for ax, range in changes.items():
             mn = min(range)
             mx = max(range)
             if mn == mx:   ## If we requested 0 range, try to preserve previous scale. Otherwise just pick an arbitrary scale.
@@ -366,7 +366,7 @@ class ViewBox(GraphicsWidget):
         if update:
             self.updateMatrix(changed)
             
-        for ax, range in changes.iteritems():
+        for ax, range in changes.items():
             link = self.state['linkedViews'][ax]
             if link is not None:
                 link.linkedViewChanged(self, ax)
@@ -1105,8 +1105,9 @@ class ViewBox(GraphicsWidget):
             return wins + alpha
             
         ## make a sorted list of all named views
-        nv = ViewBox.NamedViews.values()
-        nv.sort(cmpViews)
+        nv = list(ViewBox.NamedViews.values())
+
+        sortList(nv, cmpViews) ## see pyqtgraph.python2_3.sortList
         
         if self in nv:
             nv.remove(self)
@@ -1121,4 +1122,4 @@ class ViewBox(GraphicsWidget):
 
 
 
-from ViewBoxMenu import ViewBoxMenu
+from .ViewBoxMenu import ViewBoxMenu
