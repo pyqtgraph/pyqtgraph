@@ -89,7 +89,7 @@ class PlotDataItem(GraphicsObject):
         **Optimization keyword arguments:**
         
             ==========   ================================================
-            identical    spots are all identical. The spot image will be rendered only once and repeated for every point
+            identical    *deprecated*
             decimate     (int) decimate data
             ==========   ================================================
         

@@ -52,6 +52,9 @@ class GraphicsView(QtGui.QGraphicsView):
         
         self.setCacheMode(self.CacheBackground)
         
+        ## This might help, but it's probably dangerous in the general case..
+        #self.setOptimizationFlag(self.DontSavePainterState, True)
+        
         if background is not None:
             brush = fn.mkBrush(background)
             self.setBackgroundBrush(brush)

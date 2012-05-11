@@ -10,10 +10,11 @@ class GraphicsItem(object):
     Abstract class providing useful methods to GraphicsObject and GraphicsWidget.
     (This is required because we cannot have multiple inheritance with QObject subclasses.)
     """
-    def __init__(self):
+    def __init__(self, register=True):
         self._viewWidget = None
         self._viewBox = None
-        GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+        if register:
+            GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
     
     def getViewWidget(self):
         """
