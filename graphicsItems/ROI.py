@@ -1068,7 +1068,8 @@ class Handle(UIGraphicsItem):
         return dti.map(tr.map(self.path))
         
         
-    def viewChangedEvent(self):
+    def viewRangeChanged(self):
+        GraphicsObject.viewRangeChanged(self)
         self._shape = None  ## invalidate shape, recompute later if requested.
         #self.updateShape()
         

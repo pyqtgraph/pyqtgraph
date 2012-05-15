@@ -16,6 +16,12 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         GraphicsItem.__init__(self)
         GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
+    def itemChange(self, change, value):
+        ret = QtGui.QGraphicsWidget.itemChange(self, change, value)
+        if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
+            self._updateView()
+        return ret
+
     #def getMenu(self):
         #pass
         
