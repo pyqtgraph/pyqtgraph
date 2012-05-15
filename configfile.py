@@ -51,7 +51,7 @@ def readConfigFile(fname):
     try:
         #os.chdir(newDir)  ## bad.
         fd = open(fname)
-        s = asUnicode(fd.read(), 'UTF-8')
+        s = asUnicode(fd.read())
         fd.close()
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")

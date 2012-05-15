@@ -20,7 +20,8 @@ class DockDrop(object):
         self.overlay.raise_()
     
     def dragEnterEvent(self, ev):
-        if isinstance(ev.source(), Dock.Dock):
+        src = ev.source()
+        if hasattr(src, 'implements') and src.implements('dock'):
             #print "drag enter accept"
             ev.accept()
         else:
@@ -125,5 +126,3 @@ class DropAreaOverlay(QtGui.QWidget):
         p.setBrush(QtGui.QBrush(QtGui.QColor(100, 100, 255, 50)))
         p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 150), 3))
         p.drawRect(rgn)
-
-from . import Dock

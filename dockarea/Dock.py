@@ -64,6 +64,12 @@ class Dock(QtGui.QWidget, DockDrop):
         
         self.setStretch(*size)
 
+    def implements(self, name=None):
+        if name is None:
+            return ['dock']
+        else:
+            return name == 'dock'
+        
     def setStretch(self, x=None, y=None):
         #print "setStretch", self, x, y
         #self._stretch = (x, y)
