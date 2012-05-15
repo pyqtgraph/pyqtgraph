@@ -78,7 +78,7 @@ class ScatterPlotItem(GraphicsObject):
         """
         prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
         GraphicsObject.__init__(self)
-        #self.setFlag(self.ItemHasNoContents, True)
+        self.setFlag(self.ItemHasNoContents, True)
         self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', 'S1'), ('pen', object), ('brush', object), ('item', object), ('data', object)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
