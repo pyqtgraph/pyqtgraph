@@ -35,7 +35,7 @@ for k, c in coords.items():
 
 def makeSymbolPixmap(size, pen, brush, symbol):
     ## Render a spot with the given parameters to a pixmap
-    penPxWidth = np.ceil(pen.width())
+    penPxWidth = max(np.ceil(pen.width()), 1)
     image = QtGui.QImage(size+penPxWidth, size+penPxWidth, QtGui.QImage.Format_ARGB32_Premultiplied)
     image.fill(0)
     p = QtGui.QPainter(image)
@@ -78,7 +78,7 @@ class ScatterPlotItem(GraphicsObject):
         """
         prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
         GraphicsObject.__init__(self)
-        self.setFlag(self.ItemHasNoContents, True)
+        #self.setFlag(self.ItemHasNoContents, True)
         self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', 'S1'), ('pen', object), ('brush', object), ('item', object), ('data', object)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
@@ -355,17 +355,18 @@ class ScatterPlotItem(GraphicsObject):
             ## keep track of the maximum spot size and pixel size
             width = 0
             pxWidth = 0
-            if self.opts['pxMode']:
-                pxWidth += spot.size()
-            else:
-                width += spot.size()
             pen = spot.pen()
-            if pen.isCosmetic():
-                pxWidth += pen.width() * 2
+            if self.opts['pxMode']:
+                pxWidth = spot.size() + pen.width()
             else:
-                width += pen.width() * 2
+                width = spot.size()
+                if pen.isCosmetic():
+                    pxWidth += pen.width()
+                else:
+                    width += pen.width()
             self._maxSpotWidth = max(self._maxSpotWidth, width)
             self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
+        self.bounds = [None, None]
     
     
     def clear(self):
@@ -388,6 +389,7 @@ class ScatterPlotItem(GraphicsObject):
         if frac >= 1.0 and self.bounds[ax] is not None:
             return self.bounds[ax]
         
+        self.prepareGeometryChange()
         if self.data is None or len(self.data) == 0:
             return (None, None)
         
