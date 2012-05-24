@@ -29,6 +29,13 @@ import pyqtgraph.debug as debug
 
 from pyqtgraph.SignalProxy import SignalProxy
 
+try:
+    import pyqtgraph.metaarray as metaarray
+    HAVE_METAARRAY = True
+except:
+    HAVE_METAARRAY = False
+    
+
 class PlotROI(ROI):
     def __init__(self, size):
         ROI.__init__(self, pos=[0,0], size=size, scaleSnap=True, translateSnap=True)
@@ -187,6 +194,9 @@ class ImageView(QtGui.QWidget):
         ============== =======================================================================
         """
         prof = debug.Profiler('ImageView.setImage', disabled=True)
+        
+        if HAVE_METAARRAY and isinstance(img, metaarray.MetaArray):
+            img = img.asarray()
         
         if not isinstance(img, np.ndarray):
             raise Exception("Image must be specified as ndarray.")

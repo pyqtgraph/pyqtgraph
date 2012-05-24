@@ -1,9 +1,4 @@
-try: 
-    import metaarray
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
-
+import pyqtgraph.metaarray as metaarray
 from pyqtgraph.Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
@@ -252,6 +247,7 @@ class PlotDataItem(GraphicsObject):
         if len(args) == 1:
             data = args[0]
             dt = dataType(data)
+            print "plot:", dt, type(data)
             if dt == 'empty':
                 pass
             elif dt == 'listOfValues':
@@ -493,9 +489,10 @@ def dataType(obj):
         return 'empty'
     if isSequence(obj):
         first = obj[0]
-        if isinstance(obj, np.ndarray):
-            if HAVE_METAARRAY and isinstance(obj, metaarray.MetaArray):
-                return 'MetaArray'
+        
+        if isinstance(obj, metaarray.MetaArray):
+            return 'MetaArray'
+        elif isinstance(obj, np.ndarray):
             if obj.ndim == 1:
                 if obj.dtype.names is None:
                     return 'listOfValues'
@@ -514,7 +511,7 @@ def dataType(obj):
         
         
 def isSequence(obj):
-    return isinstance(obj, list) or isinstance(obj, np.ndarray)
+    return isinstance(obj, list) or isinstance(obj, np.ndarray) or isinstance(obj, metaarray.MetaArray)
     
             
             

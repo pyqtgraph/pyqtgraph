@@ -57,7 +57,7 @@ class sliceGenerator:
 SLICER = sliceGenerator()
     
 
-class MetaArray(np.ndarray):
+class MetaArray(object):
     """N-dimensional array with meta data such as axis titles, units, and column names.
   
     May be initialized with a file name, a tuple representing the dimensions of the array,
@@ -109,94 +109,91 @@ class MetaArray(np.ndarray):
     @staticmethod
     def isNameType(var):
         return any([isinstance(var, t) for t in MetaArray.nameTypes])
+        
+        
+    ## methods to wrap from embedded ndarray / HDF5 
+    wrapMethods = set(['__eq__', '__ne__', '__le__', '__lt__', '__ge__', '__gt__'])
   
-    def __new__(subtype, data=None, file=None, info=None, dtype=None, copy=False, **kwargs):
-        if data is not None:
-            if type(data) is tuple:
-                subarr = np.empty(data, dtype=dtype)
-            else:
-                subarr = np.array(data, dtype=dtype, copy=copy)
-            subarr = subarr.view(subtype)
-
-
-            #### Sanity checks on info
-            if info is not None:
-                try:
-                    info = list(info)
-                except:
-                    raise Exception("Info must be a list of axis specifications")
-                if len(info) < subarr.ndim+1:
-                    info.extend([{}]*(subarr.ndim+1-len(info)))
-                elif len(info) > subarr.ndim+1:
-                    raise Exception("Info parameter must be list of length ndim+1 or less.")
-                for i in range(len(info)):
-                    if not isinstance(info[i], dict):
-                        if info[i] is None:
-                            info[i] = {}
-                        else:
-                            raise Exception("Axis specification must be Dict or None")
-                    if i < subarr.ndim and 'values' in info[i]:
-                        if type(info[i]['values']) is list:
-                            info[i]['values'] = np.array(info[i]['values'])
-                        elif type(info[i]['values']) is not np.ndarray:
-                            raise Exception("Axis values must be specified as list or ndarray")
-                        if info[i]['values'].ndim != 1 or info[i]['values'].shape[0] != subarr.shape[i]:
-                            raise Exception("Values array for axis %d has incorrect shape. (given %s, but should be %s)" % (i, str(info[i]['values'].shape), str((subarr.shape[i],))))
-                    if i < subarr.ndim and 'cols' in info[i]:
-                        if not isinstance(info[i]['cols'], list):
-                            info[i]['cols'] = list(info[i]['cols'])
-                        if len(info[i]['cols']) != subarr.shape[i]:
-                            raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' % (i, len(info[i]['cols']), subarr.shape[i]))
-                subarr._info = info
-            elif hasattr(data, '_info'):
-                subarr._info = data._info
-
-
-
-        elif file is not None:
-            ## decide which read function to use
-            fd = open(file, 'rb')
-            magic = fd.read(8)
-            if magic == '\x89HDF\r\n\x1a\n':
-                fd.close()
-                return MetaArray._readHDF5(file, subtype, **kwargs)
-            else:
-                fd.seek(0)
-                meta = MetaArray._readMeta(fd)
-                if 'version' in meta:
-                    ver = meta['version']
-                else:
-                    ver = 1
-                rFuncName = '_readData%s' % str(ver)
-                if not hasattr(MetaArray, rFuncName):
-                    raise Exception("This MetaArray library does not support array version '%s'" % ver)
-                rFunc = getattr(MetaArray, rFuncName)
-                subarr = rFunc(fd, meta, subtype, **kwargs)
-
-        return subarr
-
-
-    def __array_finalize__(self,obj):
-        ## array_finalize is called every time a MetaArray is created 
-        ## (whereas __new__ is not necessarily called every time)
+    def __init__(self, data=None, info=None, dtype=None, file=None, copy=False, **kwargs):
+        object.__init__(self)
+        #self._infoOwned = False
+        self._isHDF = False
         
-        ## obj is the object from which this array was generated (for example, when slicing or view()ing)
+        if file is not None:
+            self._data = None
+            self.readFile(file, **kwargs)
+            if self._data is None:
+                raise Exception("File read failed: %s" % file)
+        else:
+            self._info = info
+            if isinstance(data, MetaArray):
+                self._info = data._info
+                self._data = data.asarray()
+            elif isinstance(data, tuple):  ## create empty array with specified shape
+                self._data = np.empty(data, dtype=dtype)
+            else:
+                self._data = np.array(data, dtype=dtype, copy=copy)
+
+        ## run sanity checks on info structure
+        self.checkInfo()
+    
+    def checkInfo(self):
+        info = self._info
+        if info is None:
+            if self._data is None:
+                return
+            else:
+                self._info = [{} for i in range(self.ndim)]
+                return
+        else:
+            try:
+                info = list(info)
+            except:
+                raise Exception("Info must be a list of axis specifications")
+            if len(info) < self.ndim+1:
+                info.extend([{}]*(self.ndim+1-len(info)))
+            elif len(info) > self.ndim+1:
+                raise Exception("Info parameter must be list of length ndim+1 or less.")
+            for i in range(len(info)):
+                if not isinstance(info[i], dict):
+                    if info[i] is None:
+                        info[i] = {}
+                    else:
+                        raise Exception("Axis specification must be Dict or None")
+                if i < self.ndim and 'values' in info[i]:
+                    if type(info[i]['values']) is list:
+                        info[i]['values'] = np.array(info[i]['values'])
+                    elif type(info[i]['values']) is not np.ndarray:
+                        raise Exception("Axis values must be specified as list or ndarray")
+                    if info[i]['values'].ndim != 1 or info[i]['values'].shape[0] != self.shape[i]:
+                        raise Exception("Values array for axis %d has incorrect shape. (given %s, but should be %s)" % (i, str(info[i]['values'].shape), str((self.shape[i],))))
+                if i < self.ndim and 'cols' in info[i]:
+                    if not isinstance(info[i]['cols'], list):
+                        info[i]['cols'] = list(info[i]['cols'])
+                    if len(info[i]['cols']) != self.shape[i]:
+                        raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' % (i, len(info[i]['cols']), self.shape[i]))
+    
+    #def __array_finalize__(self,obj):
+        ### array_finalize is called every time a MetaArray is created 
+        ### (whereas __new__ is not necessarily called every time)
         
-        # We use the getattr method to set a default if 'obj' doesn't have the 'info' attribute
-        #print "Create new MA from object", str(type(obj))
-        #import traceback
-        #traceback.print_stack()
-        #print "finalize", type(self), type(obj)
-        if not hasattr(self, '_info'):
-            #if isinstance(obj, MetaArray):
-                #print "  copy info:", obj._info
-            self._info = getattr(obj, '_info', [{}]*(obj.ndim+1))
-            self._infoOwned = False  ## Do not make changes to _info until it is copied at least once
-        #print "  self info:", self._info
+        ### obj is the object from which this array was generated (for example, when slicing or view()ing)
+        
+        ## We use the getattr method to set a default if 'obj' doesn't have the 'info' attribute
+        ##print "Create new MA from object", str(type(obj))
+        ##import traceback
+        ##traceback.print_stack()
+        ##print "finalize", type(self), type(obj)
+        #if not hasattr(self, '_info'):
+            ##if isinstance(obj, MetaArray):
+                ##print "  copy info:", obj._info
+            #self._info = getattr(obj, '_info', [{}]*(obj.ndim+1))
+            #self._infoOwned = False  ## Do not make changes to _info until it is copied at least once
+        ##print "  self info:", self._info
       
-        # We could have checked first whether self._info was already defined:
-        #if not hasattr(self, 'info'):
-        #    self._info = getattr(obj, 'info', {})
+        ## We could have checked first whether self._info was already defined:
+        ##if not hasattr(self, 'info'):
+        ##    self._info = getattr(obj, 'info', {})
     
   
     def __getitem__(self, ind):
@@ -206,80 +203,122 @@ class MetaArray(np.ndarray):
         
         nInd = self._interpretIndexes(ind)
         
-        #print "Indexes:", nInd
-        try:
-            a = np.ndarray.__getitem__(self, nInd)
-        except:
-            #print nInd, self.shape
-            raise
-        if type(a) == type(self):  ## generate new info array
-            #print "   new MA:", type(a), a.shape
-            a._info = []
-            extraInfo = self._info[-1].copy()
-            for i in range(0, len(nInd)):   ## iterate over all axes
-                #print "   axis", i
-                if type(nInd[i]) in [slice, list] or isinstance(nInd[i], np.ndarray):  ## If the axis is sliced, keep the info but chop if necessary
-                    #print "      slice axis", i, nInd[i]
-                    #a._info[i] = self._axisSlice(i, nInd[i])
-                    #print "         info:", a._info[i]
-                    a._info.append(self._axisSlice(i, nInd[i]))
-                else: ## If the axis is indexed, then move the information from that single index to the last info dictionary
-                    #print "indexed:", i, nInd[i], type(nInd[i])
-                    newInfo = self._axisSlice(i, nInd[i])
-                    name = None
-                    colName = None
-                    for k in newInfo:
-                        if k == 'cols':
-                            if 'cols' not in extraInfo:
-                                extraInfo['cols'] = []
-                            extraInfo['cols'].append(newInfo[k])
-                            if 'units' in newInfo[k]:
-                                extraInfo['units'] = newInfo[k]['units']
-                            if 'name' in newInfo[k]:
-                                colName = newInfo[k]['name']
-                        elif k == 'name':
-                            name = newInfo[k]
-                        else:
-                            if k not in extraInfo:
-                                extraInfo[k] = newInfo[k]
+        #a = np.ndarray.__getitem__(self, nInd)
+        a = self._data[nInd]
+        if len(nInd) == self.ndim:
+            if np.all([not isinstance(ind, slice) for ind in nInd]):  ## no slices; we have requested a single value from the array
+                return a
+        #if type(a) != type(self._data) and not isinstance(a, np.ndarray):  ## indexing returned single value
+            #return a
+        
+        ## indexing returned a sub-array; generate new info array to go with it
+        #print "   new MA:", type(a), a.shape
+        info = []
+        extraInfo = self._info[-1].copy()
+        for i in range(0, len(nInd)):   ## iterate over all axes
+            #print "   axis", i
+            if type(nInd[i]) in [slice, list] or isinstance(nInd[i], np.ndarray):  ## If the axis is sliced, keep the info but chop if necessary
+                #print "      slice axis", i, nInd[i]
+                #a._info[i] = self._axisSlice(i, nInd[i])
+                #print "         info:", a._info[i]
+                info.append(self._axisSlice(i, nInd[i]))
+            else: ## If the axis is indexed, then move the information from that single index to the last info dictionary
+                #print "indexed:", i, nInd[i], type(nInd[i])
+                newInfo = self._axisSlice(i, nInd[i])
+                name = None
+                colName = None
+                for k in newInfo:
+                    if k == 'cols':
+                        if 'cols' not in extraInfo:
+                            extraInfo['cols'] = []
+                        extraInfo['cols'].append(newInfo[k])
+                        if 'units' in newInfo[k]:
+                            extraInfo['units'] = newInfo[k]['units']
+                        if 'name' in newInfo[k]:
+                            colName = newInfo[k]['name']
+                    elif k == 'name':
+                        name = newInfo[k]
+                    else:
+                        if k not in extraInfo:
                             extraInfo[k] = newInfo[k]
-                    if 'name' not in extraInfo:
-                        if name is None:
-                            if colName is not None:
-                                extraInfo['name'] = colName
+                        extraInfo[k] = newInfo[k]
+                if 'name' not in extraInfo:
+                    if name is None:
+                        if colName is not None:
+                            extraInfo['name'] = colName
+                    else:
+                        if colName is not None:
+                            extraInfo['name'] = str(name) + ': ' + str(colName)
                         else:
-                            if colName is not None:
-                                extraInfo['name'] = str(name) + ': ' + str(colName)
-                            else:
-                                extraInfo['name'] = name
-                            
-                            
-                    #print "Lost info:", newInfo
-                    #a._info[i] = None
-                    #if 'name' in newInfo:
-                        #a._info[-1][newInfo['name']] = newInfo
-            a._info.append(extraInfo)
-            
-            self._infoOwned = False
-            #while None in a._info:
-                #a._info.remove(None)
-        return a
+                            extraInfo['name'] = name
+                        
+                        
+                #print "Lost info:", newInfo
+                #a._info[i] = None
+                #if 'name' in newInfo:
+                    #a._info[-1][newInfo['name']] = newInfo
+        info.append(extraInfo)
+        
+        #self._infoOwned = False
+        #while None in a._info:
+            #a._info.remove(None)
+        return MetaArray(a, info=info)
   
+    @property
+    def ndim(self):
+        return len(self.shape)  ## hdf5 objects do not have ndim property.
+            
+    @property
+    def shape(self):
+        return self._data.shape
+        
+    @property
+    def dtype(self):
+        return self._data.dtype
+        
+    def __len__(self):
+        return len(self._data)
+        
     def __getslice__(self, *args):
         return self.__getitem__(slice(*args))
   
     def __setitem__(self, ind, val):
         nInd = self._interpretIndexes(ind)
         try:
-            return np.ndarray.__setitem__(self.view(np.ndarray), nInd, val)
+            self._data[nInd] = val
         except:
             print(self, nInd, val)
             raise
         
-    #def __getattr__(self, attr):
-        #if attr in ['round']:
+    def __getattr__(self, attr):
+        if attr in self.wrapMethods:
+            return getattr(self._data, attr)
+        else:
+            raise AttributeError(attr)
             #return lambda *args, **kwargs: MetaArray(getattr(a.view(ndarray), attr)(*args, **kwargs)
         
+    def __eq__(self, b):
+        if isinstance(b, MetaArray):
+            b = b.asarray()
+        return self._data == b
+        
+    def __ne__(self, b):
+        if isinstance(b, MetaArray):
+            b = b.asarray()
+        return self._data != b
+        
+    def asarray(self):
+        if isinstance(self._data, np.ndarray):
+            return self._data
+        else:
+            return np.array(self._data)
+            
+    def view(self, typ):
+        ## deprecated; kept for backward compatibility
+        if typ is np.ndarray:
+            return self.asarray()
+        else:
+            raise Exception('invalid view type: %s' % str(typ))
   
     def axisValues(self, axis):
         """Return the list of values for an axis"""
@@ -591,8 +630,8 @@ class MetaArray(np.ndarray):
 
 
     def axisCollapsingFn(self, fn, axis=None, *args, **kargs):
-        arr = self.view(np.ndarray)
-        fn = getattr(arr, fn)
+        #arr = self.view(np.ndarray)
+        fn = getattr(self._data, fn)
         if axis is None:
             return fn(axis, *args, **kargs)
         else:
@@ -623,12 +662,37 @@ class MetaArray(np.ndarray):
         order = order + list(range(len(order), self.ndim))
         
         try:
-            return MetaArray(self.view(np.ndarray).transpose(order), info=info)
+            if self._isHDF:
+                return MetaArray(np.array(self._data).transpose(order), info=info)
+            else:
+                return MetaArray(self._data.transpose(order), info=info)
         except:
             print(order)
             raise
 
     #### File I/O Routines
+    def readFile(self, filename, **kwargs):
+        """Load the data and meta info stored in *filename*"""
+        ## decide which read function to use
+        fd = open(filename, 'rb')
+        magic = fd.read(8)
+        if magic == '\x89HDF\r\n\x1a\n':
+            fd.close()
+            self._readHDF5(filename, **kwargs)
+            self._isHDF = True
+        else:
+            fd.seek(0)
+            meta = MetaArray._readMeta(fd)
+            if 'version' in meta:
+                ver = meta['version']
+            else:
+                ver = 1
+            rFuncName = '_readData%s' % str(ver)
+            if not hasattr(MetaArray, rFuncName):
+                raise Exception("This MetaArray library does not support array version '%s'" % ver)
+            rFunc = getattr(self, rFuncName)
+            rFunc(fd, meta, **kwargs)
+            self._isHDF = False
 
     @staticmethod
     def _readMeta(fd):
@@ -646,10 +710,8 @@ class MetaArray(np.ndarray):
         #print ret
         return ret
 
-    @staticmethod
-    def _readData1(fd, meta, subtype, mmap=False):
-        """Read array data from the file descriptor for MetaArray v1 files
-        """
+    def _readData1(self, fd, meta, mmap=False):
+        ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
         frameSize = 1
         for ax in meta['info']:
@@ -664,12 +726,10 @@ class MetaArray(np.ndarray):
         else:
             subarr = np.fromstring(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
-        subarr = subarr.view(subtype)
-        subarr._info = meta['info']
-        return subarr
+        self._info = meta['info']
+        self._data = subarr
             
-    @staticmethod
-    def _readData2(fd, meta, subtype, mmap=False, subset=None):
+    def _readData2(self, fd, meta, mmap=False, subset=None):
         ## read in axis values
         dynAxis = None
         frameSize = 1
@@ -768,13 +828,14 @@ class MetaArray(np.ndarray):
                 ax['values'] = np.array(xVals, dtype=ax['values_type'])
             del ax['values_len']
             del ax['values_type']
-        subarr = subarr.view(subtype)
-        subarr._info = meta['info']
+        #subarr = subarr.view(subtype)
+        #subarr._info = meta['info']
+        self._info = meta['info']
+        self._data = subarr
         #raise Exception()  ## stress-testing
-        return subarr
+        #return subarr
 
-    @staticmethod
-    def _readHDF5(fileName, subtype, mmap=False, writable=False):
+    def _readHDF5(self, fileName, close=False, writable=False):
         if not HAVE_HDF5:
             raise Exception("The file '%s' is HDF5-formatted, but the HDF5 library (h5py) was not found." % fileName)
         f = h5py.File(fileName, 'r')
@@ -782,16 +843,19 @@ class MetaArray(np.ndarray):
         if ver > MetaArray.version:
             print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
+        self._info = meta
         
-        if mmap:
-            arr = MetaArray.mapHDF5Array(f['data'], writable=writable)
+        if close:
+            self._data = f['data'][:]
+            f.close()
         else:
-            arr = f['data'][:]
+            self._data = f['data']
+            self._openFile = f
         #meta = H5MetaList(f['info'])
-        subarr = arr.view(subtype)
-        subarr._info = meta
-        f.close()
-        return subarr
+        #subarr = arr.view(subtype)
+        #subarr._info = meta
+        #self._data = arr
+        #return subarr
 
     @staticmethod
     def mapHDF5Array(data, writable=False):
