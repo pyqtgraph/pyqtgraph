@@ -247,7 +247,6 @@ class PlotDataItem(GraphicsObject):
         if len(args) == 1:
             data = args[0]
             dt = dataType(data)
-            print "plot:", dt, type(data)
             if dt == 'empty':
                 pass
             elif dt == 'listOfValues':
