@@ -28,7 +28,7 @@ from .UIGraphicsItem import UIGraphicsItem
 __all__ = [
     'ROI', 
     'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
-    'LineROI', 'MultiLineROI', 'LineSegmentROI', 'SpiralROI',
+    'LineROI', 'MultiLineROI', 'LineSegmentROI', 'PolyLineROI', 'SpiralROI',
 ]
 
 

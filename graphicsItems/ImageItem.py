@@ -343,9 +343,9 @@ class ImageItem(GraphicsObject):
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
             return
-
-        ev.accept()
-        self.drawAt(ev.pos(), ev)
+        elif self.drawKernel is not None:
+            ev.accept()
+            self.drawAt(ev.pos(), ev)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
