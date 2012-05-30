@@ -430,9 +430,7 @@ class MetaArray(object):
             return copy.deepcopy(self._info[self._interpretAxis(axis)])
   
     def copy(self):
-        a = np.ndarray.copy(self)
-        a._info = self.infoCopy()
-        return a
+        return MetaArray(self._data.copy(), info=self.infoCopy())
   
   
     def _interpretIndexes(self, ind):
