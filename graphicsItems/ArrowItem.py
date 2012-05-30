@@ -1,8 +1,9 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
-
+import numpy as np
 __all__ = ['ArrowItem']
-class ArrowItem(QtGui.QGraphicsPolygonItem):
+
+class ArrowItem(QtGui.QGraphicsPathItem):
     """
     For displaying scale-invariant arrows.
     For arrows pointing to a location on a curve, see CurveArrow
@@ -11,16 +12,16 @@ class ArrowItem(QtGui.QGraphicsPolygonItem):
     
     
     def __init__(self, **opts):
-        QtGui.QGraphicsPolygonItem.__init__(self, opts.get('parent', None))
+        QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
         defOpts = {
-            'style': 'tri',
             'pxMode': True,
-            'size': 20,
             'angle': -150,   ## If the angle is 0, the arrow points left
             'pos': (0,0),
-            'width': None,  ## width is automatically size / 2.
+            'headLen': 20,
             'tipAngle': 25,
-            'baseAngle': 90,
+            'baseAngle': 0,
+            'tailLen': None,
+            'tailWidth': 3,
             'pen': (200,200,200),
             'brush': (50,50,200),
         }
@@ -37,23 +38,9 @@ class ArrowItem(QtGui.QGraphicsPolygonItem):
     def setStyle(self, **opts):
         self.opts = opts
         
-        if opts['style'] == 'tri':
-            if opts['width'] is None:
-                width = opts['size'] / 2.
-            else:
-                width = opts['width']
-                
-            points = [
-                QtCore.QPointF(0,0),
-                QtCore.QPointF(opts['size'],-width/2.),
-                QtCore.QPointF(opts['size'],width/2.),
-            ]
-            poly = QtGui.QPolygonF(points)
-            
-        else:
-            raise Exception("Unrecognized arrow style '%s'" % opts['style'])
-        
-        self.setPolygon(poly)
+        opt = {k:self.opts[k] for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']}
+        self.path = fn.makeArrowPath(**opt)
+        self.setPath(self.path)
         
         if opts['pxMode']:
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
@@ -62,4 +49,4 @@ class ArrowItem(QtGui.QGraphicsPolygonItem):
         
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
-        QtGui.QGraphicsPolygonItem.paint(self, p, *args)
+        QtGui.QGraphicsPathItem.paint(self, p, *args)
