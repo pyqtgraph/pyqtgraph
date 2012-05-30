@@ -44,10 +44,12 @@ class ROI(GraphicsObject):
     sigRegionChangeStarted = QtCore.Signal(object)
     sigRegionChanged = QtCore.Signal(object)
     sigHoverEvent = QtCore.Signal(object)
+    sigClicked = QtCore.Signal(object, object)
     
     def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, movable=True):
         #QObjectWorkaround.__init__(self)
         GraphicsObject.__init__(self, parent)
+        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
         size = Point(size)
         self.aspectLocked = False
@@ -127,9 +129,9 @@ class ROI(GraphicsObject):
         
     def setPos(self, pos, update=True, finish=True):
         """Set the position of the ROI (in the parent's coordinate system).
-        By default, this will cause both sigStateChanged and sigStateChangeFinished to be emitted.
+        By default, this will cause both sigRegionChanged and sigRegionChangeFinished to be emitted.
         
-        If finish is False, then sigStateChangeFinished will not be emitted. You can then use 
+        If finish is False, then sigRegionChangeFinished will not be emitted. You can then use 
         stateChangeFinished() to cause the signal to be emitted after a series of state changes.
         
         If update is False, the state change will be remembered but not processed and no signals 
@@ -171,14 +173,14 @@ class ROI(GraphicsObject):
         Resize the ROI by scaling relative to *center*.
         See setPos() for an explanation of the *update* and *finish* arguments.
         """
-        c = self.mapToScene(Point(center) * self.state['size'])
+        c = self.mapToParent(Point(center) * self.state['size'])
         self.prepareGeometryChange()
         newSize = self.state['size'] * s
-        c1 = self.mapToScene(Point(center) * newSize)
+        c1 = self.mapToParent(Point(center) * newSize)
         newPos = self.state['pos'] + c - c1
         
         self.setSize(newSize, update=False)
-        self.setPos(self.state['pos'], update=update, finish=finish)
+        self.setPos(newPos, update=update, finish=finish)
         
    
     def translate(self, *args, **kargs):
@@ -240,6 +242,8 @@ class ROI(GraphicsObject):
     def rotate(self, angle, update=True, finish=True):
         self.setAngle(self.angle()+angle, update=update, finish=finish)
 
+    def handleMoveStarted(self):
+        self.preMoveState = self.getState()
     
     def addTranslateHandle(self, pos, axes=None, item=None, name=None):
         pos = Point(pos)
@@ -298,6 +302,12 @@ class ROI(GraphicsObject):
             #h.hide()
         return h
     
+    def replaceHandle(self, ind, handle):
+        oldHandle = self.handles[ind]
+        self.handles[ind] = handle
+        oldHandle['item'].disconnectROI(self)
+        handle['item'].connectROI(self, ind)    
+    
     def getLocalHandlePositions(self, index=None):
         """Returns the position of a handle in ROI coordinates"""
         if index == None:
@@ -308,7 +318,7 @@ class ROI(GraphicsObject):
         else:
             return (self.handles[index]['name'], self.handles[index]['pos'])
             
-    def getSceneHandlePositions(self, index = None):
+    def getSceneHandlePositions(self, index=None):
         if index == None:
             positions = []
             for h in self.handles:
@@ -333,7 +343,15 @@ class ROI(GraphicsObject):
 
 
     def hoverEvent(self, ev):
-        if self.translatable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        hover = False
+        if not ev.isExit():
+            if self.translatable and ev.acceptDrags(QtCore.Qt.LeftButton):
+                hover=True
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
+                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+                    hover=True
+                    
+        if hover:
             self.setMouseHover(True)
             self.sigHoverEvent.emit(self)
         else:
@@ -381,12 +399,17 @@ class ROI(GraphicsObject):
             self.translate(newPos - self.pos(), snap=snap, finish=False)
         
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
-            if self.isMoving:
-                ev.accept()
-                self.cancelMove()
-            else:
-                ev.ignore()
+        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
+            ev.accept()
+            self.cancelMove()
+        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+            ev.accept()
+            self.sigClicked.emit(self, ev)
+        else:
+            ev.ignore()
+            
+        
+            
 
     def cancelMove(self):
         self.isMoving = False
@@ -617,7 +640,7 @@ class ROI(GraphicsObject):
             for k in list(self.state.keys()):
                 if self.state[k] != self.lastState[k]:
                     changed = True
-        self.lastState = self.stateCopy()
+        
         
         if changed:
             ## Move all handles to match the current configuration of the ROI
@@ -625,6 +648,9 @@ class ROI(GraphicsObject):
                 if h['item'] in self.childItems():
                     p = h['pos']
                     h['item'].setPos(h['pos'] * self.state['size'])
+                #else:
+                #    trans = self.state['pos']-self.lastState['pos']
+                #    h['item'].setPos(h['pos'] + h['item'].parentItem().mapFromParent(trans))
                     
             self.update()
             self.sigRegionChanged.emit(self)
@@ -632,6 +658,7 @@ class ROI(GraphicsObject):
             self.sigRegionChanged.emit(self)
             
         self.freeHandleMoved = False
+        self.lastState = self.stateCopy()
             
         if finish:
             self.stateChangeFinished()
@@ -850,7 +877,8 @@ class ROI(GraphicsObject):
         #return arr5.transpose(tr2)
 
     def getGlobalTransform(self, relativeTo=None):
-        """Return global transformation (rotation angle+translation) required to move from relative state to current state. If relative state isn't specified,
+        """Return global transformation (rotation angle+translation) required to move 
+        from relative state to current state. If relative state isn't specified,
         then we use the state of the ROI when mouse is pressed."""
         if relativeTo == None:
             relativeTo = self.preMoveState
@@ -908,7 +936,7 @@ class Handle(UIGraphicsItem):
         'rf': (12, 0),
     }
     
-    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None):
+    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None, deletable=False):
         #print "   create item with parent", parent
         #self.bounds = QtCore.QRectF(-1e-10, -1e-10, 2e-10, 2e-10)
         #self.setFlags(self.ItemIgnoresTransformations | self.ItemSendsScenePositionChanges)
@@ -923,23 +951,56 @@ class Handle(UIGraphicsItem):
         self.sides, self.startAng = self.types[typ]
         self.buildPath()
         self._shape = None
+        self.menu = self.buildMenu()
         
         UIGraphicsItem.__init__(self, parent=parent)
+        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.deletable = deletable
+        if deletable:
+            self.setAcceptedMouseButtons(QtCore.Qt.RightButton)        
         #self.updateShape()
         self.setZValue(11)
             
     def connectROI(self, roi, i):
+        ### roi is the "parent" roi, i is the index of the handle in roi.handles
         self.roi.append((roi, i))
-    
+        
+    def disconnectROI(self, roi):
+        for i, r in enumerate(self.roi):
+            if r[0] == roi:
+                self.roi.pop(i)
+                
+    def close(self):
+        self.parentItem().handleRemoved(self)
+            
+    def setDeletable(self, b):
+        self.deletable = b
+        if b:
+            self.setAcceptedMouseButtons(self.acceptedMouseButtons() | QtCore.Qt.RightButton)
+        else:
+            self.setAcceptedMouseButtons(self.acceptedMouseButtons() & ~QtCore.Qt.RightButton)
     #def boundingRect(self):
         #return self.bounds
 
     def hoverEvent(self, ev):
-        if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        hover = False
+        if not ev.isExit():
+            if ev.acceptDrags(QtCore.Qt.LeftButton):
+                hover=True
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
+                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+                    hover=True
+                    
+        if hover:
             self.currentPen = fn.mkPen(255, 255,0)
         else:
             self.currentPen = self.pen
         self.update()
+        #if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+            #self.currentPen = fn.mkPen(255, 255,0)
+        #else:
+            #self.currentPen = self.pen
+        #self.update()
             
 
 
@@ -951,7 +1012,37 @@ class Handle(UIGraphicsItem):
             #for r in self.roi:
                 #r[0].cancelMove()
             ev.accept()
+        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+            ev.accept()
+            if ev.button() == QtCore.Qt.RightButton and self.deletable:
+                self.raiseContextMenu(ev)
+            self.sigClicked.emit(self, ev)
+        else:
+            ev.ignore()        
+            
+            #elif self.deletable:
+                #ev.accept()
+                #self.raiseContextMenu(ev)
+            #else:
+                #ev.ignore()
+                
+    def buildMenu(self):
+        menu = QtGui.QMenu()
+        menu.setTitle("Handle")
+        menu.addAction("Remove handle", self.close) 
+        return menu
         
+    def getMenu(self):
+        return self.menu
+                
+            
+    def getContextMenus(self, event):
+        return [self.menu]
+    
+    def raiseContextMenu(self, ev):
+        menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
+        pos = ev.screenPos()
+        menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
 
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.LeftButton:
@@ -970,6 +1061,8 @@ class Handle(UIGraphicsItem):
                     r[0].stateChangeFinished()
             self.isMoving = False
         elif ev.isStart():
+            for r in self.roi:
+                r[0].handleMoveStarted()
             self.isMoving = True
             self.startPos = self.scenePos()
             self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
@@ -1043,6 +1136,12 @@ class Handle(UIGraphicsItem):
         return self._shape
     
     def boundingRect(self):
+        #print 'roi:', self.roi
+        s1 = self.shape()
+        #print "   s1:", s1
+        #s2 = self.shape()
+        #print "   s2:", s2
+        
         return self.shape().boundingRect()
             
     def generateShape(self):
@@ -1153,12 +1252,8 @@ class MultiLineROI(QtGui.QGraphicsObject):
             
         for l in self.lines:
             l.translatable = False
-            #self.addToGroup(l)
-            #l.connect(l, QtCore.SIGNAL('regionChanged'), self.roiChangedEvent)
             l.sigRegionChanged.connect(self.roiChangedEvent)
-            #l.connect(l, QtCore.SIGNAL('regionChangeStarted'), self.roiChangeStartedEvent)
             l.sigRegionChangeStarted.connect(self.roiChangeStartedEvent)
-            #l.connect(l, QtCore.SIGNAL('regionChangeFinished'), self.roiChangeFinishedEvent)
             l.sigRegionChangeFinished.connect(self.roiChangeFinishedEvent)
         
     def paint(self, *args):
@@ -1171,6 +1266,8 @@ class MultiLineROI(QtGui.QGraphicsObject):
         w = self.lines[0].state['size'][1]
         for l in self.lines[1:]:
             w0 = l.state['size'][1]
+            if w == w0:
+                continue
             l.scale([1.0, w/w0], center=[0.5,0.5])
         #self.emit(QtCore.SIGNAL('regionChanged'), self)
         self.sigRegionChanged.emit(self)
@@ -1255,6 +1352,7 @@ class PolygonROI(ROI):
         for p in positions:
             self.addFreeHandle(p)
         self.setZValue(1000)
+        
             
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
@@ -1294,20 +1392,197 @@ class PolygonROI(ROI):
         #sc['handles'] = self.handles
         return sc
 
+class PolyLineROI(ROI):
+    """Container class for multiple connected LineSegmentROIs. Responsible for adding new 
+    line segments, and for translation/(rotation?) of multiple lines together."""
+    def __init__(self, positions, size=[1,1], closed=False, pos=None, **args):
+        if pos is None:
+            pos = [0,0]
+        pen=args.get('pen', fn.mkPen((100,100,255)))
+        ROI.__init__(self, pos, size, **args)
+        
+        self.segments = []
+        
+        for i, p in enumerate(positions[:-1]):
+            h = None
+            if len(self.segments) > 0:
+                h = self.segments[-1].handles[-1]['item']
+            self.segments.append(LineSegmentROI([p, positions[i+1]], pos=pos, handles=(h, None), pen=pen, parent=self, movable=False))
+            
+        
+        for i, s in enumerate(self.segments):
+            h = s.handles[0]
+            self.addFreeHandle(h['pos'], item=h['item'])
+            s.setZValue(self.zValue() +1)
+           
+        h = self.segments[-1].handles[1]
+        self.addFreeHandle(h['pos'], item=h['item'])
+            
+        h1 = self.segments[-1].handles[-1]['item']
+        h2 = self.segments[0].handles[0]['item']
+        if closed:
+            self.segments.append(LineSegmentROI([positions[-1], positions[0]], pos=pos, handles=(h1, h2), pen=pen, parent=self, movable=False))
+            h2.setParentItem(self.segments[-1])
+        for s in self.segments:
+            self.setSegmentSettings(s)
+            
+    def movePoint(self, *args, **kargs):
+        pass
+    #def segmentChanged(self, obj):
+        #pass
+    def setSegmentSettings(self, s):
+        s.setParentROI(self)
+        s.sigClicked.connect(self.newHandleRequested)
+        s.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        for h in s.handles:
+            h['item'].setDeletable(True)
+            h['item'].setAcceptedMouseButtons(h['item'].acceptedMouseButtons() | QtCore.Qt.LeftButton) ## have these handles take left clicks too, so that handles cannot be added on top of other handles
+        
+    def setMouseHover(self, hover):
+        ## Inform all the ROI's segments that the mouse is(not) hovering over it
+        if self.mouseHovering == hover:
+            return
+        self.mouseHovering = hover
+        for s in self.segments:
+            s.setMouseHover(hover)
+            
+    def newHandleRequested(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
+        if ev != None:
+            pos = segment.mapToParent(ev.pos())
+        elif pos != None:
+            pos = pos
+        else:
+            raise Exception("Either an event or a position must be given.")
+        h1 = segment.handles[0]
+        h2 = segment.handles[1]
+        
+        for i, s in enumerate(self.segments):
+            if s == segment:
+                #newSegment = LineSegmentROI([pos, h2['pos']], [0,0], handles=(None, h2['item']), pen=segment.pen, movable=False, acceptsHandles=True, parent=self)
+                newSegment = LineSegmentROI([h1['pos'], pos], [0,0], handles=(h1['item'], None), pen=segment.pen, movable=False, acceptsHandles=True, parent=self)
+                self.setSegmentSettings(newSegment)
+                self.segments.insert(i, newSegment)
+                break
+            
+        segment.replaceHandle(0, newSegment.handles[1])
+        
+        self.handles.insert(i+1, newSegment.handles[1])
+        
+      
+    def handleRemoved(self, segment, handle):
+        #self.segments[i-1].replaceHandle(1, self.segments[ind].handles[1])
+        for i, s in enumerate(self.segments):
+            if s == segment:
+                #s.replaceHandle(0, self.segments[i-1].handles[0])
+                if s != self.segments[-1]:
+                    j = i+1
+                else:
+                    j=0
+                self.segments[j].replaceHandle(0, segment.handles[0])
+                break
+                
+        handle.disconnectROI(self.segments[j])
+        #handle.disconnectROI(self)
+        self.handles.pop(j)
+        #segment.handles[1]['item'].setParentItem(self.segments[(i+1)%len(self.segments)])
+        self.segments.remove(segment)
+        segment.close()
+        
+        
+    def paint(self, p, *args):
+        #for s in self.segments:
+            #s.update()
+        #p.setPen(self.currentPen)
+        #p.setPen(fn.mkPen('w'))
+        #p.drawRect(self.boundingRect())
+        #p.drawPath(self.shape())
+        pass
+    
+    def boundingRect(self):
+        r = QtCore.QRectF()
+        for h in self.handles:
+            r |= self.mapFromItem(h['item'], h['item'].boundingRect()).boundingRect()   ## |= gives the union of the two QRectFs
+        return r 
+
+    def shape(self):
+        p = QtGui.QPainterPath()
+        p.moveTo(self.handles[0]['item'].pos())
+        for i in range(len(self.handles)):
+            p.lineTo(self.handles[i]['item'].pos())
+        p.lineTo(self.handles[0]['item'].pos())
+        return p    
 
 class LineSegmentROI(ROI):
     """
-    ROI subclass with two or more freely-moving handles connecting lines.
+    ROI subclass with two freely-moving handles defining a line.
     """
-    def __init__(self, positions, pos=None, **args):
+    
+    def __init__(self, positions, pos=None, handles=(None,None), acceptsHandles=False, **args):
         if pos is None:
             pos = [0,0]
         ROI.__init__(self, pos, [1,1], **args)
         #ROI.__init__(self, positions[0])
-        for p in positions:
-            self.addFreeHandle(p)
+        if len(positions) > 2:
+            raise Exception("LineSegmentROI can only be defined by 2 positions. This is an API change.")
+        
+        for i, p in enumerate(positions):
+            self.addFreeHandle(p, item=handles[i])
+                
         self.setZValue(1000)
+        self.parentROI = None
+        self.hasParentROI = False
+        self.setAcceptsHandles(acceptsHandles)
+        
+    def setParentROI(self, parent):
+        self.parentROI = parent
+        if parent != None:
+            self.hasParentROI = True
+        else:
+            self.hasParentROI = False
             
+    def setAcceptsHandles(self, b):
+        if b:
+            self.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        else:
+            self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+            
+    def close(self):
+        #for h in self.handles:
+            #if len(h['item'].roi) == 1:
+                #h['item'].scene().removeItem(h['item'])
+            #elif h['item'].parentItem() == self:
+                #h['item'].setParentItem(self.parentItem()) 
+                
+        self.scene().removeItem(self)
+            
+    def handleRemoved(self, handle):
+        self.parentROI.handleRemoved(self, handle)
+        
+    #def hoverEvent(self, ev):
+        #if (self.translatable or self.acceptsHandles) and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+            ##print "       setHover: True"
+            #self.setMouseHover(True)
+            #self.sigHoverEvent.emit(self)
+        #else:
+            ##print "       setHover: False"
+            #self.setMouseHover(False)    
+            
+    #def mouseClickEvent(self, ev):
+        #ROI.mouseClickEvent(self, ev) ## only checks for Right-clicks (for now anyway)
+        #if ev.button() == QtCore.Qt.LeftButton:
+            #if self.acceptsHandles:
+                #ev.accept()
+                #self.newHandleRequested(ev.pos()) ## ev.pos is the position in this item's coordinates
+            #else:
+                #ev.ignore()
+                
+    def newHandleRequested(self, evPos):
+        #print "newHandleRequested"
+        
+        #if evPos - self.handles[0].pos() == Point(0.,0.) or evPos-handles[1].pos() == Point(0.,0.):
+        #    return
+        self.parentROI.newHandleRequested(self, self.mapToParent(evPos)) ## so now evPos should be passed in in the parents coordinate system
+        
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
             
@@ -1320,10 +1595,16 @@ class LineSegmentROI(ROI):
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         p.setPen(self.currentPen)
-        for i in range(len(self.handles)-1):
-            h1 = self.handles[i]['item'].pos()
-            h2 = self.handles[i+1]['item'].pos()
-            p.drawLine(h1, h2)
+        h1 = self.handles[0]['item'].pos()
+        h2 = self.handles[1]['item'].pos()
+        p.drawLine(h1, h2)
+        #p.setPen(fn.mkPen('w'))
+        #p.drawPath(self.shape())
+        
+        #for i in range(len(self.handles)-1):
+            #h1 = self.handles[i]['item'].pos()
+            #h2 = self.handles[i+1]['item'].pos()
+            #p.drawLine(h1, h2)
         
     def boundingRect(self):
         r = QtCore.QRectF()
@@ -1333,9 +1614,23 @@ class LineSegmentROI(ROI):
     
     def shape(self):
         p = QtGui.QPainterPath()
-        p.moveTo(self.handles[0]['item'].pos())
-        for i in range(len(self.handles)):
-            p.lineTo(self.handles[i]['item'].pos())
+        #pw, ph = self.pixelSize()
+        #pHyp = 4 * (pw**2 + ph**2)**0.5
+    
+        h1 = self.handles[0]['item'].pos()
+        h2 = self.handles[1]['item'].pos()
+        pxv = self.pixelVectors(h2-h1)[1] * 4
+        
+        if pxv == (None, None):
+            p.addRect(self.boundingRect())
+            return p
+        
+        p.moveTo(h1+pxv)
+        p.lineTo(h2+pxv)
+        p.lineTo(h2-pxv)
+        p.lineTo(h1-pxv)
+        p.lineTo(h1+pxv)
+      
         return p
     
     def stateCopy(self):
@@ -1465,4 +1760,3 @@ class SpiralROI(ROI):
 
             
 
-                
