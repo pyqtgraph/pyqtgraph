@@ -175,7 +175,7 @@ class ImageView(QtGui.QWidget):
         
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
-    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None):
+    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None):
         """
         Set the image to be displayed in the widget.
         
@@ -284,6 +284,8 @@ class ImageView(QtGui.QWidget):
             self.imageItem.scale(*scale)
         if pos is not None:
             self.imageItem.setPos(*pos)
+        if transform is not None:
+            self.imageItem.setTransform(transform)
         prof.mark('6')
             
         if autoRange:
@@ -325,7 +327,7 @@ class ImageView(QtGui.QWidget):
         image = self.getProcessedImage()
         
         #self.ui.graphicsView.setRange(QtCore.QRectF(0, 0, image.shape[self.axes['x']], image.shape[self.axes['y']]), padding=0., lockAspect=True)        
-        self.view.setRange(self.imageItem.boundingRect(), padding=0.)
+        self.view.autoRange() ##setRange(self.imageItem.viewBoundingRect(), padding=0.)
         
     def getProcessedImage(self):
         """Returns the image data after it has been processed by any normalization options in use."""

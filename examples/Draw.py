@@ -9,21 +9,19 @@ import pyqtgraph as pg
 app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
-win = QtGui.QMainWindow()
-win.resize(800,800)
-view = pg.GraphicsView()
-#view.useOpenGL(True)
-win.setCentralWidget(view)
-win.show()
+w = pg.GraphicsView()
+w.show()
+w.resize(800,800)
 
-## Allow mouse scale/pan
-view.enableMouse()
-## ..But lock the aspect ratio
+view = pg.ViewBox()
+w.setCentralItem(view)
+
+## lock the aspect ratio
 view.setAspectLocked(True)
 
 ## Create image item
 img = pg.ImageItem(np.zeros((200,200)))
-view.scene().addItem(img)
+view.addItem(img)
 
 ## Set initial view bounds
 view.setRange(QtCore.QRectF(0, 0, 200, 200))

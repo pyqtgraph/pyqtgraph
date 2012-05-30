@@ -30,9 +30,7 @@ class ImageItem(GraphicsObject):
     
     
     sigImageChanged = QtCore.Signal()
-    
-    ## performance gains from this are marginal, and it's rather unreliable.
-    useWeave = False
+    sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
     
     def __init__(self, image=None, **kargs):
         """
@@ -48,7 +46,6 @@ class ImageItem(GraphicsObject):
         #self.clipMask = None
         
         self.paintMode = None
-        #self.useWeave = True
         
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
@@ -56,6 +53,7 @@ class ImageItem(GraphicsObject):
         #self.clipLevel = None
         self.drawKernel = None
         self.border = None
+        self.removable = False
         
         if image is not None:
             self.setImage(image, **kargs)
@@ -160,6 +158,9 @@ class ImageItem(GraphicsObject):
             self.setCompositionMode(kargs['compositionMode'])
         if 'border' in kargs:
             self.setBorder(kargs['border'])
+        if 'removable' in kargs:
+            self.removable = kargs['removable']
+            self.menu = None
 
     def setRect(self, rect):
         """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
@@ -264,7 +265,6 @@ class ImageItem(GraphicsObject):
             
         argb, alpha = fn.makeARGB(self.image, lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha)
-        #self.pixmap = QtGui.QPixmap.fromImage(self.qimage)
         prof.finish()
     
 
@@ -324,21 +324,72 @@ class ImageItem(GraphicsObject):
             return 1,1
         return br.width()/self.width(), br.height()/self.height()
 
-    def mousePressEvent(self, ev):
+    #def mousePressEvent(self, ev):
+        #if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
+            #self.drawAt(ev.pos(), ev)
+            #ev.accept()
+        #else:
+            #ev.ignore()
+        
+    #def mouseMoveEvent(self, ev):
+        ##print "mouse move", ev.pos()
+        #if self.drawKernel is not None:
+            #self.drawAt(ev.pos(), ev)
+    
+    #def mouseReleaseEvent(self, ev):
+        #pass
+
+    def mouseDragEvent(self, ev):
+        if ev.button() != QtCore.Qt.LeftButton:
+            ev.ignore()
+            return
+
+        ev.accept()
+        self.drawAt(ev.pos(), ev)
+
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.RightButton:
+            if self.raiseContextMenu(ev):
+                ev.accept()
         if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
             self.drawAt(ev.pos(), ev)
-            ev.accept()
-        else:
-            ev.ignore()
+
+    def raiseContextMenu(self, ev):
+        ## only raise menu if this terminal is removable
+        menu = self.getMenu()
+        if menu is None:
+            return False
+        menu = self.scene().addParentContextMenus(self, menu, ev)
+        pos = ev.screenPos()
+        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+        return True
+
+    def getMenu(self):
+        if self.menu is None:
+            if not self.removable:
+                return None
+            self.menu = QtGui.QMenu()
+            self.menu.setTitle("Image")
+            remAct = QtGui.QAction("Remove image", self.menu)
+            remAct.triggered.connect(self.removeClicked)
+            self.menu.addAction(remAct)
+            self.menu.remAct = remAct
+        return self.menu
         
-    def mouseMoveEvent(self, ev):
-        #print "mouse move", ev.pos()
-        if self.drawKernel is not None:
-            self.drawAt(ev.pos(), ev)
-    
-    def mouseReleaseEvent(self, ev):
-        pass
-    
+        
+    def hoverEvent(self, ev):
+        if not ev.isExit() and self.drawKernel is not None and ev.acceptDrags(QtCore.Qt.LeftButton):
+            ev.acceptClicks(QtCore.Qt.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(QtCore.Qt.RightButton)
+            #self.box.setBrush(fn.mkBrush('w'))
+        elif not ev.isExit() and self.removable:
+            ev.acceptClicks(QtCore.Qt.RightButton)  ## accept context menu clicks
+        #else:
+            #self.box.setBrush(self.brush)
+        #self.update()
+
+
+        
     def tabletEvent(self, ev):
         print(ev.device())
         print(ev.pointerType())
@@ -364,20 +415,10 @@ class ImageItem(GraphicsObject):
             ty[i] += dy1+dy2
             sy[i] += dy1+dy2
 
-        #print sx
-        #print sy
-        #print tx
-        #print ty
-        #print self.image.shape
-        #print self.image[tx[0]:tx[1], ty[0]:ty[1]].shape
-        #print dk[sx[0]:sx[1], sy[0]:sy[1]].shape
         ts = (slice(tx[0],tx[1]), slice(ty[0],ty[1]))
         ss = (slice(sx[0],sx[1]), slice(sy[0],sy[1]))
-        #src = dk[sx[0]:sx[1], sy[0]:sy[1]]
-        #mask = self.drawMask[sx[0]:sx[1], sy[0]:sy[1]]
         mask = self.drawMask
         src = dk
-        #print self.image[ts].shape, src.shape
         
         if isinstance(self.drawMode, collections.Callable):
             self.drawMode(dk, self.image, mask, ss, ts, ev)
@@ -401,197 +442,5 @@ class ImageItem(GraphicsObject):
         self.drawMode = mode
         self.drawMask = mask
 
-
-
-
-
-    #def setImage(self, image=None, copy=True, autoRange=True, clipMask=None, white=None, black=None, axes=None):
-        #prof = debug.Profiler('ImageItem.updateImage 0x%x' %id(self), disabled=True)
-        ##debug.printTrace()
-        #if axes is None:
-            #axh = {'x': 0, 'y': 1, 'c': 2}
-        #else:
-            #axh = axes
-        ##print "Update image", black, white
-        #if white is not None:
-            #self.whiteLevel = white
-        #if black is not None:
-            #self.blackLevel = black  
-        
-        #gotNewData = False
-        #if image is None:
-            #if self.image is None:
-                #return
-        #else:
-            #gotNewData = True
-            #if self.image is None or image.shape != self.image.shape:
-                #self.prepareGeometryChange()
-            #if copy:
-                #self.image = image.view(np.ndarray).copy()
-            #else:
-                #self.image = image.view(np.ndarray)
-        ##print "  image max:", self.image.max(), "min:", self.image.min()
-        #prof.mark('1')
-        
-        ## Determine scale factors
-        #if autoRange or self.blackLevel is None:
-            #if self.image.dtype is np.ubyte:
-                #self.blackLevel = 0
-                #self.whiteLevel = 255
-            #else:
-                #self.blackLevel = self.image.min()
-                #self.whiteLevel = self.image.max()
-        ##print "Image item using", self.blackLevel, self.whiteLevel
-        
-        #if self.blackLevel != self.whiteLevel:
-            #scale = 255. / (self.whiteLevel - self.blackLevel)
-        #else:
-            #scale = 0.
-        
-        #prof.mark('2')
-        
-        ### Recolor and convert to 8 bit per channel
-        ## Try using weave, then fall back to python
-        #shape = self.image.shape
-        #black = float(self.blackLevel)
-        #white = float(self.whiteLevel)
-        
-        #if black == 0 and white == 255 and self.image.dtype == np.ubyte:
-            #im = self.image
-        #elif self.image.dtype in [np.ubyte, np.uint16]:
-            ## use lookup table instead
-            #npts = 2**(self.image.itemsize * 8)
-            #lut = self.getLookupTable(npts, black, white)
-            #im = lut[self.image]
-        #else:
-            #im = self.applyColorScaling(self.image, black, scale)
-            
-        #prof.mark('3')
-
-        #try:
-            #im1 = np.empty((im.shape[axh['y']], im.shape[axh['x']], 4), dtype=np.ubyte)
-        #except:
-            #print im.shape, axh
-            #raise
-        #alpha = np.clip(int(255 * self.alpha), 0, 255)
-        #prof.mark('4')
-        ## Fill image 
-        #if im.ndim == 2:
-            #im2 = im.transpose(axh['y'], axh['x'])
-            #im1[..., 0] = im2
-            #im1[..., 1] = im2
-            #im1[..., 2] = im2
-            #im1[..., 3] = alpha
-        #elif im.ndim == 3: #color image
-            #im2 = im.transpose(axh['y'], axh['x'], axh['c'])
-            #if im2.shape[2] > 4:
-                #raise Exception("ImageItem got image with more than 4 color channels (shape is %s; axes are %s)" % (str(im.shape), str(axh)))
-            ###      [B G R A]    Reorder colors
-            #order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
-            
-            #for i in range(0, im.shape[axh['c']]):
-                #im1[..., order[i]] = im2[..., i]    
-            
-            ### fill in unused channels with 0 or alpha
-            #for i in range(im.shape[axh['c']], 3):
-                #im1[..., i] = 0
-            #if im.shape[axh['c']] < 4:
-                #im1[..., 3] = alpha
-                
-        #else:
-            #raise Exception("Image must be 2 or 3 dimensions")
-        ##self.im1 = im1
-        ## Display image
-        #prof.mark('5')
-        #if self.clipLevel is not None or clipMask is not None:
-            #if clipMask is not None:
-                #mask = clipMask.transpose()
-            #else:
-                #mask = (self.image < self.clipLevel).transpose()
-            #im1[..., 0][mask] *= 0.5
-            #im1[..., 1][mask] *= 0.5
-            #im1[..., 2][mask] = 255
-        #prof.mark('6')
-        ##print "Final image:", im1.dtype, im1.min(), im1.max(), im1.shape
-        ##self.ims = im1.tostring()  ## Must be held in memory here because qImage won't do it for us :(
-        #prof.mark('7')
-        #try:
-            #buf = im1.data
-        #except AttributeError:
-            #im1 = np.ascontiguousarray(im1)
-            #buf = im1.data
-        
-        #qimage = QtGui.QImage(buf, im1.shape[1], im1.shape[0], QtGui.QImage.Format_ARGB32)
-        #self.qimage = qimage
-        #self.qimage.data = im1
-        #self._pixmap = None
-        #prof.mark('8')
-        
-        ##self.pixmap = QtGui.QPixmap.fromImage(qimage)
-        #prof.mark('9')
-        ###del self.ims
-        ##self.item.setPixmap(self.pixmap)
-        
-        #self.update()
-        #prof.mark('10')
-        
-        #if gotNewData:
-            ##self.emit(QtCore.SIGNAL('imageChanged'))
-            #self.sigImageChanged.emit()
-            
-        #prof.finish()
-        
-    #def getLookupTable(self, num, black, white):
-        #num = int(num)
-        #black = int(black)
-        #white = int(white)
-        #if white < black:
-            #b = black
-            #black = white
-            #white = b
-        #key = (num, black, white)
-        #lut = np.empty(num, dtype=np.ubyte)
-        #lut[:black] = 0
-        #rng = lut[black:white]
-        #try:
-            #rng[:] = np.linspace(0, 255, white-black)[:len(rng)]
-        #except:
-            #print key, rng.shape
-        #lut[white:] = 255
-        #return lut
-        
-        
-    #def applyColorScaling(self, img, offset, scale):
-        #try:
-            #if not ImageItem.useWeave:
-                #raise Exception('Skipping weave compile')
-            ##sim = np.ascontiguousarray(self.image)  ## should not be needed
-            #sim = img.reshape(img.size)
-            ##sim.shape = sim.size
-            #im = np.empty(sim.shape, dtype=np.ubyte)
-            #n = im.size
-            
-            #code = """
-            #for( int i=0; i<n; i++ ) {
-                #float a = (sim(i)-offset) * (float)scale;
-                #if( a > 255.0 )
-                    #a = 255.0;
-                #else if( a < 0.0 )
-                    #a = 0.0;
-                #im(i) = a;
-            #}
-            #"""
-            
-            #weave.inline(code, ['sim', 'im', 'n', 'offset', 'scale'], type_converters=converters.blitz, compiler = 'gcc')
-            ##sim.shape = shape
-            #im.shape = img.shape
-        #except:
-            #if ImageItem.useWeave:
-                #ImageItem.useWeave = False
-                ##sys.excepthook(*sys.exc_info())
-                ##print "=============================================================================="
-                ##print "Weave compile failed, falling back to slower version."
-            ##img.shape = shape
-            #im = ((img - offset) * scale).clip(0.,255.).astype(np.ubyte)
-        #return im
-        
+    def removeClicked(self):
+        self.sigRemoveRequested.emit(self)

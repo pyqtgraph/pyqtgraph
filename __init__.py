@@ -110,7 +110,9 @@ importAll('widgets', excludes=['MatplotlibWidget'])
 from .imageview import *
 from .WidgetGroup import *
 from .Point import Point
+from .Vector import Vector
 from .Transform import Transform
+from .Transform3D import Transform3D
 from .functions import *
 from .graphicsWindows import *
 from .SignalProxy import *

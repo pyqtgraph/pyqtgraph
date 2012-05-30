@@ -322,7 +322,7 @@ class PlotCurveItem(GraphicsObject):
             
         
         pixels = self.pixelVectors()
-        if pixels is None:
+        if pixels == (None, None):
             pixels = [Point(0,0), Point(0,0)]
         xmin = x.min() - pixels[0].x() * lineWidth
         xmax = x.max() + pixels[0].x() * lineWidth

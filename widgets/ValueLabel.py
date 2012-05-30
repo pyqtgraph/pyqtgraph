@@ -47,6 +47,8 @@ class ValueLabel(QtGui.QLabel):
         self.formatStr = text
         self.update()
         
+    def setAverageTime(self, t):
+        self.averageTime = t
         
     def averageValue(self):
         return reduce(lambda a,b: a+b, [v[1] for v in self.values]) / float(len(self.values))

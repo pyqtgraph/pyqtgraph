@@ -57,7 +57,7 @@ class CheckTable(QtGui.QWidget):
         
     def removeRow(self, name):
         row = self.rowNames.index(name)
-        self.oldRows[name] = self.saveState['rows'][name]  ## save for later
+        self.oldRows[name] = self.saveState()['rows'][row]  ## save for later
         self.rowNames.pop(row)
         for w in self.rowWidgets[row]:
             w.setParent(None)

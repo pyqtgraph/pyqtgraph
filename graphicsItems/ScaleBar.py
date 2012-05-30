@@ -22,7 +22,7 @@ class ScaleBar(UIGraphicsItem):
         
         rect = self.boundingRect()
         unit = self.pixelSize()
-        y = rect.bottom() + (rect.top()-rect.bottom()) * 0.02
+        y = rect.top() + (rect.bottom()-rect.top()) * 0.02
         y1 = y + unit[1]*self._width
         x = rect.right() + (rect.left()-rect.right()) * 0.02
         x1 = x - self.size

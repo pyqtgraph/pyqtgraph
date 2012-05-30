@@ -32,6 +32,7 @@ class MouseDragEvent:
         self._buttons = moveEvent.buttons()
         self._button = pressEvent.button()
         self._modifiers = moveEvent.modifiers()
+        self.acceptedItem = None
         
     def accept(self):
         """An item should call this method if it can handle the event. This will prevent the event being delivered to any other items."""
@@ -160,7 +161,7 @@ class MouseClickEvent:
         self._buttons = pressEvent.buttons()
         self._modifiers = pressEvent.modifiers()
         self._time = ptime.time()
-        
+        self.acceptedItem = None
         
     def accept(self):
         """An item should call this method if it can handle the event. This will prevent the event being delivered to any other items."""
