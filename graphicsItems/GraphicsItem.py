@@ -9,6 +9,10 @@ class GraphicsItem(object):
 
     Abstract class providing useful methods to GraphicsObject and GraphicsWidget.
     (This is required because we cannot have multiple inheritance with QObject subclasses.)
+
+    A note about Qt's GraphicsView framework:
+
+    The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
     def __init__(self, register=True):
         self._viewWidget = None
@@ -31,10 +35,10 @@ class GraphicsItem(object):
                 return None
             self._viewWidget = weakref.ref(self.scene().views()[0])
         return self._viewWidget()
-        
+    
     def forgetViewWidget(self):
         self._viewWidget = None
-        
+    
     def getViewBox(self):
         """
         Return the first ViewBox or GraphicsView which bounds this item's visible space.
@@ -72,7 +76,15 @@ class GraphicsItem(object):
             if view is None:
                 return None
             viewportTransform = view.viewportTransform()
-        return QtGui.QGraphicsObject.deviceTransform(self, viewportTransform)
+        dt = QtGui.QGraphicsObject.deviceTransform(self, viewportTransform)
+        
+        #xmag = abs(dt.m11())+abs(dt.m12())
+        #ymag = abs(dt.m21())+abs(dt.m22())
+        #if xmag * ymag == 0: 
+        if dt.determinant() == 0:  ## occurs when deviceTransform is invalid because widget has not been displayed
+            return None
+        else:
+            return dt
         
     def viewTransform(self):
         """Return the transform that maps from local coordinates to the item's ViewBox coordinates
@@ -123,35 +135,59 @@ class GraphicsItem(object):
         
         
         
-    def pixelVectors(self):
-        """Return vectors in local coordinates representing the width and height of a view pixel."""
-        vt = self.deviceTransform()
-        if vt is None:
-            return None
-        vt = vt.inverted()[0]
-        orig = vt.map(QtCore.QPointF(0, 0))
-        return vt.map(QtCore.QPointF(1, 0))-orig, vt.map(QtCore.QPointF(0, 1))-orig
+
+    def pixelVectors(self, direction=None):
+        """Return vectors in local coordinates representing the width and height of a view pixel.
+        If direction is specified, then return vectors parallel and orthogonal to it.
         
-    def pixelLength(self, direction):
-        """
-        Return the length of one pixel in the direction indicated (in local coordinates)
-        If the result would be infinite (this happens if the device transform is not properly configured yet),
-        then return None instead.
-        """
+        Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)."""
+
         dt = self.deviceTransform()
         if dt is None:
-            return None
+            return None, None
+        
+        if direction is None:
+            direction = Point(1, 0)
+            
         viewDir = Point(dt.map(direction) - dt.map(Point(0,0)))
-        try:
-            norm = viewDir.norm()
-        except ZeroDivisionError:
-            return None
+        orthoDir = Point(viewDir[1], -viewDir[0])  ## orthogonal to line in pixel-space
+        
+        try:  
+            normView = viewDir.norm()  ## direction of one pixel orthogonal to line
+            normOrtho = orthoDir.norm()
+        except:
+            raise Exception("Invalid direction %s" %direction)
+            
+        
         dti = dt.inverted()[0]
-        return Point(dti.map(norm)-dti.map(Point(0,0))).length()
+        return Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))  
+    
+        #vt = self.deviceTransform()
+        #if vt is None:
+            #return None
+        #vt = vt.inverted()[0]
+        #orig = vt.map(QtCore.QPointF(0, 0))
+        #return vt.map(QtCore.QPointF(1, 0))-orig, vt.map(QtCore.QPointF(0, 1))-orig
+        
+    def pixelLength(self, direction, ortho=False):
+        """Return the length of one pixel in the direction indicated (in local coordinates)
+        If ortho=True, then return the length of one pixel orthogonal to the direction indicated.
+        
+        Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
+        """
+        normV, orthoV = self.pixelVectors(direction)
+        if normV == None or orthoV == None:
+            return None
+        if ortho:
+            return orthoV.length()
+        return normV.length()
+        
         
 
     def pixelSize(self):
         v = self.pixelVectors()
+        if v == (None, None):
+            return None, None
         return (v[0].x()**2+v[0].y()**2)**0.5, (v[1].x()**2+v[1].y()**2)**0.5
 
     def pixelWidth(self):

@@ -1,15 +1,15 @@
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
-from .UIGraphicsItem import UIGraphicsItem
+from .GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 import numpy as np
 import weakref
 
 
 __all__ = ['InfiniteLine']
-class InfiniteLine(UIGraphicsItem):
+class InfiniteLine(GraphicsObject):
     """
-    **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
+    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     
     Displays a line of infinite length.
     This line may be dragged to indicate a position in data coordinates.
@@ -42,7 +42,7 @@ class InfiniteLine(UIGraphicsItem):
         ============= ==================================================================
         """
         
-        UIGraphicsItem.__init__(self)
+        GraphicsObject.__init__(self)
         
         if bounds is None:              ## allowed value boundaries for orthogonal lines
             self.maxRange = [None, None]
@@ -121,7 +121,7 @@ class InfiniteLine(UIGraphicsItem):
             
         if self.p != newPos:
             self.p = newPos
-            UIGraphicsItem.setPos(self, Point(self.p))
+            GraphicsObject.setPos(self, Point(self.p))
             self.update()
             self.sigPositionChanged.emit(self)
 
@@ -161,31 +161,18 @@ class InfiniteLine(UIGraphicsItem):
         #return GraphicsObject.itemChange(self, change, val)
                 
     def boundingRect(self):
-        br = UIGraphicsItem.boundingRect(self)
-        
+        #br = UIGraphicsItem.boundingRect(self)
+        br = self.viewRect()
         ## add a 4-pixel radius around the line for mouse interaction.
         
-        #print "line bounds:", self, br
-        dt = self.deviceTransform()
-        if dt is None:
-            return QtCore.QRectF()
-        lineDir = Point(dt.map(Point(1, 0)) - dt.map(Point(0,0)))  ## direction of line in pixel-space
-        orthoDir = Point(lineDir[1], -lineDir[0])  ## orthogonal to line in pixel-space
-        try:
-            norm = orthoDir.norm()  ## direction of one pixel orthogonal to line
-        except ZeroDivisionError:
-            return br
-        
-        dti = dt.inverted()[0]
-        px = Point(dti.map(norm)-dti.map(Point(0,0)))  ## orthogonal pixel mapped back to item coords
-        px = px[1]  ## project to y-direction
-        
+        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+        if px is None:
+            px = 0
         br.setBottom(-px*4)
         br.setTop(px*4)
         return br.normalized()
     
     def paint(self, p, *args):
-        UIGraphicsItem.paint(self, p, *args)
         br = self.boundingRect()
         p.setPen(self.currentPen)
         p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
