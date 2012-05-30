@@ -328,6 +328,35 @@ def glColor(*args, **kargs):
     c = mkColor(*args, **kargs)
     return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
 
+    
+
+def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
+    """
+    Construct a path outlining an arrow with the given dimensions.
+    The arrow points in the -x direction with tip positioned at 0,0.
+    If *tipAngle* is supplied (in degrees), it overrides *headWidth*.
+    If *tailLen* is None, no tail will be drawn.
+    """
+    headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+    path = QtGui.QPainterPath()
+    path.moveTo(0,0)
+    path.lineTo(headLen, -headWidth)
+    if tailLen is None:
+        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        path.lineTo(innerY, 0)
+    else:
+        tailWidth *= 0.5
+        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        path.lineTo(innerY, -tailWidth)
+        path.lineTo(headLen + tailLen, -tailWidth)
+        path.lineTo(headLen + tailLen, tailWidth)
+        path.lineTo(innerY, tailWidth)
+    path.lineTo(headLen, headWidth)
+    path.lineTo(0,0)
+    return path
+    
+    
+    
 def affineSlice(data, shape, origin, vectors, axes, **kargs):
     """
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
@@ -348,6 +377,8 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
         * If the vectors are not orthogonal, the result will be sheared.
             
         *axes*: the axes in the original dataset which correspond to the slice *vectors*
+        
+        All extra keyword arguments are passed to scipy.ndimage.map_coordinates
         
     Example: start with a 4D fMRI data set, take a diagonal-planar slice out of the last 3 axes
         
@@ -419,8 +450,45 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
     return output.transpose(tr2)
 
 
-
-
+def solve3DTransform(points1, points2):
+    """
+    Find a 3D transformation matrix that maps points1 onto points2
+    points must be specified as a list of 4 Vectors.
+    """
+    A = np.array([[points1[i].x(), points1[i].y(), points1[i].z(), 1] for i in range(4)])
+    B = np.array([[points2[i].x(), points2[i].y(), points2[i].z(), 1] for i in range(4)])
+    
+    ## solve 3 sets of linear equations to determine transformation matrix elements
+    matrix = np.zeros((4,4))
+    for i in range(3):
+        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+    
+    return matrix
+    
+def solveBilinearTransform(points1, points2):
+    """
+    Find a bilinear transformation matrix (2x4) that maps points1 onto points2
+    points must be specified as a list of 4 Vector, Point, QPointF, etc.
+    
+    To use this matrix to map a point [x,y]::
+    
+        mapped = np.dot(matrix, [x*y, x, y, 1])
+    """
+    ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
+    ## B is 4 rows (points) x 2 columns (x, y)
+    A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
+    B = np.array([[points2[i].x(), points2[i].y()] for i in range(4)])
+    
+    ## solve 2 sets of linear equations to determine transformation matrix elements
+    matrix = np.zeros((2,4))
+    for i in range(2):
+        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+    
+    return matrix
+    
+    
+    
+    
 
 def makeARGB(data, lut=None, levels=None, useRGBA=False): 
     """
