@@ -160,8 +160,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if self.opts['int']:
             if 'step' in opts:
                 step = opts['step']
-                if int(step) != step:
-                    raise Exception('Integer SpinBox must have integer step size.')
+                ## not necessary..
+                #if int(step) != step:
+                    #raise Exception('Integer SpinBox must have integer step size.')
             else:
                 self.opts['step'] = int(self.opts['step'])
             
@@ -486,61 +487,3 @@ class SpinBox(QtGui.QAbstractSpinBox):
     #def widgetGroupInterface(self):
         #return (self.valueChanged, SpinBox.value, SpinBox.setValue)
     
-        
-if __name__ == '__main__':
-    import sys
-    app = QtGui.QApplication([])
-    
-    def valueChanged(sb):
-        #sb = QtCore.QObject.sender()
-        print(str(sb) + " valueChanged: %s" % str(sb.value()))
-    
-    def valueChanging(sb, value):
-        #sb = QtCore.QObject.sender()
-        print(str(sb) + " valueChanging: %s" % str(sb.value()))
-    
-    def mkWin():
-        win = QtGui.QMainWindow()
-        g = QtGui.QFormLayout()
-        w = QtGui.QWidget()
-        w.setLayout(g)
-        win.setCentralWidget(w)
-        s1 = SpinBox(value=5, step=0.1, bounds=[-1.5, None], suffix='units')
-        t1 = QtGui.QLineEdit()
-        g.addRow(s1, t1)
-        s2 = SpinBox(value=10e-6, dec=True, step=0.1, minStep=1e-6, suffix='A', siPrefix=True)
-        t2 = QtGui.QLineEdit()
-        g.addRow(s2, t2)
-        s3 = SpinBox(value=1000, dec=True, step=0.5, minStep=1e-6, bounds=[1, 1e9], suffix='Hz', siPrefix=True)
-        t3 = QtGui.QLineEdit()
-        g.addRow(s3, t3)
-        s4 = SpinBox(int=True, dec=True, step=1, minStep=1, bounds=[-10, 1000])
-        t4 = QtGui.QLineEdit()
-        g.addRow(s4, t4)
-
-        win.show()
-        
-        import sys
-        for sb in [s1, s2, s3,s4]:
-            
-            #QtCore.QObject.connect(sb, QtCore.SIGNAL('valueChanged(double)'), lambda v: sys.stdout.write(str(sb) + " valueChanged\n"))
-            #QtCore.QObject.connect(sb, QtCore.SIGNAL('editingFinished()'), lambda: sys.stdout.write(str(sb) + " editingFinished\n"))
-            sb.sigValueChanged.connect(valueChanged)
-            sb.sigValueChanging.connect(valueChanging)
-            sb.editingFinished.connect(lambda: sys.stdout.write(str(sb) + " editingFinished\n"))
-        return win, w, [s1, s2, s3, s4]
-    a = mkWin()
-    
-        
-    def test(n=100):
-        for i in range(n):
-            win, w, sb = mkWin()
-            for s in sb:
-                w.setParent(None)
-                s.setParent(None)
-                s.valueChanged.disconnect()
-                s.editingFinished.disconnect()
-                
-    ## Start Qt event loop unless running in interactive mode.
-    if sys.flags.interactive != 1:
-        app.exec_()

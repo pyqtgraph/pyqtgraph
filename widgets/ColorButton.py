@@ -83,22 +83,3 @@ class ColorButton(QtGui.QPushButton):
     def widgetGroupInterface(self):
         return (self.sigColorChanged, ColorButton.saveState, ColorButton.restoreState)
     
-if __name__ == '__main__':
-    app = QtGui.QApplication([])
-    win = QtGui.QMainWindow()
-    btn = ColorButton()
-    win.setCentralWidget(btn)
-    win.show()
-    
-    def change(btn):
-        print("change", btn.color())
-    def done(btn):
-        print("done", btn.color())
-        
-    btn.sigColorChanging.connect(change)
-    btn.sigColorChanged.connect(done)
-    
-    ## Start Qt event loop unless running in interactive mode.
-    import sys
-    if sys.flags.interactive != 1:
-        app.exec_()

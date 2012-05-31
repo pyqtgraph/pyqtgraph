@@ -81,26 +81,3 @@ class DataTreeWidget(QtGui.QTreeWidget):
             #node = QtGui.QTreeWidgetItem([unicode(name), unicode(v)])
         #return node
         
-        
-if __name__ == '__main__':
-    app = QtGui.QApplication([])
-    d = {
-        'list1': [1,2,3,4,5,6, {'nested1': 'aaaaa', 'nested2': 'bbbbb'}, "seven"],
-        'dict1': {
-            'x': 1,
-            'y': 2,
-            'z': 'three'
-        },
-        'array1 (20x20)': np.ones((10,10))
-    }
-        
-    tree = DataTreeWidget(data=d)
-    tree.show()
-    tree.resize(600,600)
-    
-    
-    ## Start Qt event loop unless running in interactive mode.
-    import sys
-    if sys.flags.interactive != 1:
-        app.exec_()
-        
