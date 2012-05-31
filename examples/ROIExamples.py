@@ -62,12 +62,17 @@ update(rois[-1])
     
 
 
-text = """Extraction of traces from image data"""
+text = """User-Modifiable ROIs<br>
+Click on a line segment to add a new handle.
+Right click on a handle to remove.
+"""
 w2 = w.addLayout(row=0, col=1)
 label2 = w2.addLabel(text, row=0, col=0)
 v2a = w2.addViewBox(row=1, col=0, lockAspect=True)
-v2b = w2.addPlot(row=2, col=0)
-
+r2a = pg.PolyLineROI([[0,0], [10,10], [10,30], [30,10]], closed=True)
+v2a.addItem(r2a)
+r2b = pg.PolyLineROI([[0,-20], [10,-10], [10,-30]], closed=False)
+v2a.addItem(r2b)
 
 text = """Building custom ROI types<Br>
 ROIs can be built with a variety of different handle types<br>
