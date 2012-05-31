@@ -13,6 +13,10 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     
     def __init__(self, **opts):
         QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
+        if 'size' in opts:
+            opts['headLen'] = opts['size']
+        if 'width' in opts:
+            opts['headWidth'] = opts['width']
         defOpts = {
             'pxMode': True,
             'angle': -150,   ## If the angle is 0, the arrow points left
