@@ -19,12 +19,12 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 from . import python2_3
 
     
-## in general openGL is poorly supported in Qt.
+## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
 if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
-elif 'darwin' in sys.platform: ## openGL greatly speeds up display on mac
+elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = True
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
@@ -111,8 +111,8 @@ from .imageview import *
 from .WidgetGroup import *
 from .Point import Point
 from .Vector import Vector
-from .Transform import Transform
-from .Transform3D import Transform3D
+from .SRTTransform import SRTTransform
+from .SRTTransform3D import SRTTransform3D
 from .functions import *
 from .graphicsWindows import *
 from .SignalProxy import *

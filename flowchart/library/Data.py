@@ -3,7 +3,7 @@ from ..Node import Node
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 from .common import *
-from pyqtgraph.Transform import Transform
+from pyqtgraph.SRTTransform import SRTTransform
 from pyqtgraph.Point import Point
 from pyqtgraph.widgets.TreeWidget import TreeWidget
 from pyqtgraph.graphicsItems.LinearRegionItem import LinearRegionItem

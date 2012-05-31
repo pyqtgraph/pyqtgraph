@@ -92,7 +92,7 @@ class CanvasItem(QtCore.QObject):
         if 'transform' in self.opts:
             self.baseTransform = self.opts['transform']
         else:
-            self.baseTransform = pg.Transform()
+            self.baseTransform = pg.SRTTransform()
             if 'pos' in self.opts and self.opts['pos'] is not None:
                 self.baseTransform.translate(self.opts['pos'])
             if 'angle' in self.opts and self.opts['angle'] is not None:
@@ -120,8 +120,8 @@ class CanvasItem(QtCore.QObject):
         self.itemScale = QtGui.QGraphicsScale()
         self._graphicsItem.setTransformations([self.itemRotation, self.itemScale])
         
-        self.tempTransform = pg.Transform() ## holds the additional transform that happens during a move - gets added to the userTransform when move is done.
-        self.userTransform = pg.Transform() ## stores the total transform of the object
+        self.tempTransform = pg.SRTTransform() ## holds the additional transform that happens during a move - gets added to the userTransform when move is done.
+        self.userTransform = pg.SRTTransform() ## stores the total transform of the object
         self.resetUserTransform() 
         
         ## now happens inside resetUserTransform -> selectBoxToItem
@@ -196,7 +196,7 @@ class CanvasItem(QtCore.QObject):
         #flip = self.transformGui.mirrorImageCheck.isChecked()
         #tr = self.userTransform.saveState()
         
-        inv = pg.Transform()
+        inv = pg.SRTTransform()
         inv.scale(-1, 1)
         self.userTransform = self.userTransform * inv
         self.updateTransform()
@@ -226,7 +226,7 @@ class CanvasItem(QtCore.QObject):
         if not self.isMovable():
             return
         self.rotate(180.)
-        # inv = pg.Transform()
+        # inv = pg.SRTTransform()
         # inv.scale(-1, -1)
         # self.userTransform = self.userTransform * inv #flip lr/ud
         # s=self.updateTransform()
@@ -311,7 +311,7 @@ class CanvasItem(QtCore.QObject):
 
 
     def resetTemporaryTransform(self):
-        self.tempTransform = pg.Transform()  ## don't use Transform.reset()--this transform might be used elsewhere.
+        self.tempTransform = pg.SRTTransform()  ## don't use Transform.reset()--this transform might be used elsewhere.
         self.updateTransform()
         
     def transform(self): 
@@ -363,7 +363,7 @@ class CanvasItem(QtCore.QObject):
         try:
             #self.userTranslate = pg.Point(tr['trans'])
             #self.userRotate = tr['rot']
-            self.userTransform = pg.Transform(tr)
+            self.userTransform = pg.SRTTransform(tr)
             self.updateTransform()
             
             self.selectBoxFromUser() ## move select box to match
@@ -372,7 +372,7 @@ class CanvasItem(QtCore.QObject):
         except:
             #self.userTranslate = pg.Point([0,0])
             #self.userRotate = 0
-            self.userTransform = pg.Transform()
+            self.userTransform = pg.SRTTransform()
             debug.printExc("Failed to load transform:")
         #print "set transform", self, self.userTranslate
         
