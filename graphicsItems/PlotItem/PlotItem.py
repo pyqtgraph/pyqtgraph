@@ -193,6 +193,7 @@ class PlotItem(GraphicsWidget):
             'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
             'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled',
             'enableAutoRange', 'disableAutoRange', 'setAspectLocked',
+            'setMenuEnabled', 'menuEnabled',
             'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
             setattr(self, m, getattr(self.vb, m))
             

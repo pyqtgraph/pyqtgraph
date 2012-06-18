@@ -62,7 +62,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, name=None):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu = True, name=None):
         """
         =============  =============================================================
         **Arguments**
@@ -103,6 +103,7 @@ class ViewBox(GraphicsWidget):
             
             'mouseEnabled': [enableMouse, enableMouse],
             'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
+            'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
         }
         
@@ -250,6 +251,13 @@ class ViewBox(GraphicsWidget):
             
     def mouseEnabled(self):
         return self.state['mouseEnabled'][:]
+        
+    def setMenuEnabled(self, enableMenu=True):
+        self.state['enableMenu'] = enableMenu
+        self.sigStateChanged.emit(self)
+
+    def menuEnabled(self):
+        return self.state.get('enableMenu', True)       
     
     def addItem(self, item, ignoreBounds=False):
         """
@@ -822,7 +830,7 @@ class ViewBox(GraphicsWidget):
 
         
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():
             ev.accept()
             self.raiseContextMenu(ev)
     
