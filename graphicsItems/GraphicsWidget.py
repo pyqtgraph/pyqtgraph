@@ -5,6 +5,8 @@ from .GraphicsItem import GraphicsItem
 __all__ = ['GraphicsWidget']
 
 class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
+    
+    _qtBaseClass = QtGui.QGraphicsWidget
     def __init__(self, *args, **kargs):
         """
         **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtGui.QGraphicsWidget`
@@ -14,7 +16,9 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
-        GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+        
+        ## done by GraphicsItem init
+        #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
 ## Removed because this causes segmentation faults. Don't know why.
 #    def itemChange(self, change, value):
@@ -52,11 +56,3 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         return p
 
 
-
-    def setParentItem(self, parent):
-        ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-        if parent is not None:
-            pscene = parent.scene()
-            if pscene is not None and self.scene() is not pscene:
-                pscene.addItem(self)
-        return QtGui.QGraphicsObject.setParentItem(self, parent)
