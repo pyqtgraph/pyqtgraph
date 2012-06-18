@@ -94,7 +94,7 @@ class TableWidget(QtGui.QTableWidget):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
             return lambda d: iter(d.values()), list(map(str, data.keys()))
-        elif HAVE_METAARRAY and isinstance(data, metaarray.MetaArray):
+        elif HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             if data.axisHasColumns(0):
                 header = [str(data.columnName(0, i)) for i in range(data.shape[0])]
             elif data.axisHasValues(0):

@@ -50,7 +50,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
         
         if isinstance(data, types.TracebackType):  ## convert traceback to a list of strings
             data = list(map(str.strip, traceback.format_list(traceback.extract_tb(data))))
-        elif HAVE_METAARRAY and isinstance(data, metaarray.MetaArray):
+        elif HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             data = {
                 'data': data.view(np.ndarray),
                 'meta': data.infoCopy()

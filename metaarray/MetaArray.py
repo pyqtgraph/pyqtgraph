@@ -4,7 +4,7 @@ MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 
-MetaArray is an extension of ndarray which allows storage of per-axis meta data
+MetaArray is an array class based on numpy.ndarray that allows storage of per-axis meta data
 such as axis values, names, units, column names, etc. It also enables several
 new methods for slicing and indexing the array based on this meta data. 
 More info at http://www.scipy.org/Cookbook/MetaArray
@@ -126,7 +126,7 @@ class MetaArray(object):
                 raise Exception("File read failed: %s" % file)
         else:
             self._info = info
-            if isinstance(data, MetaArray):
+            if (hasattr(data, 'implements') and data.implements('MetaArray')):
                 self._info = data._info
                 self._data = data.asarray()
             elif isinstance(data, tuple):  ## create empty array with specified shape
@@ -172,6 +172,13 @@ class MetaArray(object):
                         info[i]['cols'] = list(info[i]['cols'])
                     if len(info[i]['cols']) != self.shape[i]:
                         raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' % (i, len(info[i]['cols']), self.shape[i]))
+   
+    def implements(self, name=None):
+        ## Rather than isinstance(obj, MetaArray) use object.implements('MetaArray')
+        if name is None:
+            return ['MetaArray']
+        else:
+            return name == 'MetaArray'
     
     #def __array_finalize__(self,obj):
         ### array_finalize is called every time a MetaArray is created 
@@ -670,7 +677,18 @@ class MetaArray(object):
 
     #### File I/O Routines
     def readFile(self, filename, **kwargs):
-        """Load the data and meta info stored in *filename*"""
+        """Load the data and meta info stored in *filename*
+        Different arguments are allowed depending on the type of file.
+        For HDF5 files:
+        
+            *writable* (bool) if True, then any modifications to data in the array will be stored to disk.
+            *readAllData* (bool) if True, then all data in the array is immediately read from disk
+                          and the file is closed (this is the default for files < 500MB). Otherwise, the file will
+                          be left open and data will be read only as requested (this is 
+                          the default for files >= 500MB).
+        
+        
+        """
         ## decide which read function to use
         fd = open(filename, 'rb')
         magic = fd.read(8)
@@ -833,27 +851,39 @@ class MetaArray(object):
         #raise Exception()  ## stress-testing
         #return subarr
 
-    def _readHDF5(self, fileName, close=False, writable=False):
+    def _readHDF5(self, fileName, readAllData=None, writable=False, **kargs):
+        if 'close' in kargs and readAllData is None: ## for backward compatibility
+            readAllData = kargs['close']
+       
         if not HAVE_HDF5:
             raise Exception("The file '%s' is HDF5-formatted, but the HDF5 library (h5py) was not found." % fileName)
-        f = h5py.File(fileName, 'r')
+        
+        if readAllData is True and writable is True:
+            raise Exception("Incompatible arguments: readAllData=True and writable=True")
+        
+        ## by default, readAllData=True for files < 500MB
+        if readAllData is None:
+            size = os.stat(fileName).st_size
+            readAllData = (size < 500e6)
+        
+        if writable is True:
+            mode = 'r+'
+        else:
+            mode = 'r'
+        f = h5py.File(fileName, mode)
+        
         ver = f.attrs['MetaArray']
         if ver > MetaArray.version:
             print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
         self._info = meta
         
-        if close:
-            self._data = f['data'][:]
-            f.close()
-        else:
+        if writable or not readAllData:  ## read all data, convert to ndarray, close file
             self._data = f['data']
             self._openFile = f
-        #meta = H5MetaList(f['info'])
-        #subarr = arr.view(subtype)
-        #subarr._info = meta
-        #self._data = arr
-        #return subarr
+        else:
+            self._data = f['data'][:]
+            f.close()
 
     @staticmethod
     def mapHDF5Array(data, writable=False):

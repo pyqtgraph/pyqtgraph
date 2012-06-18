@@ -17,6 +17,7 @@ from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
+import pyqtgraph.metaarray as metaarray
 
 app = QtGui.QApplication([])
 
@@ -46,6 +47,7 @@ win.show()
 data = np.random.normal(size=1000)
 data[200:300] += 1
 data += np.sin(np.linspace(0, 100, 1000))
+data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0, 1.0, len(data))}, {}])
 
 fc.setInput(dataIn=data)
 

@@ -9,7 +9,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
     or downsampled to match.
     """
     ma = None
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         ma = data
         data = data.view(np.ndarray)
         
@@ -60,7 +60,7 @@ def applyFilter(data, b, a, padding=100, bidir=True):
     if padding > 0:
         d1 = d1[padding:-padding]
         
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d1, info=data.infoCopy())
     else:
         return d1
@@ -79,7 +79,7 @@ def besselFilter(data, cutoff, order=1, dt=None, btype='low', bidir=True):
     return applyFilter(data, b, a, bidir=bidir)
     #base = data.mean()
     #d1 = scipy.signal.lfilter(b, a, data.view(ndarray)-base) + base
-    #if isinstance(data, MetaArray):
+    #if (hasattr(data, 'implements') and data.implements('MetaArray')):
         #return MetaArray(d1, info=data.infoCopy())
     #return d1
 
@@ -142,7 +142,7 @@ def modeFilter(data, window=500, step=None, bins=None):
     chunks.append(np.linspace(vals[-1], vals[-1], remain))
     d2 = np.hstack(chunks)
     
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d2, info=data.infoCopy())
     return d2
 
@@ -169,7 +169,7 @@ def denoise(data, radius=2, threshold=4):
     d6[:radius] = d1[:radius]
     d6[-radius:] = d1[-radius:]
     
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d6, info=data.infoCopy())
     return d6
 
@@ -191,7 +191,7 @@ def adaptiveDetrend(data, x=None, threshold=3.0):
     base = lr[1] + lr[0]*x
     d4 = d - base
     
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d4, info=data.infoCopy())
     return d4
     
@@ -214,7 +214,7 @@ def histogramDetrend(data, window=500, bins=50, threshold=3.0):
     base = np.linspace(v[0], v[1], len(data))
     d3 = data.view(np.ndarray) - base
     
-    if isinstance(data, MetaArray):
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d3, info=data.infoCopy())
     return d3
     

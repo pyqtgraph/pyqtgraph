@@ -26,7 +26,7 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
         #self.layout.clear()
         self.plots = []
             
-        if HAVE_METAARRAY and isinstance(data, MetaArray):
+        if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             if data.ndim != 2:
                 raise Exception("MultiPlot currently only accepts 2D MetaArray.")
             ic = data.infoCopy()

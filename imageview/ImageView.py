@@ -29,11 +29,11 @@ import pyqtgraph.debug as debug
 
 from pyqtgraph.SignalProxy import SignalProxy
 
-try:
-    import pyqtgraph.metaarray as metaarray
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
+#try:
+    #import pyqtgraph.metaarray as metaarray
+    #HAVE_METAARRAY = True
+#except:
+    #HAVE_METAARRAY = False
     
 
 class PlotROI(ROI):
@@ -195,7 +195,7 @@ class ImageView(QtGui.QWidget):
         """
         prof = debug.Profiler('ImageView.setImage', disabled=True)
         
-        if HAVE_METAARRAY and isinstance(img, metaarray.MetaArray):
+        if hasattr(img, 'implements') and img.implements('MetaArray'):
             img = img.asarray()
         
         if not isinstance(img, np.ndarray):

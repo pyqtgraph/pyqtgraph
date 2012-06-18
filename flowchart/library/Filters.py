@@ -145,7 +145,7 @@ class Derivative(CtrlNode):
     nodeName = 'DerivativeFilter'
     
     def processData(self, data):
-        if HAVE_METAARRAY and isinstance(data, metaarray.MetaArray):
+        if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             info = data.infoCopy()
             if 'values' in info[0]:
                 info[0]['values'] = info[0]['values'][:-1]
@@ -198,3 +198,54 @@ class HistogramDetrend(CtrlNode):
 
 
     
+class RemovePeriodic(CtrlNode):
+    nodeName = 'RemovePeriodic'
+    uiTemplate = [
+        #('windowSize', 'intSpin', {'value': 500, 'min': 10, 'max': 1000000, 'suffix': 'pts'}),
+        #('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000})
+        ('f0', 'spin', {'value': 60, 'suffix': 'Hz', 'siPrefix': True, 'min': 0, 'max': None}),
+        ('harmonics', 'intSpin', {'value': 30, 'min': 0}),
+    ]
+
+    def processData(self, data):
+        times = data.xvals('Time')
+        dt = times[1]-times[0]
+        
+        data1 = data.asarray()
+        ft = np.fft.fft(data1)
+        
+        ## determine frequencies in fft data
+        df = 1.0 / (len(data1) * dt)
+        freqs = np.linspace(0.0, (len(ft)-1) * df, len(ft))
+        
+        ## flatten spikes at f0 and harmonics
+        f0 = self.ctrls['f0'].value()
+        for i in xrange(1, self.ctrls['harmonics'].value()+2):
+            f = f0 * i # target frequency
+            
+            ## determine index range to check for this frequency
+            ind1 = int(np.floor(f / df))
+            ind2 = int(np.ceil(f / df))
+            if ind1 > len(ft)/2.:
+                break
+            print "--->", f
+            print ind1, ind2, abs(ft[ind1-2:ind2+2])
+            print ft[ind1-2:ind2+2]
+            mag = (abs(ft[ind1-1]) + abs(ft[ind2+1])) * 0.5
+            print "new mag:", mag
+            for j in range(ind1, ind2+1):
+                phase = np.angle(ft[j])
+                re = mag * np.cos(phase)
+                im = mag * np.sin(phase)
+                ft[j] = re + im*1j
+                ft[len(ft)-j] = re - im*1j
+            print abs(ft[ind1-2:ind2+2])
+            print ft[ind1-2:ind2+2]
+                
+        data2 = np.fft.ifft(ft).real
+        
+        ma = metaarray.MetaArray(data2, info=data.infoCopy())
+        return ma
+        
+        
+        
