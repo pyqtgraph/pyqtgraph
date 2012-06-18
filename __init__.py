@@ -193,7 +193,10 @@ show = image  ## for backward compatibility
     
 def mkQApp():
     global QAPP
-    if QtGui.QApplication.instance() is None:
+    inst = QtGui.QApplication.instance()
+    if inst is None:
         QAPP = QtGui.QApplication([])
+    else:
+        QAPP = inst
     return QAPP
         

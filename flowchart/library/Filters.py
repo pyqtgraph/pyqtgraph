@@ -8,11 +8,7 @@ from . import functions
 from .common import *
 import numpy as np
 
-try:
-    import metaarray
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
+import pyqtgraph.metaarray as metaarray
 
 
 class Downsample(CtrlNode):
@@ -145,11 +141,11 @@ class Derivative(CtrlNode):
     nodeName = 'DerivativeFilter'
     
     def processData(self, data):
-        if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
+        if hasattr(data, 'implements') and data.implements('MetaArray'):
             info = data.infoCopy()
             if 'values' in info[0]:
                 info[0]['values'] = info[0]['values'][:-1]
-            return MetaArray(data[1:] - data[:-1], info=info)
+            return metaarray.MetaArray(data[1:] - data[:-1], info=info)
         else:
             return data[1:] - data[:-1]
 

@@ -15,11 +15,20 @@ class GraphicsItem(object):
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
     def __init__(self, register=True):
+        if not hasattr(self, '_qtBaseClass'):
+            for b in self.__class__.__bases__:
+                if issubclass(b, QtGui.QGraphicsItem):
+                    self.__class__._qtBaseClass = b
+                    break
+        if not hasattr(self, '_qtBaseClass'):
+            raise Exception('Could not determine Qt base class for GraphicsItem: %s' % str(self))
+        
         self._viewWidget = None
         self._viewBox = None
         self._connectedView = None
         if register:
             GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+                    
     
     def getViewWidget(self):
         """
@@ -76,7 +85,7 @@ class GraphicsItem(object):
             if view is None:
                 return None
             viewportTransform = view.viewportTransform()
-        dt = QtGui.QGraphicsObject.deviceTransform(self, viewportTransform)
+        dt = self._qtBaseClass.deviceTransform(self, viewportTransform)
         
         #xmag = abs(dt.m11())+abs(dt.m12())
         #ymag = abs(dt.m21())+abs(dt.m22())
@@ -274,19 +283,26 @@ class GraphicsItem(object):
         return vt.mapRect(obj)
 
     def pos(self):
-        return Point(QtGui.QGraphicsObject.pos(self))
+        return Point(self._qtBaseClass.pos(self))
     
     def viewPos(self):
         return self.mapToView(self.mapFromParent(self.pos()))
     
     def parentItem(self):
         ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(QtGui.QGraphicsObject.parentItem(self))
+        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
         
+    def setParentItem(self, parent):
+        ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
+        if parent is not None:
+            pscene = parent.scene()
+            if pscene is not None and self.scene() is not pscene:
+                pscene.addItem(self)
+        return self._qtBaseClass.setParentItem(self, parent)
     
     def childItems(self):
         ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, QtGui.QGraphicsObject.childItems(self)))
+        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
 
 
     def sceneTransform(self):
@@ -296,7 +312,7 @@ class GraphicsItem(object):
         if self.scene() is None:
             return self.transform()
         else:
-            return QtGui.QGraphicsObject.sceneTransform(self)
+            return self._qtBaseClass.sceneTransform(self)
 
 
     def transformAngle(self, relativeItem=None):
@@ -315,7 +331,7 @@ class GraphicsItem(object):
         
         
     #def itemChange(self, change, value):
-        #ret = QtGui.QGraphicsObject.itemChange(self, change, value)
+        #ret = self._qtBaseClass.itemChange(self, change, value)
         #if change == self.ItemParentHasChanged or change == self.ItemSceneHasChanged:
             #print "Item scene changed:", self
             #self.setChildScene(self)  ## This is bizarre.

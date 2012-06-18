@@ -36,7 +36,7 @@ for k, c in coords.items():
 def makeSymbolPixmap(size, pen, brush, symbol):
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(np.ceil(pen.width()), 1)
-    image = QtGui.QImage(size+penPxWidth, size+penPxWidth, QtGui.QImage.Format_ARGB32_Premultiplied)
+    image = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32_Premultiplied)
     image.fill(0)
     p = QtGui.QPainter(image)
     p.setRenderHint(p.Antialiasing)

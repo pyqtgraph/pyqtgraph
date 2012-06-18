@@ -13,10 +13,13 @@ from .mouseEvents import *
 import pyqtgraph.debug as debug
 from . import exportDialog
 
-try:
-    import sip
-    HAVE_SIP = True
-except:
+if hasattr(QtCore, 'PYQT_VERSION'):
+    try:
+        import sip
+        HAVE_SIP = True
+    except ImportError:
+        HAVE_SIP = False
+else:
     HAVE_SIP = False
 
 
