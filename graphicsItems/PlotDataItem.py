@@ -371,7 +371,6 @@ class PlotDataItem(GraphicsObject):
             #self.curves.append(curve)
         
         if scatterArgs['symbol'] is not None:
-            print scatterArgs
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
         else:

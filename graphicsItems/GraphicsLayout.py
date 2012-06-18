@@ -1,6 +1,10 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
 from .GraphicsWidget import GraphicsWidget
+## Must be imported at the end to avoid cyclic-dependency hell:
+from .ViewBox import ViewBox
+from .PlotItem import PlotItem
+from .LabelItem import LabelItem
 
 __all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):
@@ -34,7 +38,7 @@ class GraphicsLayout(GraphicsWidget):
         return self.currentCol-colspan
         
     def nextCol(self, *args, **kargs):
-        """Advance to next column for automatic item placement"""
+        """Alias of nextColumn"""
         return self.nextColumn(*args, **kargs)
         
     def addPlot(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
@@ -131,7 +135,3 @@ class GraphicsLayout(GraphicsWidget):
             self.removeItem(i)
 
 
-## Must be imported at the end to avoid cyclic-dependency hell:
-from .ViewBox import ViewBox
-from .PlotItem import PlotItem
-from .LabelItem import LabelItem

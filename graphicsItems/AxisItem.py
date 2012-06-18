@@ -210,7 +210,7 @@ class AxisItem(GraphicsWidget):
         if scale is None:
             #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
             if self.label.isVisible():
-                d = self.range[1] - self.range[0]
+                #d = self.range[1] - self.range[0]
                 #(scale, prefix) = fn.siScale(d / 2.)
                 (scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
                 if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
@@ -230,7 +230,7 @@ class AxisItem(GraphicsWidget):
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
-        if mn in [np.nan, np.inf, -np.inf] or mx in [np.nan, np.inf, -np.inf]:
+        if any(np.isinf((mn, mx))) or any(np.isnan((mn, mx))):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoScale:
@@ -259,7 +259,10 @@ class AxisItem(GraphicsWidget):
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         
     def linkedViewChanged(self, view, newRange):
-        self.setRange(*newRange)
+        if self.orientation in ['right', 'left'] and view.yInverted():
+            self.setRange(*newRange[::-1])
+        else:
+            self.setRange(*newRange)
         
     def boundingRect(self):
         linkedView = self.linkedView()
@@ -365,12 +368,14 @@ class AxisItem(GraphicsWidget):
         By default, this method calls tickSpacing to determine the correct tick locations.
         This is a good method to override in subclasses.
         """
+        minVal, maxVal = sorted((minVal, maxVal))
+        
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size)
             
         ticks = []
         tickLevels = self.tickSpacing(minVal, maxVal, size)
-        allValues = []
+        allValues = np.array([])
         for i in range(len(tickLevels)):
             spacing, offset = tickLevels[i]
             
@@ -380,8 +385,11 @@ class AxisItem(GraphicsWidget):
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
             values = np.arange(num) * spacing + start
-            values = filter(lambda x: x not in allValues, values) ## remove any ticks that were present in higher levels
-            allValues.extend(values)
+            ## remove any ticks that were present in higher levels
+            ## we assume here that if the difference between a tick value and a previously seen tick value
+            ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
+            values = filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) 
+            allValues = np.concatenate([allValues, values])
             ticks.append((spacing, values))
         return ticks
     
