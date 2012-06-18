@@ -62,7 +62,6 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    
     def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, name=None):
         """
         =============  =============================================================
@@ -99,7 +98,8 @@ class ViewBox(GraphicsWidget):
                                           ## otherwise float gives the fraction of data that is visible
             'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot 
-            'linkedViews': [None, None],
+            'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
+                                          ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
             
             'mouseEnabled': [enableMouse, enableMouse],
             'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
@@ -160,6 +160,8 @@ class ViewBox(GraphicsWidget):
         if name is not None:
             ViewBox.NamedViews[name] = self
             ViewBox.updateAllViewLists()
+            self.destroyed.connect(lambda: ViewBox.forgetView(id(self), self.name))
+            #self.destroyed.connect(self.unregister)
 
     def unregister(self):
         """
@@ -177,14 +179,26 @@ class ViewBox(GraphicsWidget):
         
         
     def getState(self, copy=True):
+        """Return the current state of the ViewBox. 
+        Linked views are always converted to view names in the returned state."""
         state = self.state.copy()
-        state['linkedViews'] = [(None if v is None else v.name) for v in state['linkedViews']]
+        views = []
+        for v in state['linkedViews']:
+            if isinstance(v, weakref.ref):
+                v = v()
+            if v is None or isinstance(v, basestring):
+                views.append(v)
+            else:
+                views.append(v.name)
+        state['linkedViews'] = views
         if copy:
-            return deepcopy(self.state)
+            return deepcopy(state)
         else:
-            return self.state
+            return state
         
     def setState(self, state):
+        """Restore the state of this ViewBox.
+        (see also getState)"""
         state = state.copy()
         self.setXLink(state['linkedViews'][0])
         self.setYLink(state['linkedViews'][1])
@@ -368,7 +382,7 @@ class ViewBox(GraphicsWidget):
             self.updateMatrix(changed)
             
         for ax, range in changes.items():
-            link = self.state['linkedViews'][ax]
+            link = self.linkedView(ax)
             if link is not None:
                 link.linkedViewChanged(self, ax)
 
@@ -572,7 +586,7 @@ class ViewBox(GraphicsWidget):
             if view == '':
                 view = None
             else:
-                view = ViewBox.NamedViews[view]
+                view = ViewBox.NamedViews.get(view, view)  ## convert view name to ViewBox if possible
 
         if hasattr(view, 'implements') and view.implements('ViewBoxWrapper'):
             view = view.getViewBox()
@@ -586,13 +600,19 @@ class ViewBox(GraphicsWidget):
             slot = self.linkedYChanged
 
 
-        oldLink = self.state['linkedViews'][axis]
+        oldLink = self.linkedView(axis)
         if oldLink is not None:
-            getattr(oldLink, signal).disconnect(slot)
+            try:
+                getattr(oldLink, signal).disconnect(slot)
+            except TypeError:
+                ## This can occur if the view has been deleted already
+                pass
             
-        self.state['linkedViews'][axis] = view
         
-        if view is not None:
+        if view is None or isinstance(view, basestring):
+            self.state['linkedViews'][axis] = view
+        else:
+            self.state['linkedViews'][axis] = weakref.ref(view)
             getattr(view, signal).connect(slot)
             if view.autoRangeEnabled()[axis] is not False:
                 self.enableAutoRange(axis, False)
@@ -608,14 +628,22 @@ class ViewBox(GraphicsWidget):
 
     def linkedXChanged(self):
         ## called when x range of linked view has changed
-        view = self.state['linkedViews'][0]
+        view = self.linkedView(0)
         self.linkedViewChanged(view, ViewBox.XAxis)
 
     def linkedYChanged(self):
         ## called when y range of linked view has changed
-        view = self.state['linkedViews'][1]
+        view = self.linkedView(1)
         self.linkedViewChanged(view, ViewBox.YAxis)
         
+    def linkedView(self, ax):
+        ## Return the linked view for axis *ax*.
+        ## this method _always_ returns either a ViewBox or None.
+        v = self.state['linkedViews'][ax]
+        if v is None or isinstance(v, basestring):
+            return None
+        else:
+            return v()  ## dereference weakref pointer. If the reference is dead, this returns None
 
     def linkedViewChanged(self, view, axis):
         if self.linksBlocked or view is None:
@@ -623,10 +651,9 @@ class ViewBox(GraphicsWidget):
         
         vr = view.viewRect()
         vg = view.screenGeometry()
-        if vg is None:
-            return
-            
         sg = self.screenGeometry()
+        if vg is None or sg is None:
+            return
         
         view.blockLink(True)
         try:
@@ -683,8 +710,11 @@ class ViewBox(GraphicsWidget):
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
         """
         self.state['yInverted'] = b
-        self.updateMatrix()
+        self.updateMatrix(changed=(False, True))
         self.sigStateChanged.emit(self)
+
+    def yInverted(self):
+        return self.state['yInverted']
         
     def setAspectLocked(self, lock=True, ratio=1):
         """
@@ -1030,6 +1060,7 @@ class ViewBox(GraphicsWidget):
     def updateMatrix(self, changed=None):
         if changed is None:
             changed = [False, False]
+        changed = list(changed)
         #print "udpateMatrix:"
         #print "  range:", self.range
         tr = self.targetRect()
@@ -1124,20 +1155,40 @@ class ViewBox(GraphicsWidget):
             
         ## make a sorted list of all named views
         nv = list(ViewBox.NamedViews.values())
-
+        #print "new view list:", nv
         sortList(nv, cmpViews) ## see pyqtgraph.python2_3.sortList
         
         if self in nv:
             nv.remove(self)
-        names = [v.name for v in nv]
-        self.menu.setViewList(names)
+            
+        self.menu.setViewList(nv)
+        
+        for ax in [0,1]:
+            link = self.state['linkedViews'][ax]
+            if isinstance(link, basestring):     ## axis has not been linked yet; see if it's possible now
+                for v in nv:
+                    if link == v.name:
+                        self.linkView(ax, v)
+        #print "New view list:", nv
+        #print "linked views:", self.state['linkedViews']
 
     @staticmethod
     def updateAllViewLists():
+        #print "Update:", ViewBox.AllViews.keys()
+        #print "Update:", ViewBox.NamedViews.keys()
         for v in ViewBox.AllViews:
             v.updateViewLists()
             
 
-
+    @staticmethod
+    def forgetView(vid, name):
+        
+        ## Called with ID and name of view (the view itself is no longer available)
+        for v in ViewBox.AllViews.iterkeys():
+            if id(v) == vid:
+                ViewBox.AllViews.pop(v)
+                break
+        ViewBox.NamedViews.pop(name, None)
+        ViewBox.updateAllViewLists()
 
 from .ViewBoxMenu import ViewBoxMenu

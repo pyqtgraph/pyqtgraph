@@ -342,26 +342,47 @@ class GraphicsItem(object):
         
         ## check for this item's current viewbox or view widget
         view = self.getViewBox()
-        if view is None:
-            #print "  no view"
-            return
+        #if view is None:
+            ##print "  no view"
+            #return
 
-        if self._connectedView is not None and view is self._connectedView():
+        oldView = None
+        if self._connectedView is not None:
+            oldView = self._connectedView()
+            
+        if view is oldView:
             #print "  already have view", view
             return
 
         ## disconnect from previous view
-        if self._connectedView is not None:
-            cv = self._connectedView()
-            if cv is not None:
-                #print "disconnect:", self
-                cv.sigRangeChanged.disconnect(self.viewRangeChanged)
+        if oldView is not None:
+            #print "disconnect:", self, oldView
+            oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
+            self._connectedView = None
 
         ## connect to new view
-        #print "connect:", self
-        view.sigRangeChanged.connect(self.viewRangeChanged)
-        self._connectedView = weakref.ref(view)
-        self.viewRangeChanged()
+        if view is not None:
+            #print "connect:", self, view
+            view.sigRangeChanged.connect(self.viewRangeChanged)
+            self._connectedView = weakref.ref(view)
+            self.viewRangeChanged()
+        
+        ## inform children that their view might have changed
+        self._replaceView(oldView)
+        
+        
+    def _replaceView(self, oldView, item=None):
+        if item is None:
+            item = self
+        for child in item.childItems():
+            if isinstance(child, GraphicsItem):
+                if child.getViewBox() is oldView:
+                    child._updateView()
+                        #self._replaceView(oldView, child)
+            else:
+                self._replaceView(oldView, child)
+        
+        
 
     def viewRangeChanged(self):
         """

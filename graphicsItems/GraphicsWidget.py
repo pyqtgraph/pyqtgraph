@@ -55,7 +55,8 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
 
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-        pscene = parent.scene()
-        if pscene is not None and self.scene() is not pscene:
-            pscene.addItem(self)
-        return QtGui.QGraphicsWidget.setParentItem(self, parent)
+        if parent is not None:
+            pscene = parent.scene()
+            if pscene is not None and self.scene() is not pscene:
+                pscene.addItem(self)
+        return QtGui.QGraphicsObject.setParentItem(self, parent)

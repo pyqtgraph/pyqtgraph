@@ -510,7 +510,7 @@ class NodeGraphicsItem(GraphicsObject):
         if change == self.ItemPositionHasChanged:
             for k, t in self.terminals.items():
                 t[1].nodeMoved()
-        return QtGui.QGraphicsItem.itemChange(self, change, val)
+        return GraphicsObject.itemChange(self, change, val)
             
 
     #def contextMenuEvent(self, ev):
