@@ -36,6 +36,7 @@ examples = OrderedDict([
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
         ('SpinBox', 'SpinBox.py'),
+        ('ConsoleWidget', 'ConsoleWidget.py'),
         ('TreeWidget', 'TreeWidget.py'),
         ('DataTreeWidget', 'DataTreeWidget.py'),
         ('GradientWidget', 'GradientWidget.py'),
