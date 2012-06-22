@@ -153,7 +153,7 @@ def denoise(data, radius=2, threshold=4):
     
     r2 = radius * 2
     d1 = data.view(np.ndarray)
-    d2 = data[radius:] - data[:-radius] #a derivative
+    d2 = d1[radius:] - d1[:-radius] #a derivative
     #d3 = data[r2:] - data[:-r2]
     #d4 = d2 - d3
     stdev = d2.std()

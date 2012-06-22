@@ -45,7 +45,7 @@ class Terminal:
             self._value = {}  ## dictionary of terminal:value pairs.
         else:
             self._value = None  
-            
+        
         self.valueOk = None
         self.recolor()
         
@@ -70,6 +70,8 @@ class Terminal:
                 return
             self._value = val
         else:
+            if not isinstance(self._value, dict):
+                self._value = {}
             if val is not None:
                 self._value.update(val)
             
@@ -132,9 +134,14 @@ class Terminal:
     def isMultiValue(self):
         return self._multi
     
-    def setMultiValue(self, b):
+    def setMultiValue(self, multi):
         """Set whether this is a multi-value terminal."""
-        self._multi = b
+        self._multi = multi
+        if not multi and len(self.inputTerminals()) > 1:
+            self.disconnectAll()
+            
+        for term in self.inputTerminals():
+            self.inputChanged(term)
 
     def isOutput(self):
         return self._io == 'out'
@@ -407,6 +414,8 @@ class TerminalGraphicsItem(GraphicsObject):
             multiAct = QtGui.QAction("Multi-value", self.menu)
             multiAct.setCheckable(True)
             multiAct.setChecked(self.term.isMultiValue())
+            multiAct.setEnabled(self.term.isMultiable())
+            
             multiAct.triggered.connect(self.toggleMulti)
             self.menu.addAction(multiAct)
             self.menu.multiAct = multiAct
