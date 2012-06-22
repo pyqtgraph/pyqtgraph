@@ -1,37 +1,9 @@
 # -*- coding: utf-8 -*-
 import initExample ## Add path to library (just for examples; you do not need this)
-
 import numpy as np
 import pyqtgraph.multiprocess as mp
-from pyqtgraph.multiprocess.parallelizer import Parallelize #, Parallelizer
+import pyqtgraph as pg
 import time
-
-print "\n=================\nParallelize"
-tasks = [1,2,4,8]
-results = [None] * len(tasks)
-size = 2000000
-
-start = time.time()
-with Parallelize(enumerate(tasks), results=results, workers=1) as tasker:
-    for i, x in tasker:
-        print i, x
-        tot = 0
-        for j in xrange(size):
-            tot += j * x
-        results[i] = tot
-print results
-print "serial:", time.time() - start
-
-start = time.time()
-with Parallelize(enumerate(tasks), results=results) as tasker:
-    for i, x in tasker:
-        print i, x
-        tot = 0
-        for j in xrange(size):
-            tot += j * x
-        results[i] = tot
-print results
-print "parallel:", time.time() - start
 
 
 
