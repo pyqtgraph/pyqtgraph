@@ -14,7 +14,7 @@ class ProgressDialog(QtGui.QProgressDialog):
             if dlg.wasCanceled():
                 raise Exception("Processing canceled by user")
     """
-    def __init__(self, labelText, minimum=0, maximum=100, cancelText='Cancel', parent=None, wait=250, busyCursor=False):
+    def __init__(self, labelText, minimum=0, maximum=100, cancelText='Cancel', parent=None, wait=250, busyCursor=False, disable=False):
         """
         ============== ================================================================
         **Arguments:**
@@ -25,15 +25,16 @@ class ProgressDialog(QtGui.QProgressDialog):
         parent       
         wait           Length of time (im ms) to wait before displaying dialog
         busyCursor     If True, show busy cursor until dialog finishes
+        disable        If True, the progress dialog will not be displayed
+                       and calls to wasCanceled() will always return False.
+                       If ProgressDialog is entered from a non-gui thread, it will
+                       always be disabled.
         ============== ================================================================
         """    
-    
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
-        if not isGuiThread:
-            self.disabled = True
+        self.disabled = disable or (not isGuiThread)
+        if self.disabled:
             return
-        
-        self.disabled = False
 
         noCancel = False
         if cancelText is None:

@@ -483,6 +483,8 @@ class AxisItem(GraphicsWidget):
 
         ## determine size of this item in pixels
         points = list(map(self.mapToDevice, span))
+        if None in points:
+            return
         lengthInPixels = Point(points[1] - points[0]).length()
         if lengthInPixels == 0:
             return

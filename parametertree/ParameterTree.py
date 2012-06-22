@@ -113,4 +113,6 @@ class ParameterTree(TreeWidget):
             sel[0].selected(True)
         return TreeWidget.selectionChanged(self, *args)
         
-
+    def wheelEvent(self, ev):
+        self.clearSelection()
+        return TreeWidget.wheelEvent(self, ev)

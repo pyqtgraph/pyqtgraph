@@ -1,12 +1,10 @@
 
 from pyqtgraph.Qt import QtCore, QtGui
-import sys, re, os, time, traceback
+import sys, re, os, time, traceback, subprocess
 import pyqtgraph as pg
 import template
 import pyqtgraph.exceptionHandling as exceptionHandling
 import pickle
-
-EDITOR = "pykate {fileName}:{lineNum}"
 
 class ConsoleWidget(QtGui.QWidget):
     """
@@ -258,7 +256,7 @@ class ConsoleWidget(QtGui.QWidget):
         tb = self.currentFrame()
         lineNum = tb.tb_lineno
         fileName = tb.tb_frame.f_code.co_filename
-        os.system(EDITOR.format(fileName=fileName, lineNum=lineNum))
+        subprocess.Popen(EDITOR.format(fileName=fileName, lineNum=lineNum), shell=True)
         
     
     def allExceptionsHandler(self, *args):

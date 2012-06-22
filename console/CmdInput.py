@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui
 
 class CmdInput(QtGui.QLineEdit):
     
