@@ -7,10 +7,9 @@ app = pg.mkQApp()
 v = pg.RemoteGraphicsView()
 v.show()
 
-QtGui = v.pg.QtGui
-rect = QtGui.QGraphicsRectItem(0,0,10,10)
-rect.setPen(QtGui.QPen(QtGui.QColor(255,255,0)))
-v.scene().addItem(rect)
+plt = v.pg.PlotItem()
+v.setCentralItem(plt)
+plt.plot([1,4,2,3,6,2,3,4,2,3], pen='g')
 
 
 

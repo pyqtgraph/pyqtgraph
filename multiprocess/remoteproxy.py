@@ -511,24 +511,31 @@ class LocalObjectProxy(object):
         del cls.proxiedObjects[pid]
         #print "release:", cls.proxiedObjects 
     
-    def __init__(self, obj):
+    def __init__(self, obj, **opts):
+        """
+        Create a 'local' proxy object that, when sent to a remote host,
+        will appear as a normal ObjectProxy to *obj*. 
+        Any extra keyword arguments are passed to proxy._setProxyOptions()
+        on the remote side.
+        """
         self.processId = os.getpid()
         #self.objectId = id(obj)
         self.typeStr = repr(obj)
         #self.handler = handler
         self.obj = obj
+        self.opts = opts
         
     def __reduce__(self):
         ## a proxy is being pickled and sent to a remote process.
         ## every time this happens, a new proxy will be generated in the remote process,
         ## so we keep a new ID so we can track when each is released.
         pid = LocalObjectProxy.registerObject(self.obj)
-        return (unpickleObjectProxy, (self.processId, pid, self.typeStr))
+        return (unpickleObjectProxy, (self.processId, pid, self.typeStr, None, self.opts))
         
 ## alias
 proxy = LocalObjectProxy
 
-def unpickleObjectProxy(processId, proxyId, typeStr, attributes=None):
+def unpickleObjectProxy(processId, proxyId, typeStr, attributes=None, opts=None):
     if processId == os.getpid():
         obj = LocalObjectProxy.lookupProxyId(proxyId)
         if attributes is not None:
@@ -536,7 +543,10 @@ def unpickleObjectProxy(processId, proxyId, typeStr, attributes=None):
                 obj = getattr(obj, attr)
         return obj
     else:
-        return ObjectProxy(processId, proxyId=proxyId, typeStr=typeStr)
+        proxy = ObjectProxy(processId, proxyId=proxyId, typeStr=typeStr)
+        if opts is not None:
+            proxy._setProxyOptions(**opts)
+        return proxy
     
 class ObjectProxy(object):
     """
