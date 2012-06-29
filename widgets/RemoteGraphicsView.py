@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
+from .GraphicsView import GraphicsView
 import numpy as np
 import mmap, tempfile, ctypes, atexit
 
@@ -20,6 +21,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._proc = mp.QtProcess()
         self.pg = self._proc._import('pyqtgraph')
+        self.pg.setConfigOptions(self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)
@@ -82,7 +84,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         
     
     
-class Renderer(pg.GraphicsView):
+class Renderer(GraphicsView):
     
     sceneRendered = QtCore.Signal(object)
     
@@ -97,7 +99,7 @@ class Renderer(pg.GraphicsView):
         self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         atexit.register(self.close)
         
-        pg.GraphicsView.__init__(self, *args, **kwds)
+        GraphicsView.__init__(self, *args, **kwds)
         self.scene().changed.connect(self.update)
         self.img = None
         self.renderTimer = QtCore.QTimer()
@@ -113,11 +115,11 @@ class Renderer(pg.GraphicsView):
         
     def update(self):
         self.img = None
-        return pg.GraphicsView.update(self)
+        return GraphicsView.update(self)
         
     def resize(self, size):
         oldSize = self.size()
-        pg.GraphicsView.resize(self, size)
+        GraphicsView.resize(self, size)
         self.resizeEvent(QtGui.QResizeEvent(size, oldSize))
         self.update()
         
@@ -141,29 +143,29 @@ class Renderer(pg.GraphicsView):
         typ = QtCore.QEvent.Type(typ)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return pg.GraphicsView.mousePressEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+        return GraphicsView.mousePressEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
 
     def mouseMoveEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return pg.GraphicsView.mouseMoveEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+        return GraphicsView.mouseMoveEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
 
     def mouseReleaseEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return pg.GraphicsView.mouseReleaseEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+        return GraphicsView.mouseReleaseEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
 
     def wheelEvent(self, pos, gpos, d, btns, mods, ori):
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return pg.GraphicsView.wheelEvent(self, QtGui.QWheelEvent(pos, gpos, d, btns, mods, ori))
+        return GraphicsView.wheelEvent(self, QtGui.QWheelEvent(pos, gpos, d, btns, mods, ori))
 
     def keyEvent(self, typ, mods, text, autorep, count):
         typ = QtCore.QEvent.Type(typ)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        pg.GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
+        GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
         return ev.accepted()
         
         

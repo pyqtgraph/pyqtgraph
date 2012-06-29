@@ -15,7 +15,7 @@ class GradientWidget(GraphicsView):
     
     def __init__(self, parent=None, orientation='bottom',  *args, **kargs):
         GraphicsView.__init__(self, parent, useOpenGL=False, background=None)
-        self.maxDim = 27
+        self.maxDim = 31
         kargs['tickPen'] = 'k'
         self.item = GradientEditorItem(*args, **kargs)
         self.item.sigGradientChanged.connect(self.sigGradientChanged)
@@ -24,7 +24,7 @@ class GradientWidget(GraphicsView):
         self.setCacheMode(self.CacheNone)
         self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
         self.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
-        self.setBackgroundRole(QtGui.QPalette.NoRole)
+        #self.setBackgroundRole(QtGui.QPalette.NoRole)
         #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.NoBrush))
         #self.setAutoFillBackground(False)
         #self.setAttribute(QtCore.Qt.WA_PaintOnScreen, False)

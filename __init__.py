@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+REVISION = '621'
+
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui 
+from .Qt import QtGui
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -30,12 +32,14 @@ else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
 CONFIG_OPTIONS = {
-    'useOpenGL': useOpenGL,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
+    'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    'foregroundColor': (200,200,200),
-    'backgroundColor': (0,0,0),
+    'foreground': (150, 150, 150),  ## default foreground color for axes, labels, etc.
+    'background': (0, 0, 0),        ## default background for GraphicsWidget
     'antialias': False,
+    'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
 } 
+
 
 def setConfigOption(opt, value):
     CONFIG_OPTIONS[opt] = value
@@ -43,6 +47,16 @@ def setConfigOption(opt, value):
 def getConfigOption(opt):
     return CONFIG_OPTIONS[opt]
 
+
+def systemInfo():
+    print "sys.platform:", sys.platform
+    print "sys.version:", sys.version
+    from .Qt import VERSION_INFO
+    print "qt bindings:", VERSION_INFO
+    print "pyqtgraph:", REVISION
+    print "config:"
+    import pprint
+    pprint.pprint(CONFIG_OPTIONS)
 
 ## Rename orphaned .pyc files. This is *probably* safe :)
 

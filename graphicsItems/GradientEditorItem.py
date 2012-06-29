@@ -175,7 +175,7 @@ class TickSliderItem(GraphicsWidget):
     
     def resizeEvent(self, ev):
         wlen = max(40, self.widgetLength())
-        self.setLength(wlen-self.tickSize)
+        self.setLength(wlen-self.tickSize-2)
         self.setOrientation(self.orientation)
         #bounds = self.scene().itemsBoundingRect()
         #bounds.setLeft(min(-self.tickSize*0.5, bounds.left()))
@@ -186,7 +186,7 @@ class TickSliderItem(GraphicsWidget):
     def setLength(self, newLen):
         #private
         for t, x in list(self.ticks.items()):
-            t.setPos(x * newLen, t.pos().y())
+            t.setPos(x * newLen + 1, t.pos().y())
         self.length = float(newLen)
         
     #def mousePressEvent(self, ev):
@@ -491,8 +491,8 @@ class GradientEditorItem(TickSliderItem):
     def setLength(self, newLen):
         #private (but maybe public)
         TickSliderItem.setLength(self, newLen)
-        self.backgroundRect.setRect(0, -self.rectSize, newLen, self.rectSize)
-        self.gradRect.setRect(0, -self.rectSize, newLen, self.rectSize)
+        self.backgroundRect.setRect(1, -self.rectSize, newLen, self.rectSize)
+        self.gradRect.setRect(1, -self.rectSize, newLen, self.rectSize)
         self.updateGradient()
         
     def currentColorChanged(self, color):

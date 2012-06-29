@@ -105,6 +105,8 @@ class ViewBox(GraphicsWidget):
             'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
+
+            'background': None,
         }
         
         
@@ -118,10 +120,16 @@ class ViewBox(GraphicsWidget):
         self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
         
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
-        ## this is a workaround for a Qt + OpenGL but that causes improper clipping
+        ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
         self.childGroup.sigItemsChanged.connect(self.itemsChanged)
+        
+        self.background = QtGui.QGraphicsRectItem(self.rect())
+        self.background.setParentItem(self)
+        self.background.setZValue(-1e6)
+        self.background.setPen(fn.mkPen(None))
+        self.updateBackground()
         
         #self.useLeftButtonPan = pyqtgraph.getConfigOption('leftButtonPan') # normally use left button to pan
         # this also enables capture of keyPressEvents.
@@ -286,6 +294,7 @@ class ViewBox(GraphicsWidget):
         #self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
+        self.background.setRect(self.rect())
         #self.linkedXChanged()
         #self.linkedYChanged()
         
@@ -1155,6 +1164,16 @@ class ViewBox(GraphicsWidget):
             #self.scene().render(p)
             #p.end()
 
+    def updateBackground(self):
+        bg = self.state['background']
+        #print self, bg
+        if bg is None:
+            self.background.hide()
+        else:
+            self.background.show()
+            self.background.setBrush(fn.mkBrush(bg))
+            
+            
     def updateViewLists(self):
         def cmpViews(a, b):
             wins = 100 * cmp(a.window() is self.window(), b.window() is self.window())

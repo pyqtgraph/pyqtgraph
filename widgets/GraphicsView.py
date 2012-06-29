@@ -6,6 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph as pg
 
 try:
     from pyqtgraph.Qt import QtOpenGL
@@ -13,12 +14,8 @@ try:
 except ImportError:
     HAVE_OPENGL = False
 
-#from numpy import vstack
-#import time
 from pyqtgraph.Point import Point
-#from vector import *
 import sys, os
-#import debug    
 from .FileDialog import FileDialog
 from pyqtgraph.GraphicsScene import GraphicsScene
 import numpy as np
@@ -29,6 +26,20 @@ import pyqtgraph
 __all__ = ['GraphicsView']
 
 class GraphicsView(QtGui.QGraphicsView):
+    """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
+    viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
+    that is automatically scaled to the full view geometry.
+    
+    This widget is the basis for :class:`PlotWidget <pyqtgraph.PlotWidget>`, 
+    :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`, and the view widget in
+    :class:`ImageView <pyqtgraph.ImageView>`.
+    
+    By default, the view coordinate system matches the widget's pixel coordinates and 
+    automatically updates when the view is resized. This can be overridden by setting 
+    autoPixelRange=False. The exact visible range can be set with setRange().
+    
+    The view can be panned using the middle mouse button and scaled using the right mouse button if
+    enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
     
     sigRangeChanged = QtCore.Signal(object, object)
     sigMouseReleased = QtCore.Signal(object)
@@ -37,17 +48,25 @@ class GraphicsView(QtGui.QGraphicsView):
     sigScaleChanged = QtCore.Signal(object)
     lastFileDir = None
     
-    def __init__(self, parent=None, useOpenGL=None, background='k'):
-        """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
-        viewed coordinate range. Also automatically creates a QGraphicsScene and a central QGraphicsWidget
-        that is automatically scaled to the full view geometry.
+    def __init__(self, parent=None, useOpenGL=None, background='default'):
+        """
+        ============  ============================================================
+        Arguments:
+        parent        Optional parent widget
+        useOpenGL     If True, the GraphicsView will use OpenGL to do all of its
+                      rendering. This can improve performance on some systems,
+                      but may also introduce bugs (the combination of 
+                      QGraphicsView and QGLWidget is still an 'experimental' 
+                      feature of Qt)
+        background    Set the background color of the GraphicsView. Accepts any
+                      single argument accepted by 
+                      :func:`mkColor <pyqtgraph.mkColor>`. By 
+                      default, the background color is determined using the
+                      'backgroundColor' configuration option (see 
+                      :func:`setConfigOption <pyqtgraph.setConfigOption>`.
+        ============  ============================================================
+        """
         
-        By default, the view coordinate system matches the widget's pixel coordinates and 
-        automatically updates when the view is resized. This can be overridden by setting 
-        autoPixelRange=False. The exact visible range can be set with setRange().
-        
-        The view can be panned using the middle mouse button and scaled using the right mouse button if
-        enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
         self.closed = False
         
         QtGui.QGraphicsView.__init__(self, parent)
@@ -62,9 +81,7 @@ class GraphicsView(QtGui.QGraphicsView):
         ## This might help, but it's probably dangerous in the general case..
         #self.setOptimizationFlag(self.DontSavePainterState, True)
         
-        if background is not None:
-            brush = fn.mkBrush(background)
-            self.setBackgroundBrush(brush)
+        self.setBackground(background)
         
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFrameShape(QtGui.QFrame.NoFrame)
@@ -98,7 +115,22 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
         
-        
+    def setBackground(self, background):
+        """
+        Set the background color of the GraphicsView.
+        To use the defaults specified py pyqtgraph.setConfigOption, use background='default'.
+        To make the background transparent, use background=None.
+        """
+        self._background = background
+        if background == 'default':
+            background = pyqtgraph.getConfigOption('background')
+        if background is None:
+            self.setBackgroundRole(QtGui.QPalette.NoRole)
+        else:
+            brush = fn.mkBrush(background)
+            self.setBackgroundBrush(brush)
+            
+    
     def close(self):
         self.centralWidget = None
         self.scene().clear()
@@ -126,7 +158,8 @@ class GraphicsView(QtGui.QGraphicsView):
         return self.setCentralWidget(item)
         
     def setCentralWidget(self, item):
-        """Sets a QGraphicsWidget to automatically fill the entire view."""
+        """Sets a QGraphicsWidget to automatically fill the entire view (the item will be automatically
+        resize whenever the GraphicsView is resized)."""
         if self.centralWidget is not None:
             self.scene().removeItem(self.centralWidget)
         self.centralWidget = item
@@ -152,15 +185,18 @@ class GraphicsView(QtGui.QGraphicsView):
             return
         if self.autoPixelRange:
             self.range = QtCore.QRectF(0, 0, self.size().width(), self.size().height())
-        GraphicsView.setRange(self, self.range, padding=0, disableAutoPixel=False)
+        GraphicsView.setRange(self, self.range, padding=0, disableAutoPixel=False)  ## we do this because some subclasses like to redefine setRange in an incompatible way.
         self.updateMatrix()
     
     def updateMatrix(self, propagate=True):
         self.setSceneRect(self.range)
-        if self.aspectLocked:
-            self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+        if self.autoPixelRange:
+            self.resetTransform()
         else:
-            self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
+            if self.aspectLocked:
+                self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
+            else:
+                self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
         self.sigRangeChanged.emit(self, self.range)
         
