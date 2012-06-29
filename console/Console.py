@@ -22,7 +22,7 @@ class ConsoleWidget(QtGui.QWidget):
       be baffling and frustrating to users since it would appear the program has frozen.
     - some terminals (eg windows cmd.exe) have notoriously unfriendly interfaces
     - ability to add extra features like exception stack introspection
-    - ability to have multiple interactive prompts for remotely generated processes
+    - ability to have multiple interactive prompts, including for spawned sub-processes
     """
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
@@ -70,8 +70,8 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.historyList.itemDoubleClicked.connect(self.cmdDblClicked)
         self.ui.exceptionBtn.toggled.connect(self.ui.exceptionGroup.setVisible)
         
-        self.ui.catchAllExceptionsBtn.toggled.connect(self.catchAllToggled)
-        self.ui.catchNextExceptionBtn.toggled.connect(self.catchNextToggled)
+        self.ui.catchAllExceptionsBtn.toggled.connect(self.catchAllExceptions)
+        self.ui.catchNextExceptionBtn.toggled.connect(self.catchNextException)
         self.ui.clearExceptionBtn.clicked.connect(self.clearExceptionClicked)
         self.ui.exceptionStackList.itemClicked.connect(self.stackItemClicked)
         self.ui.exceptionStackList.itemDoubleClicked.connect(self.stackItemDblClicked)
@@ -227,15 +227,25 @@ class ConsoleWidget(QtGui.QWidget):
     def flush(self):
         pass
 
-    def catchAllToggled(self, b):
-        if b:
+    def catchAllExceptions(self, catch=True):
+        """
+        If True, the console will catch all unhandled exceptions and display the stack
+        trace. Each exception caught clears the last.
+        """
+        self.ui.catchAllExceptionsBtn.setChecked(catch)
+        if catch:
             self.ui.catchNextExceptionBtn.setChecked(False)
             exceptionHandling.register(self.allExceptionsHandler)
         else:
             exceptionHandling.unregister(self.allExceptionsHandler)
         
-    def catchNextToggled(self, b):
-        if b:
+    def catchNextException(self, catch=True):
+        """
+        If True, the console will catch the next unhandled exception and display the stack
+        trace.
+        """
+        self.ui.catchNextExceptionBtn.setChecked(catch)
+        if catch:
             self.ui.catchAllExceptionsBtn.setChecked(False)
             exceptionHandling.register(self.nextExceptionHandler)
         else:
@@ -252,11 +262,15 @@ class ConsoleWidget(QtGui.QWidget):
         pass
     
     def stackItemDblClicked(self, item):
-        global EDITOR
+        editor = self.editor
+        if editor is None:
+            editor = pg.getConfigOption('editorCommand')
+        if editor is None:
+            return
         tb = self.currentFrame()
         lineNum = tb.tb_lineno
         fileName = tb.tb_frame.f_code.co_filename
-        subprocess.Popen(EDITOR.format(fileName=fileName, lineNum=lineNum), shell=True)
+        subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
         
     
     def allExceptionsHandler(self, *args):
