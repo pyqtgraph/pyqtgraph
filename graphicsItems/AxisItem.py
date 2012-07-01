@@ -537,6 +537,10 @@ class AxisItem(GraphicsWidget):
         else:
             xScale = bounds.width() / dif
             offset = self.range[0] * xScale
+            
+        xRange = [x * xScale - offset for x in self.range]
+        xMin = min(xRange)
+        xMax = max(xRange)
         
         prof.mark('init')
             
@@ -545,6 +549,7 @@ class AxisItem(GraphicsWidget):
         ## draw ticks
         ## (to improve performance, we do not interleave line and text drawing, since this causes unnecessary pipeline switching)
         ## draw three different intervals, long ticks first
+        
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
@@ -557,7 +562,13 @@ class AxisItem(GraphicsWidget):
                 lineAlpha = self.grid
             
             for v in ticks:
+                ## determine actual position to draw this tick
                 x = (v * xScale) - offset
+                if x < xMin or x > xMax:  ## last check to make sure no out-of-bounds ticks are drawn
+                    tickPositions[i].append(None)
+                    continue
+                tickPositions[i].append(x)
+                
                 p1 = [x, x]
                 p2 = [x, x]
                 p1[axis] = tickStart
@@ -570,7 +581,6 @@ class AxisItem(GraphicsWidget):
                 tickPen.setColor(color)
                 p.setPen(tickPen)
                 p.drawLine(Point(p1), Point(p2))
-                tickPositions[i].append(x)
         prof.mark('draw ticks')
 
         ## Draw text until there is no more room (or no more text)
@@ -585,10 +595,15 @@ class AxisItem(GraphicsWidget):
                 
             if len(strings) == 0:
                 continue
+            
+            ## ignore strings belonging to ticks that were previously ignored
+            for j in range(len(strings)):
+                if tickPositions[i][j] is None:
+                    strings[j] = None
 
             if i > 0:  ## always draw top level
                 ## measure all text, make sure there's enough room
-                textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings])
+                textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings if s is not None])
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
                 else:
@@ -603,6 +618,8 @@ class AxisItem(GraphicsWidget):
             #strings = self.tickStrings(values, self.scale, spacing)
             for j in range(len(strings)):
                 vstr = strings[j]
+                if vstr is None:## this tick was ignored because it is out of bounds
+                    continue
                 x = tickPositions[i][j]
                 textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
                 height = textRect.height()

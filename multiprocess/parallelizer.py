@@ -37,7 +37,7 @@ class Parallelize:
     since it is automatically sent via pipe back to the parent process.
     """
 
-    def __init__(self, tasks, workers=None, block=True, progressDialog=None, **kwds):
+    def __init__(self, tasks, workers=None, block=True, progressDialog=None, randomReseed=True, **kwds):
         """
         ===============  ===================================================================
         Arguments:
@@ -47,6 +47,9 @@ class Parallelize:
                          system
         progressDialog   optional dict of arguments for ProgressDialog
                          to update while tasks are processed
+        randomReseed     If True, each forked process will reseed its random number generator
+                         to ensure independent results. Works with the built-in random
+                         and numpy.random.
         kwds             objects to be shared by proxy with child processes (they will 
                          appear as attributes of the tasker)
         ===============  ===================================================================
@@ -68,6 +71,7 @@ class Parallelize:
             workers = 1
         self.workers = workers
         self.tasks = list(tasks)
+        self.reseed = randomReseed
         self.kwds = kwds.copy()
         self.kwds['_taskStarted'] = self._taskStarted
         
@@ -112,7 +116,7 @@ class Parallelize:
         
         ## fork and assign tasks to each worker
         for i in range(workers):
-            proc = ForkedProcess(target=None, preProxy=self.kwds)
+            proc = ForkedProcess(target=None, preProxy=self.kwds, randomReseed=self.reseed)
             if not proc.isParent:
                 self.proc = proc
                 return Tasker(proc, chunks[i], proc.forkedProxies)
@@ -150,7 +154,17 @@ class Parallelize:
                 #print "remove:", [ch.childPid for ch in rem]
                 for ch in rem:
                     activeChilds.remove(ch)
-                    os.waitpid(ch.childPid, 0)
+                    while True:
+                        try:
+                            os.waitpid(ch.childPid, 0)
+                            break
+                        except OSError as ex:
+                            if ex.errno == 4:  ## If we get this error, just try again
+                                continue
+                                #print "Ignored system call interruption"
+                            else:
+                                raise
+                    
                     #print [ch.childPid for ch in activeChilds]
                     
                 if self.showProgress and self.progressDlg.wasCanceled():
