@@ -1,3 +1,5 @@
+.. _api_widgets:
+
 Pyqtgraph's Widgets
 ===================
 

@@ -130,7 +130,7 @@ class ForkedProcess(RemoteEventHandler):
       
     """
     
-    def __init__(self, name=None, target=0, preProxy=None):
+    def __init__(self, name=None, target=0, preProxy=None, randomReseed=True):
         """
         When initializing, an optional target may be given. 
         If no target is specified, self.eventLoop will be used.
@@ -141,6 +141,9 @@ class ForkedProcess(RemoteEventHandler):
         in the remote process (but do not need to be sent explicitly since 
         they are available immediately before the call to fork().
         Proxies will be availabe as self.proxies[name].
+        
+        If randomReseed is True, the built-in random and numpy.random generators
+        will be reseeded in the child process.
         """
         self.hasJoined = False
         if target == 0:
@@ -188,6 +191,11 @@ class ForkedProcess(RemoteEventHandler):
             atexit._exithandlers = []
             atexit.register(lambda: os._exit(0))
             
+            if randomReseed:
+                if 'numpy.random' in sys.modules:
+                    sys.modules['numpy.random'].seed(os.getpid() ^ int(time.time()*10000%10000))
+                if 'random' in sys.modules:
+                    sys.modules['random'].seed(os.getpid() ^ int(time.time()*10000%10000))
             
             RemoteEventHandler.__init__(self, remoteConn, name+'_child', pid=os.getppid())
             

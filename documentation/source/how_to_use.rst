@@ -43,5 +43,12 @@ While I consider this approach somewhat lazy, it is often the case that 'lazy' i
 Embedding widgets inside PyQt applications
 ------------------------------------------
 
-For the serious application developer, all of the functionality in pyqtgraph is available via widgets that can be embedded just like any other Qt widgets. Most importantly, see: :class:`PlotWidget <pyqtgraph.PlotWidget>`, :class:`ImageView <pyqtgraph.ImageView>`, :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`, and :class:`GraphicsView <pyqtgraph.GraphicsView>`. Pyqtgraph's widgets can be included in Designer's ui files via the "Promote To..." functionality.
+For the serious application developer, all of the functionality in pyqtgraph is available via :ref:`widgets <api_widgets>` that can be embedded just like any other Qt widgets. Most importantly, see: :class:`PlotWidget <pyqtgraph.PlotWidget>`, :class:`ImageView <pyqtgraph.ImageView>`, :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`, and :class:`GraphicsView <pyqtgraph.GraphicsView>`. Pyqtgraph's widgets can be included in Designer's ui files via the "Promote To..." functionality:
+    
+#. In Designer, create a QGraphicsView widget ("Graphics View" under the "Display Widgets" category).
+#. Right-click on the QGraphicsView and select "Promote To...".
+#. Under "Promoted class name", enter the class name you wish to use ("PlotWidget", "GraphicsLayoutWidget", etc).
+#. Under "Header file", enter "pyqtgraph".
+#. Click "Add", then click "Promote".
 
+See the designer documentation for more information on promoting widgets.
