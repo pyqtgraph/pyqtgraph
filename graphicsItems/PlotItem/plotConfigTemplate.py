@@ -116,7 +116,7 @@ class Ui_Form(object):
         self.gridLayout_2.addWidget(self.yGridCheck, 1, 0, 1, 2)
         self.gridAlphaSlider = QtGui.QSlider(self.gridGroup)
         self.gridAlphaSlider.setMaximum(255)
-        self.gridAlphaSlider.setProperty("value", 70)
+        self.gridAlphaSlider.setProperty("value", 128)
         self.gridAlphaSlider.setOrientation(QtCore.Qt.Horizontal)
         self.gridAlphaSlider.setObjectName(_fromUtf8("gridAlphaSlider"))
         self.gridLayout_2.addWidget(self.gridAlphaSlider, 2, 1, 1, 1)
