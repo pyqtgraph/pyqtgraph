@@ -363,6 +363,29 @@ class AxisItem(GraphicsWidget):
             (intervals[minorIndex], 0)
         ]
         
+        ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
+        ### Determine major/minor tick spacings which flank the optimal spacing.
+        #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
+        #minorIndex = 0
+        #while intervals[minorIndex+1] <= optimalSpacing:
+            #minorIndex += 1
+            
+        ### make sure we never see 5 and 2 at the same time
+        #intIndexes = [
+            #[0,1,3],
+            #[0,2,3],
+            #[2,3,4],
+            #[3,4,6],
+            #[3,5,6],
+        #][minorIndex]
+        
+        #return [
+            #(intervals[intIndexes[2]], 0),
+            #(intervals[intIndexes[1]], 0),
+            #(intervals[intIndexes[0]], 0)
+        #]
+        
+        
 
     def tickValues(self, minVal, maxVal, size):
         """
@@ -395,7 +418,7 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) 
+            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) )
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing, values))
             
@@ -601,9 +624,9 @@ class AxisItem(GraphicsWidget):
                 if tickPositions[i][j] is None:
                     strings[j] = None
 
+            textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings if s is not None])
             if i > 0:  ## always draw top level
                 ## measure all text, make sure there's enough room
-                textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings if s is not None])
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
                 else:
@@ -613,7 +636,6 @@ class AxisItem(GraphicsWidget):
                 textFillRatio = float(textSize) / lengthInPixels
                 if textFillRatio > 0.7:
                     break
-            
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
             for j in range(len(strings)):

@@ -16,6 +16,7 @@ examples = OrderedDict([
     ('Video speed test', 'VideoSpeedTest.py'),
     ('Plot speed test', 'PlotSpeedTest.py'),
     ('Data Slicing', 'DataSlicing.py'),
+    ('Plot Customization', 'customPlot.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
@@ -45,7 +46,7 @@ examples = OrderedDict([
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', 'JoystickButton.py'),
     ])),
-   
+    
     ('GraphicsScene', 'GraphicsScene.py'),
     ('Flowcharts', 'Flowchart.py'),
     #('Canvas', '../canvas'),

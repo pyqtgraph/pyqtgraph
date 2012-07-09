@@ -49,10 +49,10 @@ def getConfigOption(opt):
 
 
 def systemInfo():
-    print "sys.platform:", sys.platform
-    print "sys.version:", sys.version
+    print("sys.platform: %s" % sys.platform)
+    print("sys.version: %s" % sys.version)
     from .Qt import VERSION_INFO
-    print "qt bindings:", VERSION_INFO
+    print("qt bindings: %s" % VERSION_INFO)
     
     global REVISION
     if REVISION is None:  ## this code was probably checked out from bzr; look up the last-revision file
@@ -60,8 +60,8 @@ def systemInfo():
         if os.path.exists(lastRevFile):
             REVISION = open(lastRevFile, 'r').read().strip()
     
-    print "pyqtgraph:", REVISION
-    print "config:"
+    print("pyqtgraph: %s" % REVISION)
+    print("config:")
     import pprint
     pprint.pprint(CONFIG_OPTIONS)
 
@@ -126,7 +126,7 @@ def importAll(path, excludes=()):
                 globals()[k] = getattr(mod, k)
 
 importAll('graphicsItems')
-importAll('widgets', excludes=['MatplotlibWidget'])
+importAll('widgets', excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
 
 from .imageview import *
 from .WidgetGroup import *

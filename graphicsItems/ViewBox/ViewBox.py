@@ -62,7 +62,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu = True, name=None):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None):
         """
         =============  =============================================================
         **Arguments**
@@ -136,7 +136,7 @@ class ViewBox(GraphicsWidget):
         
         ## Make scale box that is shown when dragging on the view
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
-        self.rbScaleBox.setPen(fn.mkPen((255,0,0), width=1))
+        self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
         self.rbScaleBox.hide()
         self.addItem(self.rbScaleBox)
@@ -358,7 +358,7 @@ class ViewBox(GraphicsWidget):
             changes[1] = yRange
 
         if len(changes) == 0:
-            print rect
+            print(rect)
             raise Exception("Must specify at least one of rect, xRange, or yRange. (gave rect=%s)" % str(type(rect)))
         
         changed = [False, False]
@@ -863,7 +863,10 @@ class ViewBox(GraphicsWidget):
         return self._menuCopy
         
     def getContextMenus(self, event):
-        return self.menu.subMenus()
+        if self.menuEnabled():
+            return self.menu.subMenus()
+        else:
+            return None
         #return [self.getMenu(event)]
         
 
