@@ -101,4 +101,4 @@ class Ui_Form(object):
         self.runSelectedFrameCheck.setText(QtGui.QApplication.translate("Form", "Run commands in selected stack frame", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Exception Info", None, QtGui.QApplication.UnicodeUTF8))
 
-from CmdInput import CmdInput
+from .CmdInput import CmdInput

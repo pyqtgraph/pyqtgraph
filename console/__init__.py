@@ -1,1 +1,1 @@
-from Console import ConsoleWidget
+from .Console import ConsoleWidget

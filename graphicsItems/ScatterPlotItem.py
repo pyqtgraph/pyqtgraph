@@ -79,7 +79,7 @@ class ScatterPlotItem(GraphicsObject):
         prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
         GraphicsObject.__init__(self)
         self.setFlag(self.ItemHasNoContents, True)
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', 'S1'), ('pen', object), ('brush', object), ('item', object), ('data', object)])
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('item', object), ('data', object)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -559,7 +559,7 @@ class SpotItem(GraphicsItem):
         If the spot has no explicit symbol set, then return the ScatterPlotItem's default symbol instead.
         """
         symbol = self._data['symbol']
-        if symbol == '':
+        if symbol is None:
             symbol = self._plot.opts['symbol']
         try:
             n = int(symbol)

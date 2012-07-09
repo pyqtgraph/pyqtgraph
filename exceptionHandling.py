@@ -51,16 +51,16 @@ class ExceptionHandler:
     def __call__(self, *args):
         ## call original exception handler first (prints exception)
         global original_excepthook, callbacks, clear_tracebacks
-        print "=====", time.strftime("%Y.%m.%d %H:%m:%S", time.localtime(time.time())), "====="
+        print("===== %s =====" % str(time.strftime("%Y.%m.%d %H:%m:%S", time.localtime(time.time()))))
         ret = original_excepthook(*args)
         
         for cb in callbacks:
             try:
                 cb(*args)
             except:
-                print "   --------------------------------------------------------------"
-                print "      Error occurred during exception callback", cb
-                print "   --------------------------------------------------------------"
+                print("   --------------------------------------------------------------")
+                print("      Error occurred during exception callback %s" % str(cb))
+                print("   --------------------------------------------------------------")
                 traceback.print_exception(*sys.exc_info())
             
         
