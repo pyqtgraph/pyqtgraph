@@ -131,11 +131,16 @@ class Parameter(QtCore.QObject):
         return name
 
     def childPath(self, child):
-        """Return the path of parameter names from self to child."""
+        """
+        Return the path of parameter names from self to child.
+        If child is not a (grand)child of self, return None.
+        """
         path = []
         while child is not self:
             path.insert(0, child.name())
             child = child.parent()
+            if child is None:
+                return None
         return path
 
     def setValue(self, value, blockSignal=None):

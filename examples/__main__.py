@@ -11,7 +11,7 @@ examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', 'Plotting.py'),
     ('ImageView', 'ImageView.py'),
-    ('ParameterTree', '../parametertree'),
+    ('ParameterTree', 'parametertree.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Video speed test', 'VideoSpeedTest.py'),
     ('Plot speed test', 'PlotSpeedTest.py'),
