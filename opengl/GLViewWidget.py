@@ -116,16 +116,18 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                         print(msg)
                     
                 finally:
-                    glPopAttrib(GL_ALL_ATTRIB_BITS)
+                    glPopAttrib()
             else:
                 glMatrixMode(GL_MODELVIEW)
                 glPushMatrix()
-                tr = i.transform()
-                a = np.array(tr.copyDataTo()).reshape((4,4))
-                glMultMatrixf(a.transpose())
-                self.drawItemTree(i)
-                glMatrixMode(GL_MODELVIEW)
-                glPopMatrix()
+                try:
+                    tr = i.transform()
+                    a = np.array(tr.copyDataTo()).reshape((4,4))
+                    glMultMatrixf(a.transpose())
+                    self.drawItemTree(i)
+                finally:
+                    glMatrixMode(GL_MODELVIEW)
+                    glPopMatrix()
             
         
     def cameraPosition(self):

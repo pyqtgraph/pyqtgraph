@@ -205,16 +205,14 @@ class AxisItem(GraphicsWidget):
         
     def setScale(self, scale=None):
         """
-        Set the value scaling for this axis. 
-        The scaling value 1) multiplies the values displayed along the axis
-        and 2) changes the way units are displayed in the label. 
+        Set the value scaling for this axis. Values on the axis are multiplied
+        by this scale factor before being displayed as text. By default,
+        this scaling value is automatically determined based on the visible range
+        and the axis units are updated to reflect the chosen scale factor.
         
         For example: If the axis spans values from -0.1 to 0.1 and has units set 
         to 'V' then a scale of 1000 would cause the axis to display values -100 to 100
         and the units would appear as 'mV'
-        
-        If scale is None, then it will be determined automatically based on the current 
-        range displayed by the axis.
         """
         if scale is None:
             #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
@@ -228,8 +226,10 @@ class AxisItem(GraphicsWidget):
                 self.setLabel(unitPrefix=prefix)
             else:
                 scale = 1.0
-        
-        
+        else:
+            self.setLabel(unitPrefix='')
+            self.autoScale = False
+            
         if scale != self.scale:
             self.scale = scale
             self.setLabel()
