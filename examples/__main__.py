@@ -17,6 +17,7 @@ examples = OrderedDict([
     ('Plot speed test', 'PlotSpeedTest.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Dock widgets', 'dockarea.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
@@ -67,9 +68,9 @@ class ExampleLoader(QtGui.QMainWindow):
         self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples)
         self.ui.exampleTree.expandAll()
         
-        self.resize(900,500)
+        self.resize(1000,500)
         self.show()
-        self.ui.splitter.setSizes([150,750])
+        self.ui.splitter.setSizes([250,750])
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
