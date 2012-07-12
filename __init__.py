@@ -14,7 +14,8 @@ from .Qt import QtGui
 import os, sys
 
 ## check python version
-if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] != 7):
+## Allow anything >= 2.7
+if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] < 7):
     raise Exception("Pyqtgraph requires Python version 2.7 (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
 
 ## helpers for 2/3 compatibility

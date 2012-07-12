@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.python2_3 import sortList
 import numpy as np
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
@@ -451,10 +452,8 @@ class ViewBox(GraphicsWidget):
             center = Point(vr.center())
         else:
             center = Point(center)
-        
         tl = center + (vr.topLeft()-center) * scale
         br = center + (vr.bottomRight()-center) * scale
-       
         self.setRange(QtCore.QRectF(tl, br), padding=0)
         
     def translateBy(self, t):
@@ -764,7 +763,7 @@ class ViewBox(GraphicsWidget):
 
     def mapToView(self, obj):
         """Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox"""
-        m = self.childTransform().inverted()[0]
+        m = fn.invertQTransform(self.childTransform())
         return m.map(obj)
 
     def mapFromView(self, obj):
@@ -830,7 +829,7 @@ class ViewBox(GraphicsWidget):
             mask[axis] = mv
         s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         
-        center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
+        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         #center = ev.pos()
         
         self.scaleBy(s, center)
@@ -913,8 +912,11 @@ class ViewBox(GraphicsWidget):
             dif = np.array([dif.x(), dif.y()])
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif
-            center = Point(self.childGroup.transform().inverted()[0].map(ev.buttonDownPos(QtCore.Qt.RightButton)))
-            #center = Point(ev.buttonDownPos(QtCore.Qt.RightButton))
+            
+            tr = self.childGroup.transform()
+            tr = fn.invertQTransform(tr)
+            
+            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self.scaleBy(s, center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 

@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.WidgetGroup import WidgetGroup
 from .axisCtrlTemplate import Ui_Form as AxisCtrlTemplate
 import weakref 

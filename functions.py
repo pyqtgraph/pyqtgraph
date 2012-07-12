@@ -5,6 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from .python2_3 import asUnicode
 Colors = {
     'b': (0,0,255,255),
     'g': (0,255,0,255),
@@ -1275,3 +1276,19 @@ def isosurface(data, level):
 
     return facets
 
+
+    
+def invertQTransform(tr):
+    """Return a QTransform that is the inverse of *tr*.
+    Rasises an exception if tr is not invertible.
+    
+    Note that this function is preferred over QTransform.inverted() due to
+    bugs in that method. (specifically, Qt has floating-point precision issues
+    when determining whether a matrix is invertible)
+    """
+    #return tr.inverted()[0]
+    arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+    inv = scipy.linalg.inv(arr)
+    return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
+    
+    

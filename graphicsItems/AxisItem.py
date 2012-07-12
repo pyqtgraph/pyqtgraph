@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.python2_3 import asUnicode
 import numpy as np
 from pyqtgraph.Point import Point
 import pyqtgraph.debug as debug

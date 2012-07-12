@@ -800,7 +800,7 @@ class ROI(GraphicsObject):
         #print "  dshape", dShape
         
         ## Determine transform that maps ROI bounding box to image coordinates
-        tr = self.sceneTransform() * img.sceneTransform().inverted()[0] 
+        tr = self.sceneTransform() * fn.invertQTransform(img.sceneTransform())
         
         ## Modify transform to scale from image coords to data coords
         #m = QtGui.QTransform()
@@ -1251,7 +1251,7 @@ class Handle(UIGraphicsItem):
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
         va = np.arctan2(v.y(), v.x())
         
-        dti = dt.inverted()[0]
+        dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())

@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.python2_3 import sortList
 #try:
     #from PyQt4 import QtOpenGL
     #HAVE_OPENGL = True

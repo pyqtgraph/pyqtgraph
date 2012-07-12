@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.python2_3 import sortList
 import pyqtgraph.functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget

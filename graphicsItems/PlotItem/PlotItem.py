@@ -1053,6 +1053,7 @@ class PlotItem(GraphicsWidget):
             s.hide()
             
     def hideAxis(self, axis):
+        """Hide one of the PlotItem's axes. ('left', 'bottom', 'right', or 'top')"""
         self.showAxis(axis, False)
             
     def showScale(self, *args, **kargs):
@@ -1060,6 +1061,7 @@ class PlotItem(GraphicsWidget):
         return self.showAxis(*args, **kargs)
             
     def hideButtons(self):
+        """Causes auto-scale button ('A' in lower-left corner) to be hidden for this PlotItem"""
         #self.ctrlBtn.hide()
         self.autoBtn.hide()
         

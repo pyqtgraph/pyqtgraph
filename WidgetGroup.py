@@ -10,6 +10,7 @@ of a large group of widgets.
 
 from .Qt import QtCore, QtGui
 import weakref, inspect
+from .python2_3 import asUnicode
 
 
 __all__ = ['WidgetGroup']
