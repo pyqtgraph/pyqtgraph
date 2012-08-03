@@ -686,3 +686,11 @@ class ImageView(QtGui.QWidget):
     def getImageItem(self):
         """Return the ImageItem for this ImageView."""
         return self.imageItem
+        
+    def getRoiPlot(self):
+        """Return the ROI PlotWidget for this ImageView"""
+        return self.ui.roiPlot
+       
+    def getHistogramWidget(self):
+        """Return the HistogramLUTWidget for this ImageView"""
+        return self.ui.histogram
