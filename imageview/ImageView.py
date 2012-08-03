@@ -38,7 +38,7 @@ from pyqtgraph.SignalProxy import SignalProxy
 
 class PlotROI(ROI):
     def __init__(self, size):
-        ROI.__init__(self, pos=[0,0], size=size, scaleSnap=True, translateSnap=True)
+        ROI.__init__(self, pos=[0,0], size=size) #, scaleSnap=True, translateSnap=True)
         self.addScaleHandle([1, 1], [0, 0])
         self.addRotateHandle([0, 0], [0.5, 0.5])
 
@@ -531,14 +531,18 @@ class ImageView(QtGui.QWidget):
             axes = (1, 2)
         else:
             return
-        data = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes)
+        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
         if data is not None:
             while data.ndim > 1:
                 data = data.mean(axis=1)
             if image.ndim == 3:
                 self.roiCurve.setData(y=data, x=self.tVals)
             else:
-                self.roiCurve.setData(y=data, x=list(range(len(data))))
+                while coords.ndim > 2:
+                    coords = coords[:,:,0]
+                coords = coords - coords[:,0,np.newaxis]
+                xvals = (coords**2).sum(axis=0) ** 0.5
+                self.roiCurve.setData(y=data, x=xvals)
                 
             #self.ui.roiPlot.replot()
 
