@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtGui, QtCore  
 from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Point import Point
+import pyqtgraph.functions as fn
 import weakref
 
 class GraphicsItem(object):
@@ -149,16 +150,32 @@ class GraphicsItem(object):
         """Return vectors in local coordinates representing the width and height of a view pixel.
         If direction is specified, then return vectors parallel and orthogonal to it.
         
-        Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)."""
+        Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)
+        or if pixel size is below floating-point precision limit.
+        """
 
         dt = self.deviceTransform()
         if dt is None:
             return None, None
         
         if direction is None:
-            direction = Point(1, 0)
+            direction = Point(1, 0)  
+        if direction.manhattanLength() == 0:
+            raise Exception("Cannot compute pixel length for 0-length vector.")
             
+        ## attempt to re-scale direction vector to fit within the precision of the coordinate system
+        if direction.x() == 0:
+            r = abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))
+        elif direction.y() == 0:
+            r = abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))
+        else:
+            r = ((abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))) * (abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))))**0.5
+        direction = direction * r
+        
         viewDir = Point(dt.map(direction) - dt.map(Point(0,0)))
+        if viewDir.manhattanLength() == 0:
+            return None, None   ##  pixel size cannot be represented on this scale
+            
         orthoDir = Point(viewDir[1], -viewDir[0])  ## orthogonal to line in pixel-space
         
         try:  
@@ -168,7 +185,7 @@ class GraphicsItem(object):
             raise Exception("Invalid direction %s" %direction)
             
         
-        dti = dt.inverted()[0]
+        dti = fn.invertQTransform(dt)
         return Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))  
     
         #vt = self.deviceTransform()
@@ -194,23 +211,26 @@ class GraphicsItem(object):
         
 
     def pixelSize(self):
+        ## deprecated
         v = self.pixelVectors()
         if v == (None, None):
             return None, None
         return (v[0].x()**2+v[0].y()**2)**0.5, (v[1].x()**2+v[1].y()**2)**0.5
 
     def pixelWidth(self):
+        ## deprecated
         vt = self.deviceTransform()
         if vt is None:
             return 0
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return Point(vt.map(QtCore.QPointF(1, 0))-vt.map(QtCore.QPointF(0, 0))).length()
         
     def pixelHeight(self):
+        ## deprecated
         vt = self.deviceTransform()
         if vt is None:
             return 0
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return Point(vt.map(QtCore.QPointF(0, 1))-vt.map(QtCore.QPointF(0, 0))).length()
         
         
@@ -232,7 +252,7 @@ class GraphicsItem(object):
         vt = self.deviceTransform()
         if vt is None:
             return None
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
     def mapRectToDevice(self, rect):
@@ -253,7 +273,7 @@ class GraphicsItem(object):
         vt = self.deviceTransform()
         if vt is None:
             return None
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return vt.mapRect(rect)
     
     def mapToView(self, obj):
@@ -272,14 +292,14 @@ class GraphicsItem(object):
         vt = self.viewTransform()
         if vt is None:
             return None
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
     def mapRectFromView(self, obj):
         vt = self.viewTransform()
         if vt is None:
             return None
-        vt = vt.inverted()[0]
+        vt = fn.invertQTransform(vt)
         return vt.mapRect(obj)
 
     def pos(self):

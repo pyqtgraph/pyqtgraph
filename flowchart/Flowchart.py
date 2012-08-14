@@ -71,7 +71,8 @@ class Flowchart(Node):
         if terminals is None:
             terminals = {}
         self.filePath = filePath
-        Node.__init__(self, name)  ## create node without terminals; we'll add these later
+        Node.__init__(self, name, allowAddInput=True, allowAddOutput=True)  ## create node without terminals; we'll add these later
+        
         
         self.inputWasSet = False  ## flag allows detection of changes in the absence of input change.
         self._nodes = {}
@@ -457,7 +458,7 @@ class Flowchart(Node):
         state = Node.saveState(self)
         state['nodes'] = []
         state['connects'] = []
-        state['terminals'] = self.saveTerminals()
+        #state['terminals'] = self.saveTerminals()
         
         for name, node in self._nodes.items():
             cls = type(node)
@@ -470,7 +471,7 @@ class Flowchart(Node):
         conn = self.listConnections()
         for a, b in conn:
             state['connects'].append((a.node().name(), a.name(), b.node().name(), b.name()))
-            
+        
         state['inputNode'] = self.inputNode.saveState()
         state['outputNode'] = self.outputNode.saveState()
         
@@ -486,7 +487,8 @@ class Flowchart(Node):
             nodes.sort(lambda a, b: cmp(a['pos'][0], b['pos'][0]))
             for n in nodes:
                 if n['name'] in self._nodes:
-                    self._nodes[n['name']].moveBy(*n['pos'])
+                    #self._nodes[n['name']].graphicsItem().moveBy(*n['pos'])
+                    self._nodes[n['name']].restoreState(n['state'])
                     continue
                 try:
                     node = self.createNode(n['class'], name=n['name'])
@@ -498,7 +500,7 @@ class Flowchart(Node):
             self.inputNode.restoreState(state.get('inputNode', {}))
             self.outputNode.restoreState(state.get('outputNode', {}))
                 
-            self.restoreTerminals(state['terminals'])
+            #self.restoreTerminals(state['terminals'])
             for n1, t1, n2, t2 in state['connects']:
                 try:
                     self.connectTerminals(self._nodes[n1][t1], self._nodes[n2][t2])

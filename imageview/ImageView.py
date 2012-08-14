@@ -38,7 +38,7 @@ from pyqtgraph.SignalProxy import SignalProxy
 
 class PlotROI(ROI):
     def __init__(self, size):
-        ROI.__init__(self, pos=[0,0], size=size, scaleSnap=True, translateSnap=True)
+        ROI.__init__(self, pos=[0,0], size=size) #, scaleSnap=True, translateSnap=True)
         self.addScaleHandle([1, 1], [0, 0])
         self.addRotateHandle([0, 0], [0.5, 0.5])
 
@@ -67,7 +67,12 @@ class ImageView(QtGui.QWidget):
     sigTimeChanged = QtCore.Signal(object, object)
     sigProcessingChanged = QtCore.Signal(object)
     
-    def __init__(self, parent=None, name="ImageView", *args):
+    def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
+        """
+        By default, this class creates an :class:`ImageItem <pyqtgraph.ImageItem>` to display image data
+        and a :class:`ViewBox <pyqtgraph.ViewBox>` to contain the ImageItem. Custom items may be given instead 
+        by specifying the *view* and/or *imageItem* arguments.
+        """
         QtGui.QWidget.__init__(self, parent, *args)
         self.levelMax = 4096
         self.levelMin = 0
@@ -89,7 +94,10 @@ class ImageView(QtGui.QWidget):
         #self.ui.graphicsView.setAspectLocked(True)
         #self.ui.graphicsView.invertY()
         #self.ui.graphicsView.enableMouse()
-        self.view = ViewBox()
+        if view is None:
+            self.view = ViewBox()
+        else:
+            self.view = view
         self.ui.graphicsView.setCentralItem(self.view)
         self.view.setAspectLocked(True)
         self.view.invertY()
@@ -101,7 +109,10 @@ class ImageView(QtGui.QWidget):
         #self.ui.gradientWidget.setTickColor(self.ticks[1], QtGui.QColor(255,255,255))
         #self.ui.gradientWidget.setOrientation('right')
         
-        self.imageItem = ImageItem()
+        if imageItem is None:
+            self.imageItem = ImageItem()
+        else:
+            self.imageItem = imageItem
         self.view.addItem(self.imageItem)
         self.currentIndex = 0
         
@@ -531,14 +542,18 @@ class ImageView(QtGui.QWidget):
             axes = (1, 2)
         else:
             return
-        data = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes)
+        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
         if data is not None:
             while data.ndim > 1:
                 data = data.mean(axis=1)
             if image.ndim == 3:
                 self.roiCurve.setData(y=data, x=self.tVals)
             else:
-                self.roiCurve.setData(y=data, x=list(range(len(data))))
+                while coords.ndim > 2:
+                    coords = coords[:,:,0]
+                coords = coords - coords[:,0,np.newaxis]
+                xvals = (coords**2).sum(axis=0) ** 0.5
+                self.roiCurve.setData(y=data, x=xvals)
                 
             #self.ui.roiPlot.replot()
 
@@ -664,4 +679,18 @@ class ImageView(QtGui.QWidget):
         #return self.levelMin + (self.levelMax-self.levelMin) * self.ui.gradientWidget.tickValue(self.ticks[0])
         ##return self.levelMin + ((self.levelMax-self.levelMin) / self.ui.blackSlider.maximum()) * self.ui.blackSlider.value()
         
-    
+    def getView(self):
+        """Return the ViewBox (or other compatible object) which displays the ImageItem"""
+        return self.view
+        
+    def getImageItem(self):
+        """Return the ImageItem for this ImageView."""
+        return self.imageItem
+        
+    def getRoiPlot(self):
+        """Return the ROI PlotWidget for this ImageView"""
+        return self.ui.roiPlot
+       
+    def getHistogramWidget(self):
+        """Return the HistogramLUTWidget for this ImageView"""
+        return self.ui.histogram

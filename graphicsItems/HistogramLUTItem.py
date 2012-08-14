@@ -50,7 +50,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.layout.setSpacing(0)
         self.vb = ViewBox()
         self.vb.setMaximumWidth(152)
-        self.vb.setMinimumWidth(52)
+        self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
         self.gradient = GradientEditorItem()
         self.gradient.setOrientation('right')

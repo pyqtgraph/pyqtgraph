@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.Qt import QtCore, QtGui
-#from PySide import QtCore, QtGui
 from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 from .Terminal import *
 from collections import OrderedDict
 from pyqtgraph.debug import *
 import numpy as np
-#from pyqtgraph.ObjectWorkaround import QObjectWorkaround
 from .eq import *
 
-#TETRACYCLINE = True
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
@@ -32,8 +29,8 @@ class Node(QtCore.QObject):
         self.bypassButton = None  ## this will be set by the flowchart ctrl widget..
         self._graphicsItem = None
         self.terminals = OrderedDict()
-        self._inputs = {}
-        self._outputs = {}
+        self._inputs = OrderedDict()
+        self._outputs = OrderedDict()
         self._allowAddInput = allowAddInput   ## flags to allow the user to add/remove terminals
         self._allowAddOutput = allowAddOutput
         self._allowRemove = allowRemove
@@ -85,24 +82,16 @@ class Node(QtCore.QObject):
     def terminalRenamed(self, term, oldName):
         """Called after a terminal has been renamed"""
         newName = term.name()
-        #print "node", self, "handling rename..", newName, oldName
         for d in [self.terminals, self._inputs, self._outputs]:
             if oldName not in d:
                 continue
-            #print "  got one"
             d[newName] = d[oldName]
             del d[oldName]
             
         self.graphicsItem().updateTerminals()
-        #self.emit(QtCore.SIGNAL('terminalRenamed'), term, oldName)
         self.sigTerminalRenamed.emit(term, oldName)
         
     def addTerminal(self, name, **opts):
-        #print "Node.addTerminal called. name:", name, "opts:", opts
-        #global TETRACYCLINE
-        #print "TETRACYCLINE: ", TETRACYCLINE
-        #if TETRACYCLINE:
-            #print  "Creating Terminal..."
         name = self.nextTerminalName(name)
         term = Terminal(self, name, **opts)
         self.terminals[name] = term
@@ -278,12 +267,20 @@ class Node(QtCore.QObject):
 
     def saveState(self):
         pos = self.graphicsItem().pos()
-        return {'pos': (pos.x(), pos.y()), 'bypass': self.isBypassed()}
+        state = {'pos': (pos.x(), pos.y()), 'bypass': self.isBypassed()}
+        termsEditable = self._allowAddInput | self._allowAddOutput
+        for term in self._inputs.values() + self._outputs.values():
+            termsEditable |= term._renamable | term._removable | term._multiable
+        if termsEditable:
+            state['terminals'] = self.saveTerminals()
+        return state
         
     def restoreState(self, state):
         pos = state.get('pos', (0,0))
         self.graphicsItem().setPos(*pos)
         self.bypass(state.get('bypass', False))
+        if 'terminals' in state:
+            self.restoreTerminals(state['terminals'])
 
     def saveTerminals(self):
         terms = OrderedDict()
@@ -309,8 +306,8 @@ class Node(QtCore.QObject):
         for t in self.terminals.values():
             t.close()
         self.terminals = OrderedDict()
-        self._inputs = {}
-        self._outputs = {}
+        self._inputs = OrderedDict()
+        self._outputs = OrderedDict()
         
     def close(self):
         """Cleans up after the node--removes terminals, graphicsItem, widget"""
@@ -493,10 +490,6 @@ class NodeGraphicsItem(GraphicsObject):
             self.hovered = False
         self.update()
             
-    #def mouseReleaseEvent(self, ev):
-        #ret = QtGui.QGraphicsItem.mouseReleaseEvent(self, ev)
-        #return ret
-
     def keyPressEvent(self, ev):
         if ev.key() == QtCore.Qt.Key_Delete or ev.key() == QtCore.Qt.Key_Backspace:
             ev.accept()
@@ -513,13 +506,8 @@ class NodeGraphicsItem(GraphicsObject):
         return GraphicsObject.itemChange(self, change, val)
             
 
-    #def contextMenuEvent(self, ev):
-        #ev.accept()
-        #self.menu.popup(ev.screenPos())
-        
     def getMenu(self):
         return self.menu
-    
 
     def getContextMenus(self, event):
         return [self.menu]
@@ -548,25 +536,3 @@ class NodeGraphicsItem(GraphicsObject):
     def addOutputFromMenu(self):  ## called when add output is clicked in context menu
         self.node.addOutput(renamable=True, removable=True, multiable=False)
         
-    #def menuTriggered(self, action):
-        ##print "node.menuTriggered called. action:", action
-        #act = str(action.text())
-        #if act == "Add input":
-            #self.node.addInput()
-            #self.updateActionMenu()
-        #elif act == "Add output":
-            #self.node.addOutput()
-            #self.updateActionMenu()
-        #elif act == "Remove node":
-            #self.node.close()
-        #else: ## only other option is to remove a terminal
-            #self.node.removeTerminal(act)
-            #self.terminalMenu.removeAction(action)
-
-    #def updateActionMenu(self):
-        #for t in self.node.terminals:
-            #if t not in [str(a.text()) for a in self.terminalMenu.actions()]:
-                #self.terminalMenu.addAction(t)
-        #for a in self.terminalMenu.actions():
-            #if str(a.text()) not in self.node.terminals:
-                #self.terminalMenu.removeAction(a)

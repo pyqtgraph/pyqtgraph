@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
+REVISION = None
+
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui 
+from .Qt import QtGui
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
 
-import sys
+import os, sys
 
 ## check python version
-if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] != 7):
+## Allow anything >= 2.7
+if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] < 7):
     raise Exception("Pyqtgraph requires Python version 2.7 (this is %d.%d)" % (sys.version_info[0], sys.version_info[1]))
 
 ## helpers for 2/3 compatibility
@@ -30,12 +33,14 @@ else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
 CONFIG_OPTIONS = {
-    'useOpenGL': useOpenGL,   ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
+    'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    'foregroundColor': (200,200,200),
-    'backgroundColor': (0,0,0),
+    'foreground': (150, 150, 150),  ## default foreground color for axes, labels, etc.
+    'background': (0, 0, 0),        ## default background for GraphicsWidget
     'antialias': False,
+    'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
 } 
+
 
 def setConfigOption(opt, value):
     CONFIG_OPTIONS[opt] = value
@@ -43,6 +48,23 @@ def setConfigOption(opt, value):
 def getConfigOption(opt):
     return CONFIG_OPTIONS[opt]
 
+
+def systemInfo():
+    print("sys.platform: %s" % sys.platform)
+    print("sys.version: %s" % sys.version)
+    from .Qt import VERSION_INFO
+    print("qt bindings: %s" % VERSION_INFO)
+    
+    global REVISION
+    if REVISION is None:  ## this code was probably checked out from bzr; look up the last-revision file
+        lastRevFile = os.path.join(os.path.dirname(__file__), '.bzr', 'branch', 'last-revision')
+        if os.path.exists(lastRevFile):
+            REVISION = open(lastRevFile, 'r').read().strip()
+    
+    print("pyqtgraph: %s" % REVISION)
+    print("config:")
+    import pprint
+    pprint.pprint(CONFIG_OPTIONS)
 
 ## Rename orphaned .pyc files. This is *probably* safe :)
 
@@ -105,7 +127,7 @@ def importAll(path, excludes=()):
                 globals()[k] = getattr(mod, k)
 
 importAll('graphicsItems')
-importAll('widgets', excludes=['MatplotlibWidget'])
+importAll('widgets', excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
 
 from .imageview import *
 from .WidgetGroup import *

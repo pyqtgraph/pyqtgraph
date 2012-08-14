@@ -76,7 +76,7 @@ class SRTTransform(QtGui.QTransform):
         m = pg.SRTTransform3D(m)
         angle, axis = m.getRotation()
         if angle != 0 and (axis[0] != 0 or axis[1] != 0 or axis[2] != 1):
-            print angle, axis
+            print("angle: %s  axis: %s" % (str(angle), str(axis)))
             raise Exception("Can only convert 4x4 matrix to 3x3 if rotation is around Z-axis.")
         self._state = {
             'pos': Point(m.getTranslation()),

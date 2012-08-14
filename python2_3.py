@@ -42,8 +42,9 @@ def sortList(l, cmpFunc):
 if sys.version_info[0] == 3:
     import builtins
     builtins.basestring = str
-    builtins.asUnicode = asUnicode
-    builtins.sortList = sortList
+    #builtins.asUnicode = asUnicode
+    #builtins.sortList = sortList
+    basestring = str
     def cmp(a,b):
         if a>b:
             return 1
@@ -52,7 +53,7 @@ if sys.version_info[0] == 3:
         else:
             return 0
     builtins.cmp = cmp
-else:
-    import __builtin__
-    __builtin__.asUnicode = asUnicode
-    __builtin__.sortList = sortList
+#else:    ## don't use __builtin__  -- this confuses things like pyshell and ActiveState's lazy import recipe
+    #import __builtin__
+    #__builtin__.asUnicode = asUnicode
+    #__builtin__.sortList = sortList

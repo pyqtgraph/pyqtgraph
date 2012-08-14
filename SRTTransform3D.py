@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from Qt import QtCore, QtGui
-from Vector import Vector
-from SRTTransform import SRTTransform
+from .Qt import QtCore, QtGui
+from .Vector import Vector
+from .SRTTransform import SRTTransform
 import pyqtgraph as pg
 import numpy as np
 import scipy.linalg
@@ -136,15 +136,15 @@ class SRTTransform3D(QtGui.QMatrix4x4):
         try:
             evals, evecs = scipy.linalg.eig(r)
         except:
-            print "Rotation matrix:", r
-            print "Scale:", scale
-            print "Original matrix:", m
+            print("Rotation matrix: %s" % str(r))
+            print("Scale: %s" % str(scale))
+            print("Original matrix: %s" % str(m))
             raise
         eigIndex = np.argwhere(np.abs(evals-1) < 1e-7)
         if len(eigIndex) < 1:
-            print "eigenvalues:", evals
-            print "eigenvectors:", evecs
-            print "index:", eigIndex, evals-1
+            print("eigenvalues: %s" % str(evals))
+            print("eigenvectors: %s" % str(evecs))
+            print("index: %s, %s" % (str(eigIndex), str(evals-1)))
             raise Exception("Could not determine rotation axis.")
         axis = evecs[eigIndex[0,0]].real
         axis /= ((axis**2).sum())**0.5
@@ -259,23 +259,23 @@ if __name__ == '__main__':
     tr3 = QtGui.QTransform()
     tr3.translate(20, 0)
     tr3.rotate(45)
-    print "QTransform -> Transform:", SRTTransform(tr3)
+    print("QTransform -> Transform: %s" % str(SRTTransform(tr3)))
     
-    print "tr1:", tr1
+    print("tr1: %s" % str(tr1))
     
     tr2.translate(20, 0)
     tr2.rotate(45)
-    print "tr2:", tr2
+    print("tr2: %s" % str(tr2))
     
     dt = tr2/tr1
-    print "tr2 / tr1 = ", dt
+    print("tr2 / tr1 = %s" % str(dt))
     
-    print "tr2 * tr1 = ", tr2*tr1
+    print("tr2 * tr1 = %s" % str(tr2*tr1))
     
     tr4 = SRTTransform()
     tr4.scale(-1, 1)
     tr4.rotate(30)
-    print "tr1 * tr4 = ", tr1*tr4
+    print("tr1 * tr4 = %s" % str(tr1*tr4))
     
     w1 = widgets.TestROI((19,19), (22, 22), invertible=True)
     #w2 = widgets.TestROI((0,0), (150, 150))

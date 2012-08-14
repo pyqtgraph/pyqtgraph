@@ -79,7 +79,7 @@ class ScatterPlotItem(GraphicsObject):
         prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
         GraphicsObject.__init__(self)
         self.setFlag(self.ItemHasNoContents, True)
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', 'S1'), ('pen', object), ('brush', object), ('item', object), ('data', object)])
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('item', object), ('data', object)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -226,6 +226,7 @@ class ScatterPlotItem(GraphicsObject):
             self.setPointData(kargs['data'], dataSet=newData)
         
         #self.updateSpots()
+        self.prepareGeometryChange()
         self.bounds = [None, None]
         self.generateSpotItems()
         self.sigPlotChanged.emit(self)
@@ -396,7 +397,7 @@ class ScatterPlotItem(GraphicsObject):
         if frac >= 1.0 and self.bounds[ax] is not None:
             return self.bounds[ax]
         
-        self.prepareGeometryChange()
+        #self.prepareGeometryChange()
         if self.data is None or len(self.data) == 0:
             return (None, None)
         
@@ -464,6 +465,7 @@ class ScatterPlotItem(GraphicsObject):
         return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
 
     def viewRangeChanged(self):
+        self.prepareGeometryChange()
         GraphicsObject.viewRangeChanged(self)
         self.bounds = [None, None]
         
@@ -557,7 +559,7 @@ class SpotItem(GraphicsItem):
         If the spot has no explicit symbol set, then return the ScatterPlotItem's default symbol instead.
         """
         symbol = self._data['symbol']
-        if symbol == '':
+        if symbol is None:
             symbol = self._plot.opts['symbol']
         try:
             n = int(symbol)

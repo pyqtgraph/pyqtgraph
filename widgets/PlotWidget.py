@@ -41,6 +41,8 @@ class PlotWidget(GraphicsView):
     other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
     def __init__(self, parent=None, **kargs):
+        """When initializing PlotWidget, all keyword arguments except *parent* are passed
+        to :func:`PlotItem.__init__() <pyqtgraph.PlotItem.__init__>`."""
         GraphicsView.__init__(self, parent)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.enableMouse(False)

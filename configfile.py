@@ -13,6 +13,7 @@ import re, os, sys
 from collections import OrderedDict
 GLOBAL_PATH = None # so not thread safe.
 from . import units
+from .python2_3 import asUnicode
 
 class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):

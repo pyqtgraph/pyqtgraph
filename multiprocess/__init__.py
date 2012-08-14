@@ -19,4 +19,6 @@ TODO:
     (RemoteGraphicsView class)
 """
 
-from processes import *
+from .processes import *
+from .parallelizer import Parallelize, CanceledError
+from .remoteproxy import proxy

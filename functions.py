@@ -5,6 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from .python2_3 import asUnicode
 Colors = {
     'b': (0,0,255,255),
     'g': (0,255,0,255),
@@ -357,28 +358,36 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     
     
     
-def affineSlice(data, shape, origin, vectors, axes, **kargs):
+def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
     """
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets.
+    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates (see the scipy documentation for more information about this).
     
-    For a graphical interface to this function, see :func:`ROI.getArrayRegion`
+    For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
+    ==============  ====================================================================================================
     Arguments:
+    *data*          (ndarray) the original dataset
+    *shape*         the shape of the slice to take (Note the return value may have more dimensions than len(shape))
+    *origin*        the location in the original dataset that will become the origin of the sliced data.
+    *vectors*       list of unit vectors which point in the direction of the slice axes. Each vector must have the same 
+                    length as *axes*. If the vectors are not unit length, the result will be scaled relative to the 
+                    original data. If the vectors are not orthogonal, the result will be sheared relative to the 
+                    original data.
+    *axes*          The axes in the original dataset which correspond to the slice *vectors*
+    *order*         The order of spline interpolation. Default is 1 (linear). See scipy.ndimage.map_coordinates
+                    for more information.
+    *returnCoords*  If True, return a tuple (result, coords) where coords is the array of coordinates used to select
+                    values from the original dataset.
+    *All extra keyword arguments are passed to scipy.ndimage.map_coordinates.*
+    --------------------------------------------------------------------------------------------------------------------
+    ==============  ====================================================================================================
     
-        | *data* (ndarray): the original dataset
-        | *shape*: the shape of the slice to take (Note the return value may have more dimensions than len(shape))
-        | *origin*: the location in the original dataset that will become the origin in the sliced data.
-        | *vectors*: list of unit vectors which point in the direction of the slice axes
+    Note the following must be true: 
         
-        * each vector must have the same length as *axes*
-        * If the vectors are not unit length, the result will be scaled.
-        * If the vectors are not orthogonal, the result will be sheared.
-            
-        *axes*: the axes in the original dataset which correspond to the slice *vectors*
-        
-        All extra keyword arguments are passed to scipy.ndimage.map_coordinates
+        | len(shape) == len(vectors) 
+        | len(origin) == len(axes) == len(vectors[i])
         
     Example: start with a 4D fMRI data set, take a diagonal-planar slice out of the last 3 axes
         
@@ -391,10 +400,6 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
         
         affineSlice(data, shape=(20,20), origin=(40,0,0), vectors=((-1, 1, 0), (-1, 0, 1)), axes=(1,2,3))
     
-    Note the following must be true: 
-        
-        | len(shape) == len(vectors) 
-        | len(origin) == len(axes) == len(vectors[0])
     """
     
     # sanity check
@@ -436,7 +441,7 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
     for inds in np.ndindex(*extraShape):
         ind = (Ellipsis,) + inds
         #print data[ind].shape, x.shape, output[ind].shape, output.shape
-        output[ind] = scipy.ndimage.map_coordinates(data[ind], x, **kargs)
+        output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
     
     tr = list(range(output.ndim))
     trb = []
@@ -447,9 +452,18 @@ def affineSlice(data, shape, origin, vectors, axes, **kargs):
     tr2 = tuple(trb+tr)
 
     ## Untranspose array before returning
-    return output.transpose(tr2)
+    output = output.transpose(tr2)
+    if returnCoords:
+        return (output, x)
+    else:
+        return output
 
-
+def transformToArray(tr):
+    """
+    Given a QTransform, return a 3x3 numpy array.
+    """
+    return np.array([[tr.m11(), tr.m12(), tr.m13()],[tr.m21(), tr.m22(), tr.m23()],[tr.m31(), tr.m32(), tr.m33()]])
+        
 def solve3DTransform(points1, points2):
     """
     Find a 3D transformation matrix that maps points1 onto points2
@@ -1275,3 +1289,19 @@ def isosurface(data, level):
 
     return facets
 
+
+    
+def invertQTransform(tr):
+    """Return a QTransform that is the inverse of *tr*.
+    Rasises an exception if tr is not invertible.
+    
+    Note that this function is preferred over QTransform.inverted() due to
+    bugs in that method. (specifically, Qt has floating-point precision issues
+    when determining whether a matrix is invertible)
+    """
+    #return tr.inverted()[0]
+    arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+    inv = scipy.linalg.inv(arr)
+    return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
+    
+    

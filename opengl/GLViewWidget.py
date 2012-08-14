@@ -29,12 +29,18 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
+        
+        self.makeCurrent()
 
     def addItem(self, item):
         self.items.append(item)
         if hasattr(item, 'initializeGL'):
             self.makeCurrent()
-            item.initializeGL()
+            try:
+                item.initializeGL()
+            except:
+                self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
+                
         item._setView(self)
         #print "set view", item, self, item.view()
         self.update()
@@ -100,20 +106,28 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glPushAttrib(GL_ALL_ATTRIB_BITS)
                     i.paint()
                 except:
-                    import sys
-                    sys.excepthook(*sys.exc_info())
-                    print("Error while drawing item", i)
+                    import pyqtgraph.debug
+                    pyqtgraph.debug.printExc()
+                    msg = "Error while drawing item %s." % str(item)
+                    ver = glGetString(GL_VERSION).split()[0]
+                    if int(ver.split('.')[0]) < 2:
+                        print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
+                    else:
+                        print(msg)
+                    
                 finally:
-                    glPopAttrib(GL_ALL_ATTRIB_BITS)
+                    glPopAttrib()
             else:
                 glMatrixMode(GL_MODELVIEW)
                 glPushMatrix()
-                tr = i.transform()
-                a = np.array(tr.copyDataTo()).reshape((4,4))
-                glMultMatrixf(a.transpose())
-                self.drawItemTree(i)
-                glMatrixMode(GL_MODELVIEW)
-                glPopMatrix()
+                try:
+                    tr = i.transform()
+                    a = np.array(tr.copyDataTo()).reshape((4,4))
+                    glMultMatrixf(a.transpose())
+                    self.drawItemTree(i)
+                finally:
+                    glMatrixMode(GL_MODELVIEW)
+                    glPopMatrix()
             
         
     def cameraPosition(self):
@@ -236,5 +250,16 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 self.keyTimer.start(16)
         else:
             self.keyTimer.stop()
+
+    def checkOpenGLVersion(self, msg):
+        ## Only to be called from within exception handler.
+        ver = glGetString(GL_VERSION).split()[0]
+        if int(ver.split('.')[0]) < 2:
+            import pyqtgraph.debug
+            pyqtgraph.debug.printExc()
+            raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
+        else:
+            raise
+            
 
         

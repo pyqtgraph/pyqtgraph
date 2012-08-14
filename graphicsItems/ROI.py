@@ -800,7 +800,7 @@ class ROI(GraphicsObject):
         #print "  dshape", dShape
         
         ## Determine transform that maps ROI bounding box to image coordinates
-        tr = self.sceneTransform() * img.sceneTransform().inverted()[0] 
+        tr = self.sceneTransform() * fn.invertQTransform(img.sceneTransform())
         
         ## Modify transform to scale from image coords to data coords
         #m = QtGui.QTransform()
@@ -832,35 +832,34 @@ class ROI(GraphicsObject):
         else:
             return bounds, tr
 
-
-    def getArrayRegion(self, data, img, axes=(0,1)):
-        """Use the position of this ROI relative to an imageItem to pull a slice from an array."""
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+        """Use the position and orientation of this ROI relative to an imageItem to pull a slice from an array.
         
+        This method uses :func:`affineSlice <pyqtgraph.affineSlice>` to generate
+        the slice from *data* and uses :func:`getAffineSliceParams <pyqtgraph.ROI.getAffineSliceParams>` to determine the parameters to 
+        pass to :func:`affineSlice <pyqtgraph.affineSlice>`.
         
-        shape = self.state['size']
+        If *returnMappedCoords* is True, then the method returns a tuple (result, coords) 
+        such that coords is the set of coordinates used to interpolate values from the original
+        data, mapped into the parent coordinate system of the image. This is useful, when slicing
+        data from images that have been transformed, for determining the location of each value
+        in the sliced data.
         
-        origin = self.mapToItem(img, QtCore.QPointF(0, 0))
+        All extra keyword arguments are passed to :func:`affineSlice <pyqtgraph.affineSlice>`.
+        """
         
-        ## vx and vy point in the directions of the slice axes, but must be scaled properly
-        vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
-        vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
-        
-        lvx = np.sqrt(vx.x()**2 + vx.y()**2)
-        lvy = np.sqrt(vy.x()**2 + vy.y()**2)
-        pxLen = img.width() / float(data.shape[axes[0]])
-        sx =  pxLen / lvx
-        sy =  pxLen / lvy
-        
-        vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
-        shape = self.state['size']
-        shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
-        
-        origin = (origin.x(), origin.y())
-        
-        #print "shape", shape, "vectors", vectors, "origin", origin
-        
-        return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, order=1)
-        
+        shape, vectors, origin = self.getAffineSliceParams(data, img, axes)
+        if not returnMappedCoords:
+            return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+        else:
+            kwds['returnCoords'] = True
+            result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            tr = fn.transformToArray(img.transform())[:,:2].reshape((3, 2) + (1,)*(coords.ndim-1))
+            coords = coords[np.newaxis, ...]
+            mapped = (tr*coords).sum(axis=0)
+            return result, mapped
+            
+            
         ### transpose data so x and y are the first 2 axes
         #trAx = range(0, data.ndim)
         #trAx.remove(axes[0])
@@ -959,6 +958,37 @@ class ROI(GraphicsObject):
         ### Untranspose array before returning
         #return arr5.transpose(tr2)
 
+    def getAffineSliceParams(self, data, img, axes=(0.1)):
+        """
+        Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>` to 
+        extract a subset of *data* using this ROI and *img* to specify the subset.
+        
+        See :func:`getArrayRegion <pyqtgraph.ROI.getArrayRegion>` for more information.
+        """
+        
+        shape = self.state['size']
+        
+        origin = self.mapToItem(img, QtCore.QPointF(0, 0))
+        
+        ## vx and vy point in the directions of the slice axes, but must be scaled properly
+        vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
+        vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
+        
+        lvx = np.sqrt(vx.x()**2 + vx.y()**2)
+        lvy = np.sqrt(vy.x()**2 + vy.y()**2)
+        pxLen = img.width() / float(data.shape[axes[0]])
+        #img.width is number of pixels or width of item?
+        #need pxWidth and pxHeight instead of pxLen ?
+        sx =  pxLen / lvx
+        sy =  pxLen / lvy
+        
+        vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
+        shape = self.state['size']
+        shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
+        
+        origin = (origin.x(), origin.y())
+        return shape, vectors, origin
+        
     def getGlobalTransform(self, relativeTo=None):
         """Return global transformation (rotation angle+translation) required to move 
         from relative state to current state. If relative state isn't specified,
@@ -1251,7 +1281,7 @@ class Handle(UIGraphicsItem):
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
         va = np.arctan2(v.y(), v.x())
         
-        dti = dt.inverted()[0]
+        dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())

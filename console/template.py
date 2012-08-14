@@ -91,7 +91,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(QtGui.QApplication.translate("Console", "Console", None, QtGui.QApplication.UnicodeUTF8))
         self.historyBtn.setText(QtGui.QApplication.translate("Form", "History..", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionBtn.setText(QtGui.QApplication.translate("Form", "Exceptions..", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionGroup.setTitle(QtGui.QApplication.translate("Form", "Exception Handling", None, QtGui.QApplication.UnicodeUTF8))
@@ -101,4 +101,4 @@ class Ui_Form(object):
         self.runSelectedFrameCheck.setText(QtGui.QApplication.translate("Form", "Run commands in selected stack frame", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Exception Info", None, QtGui.QApplication.UnicodeUTF8))
 
-from CmdInput import CmdInput
+from .CmdInput import CmdInput

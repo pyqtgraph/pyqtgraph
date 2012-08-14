@@ -240,7 +240,7 @@ class EvalNode(Node):
     def saveState(self):
         state = Node.saveState(self)
         state['text'] = str(self.text.toPlainText())
-        state['terminals'] = self.saveTerminals()
+        #state['terminals'] = self.saveTerminals()
         return state
         
     def restoreState(self, state):
@@ -282,7 +282,7 @@ class ColumnJoinNode(Node):
         
     def addInput(self):
         #print "ColumnJoinNode.addInput called."
-        term = Node.addInput(self, 'input', renamable=True)
+        term = Node.addInput(self, 'input', renamable=True, removable=True)
         #print "Node.addInput returned. term:", term
         item = QtGui.QTreeWidgetItem([term.name()])
         item.term = term
@@ -322,16 +322,14 @@ class ColumnJoinNode(Node):
         
     def restoreState(self, state):
         Node.restoreState(self, state)
-        inputs = [inp.name() for inp in self.inputs()]
+        inputs = self.inputs()
+        order = [name for name in state['order'] if name in inputs]
         for name in inputs:
-            if name not in state['order']:
-                self.removeTerminal(name)
-        for name in state['order']:
-            if name not in inputs:
-                Node.addInput(self, name, renamable=True)
+            if name not in order:
+                order.append(name)
         
         self.tree.clear()
-        for name in state['order']:
+        for name in order:
             term = self[name]
             item = QtGui.QTreeWidgetItem([name])
             item.term = term

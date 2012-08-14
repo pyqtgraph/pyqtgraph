@@ -1,4 +1,5 @@
-from PyQt4 import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.python2_3 import asUnicode
 
 class CmdInput(QtGui.QLineEdit):
     
@@ -25,10 +26,10 @@ class CmdInput(QtGui.QLineEdit):
             self.execCmd()
         else:
             QtGui.QLineEdit.keyPressEvent(self, ev)
-            self.history[0] = unicode(self.text())
+            self.history[0] = asUnicode(self.text())
         
     def execCmd(self):
-        cmd = unicode(self.text())
+        cmd = asUnicode(self.text())
         if len(self.history) == 1 or cmd != self.history[1]:
             self.history.insert(1, cmd)
         #self.lastCmd = cmd

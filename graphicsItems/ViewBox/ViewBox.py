@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.python2_3 import sortList
 import numpy as np
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
@@ -62,7 +63,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu = True, name=None):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None):
         """
         =============  =============================================================
         **Arguments**
@@ -105,6 +106,8 @@ class ViewBox(GraphicsWidget):
             'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
+
+            'background': None,
         }
         
         
@@ -118,17 +121,23 @@ class ViewBox(GraphicsWidget):
         self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
         
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
-        ## this is a workaround for a Qt + OpenGL but that causes improper clipping
+        ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
         self.childGroup.sigItemsChanged.connect(self.itemsChanged)
+        
+        self.background = QtGui.QGraphicsRectItem(self.rect())
+        self.background.setParentItem(self)
+        self.background.setZValue(-1e6)
+        self.background.setPen(fn.mkPen(None))
+        self.updateBackground()
         
         #self.useLeftButtonPan = pyqtgraph.getConfigOption('leftButtonPan') # normally use left button to pan
         # this also enables capture of keyPressEvents.
         
         ## Make scale box that is shown when dragging on the view
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
-        self.rbScaleBox.setPen(fn.mkPen((255,0,0), width=1))
+        self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
         self.rbScaleBox.hide()
         self.addItem(self.rbScaleBox)
@@ -286,6 +295,7 @@ class ViewBox(GraphicsWidget):
         #self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
+        self.background.setRect(self.rect())
         #self.linkedXChanged()
         #self.linkedYChanged()
         
@@ -349,7 +359,7 @@ class ViewBox(GraphicsWidget):
             changes[1] = yRange
 
         if len(changes) == 0:
-            print rect
+            print(rect)
             raise Exception("Must specify at least one of rect, xRange, or yRange. (gave rect=%s)" % str(type(rect)))
         
         changed = [False, False]
@@ -442,10 +452,8 @@ class ViewBox(GraphicsWidget):
             center = Point(vr.center())
         else:
             center = Point(center)
-        
         tl = center + (vr.topLeft()-center) * scale
         br = center + (vr.bottomRight()-center) * scale
-       
         self.setRange(QtCore.QRectF(tl, br), padding=0)
         
     def translateBy(self, t):
@@ -755,7 +763,7 @@ class ViewBox(GraphicsWidget):
 
     def mapToView(self, obj):
         """Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox"""
-        m = self.childTransform().inverted()[0]
+        m = fn.invertQTransform(self.childTransform())
         return m.map(obj)
 
     def mapFromView(self, obj):
@@ -821,7 +829,7 @@ class ViewBox(GraphicsWidget):
             mask[axis] = mv
         s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         
-        center = Point(self.childGroup.transform().inverted()[0].map(ev.pos()))
+        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         #center = ev.pos()
         
         self.scaleBy(s, center)
@@ -854,7 +862,10 @@ class ViewBox(GraphicsWidget):
         return self._menuCopy
         
     def getContextMenus(self, event):
-        return self.menu.subMenus()
+        if self.menuEnabled():
+            return self.menu.subMenus()
+        else:
+            return None
         #return [self.getMenu(event)]
         
 
@@ -901,8 +912,11 @@ class ViewBox(GraphicsWidget):
             dif = np.array([dif.x(), dif.y()])
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif
-            center = Point(self.childGroup.transform().inverted()[0].map(ev.buttonDownPos(QtCore.Qt.RightButton)))
-            #center = Point(ev.buttonDownPos(QtCore.Qt.RightButton))
+            
+            tr = self.childGroup.transform()
+            tr = fn.invertQTransform(tr)
+            
+            center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self.scaleBy(s, center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
@@ -1155,6 +1169,15 @@ class ViewBox(GraphicsWidget):
             #self.scene().render(p)
             #p.end()
 
+    def updateBackground(self):
+        bg = self.state['background']
+        if bg is None:
+            self.background.hide()
+        else:
+            self.background.show()
+            self.background.setBrush(fn.mkBrush(bg))
+            
+            
     def updateViewLists(self):
         def cmpViews(a, b):
             wins = 100 * cmp(a.window() is self.window(), b.window() is self.window())

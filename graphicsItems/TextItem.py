@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 from .UIGraphicsItem import *
+import pyqtgraph.functions as fn
 
 class TextItem(UIGraphicsItem):
     """
@@ -87,7 +88,7 @@ class TextItem(UIGraphicsItem):
         if br is None:
             return
         self.prepareGeometryChange()
-        self._bounds = self.deviceTransform().inverted()[0].mapRect(br)
+        self._bounds = fn.invertQTransform(self.deviceTransform()).mapRect(br)
         #print self._bounds
 
     def boundingRect(self):

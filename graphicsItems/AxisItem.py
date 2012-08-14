@@ -1,9 +1,11 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.python2_3 import asUnicode
 import numpy as np
 from pyqtgraph.Point import Point
 import pyqtgraph.debug as debug
 import weakref
 import pyqtgraph.functions as fn
+import pyqtgraph as pg
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
@@ -65,8 +67,6 @@ class AxisItem(GraphicsWidget):
             
         self.setRange(0, 1)
         
-        if pen is None:
-            pen = QtGui.QPen(QtGui.QColor(100, 100, 100))
         self.setPen(pen)
         
         self._linkedView = None
@@ -189,23 +189,31 @@ class AxisItem(GraphicsWidget):
         self.setMaximumWidth(w)
         self.setMinimumWidth(w)
         
+    def pen(self):
+        if self._pen is None:
+            return fn.mkPen(pg.getConfigOption('foreground'))
+        return self._pen
+        
     def setPen(self, pen):
-        self.pen = pen
+        """
+        Set the pen used for drawing text, axes, ticks, and grid lines.
+        if pen == None, the default will be used (see :func:`setConfigOption 
+        <pyqtgraph.setConfigOption>`)
+        """
+        self._pen = pen
         self.picture = None
         self.update()
         
     def setScale(self, scale=None):
         """
-        Set the value scaling for this axis. 
-        The scaling value 1) multiplies the values displayed along the axis
-        and 2) changes the way units are displayed in the label. 
+        Set the value scaling for this axis. Values on the axis are multiplied
+        by this scale factor before being displayed as text. By default,
+        this scaling value is automatically determined based on the visible range
+        and the axis units are updated to reflect the chosen scale factor.
         
         For example: If the axis spans values from -0.1 to 0.1 and has units set 
         to 'V' then a scale of 1000 would cause the axis to display values -100 to 100
         and the units would appear as 'mV'
-        
-        If scale is None, then it will be determined automatically based on the current 
-        range displayed by the axis.
         """
         if scale is None:
             #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
@@ -219,8 +227,10 @@ class AxisItem(GraphicsWidget):
                 self.setLabel(unitPrefix=prefix)
             else:
                 scale = 1.0
-        
-        
+        else:
+            self.setLabel(unitPrefix='')
+            self.autoScale = False
+            
         if scale != self.scale:
             self.scale = scale
             self.setLabel()
@@ -354,6 +364,29 @@ class AxisItem(GraphicsWidget):
             (intervals[minorIndex], 0)
         ]
         
+        ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
+        ### Determine major/minor tick spacings which flank the optimal spacing.
+        #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
+        #minorIndex = 0
+        #while intervals[minorIndex+1] <= optimalSpacing:
+            #minorIndex += 1
+            
+        ### make sure we never see 5 and 2 at the same time
+        #intIndexes = [
+            #[0,1,3],
+            #[0,2,3],
+            #[2,3,4],
+            #[3,4,6],
+            #[3,5,6],
+        #][minorIndex]
+        
+        #return [
+            #(intervals[intIndexes[2]], 0),
+            #(intervals[intIndexes[1]], 0),
+            #(intervals[intIndexes[0]], 0)
+        #]
+        
+        
 
     def tickValues(self, minVal, maxVal, size):
         """
@@ -370,8 +403,6 @@ class AxisItem(GraphicsWidget):
         """
         minVal, maxVal = sorted((minVal, maxVal))
         
-        if self.logMode:
-            return self.logTickValues(minVal, maxVal, size)
             
         ticks = []
         tickLevels = self.tickSpacing(minVal, maxVal, size)
@@ -388,21 +419,36 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) 
+            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) )
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing, values))
+            
+        if self.logMode:
+            return self.logTickValues(minVal, maxVal, size, ticks)
+            
         return ticks
     
-    def logTickValues(self, minVal, maxVal, size):
-        v1 = int(np.floor(minVal))
-        v2 = int(np.ceil(maxVal))
-        major = list(range(v1+1, v2))
+    def logTickValues(self, minVal, maxVal, size, stdTicks):
         
-        minor = []
-        for v in range(v1, v2):
-            minor.extend(v + np.log10(np.arange(1, 10)))
-        minor = [x for x in minor if x>minVal and x<maxVal]
-        return [(1.0, major), (None, minor)]
+        ## start with the tick spacing given by tickValues().
+        ## Any level whose spacing is < 1 needs to be converted to log scale
+        
+        ticks = []
+        for (spacing, t) in stdTicks:
+            if spacing >= 1.0:
+                ticks.append((spacing, t))
+        
+        if len(ticks) < 3:
+            v1 = int(np.floor(minVal))
+            v2 = int(np.ceil(maxVal))
+            #major = list(range(v1+1, v2))
+            
+            minor = []
+            for v in range(v1, v2):
+                minor.extend(v + np.log10(np.arange(1, 10)))
+            minor = [x for x in minor if x>minVal and x<maxVal]
+            ticks.append((None, minor))
+        return ticks
 
     def tickStrings(self, values, scale, spacing):
         """Return the strings that should be placed next to ticks. This method is called 
@@ -477,12 +523,14 @@ class AxisItem(GraphicsWidget):
         #print tickStart, tickStop, span
         
         ## draw long line along axis
-        p.setPen(self.pen)
+        p.setPen(self.pen())
         p.drawLine(*span)
         p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## determine size of this item in pixels
         points = list(map(self.mapToDevice, span))
+        if None in points:
+            return
         lengthInPixels = Point(points[1] - points[0]).length()
         if lengthInPixels == 0:
             return
@@ -513,6 +561,10 @@ class AxisItem(GraphicsWidget):
         else:
             xScale = bounds.width() / dif
             offset = self.range[0] * xScale
+            
+        xRange = [x * xScale - offset for x in self.range]
+        xMin = min(xRange)
+        xMax = max(xRange)
         
         prof.mark('init')
             
@@ -521,6 +573,7 @@ class AxisItem(GraphicsWidget):
         ## draw ticks
         ## (to improve performance, we do not interleave line and text drawing, since this causes unnecessary pipeline switching)
         ## draw three different intervals, long ticks first
+        
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
@@ -530,19 +583,28 @@ class AxisItem(GraphicsWidget):
                 
             lineAlpha = 255 / (i+1)
             if self.grid is not False:
-                lineAlpha = self.grid
+                lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             
             for v in ticks:
+                ## determine actual position to draw this tick
                 x = (v * xScale) - offset
+                if x < xMin or x > xMax:  ## last check to make sure no out-of-bounds ticks are drawn
+                    tickPositions[i].append(None)
+                    continue
+                tickPositions[i].append(x)
+                
                 p1 = [x, x]
                 p2 = [x, x]
                 p1[axis] = tickStart
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150, lineAlpha)))
+                tickPen = self.pen()
+                color = tickPen.color()
+                color.setAlpha(lineAlpha)
+                tickPen.setColor(color)
+                p.setPen(tickPen)
                 p.drawLine(Point(p1), Point(p2))
-                tickPositions[i].append(x)
         prof.mark('draw ticks')
 
         ## Draw text until there is no more room (or no more text)
@@ -557,10 +619,15 @@ class AxisItem(GraphicsWidget):
                 
             if len(strings) == 0:
                 continue
+            
+            ## ignore strings belonging to ticks that were previously ignored
+            for j in range(len(strings)):
+                if tickPositions[i][j] is None:
+                    strings[j] = None
 
+            textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings if s is not None])
             if i > 0:  ## always draw top level
                 ## measure all text, make sure there's enough room
-                textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings])
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
                 else:
@@ -570,11 +637,12 @@ class AxisItem(GraphicsWidget):
                 textFillRatio = float(textSize) / lengthInPixels
                 if textFillRatio > 0.7:
                     break
-            
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
             for j in range(len(strings)):
                 vstr = strings[j]
+                if vstr is None:## this tick was ignored because it is out of bounds
+                    continue
                 x = tickPositions[i][j]
                 textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
                 height = textRect.height()
@@ -592,7 +660,7 @@ class AxisItem(GraphicsWidget):
                     textFlags = QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
                     rect = QtCore.QRectF(x-100, tickStop+max(0,self.tickLength), 200, height)
 
-                p.setPen(QtGui.QPen(QtGui.QColor(150, 150, 150)))
+                p.setPen(self.pen())
                 p.drawText(rect, textFlags, vstr)
         prof.mark('draw text')
         prof.finish()
