@@ -17,12 +17,16 @@ i11  = QtGui.QTreeWidgetItem(["Item 1.1"])
 i12  = QtGui.QTreeWidgetItem(["Item 1.2"])
 i2  = QtGui.QTreeWidgetItem(["Item 2"])
 i21  = QtGui.QTreeWidgetItem(["Item 2.1"])
-i211  = QtGui.QTreeWidgetItem(["Item 2.1.1"])
-i212  = QtGui.QTreeWidgetItem(["Item 2.1.2"])
-i22  = QtGui.QTreeWidgetItem(["Item 2.2"])
-i3  = QtGui.QTreeWidgetItem(["Item 3"])
-i4  = QtGui.QTreeWidgetItem(["Item 4"])
-i5  = QtGui.QTreeWidgetItem(["Item 5"])
+i211  = pg.TreeWidgetItem(["Item 2.1.1"])
+i212  = pg.TreeWidgetItem(["Item 2.1.2"])
+i22  = pg.TreeWidgetItem(["Item 2.2"])
+i3  = pg.TreeWidgetItem(["Item 3"])
+i4  = pg.TreeWidgetItem(["Item 4"])
+i5  = pg.TreeWidgetItem(["Item 5"])
+b5 = QtGui.QPushButton('Button')
+i5.setWidget(1, b5)
+
+
 
 w.addTopLevelItem(i1)
 w.addTopLevelItem(i2)
@@ -36,7 +40,7 @@ i21.addChild(i211)
 i21.addChild(i212)
 i2.addChild(i22)
 
-b1 = QtGui.QPushButton("B1")
+b1 = QtGui.QPushButton("Button")
 w.setItemWidget(i1, 1, b1)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

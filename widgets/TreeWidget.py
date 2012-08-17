@@ -2,7 +2,7 @@
 from pyqtgraph.Qt import QtGui, QtCore
 from weakref import *
 
-__all__ = ['TreeWidget']
+__all__ = ['TreeWidget', 'TreeWidgetItem']
 class TreeWidget(QtGui.QTreeWidget):
     """Extends QTreeWidget to allow internal drag/drop with widgets in the tree.
     Also maintains the expanded state of subtrees as they are moved.
@@ -20,6 +20,10 @@ class TreeWidget(QtGui.QTreeWidget):
         self.childNestingLimit = None
 
     def setItemWidget(self, item, col, wid):
+        """
+        Overrides QTreeWidget.setItemWidget such that widgets are added inside an invisible wrapper widget.
+        This makes it possible to move the item in and out of the tree without its widgets being automatically deleted.
+        """
         w = QtGui.QWidget()  ## foster parent / surrogate child widget
         l = QtGui.QVBoxLayout()
         l.setContentsMargins(0,0,0,0)
@@ -152,4 +156,127 @@ class TreeWidget(QtGui.QTreeWidget):
                     item.setFlags(item.flags() & (~QtCore.Qt.ItemIsDropEnabled))
                 else:
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsDropEnabled)
+
+    @staticmethod
+    def informTreeWidgetChange(item):
+        if hasattr(item, 'treeWidgetChanged'):
+            item.treeWidgetChanged()
+        else:
+            for i in xrange(item.childCount()):
+                TreeWidget.informTreeWidgetChange(item.child(i))
+        
+        
+    def addTopLevelItem(self, item):
+        QtGui.QTreeWidget.addTopLevelItem(self, item)
+        self.informTreeWidgetChange(item)
+
+    def addTopLevelItems(self, items):
+        QtGui.QTreeWidget.addTopLevelItems(self, items)
+        for item in items:
+            self.informTreeWidgetChange(item)
             
+    def insertTopLevelItem(self, index, item):
+        QtGui.QTreeWidget.insertTopLevelItem(self, index, item)
+        self.informTreeWidgetChange(item)
+
+    def insertTopLevelItems(self, index, items):
+        QtGui.QTreeWidget.insertTopLevelItems(self, index, items)
+        for item in items:
+            self.informTreeWidgetChange(item)
+            
+    def takeTopLevelItem(self, index):
+        item = self.topLevelItem(index)
+        if item is not None:
+            self.prepareMove(item)
+        item = QtGui.QTreeWidget.takeTopLevelItem(self, index)
+        self.prepareMove(item)
+        self.informTreeWidgetChange(item)
+        return item
+
+    def topLevelItems(self):
+        return map(self.topLevelItem, xrange(self.topLevelItemCount()))
+        
+    def clear(self):
+        items = self.topLevelItems()
+        for item in items:
+            self.prepareMove(item)
+        QtGui.QTreeWidget.clear(self)
+        for item in items:
+            self.informTreeWidgetChange(item)
+        
+            
+class TreeWidgetItem(QtGui.QTreeWidgetItem):
+    """
+    TreeWidgetItem that keeps track of its own widgets.
+    Widgets may be added to columns before the item is added to a tree.
+    """
+    def __init__(self, *args):
+        QtGui.QTreeWidgetItem.__init__(self, *args)
+        self._widgets = {}  # col: widget
+        self._tree = None
+        
+        
+    def setChecked(self, column, checked):
+        self.setCheckState(column, QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
+        
+    def setWidget(self, column, widget):
+        if column in self._widgets:
+            self.removeWidget(column)
+        self._widgets[column] = widget
+        tree = self.treeWidget()
+        if tree is None:
+            return
+        else:
+            tree.setItemWidget(self, column, widget)
+            
+    def removeWidget(self, column):
+        del self._widgets[column]
+        tree = self.treeWidget()
+        if tree is None:
+            return
+        tree.removeItemWidget(self, column)
+            
+    def treeWidgetChanged(self):
+        tree = self.treeWidget()
+        if self._tree is tree:
+            return
+        self._tree = self.treeWidget()
+        if tree is None:
+            return
+        for col, widget in self._widgets.items():
+            tree.setItemWidget(self, col, widget)
+            
+    def addChild(self, child):
+        QtGui.QTreeWidgetItem.addChild(self, child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def addChildren(self, childs):
+        QtGui.QTreeWidgetItem.addChildren(self, childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+
+    def insertChild(self, index, child):
+        QtGui.QTreeWidgetItem.insertChild(self, index, child)
+        TreeWidget.informTreeWidgetChange(child)
+    
+    def insertChildren(self, index, childs):
+        QtGui.QTreeWidgetItem.addChildren(self, index, childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+    
+    def removeChild(self, child):
+        QtGui.QTreeWidgetItem.removeChild(self, child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def takeChild(self, index):
+        child = QtGui.QTreeWidgetItem.takeChild(self, index)
+        TreeWidget.informTreeWidgetChange(child)
+        return child
+    
+    def takeChildren(self):
+        childs = QtGui.QTreeWidgetItem.takeChildren(self)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+        return childs
+        
+        
