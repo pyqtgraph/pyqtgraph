@@ -14,14 +14,39 @@ def registerParameterType(name, cls, override=False):
 
 
 class Parameter(QtCore.QObject):
-    """Tree of name=value pairs (modifiable or not)
+    """
+    Tree of name=value pairs (modifiable or not)
        - Value may be integer, float, string, bool, color, or list selection
        - Optionally, a custom widget may be specified for a property
        - Any number of extra columns may be added for other purposes
        - Any values may be reset to a default value
        - Parameters may be grouped / nested
+       - Parameter may be subclassed to provide customized behavior.
        
     For more Parameter types, see ParameterTree.parameterTypes module.
+    
+    ===================================  =========================================================
+    **Signals:**
+    sigStateChanged(self, change, info)  Emitted when anything changes about this parameter at 
+                                         all.
+                                         The second argument is a string indicating what changed 
+                                         ('value', 'childAdded', etc..)
+                                         The third argument can be any extra information about 
+                                         the change
+    sigTreeStateChanged(self, changes)   Emitted when any child in the tree changes state
+                                         (but only if monitorChildren() is called)
+                                         the format of *changes* is [(param, change, info), ...]
+    sigValueChanged(self, value)         Emitted when value is finished changing
+    sigValueChanging(self, value)        Emitted immediately for all value changes, 
+                                         including during editing.
+    sigChildAdded(self, child, index)    Emitted when a child is added
+    sigChildRemoved(self, child)         Emitted when a child is removed
+    sigParentChanged(self, parent)       Emitted when this parameter's parent has changed
+    sigLimitsChanged(self, limits)       Emitted when this parameter's limits have changed
+    sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
+    sigNameChanged(self, name)           Emitted when this parameter's name has changed
+    sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
+    ===================================  =========================================================
     """
     ## name, type, limits, etc.
     ## can also carry UI hints (slider vs spinbox, etc.)
@@ -244,25 +269,33 @@ class Parameter(QtCore.QObject):
             
         
     def defaultValue(self):
+        """Return the default value for this parameter."""
         return self.opts['default']
         
     def setDefault(self, val):
+        """Set the default value for this parameter."""
         if self.opts['default'] == val:
             return
         self.opts['default'] = val
         self.sigDefaultChanged.emit(self, val)
 
     def setToDefault(self):
+        """Set this parameter's value to the default."""
         if self.hasDefault():
             self.setValue(self.defaultValue())
 
     def hasDefault(self):
+        """Returns True if this parameter has a default value."""
         return 'default' in self.opts
         
     def valueIsDefault(self):
+        """Returns True if this parameter's value is equal to the default value."""
         return self.value() == self.defaultValue()
         
     def setLimits(self, limits):
+        """Set limits on the acceptable values for this parameter. 
+        The format of limits depends on the type of the parameter and
+        some parameters do not make use of limits at all."""
         if 'limits' in self.opts and self.opts['limits'] == limits:
             return
         self.opts['limits'] = limits
@@ -270,10 +303,20 @@ class Parameter(QtCore.QObject):
         return limits
 
     def writable(self):
+        """
+        Returns True if this parameter's value can be changed by the user.
+        Note that the value of the parameter can *always* be changed by
+        calling setValue().
+        """
         return not self.opts.get('readonly', False)
 
     def setOpts(self, **opts):
-        """For setting any arbitrary options."""
+        """
+        Set any arbitrary options on this parameter.
+        The exact behavior of this function will depend on the parameter type, but
+        most parameters will accept a common set of options: value, name, limits,
+        default, readonly, removable, renamable, visible, and enabled.
+        """
         changed = collections.OrderedDict()
         for k in opts:
             if k == 'value':
@@ -344,6 +387,7 @@ class Parameter(QtCore.QObject):
         return child
         
     def removeChild(self, child):
+        """Remove a child parameter."""
         name = child.name()
         if name not in self.names or self.names[name] is not child:
             raise Exception("Parameter %s is not my child; can't remove." % str(child))
@@ -355,22 +399,27 @@ class Parameter(QtCore.QObject):
         child.sigTreeStateChanged.disconnect(self.treeStateChanged)
 
     def clearChildren(self):
+        """Remove all child parameters."""
         for ch in self.childs[:]:
             self.removeChild(ch)
 
     def children(self):  
+        """Return a list of this parameter's children."""
         ## warning -- this overrides QObject.children
         return self.childs[:]
 
     def parentChanged(self, parent):
+        """This method is called when the parameter's parent has changed.
+        It may be useful to extend this method in subclasses."""
         self._parent = parent
         self.sigParentChanged.emit(self, parent)
         
     def parent(self):
+        """Return the parent of this parameter."""
         return self._parent
         
     def remove(self):
-        """Remove self from parent's child list"""
+        """Remove this parameter from its parent's child list"""
         parent = self.parent()
         if parent is None:
             raise Exception("Cannot remove; no parent.")
@@ -396,13 +445,21 @@ class Parameter(QtCore.QObject):
             yield ch
 
     def __getitem__(self, names):
-        """Get the value of a child parameter"""
+        """Get the value of a child parameter. The name may also be a tuple giving
+        the path to a sub-parameter::
+        
+            value = param[('child', 'grandchild')]
+        """
         if not isinstance(names, tuple):
             names = (names,)
         return self.param(*names).value()
 
     def __setitem__(self, names, value):
-        """Set the value of a child parameter"""
+        """Set the value of a child parameter. The name may also be a tuple giving
+        the path to a sub-parameter::
+        
+            param[('child', 'grandchild')] = value
+        """
         if isinstance(names, basestring):
             names = (names,)
         return self.param(*names).setValue(value)
@@ -424,6 +481,7 @@ class Parameter(QtCore.QObject):
         return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
        
     def __getattr__(self, attr):
+        ## Leaving this undocumented because I might like to remove it in the future..
         #print type(self), attr
         if attr in self.names:
             return self.param(attr)
@@ -442,9 +500,12 @@ class Parameter(QtCore.QObject):
         self.items[item] = None
         
     def hide(self):
+        """Hide this parameter. It and its children will no longer be visible in any ParameterTree
+        widgets it is connected to."""
         self.show(False)
         
     def show(self, s=True):
+        """Show this parameter. """
         self.opts['visible'] = s
         self.sigOptionsChanged.emit(self, {'visible': s})
 
