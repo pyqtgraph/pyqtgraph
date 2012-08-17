@@ -10,7 +10,7 @@ Parameter Trees
 
 The parameter tree system provides a widget displaying a tree of modifiable values similar to those used in most GUI editor applications. This allows a large number of variables to be controlled by the user with relatively little programming effort. The system also provides separation between the data being controlled and the user interface controlling it (model/view architecture). Parameters may be grouped/nested to any depth and custom parameter types can be built by subclassing from Parameter and ParameterItem.
 
-See the parametertree example for more information.
+See the `parametertree documentation <parametertree>`_ for more information.
 
 
 Visual Programming Flowcharts

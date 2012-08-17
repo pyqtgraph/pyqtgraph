@@ -20,7 +20,8 @@ Contents:
     3dgraphics
     style
     region_of_interest
-    parametertree
+    prototyping
+    parametertree/index
     internals
     apireference
     
