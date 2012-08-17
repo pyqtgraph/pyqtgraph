@@ -515,6 +515,7 @@ class Flowchart(Node):
             
         self.sigChartLoaded.emit()
         self.outputChanged()
+        self.sigStateChanged.emit()
         #self.sigOutputChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):

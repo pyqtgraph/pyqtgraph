@@ -236,6 +236,7 @@ class ConsoleWidget(QtGui.QWidget):
         if catch:
             self.ui.catchNextExceptionBtn.setChecked(False)
             exceptionHandling.register(self.allExceptionsHandler)
+            self.ui.exceptionBtn.setChecked(True)
         else:
             exceptionHandling.unregister(self.allExceptionsHandler)
         
@@ -248,6 +249,7 @@ class ConsoleWidget(QtGui.QWidget):
         if catch:
             self.ui.catchAllExceptionsBtn.setChecked(False)
             exceptionHandling.register(self.nextExceptionHandler)
+            self.ui.exceptionBtn.setChecked(True)
         else:
             exceptionHandling.unregister(self.nextExceptionHandler)
         
