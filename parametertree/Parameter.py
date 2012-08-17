@@ -70,6 +70,7 @@ class Parameter(QtCore.QObject):
         QtCore.QObject.__init__(self)
         
         self.opts = {
+            'type': None,
             'readonly': False,
             'visible': True,
             'enabled': True,
@@ -130,6 +131,9 @@ class Parameter(QtCore.QObject):
             self.sigNameChanged.emit(self, name)
         return name
 
+    def type(self):
+        return self.opts['type']
+        
     def childPath(self, child):
         """
         Return the path of parameter names from self to child.
@@ -171,15 +175,80 @@ class Parameter(QtCore.QObject):
         return vals
     
     def saveState(self):
-        """Return a structure representing the entire state of the parameter tree."""
+        """
+        Return a structure representing the entire state of the parameter tree.
+        The tree state may be restored from this structure using restoreState()
+        """
         state = self.opts.copy()
-        state['children'] = {ch.name(): ch.saveState() for ch in self}
+        state['children'] = [ch.saveState() for ch in self]
         return state
 
+    def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True):
+        """
+        Restore the state of this parameter and its children from a structure generated using saveState()
+        If recursive is True, then attempt to restore the state of child parameters as well.
+        If addChildren is True, then any children which are referenced in the state object will be
+        created if they do not already exist.
+        If removeChildren is True, then any children which are not referenced in the state object will 
+        be removed.
+        """
+        childState = state.get('children', [])
+        self.setOpts(**state)
+        
+        if not recursive:
+            return
+        
+        ptr = 0  ## pointer to first child that has not been restored yet
+        foundChilds = set()
+        #print "==============", self.name()
+        for ch in childState:
+            name = ch['name']
+            typ = ch['type']
+            #print('child: %s, %s' % (self.name()+'.'+name, typ))
+            
+            ## First, see if there is already a child with this name and type
+            gotChild = False
+            for i, ch2 in enumerate(self.childs[ptr:]):
+                #print ch2, ch2.name, ch2.type
+                if ch2.name() != name or ch2.type() != typ:
+                    continue
+                gotChild = True
+                #print "  found it"
+                if i != 0:  ## move parameter to next position
+                    self.removeChild(ch2)
+                    self.insertChild(ptr, ch2)
+                    #print "  moved to position", ptr
+                ch2.restoreState(ch, recursive=recursive, addChildren=addChildren, removeChildren=removeChildren)
+                foundChilds.add(ch2)
+                
+                break
+            
+            if not gotChild:
+                if not addChildren:
+                    #print "  ignored child"
+                    continue
+                #print "  created new"
+                ch2 = Parameter.create(**ch)
+                self.insertChild(ptr, ch2)
+                foundChilds.add(ch2)
+                
+            ptr += 1
+            
+        if removeChildren:
+            for ch in self:
+                if ch not in foundChilds:
+                    #print "  remove:", ch
+                    self.removeChild(ch)
+                
+            
+            
+        
     def defaultValue(self):
         return self.opts['default']
         
     def setDefault(self, val):
+        if self.opts['default'] == val:
+            return
         self.opts['default'] = val
         self.sigDefaultChanged.emit(self, val)
 

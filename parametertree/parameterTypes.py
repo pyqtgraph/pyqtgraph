@@ -366,7 +366,6 @@ class GroupParameter(Parameter):
     of child parameters. It also provides a simple mechanism for displaying a button or combo
     that can be used to add new parameters to the group.
     """
-    type = 'group'
     itemClass = GroupParameterItem
 
     def addNew(self, typ=None):
@@ -457,7 +456,6 @@ class ListParameterItem(WidgetParameterItem):
 
 
 class ListParameter(Parameter):
-    type = 'list'
     itemClass = ListParameterItem
 
     def __init__(self, **opts):

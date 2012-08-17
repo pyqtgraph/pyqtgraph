@@ -81,7 +81,6 @@ class TextParameterItem(pTypes.WidgetParameterItem):
         return self.textBox
         
 class TextParameter(Parameter):
-    type = 'text'
     itemClass = TextParameterItem
     
 registerParameterType('text', TextParameter)
@@ -151,7 +150,9 @@ t2.setParameters(p, showTop=False)
 t2.show()
 t2.resize(400,600)
     
-
+## test save/restore
+s = p.saveState()
+p.restoreState(s)
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
