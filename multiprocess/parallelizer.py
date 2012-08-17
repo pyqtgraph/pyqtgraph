@@ -85,12 +85,14 @@ class Parallelize:
     def __exit__(self, *exc_info):
         
         if self.proc is not None:  ## worker 
+            exceptOccurred = exc_info[0] is not None ## hit an exception during processing.
+                
             try:
-                if exc_info[0] is not None:
+                if exceptOccurred:
                     sys.excepthook(*exc_info)
             finally:
                 #print os.getpid(), 'exit'
-                os._exit(0)
+                os._exit(1 if exceptOccurred else 0)
                 
         else:  ## parent
             if self.showProgress:
@@ -137,6 +139,7 @@ class Parallelize:
             ## process events from workers until all have exited.
                 
             activeChilds = self.childs[:]
+            self.exitCodes = []
             pollInterval = 0.01
             while len(activeChilds) > 0:
                 waitingChildren = 0
@@ -156,7 +159,8 @@ class Parallelize:
                     activeChilds.remove(ch)
                     while True:
                         try:
-                            os.waitpid(ch.childPid, 0)
+                            pid, exitcode = os.waitpid(ch.childPid, 0)
+                            self.exitCodes.append(exitcode)
                             break
                         except OSError as ex:
                             if ex.errno == 4:  ## If we get this error, just try again
@@ -183,6 +187,11 @@ class Parallelize:
         finally:
             if self.showProgress:
                 self.progressDlg.__exit__(None, None, None)
+        if len(self.exitCodes) < len(self.childs):
+            raise Exception("Parallelizer started %d processes but only received exit codes from %d." % (len(self.childs), len(self.exitCodes)))
+        for code in self.exitCodes:
+            if code != 0:
+                raise Exception("Error occurred in parallel-executed subprocess (console output may have more information).")
         return []  ## no tasks for parent process.
     
     

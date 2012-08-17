@@ -1,7 +1,8 @@
 """For starting up remote processes"""
-import sys, pickle
+import sys, pickle, os
 
 if __name__ == '__main__':
+    os.setpgrp()  ## prevents signals (notably keyboard interrupt) being forwarded from parent to this process
     name, port, authkey, targetStr, path = pickle.load(sys.stdin)
     if path is not None:
         ## rewrite sys.path without assigning a new object--no idea who already has a reference to the existing list.

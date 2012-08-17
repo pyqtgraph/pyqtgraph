@@ -60,7 +60,11 @@ class RemoteEventHandler(object):
     
     @classmethod
     def getHandler(cls, pid):
-        return cls.handlers[pid]
+        try:
+            return cls.handlers[pid]
+        except:
+            print pid, cls.handlers
+            raise
     
     def getProxyOption(self, opt):
         return self.proxyOptions[opt]
@@ -88,6 +92,11 @@ class RemoteEventHandler(object):
             except ExitError:
                 self.exited = True
                 raise
+            except IOError as err:
+                if err.errno == 4:  ## interrupted system call; try again
+                    continue
+                else:
+                    raise
             except:
                 print "Error in process %s" % self.name
                 sys.excepthook(*sys.exc_info())
