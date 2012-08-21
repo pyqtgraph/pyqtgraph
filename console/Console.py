@@ -75,8 +75,8 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.clearExceptionBtn.clicked.connect(self.clearExceptionClicked)
         self.ui.exceptionStackList.itemClicked.connect(self.stackItemClicked)
         self.ui.exceptionStackList.itemDoubleClicked.connect(self.stackItemDblClicked)
+        self.ui.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
         
-        self.exceptionHandlerRunning = False
         self.currentTraceback = None
         
     def loadHistory(self):
@@ -235,10 +235,10 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.catchAllExceptionsBtn.setChecked(catch)
         if catch:
             self.ui.catchNextExceptionBtn.setChecked(False)
-            exceptionHandling.register(self.allExceptionsHandler)
+            self.enableExceptionHandling()
             self.ui.exceptionBtn.setChecked(True)
         else:
-            exceptionHandling.unregister(self.allExceptionsHandler)
+            self.disableExceptionHandling()
         
     def catchNextException(self, catch=True):
         """
@@ -248,11 +248,18 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.catchNextExceptionBtn.setChecked(catch)
         if catch:
             self.ui.catchAllExceptionsBtn.setChecked(False)
-            exceptionHandling.register(self.nextExceptionHandler)
+            self.enableExceptionHandling()
             self.ui.exceptionBtn.setChecked(True)
         else:
-            exceptionHandling.unregister(self.nextExceptionHandler)
+            self.disableExceptionHandling()
         
+    def enableExceptionHandling(self):
+        exceptionHandling.register(self.exceptionHandler)
+        self.updateSysTrace()
+        
+    def disableExceptionHandling(self):
+        exceptionHandling.unregister(self.exceptionHandler)
+        self.updateSysTrace()
         
     def clearExceptionClicked(self):
         self.currentTraceback = None
@@ -275,14 +282,35 @@ class ConsoleWidget(QtGui.QWidget):
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
         
     
-    def allExceptionsHandler(self, *args):
-        self.exceptionHandler(*args)
+    #def allExceptionsHandler(self, *args):
+        #self.exceptionHandler(*args)
     
-    def nextExceptionHandler(self, *args):
-        self.ui.catchNextExceptionBtn.setChecked(False)
-        self.exceptionHandler(*args)
+    #def nextExceptionHandler(self, *args):
+        #self.ui.catchNextExceptionBtn.setChecked(False)
+        #self.exceptionHandler(*args)
 
+    def updateSysTrace(self):
+        ## Install or uninstall  sys.settrace handler 
+        
+        if not self.ui.catchNextExceptionBtn.isChecked() and not self.ui.catchAllExceptionsBtn.isChecked():
+            if sys.gettrace() == self.systrace:
+                sys.settrace(None)
+            return
+        
+        if self.ui.onlyUncaughtCheck.isChecked():
+            if sys.gettrace() == self.systrace:
+                sys.settrace(None)
+        else:
+            if sys.gettrace() is not None and sys.gettrace() != self.systrace:
+                self.ui.onlyUncaughtCheck.setChecked(False)
+                raise Exception("sys.settrace is in use; cannot monitor for caught exceptions.")
+            else:
+                sys.settrace(self.systrace)
+        
     def exceptionHandler(self, excType, exc, tb):
+        if self.ui.catchNextExceptionBtn.isChecked():
+            self.ui.catchNextExceptionBtn.setChecked(False)
+        
         self.ui.clearExceptionBtn.setEnabled(True)
         self.currentTraceback = tb
         
@@ -291,14 +319,9 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.exceptionStackList.clear()
         for index, line in enumerate(traceback.extract_tb(tb)):
             self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
-        
     
-    def quit(self):
-        if self.exceptionHandlerRunning:
-            self.exitHandler = True
-        try:
-            exceptionHandling.unregister(self.exceptionHandler)
-        except:
-            pass
-        
-        
+    def systrace(self, frame, event, arg):
+        if event == 'exception':
+            self.exceptionHandler(*arg)
+        return self.systrace
+    

@@ -519,6 +519,10 @@ class Canvas(QtGui.QWidget):
         
         ## disconnect signals, remove from list, etc..
         
+    def clear(self):
+        while len(self.items) > 0:
+            self.removeItem(self.items[0])
+        
 
     def addToScene(self, item):
         self.view.addItem(item)
