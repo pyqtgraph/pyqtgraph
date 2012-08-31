@@ -261,7 +261,7 @@ def mkPen(*args, **kargs):
         if isinstance(arg, dict):
             return mkPen(**arg)
         if isinstance(arg, QtGui.QPen):
-            return arg
+            return QtGui.QPen(arg)  ## return a copy of this pen
         elif arg is None:
             style = QtCore.Qt.NoPen
         else:

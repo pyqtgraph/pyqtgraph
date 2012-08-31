@@ -56,7 +56,7 @@ class AxisItem(GraphicsWidget):
         self.labelText = ''
         self.labelUnits = ''
         self.labelUnitPrefix=''
-        self.labelStyle = {'color': '#CCC'}
+        self.labelStyle = {}
         self.logMode = False
         
         self.textHeight = 18
@@ -167,7 +167,7 @@ class AxisItem(GraphicsWidget):
             
         s = asUnicode('%s %s') % (self.labelText, units)
         
-        style = ';'.join(['%s: "%s"' % (k, self.labelStyle[k]) for k in self.labelStyle])
+        style = ';'.join(['%s: %s' % (k, self.labelStyle[k]) for k in self.labelStyle])
         
         return asUnicode("<span style='%s'>%s</span>") % (style, s)
         
@@ -192,7 +192,7 @@ class AxisItem(GraphicsWidget):
     def pen(self):
         if self._pen is None:
             return fn.mkPen(pg.getConfigOption('foreground'))
-        return self._pen
+        return pg.mkPen(self._pen)
         
     def setPen(self, pen):
         """
@@ -202,6 +202,10 @@ class AxisItem(GraphicsWidget):
         """
         self._pen = pen
         self.picture = None
+        if pen is None:
+            pen = pg.getConfigOption('foreground')
+        self.labelStyle['color'] = '#' + pg.colorStr(pg.mkPen(pen).color())[:6]
+        self.setLabel()
         self.update()
         
     def setScale(self, scale=None):
@@ -299,8 +303,8 @@ class AxisItem(GraphicsWidget):
                 self.drawPicture(painter)
             finally:
                 painter.end()
-        p.setRenderHint(p.Antialiasing, False)
-        p.setRenderHint(p.TextAntialiasing, True)
+        #p.setRenderHint(p.Antialiasing, False)   ## Sometimes we get a segfault here ???
+        #p.setRenderHint(p.TextAntialiasing, True)
         self.picture.play(p)
         
 

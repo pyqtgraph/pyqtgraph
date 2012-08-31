@@ -160,7 +160,10 @@ class Flowchart(Node):
         Node.addTerminal(self, term.name(), io=io, renamable=term.isRenamable(), removable=term.isRemovable(), multiable=term.isMultiable())
         
     def internalTerminalRemoved(self, node, term):
-        Node.removeTerminal(self, term.name())
+        try:
+            Node.removeTerminal(self, term.name())
+        except KeyError:
+            pass
         
     def terminalRenamed(self, term, oldName):
         newName = term.name()

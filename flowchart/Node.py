@@ -294,6 +294,8 @@ class Node(QtCore.QObject):
                 self.removeTerminal(name)
         for name, opts in state.items():
             if name in self.terminals:
+                term = self[name]
+                term.setOpts(**opts)
                 continue
             try:
                 opts = strDict(opts)

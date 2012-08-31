@@ -127,6 +127,12 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.editingFinished.connect(self.editingFinishedEvent)
         self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange)
         
+    def event(self, ev):
+        ret = QtGui.QAbstractSpinBox.event(self, ev)
+        if ev.type() == QtCore.QEvent.KeyPress and ev.key() == QtCore.Qt.Key_Return:
+            ret = True  ## For some reason, spinbox pretends to ignore return key press
+        return ret
+        
     ##lots of config options, just gonna stuff 'em all in here rather than do the get/set crap.
     def setOpts(self, **opts):
         """

@@ -71,7 +71,6 @@ class ScatterPlotItem(GraphicsObject):
     #sigPointClicked = QtCore.Signal(object, object)
     sigClicked = QtCore.Signal(object, object)  ## self, points
     sigPlotChanged = QtCore.Signal(object)
-    
     def __init__(self, *args, **kargs):
         """
         Accepts the same arguments as setData()
@@ -231,6 +230,9 @@ class ScatterPlotItem(GraphicsObject):
         self.generateSpotItems()
         self.sigPlotChanged.emit(self)
         
+    def getData(self):
+        return self.data['x'], self.data['y']
+    
         
     def setPoints(self, *args, **kargs):
         ##Deprecated; use setData

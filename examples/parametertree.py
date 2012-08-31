@@ -122,7 +122,7 @@ params = [
 ]
 
 ## Create tree of Parameter objects
-p = Parameter(name='params', type='group', children=params)
+p = Parameter.create(name='params', type='group', children=params)
 
 ## If anything changes in the tree, print a message
 def change(param, changes):

@@ -196,8 +196,10 @@ def adaptiveDetrend(data, x=None, threshold=3.0):
     return d4
     
 
-def histogramDetrend(data, window=500, bins=50, threshold=3.0):
-    """Linear detrend. Works by finding the most common value at the beginning and end of a trace, excluding outliers."""
+def histogramDetrend(data, window=500, bins=50, threshold=3.0, offsetOnly=False):
+    """Linear detrend. Works by finding the most common value at the beginning and end of a trace, excluding outliers.
+    If offsetOnly is True, then only the offset from the beginning of the trace is subtracted.
+    """
     
     d1 = data.view(np.ndarray)
     d2 = [d1[:window], d1[-window:]]
@@ -211,8 +213,11 @@ def histogramDetrend(data, window=500, bins=50, threshold=3.0):
         ind = np.argmax(y)
         v[i] = 0.5 * (x[ind] + x[ind+1])
         
-    base = np.linspace(v[0], v[1], len(data))
-    d3 = data.view(np.ndarray) - base
+    if offsetOnly:
+        d3 = data.view(np.ndarray) - v[0]
+    else:
+        base = np.linspace(v[0], v[1], len(data))
+        d3 = data.view(np.ndarray) - base
     
     if (hasattr(data, 'implements') and data.implements('MetaArray')):
         return MetaArray(d3, info=data.infoCopy())

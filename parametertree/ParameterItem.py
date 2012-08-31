@@ -26,6 +26,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         param.sigLimitsChanged.connect(self.limitsChanged)
         param.sigDefaultChanged.connect(self.defaultChanged)
         param.sigOptionsChanged.connect(self.optsChanged)
+        param.sigParentChanged.connect(self.parentChanged)
         
         
         opts = param.opts
@@ -92,6 +93,10 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if item.param is child:
                 self.takeChild(i)
                 break
+                
+    def parentChanged(self, param, parent):
+        ## called when the parameter's parent has changed.
+        pass
                 
     def contextMenuEvent(self, ev):
         if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False):

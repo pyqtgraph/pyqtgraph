@@ -235,6 +235,9 @@ class EvalNode(Node):
             run = "\noutput=fn(**args)\n"
             text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
             exec(text)
+        except:
+            print "Error processing node:", self.name()
+            raise
         return output
         
     def saveState(self):
@@ -282,7 +285,7 @@ class ColumnJoinNode(Node):
         
     def addInput(self):
         #print "ColumnJoinNode.addInput called."
-        term = Node.addInput(self, 'input', renamable=True, removable=True)
+        term = Node.addInput(self, 'input', renamable=True, removable=True, multiable=True)
         #print "Node.addInput returned. term:", term
         item = QtGui.QTreeWidgetItem([term.name()])
         item.term = term
@@ -323,6 +326,14 @@ class ColumnJoinNode(Node):
     def restoreState(self, state):
         Node.restoreState(self, state)
         inputs = self.inputs()
+
+        ## Node.restoreState should have created all of the terminals we need
+        ## However: to maintain support for some older flowchart files, we need
+	## to manually add any terminals that were not taken care of.
+        for name in [n for n in state['order'] if n not in inputs]:
+            Node.addInput(self, name, renamable=True, removable=True, multiable=True)
+        inputs = self.inputs()
+
         order = [name for name in state['order'] if name in inputs]
         for name in inputs:
             if name not in order:

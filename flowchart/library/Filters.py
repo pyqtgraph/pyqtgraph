@@ -184,13 +184,16 @@ class HistogramDetrend(CtrlNode):
     nodeName = 'HistogramDetrend'
     uiTemplate = [
         ('windowSize', 'intSpin', {'value': 500, 'min': 10, 'max': 1000000, 'suffix': 'pts'}),
-        ('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000})
+        ('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000}),
+        ('offsetOnly', 'check', {'checked': False}),
     ]
     
     def processData(self, data):
-        ws = self.ctrls['windowSize'].value()
-        bn = self.ctrls['numBins'].value()
-        return functions.histogramDetrend(data, window=ws, bins=bn)
+        s = self.stateGroup.state()
+        #ws = self.ctrls['windowSize'].value()
+        #bn = self.ctrls['numBins'].value()
+        #offset = self.ctrls['offsetOnly'].checked()
+        return functions.histogramDetrend(data, window=s['windowSize'], bins=s['numBins'], offsetOnly=s['offsetOnly'])
 
 
     

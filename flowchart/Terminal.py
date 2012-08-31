@@ -85,6 +85,14 @@ class Terminal:
                 #if c.isInput():
                     #c.inputChanged(self)
         self.recolor()
+        
+    def setOpts(self, **opts):
+        self._renamable = opts.get('renamable', self._renamable)
+        self._removable = opts.get('removable', self._removable)
+        self._multiable = opts.get('multiable', self._multiable)
+        if 'multi' in opts:
+            self.setMultiValue(opts['multi'])
+        
 
     def connected(self, term):
         """Called whenever this terminal has been connected to another. (note--this function is called on both terminals)"""

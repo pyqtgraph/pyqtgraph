@@ -47,6 +47,8 @@ class GradientLegend(UIGraphicsItem):
         UIGraphicsItem.paint(self, p, opt, widget)
         rect = self.boundingRect()   ## Boundaries of visible area in scene coords.
         unit = self.pixelSize()       ## Size of one view pixel in scene coords.
+        if unit[0] is None:  
+            return
         
         ## determine max width of all labels
         labelWidth = 0

@@ -310,6 +310,12 @@ class Parameter(QtCore.QObject):
         """
         return not self.opts.get('readonly', False)
 
+    def setWritable(self, writable=True):
+        self.setOpts(readonly=not writable)
+        
+    def setReadonly(self, readonly=True):
+        self.setOpts(readonly=readonly)
+        
     def setOpts(self, **opts):
         """
         Set any arbitrary options on this parameter.
