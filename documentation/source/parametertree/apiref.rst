@@ -1,5 +1,3 @@
-.. _api_widgets:
-
 ParameterTree API Reference
 ===========================
 

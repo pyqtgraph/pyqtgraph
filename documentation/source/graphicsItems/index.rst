@@ -21,6 +21,7 @@ Contents:
     scatterplotitem
     isocurveitem
     axisitem
+    textitem
     arrowitem
     curvepoint
     curvearrow

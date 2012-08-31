@@ -364,9 +364,10 @@ class Parameter(QtCore.QObject):
         return self.insertChild(len(self.childs), child)
         
     def insertChild(self, pos, child):
-        """Insert a new child at pos.
+        """
+        Insert a new child at pos.
         If pos is a Parameter, then insert at the position of that Parameter.
-        If child is a dict, then a parameter is constructed as Parameter(**child)
+        If child is a dict, then a parameter is constructed as Parameter(\*\*child)
         """
         if isinstance(child, dict):
             child = Parameter.create(**child)

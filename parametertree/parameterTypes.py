@@ -10,10 +10,12 @@ import os, collections
 class WidgetParameterItem(ParameterItem):
     """
     ParameterTree item with:
-        - label in second column for displaying value
-        - simple widget for editing value (displayed instead of label when item is selected)
-        - button that resets value to default
-        - provides SpinBox, CheckBox, LineEdit, and ColorButton types
+    
+    - label in second column for displaying value
+    - simple widget for editing value (displayed instead of label when item is selected)
+    - button that resets value to default
+    - provides SpinBox, CheckBox, LineEdit, and ColorButton types
+    
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
     def __init__(self, param, depth):
@@ -64,9 +66,13 @@ class WidgetParameterItem(ParameterItem):
         """
         Return a single widget that should be placed in the second tree column.
         The widget must be given three attributes:
-            sigChanged -- a signal that is emitted when the widget's value is changed
-            value -- a function that returns the value
-            setValue -- a function that sets the value
+        
+        ==========  ============================================================
+        sigChanged  a signal that is emitted when the widget's value is changed
+        value       a function that returns the value
+        setValue    a function that sets the value
+        ==========  ============================================================
+            
         This is a good function to override in subclasses.
         """
         opts = self.param.opts

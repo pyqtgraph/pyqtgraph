@@ -75,7 +75,7 @@ class GraphicsLayout(GraphicsWidget):
         All extra keyword arguments are passed to :func:`LabelItem.__init__ <pyqtgraph.LabelItem.__init__>`
         Returns the created item.
         
-        To create a vertical label, use *angle*=-90
+        To create a vertical label, use *angle* = -90.
         """
         text = LabelItem(text, **kargs)
         self.addItem(text, row, col, rowspan, colspan)
