@@ -321,7 +321,33 @@ class ConsoleWidget(QtGui.QWidget):
             self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
     
     def systrace(self, frame, event, arg):
-        if event == 'exception':
+        if event == 'exception' and self.checkException(*arg):
             self.exceptionHandler(*arg)
         return self.systrace
+        
+    def checkException(self, excType, exc, tb):
+        ## Return True if the exception is interesting; False if it should be ignored.
+        
+        filename = tb.tb_frame.f_code.co_filename
+        function = tb.tb_frame.f_code.co_name
+        
+        ## Go through a list of common exception points we like to ignore:
+        if excType is GeneratorExit or excType is StopIteration:
+            return False
+        if excType is KeyError:
+            if filename.endswith('python2.7/weakref.py') and function == '__contains__':
+                return False
+            if filename.endswith('python2.7/copy.py') and function == '_keep_alive':
+                return False
+        if excType is AttributeError:
+            if filename.endswith('python2.7/collections.py') and function == '__init__':
+                return False
+            if filename.endswith('numpy/core/fromnumeric.py') and function in ('all', '_wrapit', 'transpose'):
+                return False
+            if filename.endswith('MetaArray.py') and function == '__getattr__':
+                for name in ('__array_interface__', '__array_struct__', '__array__'):  ## numpy looks for these when converting objects to array
+                    if name in exc:
+                        return False
+            
+        return True
     
