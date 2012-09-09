@@ -1,7 +1,11 @@
-from . import exportDialogTemplate
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 import pyqtgraph as pg
 import pyqtgraph.exporters as exporters
+
+if USE_PYSIDE:
+    from . import exportDialogTemplate_pyside as exportDialogTemplate
+else:
+    from . import exportDialogTemplate_pyqt as exportDialogTemplate
 
 
 class ExportDialog(QtGui.QWidget):

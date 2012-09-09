@@ -72,6 +72,10 @@ def renamePyc(startDir):
     ### Used to rename orphaned .pyc files
     ### When a python file changes its location in the repository, usually the .pyc file
     ### is left behind, possibly causing mysterious and difficult to track bugs. 
+
+    ### Note that this is no longer necessary for python 3.2; from PEP 3147:
+    ### "If the py source file is missing, the pyc file inside __pycache__ will be ignored. 
+    ### This eliminates the problem of accidental stale pyc file imports."
     
     printed = False
     startDir = os.path.abspath(startDir)

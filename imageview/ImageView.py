@@ -12,15 +12,19 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
+from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
-from .ImageViewTemplate import *
+if USE_PYSIDE:
+    from .ImageViewTemplate_pyside import *
+else:
+    from .ImageViewTemplate_pyqt import *
+    
 from pyqtgraph.graphicsItems.ImageItem import *
 from pyqtgraph.graphicsItems.ROI import *
 from pyqtgraph.graphicsItems.LinearRegionItem import *
 from pyqtgraph.graphicsItems.InfiniteLine import *
 from pyqtgraph.graphicsItems.ViewBox import *
 #from widgets import ROI
-from pyqtgraph.Qt import QtCore, QtGui
 import sys
 #from numpy import ndarray
 import pyqtgraph.ptime as ptime

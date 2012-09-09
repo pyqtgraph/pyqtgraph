@@ -52,3 +52,22 @@ For the serious application developer, all of the functionality in pyqtgraph is 
 #. Click "Add", then click "Promote".
 
 See the designer documentation for more information on promoting widgets.
+
+
+PyQt and PySide
+---------------
+
+Pyqtgraph supports two popular python wrappers for the Qt library: PyQt and PySide. Both packages provide nearly identical 
+APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. When
+pyqtgraph is first imported, it automatically determines which library to use by making the fillowing checks:
+    
+#. If PyQt4 is already imported, use that
+#. Else, if PySide is already imported, use that
+#. Else, attempt to import PyQt4
+#. If that import fails, attempt to import PySide. 
+
+If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
+make sure it is imported before pyqtgraph::
+    
+    import PySide  ## this will force pyqtgraph to use PySide instead of PyQt4
+    import pyqtgraph as pg

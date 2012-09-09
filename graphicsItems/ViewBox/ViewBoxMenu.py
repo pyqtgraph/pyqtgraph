@@ -1,7 +1,12 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.WidgetGroup import WidgetGroup
-from .axisCtrlTemplate import Ui_Form as AxisCtrlTemplate
+
+if USE_PYSIDE:
+    from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
+else:
+    from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
+
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
+from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
 from pyqtgraph.graphicsItems.ROI import ROI
 import pyqtgraph as pg
-from . import TransformGuiTemplate
+if USE_PYSIDE:
+    from . import TransformGuiTemplate_pyside as TransformGuiTemplate
+else:
+    from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
+
 from pyqtgraph import debug
 
 class SelectBox(ROI):

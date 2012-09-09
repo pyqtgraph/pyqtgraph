@@ -1,34 +1,29 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'axisCtrlTemplate.ui'
+# Form implementation generated from reading ui file './graphicsItems/ViewBox/axisCtrlTemplate.ui'
 #
-# Created: Fri Jun  1 17:38:02 2012
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Sun Sep  9 14:41:32 2012
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
+from PySide import QtCore, QtGui
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName(_fromUtf8("Form"))
+        Form.setObjectName("Form")
         Form.resize(186, 154)
         Form.setMaximumSize(QtCore.QSize(200, 16777215))
         self.gridLayout = QtGui.QGridLayout(Form)
-        self.gridLayout.setMargin(0)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.gridLayout.setObjectName("gridLayout")
         self.label = QtGui.QLabel(Form)
-        self.label.setObjectName(_fromUtf8("label"))
+        self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 7, 0, 1, 2)
         self.linkCombo = QtGui.QComboBox(Form)
         self.linkCombo.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
-        self.linkCombo.setObjectName(_fromUtf8("linkCombo"))
+        self.linkCombo.setObjectName("linkCombo")
         self.gridLayout.addWidget(self.linkCombo, 7, 2, 1, 2)
         self.autoPercentSpin = QtGui.QSpinBox(Form)
         self.autoPercentSpin.setEnabled(True)
@@ -36,33 +31,33 @@ class Ui_Form(object):
         self.autoPercentSpin.setMaximum(100)
         self.autoPercentSpin.setSingleStep(1)
         self.autoPercentSpin.setProperty("value", 100)
-        self.autoPercentSpin.setObjectName(_fromUtf8("autoPercentSpin"))
+        self.autoPercentSpin.setObjectName("autoPercentSpin")
         self.gridLayout.addWidget(self.autoPercentSpin, 2, 2, 1, 2)
         self.autoRadio = QtGui.QRadioButton(Form)
         self.autoRadio.setChecked(True)
-        self.autoRadio.setObjectName(_fromUtf8("autoRadio"))
+        self.autoRadio.setObjectName("autoRadio")
         self.gridLayout.addWidget(self.autoRadio, 2, 0, 1, 2)
         self.manualRadio = QtGui.QRadioButton(Form)
-        self.manualRadio.setObjectName(_fromUtf8("manualRadio"))
+        self.manualRadio.setObjectName("manualRadio")
         self.gridLayout.addWidget(self.manualRadio, 1, 0, 1, 2)
         self.minText = QtGui.QLineEdit(Form)
-        self.minText.setObjectName(_fromUtf8("minText"))
+        self.minText.setObjectName("minText")
         self.gridLayout.addWidget(self.minText, 1, 2, 1, 1)
         self.maxText = QtGui.QLineEdit(Form)
-        self.maxText.setObjectName(_fromUtf8("maxText"))
+        self.maxText.setObjectName("maxText")
         self.gridLayout.addWidget(self.maxText, 1, 3, 1, 1)
         self.invertCheck = QtGui.QCheckBox(Form)
-        self.invertCheck.setObjectName(_fromUtf8("invertCheck"))
+        self.invertCheck.setObjectName("invertCheck")
         self.gridLayout.addWidget(self.invertCheck, 5, 0, 1, 4)
         self.mouseCheck = QtGui.QCheckBox(Form)
         self.mouseCheck.setChecked(True)
-        self.mouseCheck.setObjectName(_fromUtf8("mouseCheck"))
+        self.mouseCheck.setObjectName("mouseCheck")
         self.gridLayout.addWidget(self.mouseCheck, 6, 0, 1, 4)
         self.visibleOnlyCheck = QtGui.QCheckBox(Form)
-        self.visibleOnlyCheck.setObjectName(_fromUtf8("visibleOnlyCheck"))
+        self.visibleOnlyCheck.setObjectName("visibleOnlyCheck")
         self.gridLayout.addWidget(self.visibleOnlyCheck, 3, 2, 1, 2)
         self.autoPanCheck = QtGui.QCheckBox(Form)
-        self.autoPanCheck.setObjectName(_fromUtf8("autoPanCheck"))
+        self.autoPanCheck.setObjectName("autoPanCheck")
         self.gridLayout.addWidget(self.autoPanCheck, 4, 2, 1, 2)
 
         self.retranslateUi(Form)

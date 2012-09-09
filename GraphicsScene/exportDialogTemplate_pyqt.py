@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exportDialogTemplate.ui'
+# Form implementation generated from reading ui file './GraphicsScene/exportDialogTemplate.ui'
 #
-# Created: Thu Mar 22 13:13:06 2012
-#      by: PyQt4 UI code generator 4.8.5
+# Created: Sun Sep  9 14:41:31 2012
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,12 +18,10 @@ class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
         Form.resize(241, 367)
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Export", None, QtGui.QApplication.UnicodeUTF8))
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.label = QtGui.QLabel(Form)
-        self.label.setText(QtGui.QApplication.translate("Form", "Item to export:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 1, 3)
         self.itemTree = QtGui.QTreeWidget(Form)
@@ -32,18 +30,15 @@ class Ui_Form(object):
         self.itemTree.header().setVisible(False)
         self.gridLayout.addWidget(self.itemTree, 1, 0, 1, 3)
         self.label_2 = QtGui.QLabel(Form)
-        self.label_2.setText(QtGui.QApplication.translate("Form", "Export format", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.gridLayout.addWidget(self.label_2, 2, 0, 1, 3)
         self.formatList = QtGui.QListWidget(Form)
         self.formatList.setObjectName(_fromUtf8("formatList"))
         self.gridLayout.addWidget(self.formatList, 3, 0, 1, 3)
         self.exportBtn = QtGui.QPushButton(Form)
-        self.exportBtn.setText(QtGui.QApplication.translate("Form", "Export", None, QtGui.QApplication.UnicodeUTF8))
         self.exportBtn.setObjectName(_fromUtf8("exportBtn"))
         self.gridLayout.addWidget(self.exportBtn, 6, 1, 1, 1)
         self.closeBtn = QtGui.QPushButton(Form)
-        self.closeBtn.setText(QtGui.QApplication.translate("Form", "Close", None, QtGui.QApplication.UnicodeUTF8))
         self.closeBtn.setObjectName(_fromUtf8("closeBtn"))
         self.gridLayout.addWidget(self.closeBtn, 6, 2, 1, 1)
         self.paramTree = ParameterTree(Form)
@@ -52,7 +47,6 @@ class Ui_Form(object):
         self.paramTree.header().setVisible(False)
         self.gridLayout.addWidget(self.paramTree, 5, 0, 1, 3)
         self.label_3 = QtGui.QLabel(Form)
-        self.label_3.setText(QtGui.QApplication.translate("Form", "Export options", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setObjectName(_fromUtf8("label_3"))
         self.gridLayout.addWidget(self.label_3, 4, 0, 1, 3)
 
@@ -60,6 +54,11 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        pass
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Export", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Form", "Item to export:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Form", "Export format", None, QtGui.QApplication.UnicodeUTF8))
+        self.exportBtn.setText(QtGui.QApplication.translate("Form", "Export", None, QtGui.QApplication.UnicodeUTF8))
+        self.closeBtn.setText(QtGui.QApplication.translate("Form", "Close", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("Form", "Export options", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph.parametertree import ParameterTree

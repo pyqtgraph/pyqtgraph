@@ -1,9 +1,9 @@
 import os, sys
-## run "python rebuildUi.py pyside" to rebuild all ui files for pyside
+## Search the package tree for all .ui files, compile each to
+## a .py for pyqt and pyside
 
-uic = 'pyuic4'
-if len(sys.argv) > 1 and sys.argv[1] == 'pyside':
-    uic = 'pyside-uic'
+pyqtuic = 'pyuic4'
+pysideuic = 'pyside-uic'
 
 for path, sd, files in os.walk('.'):
     for f in files:
@@ -11,6 +11,11 @@ for path, sd, files in os.walk('.'):
         if ext != '.ui':
             continue
         ui = os.path.join(path, f)
-        py = os.path.join(path, base + '.py')
-        os.system('%s %s > %s' % (uic, ui, py))
+
+        py = os.path.join(path, base + '_pyqt.py')
+        os.system('%s %s > %s' % (pyqtuic, ui, py))
+        print(py)
+
+        py = os.path.join(path, base + '_pyside.py')
+        os.system('%s %s > %s' % (pysideuic, ui, py))
         print(py)

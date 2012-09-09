@@ -1,9 +1,13 @@
 import sys, os
 ## make sure this pyqtgraph is importable before any others
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
-from exampleLoaderTemplate import Ui_Form
+if USE_PYSIDE:
+    from exampleLoaderTemplate_pyside import Ui_Form
+else:
+    from exampleLoaderTemplate_pyqt import Ui_Form
+    
 import os, sys
 from collections import OrderedDict
 

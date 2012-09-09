@@ -5,7 +5,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
@@ -13,7 +13,10 @@ from pyqtgraph.ptime import time
 app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
-from ScatterPlotSpeedTestTemplate import Ui_Form
+if USE_PYSIDE:
+    from ScatterPlotSpeedTestTemplate_pyside import Ui_Form
+else:
+    from ScatterPlotSpeedTestTemplate_pyqt import Ui_Form
 
 win = QtGui.QWidget()
 ui = Ui_Form()

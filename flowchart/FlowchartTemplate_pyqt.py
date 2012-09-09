@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'FlowchartTemplate.ui'
+# Form implementation generated from reading ui file './flowchart/FlowchartTemplate.ui'
 #
-# Created: Sun Dec 18 20:55:57 2011
-#      by: PyQt4 UI code generator 4.8.3
+# Created: Sun Sep  9 14:41:29 2012
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -32,8 +32,8 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.selDescLabel, 0, 0, 1, 1)
         self.selNameLabel = QtGui.QLabel(self.selInfoWidget)
         font = QtGui.QFont()
-        font.setWeight(75)
         font.setBold(True)
+        font.setWeight(75)
         self.selNameLabel.setFont(font)
         self.selNameLabel.setText(_fromUtf8(""))
         self.selNameLabel.setObjectName(_fromUtf8("selNameLabel"))
@@ -56,4 +56,4 @@ class Ui_Form(object):
         Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph.widgets.DataTreeWidget import DataTreeWidget
-from .FlowchartGraphicsView import FlowchartGraphicsView
+from FlowchartGraphicsView import FlowchartGraphicsView

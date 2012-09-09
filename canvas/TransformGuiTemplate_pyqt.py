@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './lib/util/pyqtgraph/canvas/TransformGuiTemplate.ui'
+# Form implementation generated from reading ui file './canvas/TransformGuiTemplate.ui'
 #
-# Created: Wed Apr 18 13:40:19 2012
-#      by: PyQt4 UI code generator 4.8.3
+# Created: Sun Sep  9 14:41:30 2012
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 

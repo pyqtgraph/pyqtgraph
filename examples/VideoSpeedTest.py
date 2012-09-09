@@ -10,13 +10,18 @@ is used by the view widget
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph import RawImageWidget
 import scipy.ndimage as ndi
 import pyqtgraph.ptime as ptime
-import VideoTemplate
+
+if USE_PYSIDE:
+    import VideoTemplate_pyside as VideoTemplate
+else:
+    import VideoTemplate_pyqt as VideoTemplate
+    
 
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])

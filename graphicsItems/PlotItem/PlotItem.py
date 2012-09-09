@@ -16,24 +16,24 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-#from graphicsItems import *
-from .plotConfigTemplate import *
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
+from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+
+if USE_PYSIDE:
+    from .plotConfigTemplate_pyside import *
+else:
+    from .plotConfigTemplate_pyqt import *
+
 import pyqtgraph.functions as fn
 from pyqtgraph.widgets.FileDialog import FileDialog
 import weakref
-#from types import *
 import numpy as np
 import os
-#from .. PlotCurveItem import PlotCurveItem
-#from .. ScatterPlotItem import ScatterPlotItem
 from .. PlotDataItem import PlotDataItem
 from .. ViewBox import ViewBox
 from .. AxisItem import AxisItem
 from .. LabelItem import LabelItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
-#from .. GraphicsLayout import GraphicsLayout
 from pyqtgraph.WidgetGroup import WidgetGroup
 import collections
 
