@@ -3,25 +3,29 @@ import collections, os, weakref, re
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
-
+PARAM_NAMES = {}
 
 def registerParameterType(name, cls, override=False):
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
         raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)
     PARAM_TYPES[name] = cls
+    PARAM_NAMES[cls] = name
 
 
 
 class Parameter(QtCore.QObject):
     """
-    Tree of name=value pairs (modifiable or not)
-       - Value may be integer, float, string, bool, color, or list selection
-       - Optionally, a custom widget may be specified for a property
-       - Any number of extra columns may be added for other purposes
-       - Any values may be reset to a default value
-       - Parameters may be grouped / nested
-       - Parameter may be subclassed to provide customized behavior.
+    A Parameter is the basic unit of data in a parameter tree. Each parameter has
+    a name, a type, a value, and several other properties that modify the behavior of the 
+    Parameter. Parameters may have parent / child / sibling relationships to construct
+    organized hierarchies. Parameters generally do not have any inherent GUI or visual
+    interpretation; instead they manage ParameterItem instances which take care of
+    display and user interaction.
+    
+    Note: It is fairly uncommon to use the Parameter class directly; mostly you 
+    will use subclasses which provide specialized type and data handling. The static
+    pethod Parameter.create(...) is an easy way to generate instances of these subclasses.
        
     For more Parameter types, see ParameterTree.parameterTypes module.
     
@@ -88,7 +92,11 @@ class Parameter(QtCore.QObject):
         
         Use registerParameterType() to add new class types.
         """
-        cls = PARAM_TYPES[opts['type']]
+        typ = opts.get('type', None)
+        if typ is None:
+            cls = Parameter
+        else:
+            cls = PARAM_TYPES[opts['type']]
         return cls(**opts)
     
     def __init__(self, **opts):
@@ -102,6 +110,7 @@ class Parameter(QtCore.QObject):
             'renamable': False,
             'removable': False,
             'strictNaming': False,  # forces name to be usable as a python variable
+            #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
         self.opts.update(opts)
         
@@ -120,9 +129,7 @@ class Parameter(QtCore.QObject):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(opts['name'])
         
-        for chOpts in self.opts.get('children', []):
-            #print self, "Add child:", type(chOpts), id(chOpts)
-            self.addChild(chOpts)
+        self.addChildren(self.opts.get('children', []))
             
         if 'value' in self.opts and 'default' not in self.opts:
             self.opts['default'] = self.opts['value']
@@ -159,6 +166,22 @@ class Parameter(QtCore.QObject):
     def type(self):
         return self.opts['type']
         
+    def isType(self, typ):
+        """
+        Return True if this parameter type matches the name *typ*.
+        This can occur either of two ways:
+        
+        - If self.type() == *typ*
+        - If this parameter's class is registered with the name *typ*
+        """
+        if self.type() == typ:
+            return True
+        global PARAM_TYPES
+        cls = PARAM_TYPES.get(typ, None)
+        if cls is None:
+            raise Exception("Type name '%s' is not registered." % str(typ))
+        return self.__class__ is cls
+        
     def childPath(self, child):
         """
         Return the path of parameter names from self to child.
@@ -175,7 +198,6 @@ class Parameter(QtCore.QObject):
     def setValue(self, value, blockSignal=None):
         ## return the actual value that was set
         ## (this may be different from the value that was requested)
-        #print self, "Set value:", value, self.opts['value'], self.opts['value'] == value
         try:
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
@@ -205,10 +227,13 @@ class Parameter(QtCore.QObject):
         The tree state may be restored from this structure using restoreState()
         """
         state = self.opts.copy()
-        state['children'] = [ch.saveState() for ch in self]
+        state['children'] = collections.OrderedDict([(ch.name(), ch.saveState()) for ch in self])
+        if state['type'] is None:
+            global PARAM_NAMES
+            state['type'] = PARAM_NAMES.get(type(self), None)
         return state
 
-    def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True):
+    def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True, blockSignals=True):
         """
         Restore the state of this parameter and its children from a structure generated using saveState()
         If recursive is True, then attempt to restore the state of child parameters as well.
@@ -216,55 +241,70 @@ class Parameter(QtCore.QObject):
         created if they do not already exist.
         If removeChildren is True, then any children which are not referenced in the state object will 
         be removed.
+        If blockSignals is True, no signals will be emitted until the tree has been completely restored. 
+        This prevents signal handlers from responding to a partially-rebuilt network.
         """
         childState = state.get('children', [])
-        self.setOpts(**state)
         
-        if not recursive:
-            return
-        
-        ptr = 0  ## pointer to first child that has not been restored yet
-        foundChilds = set()
-        #print "==============", self.name()
-        for ch in childState:
-            name = ch['name']
-            typ = ch['type']
-            #print('child: %s, %s' % (self.name()+'.'+name, typ))
+        ## list of children may be stored either as list or dict.
+        if isinstance(childState, dict):
+            childState = childState.values()
             
-            ## First, see if there is already a child with this name and type
-            gotChild = False
-            for i, ch2 in enumerate(self.childs[ptr:]):
-                #print ch2, ch2.name, ch2.type
-                if ch2.name() != name or ch2.type() != typ:
-                    continue
-                gotChild = True
-                #print "  found it"
-                if i != 0:  ## move parameter to next position
-                    self.removeChild(ch2)
+        
+        if blockSignals:
+            self.blockTreeChangeSignal()
+            
+        try:
+            self.setOpts(**state)
+            
+            if not recursive:
+                return
+            
+            ptr = 0  ## pointer to first child that has not been restored yet
+            foundChilds = set()
+            #print "==============", self.name()
+            
+            for ch in childState:
+                name = ch['name']
+                typ = ch['type']
+                #print('child: %s, %s' % (self.name()+'.'+name, typ))
+                
+                ## First, see if there is already a child with this name and type
+                gotChild = False
+                for i, ch2 in enumerate(self.childs[ptr:]):
+                    #print "  ", ch2.name(), ch2.type()
+                    if ch2.name() != name or not ch2.isType(typ):
+                        continue
+                    gotChild = True
+                    #print "    found it"
+                    if i != 0:  ## move parameter to next position
+                        #self.removeChild(ch2)
+                        self.insertChild(ptr, ch2)
+                        #print "  moved to position", ptr
+                    ch2.restoreState(ch, recursive=recursive, addChildren=addChildren, removeChildren=removeChildren)
+                    foundChilds.add(ch2)
+                    
+                    break
+                
+                if not gotChild:
+                    if not addChildren:
+                        #print "  ignored child"
+                        continue
+                    #print "    created new"
+                    ch2 = Parameter.create(**ch)
                     self.insertChild(ptr, ch2)
-                    #print "  moved to position", ptr
-                ch2.restoreState(ch, recursive=recursive, addChildren=addChildren, removeChildren=removeChildren)
-                foundChilds.add(ch2)
+                    foundChilds.add(ch2)
+                    
+                ptr += 1
                 
-                break
-            
-            if not gotChild:
-                if not addChildren:
-                    #print "  ignored child"
-                    continue
-                #print "  created new"
-                ch2 = Parameter.create(**ch)
-                self.insertChild(ptr, ch2)
-                foundChilds.add(ch2)
-                
-            ptr += 1
-            
-        if removeChildren:
-            for ch in self:
-                if ch not in foundChilds:
-                    #print "  remove:", ch
-                    self.removeChild(ch)
-                
+            if removeChildren:
+                for ch in self.childs[:]:
+                    if ch not in foundChilds:
+                        #print "  remove:", ch
+                        self.removeChild(ch)
+        finally:
+            if blockSignals:
+                self.unblockTreeChangeSignal()
             
             
         
@@ -362,6 +402,22 @@ class Parameter(QtCore.QObject):
     def addChild(self, child):
         """Add another parameter to the end of this parameter's child list."""
         return self.insertChild(len(self.childs), child)
+
+    def addChildren(self, children):
+        ## If children was specified as dict, then assume keys are the names.
+        if isinstance(children, dict):
+            ch2 = []
+            for name, opts in children.items():
+                if isinstance(opts, dict) and 'name' not in opts:
+                    opts = opts.copy()
+                    opts['name'] = name
+                ch2.append(opts)
+            children = ch2
+        
+        for chOpts in children:
+            #print self, "Add child:", type(chOpts), id(chOpts)
+            self.addChild(chOpts)
+        
         
     def insertChild(self, pos, child):
         """
@@ -373,7 +429,7 @@ class Parameter(QtCore.QObject):
             child = Parameter.create(**child)
         
         name = child.name()
-        if name in self.names:
+        if name in self.names and child is not self.names[name]:
             if child.opts.get('autoIncrementName', False):
                 name = self.incrementName(name)
                 child.setName(name)
@@ -382,15 +438,16 @@ class Parameter(QtCore.QObject):
         if isinstance(pos, Parameter):
             pos = self.childs.index(pos)
             
-        if child.parent() is not None:
-            child.remove()
+        with self.treeChangeBlocker():
+            if child.parent() is not None:
+                child.remove()
+                
+            self.names[name] = child
+            self.childs.insert(pos, child)
             
-        self.names[name] = child
-        self.childs.insert(pos, child)
-        
-        child.parentChanged(self)
-        self.sigChildAdded.emit(self, child, pos)
-        child.sigTreeStateChanged.connect(self.treeStateChanged)
+            child.parentChanged(self)
+            self.sigChildAdded.emit(self, child, pos)
+            child.sigTreeStateChanged.connect(self.treeStateChanged)
         return child
         
     def removeChild(self, child):
@@ -398,7 +455,6 @@ class Parameter(QtCore.QObject):
         name = child.name()
         if name not in self.names or self.names[name] is not child:
             raise Exception("Parameter %s is not my child; can't remove." % str(child))
-        
         del self.names[name]
         self.childs.pop(self.childs.index(child))
         child.parentChanged(None)
@@ -414,6 +470,9 @@ class Parameter(QtCore.QObject):
         """Return a list of this parameter's children."""
         ## warning -- this overrides QObject.children
         return self.childs[:]
+    
+    def hasChildren(self):
+        return len(self.childs) > 0
 
     def parentChanged(self, parent):
         """This method is called when the parameter's parent has changed.
@@ -443,7 +502,7 @@ class Parameter(QtCore.QObject):
             num = int(num)
         while True:
             newName = base + ("%%0%dd"%numLen) % num
-            if newName not in self.childs:
+            if newName not in self.names:
                 return newName
             num += 1
 
