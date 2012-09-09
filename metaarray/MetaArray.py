@@ -305,14 +305,37 @@ class MetaArray(object):
             #return lambda *args, **kwargs: MetaArray(getattr(a.view(ndarray), attr)(*args, **kwargs)
         
     def __eq__(self, b):
-        if isinstance(b, MetaArray):
-            b = b.asarray()
-        return self._data == b
+        return self._binop('__eq__', b)
         
     def __ne__(self, b):
+        return self._binop('__ne__', b)
+        #if isinstance(b, MetaArray):
+            #b = b.asarray()
+        #return self.asarray() != b
+        
+    def __sub__(self, b):
+        return self._binop('__sub__', b)
+        #if isinstance(b, MetaArray):
+            #b = b.asarray()
+        #return MetaArray(self.asarray() - b, info=self.infoCopy())
+
+    def __add__(self, b):
+        return self._binop('__add__', b)
+
+    def __mul__(self, b):
+        return self._binop('__mul__', b)
+        
+    def __div__(self, b):
+        return self._binop('__div__', b)
+        
+    def _binop(self, op, b):
         if isinstance(b, MetaArray):
             b = b.asarray()
-        return self._data != b
+        a = self.asarray()
+        c = getattr(a, op)(b)
+        if c.shape != a.shape:
+            raise Exception("Binary operators with MetaArray must return an array of the same shape (this shape is %s, result shape was %s)" % (a.shape, c.shape))
+        return MetaArray(c, info=self.infoCopy())
         
     def asarray(self):
         if isinstance(self._data, np.ndarray):

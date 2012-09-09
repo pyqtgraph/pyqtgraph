@@ -965,6 +965,8 @@ class ROI(GraphicsObject):
         
         See :func:`getArrayRegion <pyqtgraph.ROI.getArrayRegion>` for more information.
         """
+        if self.scene() is not img.scene():
+            raise Exception("ROI and target item must be members of the same scene.")
         
         shape = self.state['size']
         
