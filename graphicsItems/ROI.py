@@ -958,7 +958,7 @@ class ROI(GraphicsObject):
         ### Untranspose array before returning
         #return arr5.transpose(tr2)
 
-    def getAffineSliceParams(self, data, img, axes=(0.1)):
+    def getAffineSliceParams(self, data, img, axes=(0,1)):
         """
         Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>` to 
         extract a subset of *data* using this ROI and *img* to specify the subset.
