@@ -1,5 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
-import collections, os, weakref, re
+import os, weakref, re
+from pyqtgraph.pgcollections import OrderedDict
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
@@ -216,7 +217,7 @@ class Parameter(QtCore.QObject):
 
     def getValues(self):
         """Return a tree of all values that are children of this parameter"""
-        vals = collections.OrderedDict()
+        vals = OrderedDict()
         for ch in self:
             vals[ch.name()] = (ch.value(), ch.getValues())
         return vals
@@ -227,7 +228,7 @@ class Parameter(QtCore.QObject):
         The tree state may be restored from this structure using restoreState()
         """
         state = self.opts.copy()
-        state['children'] = collections.OrderedDict([(ch.name(), ch.saveState()) for ch in self])
+        state['children'] = OrderedDict([(ch.name(), ch.saveState()) for ch in self])
         if state['type'] is None:
             global PARAM_NAMES
             state['type'] = PARAM_NAMES.get(type(self), None)
@@ -363,7 +364,7 @@ class Parameter(QtCore.QObject):
         most parameters will accept a common set of options: value, name, limits,
         default, readonly, removable, renamable, visible, and enabled.
         """
-        changed = collections.OrderedDict()
+        changed = OrderedDict()
         for k in opts:
             if k == 'value':
                 self.setValue(opts[k])

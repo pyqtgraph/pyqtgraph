@@ -1,5 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
-import collections, os, weakref, re
+import os, weakref, re
 
 class ParameterItem(QtGui.QTreeWidgetItem):
     """

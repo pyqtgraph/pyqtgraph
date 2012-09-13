@@ -120,6 +120,14 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
         
+    def setAntialiasing(self, aa):
+        """Enable or disable default antialiasing.
+        Note that this will only affect items that do not specify their own antialiasing options."""
+        if aa:
+            self.setRenderHints(self.renderHints() | QtGui.QPainter.Antialiasing)
+        else:
+            self.setRenderHints(self.renderHints() & ~QtGui.QPainter.Antialiasing)
+        
     def setBackground(self, background):
         """
         Set the background color of the GraphicsView.

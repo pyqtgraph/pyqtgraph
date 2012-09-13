@@ -5,7 +5,8 @@ from .ParameterItem import ParameterItem
 from pyqtgraph.widgets.SpinBox import SpinBox
 from pyqtgraph.widgets.ColorButton import ColorButton
 import pyqtgraph as pg
-import os, collections
+import os
+from pyqtgraph.pgcollections import OrderedDict
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -481,8 +482,6 @@ class ListParameterItem(WidgetParameterItem):
 
     def limitsChanged(self, param, limits):
         # set up forward / reverse mappings for name:value
-        #self.forward = collections.OrderedDict([('', None)])  ## name: value
-        #self.reverse = collections.OrderedDict([(None, '')])  ## value: name
         
         if len(limits) == 0:
             limits = ['']  ## Can never have an empty list--there is always at least a singhe blank item.
@@ -507,8 +506,8 @@ class ListParameter(Parameter):
     itemClass = ListParameterItem
 
     def __init__(self, **opts):
-        self.forward = collections.OrderedDict()  ## name: value
-        self.reverse = collections.OrderedDict()  ## value: name
+        self.forward = OrderedDict()  ## name: value
+        self.reverse = OrderedDict()  ## value: name
         
         ## Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
@@ -528,8 +527,8 @@ class ListParameter(Parameter):
     @staticmethod
     def mapping(limits):
         ## Return forward and reverse mapping dictionaries given a limit specification
-        forward = collections.OrderedDict()  ## name: value
-        reverse = collections.OrderedDict()  ## value: name
+        forward = OrderedDict()  ## name: value
+        reverse = OrderedDict()  ## value: name
         if isinstance(limits, dict):
             for k, v in limits.items():
                 forward[k] = v

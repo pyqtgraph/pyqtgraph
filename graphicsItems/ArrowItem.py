@@ -42,7 +42,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     def setStyle(self, **opts):
         self.opts = opts
         
-        opt = {k:self.opts[k] for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']}
+        opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
         self.path = fn.makeArrowPath(**opt)
         self.setPath(self.path)
         

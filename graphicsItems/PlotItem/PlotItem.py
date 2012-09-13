@@ -35,7 +35,6 @@ from .. LabelItem import LabelItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from pyqtgraph.WidgetGroup import WidgetGroup
-import collections
 
 __all__ = ['PlotItem']
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
+from pyqtgraph.pgcollections import OrderedDict
 import os, types
 from pyqtgraph.debug import printExc
 from ..Node import Node

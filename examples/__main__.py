@@ -9,7 +9,7 @@ else:
     from exampleLoaderTemplate_pyqt import Ui_Form
     
 import os, sys
-from collections import OrderedDict
+from pyqtgraph.pgcollections import OrderedDict
 
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),

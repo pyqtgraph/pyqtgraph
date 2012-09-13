@@ -7,7 +7,7 @@ import numpy as np
 import scipy.stats
 import weakref
 import pyqtgraph.debug as debug
-from collections import OrderedDict
+from pyqtgraph.pgcollections import OrderedDict
 #import pyqtgraph as pg 
 
 __all__ = ['ScatterPlotItem', 'SpotItem']

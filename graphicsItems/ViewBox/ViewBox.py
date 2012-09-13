@@ -9,7 +9,6 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 import pyqtgraph
 import weakref
 from copy import deepcopy
-import collections
 
 __all__ = ['ViewBox']
 
@@ -110,12 +109,6 @@ class ViewBox(GraphicsWidget):
             'background': None,
         }
         
-        
-        #self.exportMethods = collections.OrderedDict([
-            #('SVG', self.saveSvg),
-            #('Image', self.saveImage),
-            #('Print', self.savePrint),
-        #])
         
         self.setFlag(self.ItemClipsChildrenToShape)
         self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses

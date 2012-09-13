@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 from .Node import *
-from collections import OrderedDict
+from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.widgets.TreeWidget import *
 
 ## pyside and pyqt use incompatible ui files.
