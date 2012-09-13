@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from numpy import ndarray, bool_
-from metaarray import MetaArray
+from pyqtgraph.metaarray import MetaArray
 
 def eq(a, b):
     """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
