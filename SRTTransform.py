@@ -34,7 +34,11 @@ class SRTTransform(QtGui.QTransform):
     def getScale(self):
         return self._state['scale']
         
-    def getAngle(self):
+    def getAngle(self):  
+        ## deprecated; for backward compatibility
+        return self.getRotation()
+        
+    def getRotation(self):
         return self._state['angle']
         
     def getTranslation(self):

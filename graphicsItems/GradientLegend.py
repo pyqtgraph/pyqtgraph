@@ -10,10 +10,10 @@ class GradientLegend(UIGraphicsItem):
     points along the gradient.
     """
     
-    def __init__(self, view, size, offset):
+    def __init__(self, size, offset):
         self.size = size
         self.offset = offset
-        UIGraphicsItem.__init__(self, view)
+        UIGraphicsItem.__init__(self)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.brush = QtGui.QBrush(QtGui.QColor(200,0,0))
         self.pen = QtGui.QPen(QtGui.QColor(0,0,0))

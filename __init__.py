@@ -21,7 +21,9 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 ## helpers for 2/3 compatibility
 from . import python2_3
 
-    
+## install workarounds for numpy bugs
+import numpy_fix
+
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -215,6 +217,21 @@ def image(*args, **kargs):
     w.show()
     return w
 show = image  ## for backward compatibility
+
+def dbg():
+    """
+    Create a console window and begin watching for exceptions.
+    """
+    mkQApp()
+    import console
+    c = console.ConsoleWidget()
+    c.catchAllExceptions()
+    c.show()
+    global consoles
+    try:
+        consoles.append(c)
+    except NameError:
+        consoles = [c]
     
     
 def mkQApp():

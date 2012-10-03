@@ -267,7 +267,7 @@ class PlotCurveItem(GraphicsObject):
         ##    0(i4)
         ##
         ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-        if sys.version_info.major == 2:
+        if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
             n = x.shape[0]
             # create empty array, pad with extra space on either end
             arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])

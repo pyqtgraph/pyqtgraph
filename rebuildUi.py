@@ -13,9 +13,11 @@ for path, sd, files in os.walk('.'):
         ui = os.path.join(path, f)
 
         py = os.path.join(path, base + '_pyqt.py')
-        os.system('%s %s > %s' % (pyqtuic, ui, py))
-        print(py)
+        if os.stat(ui).st_mtime > os.stat(py).st_mtime:
+            os.system('%s %s > %s' % (pyqtuic, ui, py))
+       	    print(py)
 
         py = os.path.join(path, base + '_pyside.py')
-        os.system('%s %s > %s' % (pysideuic, ui, py))
-        print(py)
+        if os.stat(ui).st_mtime > os.stat(py).st_mtime:
+            os.system('%s %s > %s' % (pysideuic, ui, py))
+            print(py)

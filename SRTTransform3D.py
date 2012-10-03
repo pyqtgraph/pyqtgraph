@@ -183,7 +183,7 @@ class SRTTransform3D(QtGui.QMatrix4x4):
     def restoreState(self, state):
         self._state['pos'] = Vector(state.get('pos', (0.,0.,0.)))
         scale = state.get('scale', (1.,1.,1.))
-        scale = scale + (1.,) * (3-len(scale))
+        scale = tuple(scale) + (1.,) * (3-len(scale))
         self._state['scale'] = Vector(scale)
         self._state['angle'] = state.get('angle', 0.)
         self._state['axis'] = state.get('axis', (0, 0, 1))

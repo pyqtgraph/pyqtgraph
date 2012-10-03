@@ -73,6 +73,29 @@ class Butterworth(CtrlNode):
         ret = functions.butterworthFilter(data, bidir=s['bidir'], btype=mode, wPass=s['wPass'], wStop=s['wStop'], gPass=s['gPass'], gStop=s['gStop'])
         return ret
 
+        
+class ButterworthNotch(CtrlNode):
+    """Butterworth notch filter"""
+    nodeName = 'ButterworthNotchFilter'
+    uiTemplate = [
+        ('low_wPass', 'spin', {'value': 1000., 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'Hz', 'siPrefix': True}),
+        ('low_wStop', 'spin', {'value': 2000., 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'Hz', 'siPrefix': True}),
+        ('low_gPass', 'spin', {'value': 2.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
+        ('low_gStop', 'spin', {'value': 20.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
+        ('high_wPass', 'spin', {'value': 3000., 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'Hz', 'siPrefix': True}),
+        ('high_wStop', 'spin', {'value': 4000., 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'Hz', 'siPrefix': True}),
+        ('high_gPass', 'spin', {'value': 2.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
+        ('high_gStop', 'spin', {'value': 20.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
+        ('bidir', 'check', {'checked': True})
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        
+        low = functions.butterworthFilter(data, bidir=s['bidir'], btype='low', wPass=s['low_wPass'], wStop=s['low_wStop'], gPass=s['low_gPass'], gStop=s['low_gStop'])
+        high = functions.butterworthFilter(data, bidir=s['bidir'], btype='high', wPass=s['high_wPass'], wStop=s['high_wStop'], gPass=s['high_gPass'], gStop=s['high_gStop'])
+        return low + high
+    
 
 class Mean(CtrlNode):
     """Filters data by taking the mean of a sliding window"""
@@ -204,6 +227,7 @@ class RemovePeriodic(CtrlNode):
         #('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000})
         ('f0', 'spin', {'value': 60, 'suffix': 'Hz', 'siPrefix': True, 'min': 0, 'max': None}),
         ('harmonics', 'intSpin', {'value': 30, 'min': 0}),
+        ('samples', 'intSpin', {'value': 1, 'min': 1}),
     ]
 
     def processData(self, data):
@@ -224,22 +248,16 @@ class RemovePeriodic(CtrlNode):
             
             ## determine index range to check for this frequency
             ind1 = int(np.floor(f / df))
-            ind2 = int(np.ceil(f / df))
+            ind2 = int(np.ceil(f / df)) + (self.ctrls['samples'].value()-1)
             if ind1 > len(ft)/2.:
                 break
-            print "--->", f
-            print ind1, ind2, abs(ft[ind1-2:ind2+2])
-            print ft[ind1-2:ind2+2]
             mag = (abs(ft[ind1-1]) + abs(ft[ind2+1])) * 0.5
-            print "new mag:", mag
             for j in range(ind1, ind2+1):
-                phase = np.angle(ft[j])
+                phase = np.angle(ft[j])   ## Must preserve the phase of each point, otherwise any transients in the trace might lead to large artifacts.
                 re = mag * np.cos(phase)
                 im = mag * np.sin(phase)
                 ft[j] = re + im*1j
                 ft[len(ft)-j] = re - im*1j
-            print abs(ft[ind1-2:ind2+2])
-            print ft[ind1-2:ind2+2]
                 
         data2 = np.fft.ifft(ft).real
         

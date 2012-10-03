@@ -57,36 +57,36 @@ class PlotDataItem(GraphicsObject):
         
         **Line style keyword arguments:**
             ==========   ================================================
-            pen          pen to use for drawing line between points. 
+            pen          Pen to use for drawing line between points. 
                          Default is solid grey, 1px width. Use None to disable line drawing.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
-            shadowPen    pen for secondary line to draw behind the primary line. disabled by default.
+            shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
-            fillLevel    fill the area between the curve and fillLevel
-            fillBrush    fill to use when fillLevel is specified
+            fillLevel    Fill the area between the curve and fillLevel
+            fillBrush    Fill to use when fillLevel is specified. 
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             ==========   ================================================
         
-        **Point style keyword arguments:**
+        **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
         
             ============   ================================================
-            symbol         (str) symbol to use for drawing points OR list of symbols, one per point. Default is no symbol.
-                           options are o, s, t, d, +
-            symbolPen      outline pen for drawing points OR list of pens, one per point
+            symbol         Symbol to use for drawing points OR list of symbols, one per point. Default is no symbol.
+                           Options are o, s, t, d, +, or any QPainterPath
+            symbolPen      Outline pen for drawing points OR list of pens, one per point.
                            May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
-            symbolBrush    brush for filling points OR list of brushes, one per point
+            symbolBrush    Brush for filling points OR list of brushes, one per point.
                            May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            symbolSize     diameter of symbols OR list of diameters
+            symbolSize     Diameter of symbols OR list of diameters.
             pxMode         (bool) If True, then symbolSize is specified in pixels. If False, then symbolSize is 
                            specified in data coordinates.
             ============   ================================================
         
         **Optimization keyword arguments:**
         
-            ==========   ================================================
+            ==========   =====================================================================
             identical    *deprecated*
-            decimate     (int) decimate data
-            ==========   ================================================
+            decimate     (int) sub-sample data by selecting every nth sample before plotting
+            ==========   =====================================================================
         
         **Meta-info keyword arguments:**
         
@@ -239,7 +239,6 @@ class PlotDataItem(GraphicsObject):
         Clear any data displayed by this item and display new data.
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
-        
         #self.clear()
         prof = debug.Profiler('PlotDataItem.setData (0x%x)' % id(self), disabled=True)
         y = None
@@ -265,7 +264,8 @@ class PlotDataItem(GraphicsObject):
                 if 'y' in data[0]:
                     y = np.array([d.get('y',None) for d in data])
                 for k in ['data', 'symbolSize', 'symbolPen', 'symbolBrush', 'symbolShape']:
-                    kargs[k] = [d.get(k, None) for d in data]
+                    if k in data:
+                        kargs[k] = [d.get(k, None) for d in data]
             elif dt == 'MetaArray':
                 y = data.view(np.ndarray)
                 x = data.xvals(0).view(np.ndarray)
@@ -296,6 +296,7 @@ class PlotDataItem(GraphicsObject):
         
 
         ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
+        
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
             kargs['symbol'] = 'o'
             
@@ -502,11 +503,11 @@ def dataType(obj):
             else:
                 raise Exception('array shape must be (N,) or (N,2); got %s instead' % str(obj.shape))
         elif isinstance(first, dict):
-            return 'listOfDict'
+            return 'listOfDicts'
         else:
             return 'listOfValues'
     elif isinstance(obj, dict):
-        return 'dict'
+        return 'dictOfLists'
         
         
 def isSequence(obj):
