@@ -44,5 +44,5 @@ QtVersion = PySide.QtCore.__version__ if USE_PYSIDE else QtCore.QT_VERSION_STR
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and map(int, m.groups()) < versionReq:
     print map(int, m.groups())
-    raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq + (QtVersion,)))
+    raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
 
