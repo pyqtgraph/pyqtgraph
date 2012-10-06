@@ -201,11 +201,11 @@ class SRTTransform3D(QtGui.QMatrix4x4):
         
     def matrix(self, nd=3):
         if nd == 3:
-            return np.array(self.copyDataTo())
+            return np.array(self.copyDataTo()).reshape(4,4)
         elif nd == 2:
-            m = np.array(self.copyDataTo())
+            m = np.array(self.copyDataTo()).reshape(4,4)
             m[2] = m[3]
-            m[:,2] = n[:,3]
+            m[:,2] = m[:,3]
             return m[:3,:3]
         else:
             raise Exception("Argument 'nd' must be 2 or 3")

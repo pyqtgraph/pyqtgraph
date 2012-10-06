@@ -614,7 +614,8 @@ class Parameter(QtCore.QObject):
         about to be made to the tree and only one change signal should be
         emitted at the end.
         
-        Example:
+        Example::
+
             with param.treeChangeBlocker():
                 param.addChild(...)
                 param.removeChild(...)
@@ -638,11 +639,14 @@ class Parameter(QtCore.QObject):
     def treeStateChanged(self, param, changes):
         """
         Called when the state of any sub-parameter has changed. 
+        
+        ==========  ================================================================
         Arguments:
-            param: the immediate child whose tree state has changed.
-                   note that the change may have originated from a grandchild.
-            changes: list of tuples describing all changes that have been made
-                     in this event: (param, changeDescr, data)
+        param       The immediate child whose tree state has changed.
+                    note that the change may have originated from a grandchild.
+        changes     List of tuples describing all changes that have been made
+                    in this event: (param, changeDescr, data)
+        ==========  ================================================================
                      
         This function can be extended to react to tree state changes.
         """

@@ -854,9 +854,18 @@ class ROI(GraphicsObject):
         else:
             kwds['returnCoords'] = True
             result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
-            tr = fn.transformToArray(img.transform())[:,:2].reshape((3, 2) + (1,)*(coords.ndim-1))
-            coords = coords[np.newaxis, ...]
-            mapped = (tr*coords).sum(axis=0)
+            #tr = fn.transformToArray(img.transform())[:2]  ## remove perspective transform values
+            
+            ### separate translation from scale/rotate
+            #translate = tr[:,2]
+            #tr = tr[:,:2]
+            #tr = tr.reshape((2,2) + (1,)*(coords.ndim-1))
+            #coords = coords[np.newaxis, ...]
+            
+            ### map coordinates and return
+            #mapped = (tr*coords).sum(axis=0)  ## apply scale/rotate
+            #mapped += translate.reshape((2,1,1))
+            mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
             
             

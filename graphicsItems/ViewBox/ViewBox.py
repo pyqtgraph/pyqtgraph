@@ -538,6 +538,7 @@ class ViewBox(GraphicsWidget):
         if self.state['autoVisibleOnly'][0] is True:
             order = [1,0]
 
+        args = {}
         for ax in order:
             if self.state['autoRange'][ax] is False:
                 continue
@@ -563,6 +564,7 @@ class ViewBox(GraphicsWidget):
                     
                 targetRect[0][0] = childRect.left()
                 targetRect[0][1] = childRect.right()
+                args['xRange'] = targetRect[0]
             else:
                 ## Make corrections to Y range
                 if self.state['autoPan'][1]:
@@ -576,8 +578,11 @@ class ViewBox(GraphicsWidget):
                     
                 targetRect[1][0] = childRect.top()
                 targetRect[1][1] = childRect.bottom()
-            
-        self.setRange(xRange=targetRect[0], yRange=targetRect[1], padding=0, disableAutoRange=False)
+                args['yRange'] = targetRect[1]
+        args['padding'] = 0
+        args['disableAutoRange'] = False
+        #self.setRange(xRange=targetRect[0], yRange=targetRect[1], padding=0, disableAutoRange=False)
+        self.setRange(**args)
         
     def setXLink(self, view):
         """Link this view's X axis to another view. (see LinkView)"""
@@ -1213,7 +1218,8 @@ class ViewBox(GraphicsWidget):
 
     @staticmethod
     def forgetView(vid, name):
-        
+        if ViewBox is None:     ## can happen as python is shutting down
+            return
         ## Called with ID and name of view (the view itself is no longer available)
         for v in ViewBox.AllViews.iterkeys():
             if id(v) == vid:
