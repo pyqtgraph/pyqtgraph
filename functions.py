@@ -116,7 +116,7 @@ def siEval(s):
     """
     
     s = asUnicode(s)
-    m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?)$', s)
+    m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?).*$', s)
     if m is None:
         raise Exception("Can't convert string '%s' to number." % s)
     v = float(m.groups()[0])

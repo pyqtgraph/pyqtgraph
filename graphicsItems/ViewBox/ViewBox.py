@@ -532,7 +532,7 @@ class ViewBox(GraphicsWidget):
             if type(fractionVisible[i]) is bool:
                 fractionVisible[i] = 1.0
 
-        childRect = None
+        childRange = None
 
         order = [0,1]
         if self.state['autoVisibleOnly'][0] is True:
@@ -545,40 +545,48 @@ class ViewBox(GraphicsWidget):
             if self.state['autoVisibleOnly'][ax]:
                 oRange = [None, None]
                 oRange[ax] = targetRect[1-ax]
-                childRect = self.childrenBoundingRect(frac=fractionVisible, orthoRange=oRange)
+                childRange = self.childrenBounds(frac=fractionVisible, orthoRange=oRange)
                 
             else:
-                if childRect is None:
-                    childRect = self.childrenBoundingRect(frac=fractionVisible)
-
-            if ax == 0:
-                ## Make corrections to X range
+                if childRange is None:
+                    childRange = self.childrenBounds(frac=fractionVisible)
+            
+            ## Make corrections to range
+            xr = childRange[ax]
+            if xr is not None:
                 if self.state['autoPan'][0]:
-                    x = childRect.center().x()
+                    x = sum(xr) * 0.5
+                    #x = childRect.center().x()
                     w2 = (targetRect[0][1]-targetRect[0][0]) / 2.
-                    childRect.setLeft(x-w2)
-                    childRect.setRight(x+w2)
+                    #childRect.setLeft(x-w2)
+                    #childRect.setRight(x+w2)
+                    childRange[ax] = [x-w2, x+w2]
                 else:
-                    wp = childRect.width() * 0.02
-                    childRect = childRect.adjusted(-wp, 0, wp, 0)
+                    #wp = childRect.width() * 0.02
+                    wp = (xr[1] - xr[0]) * 0.02
+                    #childRect = childRect.adjusted(-wp, 0, wp, 0)
+                    childRange[ax][0] -= wp
+                    childRange[ax][1] += wp
+                #targetRect[ax][0] = childRect.left()
+                #targetRect[ax][1] = childRect.right()
+                targetRect[ax] = childRange[ax]
+                args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
+            #else:
+                ### Make corrections to Y range
+                #if self.state['autoPan'][1]:
+                    #y = childRect.center().y()
+                    #h2 = (targetRect[1][1]-targetRect[1][0]) / 2.
+                    #childRect.setTop(y-h2)
+                    #childRect.setBottom(y+h2)
+                #else:
+                    #hp = childRect.height() * 0.02
+                    #childRect = childRect.adjusted(0, -hp, 0, hp)
                     
-                targetRect[0][0] = childRect.left()
-                targetRect[0][1] = childRect.right()
-                args['xRange'] = targetRect[0]
-            else:
-                ## Make corrections to Y range
-                if self.state['autoPan'][1]:
-                    y = childRect.center().y()
-                    h2 = (targetRect[1][1]-targetRect[1][0]) / 2.
-                    childRect.setTop(y-h2)
-                    childRect.setBottom(y+h2)
-                else:
-                    hp = childRect.height() * 0.02
-                    childRect = childRect.adjusted(0, -hp, 0, hp)
-                    
-                targetRect[1][0] = childRect.top()
-                targetRect[1][1] = childRect.bottom()
-                args['yRange'] = targetRect[1]
+                #targetRect[1][0] = childRect.top()
+                #targetRect[1][1] = childRect.bottom()
+                #args['yRange'] = targetRect[1]
+        if len(args) == 0:
+            return
         args['padding'] = 0
         args['disableAutoRange'] = False
         #self.setRange(xRange=targetRect[0], yRange=targetRect[1], padding=0, disableAutoRange=False)
@@ -689,14 +697,14 @@ class ViewBox(GraphicsWidget):
                 overlap = min(sg.bottom(), vg.bottom()) - max(sg.top(), vg.top())
                 if overlap < min(vg.height()/3, sg.height()/3):  ## if less than 1/3 of views overlap, 
                                                                ## then just replicate the view
-                    x1 = vr.top()
-                    x2 = vr.bottom()
+                    y1 = vr.top()
+                    y2 = vr.bottom()
                 else:  ## views overlap; line them up
                     upp = float(vr.height()) / vg.height()
-                    x1 = vr.top() + (sg.y()-vg.y()) * upp
-                    x2 = x1 + sg.height() * upp
+                    y2 = vr.bottom() - (sg.y()-vg.y()) * upp
+                    y1 = y2 - sg.height() * upp
                 self.enableAutoRange(ViewBox.YAxis, False)
-                self.setYRange(x1, x2, padding=0)
+                self.setYRange(y1, y2, padding=0)
         finally:
             view.blockLink(False)
         
@@ -984,8 +992,8 @@ class ViewBox(GraphicsWidget):
         return children
         
         
-        
-    def childrenBoundingRect(self, frac=None, orthoRange=(None,None)):
+    
+    def childrenBounds(self, frac=None, orthoRange=(None,None)):
         """Return the bounding range of all children.
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
@@ -1052,22 +1060,18 @@ class ViewBox(GraphicsWidget):
             if useY:
                 if range[1] is not None:
                     range[1] = [min(bounds.top(), range[1][0]), max(bounds.bottom(), range[1][1])]
-                    #bounds.setTop(min(bounds.top(), chb.top()))
-                    #bounds.setBottom(max(bounds.bottom(), chb.bottom()))
                 else:
                     range[1] = [bounds.top(), bounds.bottom()]
-                    #bounds.setTop(chb.top())
-                    #bounds.setBottom(chb.bottom())
             if useX:
                 if range[0] is not None:
                     range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
-                    #bounds.setLeft(min(bounds.left(), chb.left()))
-                    #bounds.setRight(max(bounds.right(), chb.right()))
                 else:
                     range[0] = [bounds.left(), bounds.right()]
-                    #bounds.setLeft(chb.left())
-                    #bounds.setRight(chb.right())
         
+        return range
+        
+    def childrenBoundingRect(self, *args, **kwds):
+        range = self.childrenBounds(*args, **kwds)
         tr = self.targetRange()
         if range[0] is None:
             range[0] = tr[0]

@@ -217,6 +217,7 @@ class ConsoleWidget(QtGui.QWidget):
         for l in tb.split('\n'):
             lines.append(" "*indent + prefix + l)
         self.write('\n'.join(lines))
+        self.exceptionHandler(*sys.exc_info())
         
     def cmdSelected(self, item):
         index = -(self.ui.historyList.row(item)+1)
@@ -314,6 +315,8 @@ class ConsoleWidget(QtGui.QWidget):
     def exceptionHandler(self, excType, exc, tb):
         if self.ui.catchNextExceptionBtn.isChecked():
             self.ui.catchNextExceptionBtn.setChecked(False)
+        elif not self.ui.catchAllExceptionsBtn.isChecked():
+            return
         
         self.ui.clearExceptionBtn.setEnabled(True)
         self.currentTraceback = tb
