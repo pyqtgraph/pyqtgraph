@@ -1376,10 +1376,11 @@ def invertQTransform(tr):
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
-    if not USE_WEAVE:
-        raise Exception("This function depends on scipy.weave library, but it does not appear to be usable.")
-    
-    #return tr.inverted()[0]
+    if not HAVE_SCIPY:
+        inv = tr.inverted()
+        if inv[1] is False:
+            raise Exception("Transform is not invertible.")
+        return inv[0]
     arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
     inv = scipy.linalg.inv(arr)
     return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
