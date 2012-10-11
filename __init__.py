@@ -104,36 +104,61 @@ def renamePyc(startDir):
                 
 import os
 path = os.path.split(__file__)[0]
-renamePyc(path)
+if not hasattr(sys, 'frozen'): ## If we are frozen, there's a good chance we don't have the original .py files anymore.
+    renamePyc(path)
 
 
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
 ## these must be imported separately.
-
-def importAll(path, excludes=()):
-    d = os.path.join(os.path.split(__file__)[0], path)
-    files = []
-    for f in os.listdir(d):
-        if os.path.isdir(os.path.join(d, f)) and f != '__pycache__':
-            files.append(f)
+import frozenSupport
+def importModules(path, globals, locals, excludes=()):
+    """Import all modules residing within *path*, return a dict of name: module pairs.
+    
+    Note that *path* MUST be relative to the module doing the import.    
+    """
+    d = os.path.join(os.path.split(globals['__file__'])[0], path)
+    files = set()
+    for f in frozenSupport.listdir(d):
+        if frozenSupport.isdir(os.path.join(d, f)) and f != '__pycache__':
+            files.add(f)
         elif f[-3:] == '.py' and f != '__init__.py':
-            files.append(f[:-3])
+            files.add(f[:-3])
+        elif f[-4:] == '.pyc' and f != '__init__.pyc':
+            files.add(f[:-4])
         
+    mods = {}
+    path = path.replace(os.sep, '.')
     for modName in files:
         if modName in excludes:
             continue
-        mod = __import__(path+"."+modName, globals(), locals(), fromlist=['*'])
+        try:
+            if len(path) > 0:
+                modName = path + '.' + modName
+            mod = __import__(modName, globals, locals, fromlist=['*'])
+            mods[modName] = mod
+        except:
+            import traceback
+            traceback.print_stack()
+            sys.excepthook(*sys.exc_info())
+            print("[Error importing module: %s]" % modName)
+            
+    return mods
+
+def importAll(path, globals, locals, excludes=()):
+    """Given a list of modules, import all names from each module into the global namespace."""
+    mods = importModules(path, globals, locals, excludes)
+    for mod in mods.values():
         if hasattr(mod, '__all__'):
             names = mod.__all__
         else:
             names = [n for n in dir(mod) if n[0] != '_']
         for k in names:
             if hasattr(mod, k):
-                globals()[k] = getattr(mod, k)
+                globals[k] = getattr(mod, k)
 
-importAll('graphicsItems')
-importAll('widgets', excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
+importAll('graphicsItems', globals(), locals())
+importAll('widgets', globals(), locals(), excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
 
 from .imageview import *
 from .WidgetGroup import *

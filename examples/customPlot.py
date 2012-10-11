@@ -14,7 +14,13 @@ import time
 
 class DateAxis(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
-        return [time.strftime('%b %Y', time.localtime(x)) for x in values]
+        strns = []
+        for x in values:
+            try:
+                strns.append(time.strftime('%b %Y', time.localtime(x)))
+            except ValueError:  ## Windows can't handle dates before 1970
+                strns.append('')
+        return strns
 
 class CustomViewBox(pg.ViewBox):
     def __init__(self, *args, **kwds):
