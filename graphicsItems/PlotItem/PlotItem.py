@@ -17,6 +17,7 @@ This class is very heavily featured:
     display, power spectrum, svg/png export, plot linking, and more.
 """
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+import pyqtgraph.pixmaps
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
@@ -124,9 +125,9 @@ class PlotItem(GraphicsWidget):
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
-        self.autoImageFile = os.path.join(path, 'auto.png')
-        self.lockImageFile = os.path.join(path, 'lock.png')
-        self.autoBtn = ButtonItem(self.autoImageFile, 14, self)
+        #self.autoImageFile = os.path.join(path, 'auto.png')
+        #self.lockImageFile = os.path.join(path, 'lock.png')
+        self.autoBtn = ButtonItem(pyqtgraph.pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         
