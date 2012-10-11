@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.pgcollections import OrderedDict
+from pyqtgraph import importModules
 import os, types
 from pyqtgraph.debug import printExc
 from ..Node import Node
@@ -59,29 +60,31 @@ def loadLibrary(reloadLibs=False, libPath=None):
     """Import all Node subclasses found within files in the library module."""
 
     global NODE_LIST, NODE_TREE
-    if libPath is None:
-        libPath = os.path.dirname(os.path.abspath(__file__))
+    #if libPath is None:
+        #libPath = os.path.dirname(os.path.abspath(__file__))
     
     if reloadLibs:
         reload.reloadAll(libPath)
-    
-    for f in os.listdir(libPath):
-        pathName, ext = os.path.splitext(f)
-        if ext != '.py' or '__init__' in pathName or '__pycache__' in pathName:
-            continue
-        try:
-            #print "importing from", f
-            mod = __import__(pathName, globals(), locals())
-        except:
-            printExc("Error loading flowchart library %s:" % pathName)
-            continue
         
+    mods = importModules('', globals(), locals())
+    #for f in frozenSupport.listdir(libPath):
+        #pathName, ext = os.path.splitext(f)
+        #if ext not in ('.py', '.pyc') or '__init__' in pathName or '__pycache__' in pathName:
+            #continue
+        #try:
+            ##print "importing from", f
+            #mod = __import__(pathName, globals(), locals())
+        #except:
+            #printExc("Error loading flowchart library %s:" % pathName)
+            #continue
+        
+    for name, mod in mods.items():
         nodes = []
         for n in dir(mod):
             o = getattr(mod, n)
             if isNodeClass(o):
                 #print "  ", str(o)
-                registerNodeType(o, [(pathName,)], override=reloadLibs)
+                registerNodeType(o, [(name,)], override=reloadLibs)
                 #nodes.append((o.nodeName, o))
         #if len(nodes) > 0:
             #NODE_TREE[name] = OrderedDict(nodes)
