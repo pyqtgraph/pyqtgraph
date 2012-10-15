@@ -1020,6 +1020,7 @@ class ViewBox(GraphicsWidget):
                     frac = (1.0, 1.0)
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
+                #print "   xr:", xr, "   yr:", yr
                 if xr is None or xr == (None, None):
                     useX = False
                     xr = (0,0)
@@ -1028,6 +1029,7 @@ class ViewBox(GraphicsWidget):
                     yr = (0,0)
 
                 bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
+                #print "   xr:", xr, "   yr:", yr
                 #print "   item real:", bounds
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
@@ -1041,7 +1043,7 @@ class ViewBox(GraphicsWidget):
             bounds = self.mapFromItemToView(item, bounds).boundingRect()
             #print "    ", bounds
             
-            
+            #print "   useX:", useX, "   useY:", useY
             if not any([useX, useY]):
                 continue
             
@@ -1050,12 +1052,14 @@ class ViewBox(GraphicsWidget):
                 if ang == 0 or ang == 180:
                     pass
                 elif ang == 90 or ang == 270:
-                    tmp = useX
-                    useY = useX
-                    useX = tmp
+                    useX, useY = useY, useX 
                 else:
                     continue  ## need to check for item rotations and decide how best to apply this boundary. 
+                
+            #print "   useX:", useX, "   useY:", useY
             
+            #print "   range:", range
+            #print "   bounds (r,l,t,b):", bounds.right(), bounds.left(), bounds.top(), bounds.bottom()
             
             if useY:
                 if range[1] is not None:
@@ -1067,6 +1071,8 @@ class ViewBox(GraphicsWidget):
                     range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
                 else:
                     range[0] = [bounds.left(), bounds.right()]
+                    
+            #print "   range:", range
         
         return range
         
