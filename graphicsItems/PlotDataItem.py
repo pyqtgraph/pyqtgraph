@@ -130,6 +130,8 @@ class PlotDataItem(GraphicsObject):
             'symbolBrush': (50, 50, 150),
             'pxMode': True,
             
+            'pointMode': None,
+            
             'data': None,
         }
         self.setData(*args, **kargs)
@@ -144,22 +146,30 @@ class PlotDataItem(GraphicsObject):
         return QtCore.QRectF()  ## let child items handle this
 
     def setAlpha(self, alpha, auto):
+        if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
+            return
         self.opts['alphaHint'] = alpha
         self.opts['alphaMode'] = auto
         self.setOpacity(alpha)
         #self.update()
         
     def setFftMode(self, mode):
+        if self.opts['fftMode'] == mode:
+            return
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
         self.updateItems()
     
     def setLogMode(self, xMode, yMode):
-        self.opts['logMode'] = (xMode, yMode)
+        if self.opts['logMode'] == [xMode, yMode]:
+            return
+        self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
         self.updateItems()
     
     def setPointMode(self, mode):
+        if self.opts['pointMode'] == mode:
+            return
         self.opts['pointMode'] = mode
         self.update()
         
@@ -193,6 +203,8 @@ class PlotDataItem(GraphicsObject):
         
     def setFillBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
+        if self.opts['fillBrush'] == brush:
+            return
         self.opts['fillBrush'] = brush
         self.updateItems()
         
@@ -200,16 +212,22 @@ class PlotDataItem(GraphicsObject):
         return self.setFillBrush(*args, **kargs)
     
     def setFillLevel(self, level):
+        if self.opts['fillLevel'] == level:
+            return
         self.opts['fillLevel'] = level
         self.updateItems()
 
     def setSymbol(self, symbol):
+        if self.opts['symbol'] == symbol:
+            return
         self.opts['symbol'] = symbol
         #self.scatter.setSymbol(symbol)
         self.updateItems()
         
     def setSymbolPen(self, *args, **kargs):
         pen = fn.mkPen(*args, **kargs)
+        if self.opts['symbolPen'] == pen:
+            return
         self.opts['symbolPen'] = pen
         #self.scatter.setSymbolPen(pen)
         self.updateItems()
@@ -218,21 +236,26 @@ class PlotDataItem(GraphicsObject):
     
     def setSymbolBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
+        if self.opts['symbolBrush'] == brush:
+            return
         self.opts['symbolBrush'] = brush
         #self.scatter.setSymbolBrush(brush)
         self.updateItems()
     
     
     def setSymbolSize(self, size):
+        if self.opts['symbolSize'] == size:
+            return
         self.opts['symbolSize'] = size
         #self.scatter.setSymbolSize(symbolSize)
         self.updateItems()
 
     def setDownsampling(self, ds):
-        if self.opts['downsample'] != ds:
-            self.opts['downsample'] = ds
-            self.xDisp = self.yDisp = None
-            self.updateItems()
+        if self.opts['downsample'] == ds:
+            return
+        self.opts['downsample'] = ds
+        self.xDisp = self.yDisp = None
+        self.updateItems()
         
     def setData(self, *args, **kargs):
         """
