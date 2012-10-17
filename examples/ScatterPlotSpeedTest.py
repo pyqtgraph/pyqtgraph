@@ -49,7 +49,8 @@ def update():
         s = np.clip(dt*3., 0, 1)
         fps = fps * (1-s) + (1.0/dt) * s
     p.setTitle('%0.2f fps' % fps)
-    app.processEvents()  ## force complete redraw for every plot
+    p.repaint()
+    #app.processEvents()  ## force complete redraw for every plot
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)

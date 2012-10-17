@@ -105,21 +105,27 @@ class SymbolAtlas:
         self.atlas = None     # atlas as QPixmap
         self.atlasValid = False
         
-    def getSymbolCoords(self, symbol, size, pen, brush):
-        key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
-        if key not in self.symbolMap:
-            newCoords = SymbolAtlas.SymbolCoords()
-            self.symbolMap[key] = newCoords
-            self.invalidateAtlas()
-            #try:
-                #self.addToAtlas(key)  ## squeeze this into the atlas if there is room
-            #except:
-                #self.buildAtlas()  ## otherwise, we need to rebuild
-        
-        return self.symbolMap[key]
-        
-    def invalidateAtlas(self):
-        self.atlasValid = False
+    def getSymbolCoords(self, opts):
+        """
+        Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
+        """
+        coords = np.empty(len(opts), dtype=object)
+        for i, rec in enumerate(opts):
+            symbol, size, pen, brush = rec['symbol'], rec['size'], rec['pen'], rec['brush']
+            pen = fn.mkPen(pen) if not isinstance(pen, QtGui.QPen) else pen
+            brush = fn.mkBrush(brush) if not isinstance(pen, QtGui.QBrush) else brush
+            key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
+            if key not in self.symbolMap:
+                newCoords = SymbolAtlas.SymbolCoords()
+                self.symbolMap[key] = newCoords
+                self.atlasValid = False
+                #try:
+                    #self.addToAtlas(key)  ## squeeze this into the atlas if there is room
+                #except:
+                    #self.buildAtlas()  ## otherwise, we need to rebuild
+            
+            coords[i] = self.symbolMap[key]
+        return coords
         
     def buildAtlas(self):
         # get rendered array for all symbols, keep track of avg/max width
@@ -512,29 +518,48 @@ class ScatterPlotItem(GraphicsObject):
             dataSet = self.data
         self._maxSpotWidth = 0
         self._maxSpotPxWidth = 0
-        if self.opts['pxMode']:
-            for rec in dataSet:
-                if rec['fragCoords'] is None:
-                    
-                    
-                    rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
+        invalidate = False
         self.measureSpotSizes(dataSet)
+        if self.opts['pxMode']:
+            mask = np.equal(dataSet['fragCoords'], None)
+            if np.any(mask):
+                invalidate = True
+                opts = self.getSpotOpts(dataSet[mask])
+                coords = self.fragmentAtlas.getSymbolCoords(opts)
+                dataSet['fragCoords'][mask] = coords
+                
+            #for rec in dataSet:
+                #if rec['fragCoords'] is None:
+                    #invalidate = True
+                    #rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
+        if invalidate:
+            self.invalidate()
 
-    def getSpotOpts(self, rec):
-        symbol = rec['symbol']
-        if symbol is None:
-            symbol = self.opts['symbol']
-        size = rec['size']
-        if size < 0:
-            size = self.opts['size']
-        pen = rec['pen']
-        if pen is None:
-            pen = self.opts['pen']
-        brush = rec['brush']
-        if brush is None:
-            brush = self.opts['brush']
-        return (symbol, size, fn.mkPen(pen), fn.mkBrush(brush))
-        
+    def getSpotOpts(self, recs):
+        if recs.ndim == 0:
+            rec = recs
+            symbol = rec['symbol']
+            if symbol is None:
+                symbol = self.opts['symbol']
+            size = rec['size']
+            if size < 0:
+                size = self.opts['size']
+            pen = rec['pen']
+            if pen is None:
+                pen = self.opts['pen']
+            brush = rec['brush']
+            if brush is None:
+                brush = self.opts['brush']
+            return (symbol, size, fn.mkPen(pen), fn.mkBrush(brush))
+        else:
+            recs = recs.copy()
+            recs['symbol'][np.equal(recs['symbol'], None)] = self.opts['symbol']
+            recs['size'][np.equal(recs['size'], -1)] = self.opts['size']
+            recs['pen'][np.equal(recs['pen'], None)] = fn.mkPen(self.opts['pen'])
+            recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
+            return recs
+            
+            
         
     def measureSpotSizes(self, dataSet):
         for rec in dataSet:
@@ -642,7 +667,6 @@ class ScatterPlotItem(GraphicsObject):
     def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
-        
         if self.opts['pxMode']:
             atlas = self.fragmentAtlas.getAtlas()
             #arr = fn.imageToArray(atlas.toImage(), copy=True)
