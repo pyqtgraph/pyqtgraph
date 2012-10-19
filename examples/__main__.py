@@ -31,6 +31,7 @@ examples = OrderedDict([
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROIExamples.py'),
         ('GraphicsLayout', 'GraphicsLayout.py'),
+        ('LegendItem', 'Legend.py'),
         ('Text Item', 'text.py'),
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
@@ -39,6 +40,8 @@ examples = OrderedDict([
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
         ('Isosurface', 'GLMeshItem.py'),
+        ('Image', 'GLImageItem.py'),
+        ('Scatter Plot', 'GLScatterPlotItem.py'),
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
