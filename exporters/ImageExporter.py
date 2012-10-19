@@ -63,7 +63,7 @@ class ImageExporter(Exporter):
             self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
         finally:
             self.setExportMode(False)
-        self.png.save(fileName)
         painter.end()
+        self.png.save(fileName)
         
         

@@ -54,8 +54,13 @@ class Exporter(object):
         fileName = str(fileName)
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
-        self.export(fileName=fileName, **self.fileDialog.opts)
         
+        ext = os.path.splitext(fileName)[1].lower()
+        selectedExt = str(self.fileDialog.selectedNameFilter()).lstrip('*').lower()
+        if ext != selectedExt:
+            fileName = fileName + selectedExt
+        
+        self.export(fileName=fileName, **self.fileDialog.opts)
         
     def getScene(self):
         if isinstance(self.item, pg.GraphicsScene):

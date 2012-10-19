@@ -554,10 +554,10 @@ class ViewBox(GraphicsWidget):
             ## Make corrections to range
             xr = childRange[ax]
             if xr is not None:
-                if self.state['autoPan'][0]:
+                if self.state['autoPan'][ax]:
                     x = sum(xr) * 0.5
                     #x = childRect.center().x()
-                    w2 = (targetRect[0][1]-targetRect[0][0]) / 2.
+                    w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
                     #childRect.setLeft(x-w2)
                     #childRect.setRight(x+w2)
                     childRange[ax] = [x-w2, x+w2]

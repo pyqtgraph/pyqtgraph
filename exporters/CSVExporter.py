@@ -22,7 +22,7 @@ class CSVExporter(Exporter):
     def export(self, fileName=None):
         
         if not isinstance(self.item, pg.PlotItem):
-            raise Exception("Matplotlib export currently only works with plot items")
+            raise Exception("Must have a PlotItem selected for CSV export.")
         
         if fileName is None:
             self.fileSaveDialog(filter=["*.csv", "*.tsv"])
