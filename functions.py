@@ -1469,3 +1469,52 @@ def invertQTransform(tr):
     return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     
     
+def pseudoScatter(data, spacing=None, shuffle=True):
+    """
+    Used for examining the distribution of values in a set.
+    
+    Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
+    will not have overlapping points (it will look similar to a histogram).
+    """
+    inds = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(inds)
+        
+    data = data[inds]
+    
+    if spacing is None:
+        spacing = 2.*np.std(data)/len(data)**0.5
+    s2 = spacing**2
+    
+    yvals = np.empty(len(data))
+    yvals[0] = 0
+    for i in range(1,len(data)):
+        x = data[i]     # current x value to be placed
+        x0 = data[:i]   # all x values already placed
+        y0 = yvals[:i]  # all y values already placed
+        y = 0
+        
+        dx = (x0-x)**2  # x-distance to each previous point
+        xmask = dx < s2  # exclude anything too far away
+        
+        if xmask.sum() > 0:
+            dx = dx[xmask]
+            dy = (s2 - dx)**0.5   
+            limits = np.empty((2,len(dy)))  # ranges of y-values to exclude
+            limits[0] = y0[xmask] - dy
+            limits[1] = y0[xmask] + dy    
+            
+            while True:
+                # ignore anything below this y-value
+                mask = limits[1] >= y
+                limits = limits[:,mask]
+                
+                # are we inside an excluded region?
+                mask = (limits[0] < y) & (limits[1] > y)
+                if mask.sum() == 0:
+                    break
+                y = limits[:,mask].max()
+        
+        yvals[i] = y
+    
+    return yvals[np.argsort(inds)]  ## un-shuffle values before returning
