@@ -17,12 +17,11 @@ examples = OrderedDict([
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
-    ('Video speed test', 'VideoSpeedTest.py'),
-    ('Plot speed test', 'PlotSpeedTest.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
+    ('Histograms', 'histogram.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
@@ -36,6 +35,11 @@ examples = OrderedDict([
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
         ('ViewBox', 'ViewBox.py'),
+    ])),
+    ('Benchmarks', OrderedDict([
+        ('Video speed test', 'VideoSpeedTest.py'),
+        ('Line Plot update', 'PlotSpeedTest.py'),
+        ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
