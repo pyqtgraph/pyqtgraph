@@ -642,9 +642,9 @@ class ScatterPlotItem(GraphicsObject):
             ymx = 0
         return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
 
-    def viewRangeChanged(self):
+    def viewTransformChanged(self):
         self.prepareGeometryChange()
-        GraphicsObject.viewRangeChanged(self)
+        GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
         self.fragments = None
         
