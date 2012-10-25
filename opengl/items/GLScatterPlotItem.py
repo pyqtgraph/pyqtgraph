@@ -23,7 +23,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         ------------------------------------------------------------------------
         pos                   (x,y,z) tuple of coordinate values or QVector3D
         color                 (r,g,b,a) tuple of floats (0.0-1.0) or QColor
-        size                  (float) diameter of spot in pixels
+        size                  (float) diameter of spot
         ====================  ==================================================
         """
         
