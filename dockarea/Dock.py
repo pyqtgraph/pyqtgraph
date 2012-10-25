@@ -77,6 +77,11 @@ class Dock(QtGui.QWidget, DockDrop):
             return name == 'dock'
         
     def setStretch(self, x=None, y=None):
+        """
+        Set the 'target' size for this Dock. 
+        The actual size will be determined by comparing this Dock's
+        stretch value to the rest of the docks it shares space with.
+        """
         #print "setStretch", self, x, y
         #self._stretch = (x, y)
         if x is None:
@@ -100,6 +105,10 @@ class Dock(QtGui.QWidget, DockDrop):
         #return self._stretch
 
     def hideTitleBar(self):
+        """
+        Hide the title bar for this Dock.
+        This will prevent the Dock being moved by the user.
+        """
         self.label.hide()
         self.labelHidden = True
         if 'center' in self.allowedAreas:
@@ -107,12 +116,21 @@ class Dock(QtGui.QWidget, DockDrop):
         self.updateStyle()
         
     def showTitleBar(self):
+        """
+        Show the title bar for this Dock.
+        """
         self.label.show()
         self.labelHidden = False
         self.allowedAreas.add('center')
         self.updateStyle()
         
     def setOrientation(self, o='auto', force=False):
+        """
+        Sets the orientation of the title bar for this Dock.
+        Must be one of 'auto', 'horizontal', or 'vertical'.
+        By default ('auto'), the orientation is determined
+        based on the aspect ratio of the Dock.        
+        """
         #print self.name(), "setOrientation", o, force
         if o == 'auto' and self.autoOrient:
             if self.container().type() == 'tab':
@@ -127,6 +145,7 @@ class Dock(QtGui.QWidget, DockDrop):
             self.updateStyle()
         
     def updateStyle(self):
+        ## updates orientation and appearance of title bar
         #print self.name(), "update style:", self.orientation, self.moveLabel, self.label.isVisible()
         if self.labelHidden:
             self.widgetArea.setStyleSheet(self.nStyle)
@@ -154,6 +173,10 @@ class Dock(QtGui.QWidget, DockDrop):
         return self._container
 
     def addWidget(self, widget, row=None, col=0, rowspan=1, colspan=1):
+        """
+        Add a new widget to the interior of this Dock. 
+        Each Dock uses a QGridLayout to arrange widgets within.
+        """
         if row is None:
             row = self.currentRow
         self.currentRow = max(row+1, self.currentRow)
@@ -188,7 +211,8 @@ class Dock(QtGui.QWidget, DockDrop):
 
     def __repr__(self):
         return "<Dock %s %s>" % (self.name(), self.stretch())
-            
+
+
 class DockLabel(VerticalLabel):
     
     sigClicked = QtCore.Signal(object, object)
@@ -287,76 +311,3 @@ class DockLabel(VerticalLabel):
             
             
             
-#class DockLabel(QtGui.QWidget):
-    #def __init__(self, text, dock):
-        #QtGui.QWidget.__init__(self)
-        #self._text = text
-        #self.dock = dock
-        #self.orientation = None
-        #self.setOrientation('horizontal')
-        
-    #def text(self):
-        #return self._text
-        
-    #def mousePressEvent(self, ev):
-        #if ev.button() == QtCore.Qt.LeftButton:
-            #self.pressPos = ev.pos()
-            #self.startedDrag = False
-            #ev.accept()
-        
-    #def mouseMoveEvent(self, ev):
-        #if not self.startedDrag and (ev.pos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance():
-            #self.dock.startDrag()
-        #ev.accept()
-        ##print ev.pos()
-            
-    #def mouseReleaseEvent(self, ev):
-        #ev.accept()
-        
-    #def mouseDoubleClickEvent(self, ev):
-        #if ev.button() == QtCore.Qt.LeftButton:
-            #self.dock.float()
-            
-    #def setOrientation(self, o):
-        #if self.orientation == o:
-            #return
-        #self.orientation = o
-        #self.update()
-        #self.updateGeometry()
-        
-    #def paintEvent(self, ev):
-        #p = QtGui.QPainter(self)
-        #p.setBrush(QtGui.QBrush(QtGui.QColor(100, 100, 200)))
-        #p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 100)))
-        #p.drawRect(self.rect().adjusted(0, 0, -1, -1))
-        
-        #p.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
-        
-        #if self.orientation == 'vertical':
-            #p.rotate(-90)
-            #rgn = QtCore.QRect(-self.height(), 0, self.height(), self.width())
-        #else:
-            #rgn = self.rect()
-        #align  = QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter
-            
-        #self.hint = p.drawText(rgn, align, self.text())
-        #p.end()
-        
-        #if self.orientation == 'vertical':
-            #self.setMaximumWidth(self.hint.height())
-            #self.setMaximumHeight(16777215)
-        #else:
-            #self.setMaximumHeight(self.hint.height())
-            #self.setMaximumWidth(16777215)
-
-    #def sizeHint(self):
-        #if self.orientation == 'vertical':
-            #if hasattr(self, 'hint'):
-                #return QtCore.QSize(self.hint.height(), self.hint.width())
-            #else:
-                #return QtCore.QSize(19, 50)
-        #else:
-            #if hasattr(self, 'hint'):
-                #return QtCore.QSize(self.hint.width(), self.hint.height())
-            #else:
-                #return QtCore.QSize(50, 19)
