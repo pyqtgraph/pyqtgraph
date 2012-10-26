@@ -64,6 +64,7 @@ class PlotCurveItem(GraphicsObject):
             'shadowPen': None,
             'fillLevel': None,
             'brush': None,
+            'stepMode': False,
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -223,8 +224,15 @@ class PlotCurveItem(GraphicsObject):
         
         prof.mark('copy')
         
-        if self.xData.shape != self.yData.shape:
-            raise Exception("X and Y arrays must be the same shape--got %s and %s." % (str(x.shape), str(y.shape)))
+        if 'stepMode' in kargs:
+            self.opts['stepMode'] = kargs['stepMode']
+        
+        if self.opts['stepMode'] is True:
+            if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
+                raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (str(x.shape), str(y.shape)))
+        else:
+            if self.xData.shape != self.yData.shape:  ## allow difference of 1 for step mode plots
+                raise Exception("X and Y arrays must be the same shape--got %s and %s." % (str(x.shape), str(y.shape)))
         
         self.path = None
         self.fillPath = None
@@ -267,6 +275,29 @@ class PlotCurveItem(GraphicsObject):
         ##    0(i4)
         ##
         ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+        
+        if self.opts['stepMode']:
+            ## each value in the x/y arrays generates 2 points.
+            x2 = np.empty((len(x),2), dtype=x.dtype)
+            x2[:] = x[:,np.newaxis]
+            if self.opts['fillLevel'] is None:
+                x = x2.reshape(x2.size)[1:-1]
+                y2 = np.empty((len(y),2), dtype=y.dtype)
+                y2[:] = y[:,np.newaxis]
+                y = y2.reshape(y2.size)
+            else:
+                ## If we have a fill level, add two extra points at either end
+                x = x2.reshape(x2.size)
+                y2 = np.empty((len(y)+2,2), dtype=y.dtype)
+                y2[1:-1] = y[:,np.newaxis]
+                y = y2.reshape(y2.size)[1:-1]
+                y[0] = self.opts['fillLevel']
+                y[-1] = self.opts['fillLevel']
+                
+                
+            
+        
+        
         if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
             n = x.shape[0]
             # create empty array, pad with extra space on either end
@@ -324,12 +355,21 @@ class PlotCurveItem(GraphicsObject):
         pixels = self.pixelVectors()
         if pixels == (None, None):
             pixels = [Point(0,0), Point(0,0)]
-        xmin = x.min() - pixels[0].x() * lineWidth
-        xmax = x.max() + pixels[0].x() * lineWidth
-        ymin = y.min() - abs(pixels[1].y()) * lineWidth
-        ymax = y.max() + abs(pixels[1].y()) * lineWidth
-        
             
+        xmin = x.min()
+        xmax = x.max()
+        ymin = y.min()
+        ymax = y.max()
+        
+        if self.opts['fillLevel'] is not None:
+            ymin = min(ymin, self.opts['fillLevel'])
+            ymax = max(ymax, self.opts['fillLevel'])
+            
+        xmin -= pixels[0].x() * lineWidth
+        xmax += pixels[0].x() * lineWidth
+        ymin -= abs(pixels[1].y()) * lineWidth
+        ymax += abs(pixels[1].y()) * lineWidth
+        
         return QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
 
     def paint(self, p, opt, widget):

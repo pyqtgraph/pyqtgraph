@@ -40,6 +40,24 @@
         </widget>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QCheckBox" name="pyqtCheck">
+           <property name="text">
+            <string>Force PyQt</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="pysideCheck">
+           <property name="text">
+            <string>Force PySide</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QPushButton" name="loadBtn">
          <property name="text">
           <string>Load Example</string>

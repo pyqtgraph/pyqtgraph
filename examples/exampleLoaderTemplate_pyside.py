@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './examples/exampleLoaderTemplate.ui'
 #
-# Created: Sun Sep  9 14:41:31 2012
+# Created: Fri Oct 26 07:53:57 2012
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -30,6 +30,15 @@ class Ui_Form(object):
         self.exampleTree.headerItem().setText(0, "1")
         self.exampleTree.header().setVisible(False)
         self.verticalLayout.addWidget(self.exampleTree)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.pyqtCheck = QtGui.QCheckBox(self.layoutWidget)
+        self.pyqtCheck.setObjectName("pyqtCheck")
+        self.horizontalLayout.addWidget(self.pyqtCheck)
+        self.pysideCheck = QtGui.QCheckBox(self.layoutWidget)
+        self.pysideCheck.setObjectName("pysideCheck")
+        self.horizontalLayout.addWidget(self.pysideCheck)
+        self.verticalLayout.addLayout(self.horizontalLayout)
         self.loadBtn = QtGui.QPushButton(self.layoutWidget)
         self.loadBtn.setObjectName("loadBtn")
         self.verticalLayout.addWidget(self.loadBtn)
@@ -46,5 +55,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.pyqtCheck.setText(QtGui.QApplication.translate("Form", "Force PyQt", None, QtGui.QApplication.UnicodeUTF8))
+        self.pysideCheck.setText(QtGui.QApplication.translate("Form", "Force PySide", None, QtGui.QApplication.UnicodeUTF8))
         self.loadBtn.setText(QtGui.QApplication.translate("Form", "Load Example", None, QtGui.QApplication.UnicodeUTF8))
 

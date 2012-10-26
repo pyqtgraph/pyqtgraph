@@ -48,6 +48,7 @@ class ViewBox(GraphicsWidget):
     sigRangeChanged = QtCore.Signal(object, object)
     #sigActionPositionChanged = QtCore.Signal(object)
     sigStateChanged = QtCore.Signal(object)
+    sigTransformChanged = QtCore.Signal(object)
     
     ## mouse modes
     PanMode = 3
@@ -307,10 +308,6 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['viewRange'])
             raise
     
-    #def viewportTransform(self):
-        ##return self.itemTransform(self.childGroup)[0]
-        #return self.childGroup.itemTransform(self)[0]
-    
     def targetRange(self):
         return [x[:] for x in self.state['targetRange']]  ## return copy
     
@@ -554,10 +551,10 @@ class ViewBox(GraphicsWidget):
             ## Make corrections to range
             xr = childRange[ax]
             if xr is not None:
-                if self.state['autoPan'][0]:
+                if self.state['autoPan'][ax]:
                     x = sum(xr) * 0.5
                     #x = childRect.center().x()
-                    w2 = (targetRect[0][1]-targetRect[0][0]) / 2.
+                    w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
                     #childRect.setLeft(x-w2)
                     #childRect.setRight(x+w2)
                     childRange[ax] = [x-w2, x+w2]
@@ -1127,29 +1124,15 @@ class ViewBox(GraphicsWidget):
         m = QtGui.QTransform()
         
         ## First center the viewport at 0
-        #self.childGroup.resetTransform()
-        #self.resetTransform()
-        #center = self.transform().inverted()[0].map(bounds.center())
         center = bounds.center()
-        #print "  transform to center:", center
-        #if self.state['yInverted']:
-            #m.translate(center.x(), -center.y())
-            #print "  inverted; translate", center.x(), center.y()
-        #else:
         m.translate(center.x(), center.y())
-            #print "  not inverted; translate", center.x(), -center.y()
             
         ## Now scale and translate properly
         m.scale(scale[0], scale[1])
         st = Point(vr.center())
-        #st = translate
         m.translate(-st[0], -st[1])
         
         self.childGroup.setTransform(m)
-        #self.setTransform(m)
-        #self.prepareGeometryChange()
-        
-        #self.currentScale = scale
         
         if changed[0]:
             self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
@@ -1157,6 +1140,8 @@ class ViewBox(GraphicsWidget):
             self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
         if any(changed):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
+            
+        self.sigTransformChanged.emit(self)
 
     def paint(self, p, opt, widget):
         if self.border is not None:
@@ -1164,20 +1149,6 @@ class ViewBox(GraphicsWidget):
             p.setPen(self.border)
             #p.fillRect(bounds, QtGui.QColor(0, 0, 0))
             p.drawPath(bounds)
-
-    #def saveSvg(self):
-        #pass
-        
-    #def saveImage(self):
-        #pass
-
-    #def savePrint(self):
-        #printer = QtGui.QPrinter()
-        #if QtGui.QPrintDialog(printer).exec_() == QtGui.QDialog.Accepted:
-            #p = QtGui.QPainter(printer)
-            #p.setRenderHint(p.Antialiasing)
-            #self.scene().render(p)
-            #p.end()
 
     def updateBackground(self):
         bg = self.state['background']

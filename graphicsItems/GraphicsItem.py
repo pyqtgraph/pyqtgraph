@@ -394,14 +394,17 @@ class GraphicsItem(object):
         if oldView is not None:
             #print "disconnect:", self, oldView
             oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
+            oldView.sigTransformChanged.disconnect(self.viewTransformChanged)
             self._connectedView = None
 
         ## connect to new view
         if view is not None:
             #print "connect:", self, view
             view.sigRangeChanged.connect(self.viewRangeChanged)
+            view.sigTransformChanged.connect(self.viewTransformChanged)
             self._connectedView = weakref.ref(view)
             self.viewRangeChanged()
+            self.viewTransformChanged()
         
         ## inform children that their view might have changed
         self._replaceView(oldView)
@@ -423,5 +426,11 @@ class GraphicsItem(object):
     def viewRangeChanged(self):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
+        """
+        pass
+    
+    def viewTransformChanged(self):
+        """
+        Called whenever the transformation matrix of the view has changed.
         """
         pass

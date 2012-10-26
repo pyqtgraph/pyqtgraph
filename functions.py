@@ -22,9 +22,10 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 
-from .Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import decimal, re
+import ctypes
 
 try:
     import scipy.ndimage
@@ -223,13 +224,15 @@ def mkColor(*args):
     return QtGui.QColor(*args)
 
 
-def mkBrush(*args):
+def mkBrush(*args, **kwds):
     """
     | Convenience function for constructing Brush.
     | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
     | Calling mkBrush(None) returns an invisible brush.
     """
-    if len(args) == 1:
+    if 'color' in kwds:
+        color = kwds['color']
+    elif len(args) == 1:
         arg = args[0]
         if arg is None:
             return QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -237,7 +240,7 @@ def mkBrush(*args):
             return QtGui.QBrush(arg)
         else:
             color = arg
-    if len(args) > 1:
+    elif len(args) > 1:
         color = args
     return QtGui.QBrush(mkColor(color))
 
@@ -579,7 +582,10 @@ def solveBilinearTransform(points1, points2):
     
     
     
-    
+def makeRGBA(*args, **kwds):
+    """Equivalent to makeARGB(..., useRGBA=True)"""
+    kwds['useRGBA'] = True
+    return makeARGB(*args, **kwds)
 
 def makeARGB(data, lut=None, levels=None, useRGBA=False): 
     """ 
@@ -605,7 +611,7 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
                 Lookup tables can be built using GradientWidget.
         levels - List [min, max]; optionally rescale data before converting through the
                 lookup table.   rescaled = (data-min) * len(lut) / (max-min)
-        useRGBA - If True, the data is returned in RGBA order. The default is 
+        useRGBA - If True, the data is returned in RGBA order (useful for building OpenGL textures). The default is 
                   False, which returns in BGRA order for use with QImage.
                 
     """
@@ -779,30 +785,117 @@ def makeARGB(data, lut=None, levels=None, useRGBA=False):
     return imgData, alpha
     
 
-def makeQImage(imgData, alpha):
-    """Turn an ARGB array into QImage"""
+def makeQImage(imgData, alpha=None, copy=True, transpose=True):
+    """
+    Turn an ARGB array into QImage.
+    By default, the data is copied; changes to the array will not
+    be reflected in the image. The image will be given a 'data' attribute
+    pointing to the array which shares its data to prevent python
+    freeing that memory while the image is in use.
+    
+    =========== ===================================================================
+    Arguments:
+    imgData     Array of data to convert. Must have shape (width, height, 3 or 4) 
+                and dtype=ubyte. The order of values in the 3rd axis must be 
+                (b, g, r, a).
+    alpha       If True, the QImage returned will have format ARGB32. If False,
+                the format will be RGB32. By default, _alpha_ is True if
+                array.shape[2] == 4.
+    copy        If True, the data is copied before converting to QImage.
+                If False, the new QImage points directly to the data in the array.
+                Note that the array must be contiguous for this to work.
+    transpose   If True (the default), the array x/y axes are transposed before 
+                creating the image. Note that Qt expects the axes to be in 
+                (height, width) order whereas pyqtgraph usually prefers the 
+                opposite.
+    =========== ===================================================================    
+    """
     ## create QImage from buffer
     prof = debug.Profiler('functions.makeQImage', disabled=True)
+    
+    ## If we didn't explicitly specify alpha, check the array shape.
+    if alpha is None:
+        alpha = (imgData.shape[2] == 4)
+        
+    copied = False
+    if imgData.shape[2] == 3:  ## need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
+        if copy is True:
+            d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
+            d2[:,:,:3] = imgData
+            d2[:,:,3] = 255
+            imgData = d2
+            copied = True
+        else:
+            raise Exception('Array has only 3 channels; cannot make QImage without copying.')
     
     if alpha:
         imgFormat = QtGui.QImage.Format_ARGB32
     else:
         imgFormat = QtGui.QImage.Format_RGB32
         
-    imgData = imgData.transpose((1, 0, 2))  ## QImage expects the row/column order to be opposite
-    try:
-        buf = imgData.data
-    except AttributeError:  ## happens when image data is non-contiguous
+    if transpose:
+        imgData = imgData.transpose((1, 0, 2))  ## QImage expects the row/column order to be opposite
+    
+    if not imgData.flags['C_CONTIGUOUS']:
+        if copy is False:
+            extra = ' (try setting transpose=False)' if transpose else ''
+            raise Exception('Array is not contiguous; cannot make QImage without copying.'+extra)
         imgData = np.ascontiguousarray(imgData)
-        buf = imgData.data
+        copied = True
         
-    prof.mark('1')
-    qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    prof.mark('2')
-    qimage.data = imgData
-    prof.finish()
-    return qimage
+    if copy is True and copied is False:
+        imgData = imgData.copy()
+        
+    if USE_PYSIDE:
+        ch = ctypes.c_char.from_buffer(imgData, 0)
+        img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+    else:
+        addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
+        img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+    img.data = imgData
+    return img
+    #try:
+        #buf = imgData.data
+    #except AttributeError:  ## happens when image data is non-contiguous
+        #buf = imgData.data
+        
+    #prof.mark('1')
+    #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
+    #prof.mark('2')
+    #qimage.data = imgData
+    #prof.finish()
+    #return qimage
 
+def imageToArray(img, copy=False, transpose=True):
+    """
+    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
+    the QImage is collected before the array, there may be trouble).
+    The array will have shape (width, height, (b,g,r,a)).
+    """
+    fmt = img.format()
+    ptr = img.bits()
+    if USE_PYSIDE:
+        arr = np.frombuffer(ptr, dtype=np.ubyte)
+    else:
+        ptr.setsize(img.byteCount())
+        arr = np.asarray(ptr)
+    
+    if fmt == img.Format_RGB32:
+        arr = arr.reshape(img.height(), img.width(), 3)
+    elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
+        arr = arr.reshape(img.height(), img.width(), 4)
+    
+    if copy:
+        arr = arr.copy()
+        
+    if transpose:
+        return arr.transpose((1,0,2))
+    else:
+        return arr
+    
+    
+    
 
 def rescaleData(data, scale, offset):
     newData = np.empty((data.size,), dtype=np.int)
@@ -1386,3 +1479,52 @@ def invertQTransform(tr):
     return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     
     
+def pseudoScatter(data, spacing=None, shuffle=True):
+    """
+    Used for examining the distribution of values in a set.
+    
+    Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
+    will not have overlapping points (it will look similar to a histogram).
+    """
+    inds = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(inds)
+        
+    data = data[inds]
+    
+    if spacing is None:
+        spacing = 2.*np.std(data)/len(data)**0.5
+    s2 = spacing**2
+    
+    yvals = np.empty(len(data))
+    yvals[0] = 0
+    for i in range(1,len(data)):
+        x = data[i]     # current x value to be placed
+        x0 = data[:i]   # all x values already placed
+        y0 = yvals[:i]  # all y values already placed
+        y = 0
+        
+        dx = (x0-x)**2  # x-distance to each previous point
+        xmask = dx < s2  # exclude anything too far away
+        
+        if xmask.sum() > 0:
+            dx = dx[xmask]
+            dy = (s2 - dx)**0.5   
+            limits = np.empty((2,len(dy)))  # ranges of y-values to exclude
+            limits[0] = y0[xmask] - dy
+            limits[1] = y0[xmask] + dy    
+            
+            while True:
+                # ignore anything below this y-value
+                mask = limits[1] >= y
+                limits = limits[:,mask]
+                
+                # are we inside an excluded region?
+                mask = (limits[0] < y) & (limits[1] > y)
+                if mask.sum() == 0:
+                    break
+                y = limits[:,mask].max()
+        
+        yvals[i] = y
+    
+    return yvals[np.argsort(inds)]  ## un-shuffle values before returning

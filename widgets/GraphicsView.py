@@ -42,6 +42,7 @@ class GraphicsView(QtGui.QGraphicsView):
     enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
     
     sigRangeChanged = QtCore.Signal(object, object)
+    sigTransformChanged = QtCore.Signal(object)
     sigMouseReleased = QtCore.Signal(object)
     sigSceneMouseMoved = QtCore.Signal(object)
     #sigRegionChanged = QtCore.Signal(object)
@@ -212,6 +213,7 @@ class GraphicsView(QtGui.QGraphicsView):
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
         self.sigRangeChanged.emit(self, self.range)
+        self.sigTransformChanged.emit(self)
         
         if propagate:
             for v in self.lockedViewports:

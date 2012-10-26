@@ -18,7 +18,9 @@ Contents:
     glgriditem
     glmeshitem
     glvolumeitem
+    glimageitem
     glaxisitem
     glgraphicsitem
+    glscatterplotitem
     meshdata
 

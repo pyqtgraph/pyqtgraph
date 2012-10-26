@@ -172,6 +172,8 @@ class AxisItem(GraphicsWidget):
         return asUnicode("<span style='%s'>%s</span>") % (style, s)
         
     def setHeight(self, h=None):
+        """Set the height of this axis reserved for ticks and tick labels.
+        The height of the axis label is automatically added."""
         if h is None:
             h = self.textHeight + max(0, self.tickLength)
             if self.label.isVisible():
@@ -182,6 +184,8 @@ class AxisItem(GraphicsWidget):
         
         
     def setWidth(self, w=None):
+        """Set the width of this axis reserved for ticks and tick labels.
+        The width of the axis label is automatically added."""
         if w is None:
             w = max(0, self.tickLength) + 40
             if self.label.isVisible():

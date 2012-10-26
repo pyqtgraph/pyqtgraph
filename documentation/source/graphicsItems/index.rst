@@ -29,6 +29,7 @@ Contents:
     scalebar
     labelitem
     vtickgroup
+    legenditem
     gradienteditoritem
     histogramlutitem
     gradientlegend
