@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 from .GraphicsItem import GraphicsItem
@@ -681,7 +681,7 @@ class ScatterPlotItem(GraphicsObject):
                     
             p.resetTransform()
             
-            if self.opts['useCache']:
+            if not USE_PYSIDE and self.opts['useCache']:
                 p.drawPixmapFragments(self.fragments, atlas)
             else:
                 for i in range(len(self.data)):

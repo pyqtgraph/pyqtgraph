@@ -28,6 +28,7 @@ class LegendItem(GraphicsWidget):
     def addItem(self, item, title):
         """
         Add a new entry to the legend. 
+
         =========== ========================================================
         Arguments
         item        A PlotDataItem from which the line and point style

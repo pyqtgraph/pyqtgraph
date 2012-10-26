@@ -87,7 +87,17 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
+        self.ui.pyqtCheck.toggled.connect(self.pyqtToggled)
+        self.ui.pysideCheck.toggled.connect(self.pysideToggled)
 
+    def pyqtToggled(self, b):
+        if b:
+            self.ui.pysideCheck.setChecked(False)
+        
+    def pysideToggled(self, b):
+        if b:
+            self.ui.pyqtCheck.setChecked(False)
+        
 
     def populateTree(self, root, examples):
         for key, val in examples.items():
@@ -108,12 +118,19 @@ class ExampleLoader(QtGui.QMainWindow):
     
     def loadFile(self):
         fn = self.currentFile()
+        extra = []
+        if self.ui.pyqtCheck.isChecked():
+            extra.append('pyqt')
+        elif self.ui.pysideCheck.isChecked():
+            extra.append('pyside')
+
         if fn is None:
             return
         if sys.platform.startswith('win'):
-            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"')
+            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"', *extra)
         else:
-            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn)
+
+            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
         
             
     def showFile(self):

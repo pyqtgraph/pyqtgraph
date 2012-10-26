@@ -22,7 +22,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 
-from .Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import decimal, re
 import ctypes
@@ -846,8 +846,12 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
-    img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+    if USE_PYSIDE:
+        ch = ctypes.c_char.from_buffer(imgData, 0)
+        img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+    else:
+        addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
+        img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
     img.data = imgData
     return img
     #try:
@@ -869,13 +873,19 @@ def imageToArray(img, copy=False, transpose=True):
     the QImage is collected before the array, there may be trouble).
     The array will have shape (width, height, (b,g,r,a)).
     """
-    ptr = img.bits()
-    ptr.setsize(img.byteCount())
     fmt = img.format()
+    ptr = img.bits()
+    if USE_PYSIDE:
+        arr = np.frombuffer(ptr, dtype=np.ubyte)
+    else:
+        ptr.setsize(img.byteCount())
+        arr = np.asarray(ptr)
+    
     if fmt == img.Format_RGB32:
-        arr = np.asarray(ptr).reshape(img.height(), img.width(), 3)
+        arr = arr.reshape(img.height(), img.width(), 3)
     elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
-        arr = np.asarray(ptr).reshape(img.height(), img.width(), 4)
+        arr = arr.reshape(img.height(), img.width(), 4)
+    
     if copy:
         arr = arr.copy()
         
