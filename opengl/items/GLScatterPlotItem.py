@@ -8,31 +8,47 @@ __all__ = ['GLScatterPlotItem']
 class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
-    def __init__(self, data=None):
+    def __init__(self, **kwds):
         GLGraphicsItem.__init__(self)
-        self.data = []
-        if data is not None:
-            self.setData(data)
+        self.pos = []
+        self.size = 10
+        self.color = [1.0,1.0,1.0,0.5]
+        self.pxMode = True
+        self.setData(**kwds)
     
-    def setData(self, data):
+    def setData(self, **kwds):
         """
-        Data may be either a list of dicts (one dict per point) or a numpy record array.
+        Update the data displayed by this item. All arguments are optional; 
+        for example it is allowed to update spot positions while leaving 
+        colors unchanged, etc.
         
         ====================  ==================================================
-        Allowed fields are:
+        Arguments:
         ------------------------------------------------------------------------
-        pos                   (x,y,z) tuple of coordinate values or QVector3D
-        color                 (r,g,b,a) tuple of floats (0.0-1.0) or QColor
-        size                  (float) diameter of spot
+        pos                   (N,3) array of floats specifying point locations.
+        color                 (N,4) array of floats (0.0-1.0) specifying
+                              spot colors OR a tuple of floats specifying
+                              a single color for all spots.
+        size                  (N,) array of floats specifying spot sizes or 
+                              a single value to apply to all spots.
+        pxMode                If True, spot sizes are expressed in pixels. 
+                              Otherwise, they are expressed in item coordinates.
         ====================  ==================================================
         """
-        
-        
-        self.data = data
+        args = ['pos', 'color', 'size', 'pxMode']
+        for k in kwds.keys():
+            if k not in args:
+                raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
+        self.pos = kwds.get('pos', self.pos)
+        self.color = kwds.get('color', self.color)
+        self.size = kwds.get('size', self.size)
+        self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
 
         
     def initializeGL(self):
+        
+        ## Generate texture for rendering points
         w = 64
         def fn(x,y):
             r = ((x-w/2.)**2 + (y-w/2.)**2) ** 0.5
@@ -73,28 +89,49 @@ class GLScatterPlotItem(GLGraphicsItem):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         
-        for pt in self.data:
-            pos = pt['pos']
-            try:
-                color = pt['color']
-            except KeyError:
-                color = (1,1,1,1)
-            try:
-                size = pt['size']
-            except KeyError:
-                size = 10
-                
-            if isinstance(color, QtGui.QColor):
-                color = fn.glColor(color)
-                
-            pxSize = self.view().pixelSize(QtGui.QVector3D(*pos))
+        if self.pxMode:     
+            glVertexPointerf(self.pos)
+            if isinstance(self.color, np.ndarray):
+                glColorPointerf(self.color)
+            else:
+                if isinstance(self.color, QtGui.QColor):
+                    glColor4f(*fn.glColor(self.color))
+                else:
+                    glColor4f(*self.color)
             
-            glPointSize(size / pxSize)
-            glBegin( GL_POINTS )
-            glColor4f(*color)  # x is blue
-            #glNormal3f(size, 0, 0)
-            glVertex3f(*pos)
-            glEnd()
+            if isinstance(self.size, np.ndarray):
+                raise Exception('Array size not yet supported in pxMode (hopefully soon)')
+            
+            glPointSize(self.size)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_COLOR_ARRAY)
+            glDrawArrays(GL_POINTS, 0, len(self.pos))
+        else:
+            
+            
+            for i in range(len(self.pos)):
+                pos = self.pos[i]
+                
+                if isinstance(self.color, np.ndarray):
+                    color = self.color[i]
+                else:
+                    color = self.color
+                if isinstance(self.color, QtGui.QColor):
+                    color = fn.glColor(self.color)
+                    
+                if isinstance(self.size, np.ndarray):
+                    size = self.size[i]
+                else:
+                    size = self.size
+                    
+                pxSize = self.view().pixelSize(QtGui.QVector3D(*pos))
+                
+                glPointSize(size / pxSize)
+                glBegin( GL_POINTS )
+                glColor4f(*color)  # x is blue
+                #glNormal3f(size, 0, 0)
+                glVertex3f(*pos)
+                glEnd()
 
         
         
