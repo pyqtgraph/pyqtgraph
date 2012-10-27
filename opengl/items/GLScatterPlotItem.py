@@ -1,5 +1,7 @@
 from OpenGL.GL import *
+from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
+from .. import shaders
 from pyqtgraph import QtGui
 import numpy as np
 
@@ -14,6 +16,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
         self.pxMode = True
+        #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
     
     def setData(self, **kwds):
@@ -39,13 +42,16 @@ class GLScatterPlotItem(GLGraphicsItem):
         for k in kwds.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
-        self.pos = kwds.get('pos', self.pos)
-        self.color = kwds.get('color', self.color)
-        self.size = kwds.get('size', self.size)
+            
+        args.remove('pxMode')
+        for arg in args:
+            if arg in kwds:
+                setattr(self, arg, kwds[arg])
+                #self.vbo.pop(arg, None)
+                
         self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
 
-        
     def initializeGL(self):
         
         ## Generate texture for rendering points
@@ -65,73 +71,105 @@ class GLScatterPlotItem(GLGraphicsItem):
         glBindTexture(GL_TEXTURE_2D, self.pointTexture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
         
-    def paint(self):
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        self.shader = shaders.getShaderProgram('point_sprite')
+        
+    #def getVBO(self, name):
+        #if name not in self.vbo:
+            #self.vbo[name] = vbo.VBO(getattr(self, name).astype('f'))
+        #return self.vbo[name]
+        
+    def setupGLState(self):
+        """Prepare OpenGL state for drawing. This function is called immediately before painting."""
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  ## requires z-sorting to render properly.
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
         glEnable( GL_BLEND )
         glEnable( GL_ALPHA_TEST )
-        glEnable( GL_POINT_SMOOTH )
+        glDisable( GL_DEPTH_TEST )
+        
+        #glEnable( GL_POINT_SMOOTH )
 
-        glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
+        #glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
         #glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, (0, 0, -1e-3))
         #glPointParameterfv(GL_POINT_SIZE_MAX, (65500,))
         #glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
         
+    def paint(self):
+        self.setupGLState()
+        
         glEnable(GL_POINT_SPRITE)
+        
         glActiveTexture(GL_TEXTURE0)
         glEnable( GL_TEXTURE_2D )
         glBindTexture(GL_TEXTURE_2D, self.pointTexture)
     
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE)
         #glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)    ## use texture color exactly
-        glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE )  ## texture modulates current color
+        #glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE )  ## texture modulates current color
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glEnable(GL_PROGRAM_POINT_SIZE)
         
-        if self.pxMode:     
-            glVertexPointerf(self.pos)
-            if isinstance(self.color, np.ndarray):
-                glColorPointerf(self.color)
-            else:
-                if isinstance(self.color, QtGui.QColor):
-                    glColor4f(*fn.glColor(self.color))
-                else:
-                    glColor4f(*self.color)
             
-            if isinstance(self.size, np.ndarray):
-                raise Exception('Array size not yet supported in pxMode (hopefully soon)')
-            
-            glPointSize(self.size)
+        with self.shader:
+            #glUniform1i(self.shader.uniform('texture'), 0)  ## inform the shader which texture to use
             glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_COLOR_ARRAY)
-            glDrawArrays(GL_POINTS, 0, len(self.pos))
-        else:
+            try:
+                glVertexPointerf(self.pos)
             
-            
-            for i in range(len(self.pos)):
-                pos = self.pos[i]
-                
                 if isinstance(self.color, np.ndarray):
-                    color = self.color[i]
+                    glEnableClientState(GL_COLOR_ARRAY)
+                    glColorPointerf(self.color)
                 else:
-                    color = self.color
-                if isinstance(self.color, QtGui.QColor):
-                    color = fn.glColor(self.color)
-                    
-                if isinstance(self.size, np.ndarray):
-                    size = self.size[i]
-                else:
-                    size = self.size
-                    
-                pxSize = self.view().pixelSize(QtGui.QVector3D(*pos))
+                    if isinstance(self.color, QtGui.QColor):
+                        glColor4f(*fn.glColor(self.color))
+                    else:
+                        glColor4f(*self.color)
                 
-                glPointSize(size / pxSize)
-                glBegin( GL_POINTS )
-                glColor4f(*color)  # x is blue
-                #glNormal3f(size, 0, 0)
-                glVertex3f(*pos)
-                glEnd()
+                if not self.pxMode or isinstance(self.size, np.ndarray):
+                    glEnableClientState(GL_NORMAL_ARRAY)
+                    norm = np.empty(self.pos.shape)
+                    if self.pxMode:
+                        norm[:,0] = self.size
+                    else:
+                        gpos = self.mapToView(self.pos.transpose()).transpose()
+                        pxSize = self.view().pixelSize(gpos)
+                        norm[:,0] = self.size / pxSize
+                    
+                    glNormalPointerf(norm)
+                else:
+                    glPointSize(self.size)
+                glDrawArrays(GL_POINTS, 0, len(self.pos))
+            finally:
+                glDisableClientState(GL_NORMAL_ARRAY)
+                glDisableClientState(GL_VERTEX_ARRAY)
+                glDisableClientState(GL_COLOR_ARRAY)
+                #posVBO.unbind()
+                
+        #for i in range(len(self.pos)):
+            #pos = self.pos[i]
+            
+            #if isinstance(self.color, np.ndarray):
+                #color = self.color[i]
+            #else:
+                #color = self.color
+            #if isinstance(self.color, QtGui.QColor):
+                #color = fn.glColor(self.color)
+                
+            #if isinstance(self.size, np.ndarray):
+                #size = self.size[i]
+            #else:
+                #size = self.size
+                
+            #pxSize = self.view().pixelSize(QtGui.QVector3D(*pos))
+            
+            #glPointSize(size / pxSize)
+            #glBegin( GL_POINTS )
+            #glColor4f(*color)  # x is blue
+            ##glNormal3f(size, 0, 0)
+            #glVertex3f(*pos)
+            #glEnd()
 
         
         

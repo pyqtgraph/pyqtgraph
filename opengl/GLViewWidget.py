@@ -1,8 +1,8 @@
 from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
 import numpy as np
-
-Vector = QtGui.QVector3D
+from pyqtgraph import Vector
+##Vector = QtGui.QVector3D
 
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
@@ -181,10 +181,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def pixelSize(self, pos):
         """
         Return the approximate size of a screen pixel at the location pos
-        
+        Pos may be a Vector or an (N,3) array of locations
         """
         cam = self.cameraPosition()
-        dist = (pos-cam).length()
+        if isinstance(pos, np.ndarray) and pos.ndim == 2:
+            cam = np.array(cam).reshape(1,3)
+            dist = ((pos-cam)**2).sum(axis=1)**0.5
+        else:
+            dist = (pos-cam).length()
         xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
         return xDist / self.width()
         

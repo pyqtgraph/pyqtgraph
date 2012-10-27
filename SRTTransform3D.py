@@ -6,12 +6,12 @@ import pyqtgraph as pg
 import numpy as np
 import scipy.linalg
 
-class SRTTransform3D(QtGui.QMatrix4x4):
+class SRTTransform3D(pg.Transform3D):
     """4x4 Transform matrix that can always be represented as a combination of 3 matrices: scale * rotate * translate
     This transform has no shear; angles are always preserved.
     """
     def __init__(self, init=None):
-        QtGui.QMatrix4x4.__init__(self)
+        pg.Transform3D.__init__(self)
         self.reset()
         if init is None:
             return
@@ -190,11 +190,11 @@ class SRTTransform3D(QtGui.QMatrix4x4):
         self.update()
 
     def update(self):
-        QtGui.QMatrix4x4.setToIdentity(self)
+        pg.Transform3D.setToIdentity(self)
         ## modifications to the transform are multiplied on the right, so we need to reverse order here.
-        QtGui.QMatrix4x4.translate(self, *self._state['pos'])
-        QtGui.QMatrix4x4.rotate(self, self._state['angle'], *self._state['axis'])
-        QtGui.QMatrix4x4.scale(self, *self._state['scale'])
+        pg.Transform3D.translate(self, *self._state['pos'])
+        pg.Transform3D.rotate(self, self._state['angle'], *self._state['axis'])
+        pg.Transform3D.scale(self, *self._state['scale'])
 
     def __repr__(self):
         return str(self.saveState())
