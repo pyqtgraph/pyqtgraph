@@ -139,7 +139,8 @@ class GLScatterPlotItem(GLGraphicsItem):
                     
                     glNormalPointerf(norm)
                 else:
-                    glPointSize(self.size)
+                    glNormal3f(self.size,0,0)
+                    #glPointSize(self.size)
                 glDrawArrays(GL_POINTS, 0, len(self.pos))
             finally:
                 glDisableClientState(GL_NORMAL_ARRAY)
