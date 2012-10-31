@@ -36,12 +36,16 @@ img1a = pg.ImageItem(arr)
 v1a.addItem(img1a)
 img1b = pg.ImageItem()
 v1b.addItem(img1b)
+v1a.disableAutoRange('xy')
+v1b.disableAutoRange('xy')
+v1a.autoRange()
+v1b.autoRange()
 
 rois = []
 rois.append(pg.RectROI([20, 20], [20, 20], pen=(0,9)))
 rois[-1].addRotateHandle([1,0], [0.5, 0.5])
 rois.append(pg.LineROI([0, 60], [20, 80], width=5, pen=(1,9)))
-rois.append(pg.MultiLineROI([[20, 90], [50, 60], [60, 90]], width=5, pen=(2,9)))
+rois.append(pg.MultiRectROI([[20, 90], [50, 60], [60, 90]], width=5, pen=(2,9)))
 rois.append(pg.EllipseROI([60, 10], [30, 20], pen=(3,9)))
 rois.append(pg.CircleROI([80, 50], [20, 20], pen=(4,9)))
 #rois.append(pg.LineSegmentROI([[110, 50], [20, 20]], pen=(5,9)))
@@ -70,6 +74,10 @@ r2a = pg.PolyLineROI([[0,0], [10,10], [10,30], [30,10]], closed=True)
 v2a.addItem(r2a)
 r2b = pg.PolyLineROI([[0,-20], [10,-10], [10,-30]], closed=False)
 v2a.addItem(r2b)
+v2a.disableAutoRange('xy')
+#v2b.disableAutoRange('xy')
+v2a.autoRange()
+#v2b.autoRange()
 
 text = """Building custom ROI types<Br>
 ROIs can be built with a variety of different handle types<br>
@@ -107,6 +115,9 @@ r3b.addRotateHandle([0, 1], [1, 0])
 r3b.addScaleRotateHandle([0, 0.5], [0.5, 0.5])
 r3b.addScaleRotateHandle([1, 0.5], [0.5, 0.5])
 
+v3.disableAutoRange('xy')
+v3.autoRange()
+
 
 text = """Transforming objects with ROI"""
 w4 = w.addLayout(row=1, col=1)
@@ -120,6 +131,9 @@ r4.addRotateHandle([0,1], [0.5, 0.5])
 img4 = pg.ImageItem(arr)
 v4.addItem(r4)
 img4.setParentItem(r4)
+
+v4.disableAutoRange('xy')
+v4.autoRange()
 
 
 
