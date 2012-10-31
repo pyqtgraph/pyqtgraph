@@ -516,6 +516,7 @@ class ListParameter(Parameter):
         if opts.get('limits', None) is None:
             opts['limits'] = []
         Parameter.__init__(self, **opts)
+        self.setLimits(opts['limits'])
         
     def setLimits(self, limits):
         self.forward, self.reverse = self.mapping(limits)
