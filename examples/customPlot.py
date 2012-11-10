@@ -15,9 +15,18 @@ import time
 class DateAxis(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
         strns = []
+        rng = max(values)-min(values)
+        if rng < 120:
+            return pg.AxisItem.tickStrings(self, values, scale, spacing)
+        elif rng >= 120 and rng < 3600*24:
+            string = '%H:%M:%S'
+        elif rng >= 3600*24 and rng < 3600*24*30:
+            string = '%d'
+        elif rng >= 3600*24*30:
+            string = '%b %Y'
         for x in values:
             try:
-                strns.append(time.strftime('%b %Y', time.localtime(x)))
+                strns.append(time.strftime(string, time.localtime(x)))
             except ValueError:  ## Windows can't handle dates before 1970
                 strns.append('')
         return strns
