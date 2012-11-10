@@ -165,6 +165,7 @@ from .WidgetGroup import *
 from .Point import Point
 from .Vector import Vector
 from .SRTTransform import SRTTransform
+from .Transform3D import Transform3D
 from .SRTTransform3D import SRTTransform3D
 from .functions import *
 from .graphicsWindows import *

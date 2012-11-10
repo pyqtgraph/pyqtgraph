@@ -506,12 +506,14 @@ class PlotItem(GraphicsWidget):
             self.curves.append(item)
             #self.addItem(c)
             
+        if hasattr(item, 'setLogMode'):
+            item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
+            
         if isinstance(item, PlotDataItem):
             ## configure curve for this plot
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
             item.setFftMode(self.ctrl.fftCheck.isChecked())
-            item.setLogMode(self.ctrl.logXCheck.isChecked(), self.ctrl.logYCheck.isChecked())
             item.setDownsampling(self.downsampleMode())
             item.setPointMode(self.pointMode())
             
@@ -526,6 +528,7 @@ class PlotItem(GraphicsWidget):
             #c.connect(c, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
+            
 
     def addDataItem(self, item, *args):
         print("PlotItem.addDataItem is deprecated. Use addItem instead.")
@@ -878,8 +881,9 @@ class PlotItem(GraphicsWidget):
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
         y = self.ctrl.logYCheck.isChecked()
-        for c in self.curves:
-            c.setLogMode(x,y)
+        for i in self.items:
+            if hasattr(i, 'setLogMode'):
+                i.setLogMode(x,y)
         self.getAxis('bottom').setLogMode(x)
         self.getAxis('top').setLogMode(x)
         self.getAxis('left').setLogMode(y)

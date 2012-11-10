@@ -434,3 +434,17 @@ class GraphicsItem(object):
         Called whenever the transformation matrix of the view has changed.
         """
         pass
+    
+    #def prepareGeometryChange(self):
+        #self._qtBaseClass.prepareGeometryChange(self)
+        #self.informViewBoundsChanged()
+        
+    def informViewBoundsChanged(self):
+        """
+        Inform this item's container ViewBox that the bounds of this item have changed.
+        This is used by ViewBox to react if auto-range is enabled.
+        """
+        view = self.getViewBox()
+        if view is not None and hasattr(view, 'implements') and view.implements('ViewBox'):
+            view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
+        

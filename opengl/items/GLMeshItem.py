@@ -28,7 +28,7 @@ class GLMeshItem(GLGraphicsItem):
         GLGraphicsItem.__init__(self)
         
     def initializeGL(self):
-        self.shader = shaders.getShader('balloon')
+        self.shader = shaders.getShaderProgram('balloon')
         
         l = glGenLists(1)
         self.triList = l
@@ -72,7 +72,9 @@ class GLMeshItem(GLGraphicsItem):
 
                 
     def paint(self):
-        shaders.glUseProgram(self.shader)
-        glCallList(self.triList)
-        shaders.glUseProgram(0)
+        with self.shader:
+            glCallList(self.triList)
+        #shaders.glUseProgram(self.shader)
+        #glCallList(self.triList)
+        #shaders.glUseProgram(0)
         #glCallList(self.meshList)

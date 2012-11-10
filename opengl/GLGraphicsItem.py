@@ -1,4 +1,5 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph import Transform3D
 
 class GLGraphicsItem(QtCore.QObject):
     def __init__(self, parentItem=None):
@@ -6,7 +7,7 @@ class GLGraphicsItem(QtCore.QObject):
         self.__parent = None
         self.__view = None
         self.__children = set()
-        self.__transform = QtGui.QMatrix4x4()
+        self.__transform = Transform3D()
         self.__visible = True
         self.setParentItem(parentItem)
         self.setDepthValue(0)
@@ -50,7 +51,7 @@ class GLGraphicsItem(QtCore.QObject):
         return self.__depthValue
         
     def setTransform(self, tr):
-        self.__transform = tr
+        self.__transform = Transform3D(tr)
         self.update()
         
     def resetTransform(self):
@@ -73,12 +74,22 @@ class GLGraphicsItem(QtCore.QObject):
     def transform(self):
         return self.__transform
         
+    def viewTransform(self):
+        tr = self.__transform
+        p = self
+        while True:
+            p = p.parentItem()
+            if p is None:
+                break
+            tr = p.transform() * tr
+        return Transform3D(tr)
+        
     def translate(self, dx, dy, dz, local=False):
         """
         Translate the object by (*dx*, *dy*, *dz*) in its parent's coordinate system.
         If *local* is True, then translation takes place in local coordinates.
         """
-        tr = QtGui.QMatrix4x4()
+        tr = Transform3D()
         tr.translate(dx, dy, dz)
         self.applyTransform(tr, local=local)
         
@@ -88,7 +99,7 @@ class GLGraphicsItem(QtCore.QObject):
         *angle* is in degrees.
         
         """
-        tr = QtGui.QMatrix4x4()
+        tr = Transform3D()
         tr.rotate(angle, x, y, z)
         self.applyTransform(tr, local=local)
     
@@ -97,7 +108,7 @@ class GLGraphicsItem(QtCore.QObject):
         Scale the object by (*dx*, *dy*, *dz*) in its local coordinate system.
         If *local* is False, then scale takes place in the parent's coordinates.
         """
-        tr = QtGui.QMatrix4x4()
+        tr = Transform3D()
         tr.scale(x, y, z)
         self.applyTransform(tr, local=local)
     
@@ -138,8 +149,29 @@ class GLGraphicsItem(QtCore.QObject):
             return
         v.updateGL()
         
+    def mapToParent(self, point):
+        tr = self.transform()
+        if tr is None:
+            return point
+        return tr.map(point)
+        
     def mapFromParent(self, point):
         tr = self.transform()
         if tr is None:
             return point
         return tr.inverted()[0].map(point)
+        
+    def mapToView(self, point):
+        tr = self.viewTransform()
+        if tr is None:
+            return point
+        return tr.map(point)
+        
+    def mapFromView(self, point):
+        tr = self.viewTransform()
+        if tr is None:
+            return point
+        return tr.inverted()[0].map(point)
+        
+        
+        

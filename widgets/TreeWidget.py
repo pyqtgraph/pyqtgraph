@@ -201,8 +201,10 @@ class TreeWidget(QtGui.QTreeWidget):
         for item in items:
             self.prepareMove(item)
         QtGui.QTreeWidget.clear(self)
-        for item in items:
-            self.informTreeWidgetChange(item)
+        
+        ## Why do we want to do this? It causes RuntimeErrors. 
+        #for item in items:
+            #self.informTreeWidgetChange(item)
         
             
 class TreeWidgetItem(QtGui.QTreeWidgetItem):

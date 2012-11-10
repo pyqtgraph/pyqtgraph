@@ -11,6 +11,7 @@ __all__ = ['TickSlider', 'GradientWidget', 'BlackWhiteSlider']
 class GradientWidget(GraphicsView):
     
     sigGradientChanged = QtCore.Signal(object)
+    sigGradientChangeFinished = QtCore.Signal(object)
     
     def __init__(self, parent=None, orientation='bottom',  *args, **kargs):
         GraphicsView.__init__(self, parent, useOpenGL=False, background=None)
@@ -18,6 +19,7 @@ class GradientWidget(GraphicsView):
         kargs['tickPen'] = 'k'
         self.item = GradientEditorItem(*args, **kargs)
         self.item.sigGradientChanged.connect(self.sigGradientChanged)
+        self.item.sigGradientChangeFinished.connect(self.sigGradientChangeFinished)
         self.setCentralItem(self.item)
         self.setOrientation(orientation)
         self.setCacheMode(self.CacheNone)

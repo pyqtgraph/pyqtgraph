@@ -57,3 +57,8 @@ class Vector(QtGui.QVector3D):
         else:
             raise IndexError("Point has no index %s" % str(i))
         
+    def __iter__(self):
+        yield(self.x())
+        yield(self.y())
+        yield(self.z())
+        
