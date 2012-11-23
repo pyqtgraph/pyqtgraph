@@ -166,7 +166,7 @@ class ViewBox(GraphicsWidget):
             ViewBox.NamedViews[name] = self
             ViewBox.updateAllViewLists()
             sid = id(self)
-            self.destroyed.connect(lambda: ViewBox.forgetView(sid, name) if ViewBox is not None else None)
+            self.destroyed.connect(lambda: ViewBox.forgetView(sid, name) if (ViewBox is not None and 'sid' in locals() and 'name' in locals()) else None)
             #self.destroyed.connect(self.unregister)
 
     def unregister(self):
@@ -1154,7 +1154,7 @@ class ViewBox(GraphicsWidget):
         if any(changed):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             
-        self.sigTransformChanged.emit(self)
+        self.sigTransformChanged.emit(self)  ## segfaults here: 1
 
     def paint(self, p, opt, widget):
         if self.border is not None:

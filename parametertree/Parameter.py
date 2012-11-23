@@ -460,7 +460,10 @@ class Parameter(QtCore.QObject):
         self.childs.pop(self.childs.index(child))
         child.parentChanged(None)
         self.sigChildRemoved.emit(self, child)
-        child.sigTreeStateChanged.disconnect(self.treeStateChanged)
+        try:
+            child.sigTreeStateChanged.disconnect(self.treeStateChanged)
+        except TypeError:  ## already disconnected
+            pass
 
     def clearChildren(self):
         """Remove all child parameters."""
@@ -550,6 +553,8 @@ class Parameter(QtCore.QObject):
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..
         #print type(self), attr
+        if 'names' not in self.__dict__:
+            raise AttributeError(attr)
         if attr in self.names:
             return self.param(attr)
         else:

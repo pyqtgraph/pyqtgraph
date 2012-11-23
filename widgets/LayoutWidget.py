@@ -56,8 +56,13 @@ class LayoutWidget(QtGui.QWidget):
         """
         Add a widget to the layout and place it in the next available cell (or in the cell specified).
         """
-        if row is None:
+        if row == 'next':
+            self.nextRow()
             row = self.currentRow
+        elif row is None:
+            row = self.currentRow
+            
+        
         if col is None:
             col = self.nextCol(colspan)
             
