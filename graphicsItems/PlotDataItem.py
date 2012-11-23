@@ -317,6 +317,8 @@ class PlotDataItem(GraphicsObject):
         ## pull in all style arguments. 
         ## Use self.opts to fill in anything not present in kargs.
         
+        if 'name' in kargs:
+            self.opts['name'] = kargs['name']
 
         ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
         

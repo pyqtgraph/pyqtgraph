@@ -65,6 +65,7 @@ class PlotCurveItem(GraphicsObject):
             'fillLevel': None,
             'brush': None,
             'stepMode': False,
+            'name': None
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -237,6 +238,9 @@ class PlotCurveItem(GraphicsObject):
         self.path = None
         self.fillPath = None
         #self.xDisp = self.yDisp = None
+        
+        if 'name' in kargs:
+            self.opts['name'] = kargs['name']
         
         if 'pen' in kargs:
             self.setPen(kargs['pen'])

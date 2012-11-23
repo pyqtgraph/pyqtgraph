@@ -6,13 +6,14 @@ from pyqtgraph.Qt import QtCore, QtGui
 
 plt = pg.plot()
 
-l = pg.LegendItem((100,60), (60,10))  # args are (size, position)
-l.setParentItem(plt.graphicsItem())   # Note we do NOT call plt.addItem in this case
+plt.addLegend()
+#l = pg.LegendItem((100,60), offset=(70,30))  # args are (size, offset)
+#l.setParentItem(plt.graphicsItem())   # Note we do NOT call plt.addItem in this case
 
-c1 = plt.plot([1,3,2,4], pen='r')
-c2 = plt.plot([2,1,4,3], pen='g')
-l.addItem(c1, 'red plot')
-l.addItem(c2, 'green plot')
+c1 = plt.plot([1,3,2,4], pen='r', name='red plot')
+c2 = plt.plot([2,1,4,3], pen='g', fillLevel=0, fillBrush=(255,255,255,30), name='green plot')
+#l.addItem(c1, 'red plot')
+#l.addItem(c2, 'green plot')
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
