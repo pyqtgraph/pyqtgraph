@@ -43,9 +43,12 @@ examples = OrderedDict([
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
-        ('Isosurface', 'GLMeshItem.py'),
-        ('Image', 'GLImageItem.py'),
+        ('Isosurface', 'GLIsosurface.py'),
+        ('Surface Plot', 'GLSurfacePlot.py'),
         ('Scatter Plot', 'GLScatterPlotItem.py'),
+        ('Shaders', 'GLshaders.py'),
+        ('Mesh', 'GLMeshItem.py'),
+        ('Image', 'GLImageItem.py'),
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
@@ -127,9 +130,8 @@ class ExampleLoader(QtGui.QMainWindow):
         if fn is None:
             return
         if sys.platform.startswith('win'):
-            os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, '"' + fn + '"', *extra)
+            os.spawnl(os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"', *extra)
         else:
-
             os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
         
             

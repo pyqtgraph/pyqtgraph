@@ -13,7 +13,7 @@ class GLVolumeItem(GLGraphicsItem):
     """
     
     
-    def __init__(self, data, sliceDensity=1, smooth=True):
+    def __init__(self, data, sliceDensity=1, smooth=True, glOptions='translucent'):
         """
         ==============  =======================================================================================
         **Arguments:**
@@ -27,6 +27,7 @@ class GLVolumeItem(GLGraphicsItem):
         self.smooth = smooth
         self.data = data
         GLGraphicsItem.__init__(self)
+        self.setGLOptions(glOptions)
         
     def initializeGL(self):
         glEnable(GL_TEXTURE_3D)
@@ -62,15 +63,16 @@ class GLVolumeItem(GLGraphicsItem):
 
                 
     def paint(self):
+        self.setupGLState()
         
         glEnable(GL_TEXTURE_3D)
         glBindTexture(GL_TEXTURE_3D, self.texture)
         
-        glEnable(GL_DEPTH_TEST)
+        #glEnable(GL_DEPTH_TEST)
         #glDisable(GL_CULL_FACE)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
         glColor4f(1,1,1,1)
 
         view = self.view()

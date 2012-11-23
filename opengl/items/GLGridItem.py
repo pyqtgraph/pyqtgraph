@@ -11,8 +11,9 @@ class GLGridItem(GLGraphicsItem):
     Displays a wire-grame grid. 
     """
     
-    def __init__(self, size=None, color=None):
+    def __init__(self, size=None, color=None, glOptions='translucent'):
         GLGraphicsItem.__init__(self)
+        self.setGLOptions(glOptions)
         if size is None:
             size = QtGui.QVector3D(1,1,1)
         self.setSize(size=size)
@@ -34,10 +35,10 @@ class GLGridItem(GLGraphicsItem):
     
     
     def paint(self):
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
+        self.setupGLState()
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
         glEnable( GL_POINT_SMOOTH )
         #glDisable( GL_DEPTH_TEST )
         glBegin( GL_LINES )

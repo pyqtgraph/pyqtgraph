@@ -12,8 +12,16 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Export options
 
     """
+    
+    ShareWidget = None
+    
     def __init__(self, parent=None):
-        QtOpenGL.QGLWidget.__init__(self, parent)
+        if GLViewWidget.ShareWidget is None:
+            ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
+            GLViewWidget.ShareWidget = QtOpenGL.QGLWidget()
+            
+        QtOpenGL.QGLWidget.__init__(self, parent, GLViewWidget.ShareWidget)
+        
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
         self.opts = {
@@ -131,6 +139,16 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
             
+    def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None):
+        if distance is not None:
+            self.opts['distance'] = distance
+        if elevation is not None:
+            self.opts['elevation'] = elevation
+        if azimuth is not None:
+            self.opts['azimuth'] = azimuth
+        self.update()
+        
+        
         
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""

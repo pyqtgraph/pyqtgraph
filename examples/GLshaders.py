@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Simple examples demonstrating the use of GLMeshItem.
-
+Demonstration of some of the shader programs included with pyqtgraph.
 """
+
+
 
 ## Add path to library (just for examples; you do not need this)
 import sys, os
@@ -16,7 +17,7 @@ app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 
-w.setCameraPosition(distance=40)
+w.setCameraPosition(distance=15, azimuth=-90)
 
 g = gl.GLGridItem()
 g.scale(2,2,1)
@@ -25,64 +26,38 @@ w.addItem(g)
 import numpy as np
 
 
-## Example 1:
-## Array of vertex positions and array of vertex indexes defining faces
-## Colors are specified per-face
+md = gl.MeshData.sphere(rows=10, cols=20)
+x = np.linspace(-8, 8, 6)
 
-verts = np.array([
-    [0, 0, 0],
-    [2, 0, 0],
-    [1, 2, 0],
-    [1, 1, 1],
-])
-faces = np.array([
-    [0, 1, 2],
-    [0, 1, 3],
-    [0, 2, 3],
-    [1, 2, 3]
-])
-colors = np.array([
-    [1, 0, 0, 0.3],
-    [0, 1, 0, 0.3],
-    [0, 0, 1, 0.3],
-    [1, 1, 0, 0.3]
-])
-
-## Mesh item will automatically compute face normals.
-m1 = gl.GLMeshItem(vertexes=verts, faces=faces, faceColors=colors, smooth=False)
-m1.translate(5, 5, 0)
-m1.setGLOptions('additive')
+m1 = gl.GLMeshItem(meshdata=md, smooth=True, color=(1, 0, 0, 0.2), shader='balloon', glOptions='additive')
+m1.translate(x[0], 0, 0)
+m1.scale(1, 1, 2)
 w.addItem(m1)
 
-## Example 2:
-## Array of vertex positions, three per face
-## Colors are specified per-vertex
-
-verts = verts[faces]  ## Same mesh geometry as example 2, but now we are passing in 12 vertexes
-colors = np.random.random(size=(verts.shape[0], 3, 4))
-#colors[...,3] = 1.0
-
-m2 = gl.GLMeshItem(vertexes=verts, vertexColors=colors, smooth=False, shader='balloon')
-m2.translate(-5, 5, 0)
+m2 = gl.GLMeshItem(meshdata=md, smooth=True, shader='normalColor', glOptions='opaque')
+m2.translate(x[1], 0, 0)
+m2.scale(1, 1, 2)
 w.addItem(m2)
 
-
-## Example 3:
-## icosahedron
-
-md = gl.MeshData.sphere(rows=10, cols=20)
-#colors = np.random.random(size=(md.faceCount(), 4))
-#colors[:,3] = 0.3
-#colors[100:] = 0.0
-colors = np.ones((md.faceCount(), 4), dtype=float)
-colors[::2,0] = 0
-colors[:,1] = np.linspace(0, 1, colors.shape[0])
-md.setFaceColors(colors)
-m3 = gl.GLMeshItem(meshdata=md, smooth=False)#, shader='balloon')
-
-#m3.translate(-5, -5, 0)
+m3 = gl.GLMeshItem(meshdata=md, smooth=True, shader='viewNormalColor', glOptions='opaque')
+m3.translate(x[2], 0, 0)
+m3.scale(1, 1, 2)
 w.addItem(m3)
 
+m4 = gl.GLMeshItem(meshdata=md, smooth=True, shader='shaded', glOptions='opaque')
+m4.translate(x[3], 0, 0)
+m4.scale(1, 1, 2)
+w.addItem(m4)
+
+m5 = gl.GLMeshItem(meshdata=md, smooth=True, color=(1, 0, 0, 1), shader='edgeHilight', glOptions='opaque')
+m5.translate(x[4], 0, 0)
+m5.scale(1, 1, 2)
+w.addItem(m5)
+
+m6 = gl.GLMeshItem(meshdata=md, smooth=True, color=(1, 0, 0, 1), shader='heightColor', glOptions='opaque')
+m6.translate(x[5], 0, 0)
+m6.scale(1, 1, 2)
+w.addItem(m6)
 
 
 
