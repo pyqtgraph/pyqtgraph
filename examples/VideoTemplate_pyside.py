@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './examples/VideoTemplate.ui'
 #
-# Created: Sun Sep  9 14:41:31 2012
+# Created: Sun Nov  4 18:24:21 2012
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -50,9 +50,9 @@ class Ui_MainWindow(object):
         self.scaleCheck = QtGui.QCheckBox(self.centralwidget)
         self.scaleCheck.setObjectName("scaleCheck")
         self.gridLayout_2.addWidget(self.scaleCheck, 3, 0, 1, 1)
-        self.rgbCheck = QtGui.QCheckBox(self.centralwidget)
-        self.rgbCheck.setObjectName("rgbCheck")
-        self.gridLayout_2.addWidget(self.rgbCheck, 3, 1, 1, 1)
+        self.rgbLevelsCheck = QtGui.QCheckBox(self.centralwidget)
+        self.rgbLevelsCheck.setObjectName("rgbLevelsCheck")
+        self.gridLayout_2.addWidget(self.rgbLevelsCheck, 3, 1, 1, 1)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.minSpin1 = SpinBox(self.centralwidget)
@@ -119,6 +119,9 @@ class Ui_MainWindow(object):
         self.fpsLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.fpsLabel.setObjectName("fpsLabel")
         self.gridLayout_2.addWidget(self.fpsLabel, 0, 0, 1, 4)
+        self.rgbCheck = QtGui.QCheckBox(self.centralwidget)
+        self.rgbCheck.setObjectName("rgbCheck")
+        self.gridLayout_2.addWidget(self.rgbCheck, 2, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -133,12 +136,13 @@ class Ui_MainWindow(object):
         self.dtypeCombo.setItemText(1, QtGui.QApplication.translate("MainWindow", "uint16", None, QtGui.QApplication.UnicodeUTF8))
         self.dtypeCombo.setItemText(2, QtGui.QApplication.translate("MainWindow", "float", None, QtGui.QApplication.UnicodeUTF8))
         self.scaleCheck.setText(QtGui.QApplication.translate("MainWindow", "Scale Data", None, QtGui.QApplication.UnicodeUTF8))
-        self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
+        self.rgbLevelsCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
         self.lutCheck.setText(QtGui.QApplication.translate("MainWindow", "Use Lookup  Table", None, QtGui.QApplication.UnicodeUTF8))
         self.alphaCheck.setText(QtGui.QApplication.translate("MainWindow", "alpha", None, QtGui.QApplication.UnicodeUTF8))
         self.fpsLabel.setText(QtGui.QApplication.translate("MainWindow", "FPS", None, QtGui.QApplication.UnicodeUTF8))
+        self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph import SpinBox, GradientWidget, GraphicsView, RawImageWidget

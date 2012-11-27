@@ -33,6 +33,7 @@ from .. PlotDataItem import PlotDataItem
 from .. ViewBox import ViewBox
 from .. AxisItem import AxisItem
 from .. LabelItem import LabelItem
+from .. LegendItem import LegendItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from pyqtgraph.WidgetGroup import WidgetGroup
@@ -528,6 +529,9 @@ class PlotItem(GraphicsWidget):
             #c.connect(c, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
+        name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
+        if name is not None and self.legend is not None:
+            self.legend.addItem(item, name=name)
             
 
     def addDataItem(self, item, *args):
@@ -596,6 +600,16 @@ class PlotItem(GraphicsWidget):
         
         return item
 
+    def addLegend(self, size=None, offset=(30, 30)):
+        """
+        Create a new LegendItem and anchor it over the internal ViewBox.
+        Plots will be automatically displayed in the legend if they
+        are created with the 'name' argument.
+        """
+        self.legend = LegendItem(size, offset)
+        self.legend.setParentItem(self.vb)
+        return self.legend
+        
     def scatterPlot(self, *args, **kargs):
         if 'pen' in kargs:
             kargs['symbolPen'] = kargs['pen']

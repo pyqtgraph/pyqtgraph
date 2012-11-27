@@ -12,6 +12,8 @@ class GLScatterPlotItem(GLGraphicsItem):
     
     def __init__(self, **kwds):
         GLGraphicsItem.__init__(self)
+        glopts = kwds.pop('glOptions', 'additive')
+        self.setGLOptions(glopts)
         self.pos = []
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
@@ -71,27 +73,27 @@ class GLScatterPlotItem(GLGraphicsItem):
         glBindTexture(GL_TEXTURE_2D, self.pointTexture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
         
-        self.shader = shaders.getShaderProgram('point_sprite')
+        self.shader = shaders.getShaderProgram('pointSprite')
         
     #def getVBO(self, name):
         #if name not in self.vbo:
             #self.vbo[name] = vbo.VBO(getattr(self, name).astype('f'))
         #return self.vbo[name]
         
-    def setupGLState(self):
-        """Prepare OpenGL state for drawing. This function is called immediately before painting."""
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  ## requires z-sorting to render properly.
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
-        glDisable( GL_DEPTH_TEST )
+    #def setupGLState(self):
+        #"""Prepare OpenGL state for drawing. This function is called immediately before painting."""
+        ##glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  ## requires z-sorting to render properly.
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
+        #glDisable( GL_DEPTH_TEST )
         
-        #glEnable( GL_POINT_SMOOTH )
+        ##glEnable( GL_POINT_SMOOTH )
 
-        #glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
-        #glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, (0, 0, -1e-3))
-        #glPointParameterfv(GL_POINT_SIZE_MAX, (65500,))
-        #glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
+        ##glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
+        ##glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, (0, 0, -1e-3))
+        ##glPointParameterfv(GL_POINT_SIZE_MAX, (65500,))
+        ##glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
         
     def paint(self):
         self.setupGLState()
@@ -139,7 +141,7 @@ class GLScatterPlotItem(GLGraphicsItem):
                     
                     glNormalPointerf(norm)
                 else:
-                    glNormal3f(self.size,0,0)
+                    glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
                     #glPointSize(self.size)
                 glDrawArrays(GL_POINTS, 0, len(self.pos))
             finally:

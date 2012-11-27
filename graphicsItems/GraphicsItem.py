@@ -166,13 +166,15 @@ class GraphicsItem(object):
         ## attempt to re-scale direction vector to fit within the precision of the coordinate system
         if direction.x() == 0:
             r = abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))
+            #r = 1.0/(abs(dt.m12()) + abs(dt.m22()))
         elif direction.y() == 0:
             r = abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))
+            #r = 1.0/(abs(dt.m11()) + abs(dt.m21()))
         else:
             r = ((abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))) * (abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))))**0.5
-        direction = direction * r
+        directionr = direction * r
         
-        viewDir = Point(dt.map(direction) - dt.map(Point(0,0)))
+        viewDir = Point(dt.map(directionr) - dt.map(Point(0,0)))
         if viewDir.manhattanLength() == 0:
             return None, None   ##  pixel size cannot be represented on this scale
             
@@ -182,7 +184,7 @@ class GraphicsItem(object):
             normView = viewDir.norm()  ## direction of one pixel orthogonal to line
             normOrtho = orthoDir.norm()
         except:
-            raise Exception("Invalid direction %s" %direction)
+            raise Exception("Invalid direction %s" %directionr)
             
         
         dti = fn.invertQTransform(dt)
