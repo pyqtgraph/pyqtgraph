@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, subprocess, time
 ## make sure this pyqtgraph is importable before any others
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
@@ -151,5 +151,38 @@ def run():
     
     app.exec_()
 
+def buildFileList(examples, files=None):
+    if files == None:
+        files = []
+    for key, val in examples.items():
+        #item = QtGui.QTreeWidgetItem([key])
+        if isinstance(val, basestring):
+            #item.file = val
+            files.append((key,val))
+        else:
+            buildFileList(val, files)
+    return files
+            
+def testFile(name, f):
+    global path
+    fn =  os.path.join(path,f)
+    #print "starting process: ", fn
+    process = subprocess.Popen([sys.executable, fn], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    time.sleep(1)
+    process.terminate()
+    res = process.communicate()
+    if res[1] == '':
+        print "%s.......................  passed" % name
+    else:
+        print "%s.......................  FAILED" % name
+        print res
+    
+
+
 if __name__ == '__main__':
-    run()
+    if '--test' in sys.argv[1:]:
+        files = buildFileList(examples)
+        for f in files:
+            testFile(*f)
+    else: 
+        run()
