@@ -317,7 +317,7 @@ def objectSize(obj, ignore=None, verbose=False, depth=0, recursive=False):
                     #print indent + '  -', k, len(refs)
     return size
 
-class GarbageWatcher:
+class GarbageWatcher(object):
     """
     Convenient dictionary for holding weak references to objects.
     Mainly used to check whether the objects have been collect yet or not.
@@ -356,7 +356,7 @@ class GarbageWatcher:
         return self.objs[item]
 
     
-class Profiler:
+class Profiler(object):
     """Simple profiler allowing measurement of multiple time intervals.
     
     Example:
@@ -451,7 +451,7 @@ def lookup(oid, objects=None):
         
                     
         
-class ObjTracker:
+class ObjTracker(object):
     """
     Tracks all objects under the sun, reporting the changes between snapshots: what objects are created, deleted, and persistent.
     This class is very useful for tracking memory leaks. The class goes to great (but not heroic) lengths to avoid tracking 

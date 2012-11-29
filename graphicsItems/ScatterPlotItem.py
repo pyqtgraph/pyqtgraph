@@ -77,7 +77,7 @@ def makeSymbolPixmap(size, pen, brush, symbol):
     img = renderSymbol(symbol, size, pen, brush)
     return QtGui.QPixmap(img)
     
-class SymbolAtlas:
+class SymbolAtlas(object):
     """
     Used to efficiently construct a single QPixmap containing all rendered symbols
     for a ScatterPlotItem. This is required for fragment rendering.

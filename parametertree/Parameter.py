@@ -665,7 +665,7 @@ class Parameter(QtCore.QObject):
             self.sigTreeStateChanged.emit(self, changes)
 
 
-class SignalBlocker:
+class SignalBlocker(object):
     def __init__(self, enterFn, exitFn):
         self.enterFn = enterFn
         self.exitFn = exitFn

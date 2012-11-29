@@ -47,7 +47,7 @@ def setTracebackClearing(clear=True):
     global clear_tracebacks
     clear_tracebacks = clear
     
-class ExceptionHandler:
+class ExceptionHandler(object):
     def __call__(self, *args):
         ## call original exception handler first (prints exception)
         global original_excepthook, callbacks, clear_tracebacks

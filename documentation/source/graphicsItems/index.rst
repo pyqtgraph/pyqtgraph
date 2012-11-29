@@ -23,6 +23,7 @@ Contents:
     axisitem
     textitem
     arrowitem
+    fillbetweenitem
     curvepoint
     curvearrow
     griditem
@@ -38,4 +39,5 @@ Contents:
     graphicswidget
     graphicsitem
     uigraphicsitem
+    graphicswidgetanchor
 
