@@ -48,7 +48,7 @@ def axis(name=None, cols=None, values=None, units=None):
             ax['cols'].append(col)
     return ax
 
-class sliceGenerator:
+class sliceGenerator(object):
     """Just a compact way to generate tuples of slice objects."""
     def __getitem__(self, arg):
         return arg

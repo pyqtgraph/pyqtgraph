@@ -7,7 +7,7 @@ from pyqtgraph.Point import Point
 #from PySide import QtCore, QtGui
 from .eq import *
 
-class Terminal:
+class Terminal(object):
     def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, removable=False, multiable=False, bypass=None):
         """
         Construct a new terminal. 

@@ -431,7 +431,7 @@ class RemoteEventHandler(object):
         return LocalObjectProxy(obj)
         
         
-class Request:
+class Request(object):
     """
     Request objects are returned when calling an ObjectProxy in asynchronous mode
     or if a synchronous call has timed out. Use hasResult() to ask whether

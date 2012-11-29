@@ -3,7 +3,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import weakref
 import pyqtgraph.ptime as ptime
 
-class MouseDragEvent:
+class MouseDragEvent(object):
     """
     Instances of this class are delivered to items in a :class:`GraphicsScene <pyqtgraph.GraphicsScene>` via their mouseDragEvent() method when the item is being mouse-dragged. 
     
@@ -144,7 +144,7 @@ class MouseDragEvent:
 
 
 
-class MouseClickEvent:
+class MouseClickEvent(object):
     """
     Instances of this class are delivered to items in a :class:`GraphicsScene <pyqtgraph.GraphicsScene>` via their mouseClickEvent() method when the item is clicked. 
     
@@ -229,7 +229,7 @@ class MouseClickEvent:
 
 
 
-class HoverEvent:
+class HoverEvent(object):
     """
     Instances of this class are delivered to items in a :class:`GraphicsScene <pyqtgraph.GraphicsScene>` via their hoverEvent() method when the mouse is hovering over the item.
     This event class both informs items that the mouse cursor is nearby and allows items to 

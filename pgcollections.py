@@ -260,7 +260,7 @@ def makeThreadsafe(obj):
         raise Exception("Not sure how to make object of type %s thread-safe" % str(type(obj)))
         
         
-class Locker:
+class Locker(object):
     def __init__(self, lock):
         self.lock = lock
         self.lock.acquire()

@@ -6,7 +6,7 @@ class CanceledError(Exception):
     """Raised when the progress dialog is canceled during a processing operation."""
     pass
 
-class Parallelize:
+class Parallelize(object):
     """
     Class for ultra-simple inline parallelization on multi-core CPUs
     
@@ -233,7 +233,7 @@ class Parallelize:
         self.progress[pid].append(i)
     
     
-class Tasker:
+class Tasker(object):
     def __init__(self, parallelizer, process, tasks, kwds):
         self.proc = process
         self.par = parallelizer

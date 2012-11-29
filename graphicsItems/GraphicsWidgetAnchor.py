@@ -2,7 +2,7 @@ from ..Qt import QtGui, QtCore
 from ..Point import Point
 
 
-class GraphicsWidgetAnchor:
+class GraphicsWidgetAnchor(object):
     """
     Class used to allow GraphicsWidgets to anchor to a specific position on their
     parent. 

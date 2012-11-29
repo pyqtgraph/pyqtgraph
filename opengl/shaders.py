@@ -209,7 +209,7 @@ CompiledShaderPrograms = {}
 def getShaderProgram(name):
     return ShaderProgram.names[name]
 
-class Shader:
+class Shader(object):
     def __init__(self, shaderType, code):
         self.shaderType = shaderType
         self.code = code
@@ -260,7 +260,7 @@ class FragmentShader(Shader):
         
         
 
-class ShaderProgram:
+class ShaderProgram(object):
     names = {}
     
     def __init__(self, name, shaders, uniforms=None):
