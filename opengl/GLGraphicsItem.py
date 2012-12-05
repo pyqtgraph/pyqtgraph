@@ -86,6 +86,7 @@ class GLGraphicsItem(QtCore.QObject):
         if isinstance(opts, basestring):
             opts = GLOptions[opts]
         self.__glOpts = opts.copy()
+        self.update()
         
     def updateGLOptions(self, opts):
         """

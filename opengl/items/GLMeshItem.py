@@ -55,11 +55,17 @@ class GLMeshItem(GLGraphicsItem):
         self.faces = None
         
     def setShader(self, shader):
+        """Set the shader used when rendering faces in the mesh. (see the GL shaders example)"""
         self.opts['shader'] = shader
         self.update()
         
     def shader(self):
         return shaders.getShaderProgram(self.opts['shader'])
+        
+    def setColor(self, c):
+        """Set the default color to use when no vertex or face colors are specified."""
+        self.opts['color'] = c
+        self.update()
         
     def setMeshData(self, **kwds):
         """

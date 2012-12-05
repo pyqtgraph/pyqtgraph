@@ -491,6 +491,9 @@ def transformToArray(tr):
         ## map coordinates through transform
         mapped = np.dot(m, coords)
     """
+    if isinstance(tr, np.ndarray):
+        return tr
+    
     #return np.array([[tr.m11(), tr.m12(), tr.m13()],[tr.m21(), tr.m22(), tr.m23()],[tr.m31(), tr.m32(), tr.m33()]])
     ## The order of elements given by the method names m11..m33 is misleading--
     ## It is most common for x,y translation to occupy the positions 1,3 and 2,3 in
@@ -510,8 +513,11 @@ def transformCoordinates(tr, coords):
     The mapping will _ignore_ any perspective transformations.
     """
     nd = coords.shape[0]
-    m = transformToArray(tr)    
-    m = m[:m.shape[0]-1]  # remove perspective
+    if not isinstance(tr, np.ndarray):
+        m = transformToArray(tr)
+        m = m[:m.shape[0]-1]  # remove perspective
+    else:
+        m = tr
     
     ## If coords are 3D and tr is 2D, assume no change for Z axis
     if m.shape == (2,3) and nd == 3:
@@ -537,7 +543,7 @@ def transformCoordinates(tr, coords):
     m = m[:, :-1]
     
     ## map coordinates and return
-    mapped = (m*coords).sum(axis=0)  ## apply scale/rotate
+    mapped = (m*coords).sum(axis=1)  ## apply scale/rotate
     mapped += translate
     return mapped
     

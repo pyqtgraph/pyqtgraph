@@ -281,6 +281,11 @@ class ImageItem(GraphicsObject):
             p.drawRect(self.boundingRect())
         prof.finish()
 
+    def save(self, fileName, *args):
+        """Save this image to file. Note that this saves the visible image (after scale/color changes), not the original data."""
+        if self.qimage is None:
+            self.render()
+        self.qimage.save(fileName, *args)
 
     def getHistogram(self, bins=500, step=3):
         """Returns x and y arrays containing the histogram values for the current image.

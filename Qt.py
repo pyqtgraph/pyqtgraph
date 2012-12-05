@@ -14,7 +14,7 @@ else:
         USE_PYSIDE = False
     except ImportError:
         try:
-            import Pyside
+            import PySide
             USE_PYSIDE = True
         except ImportError:
             raise Exception("PyQtGraph requires either PyQt4 or PySide; neither package could be imported.")

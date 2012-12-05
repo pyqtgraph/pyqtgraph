@@ -1222,4 +1222,15 @@ class ViewBox(GraphicsWidget):
         ViewBox.NamedViews.pop(name, None)
         ViewBox.updateAllViewLists()
 
+    @staticmethod
+    def quit():
+        ## called when the application is about to exit.
+        ## this disables all callbacks, which might otherwise generate errors if invoked during exit.
+        for k in ViewBox.AllViews:
+            try:
+                k.destroyed.disconnect()
+            except RuntimeError:  ## signal is already disconnected.
+                pass
+        
+        
 from .ViewBoxMenu import ViewBoxMenu

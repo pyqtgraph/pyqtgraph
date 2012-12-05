@@ -1,7 +1,7 @@
 from pyqtgraph.widgets.FileDialog import FileDialog
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
-import os
+import os, re
 LastExportDirectory = None
 
 
@@ -55,10 +55,13 @@ class Exporter(object):
         global LastExportDirectory
         LastExportDirectory = os.path.split(fileName)[0]
         
-        ext = os.path.splitext(fileName)[1].lower()
-        selectedExt = str(self.fileDialog.selectedNameFilter()).lstrip('*').lower()
-        if ext != selectedExt:
-            fileName = fileName + selectedExt
+        ## If file name does not match selected extension, append it now
+        ext = os.path.splitext(fileName)[1].lower().lstrip('.')
+        selectedExt = re.search(r'\*\.(\w+)\b', str(self.fileDialog.selectedNameFilter()))
+        if selectedExt is not None:
+            selectedExt = selectedExt.groups()[0].lower()
+            if ext != selectedExt:
+                fileName = fileName + selectedExt
         
         self.export(fileName=fileName, **self.fileDialog.opts)
         

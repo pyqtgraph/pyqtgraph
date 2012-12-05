@@ -11,12 +11,16 @@ class ImageExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
-        
+        if isinstance(item, QtGui.QGraphicsItem):
+            scene = item.scene()
+        else:
+            scene = item
+        bg = scene.views()[0].backgroundBrush().color()
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'width', 'type': 'int', 'value': tr.width(), 'limits': (0, None)},
             {'name': 'height', 'type': 'int', 'value': tr.height(), 'limits': (0, None)},
             {'name': 'antialias', 'type': 'bool', 'value': True},
-            {'name': 'background', 'type': 'color', 'value': (0,0,0,255)},
+            {'name': 'background', 'type': 'color', 'value': bg},
         ])
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
         self.params.param('height').sigValueChanged.connect(self.heightChanged)

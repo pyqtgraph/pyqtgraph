@@ -108,10 +108,13 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'suffix': '',
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
             
+            'delay': 0.3, ## delay sending wheel update signals for 300ms
+            
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
             
             ## for compatibility with QDoubleSpinBox and QSpinBox
-            'decimals': 2
+            'decimals': 2,
+            
         }
         
         self.decOpts = ['step', 'minStep']
@@ -125,7 +128,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         
         self.editingFinished.connect(self.editingFinishedEvent)
-        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange)
+        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
         
     def event(self, ev):
         ret = QtGui.QAbstractSpinBox.event(self, ev)
@@ -140,6 +143,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         allowed in :func:`__init__ <pyqtgraph.SpinBox.__init__>`.
         
         """
+        #print opts
         for k in opts:
             if k == 'bounds':
                 #print opts[k]
@@ -182,7 +186,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 if ms < 1:
                     ms = 1
                 self.opts['minStep'] = ms
-            
+        
+        if 'delay' in opts:
+            self.proxy.setDelay(opts['delay'])
+        
         self.updateText()
 
 

@@ -444,6 +444,10 @@ class MeshData(object):
         import pickle
         state = pickle.loads(state)
         for k in state:
+            if isinstance(state[k], list):
+                if isinstance(state[k][0], QtGui.QVector3D):
+                    state[k] = [[v.x(), v.y(), v.z()] for v in state[k]]
+                state[k] = np.array(state[k])
             setattr(self, k, state[k])
 
 

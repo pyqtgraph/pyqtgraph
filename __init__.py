@@ -173,11 +173,14 @@ from .SignalProxy import *
 from .ptime import time
 
 
-## Workaround for Qt exit crash:
-## ALL QGraphicsItems must have a scene before they are deleted.
-## This is potentially very expensive, but preferred over crashing.
 import atexit
 def cleanup():
+    ViewBox.quit()  ## tell ViewBox that it doesn't need to deregister views anymore.
+    
+    ## Workaround for Qt exit crash:
+    ## ALL QGraphicsItems must have a scene before they are deleted.
+    ## This is potentially very expensive, but preferred over crashing.
+    ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
     if QtGui.QApplication.instance() is None:
         return
     import gc
