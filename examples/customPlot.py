@@ -15,11 +15,35 @@ import time
 class DateAxis(pg.AxisItem):
     def tickStrings(self, values, scale, spacing):
         strns = []
+        rng = max(values)-min(values)
+        #if rng < 120:
+        #    return pg.AxisItem.tickStrings(self, values, scale, spacing)
+        if rng < 3600*24:
+            string = '%H:%M:%S'
+            label1 = '%b %d -'
+            label2 = ' %b %d, %Y'
+        elif rng >= 3600*24 and rng < 3600*24*30:
+            string = '%d'
+            label1 = '%b - '
+            label2 = '%b, %Y'
+        elif rng >= 3600*24*30 and rng < 3600*24*30*24:
+            string = '%b'
+            label1 = '%Y -'
+            label2 = ' %Y'
+        elif rng >=3600*24*30*24:
+            string = '%Y'
+            label1 = ''
+            label2 = ''
         for x in values:
             try:
-                strns.append(time.strftime('%b %Y', time.localtime(x)))
+                strns.append(time.strftime(string, time.localtime(x)))
             except ValueError:  ## Windows can't handle dates before 1970
                 strns.append('')
+        try:
+            label = time.strftime(label1, time.localtime(min(values)))+time.strftime(label2, time.localtime(max(values)))
+        except ValueError:
+            label = ''
+        #self.setLabel(text=label)
         return strns
 
 class CustomViewBox(pg.ViewBox):
@@ -53,6 +77,7 @@ r = pg.PolyLineROI([(0,0), (10, 10)])
 pw.addItem(r)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
-import sys
-if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-    QtGui.QApplication.instance().exec_()
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

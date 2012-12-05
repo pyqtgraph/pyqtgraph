@@ -47,7 +47,7 @@ data = np.abs(np.fromfunction(psi, (50,50,100)))
 print("Generating isosurface..")
 verts = pg.isosurface(data, data.max()/4.)
 
-md = gl.MeshData.MeshData(vertexes=verts)
+md = gl.MeshData(vertexes=verts)
 
 colors = np.ones((md.faceCount(), 4), dtype=float)
 colors[:,3] = 0.2
@@ -68,5 +68,7 @@ m2.translate(-25, -25, -50)
 
 
 ## Start Qt event loop unless running in interactive mode.
-if sys.flags.interactive != 1:
-    app.exec_()
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

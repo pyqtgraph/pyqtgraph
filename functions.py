@@ -782,7 +782,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if levels.shape != (data.shape[-1], 2):
                 raise Exception('levels must have shape (data.shape[-1], 2)')
         else:
-            print levels
+            print(levels)
             raise Exception("levels argument must be 1D or 2D.")
         #levels = np.array(levels)
         #if levels.shape == (2,):

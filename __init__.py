@@ -22,7 +22,7 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 from . import python2_3
 
 ## install workarounds for numpy bugs
-import numpy_fix
+from . import numpy_fix
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -111,7 +111,7 @@ if not hasattr(sys, 'frozen'): ## If we are frozen, there's a good chance we don
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
 ## these must be imported separately.
-import frozenSupport
+from . import frozenSupport
 def importModules(path, globals, locals, excludes=()):
     """Import all modules residing within *path*, return a dict of name: module pairs.
     

@@ -25,6 +25,6 @@ importAll('items', globals(), locals())
 \
 from MeshData import MeshData
 ## for backward compatibility:
-MeshData.MeshData = MeshData
+#MeshData.MeshData = MeshData  ## breaks autodoc.
 
 import shaders

@@ -1,8 +1,8 @@
 MeshData
 ========
 
-.. autoclass:: pyqtgraph.opengl.MeshData.MeshData
+.. autoclass:: pyqtgraph.opengl.MeshData
     :members:
 
-    .. automethod:: pyqtgraph.opengl.MeshData.MeshData.__init__
+    .. automethod:: pyqtgraph.opengl.MeshData.__init__
 
