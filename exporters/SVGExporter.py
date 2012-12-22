@@ -36,11 +36,14 @@ class SVGExporter(Exporter):
             return
         self.svg = QtSvg.QSvgGenerator()
         self.svg.setFileName(fileName)
-        self.svg.setSize(QtCore.QSize(100,100))
-        #self.svg.setResolution(600)
+        dpi = QtGui.QDesktopWidget().physicalDpiX()
+        ## not really sure why this works, but it seems to be important:
+        self.svg.setSize(QtCore.QSize(self.params['width']*dpi/90., self.params['height']*dpi/90.))
+        self.svg.setResolution(dpi)
         #self.svg.setViewBox()
         targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
         sourceRect = self.getSourceRect()
+        
         painter = QtGui.QPainter(self.svg)
         try:
             self.setExportMode(True)

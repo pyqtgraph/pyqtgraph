@@ -73,7 +73,8 @@ class Exporter(object):
         
     def getSourceRect(self):
         if isinstance(self.item, pg.GraphicsScene):
-            return self.item.getViewWidget().viewRect()
+            w = self.item.getViewWidget()
+            return w.viewportTransform().inverted()[0].mapRect(w.rect())
         else:
             return self.item.sceneBoundingRect()
         
