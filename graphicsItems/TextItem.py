@@ -7,7 +7,7 @@ class TextItem(UIGraphicsItem):
     """
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
-    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None):
+    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
         """
         ===========  =================================================================================
         Arguments:
@@ -22,6 +22,12 @@ class TextItem(UIGraphicsItem):
         *fill*       A brush to use when filling within the border
         ===========  =================================================================================
         """
+        
+        ## not working yet
+        #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
+                     #transformation will be ignored)
+                     
+                     
         UIGraphicsItem.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
         self.lastTransform = None
@@ -33,6 +39,7 @@ class TextItem(UIGraphicsItem):
         self.anchor = pg.Point(anchor)
         self.fill = pg.mkBrush(fill)
         self.border = pg.mkPen(border)
+        self.angle = angle
         #self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
@@ -115,9 +122,11 @@ class TextItem(UIGraphicsItem):
         
         #p.fillRect(tbr)
         p.resetTransform()
-        p.drawRect(tbr)
+        #p.drawRect(tbr)
         
         
         p.translate(tbr.left(), tbr.top())
+        p.rotate(self.angle)
+        p.drawRect(QtCore.QRectF(0, 0, tbr.width(), tbr.height()))
         self.textItem.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
         

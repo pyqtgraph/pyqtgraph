@@ -111,6 +111,7 @@ class ViewBox(GraphicsWidget):
         }
         self._updatingRange = False  ## Used to break recursive loops. See updateAutoRange.
         
+        self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
         
         self.setFlag(self.ItemClipsChildrenToShape)
         self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
@@ -286,6 +287,12 @@ class ViewBox(GraphicsWidget):
         self.scene().removeItem(item)
         self.updateAutoRange()
 
+    def clear(self):
+        for i in self.addedItems[:]:
+            self.removeItem(i)
+        for ch in self.childGroup.childItems():
+            ch.setParent(None)
+        
     def resizeEvent(self, ev):
         #self.setRange(self.range, padding=0)
         #self.updateAutoRange()
@@ -1231,6 +1238,46 @@ class ViewBox(GraphicsWidget):
                 k.destroyed.disconnect()
             except RuntimeError:  ## signal is already disconnected.
                 pass
+            
+    def locate(self, item, timeout=3.0, children=False):
+        """
+        Temporarily display the bounding rect of an item and lines connecting to the center of the view.
+        This is useful for determining the location of items that may be out of the range of the ViewBox.
+        if allChildren is True, then the bounding rect of all item's children will be shown instead.
+        """
+        self.clearLocate()
         
+        if item.scene() is not self.scene():
+            raise Exception("Item does not share a scene with this ViewBox.")
         
+        c = self.viewRect().center()
+        if children:
+            br = self.mapFromItemToView(item, item.childrenBoundingRect()).boundingRect()
+        else:
+            br = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
+        
+        g = ItemGroup()
+        g.setParentItem(self.childGroup)
+        self.locateGroup = g
+        g.box = QtGui.QGraphicsRectItem(br)
+        g.box.setParentItem(g)
+        g.lines = []
+        for p in (br.topLeft(), br.bottomLeft(), br.bottomRight(), br.topRight()):
+            line = QtGui.QGraphicsLineItem(c.x(), c.y(), p.x(), p.y())
+            line.setParentItem(g)
+            g.lines.append(line)
+            
+        for item in g.childItems():
+            item.setPen(fn.mkPen(color='y', width=3))
+            item.setZValue(1000000)
+        
+        QtCore.QTimer.singleShot(timeout*1000, self.clearLocate)
+    
+    def clearLocate(self):
+        if self.locateGroup is None:
+            return
+        self.scene().removeItem(self.locateGroup)
+        self.locateGroup = None
+
+
 from .ViewBoxMenu import ViewBoxMenu

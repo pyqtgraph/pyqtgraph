@@ -92,6 +92,15 @@ class Canvas(QtGui.QWidget):
         if name is not None:
             self.registeredName = CanvasManager.instance().registerCanvas(self, name)
             self.ui.redirectCombo.setHostName(self.registeredName)
+            
+        self.menu = QtGui.QMenu()
+        #self.menu.setTitle("Image")
+        remAct = QtGui.QAction("Remove item", self.menu)
+        remAct.triggered.connect(self.removeClicked)
+        self.menu.addAction(remAct)
+        self.menu.remAct = remAct
+        self.ui.itemList.contextMenuEvent = self.itemListContextMenuEvent
+            
 
     def storeSvg(self):
         self.ui.view.writeSvg()
@@ -513,10 +522,20 @@ class Canvas(QtGui.QWidget):
                 listItem.setCheckState(0, QtCore.Qt.Unchecked)
 
     def removeItem(self, item):
+        if isinstance(item, QtGui.QTreeWidgetItem):
+            item = item.canvasItem()
+            
+            
         if isinstance(item, CanvasItem):
             item.setCanvas(None)
-            self.itemList.removeTopLevelItem(item.listItem)
+            listItem = item.listItem
+            listItem.canvasItem = None
+            item.listItem = None
+            self.itemList.removeTopLevelItem(listItem)
             self.items.remove(item)
+            ctrl = item.ctrlWidget()
+            ctrl.hide()
+            self.ui.ctrlLayout.removeWidget(ctrl)
         else:
             if hasattr(item, '_canvasItem'):
                 self.removeItem(item._canvasItem)
@@ -555,7 +574,15 @@ class Canvas(QtGui.QWidget):
         #self.emit(QtCore.SIGNAL('itemTransformChangeFinished'), self, item)
         self.sigItemTransformChangeFinished.emit(self, item)
         
-
+    def itemListContextMenuEvent(self, ev):
+        self.menuItem = self.itemList.itemAt(ev.pos())
+        self.menu.popup(ev.globalPos())
+        
+    def removeClicked(self):
+        self.removeItem(self.menuItem)
+        self.menuItem = None
+        import gc
+        gc.collect()
 
 class SelectBox(ROI):
     def __init__(self, scalable=False):

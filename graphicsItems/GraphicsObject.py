@@ -1,4 +1,6 @@
-from pyqtgraph.Qt import QtGui, QtCore  
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+if not USE_PYSIDE:
+    import sip
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
@@ -20,4 +22,10 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
             self._updateView()
         if change in [self.ItemPositionHasChanged, self.ItemTransformHasChanged]:
             self.informViewBoundsChanged()
+            
+        ## workaround for pyqt bug:
+        ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
+        if not USE_PYSIDE and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
+            ret = sip.cast(ret, QtGui.QGraphicsItem)
+
         return ret

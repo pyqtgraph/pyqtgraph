@@ -53,6 +53,7 @@ if sys.version_info[0] == 3:
         else:
             return 0
     builtins.cmp = cmp
+    builtins.xrange = range
 #else:    ## don't use __builtin__  -- this confuses things like pyshell and ActiveState's lazy import recipe
     #import __builtin__
     #__builtin__.asUnicode = asUnicode

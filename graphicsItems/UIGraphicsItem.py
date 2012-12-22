@@ -1,6 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import weakref
 from .GraphicsObject import GraphicsObject
+if not USE_PYSIDE:
+    import sip
 
 __all__ = ['UIGraphicsItem']
 class UIGraphicsItem(GraphicsObject):
@@ -44,9 +46,12 @@ class UIGraphicsItem(GraphicsObject):
     
     def itemChange(self, change, value):
         ret = GraphicsObject.itemChange(self, change, value)
-        #if change == self.ItemParentHasChanged or change == self.ItemSceneHasChanged:  ## handled by GraphicsItem now.
-            ##print "caught parent/scene change:", self.parentItem(), self.scene()
-            #self.updateView()
+            
+        ## workaround for pyqt bug:
+        ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
+        if not USE_PYSIDE and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
+            ret = sip.cast(ret, QtGui.QGraphicsItem)
+        
         if change == self.ItemScenePositionHasChanged:
             self.setNewBounds()
         return ret

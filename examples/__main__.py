@@ -175,8 +175,11 @@ def testFile(name, f, exe, lib):
 try:
     %s
     import %s
+    import sys
     print("test complete")
+    sys.stdout.flush()
     import pyqtgraph as pg
+    import time
     while True:  ## run a little event loop
         pg.QtGui.QApplication.processEvents()
         time.sleep(0.01)
@@ -186,7 +189,7 @@ except:
 
 """  % ("import %s" % lib if lib != '' else "", os.path.splitext(os.path.split(fn)[1])[0])
     #print code
-    process = subprocess.Popen(['%s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     process.stdin.write(code.encode('UTF-8'))
     #process.stdin.close()
     output = ''
@@ -202,10 +205,11 @@ except:
             fail = True
             break
     time.sleep(1)
-    process.terminate()
+    process.kill()
+    #process.wait()
     res = process.communicate()
-    #if 'exception' in res[1].lower() or 'error' in res[1].lower():
-    if fail:
+    
+    if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
         print('.' * (50-len(name)) + 'FAILED')
         print(res[0].decode())
         print(res[1].decode())

@@ -8,7 +8,7 @@ Simple Data Display Functions
 
 .. autofunction:: pyqtgraph.image
 
-
+.. autofunction:: pyqtgraph.dbg
 
 Color, Pen, and Brush Functions
 -------------------------------
@@ -34,11 +34,25 @@ Qt uses the classes QColor, QPen, and QBrush to determine how to draw lines and 
 
 .. autofunction:: pyqtgraph.colorStr
 
+.. autofunction:: pyqtgraph.glColor
+
 
 Data Slicing
 ------------
 
 .. autofunction:: pyqtgraph.affineSlice
+
+
+Coordinate Transformation
+-------------------------
+
+.. autofunction:: pyqtgraph.transformToArray
+
+.. autofunction:: pyqtgraph.transformCoordinates
+
+.. autofunction:: pyqtgraph.solve3DTransform
+
+.. autofunction:: pyqtgraph.solveBilinearTransform
 
 
 
@@ -59,6 +73,12 @@ Image Preparation Functions
 
 .. autofunction:: pyqtgraph.makeQImage
 
+.. autofunction:: pyqtgraph.applyLookupTable
+
+.. autofunction:: pyqtgraph.rescaleData
+
+.. autofunction:: pyqtgraph.imageToArray
+
 
 Mesh Generation Functions
 -------------------------
@@ -66,6 +86,15 @@ Mesh Generation Functions
 .. autofunction:: pyqtgraph.isocurve
 
 .. autofunction:: pyqtgraph.isosurface
+
+
+Miscellaneous Functions
+-----------------------
+
+.. autofunction:: pyqtgraph.pseudoScatter
+
+.. autofunction:: pyqtgraph.systemInfo
+
 
 
 

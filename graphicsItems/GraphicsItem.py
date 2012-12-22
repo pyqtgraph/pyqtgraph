@@ -3,6 +3,7 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import weakref
+import operator
 
 class GraphicsItem(object):
     """
@@ -395,8 +396,16 @@ class GraphicsItem(object):
         ## disconnect from previous view
         if oldView is not None:
             #print "disconnect:", self, oldView
-            oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
-            oldView.sigTransformChanged.disconnect(self.viewTransformChanged)
+            try:
+                oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
+            except TypeError:
+                pass
+            
+            try:
+                oldView.sigTransformChanged.disconnect(self.viewTransformChanged)
+            except TypeError:
+                pass
+            
             self._connectedView = None
 
         ## connect to new view
@@ -449,4 +458,22 @@ class GraphicsItem(object):
         view = self.getViewBox()
         if view is not None and hasattr(view, 'implements') and view.implements('ViewBox'):
             view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
-        
+    
+    def childrenShape(self):
+        """Return the union of the shapes of all descendants of this item in local coordinates."""
+        childs = self.allChildItems()
+        shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
+        return reduce(operator.add, shapes)
+    
+    def allChildItems(self, root=None):
+        """Return list of the entire item tree descending from this item."""
+        if root is None:
+            root = self
+        tree = []
+        for ch in root.childItems():
+            tree.append(ch)
+            tree.extend(self.allChildItems(ch))
+        return tree
+    
+    
+    

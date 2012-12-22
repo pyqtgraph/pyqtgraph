@@ -158,7 +158,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.colors is None:
                     color = self.opts['color']
                     if isinstance(color, QtGui.QColor):
-                        glColor4f(*fn.glColor(color))
+                        glColor4f(*pg.glColor(color))
                     else:
                         glColor4f(*color)
                 else:

@@ -9,7 +9,11 @@ all_packages = ['.'.join(p) for p in subdirs]
 setup(name='pyqtgraph',
     version='',
     description='Scientific Graphics and GUI Library for Python',
-    long_description="PyQtGraph is a pure-python graphics and GUI library built on PyQt4 and numpy. It is intended for use in mathematics / scientific / engineering applications. Despite being written entirely in python, the library is very fast due to its heavy leverage of numpy for number crunching and Qt's GraphicsView framework for fast display.",
+    long_description="""\
+PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and numpy. 
+
+It is intended for use in mathematics / scientific / engineering applications. Despite being written entirely in python, the library is very fast due to its heavy leverage of numpy for number crunching and Qt's GraphicsView framework for fast display.
+""",
     license='MIT',
     url='http://www.pyqtgraph.org',
     author='Luke Campagnola',
@@ -17,5 +21,17 @@ setup(name='pyqtgraph',
     packages=all_packages,
     package_dir = {'pyqtgraph': '.'},
     package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},
+    classifiers = [
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
+        "Environment :: Other Environment",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Software Development :: User Interfaces",
+        ],
 )
 

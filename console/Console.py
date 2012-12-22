@@ -208,8 +208,11 @@ class ConsoleWidget(QtGui.QWidget):
                 #self.stdout.write("</div><br><div style='font-weight: normal; background-color: #FFF;'>")
             self.output.insertPlainText(strn)
         #self.stdout.write(strn)
-            
+    
     def displayException(self):
+        """
+        Display the current exception and stack.
+        """
         tb = traceback.format_exc()
         lines = []
         indent = 4

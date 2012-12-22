@@ -233,7 +233,7 @@ class ScatterPlotItem(GraphicsObject):
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
-        self.opts = {'pxMode': True, 'useCache': True}   ## If useCache is False, symbols are re-drawn on every paint.
+        self.opts = {'pxMode': True, 'useCache': True, 'exportMode': False}   ## If useCache is False, symbols are re-drawn on every paint.
         
         self.setPen(200,200,200, update=False)
         self.setBrush(100,100,150, update=False)
@@ -664,10 +664,14 @@ class ScatterPlotItem(GraphicsObject):
             rect = QtCore.QRectF(y, x, h, w)
             self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
             
+    def setExportMode(self, enabled, opts):
+        self.opts['exportMode'] = enabled
+            
+            
     def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
-        if self.opts['pxMode']:
+        if self.opts['pxMode'] is True:
             atlas = self.fragmentAtlas.getAtlas()
             #arr = fn.imageToArray(atlas.toImage(), copy=True)
             #if hasattr(self, 'lastAtlas'):
@@ -681,7 +685,7 @@ class ScatterPlotItem(GraphicsObject):
                     
             p.resetTransform()
             
-            if not USE_PYSIDE and self.opts['useCache']:
+            if not USE_PYSIDE and self.opts['useCache'] and self.opts['exportMode'] is False:
                 p.drawPixmapFragments(self.fragments, atlas)
             else:
                 for i in range(len(self.data)):

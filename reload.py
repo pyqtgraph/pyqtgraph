@@ -35,6 +35,7 @@ def reloadAll(prefix=None, debug=False):
     - if prefix is None, checks all loaded modules
     """
     failed = []
+    changed = []
     for modName, mod in list(sys.modules.items()):  ## don't use iteritems; size may change during reload
         if not inspect.ismodule(mod):
             continue
@@ -50,10 +51,11 @@ def reloadAll(prefix=None, debug=False):
         ## ignore if the .pyc is newer than the .py (or if there is no pyc or py)
         py = os.path.splitext(mod.__file__)[0] + '.py'
         pyc = py + 'c'
-        if os.path.isfile(pyc) and os.path.isfile(py) and os.stat(pyc).st_mtime >= os.stat(py).st_mtime:
+        if py not in changed and os.path.isfile(pyc) and os.path.isfile(py) and os.stat(pyc).st_mtime >= os.stat(py).st_mtime:
             #if debug:
                 #print "Ignoring module %s; unchanged" % str(mod)
             continue
+        changed.append(py)  ## keep track of which modules have changed to insure that duplicate-import modules get reloaded.
         
         try:
             reload(mod, debug=debug)
@@ -73,7 +75,7 @@ def reload(module, debug=False, lists=False, dicts=False):
     - Requires that class and function names have not changed
     """
     if debug:
-        print("Reloading", module)
+        print("Reloading %s" % str(module))
         
     ## make a copy of the old module dictionary, reload, then grab the new module dictionary for comparison
     oldDict = module.__dict__.copy()
@@ -158,7 +160,7 @@ def updateClass(old, new, debug):
             if isinstance(ref, old) and ref.__class__ is old:
                 ref.__class__ = new
                 if debug:
-                    print("    Changed class for", safeStr(ref))
+                    print("    Changed class for %s" % safeStr(ref))
             elif inspect.isclass(ref) and issubclass(ref, old) and old in ref.__bases__:
                 ind = ref.__bases__.index(old)
                 
@@ -174,7 +176,7 @@ def updateClass(old, new, debug):
                 ## (and I presume this may slow things down?)
                 ref.__bases__ = ref.__bases__[:ind] + (new,old) + ref.__bases__[ind+1:]
                 if debug:
-                    print("    Changed superclass for", safeStr(ref))
+                    print("    Changed superclass for %s" % safeStr(ref))
             #else:
                 #if debug:
                     #print "    Ignoring reference", type(ref)
@@ -208,7 +210,7 @@ def updateClass(old, new, debug):
     for attr in dir(new):
         if not hasattr(old, attr):
             if debug:
-                print("    Adding missing attribute", attr)
+                print("    Adding missing attribute %s" % attr)
             setattr(old, attr, getattr(new, attr))
             
     ## finally, update any previous versions still hanging around..

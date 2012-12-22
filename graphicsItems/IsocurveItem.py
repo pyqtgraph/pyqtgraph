@@ -45,12 +45,12 @@ class IsocurveItem(GraphicsObject):
         """
         Set the data/image to draw isocurves for.
         
-        ============= ================================================================
+        ============= ========================================================================
         **Arguments**
         data          A 2-dimensional ndarray.
         level         The cutoff value at which to draw the curve. If level is not specified,
-                      the previous level is used.
-        ============= ================================================================
+                      the previously set level is used.
+        ============= ========================================================================
         """
         if level is None:
             level = self.level
@@ -74,6 +74,12 @@ class IsocurveItem(GraphicsObject):
         self.pen = fn.mkPen(*args, **kwargs)
         self.update()
 
+    def setBrush(self, *args, **kwargs):
+        """Set the brush used to draw the isocurve. Arguments can be any that are valid 
+        for :func:`mkBrush <pyqtgraph.mkBrush>`"""
+        self.brush = fn.mkBrush(*args, **kwargs)
+        self.update()
+
         
     def updateLines(self, data, level):
         ##print "data:", data
@@ -88,22 +94,28 @@ class IsocurveItem(GraphicsObject):
         self.setData(data, level)
 
     def boundingRect(self):
-        if self.path is None:
+        if self.data is None:
             return QtCore.QRectF()
+        if self.path is None:
+            self.generatePath()
         return self.path.boundingRect()
     
     def generatePath(self):
-        self.path = QtGui.QPainterPath()
         if self.data is None:
+            self.path = None
             return
-        lines = fn.isocurve(self.data, self.level)
+        lines = fn.isocurve(self.data, self.level, connected=True, extendToEdge=True)
+        self.path = QtGui.QPainterPath()
         for line in lines:
             self.path.moveTo(*line[0])
-            self.path.lineTo(*line[1])
+            for p in line[1:]:
+                self.path.lineTo(*p)
     
     def paint(self, p, *args):
+        if self.data is None:
+            return
         if self.path is None:
             self.generatePath()
         p.setPen(self.pen)
         p.drawPath(self.path)
-        
+    
