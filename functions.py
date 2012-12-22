@@ -991,7 +991,53 @@ def imageToArray(img, copy=False, transpose=True):
     else:
         return arr
     
+def colorToAlpha(data, color):
+    """
+    Given an RGBA image in *data*, convert *color* to be transparent. 
+    *data* must be an array (w, h, 3 or 4) of ubyte values and *color* must be 
+    an array (3) of ubyte values.
+    This is particularly useful for use with images that have a black or white background.
     
+    Algorithm is taken from Gimp's color-to-alpha function in plug-ins/common/colortoalpha.c
+    Credit:
+        /*
+        * Color To Alpha plug-in v1.0 by Seth Burgess, sjburges@gimp.org 1999/05/14
+        *  with algorithm by clahey
+        */
+    
+    """
+    data = data.astype(float)
+    if data.shape[-1] == 3:  ## add alpha channel if needed
+        d2 = np.empty(data.shape[:2]+(4,), dtype=data.dtype)
+        d2[...,:3] = data
+        d2[...,3] = 255
+        data = d2
+    
+    color = color.astype(float)
+    alpha = np.zeros(data.shape[:2]+(3,), dtype=float)
+    output = data.copy()
+    
+    for i in [0,1,2]:
+        d = data[...,i]
+        c = color[i]
+        mask = d > c
+        alpha[...,i][mask] = (d[mask] - c) / (255. - c)
+        imask = d < c
+        alpha[...,i][imask] = (c - d[imask]) / c
+    
+    output[...,3] = alpha.max(axis=2) * 255.
+    
+    mask = output[...,3] >= 1.0  ## avoid zero division while processing alpha channel
+    correction = 255. / output[...,3][mask]  ## increase value to compensate for decreased alpha
+    for i in [0,1,2]:
+        output[...,i][mask] = ((output[...,i][mask]-color[i]) * correction) + color[i]
+        output[...,3][mask] *= data[...,3][mask] / 255.  ## combine computed and previous alpha values
+    
+    #raise Exception()
+    return np.clip(output, 0, 255).astype(np.ubyte)
+    
+
+
 #def isosurface(data, level):
     #"""
     #Generate isosurface from volumetric data using marching tetrahedra algorithm.

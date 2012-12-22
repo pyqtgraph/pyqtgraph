@@ -118,7 +118,10 @@ class GLScatterPlotItem(GLGraphicsItem):
             #glUniform1i(self.shader.uniform('texture'), 0)  ## inform the shader which texture to use
             glEnableClientState(GL_VERTEX_ARRAY)
             try:
-                glVertexPointerf(self.pos)
+                pos = self.pos
+                #if pos.ndim > 2:
+                    #pos = pos.reshape((reduce(lambda a,b: a*b, pos.shape[:-1]), pos.shape[-1]))
+                glVertexPointerf(pos)
             
                 if isinstance(self.color, np.ndarray):
                     glEnableClientState(GL_COLOR_ARRAY)
@@ -131,19 +134,19 @@ class GLScatterPlotItem(GLGraphicsItem):
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
-                    norm = np.empty(self.pos.shape)
+                    norm = np.empty(pos.shape)
                     if self.pxMode:
-                        norm[:,0] = self.size
+                        norm[...,0] = self.size
                     else:
-                        gpos = self.mapToView(self.pos.transpose()).transpose()
+                        gpos = self.mapToView(pos.transpose()).transpose()
                         pxSize = self.view().pixelSize(gpos)
-                        norm[:,0] = self.size / pxSize
+                        norm[...,0] = self.size / pxSize
                     
                     glNormalPointerf(norm)
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
                     #glPointSize(self.size)
-                glDrawArrays(GL_POINTS, 0, len(self.pos))
+                glDrawArrays(GL_POINTS, 0, pos.size / pos.shape[-1])
             finally:
                 glDisableClientState(GL_NORMAL_ARRAY)
                 glDisableClientState(GL_VERTEX_ARRAY)

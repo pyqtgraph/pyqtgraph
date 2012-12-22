@@ -205,6 +205,7 @@ class CanvasItem(QtCore.QObject):
         self.userTransform = self.userTransform * inv
         self.updateTransform()
         self.selectBoxFromUser()
+        self.sigTransformChangeFinished.emit(self)
         #if flip:
             #if tr['scale'][0] < 0 xor tr['scale'][1] < 0:
                 #return

@@ -35,6 +35,7 @@ class SRTTransform3D(pg.Transform3D):
                 'angle': init._state['angle'],
                 'axis': Vector(0, 0, 1),
             }
+            self._state['scale'][2] = 1.0
             self.update()
         elif isinstance(init, QtGui.QMatrix4x4):
             self.setFromMatrix(init)

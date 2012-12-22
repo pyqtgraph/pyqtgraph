@@ -1269,7 +1269,15 @@ class ViewBox(GraphicsWidget):
             
         for item in g.childItems():
             item.setPen(fn.mkPen(color='y', width=3))
-            item.setZValue(1000000)
+        g.setZValue(1000000)
+        
+        if children:
+            g.path = QtGui.QGraphicsPathItem(g.childrenShape())
+        else:
+            g.path = QtGui.QGraphicsPathItem(g.shape())
+        g.path.setParentItem(g)
+        g.path.setPen(fn.mkPen('g'))
+        g.path.setZValue(100)
         
         QtCore.QTimer.singleShot(timeout*1000, self.clearLocate)
     

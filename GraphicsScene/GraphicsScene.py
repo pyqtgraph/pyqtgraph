@@ -73,7 +73,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     
     sigMouseHover = QtCore.Signal(object)   ## emits a list of objects hovered over
     sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
-    sigMouseClicked = QtCore.Signal(object)   ## emitted when MouseClickEvent is not accepted by any items under the click.
+    sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
     _addressCache = weakref.WeakValueDictionary()
     
@@ -343,10 +343,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             if int(item.flags() & item.ItemIsFocusable) > 0:
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
-                if not ev.isAccepted() and ev.button() is QtCore.Qt.RightButton:
+                #if not ev.isAccepted() and ev.button() is QtCore.Qt.RightButton:
                     #print "GraphicsScene emitting sigSceneContextMenu"
-                    self.sigMouseClicked.emit(ev)
-                    ev.accept()
+                    #self.sigMouseClicked.emit(ev)
+                    #ev.accept()
+        self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
         
     #def claimEvent(self, item, button, eventType):
