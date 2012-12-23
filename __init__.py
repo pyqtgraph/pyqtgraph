@@ -30,7 +30,10 @@ from . import numpy_fix
 if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
-    useOpenGL = True
+    useOpenGL = False
+    if QtGui.QApplication.instance() is not None:
+        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
+    QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
