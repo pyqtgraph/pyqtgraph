@@ -7,6 +7,7 @@ import numpy as np
 import scipy
 import pyqtgraph.functions as fn
 import pyqtgraph.debug as debug
+import pyqtgraph as pg
 
 class PlotDataItem(GraphicsObject):
     """
@@ -84,6 +85,9 @@ class PlotDataItem(GraphicsObject):
         **Optimization keyword arguments:**
         
             ==========   =====================================================================
+            antialias    (bool) By default, antialiasing is disabled to improve performance.
+                         Note that in some cases (in particluar, when pxMode=True), points 
+                         will be rendered antialiased even if this is set to False.
             identical    *deprecated*
             decimate     (int) sub-sample data by selecting every nth sample before plotting
             ==========   =====================================================================
@@ -130,6 +134,7 @@ class PlotDataItem(GraphicsObject):
             'symbolBrush': (50, 50, 150),
             'pxMode': True,
             
+            'antialias': pg.getConfigOption('antialias'),
             'pointMode': None,
             
             'data': None,
@@ -379,11 +384,11 @@ class PlotDataItem(GraphicsObject):
                 #c.scene().removeItem(c)
             
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush')]:
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias')]:
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
-        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode')]:
+        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
             if k in self.opts:
                 scatterArgs[v] = self.opts[k]
         

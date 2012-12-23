@@ -131,6 +131,9 @@ class PlotItem(GraphicsWidget):
         self.autoBtn = ButtonItem(pyqtgraph.pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
+        #self.autoBtn.hide()
+        self.buttonsHidden = False ## whether the user has requested buttons to be hidden
+        self.mouseHovering = False
         
         self.layout = QtGui.QGraphicsGridLayout()
         self.layout.setContentsMargins(1,1,1,1)
@@ -141,6 +144,7 @@ class PlotItem(GraphicsWidget):
         if viewBox is None:
             viewBox = ViewBox()
         self.vb = viewBox
+        self.vb.sigStateChanged.connect(self.viewStateChanged)
         self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
         
         if name is not None:
@@ -476,8 +480,12 @@ class PlotItem(GraphicsWidget):
     def autoBtnClicked(self):
         if self.autoBtn.mode == 'auto':
             self.enableAutoRange()
+            self.autoBtn.hide()
         else:
             self.disableAutoRange()
+            
+    def viewStateChanged(self):
+        self.updateButtons()
             
     def enableAutoScale(self):
         """
@@ -1003,7 +1011,14 @@ class PlotItem(GraphicsWidget):
     def menuEnabled(self):
         return self._menuEnabled
     
-
+    def hoverEvent(self, ev):
+        if ev.enter:
+            self.mouseHovering = True
+        if ev.exit:
+            self.mouseHovering = False
+            
+        self.updateButtons()
+    
 
     def getLabel(self, key):
         pass
@@ -1082,8 +1097,20 @@ class PlotItem(GraphicsWidget):
     def hideButtons(self):
         """Causes auto-scale button ('A' in lower-left corner) to be hidden for this PlotItem"""
         #self.ctrlBtn.hide()
-        self.autoBtn.hide()
+        self.buttonsHidden = True
+        self.updateButtons()
         
+    def showButtons(self):
+        """Causes auto-scale button ('A' in lower-left corner) to be visible for this PlotItem"""
+        #self.ctrlBtn.hide()
+        self.buttonsHidden = False
+        self.updateButtons()
+        
+    def updateButtons(self):
+        if self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+            self.autoBtn.show()
+        else:
+            self.autoBtn.hide()
             
     def _plotArray(self, arr, x=None, **kargs):
         if arr.ndim != 1:

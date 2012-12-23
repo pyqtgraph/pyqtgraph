@@ -18,7 +18,7 @@ app = QtGui.QApplication([])
 #mw.resize(800,800)
 
 win = pg.GraphicsWindow(title="Basic plotting examples")
-win.resize(800,600)
+win.resize(1000,600)
 
 
 
