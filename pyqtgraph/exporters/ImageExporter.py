@@ -27,12 +27,12 @@ class ImageExporter(Exporter):
         
     def widthChanged(self):
         sr = self.getSourceRect()
-        ar = sr.height() / sr.width()
+        ar = float(sr.height()) / sr.width()
         self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
-        ar = sr.width() / sr.height()
+        ar = float(sr.width()) / sr.height()
         self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
         
     def parameters(self):
@@ -51,6 +51,8 @@ class ImageExporter(Exporter):
             
         targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
         sourceRect = self.getSourceRect()
+        
+        
         #self.png = QtGui.QImage(targetRect.size(), QtGui.QImage.Format_ARGB32)
         #self.png.fill(pyqtgraph.mkColor(self.params['background']))
         bg = np.empty((self.params['width'], self.params['height'], 4), dtype=np.ubyte)
@@ -60,11 +62,19 @@ class ImageExporter(Exporter):
         bg[:,:,2] = color.red()
         bg[:,:,3] = color.alpha()
         self.png = pg.makeQImage(bg, alpha=True)
+        
+        ## set resolution of image:
+        origTargetRect = self.getTargetRect()
+        resolutionScale = targetRect.width() / origTargetRect.width()
+        #self.png.setDotsPerMeterX(self.png.dotsPerMeterX() * resolutionScale)
+        #self.png.setDotsPerMeterY(self.png.dotsPerMeterY() * resolutionScale)
+        
         painter = QtGui.QPainter(self.png)
+        #dtr = painter.deviceTransform()
         try:
-            self.setExportMode(True, {'antialias': self.params['antialias'], 'background': self.params['background']})
+            self.setExportMode(True, {'antialias': self.params['antialias'], 'background': self.params['background'], 'painter': painter, 'resolutionScale': resolutionScale})
             painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params['antialias'])
-            self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
+            self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
         finally:
             self.setExportMode(False)
         painter.end()

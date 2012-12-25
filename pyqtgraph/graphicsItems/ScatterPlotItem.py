@@ -239,7 +239,6 @@ class ScatterPlotItem(GraphicsObject):
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint. 
             'antialias': pg.getConfigOption('antialias'),
         }   
-        self.exportOpts = False
         
         self.setPen(200,200,200, update=False)
         self.setBrush(100,100,150, update=False)
@@ -546,7 +545,7 @@ class ScatterPlotItem(GraphicsObject):
         if invalidate:
             self.invalidate()
 
-    def getSpotOpts(self, recs):
+    def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
             rec = recs
             symbol = rec['symbol']
@@ -561,11 +560,12 @@ class ScatterPlotItem(GraphicsObject):
             brush = rec['brush']
             if brush is None:
                 brush = self.opts['brush']
-            return (symbol, size, fn.mkPen(pen), fn.mkBrush(brush))
+            return (symbol, size*scale, fn.mkPen(pen), fn.mkBrush(brush))
         else:
             recs = recs.copy()
             recs['symbol'][np.equal(recs['symbol'], None)] = self.opts['symbol']
             recs['size'][np.equal(recs['size'], -1)] = self.opts['size']
+            recs['size'] *= scale
             recs['pen'][np.equal(recs['pen'], None)] = fn.mkPen(self.opts['pen'])
             recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
             return recs
@@ -675,18 +675,20 @@ class ScatterPlotItem(GraphicsObject):
             rect = QtCore.QRectF(y, x, h, w)
             self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
             
-    def setExportMode(self, export, opts):
-        if export:
-            self.exportOpts = opts
-            if 'antialias' not in opts:
-                self.exportOpts['antialias'] = True
-        else:
-            self.exportOpts = False
-            
+    def setExportMode(self, *args, **kwds):
+        GraphicsObject.setExportMode(self, *args, **kwds)
+        self.invalidate()
             
     def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
+        if self._exportOpts is not False:
+            aa = self._exportOpts.get('antialias', True)
+            scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
+        else:
+            aa = self.opts['antialias']
+            scale = 1.0
+            
         if self.opts['pxMode'] is True:
             atlas = self.fragmentAtlas.getAtlas()
             #arr = fn.imageToArray(atlas.toImage(), copy=True)
@@ -701,13 +703,9 @@ class ScatterPlotItem(GraphicsObject):
                     
             p.resetTransform()
             
-            if not USE_PYSIDE and self.opts['useCache'] and self.exportOpts is False:
+            if not USE_PYSIDE and self.opts['useCache'] and self._exportOpts is False:
                 p.drawPixmapFragments(self.fragments, atlas)
             else:
-                if self.exportOpts is not False:
-                    aa = self.exportOpts['antialias']
-                else:
-                    aa = self.opts['antialias']
                 p.setRenderHint(p.Antialiasing, aa)
                 
                 for i in range(len(self.data)):
@@ -715,23 +713,20 @@ class ScatterPlotItem(GraphicsObject):
                     frag = self.fragments[i]
                     p.resetTransform()
                     p.translate(frag.x, frag.y)
-                    drawSymbol(p, *self.getSpotOpts(rec))
+                    drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
                 for rec in self.data:
-                    
+                    if scale != 1.0:
+                        rec = rec.copy()
+                        rec['size'] *= scale
                     p2.resetTransform()
                     p2.translate(rec['x'], rec['y'])
-                    drawSymbol(p2, *self.getSpotOpts(rec))
+                    drawSymbol(p2, *self.getSpotOpts(rec, scale))
                 p2.end()
                 
-            if self.exportOpts is not False:
-                aa = self.exportOpts['antialias']
-            else:
-                aa = self.opts['antialias']
-            p.setRenderHint(p.Antialiasing, aa)
             self.picture.play(p)
 
         

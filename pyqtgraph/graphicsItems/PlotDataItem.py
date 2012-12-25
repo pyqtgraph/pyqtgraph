@@ -523,7 +523,9 @@ class PlotDataItem(GraphicsObject):
 def dataType(obj):
     if hasattr(obj, '__len__') and len(obj) == 0:
         return 'empty'
-    if isSequence(obj):
+    if isinstance(obj, dict):
+        return 'dictOfLists'
+    elif isSequence(obj):
         first = obj[0]
         
         if (hasattr(obj, 'implements') and obj.implements('MetaArray')):
@@ -542,12 +544,10 @@ def dataType(obj):
             return 'listOfDicts'
         else:
             return 'listOfValues'
-    elif isinstance(obj, dict):
-        return 'dictOfLists'
         
         
 def isSequence(obj):
-    return isinstance(obj, list) or isinstance(obj, np.ndarray) or (hasattr(obj, 'implements') and obj.implements('MetaArray'))
+    return hasattr(obj, '__iter__') or isinstance(obj, np.ndarray) or (hasattr(obj, 'implements') and obj.implements('MetaArray'))
     
             
             

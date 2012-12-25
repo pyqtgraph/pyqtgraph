@@ -1107,7 +1107,7 @@ class PlotItem(GraphicsWidget):
         self.updateButtons()
         
     def updateButtons(self):
-        if self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+        if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
             self.autoBtn.show()
         else:
             self.autoBtn.hide()
@@ -1151,9 +1151,11 @@ class PlotItem(GraphicsWidget):
         return c
 
       
-    def setExportMode(self, export, opts):
-        if export:
-            self.autoBtn.hide()
-        else:
-            self.autoBtn.show()
+    def setExportMode(self, export, opts=None):
+        GraphicsWidget.setExportMode(self, export, opts)
+        self.updateButtons()
+        #if export:
+            #self.autoBtn.hide()
+        #else:
+            #self.autoBtn.show()
     
