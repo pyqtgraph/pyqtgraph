@@ -153,7 +153,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         
     if root is None:
         root = item
-        
+                
     ## Skip hidden items
     if hasattr(item, 'isVisible') and not item.isVisible():
         return None
@@ -171,10 +171,10 @@ def _generateItemSvg(item, nodes=None, root=None):
         doc = xml.parseString(xmlStr)
     else:
         childs = item.childItems()
-        if isinstance(root, QtGui.QGraphicsScene):
-            tr = item.sceneTransform()
-        else:
-            tr = item.itemTransform(root)
+        tr = itemTransform(item, root)
+        
+        #print item, pg.SRTTransform(tr)
+
         #tr.translate(item.pos().x(), item.pos().y())
         #tr = tr * item.transform()
         arr = QtCore.QByteArray()
@@ -248,7 +248,7 @@ def _generateItemSvg(item, nodes=None, root=None):
             if isinstance(root, QtGui.QGraphicsScene):
                 path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
             else:
-                path = QtGui.QGraphicsPathItem(item.mapToItem(root, item.shape()))
+                path = QtGui.QGraphicsPathItem(root.mapToParent(item.mapToItem(root, item.shape())))
             pathNode = _generateItemSvg(path, root=root).getElementsByTagName('path')[0]
             ## and for the clipPath element
             clip = name + '_clip'
@@ -306,6 +306,7 @@ def correctCoordinates(node, item):
                 ch.setAttribute('d', newCoords)
             elif ch.tagName == 'text':
                 removeTransform = False
+                ## leave text alone for now. Might need this later to correctly render text with outline.
                 #c = np.array([
                     #[float(ch.getAttribute('x')), float(ch.getAttribute('y'))], 
                     #[float(ch.getAttribute('font-size')), 0], 
@@ -318,32 +319,82 @@ def correctCoordinates(node, item):
                 #ch.setAttribute('font-size', str(fs))
             else:
                 print('warning: export not implemented for SVG tag %s (from item %s)' % (ch.tagName, item))
+                
+            ## correct line widths if needed
+            if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke':
+                w = float(grp.getAttribute('stroke-width'))
+                s = pg.transformCoordinates(tr, np.array([[w,0], [0,0]]), transpose=True)
+                w = ((s[0]-s[1])**2).sum()**0.5
+                ch.setAttribute('stroke-width', str(w))
             
         if removeTransform:
             grp.removeAttribute('transform')
         
 
-def correctStroke(node, item, root, width=1):
-    #print "==============", item, node
-    if node.hasAttribute('stroke-width'):
-        width = float(node.getAttribute('stroke-width'))
-    if node.getAttribute('vector-effect') == 'non-scaling-stroke':
-        node.removeAttribute('vector-effect')
-        if isinstance(root, QtGui.QGraphicsScene):
-            w = item.mapFromScene(pg.Point(width,0))
-            o = item.mapFromScene(pg.Point(0,0))
-        else:
-            w = item.mapFromItem(root, pg.Point(width,0))
-            o = item.mapFromItem(root, pg.Point(0,0))
-        w = w-o
-        #print "   ", w, o, w-o
-        w = (w.x()**2 + w.y()**2) ** 0.5
-        #print "   ", w
-        node.setAttribute('stroke-width', str(w))
+def itemTransform(item, root):
+    ## Return the transformation mapping item to root
+    ## (actually to parent coordinate system of root)
     
-    for ch in node.childNodes:
-        if isinstance(ch, xml.Element):
-            correctStroke(ch, item, root, width)
+    if item is root:
+        tr = QtGui.QTransform()
+        tr.translate(*item.pos())
+        tr = tr * item.transform()
+        return tr
+        
+    
+    if int(item.flags() & item.ItemIgnoresTransformations) > 0:
+        pos = item.pos()
+        parent = item.parentItem()
+        if parent is not None:
+            pos = itemTransform(parent, root).map(pos)
+        tr = QtGui.QTransform()
+        tr.translate(pos.x(), pos.y())
+        tr = item.transform() * tr
+    else:
+        ## find next parent that is either the root item or 
+        ## an item that ignores its transformation
+        nextRoot = item
+        while True:
+            nextRoot = nextRoot.parentItem()
+            if nextRoot is None:
+                nextRoot = root
+                break
+            if nextRoot is root or int(nextRoot.flags() & nextRoot.ItemIgnoresTransformations) > 0:
+                break
+        
+        if isinstance(nextRoot, QtGui.QGraphicsScene):
+            tr = item.sceneTransform()
+        else:
+            tr = itemTransform(nextRoot, root) * item.itemTransform(nextRoot)[0]
+            #pos = QtGui.QTransform()
+            #pos.translate(root.pos().x(), root.pos().y())
+            #tr = pos * root.transform() * item.itemTransform(root)[0]
+        
+    
+    return tr
+
+
+#def correctStroke(node, item, root, width=1):
+    ##print "==============", item, node
+    #if node.hasAttribute('stroke-width'):
+        #width = float(node.getAttribute('stroke-width'))
+    #if node.getAttribute('vector-effect') == 'non-scaling-stroke':
+        #node.removeAttribute('vector-effect')
+        #if isinstance(root, QtGui.QGraphicsScene):
+            #w = item.mapFromScene(pg.Point(width,0))
+            #o = item.mapFromScene(pg.Point(0,0))
+        #else:
+            #w = item.mapFromItem(root, pg.Point(width,0))
+            #o = item.mapFromItem(root, pg.Point(0,0))
+        #w = w-o
+        ##print "   ", w, o, w-o
+        #w = (w.x()**2 + w.y()**2) ** 0.5
+        ##print "   ", w
+        #node.setAttribute('stroke-width', str(w))
+    
+    #for ch in node.childNodes:
+        #if isinstance(ch, xml.Element):
+            #correctStroke(ch, item, root, width)
             
 def cleanXml(node):
     ## remove extraneous text; let the xml library do the formatting.
@@ -359,4 +410,5 @@ def cleanXml(node):
     if hasElement:
         for ch in nonElement:
             node.removeChild(ch)
-
+    elif node.tagName == 'g':  ## remove childless groups
+        node.parentNode.removeChild(node)
