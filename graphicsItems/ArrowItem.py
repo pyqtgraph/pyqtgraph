@@ -54,3 +54,8 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         QtGui.QGraphicsPathItem.paint(self, p, *args)
+
+    def shape(self):
+        #if not self.opts['pxMode']:
+            #return QtGui.QGraphicsPathItem.shape(self)
+        return self.path
