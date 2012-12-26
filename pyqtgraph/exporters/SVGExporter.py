@@ -4,7 +4,7 @@ from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import pyqtgraph as pg
 import re
 import xml.dom.minidom as xml
-
+import numpy as np
 
 
 __all__ = ['SVGExporter']
@@ -121,13 +121,29 @@ def _generateItemSvg(item, nodes=None, root=None):
     ## 1) Qt SVG does not implement clipping paths. This is absurd.
     ##    The solution is to let Qt generate SVG for each item independently,
     ##    then glue them together manually with clipping.
+    ##    
+    ##    The format Qt generates for all items looks like this:
+    ##    
+    ##    <g>
+    ##        <g transform="matrix(...)">
+    ##            one or more of: <path/> or <polyline/> or <text/>
+    ##        </g>
+    ##        <g transform="matrix(...)">
+    ##            one or more of: <path/> or <polyline/> or <text/>
+    ##        </g>
+    ##        . . .
+    ##    </g>
+    ##    
     ## 2) There seems to be wide disagreement over whether path strokes
     ##    should be scaled anisotropically. 
     ##      see: http://web.mit.edu/jonas/www/anisotropy/
     ##    Given that both inkscape and illustrator seem to prefer isotropic
     ##    scaling, we will optimize for those cases.  
+    ##    
     ## 3) Qt generates paths using non-scaling-stroke from SVG 1.2, but 
     ##    inkscape only supports 1.1. 
+    ##    
+    ##    Both 2 and 3 can be addressed by drawing all items in world coordinates.
     
     
     
@@ -155,14 +171,12 @@ def _generateItemSvg(item, nodes=None, root=None):
         doc = xml.parseString(xmlStr)
     else:
         childs = item.childItems()
-        tr.translate(item.pos().x(), item.pos().y())
-        tr = tr * item.transform()
-        #if not item.isVisible() or int(item.flags() & item.ItemHasNoContents) > 0:
-            #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
-            ##print item, m
-            #xmlStr = '<g><g transform="matrix(%f,%f,%f,%f,%f,%f)"></g></g>' % m  # note: outer group is needed to separate clipping from transform
-            #doc = xml.parseString(xmlStr)
-        #else:
+        if isinstance(root, QtGui.QGraphicsScene):
+            tr = item.sceneTransform()
+        else:
+            tr = item.itemTransform(root)
+        #tr.translate(item.pos().x(), item.pos().y())
+        #tr = tr * item.transform()
         arr = QtCore.QByteArray()
         buf = QtCore.QBuffer(arr)
         svg = QtSvg.QSvgGenerator()
@@ -177,7 +191,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         if hasattr(item, 'setExportMode'):
             item.setExportMode(True, {'painter': p})
         try:
-            #p.setTransform(tr)
+            p.setTransform(tr)
             item.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
         finally:
             p.end()
@@ -197,17 +211,22 @@ def _generateItemSvg(item, nodes=None, root=None):
     except:
         print doc.toxml()
         raise
+
+
+    ## Get rid of group transformation matrices by applying
+    ## transformation to inner coordinates
+    correctCoordinates(g1, item)
     
     ## make sure g1 has the transformation matrix
-    m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
-    g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
+    #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
+    #g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
     
     #print "=================",item,"====================="
     #print g1.toprettyxml(indent="  ", newl='')
     
     ## Inkscape does not support non-scaling-stroke (this is SVG 1.2, inkscape supports 1.1)
     ## So we need to correct anything attempting to use this.
-    correctStroke(g1, item, root)
+    #correctStroke(g1, item, root)
     
     ## decide on a name for this item
     baseName = item.__class__.__name__
@@ -226,7 +245,10 @@ def _generateItemSvg(item, nodes=None, root=None):
         ## See if this item clips its children
         if int(item.flags() & item.ItemClipsChildrenToShape) > 0:
             ## Generate svg for just the path
-            path = QtGui.QGraphicsPathItem(item.shape())
+            if isinstance(root, QtGui.QGraphicsScene):
+                path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
+            else:
+                path = QtGui.QGraphicsPathItem(item.mapToItem(root, item.shape()))
             pathNode = _generateItemSvg(path, root=root).getElementsByTagName('path')[0]
             ## and for the clipPath element
             clip = name + '_clip'
@@ -248,7 +270,58 @@ def _generateItemSvg(item, nodes=None, root=None):
     
     return g1
 
-
+def correctCoordinates(node, item):
+    ## Remove transformation matrices from <g> tags by applying matrix to coordinates inside.
+    groups = node.getElementsByTagName('g')
+    for grp in groups:
+        matrix = grp.getAttribute('transform')
+        match = re.match(r'matrix\((.*)\)', matrix)
+        if match is None:
+            vals = [1,0,0,1,0,0]
+        else:
+            vals = map(float, match.groups()[0].split(','))
+        tr = np.array([[vals[0], vals[2], vals[4]], [vals[1], vals[3], vals[5]]])
+        
+        removeTransform = False
+        for ch in grp.childNodes:
+            if not isinstance(ch, xml.Element):
+                continue
+            if ch.tagName == 'polyline':
+                removeTransform = True
+                coords = np.array([map(float, c.split(',')) for c in ch.getAttribute('points').strip().split(' ')])
+                coords = pg.transformCoordinates(tr, coords, transpose=True)
+                ch.setAttribute('points', ' '.join([','.join(map(str, c)) for c in coords]))
+            elif ch.tagName == 'path':
+                removeTransform = True
+                newCoords = ''
+                for c in ch.getAttribute('d').strip().split(' '):
+                    x,y = c.split(',')
+                    if x[0].isalpha():
+                        t = x[0]
+                        x = x[1:]
+                    else:
+                        t = ''
+                    nc = pg.transformCoordinates(tr, np.array([[float(x),float(y)]]), transpose=True)
+                    newCoords += t+str(nc[0,0])+','+str(nc[0,1])+' '
+                ch.setAttribute('d', newCoords)
+            elif ch.tagName == 'text':
+                removeTransform = False
+                #c = np.array([
+                    #[float(ch.getAttribute('x')), float(ch.getAttribute('y'))], 
+                    #[float(ch.getAttribute('font-size')), 0], 
+                    #[0,0]])
+                #c = pg.transformCoordinates(tr, c, transpose=True)
+                #ch.setAttribute('x', str(c[0,0]))
+                #ch.setAttribute('y', str(c[0,1]))
+                #fs = c[1]-c[2]
+                #fs = (fs**2).sum()**0.5
+                #ch.setAttribute('font-size', str(fs))
+            else:
+                print('warning: export not implemented for SVG tag %s (from item %s)' % (ch.tagName, item))
+            
+        if removeTransform:
+            grp.removeAttribute('transform')
+        
 
 def correctStroke(node, item, root, width=1):
     #print "==============", item, node

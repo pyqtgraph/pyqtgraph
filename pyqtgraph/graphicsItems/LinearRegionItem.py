@@ -143,6 +143,7 @@ class LinearRegionItem(UIGraphicsItem):
         #prof = debug.Profiler('LinearRegionItem.paint')
         UIGraphicsItem.paint(self, p, *args)
         p.setBrush(self.currentBrush)
+        p.setPen(fn.mkPen(None))
         p.drawRect(self.boundingRect())
         #prof.finish()
 
