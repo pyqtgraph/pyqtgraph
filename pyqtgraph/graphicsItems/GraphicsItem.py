@@ -482,12 +482,14 @@ class GraphicsItem(object):
         return tree
     
     
-    def setExportMode(self, export, opts):
+    def setExportMode(self, export, opts=None):
         """
         This method is called by exporters to inform items that they are being drawn for export
         with a specific set of options. Items access these via self._exportOptions.
         When exporting is complete, _exportOptions is set to False.
         """
+        if opts is None:
+            opts = {}
         if export:
             self._exportOpts = opts
             #if 'antialias' not in opts:

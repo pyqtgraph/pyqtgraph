@@ -440,7 +440,7 @@ class PlotCurveItem(GraphicsObject):
             
             
             
-        if sp is not None:
+        if sp is not None and sp.style() != QtCore.Qt.NoPen:
             p.setPen(sp)
             p.drawPath(path)
         p.setPen(cp)

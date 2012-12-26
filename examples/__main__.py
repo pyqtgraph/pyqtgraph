@@ -1,6 +1,6 @@
 import sys, os, subprocess, time
-## make sure this pyqtgraph is importable before any others
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
 if USE_PYSIDE:
@@ -47,6 +47,7 @@ examples = OrderedDict([
         ('Surface Plot', 'GLSurfacePlot.py'),
         ('Scatter Plot', 'GLScatterPlotItem.py'),
         ('Shaders', 'GLshaders.py'),
+        ('Line Plot', 'GLLinePlotItem.py'),
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
     ])),
@@ -166,7 +167,7 @@ def buildFileList(examples, files=None):
             buildFileList(val, files)
     return files
             
-def testFile(name, f, exe, lib, graphicsSystem):
+def testFile(name, f, exe, lib, graphicsSystem=None):
     global path
     fn =  os.path.join(path,f)
     #print "starting process: ", fn
@@ -194,8 +195,8 @@ except:
     print("test failed")
     raise
 
-"""  % (import1, import2, graphicsSystem)
-    #print code
+"""  % (import1, graphicsSystem, import2)
+
     process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     process.stdin.write(code.encode('UTF-8'))
     #process.stdin.close()
