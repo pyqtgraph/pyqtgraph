@@ -126,6 +126,9 @@ class ExampleLoader(QtGui.QMainWindow):
             extra.append('pyqt')
         elif self.ui.pysideCheck.isChecked():
             extra.append('pyside')
+        
+        if self.ui.forceGraphicsCheck.isChecked():
+            extra.append(str(self.ui.forceGraphicsCombo.currentText()))
 
         if fn is None:
             return
@@ -163,22 +166,26 @@ def buildFileList(examples, files=None):
             buildFileList(val, files)
     return files
             
-def testFile(name, f, exe, lib):
+def testFile(name, f, exe, lib, graphicsSystem):
     global path
     fn =  os.path.join(path,f)
     #print "starting process: ", fn
-    
+    os.chdir(path)
     sys.stdout.write(name)
     sys.stdout.flush()
     
+    import1 = "import %s" % lib if lib != '' else ''
+    import2 = os.path.splitext(os.path.split(fn)[1])[0]
+    graphicsSystem = '' if graphicsSystem is None else "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
     code = """
 try:
+    %s
+    import pyqtgraph as pg
     %s
     import %s
     import sys
     print("test complete")
     sys.stdout.flush()
-    import pyqtgraph as pg
     import time
     while True:  ## run a little event loop
         pg.QtGui.QApplication.processEvents()
@@ -187,7 +194,7 @@ except:
     print("test failed")
     raise
 
-"""  % ("import %s" % lib if lib != '' else "", os.path.splitext(os.path.split(fn)[1])[0])
+"""  % (import1, import2, graphicsSystem)
     #print code
     process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     process.stdin.write(code.encode('UTF-8'))

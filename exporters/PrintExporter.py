@@ -3,8 +3,8 @@ from pyqtgraph.parametertree import Parameter
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import re
 
-#__all__ = ['PrintExporter']  
-__all__ = []   ## Printer is disabled for now--does not work very well.
+__all__ = ['PrintExporter']  
+#__all__ = []   ## Printer is disabled for now--does not work very well.
 
 class PrintExporter(Exporter):
     Name = "Printer"
@@ -38,9 +38,15 @@ class PrintExporter(Exporter):
         if dialog.exec_() != QtGui.QDialog.Accepted:
             return;
             
+        #dpi = QtGui.QDesktopWidget().physicalDpiX()
+        
         #self.svg.setSize(QtCore.QSize(100,100))
         #self.svg.setResolution(600)
-        res = printer.resolution()
+        #res = printer.resolution()
+        sr = self.getSourceRect()
+        #res = sr.width() * .4 / (self.params['width'] * 100 / 2.54)
+        res = QtGui.QDesktopWidget().physicalDpiX()
+        printer.setResolution(res)
         rect = printer.pageRect()
         center = rect.center()
         h = self.params['height'] * res * 100. / 2.54
@@ -52,8 +58,8 @@ class PrintExporter(Exporter):
         sourceRect = self.getSourceRect()
         painter = QtGui.QPainter(printer)
         try:
-            self.setExportMode(True)
-            self.getScene().render(painter, QtCore.QRectF(targetRect), sourceRect)
+            self.setExportMode(True, {'painter': painter})
+            self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
         finally:
             self.setExportMode(False)
         painter.end()

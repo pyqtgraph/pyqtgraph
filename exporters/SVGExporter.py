@@ -46,7 +46,7 @@ class SVGExporter(Exporter):
         
         painter = QtGui.QPainter(self.svg)
         try:
-            self.setExportMode(True)
+            self.setExportMode(True, {'painter': painter,})
             self.render(painter, QtCore.QRectF(targetRect), sourceRect)
         finally:
             self.setExportMode(False)

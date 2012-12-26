@@ -52,7 +52,6 @@ class PlotCurveItem(GraphicsObject):
         self.clear()
         self.path = None
         self.fillPath = None
-        self.exportOpts = False
         
             
         ## this is disastrous for performance.
@@ -404,8 +403,8 @@ class PlotCurveItem(GraphicsObject):
         path = self.path
         prof.mark('generate path')
         
-        if self.exportOpts is not False:
-            aa = self.exportOpts['antialias']
+        if self._exportOpts is not False:
+            aa = self._exportOpts.get('antialias', True)
         else:
             aa = self.opts['antialias']
         
@@ -487,13 +486,6 @@ class PlotCurveItem(GraphicsObject):
         ev.accept()
         self.sigClicked.emit(self)
 
-    def setExportMode(self, export, opts):
-        if export:
-            self.exportOpts = opts
-            if 'antialias' not in opts:
-                self.exportOpts['antialias'] = True
-        else:
-            self.exportOpts = False
 
 class ROIPlotItem(PlotCurveItem):
     """Plot curve that monitors an ROI and image for changes to automatically replot."""
