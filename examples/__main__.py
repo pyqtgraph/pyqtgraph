@@ -47,6 +47,7 @@ examples = OrderedDict([
         ('Surface Plot', 'GLSurfacePlot.py'),
         ('Scatter Plot', 'GLScatterPlotItem.py'),
         ('Shaders', 'GLshaders.py'),
+        ('Line Plot', 'GLLinePlotItem.py'),
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
     ])),
