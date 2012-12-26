@@ -50,6 +50,9 @@ CONFIG_OPTIONS = {
 def setConfigOption(opt, value):
     CONFIG_OPTIONS[opt] = value
 
+def setConfigOptions(**opts):
+    CONFIG_OPTIONS.update(opts)
+
 def getConfigOption(opt):
     return CONFIG_OPTIONS[opt]
 

@@ -28,10 +28,13 @@ class GraphicsItem(object):
         self._viewWidget = None
         self._viewBox = None
         self._connectedView = None
+        self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         if register:
             GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
                     
-    
+
+                    
+                    
     def getViewWidget(self):
         """
         Return the view widget for this item. If the scene has multiple views, only the first view is returned.
@@ -82,6 +85,9 @@ class GraphicsItem(object):
         Return the transform that converts local item coordinates to device coordinates (usually pixels).
         Extends deviceTransform to automatically determine the viewportTransform.
         """
+        if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
+            return self._exportOpts['painter'].deviceTransform()
+            
         if viewportTransform is None:
             view = self.getViewWidget()
             if view is None:
@@ -476,4 +482,18 @@ class GraphicsItem(object):
         return tree
     
     
+    def setExportMode(self, export, opts=None):
+        """
+        This method is called by exporters to inform items that they are being drawn for export
+        with a specific set of options. Items access these via self._exportOptions.
+        When exporting is complete, _exportOptions is set to False.
+        """
+        if opts is None:
+            opts = {}
+        if export:
+            self._exportOpts = opts
+            #if 'antialias' not in opts:
+                #self._exportOpts['antialias'] = True
+        else:
+            self._exportOpts = False
     

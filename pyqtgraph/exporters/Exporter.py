@@ -18,15 +18,18 @@ class Exporter(object):
         object.__init__(self)
         self.item = item
         
-    def item(self):
-        return self.item
+    #def item(self):
+        #return self.item
     
     def parameters(self):
         """Return the parameters used to configure this exporter."""
         raise Exception("Abstract method must be overridden in subclass.")
         
-    def export(self):
-        """"""
+    def export(self, fileName=None, toBytes=False):
+        """
+        If *fileName* is None, pop-up a file dialog.
+        If *toString* is True, return a bytes object rather than writing to file.
+        """
         raise Exception("Abstract method must be overridden in subclass.")
 
     def fileSaveDialog(self, filter=None, opts=None):

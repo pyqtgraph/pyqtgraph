@@ -1,6 +1,6 @@
 import sys, os, subprocess, time
-## make sure this pyqtgraph is importable before any others
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
 if USE_PYSIDE:
@@ -47,6 +47,7 @@ examples = OrderedDict([
         ('Surface Plot', 'GLSurfacePlot.py'),
         ('Scatter Plot', 'GLScatterPlotItem.py'),
         ('Shaders', 'GLshaders.py'),
+        ('Line Plot', 'GLLinePlotItem.py'),
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
     ])),
@@ -126,6 +127,9 @@ class ExampleLoader(QtGui.QMainWindow):
             extra.append('pyqt')
         elif self.ui.pysideCheck.isChecked():
             extra.append('pyside')
+        
+        if self.ui.forceGraphicsCheck.isChecked():
+            extra.append(str(self.ui.forceGraphicsCombo.currentText()))
 
         if fn is None:
             return
@@ -163,22 +167,26 @@ def buildFileList(examples, files=None):
             buildFileList(val, files)
     return files
             
-def testFile(name, f, exe, lib):
+def testFile(name, f, exe, lib, graphicsSystem=None):
     global path
     fn =  os.path.join(path,f)
     #print "starting process: ", fn
-    
+    os.chdir(path)
     sys.stdout.write(name)
     sys.stdout.flush()
     
+    import1 = "import %s" % lib if lib != '' else ''
+    import2 = os.path.splitext(os.path.split(fn)[1])[0]
+    graphicsSystem = '' if graphicsSystem is None else "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
     code = """
 try:
+    %s
+    import pyqtgraph as pg
     %s
     import %s
     import sys
     print("test complete")
     sys.stdout.flush()
-    import pyqtgraph as pg
     import time
     while True:  ## run a little event loop
         pg.QtGui.QApplication.processEvents()
@@ -187,8 +195,8 @@ except:
     print("test failed")
     raise
 
-"""  % ("import %s" % lib if lib != '' else "", os.path.splitext(os.path.split(fn)[1])[0])
-    #print code
+"""  % (import1, graphicsSystem, import2)
+
     process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     process.stdin.write(code.encode('UTF-8'))
     #process.stdin.close()

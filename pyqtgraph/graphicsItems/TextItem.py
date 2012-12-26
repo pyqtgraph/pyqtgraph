@@ -27,25 +27,27 @@ class TextItem(UIGraphicsItem):
         #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
                      #transformation will be ignored)
                      
-                     
+        self.anchor = pg.Point(anchor)
+        #self.angle = 0
         UIGraphicsItem.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
+        self.textItem.setParentItem(self)
         self.lastTransform = None
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setText(text, color)
         else:
             self.setHtml(html)
-        self.anchor = pg.Point(anchor)
         self.fill = pg.mkBrush(fill)
         self.border = pg.mkPen(border)
-        self.angle = angle
-        #self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
+        self.rotate(angle)
+        self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
         color = pg.mkColor(color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
+        self.updateText()
         #html = '<span style="color: #%s; text-align: center;">%s</span>' % (color, text)
         #self.setHtml(html)
         
@@ -70,38 +72,41 @@ class TextItem(UIGraphicsItem):
         self.textItem.setFont(*args)
         self.updateText()
         
-    def updateText(self):
-        self.viewRangeChanged()
-
-    #def getImage(self):
-        #if self.img is None:
-            #br = self.textItem.boundingRect()
-            #img = QtGui.QImage(int(br.width()), int(br.height()), QtGui.QImage.Format_ARGB32)
-            #p = QtGui.QPainter(img)
-            #self.textItem.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
-            #p.end()
-            #self.img = img
-        #return self.img
+    #def setAngle(self, angle):
+        #self.angle = angle
+        #self.updateText()
         
-    def textBoundingRect(self):
-        ## return the bounds of the text box in device coordinates
-        pos = self.mapToDevice(QtCore.QPointF(0,0))
-        if pos is None:
-            return None
-        tbr = self.textItem.boundingRect()
-        return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
+        
+    def updateText(self):
+        
+        ## Needed to maintain font size when rendering to image with increased resolution
+        self.textItem.resetTransform()
+        #self.textItem.rotate(self.angle)
+        if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
+            s = self._exportOpts['resolutionScale']
+            self.textItem.scale(s, s)
+        
+        #br = self.textItem.mapRectToParent(self.textItem.boundingRect())
+        self.textItem.setPos(0,0)
+        br = self.textItem.boundingRect()
+        apos = self.textItem.mapToParent(pg.Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
+        #print br, apos
+        self.textItem.setPos(-apos.x(), -apos.y())
+        
+    #def textBoundingRect(self):
+        ### return the bounds of the text box in device coordinates
+        #pos = self.mapToDevice(QtCore.QPointF(0,0))
+        #if pos is None:
+            #return None
+        #tbr = self.textItem.boundingRect()
+        #return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
 
 
     def viewRangeChanged(self):
-        br = self.textBoundingRect()
-        if br is None:
-            return
-        self.prepareGeometryChange()
-        self._bounds = fn.invertQTransform(self.deviceTransform()).mapRect(br)
-        #print self._bounds
+        self.updateText()
 
     def boundingRect(self):
-        return self._bounds
+        return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
         
     def paint(self, p, *args):
         tr = p.transform()
@@ -110,23 +115,9 @@ class TextItem(UIGraphicsItem):
                 self.viewRangeChanged()
         self.lastTransform = tr
         
-        
-        tbr = self.textBoundingRect()
-        
-        #p.setPen(pg.mkPen('r'))
-        #p.drawRect(self.boundingRect())
-        
         p.setPen(self.border)
         p.setBrush(self.fill)
+        p.setRenderHint(p.Antialiasing, True)
+        p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
-        
-        #p.fillRect(tbr)
-        p.resetTransform()
-        #p.drawRect(tbr)
-        
-        
-        p.translate(tbr.left(), tbr.top())
-        p.rotate(self.angle)
-        p.drawRect(QtCore.QRectF(0, 0, tbr.width(), tbr.height()))
-        self.textItem.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
         

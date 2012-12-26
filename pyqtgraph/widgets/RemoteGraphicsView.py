@@ -21,7 +21,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         self._proc = mp.QtProcess()
         self.pg = self._proc._import('pyqtgraph')
-        self.pg.setConfigOptions(self.pg.CONFIG_OPTIONS)
+        self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)

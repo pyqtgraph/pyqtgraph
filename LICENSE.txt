@@ -1,4 +1,4 @@
-Copyright (c) 2011  University of North Carolina at Chapel Hill
+Copyright (c) 2012  University of North Carolina at Chapel Hill
 Luke Campagnola    ('luke.campagnola@%s.com' % 'gmail')
 
 The MIT License

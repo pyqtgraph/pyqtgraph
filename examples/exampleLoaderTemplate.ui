@@ -58,6 +58,36 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="forceGraphicsCheck">
+           <property name="text">
+            <string>Force Graphics System:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="forceGraphicsCombo">
+           <item>
+            <property name="text">
+             <string>native</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>raster</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>opengl</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QPushButton" name="loadBtn">
          <property name="text">
           <string>Load Example</string>
