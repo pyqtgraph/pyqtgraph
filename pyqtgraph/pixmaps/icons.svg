@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.1 r9760"
+   sodipodi:docname="icons.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="290.39972"
+     inkscape:cy="606.05972"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer3"
+     showgrid="false"
+     inkscape:window-width="1400"
+     inkscape:window-height="1030"
+     inkscape:window-x="-3"
+     inkscape:window-y="-3"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer"
+     style="display:inline" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer#1">
+    <g
+       style="display:inline"
+       id="g3764"
+       inkscape:export-filename="/home/luke/work/manis_lab/code/acq4/lib/util/pyqtgraph/graphicsItems/PlotItem/auto.png"
+       inkscape:export-xdpi="26.181818"
+       inkscape:export-ydpi="26.181818">
+      <rect
+         ry="18.687822"
+         y="400.81378"
+         x="108.08632"
+         height="100"
+         width="100"
+         id="rect2985"
+         style="fill:#000000;fill-opacity:1;stroke:#a9a9a9;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <text
+         transform="scale(1.0048002,0.99522278)"
+         sodipodi:linespacing="125%"
+         id="text3757"
+         y="490.5354"
+         x="118.68684"
+         style="font-size:108.36511993px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#e7e7e7;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial Bold"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial Bold"
+           y="490.5354"
+           x="118.68684"
+           id="tspan3759"
+           sodipodi:role="line">A</tspan></text>
+    </g>
+    <g
+       id="g3777"
+       style="display:inline"
+       transform="translate(140,0)"
+       inkscape:export-filename="/home/luke/work/manis_lab/code/acq4/lib/util/pyqtgraph/graphicsItems/PlotItem/ctrl.png"
+       inkscape:export-xdpi="26.181818"
+       inkscape:export-ydpi="26.181818">
+      <rect
+         style="fill:#000000;fill-opacity:1;stroke:#a9a9a9;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+         id="rect3779"
+         width="100"
+         height="100"
+         x="108.08632"
+         y="400.81378"
+         ry="18.687822" />
+      <path
+         style="fill:#e3e3e3;fill-opacity:1;stroke:none"
+         d="m 192.1403,484.47301 c 3.45636,-3.45635 3.45636,-9.02124 0,-12.47759 l -36.39994,-36.39995 c 1.29616,-5.58299 -0.2288,-11.68397 -4.57999,-16.03517 -3.03048,-3.03048 -6.90883,-4.69498 -10.87095,-4.98687 l -2.98378,2.98378 9.49382,9.49382 -2.62905,9.80681 -9.79638,2.61862 -9.49382,-9.49382 -2.97334,2.97334 c 0.29168,3.96216 1.94541,7.85036 4.97644,10.88138 4.35119,4.3512 10.45218,5.87615 16.03517,4.57999 l 36.39995,36.39995 c 3.45635,3.45635 9.02124,3.45635 12.47759,0 l 0.34428,-0.34429 z m -3.38021,-3.04636 c -2.09533,2.09533 -5.4893,2.10575 -7.58463,0.0104 -2.09533,-2.09532 -2.09533,-5.49972 -10e-6,-7.59505 2.09534,-2.09534 5.48931,-2.0849 7.58464,0.0104 2.09532,2.09532 2.09533,5.47887 0,7.5742 z"
+         id="path3793"
+         inkscape:connector-curvature="0" />
+    </g>
+    <g
+       transform="translate(280,0)"
+       style="display:inline"
+       id="g3785"
+       inkscape:export-filename="/home/luke/work/manis_lab/code/acq4/lib/util/pyqtgraph/graphicsItems/PlotItem/lock.png"
+       inkscape:export-xdpi="26.181818"
+       inkscape:export-ydpi="26.181818">
+      <rect
+         ry="18.687822"
+         y="400.81378"
+         x="108.08632"
+         height="100"
+         width="100"
+         id="rect3787"
+         style="fill:#000000;fill-opacity:1;stroke:#a9a9a9;stroke-width:10;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <path
+         style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#e6e6e6;fill-opacity:1;stroke:none;stroke-width:20;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans"
+         d="m 158.08632,412.60531 c -13.62786,0 -24.7172,11.19602 -24.7172,24.87236 l 0,10.65958 -0.8689,0 c -3.12596,0 -5.63236,2.52191 -5.63236,5.64787 l 0,29.58927 c 0,3.12596 2.5064,5.64787 5.63236,5.64787 l 51.15669,0 c 3.12596,0 5.64787,-2.52191 5.64787,-5.64787 l 0,-29.58927 c 0,-3.12596 -2.52191,-5.64787 -5.64787,-5.64787 l -0.85339,0 0,-10.65958 c 0,-13.67634 -11.08933,-24.87236 -24.7172,-24.87236 z m 0,9.93032 c 8.25237,0 14.78688,6.54986 14.78688,14.94204 l 0,10.65958 -29.57376,0 0,-10.65958 c 0,-8.39218 6.53451,-14.94204 14.78688,-14.94204 z"
+         id="rect3830"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>
