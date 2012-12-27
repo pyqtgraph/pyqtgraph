@@ -44,7 +44,7 @@ It is intended for use in mathematics / scientific / engineering applications. D
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: User Interfaces",
         ],
-    requires = [
+    install_requires = [
         'numpy',
         'scipy',
         ],
