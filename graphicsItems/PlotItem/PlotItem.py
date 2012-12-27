@@ -158,6 +158,8 @@ class PlotItem(GraphicsWidget):
         self.autoAlpha = True
         self.spectrumMode = False
         
+        self.legend = None
+        
         ## Create and place axis items
         if axisItems is None:
             axisItems = {}
@@ -538,7 +540,7 @@ class PlotItem(GraphicsWidget):
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
         name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
-        if name is not None and self.legend is not None:
+        if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)
             
 
