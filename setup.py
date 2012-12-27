@@ -1,10 +1,18 @@
 from distutils.core import setup
+import distutils.dir_util
 import os
 
 ## generate list of all sub-packages
-subdirs = [i[0].split(os.path.sep)[1:] for i in os.walk('./pyqtgraph') if '__init__.py' in i[2]]
-subdirs = filter(lambda p: len(p) == 1 or p[1] != 'build', subdirs)
+path = os.path.abspath(os.path.dirname(__file__))
+n = len(path.split(os.path.sep))
+subdirs = [i[0].split(os.path.sep)[n:] for i in os.walk(os.path.join(path, 'pyqtgraph')) if '__init__.py' in i[2]]
 all_packages = ['.'.join(p) for p in subdirs] + ['pyqtgraph.examples']
+
+
+## Make sure build directory is clean before installing
+buildPath = os.path.join(path, 'build')
+if os.path.isdir(buildPath):
+    distutils.dir_util.remove_tree(buildPath)
 
 setup(name='pyqtgraph',
     version='',
@@ -23,6 +31,9 @@ It is intended for use in mathematics / scientific / engineering applications. D
     #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},
     classifiers = [
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
@@ -33,7 +44,7 @@ It is intended for use in mathematics / scientific / engineering applications. D
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: User Interfaces",
         ],
-    requires = [
+    install_requires = [
         'numpy',
         'scipy',
         ],

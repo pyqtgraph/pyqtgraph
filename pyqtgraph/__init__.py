@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-REVISION = None
+"""
+PyQtGraph - Scientific Graphics and GUI Library for Python
+www.pyqtgraph.org
+"""
+
+__version__ = None
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -63,19 +68,21 @@ def systemInfo():
     from .Qt import VERSION_INFO
     print("qt bindings: %s" % VERSION_INFO)
     
-    global REVISION
-    if REVISION is None:  ## this code was probably checked out from bzr; look up the last-revision file
-        lastRevFile = os.path.join(os.path.dirname(__file__), '.bzr', 'branch', 'last-revision')
+    global __version__
+    rev = None
+    if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
+        lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            REVISION = open(lastRevFile, 'r').read().strip()
+            rev = open(lastRevFile, 'r').read().strip()
     
-    print("pyqtgraph: %s" % REVISION)
+    print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
     import pprint
     pprint.pprint(CONFIG_OPTIONS)
 
 ## Rename orphaned .pyc files. This is *probably* safe :)
-
+## We only do this if __version__ is None, indicating the code was probably pulled
+## from the repository. 
 def renamePyc(startDir):
     ### Used to rename orphaned .pyc files
     ### When a python file changes its location in the repository, usually the .pyc file
@@ -108,9 +115,8 @@ def renamePyc(startDir):
                 print("  " + name2)
                 os.rename(fileName, name2)
                 
-import os
 path = os.path.split(__file__)[0]
-if not hasattr(sys, 'frozen'): ## If we are frozen, there's a good chance we don't have the original .py files anymore.
+if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] == 2: ## If we are frozen, there's a good chance we don't have the original .py files anymore.
     renamePyc(path)
 
 
