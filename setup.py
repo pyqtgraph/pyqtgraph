@@ -15,7 +15,7 @@ if os.path.isdir(buildPath):
     distutils.dir_util.remove_tree(buildPath)
 
 setup(name='pyqtgraph',
-    version='0.9.0',
+    version='',
     description='Scientific Graphics and GUI Library for Python',
     long_description="""\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and numpy. 
