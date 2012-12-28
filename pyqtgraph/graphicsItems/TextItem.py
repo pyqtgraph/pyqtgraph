@@ -115,9 +115,10 @@ class TextItem(UIGraphicsItem):
                 self.viewRangeChanged()
         self.lastTransform = tr
         
-        p.setPen(self.border)
-        p.setBrush(self.fill)
-        p.setRenderHint(p.Antialiasing, True)
-        p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
+        if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
+            p.setPen(self.border)
+            p.setBrush(self.fill)
+            p.setRenderHint(p.Antialiasing, True)
+            p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
         
