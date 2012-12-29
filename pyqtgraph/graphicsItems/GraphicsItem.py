@@ -63,7 +63,10 @@ class GraphicsItem(object):
         if self._viewBox is None:
             p = self
             while True:
-                p = p.parentItem()
+                try:
+                    p = p.parentItem()
+                except RuntimeError:  ## sometimes happens as items are being removed from a scene and collected.
+                    return None
                 if p is None:
                     vb = self.getViewWidget()
                     if vb is None:

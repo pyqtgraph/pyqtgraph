@@ -17,6 +17,9 @@ class SVGExporter(Exporter):
         self.params = Parameter(name='params', type='group', children=[
             #{'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
             #{'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
+            #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
+            #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
+            #{'name': 'normalize line width', 'type': 'bool', 'value': True},
         ])
         #self.params.param('width').sigValueChanged.connect(self.widthChanged)
         #self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -83,7 +86,7 @@ class SVGExporter(Exporter):
             return bytes(xml)
         else:
             with open(fileName, 'w') as fh:
-                fh.write(xml)
+                fh.write(xml.encode('UTF-8'))
 
 xmlHeader = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -171,8 +174,16 @@ def _generateItemSvg(item, nodes=None, root=None):
         doc = xml.parseString(xmlStr)
     else:
         childs = item.childItems()
-        tr = itemTransform(item, root)
+        tr = itemTransform(item, item.scene())
         
+        ## offset to corner of root item
+        if isinstance(root, QtGui.QGraphicsScene):
+            rootPos = QtCore.QPoint(0,0)
+        else:
+            rootPos = root.scenePos()
+        tr2 = QtGui.QTransform()
+        tr2.translate(-rootPos.x(), -rootPos.y())
+        tr = tr * tr2
         #print item, pg.SRTTransform(tr)
 
         #tr.translate(item.pos().x(), item.pos().y())
@@ -239,17 +250,23 @@ def _generateItemSvg(item, nodes=None, root=None):
     nodes[name] = g1
     g1.setAttribute('id', name)
     
-    ## If this item clips its children, we need to take car of that.
+    ## If this item clips its children, we need to take care of that.
     childGroup = g1  ## add children directly to this node unless we are clipping
     if not isinstance(item, QtGui.QGraphicsScene):
         ## See if this item clips its children
         if int(item.flags() & item.ItemClipsChildrenToShape) > 0:
             ## Generate svg for just the path
-            if isinstance(root, QtGui.QGraphicsScene):
-                path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
-            else:
-                path = QtGui.QGraphicsPathItem(root.mapToParent(item.mapToItem(root, item.shape())))
-            pathNode = _generateItemSvg(path, root=root).getElementsByTagName('path')[0]
+            #if isinstance(root, QtGui.QGraphicsScene):
+                #path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
+            #else:
+                #path = QtGui.QGraphicsPathItem(root.mapToParent(item.mapToItem(root, item.shape())))
+            path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
+            item.scene().addItem(path)
+            try:
+                pathNode = _generateItemSvg(path, root=root).getElementsByTagName('path')[0]
+            finally:
+                item.scene().removeItem(path)
+            
             ## and for the clipPath element
             clip = name + '_clip'
             clipNode = g1.ownerDocument.createElement('clipPath')
@@ -294,7 +311,10 @@ def correctCoordinates(node, item):
             elif ch.tagName == 'path':
                 removeTransform = True
                 newCoords = ''
-                for c in ch.getAttribute('d').strip().split(' '):
+                oldCoords = ch.getAttribute('d').strip()
+                if oldCoords == '':
+                    continue
+                for c in oldCoords.split(' '):
                     x,y = c.split(',')
                     if x[0].isalpha():
                         t = x[0]
@@ -317,8 +337,18 @@ def correctCoordinates(node, item):
                 #fs = c[1]-c[2]
                 #fs = (fs**2).sum()**0.5
                 #ch.setAttribute('font-size', str(fs))
-            else:
-                print('warning: export not implemented for SVG tag %s (from item %s)' % (ch.tagName, item))
+                
+                ## Correct some font information
+                families = ch.getAttribute('font-family').split(',')
+                if len(families) == 1:
+                    font = QtGui.QFont(families[0].strip('" '))
+                    if font.style() == font.SansSerif:
+                        families.append('sans-serif')
+                    elif font.style() == font.Serif:
+                        families.append('serif')
+                    elif font.style() == font.Courier:
+                        families.append('monospace')
+                    ch.setAttribute('font-family', ', '.join([f if ' ' not in f else '"%s"'%f for f in families]))
                 
             ## correct line widths if needed
             if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke':

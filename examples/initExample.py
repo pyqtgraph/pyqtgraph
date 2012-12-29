@@ -2,10 +2,10 @@
 import sys, os
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 path.rstrip(os.path.sep)
-if path.endswith('pyqtgraph'):
-    sys.path.insert(0, os.path.join(path, '..'))  ## examples installed inside pyqtgraph package
-elif 'pyqtgraph' in os.listdir(path):
+if 'pyqtgraph' in os.listdir(path):
     sys.path.insert(0, path) ## examples adjacent to pyqtgraph (as in source)
+elif path.endswith('pyqtgraph'):
+    sys.path.insert(0, os.path.abspath(os.path.join(path, '..')))  ## examples installed inside pyqtgraph package
 
 ## should force example to use PySide instead of PyQt
 if 'pyside' in sys.argv:  
