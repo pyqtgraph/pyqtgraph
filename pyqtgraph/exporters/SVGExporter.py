@@ -17,6 +17,9 @@ class SVGExporter(Exporter):
         self.params = Parameter(name='params', type='group', children=[
             #{'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
             #{'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
+            #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
+            #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
+            #{'name': 'normalize line width', 'type': 'bool', 'value': True},
         ])
         #self.params.param('width').sigValueChanged.connect(self.widthChanged)
         #self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -334,6 +337,18 @@ def correctCoordinates(node, item):
                 #fs = c[1]-c[2]
                 #fs = (fs**2).sum()**0.5
                 #ch.setAttribute('font-size', str(fs))
+                
+                ## Correct some font information
+                families = ch.getAttribute('font-family').split(',')
+                if len(families) == 1:
+                    font = QtGui.QFont(families[0].strip('" '))
+                    if font.style() == font.SansSerif:
+                        families.append('sans-serif')
+                    elif font.style() == font.Serif:
+                        families.append('serif')
+                    elif font.style() == font.Courier:
+                        families.append('monospace')
+                    ch.setAttribute('font-family', ', '.join([f if ' ' not in f else '"%s"'%f for f in families]))
                 
             ## correct line widths if needed
             if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke':
