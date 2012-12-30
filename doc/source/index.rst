@@ -20,6 +20,7 @@ Contents:
     3dgraphics
     style
     region_of_interest
+    exporting
     prototyping
     parametertree/index
     internals
