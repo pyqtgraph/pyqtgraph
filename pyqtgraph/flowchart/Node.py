@@ -13,6 +13,18 @@ def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
 
 class Node(QtCore.QObject):
+    """
+    Node represents the basic processing unit of a flowchart. 
+    A Node subclass implements at least:
+    
+    1) A list of input / ouptut terminals and their properties
+    2) a process() function which takes the names of input terminals as keyword arguments and returns a dict with the names of output terminals as keys.
+
+    A flowchart thus consists of multiple instances of Node subclasses, each of which is connected
+    to other by wires between their terminals. A flowchart is, itself, also a special subclass of Node.
+    This allows Nodes within the flowchart to connect to the input/output nodes of the flowchart itself.
+
+    Optionally, a node class can implement the ctrlWidget() method, which must return a QWidget (usually containing other widgets) that will be displayed in the flowchart control panel. Some nodes implement fairly complex control widgets, but most nodes follow a simple form-like pattern: a list of parameter names and a single value (represented as spin box, check box, etc..) for each parameter. To make this easier, the CtrlNode subclass allows you to instead define a simple data structure that CtrlNode will use to automatically generate the control widget.     """
     
     sigOutputChanged = QtCore.Signal(object)   # self
     sigClosed = QtCore.Signal(object)
@@ -23,6 +35,31 @@ class Node(QtCore.QObject):
 
     
     def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
+        """
+        ==============  ============================================================
+        Arguments
+        name            The name of this specific node instance. It can be any 
+                        string, but must be unique within a flowchart. Usually,
+                        we simply let the flowchart decide on a name when calling
+                        Flowchart.addNode(...)
+        terminals       Dict-of-dicts specifying the terminals present on this Node.
+                        Terminal specifications look like::
+                        
+                            'inputTerminalName': {'io': 'in'}
+                            'outputTerminalName': {'io': 'out'} 
+                            
+                        There are a number of optional parameters for terminals:
+                        multi, pos, renamable, removable, multiable, bypass. See
+                        the Terminal class for more information.
+        allowAddInput   bool; whether the user is allowed to add inputs by the
+                        context menu.
+        allowAddOutput  bool; whether the user is allowed to add outputs by the
+                        context menu.
+        allowRemove     bool; whether the user is allowed to remove this node by the
+                        context menu.
+        ==============  ============================================================  
+        
+        """
         QtCore.QObject.__init__(self)
         self._name = name
         self._bypass = False
@@ -52,15 +89,25 @@ class Node(QtCore.QObject):
         return name2
         
     def addInput(self, name="Input", **args):
+        """Add a new input terminal to this Node with the given name. Extra
+        keyword arguments are passed to Terminal.__init__.
+        
+        This is a convenience function that just calls addTerminal(io='in', ...)"""
         #print "Node.addInput called."
         return self.addTerminal(name, io='in', **args)
         
     def addOutput(self, name="Output", **args):
+        """Add a new output terminal to this Node with the given name. Extra
+        keyword arguments are passed to Terminal.__init__.
+        
+        This is a convenience function that just calls addTerminal(io='out', ...)"""
         return self.addTerminal(name, io='out', **args)
         
     def removeTerminal(self, term):
-        ## term may be a terminal or its name
+        """Remove the specified terminal from this Node. May specify either the 
+        terminal's name or the terminal itself.
         
+        Causes sigTerminalRemoved to be emitted."""
         if isinstance(term, Terminal):
             name = term.name()
         else:
@@ -80,7 +127,9 @@ class Node(QtCore.QObject):
         
         
     def terminalRenamed(self, term, oldName):
-        """Called after a terminal has been renamed"""
+        """Called after a terminal has been renamed        
+        
+        Causes sigTerminalRenamed to be emitted."""
         newName = term.name()
         for d in [self.terminals, self._inputs, self._outputs]:
             if oldName not in d:
@@ -92,6 +141,10 @@ class Node(QtCore.QObject):
         self.sigTerminalRenamed.emit(term, oldName)
         
     def addTerminal(self, name, **opts):
+        """Add a new terminal to this Node with the given name. Extra
+        keyword arguments are passed to Terminal.__init__.
+                
+        Causes sigTerminalAdded to be emitted."""
         name = self.nextTerminalName(name)
         term = Terminal(self, name, **opts)
         self.terminals[name] = term
@@ -105,38 +158,60 @@ class Node(QtCore.QObject):
 
         
     def inputs(self):
+        """Return dict of all input terminals.
+        Warning: do not modify."""
         return self._inputs
         
     def outputs(self):
+        """Return dict of all output terminals.
+        Warning: do not modify."""
         return self._outputs
         
     def process(self, **kargs):
-        """Process data through this node. Each named argument supplies data to the corresponding terminal."""
+        """Process data through this node. This method is called any time the flowchart 
+        wants the node to process data. It will be called with one keyword argument
+        corresponding to each input terminal, and must return a dict mapping the name
+        of each output terminal to its new value.
+        
+        This method is also called with a 'display' keyword argument, which indicates
+        whether the node should update its display (if it implements any) while processing
+        this data. This is primarily used to disable expensive display operations
+        during batch processing.
+        """
         return {}
     
     def graphicsItem(self):
-        """Return a (the?) graphicsitem for this node"""
-        #print "Node.graphicsItem called."
+        """Return the GraphicsItem for this node. Subclasses may re-implement
+        this method to customize their appearance in the flowchart."""
         if self._graphicsItem is None:
-            #print "Creating NodeGraphicsItem..."
             self._graphicsItem = NodeGraphicsItem(self)
-        #print "Node.graphicsItem is returning ", self._graphicsItem
         return self._graphicsItem
     
+    ## this is just bad planning. Causes too many bugs.
     def __getattr__(self, attr):
         """Return the terminal with the given name"""
         if attr not in self.terminals:
             raise AttributeError(attr)
         else:
+            import traceback
+            traceback.print_stack()
+            print("Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.")
             return self.terminals[attr]
             
     def __getitem__(self, item):
-        return getattr(self, item)
+        #return getattr(self, item)
+        """Return the terminal with the given name"""
+        if item not in self.terminals:
+            raise KeyError(item)
+        else:
+            return self.terminals[item]
             
     def name(self):
+        """Return the name of this node."""
         return self._name
 
     def rename(self, name):
+        """Rename this node. This will cause sigRenamed to be emitted."""
         oldName = self._name
         self._name = name
         #self.emit(QtCore.SIGNAL('renamed'), self, oldName)
@@ -154,15 +229,25 @@ class Node(QtCore.QObject):
         return "<Node %s @%x>" % (self.name(), id(self))
         
     def ctrlWidget(self):
+        """Return this Node's control widget."""
         return None
 
     def bypass(self, byp):
+        """Set whether this node should be bypassed.
+        
+        When bypassed, a Node's process() method is never called. In some cases,
+        data is automatically copied directly from specific input nodes to 
+        output nodes instead (see the bypass argument to Terminal.__init__). 
+        This is usually called when the user disables a node from the flowchart 
+        control panel.
+        """
         self._bypass = byp
         if self.bypassButton is not None:
             self.bypassButton.setChecked(byp)
         self.update()
         
     def isBypassed(self):
+        """Return True if this Node is currently bypassed."""
         return self._bypass
 
     def setInput(self, **args):
@@ -179,12 +264,14 @@ class Node(QtCore.QObject):
             self.update()
         
     def inputValues(self):
+        """Return a dict of all input values currently assigned to this node."""
         vals = {}
         for n, t in self.inputs().items():
             vals[n] = t.value()
         return vals
             
     def outputValues(self):
+        """Return a dict of all output values currently generated by this node."""
         vals = {}
         for n, t in self.outputs().items():
             vals[n] = t.value()
@@ -195,11 +282,15 @@ class Node(QtCore.QObject):
         pass
     
     def disconnected(self, localTerm, remoteTerm):
-        """Called whenever one of this node's terminals is connected elsewhere."""
+        """Called whenever one of this node's terminals is disconnected from another."""
         pass 
     
     def update(self, signal=True):
-        """Collect all input values, attempt to process new output values, and propagate downstream."""
+        """Collect all input values, attempt to process new output values, and propagate downstream.
+        Subclasses should call update() whenever thir internal state has changed
+        (such as when the user interacts with the Node's control widget). Update
+        is automatically called when the inputs to the node are changed.
+        """
         vals = self.inputValues()
         #print "  inputs:", vals
         try:
@@ -227,6 +318,9 @@ class Node(QtCore.QObject):
                 self.sigOutputChanged.emit(self)  ## triggers flowchart to propagate new data
 
     def processBypassed(self, args):
+        """Called when the flowchart would normally call Node.process, but this node is currently bypassed.
+        The default implementation looks for output terminals with a bypass connection and returns the
+        corresponding values. Most Node subclasses will _not_ need to reimplement this method."""
         result = {}
         for term in list(self.outputs().values()):
             byp = term.bypassValue()
@@ -266,6 +360,13 @@ class Node(QtCore.QObject):
             self.graphicsItem().setPen(QtGui.QPen(QtGui.QColor(150, 0, 0), 3))
 
     def saveState(self):
+        """Return a dictionary representing the current state of this node
+        (excluding input / output values). This is used for saving/reloading
+        flowcharts. The default implementation returns this Node's position,
+        bypass state, and information about each of its terminals. 
+        
+        Subclasses may want to extend this method, adding extra keys to the returned
+        dict."""
         pos = self.graphicsItem().pos()
         state = {'pos': (pos.x(), pos.y()), 'bypass': self.isBypassed()}
         termsEditable = self._allowAddInput | self._allowAddOutput
@@ -276,6 +377,8 @@ class Node(QtCore.QObject):
         return state
         
     def restoreState(self, state):
+        """Restore the state of this node from a structure previously generated
+        by saveState(). """
         pos = state.get('pos', (0,0))
         self.graphicsItem().setPos(*pos)
         self.bypass(state.get('bypass', False))
