@@ -67,6 +67,7 @@ examples = OrderedDict([
     
     ('GraphicsScene', 'GraphicsScene.py'),
     ('Flowcharts', 'Flowchart.py'),
+    ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
     #('Canvas', '../canvas'),
     #('MultiPlotWidget', 'MultiPlotWidget.py'),
 ])
