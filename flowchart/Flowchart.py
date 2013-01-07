@@ -106,6 +106,9 @@ class Flowchart(Node):
             self.addTerminal(name, **opts)
       
     def setInput(self, **args):
+        """Set the input values of the flowchart. This will automatically propagate
+        the new values throughout the flowchart, (possibly) causing the output to change.
+        """
         #print "setInput", args
         #Node.setInput(self, **args)
         #print "  ....."
@@ -120,6 +123,8 @@ class Flowchart(Node):
         #self.sigOutputChanged.emit(self)
         
     def output(self):
+        """Return a dict of the values on the Flowchart's output terminals.
+        """
         return self.outputNode.inputValues()
         
     def nodes(self):
