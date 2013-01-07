@@ -426,10 +426,12 @@ class PlotCurveItem(GraphicsObject):
             p.fillPath(self.fillPath, self.opts['brush'])
             prof.mark('draw fill path')
             
-
+        sp = fn.mkPen(self.opts['shadowPen'])
+        cp = fn.mkPen(self.opts['pen'])
+ 
         ## Copy pens and apply alpha adjustment
-        sp = QtGui.QPen(self.opts['shadowPen'])
-        cp = QtGui.QPen(self.opts['pen'])
+        #sp = QtGui.QPen(self.opts['shadowPen'])
+        #cp = QtGui.QPen(self.opts['pen'])
         #for pen in [sp, cp]:
             #if pen is None:
                 #continue
