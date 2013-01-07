@@ -229,7 +229,11 @@ class Node(QtCore.QObject):
         return "<Node %s @%x>" % (self.name(), id(self))
         
     def ctrlWidget(self):
-        """Return this Node's control widget."""
+        """Return this Node's control widget. 
+        
+        By default, Nodes have no control widget. Subclasses may reimplement this 
+        method to provide a custom widget. This method is called by Flowcharts
+        when they are constructing their Node list."""
         return None
 
     def bypass(self, byp):

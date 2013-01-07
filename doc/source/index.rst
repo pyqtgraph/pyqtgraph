@@ -23,6 +23,7 @@ Contents:
     exporting
     prototyping
     parametertree/index
+    flowchart/index
     internals
     apireference
     
