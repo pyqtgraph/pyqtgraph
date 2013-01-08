@@ -379,10 +379,7 @@ class PlotDataItem(GraphicsObject):
 
 
     def updateItems(self):
-        #for c in self.curves+self.scatters:
-            #if c.scene() is not None:
-                #c.scene().removeItem(c)
-            
+        
         curveArgs = {}
         for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias')]:
             curveArgs[v] = self.opts[k]
@@ -399,18 +396,12 @@ class PlotDataItem(GraphicsObject):
             self.curve.show()
         else:
             self.curve.hide()
-            #curve = PlotCurveItem(x=x, y=y, **curveArgs)
-            #curve.setParentItem(self)
-            #self.curves.append(curve)
         
         if scatterArgs['symbol'] is not None:
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
         else:
             self.scatter.hide()
-            #sp = ScatterPlotItem(x=x, y=y, **scatterArgs)
-            #sp.setParentItem(self)
-            #self.scatters.append(sp)
 
 
     def getData(self):

@@ -24,6 +24,8 @@ class Terminal(object):
         renamable       (bool) Whether the terminal can be renamed by the user
         removable       (bool) Whether the terminal can be removed by the user
         multiable       (bool) Whether the user may toggle the *multi* option for this terminal
+        bypass          (str) Name of the terminal from which this terminal's value is derived
+                        when the Node is in bypass mode.
         ==============  =================================================================================
         """
         self._io = io

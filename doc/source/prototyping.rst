@@ -18,14 +18,8 @@ Visual Programming Flowcharts
 
 Pyqtgraph's flowcharts provide a visual programming environment similar in concept to LabView--functional modules are added to a flowchart and connected by wires to define a more complex and arbitrarily configurable algorithm. A small number of predefined modules (called Nodes) are included with pyqtgraph, but most flowchart developers will want to define their own library of Nodes. At their core, the Nodes are little more than 1) a Python function 2) a list of input/output terminals, and 3) an optional widget providing a control panel for the Node. Nodes may transmit/receive any type of Python object via their terminals.
 
-One major limitation of flowcharts is that there is no mechanism for looping within a flowchart. (however individual Nodes may contain loops (they may contain any Python code at all), and an entire flowchart may be executed from within a loop). 
+See the `flowchart documentation <flowchart>`_ and the flowchart examples for more information.
 
-There are two distinct modes of executing the code in a flowchart:
-    
-1. Provide data to the input terminals of the flowchart. This method is slower and will provide a graphical representation of the data as it passes through the flowchart. This is useful for debugging as it allows the user to inspect the data at each terminal and see where exceptions occurred within the flowchart.
-2. Call Flowchart.process. This method does not update the displayed state of the flowchart and only retains the state of each terminal as long as it is needed. Additionally, Nodes which do not contribute to the output values of the flowchart (such as plotting nodes) are ignored. This mode allows for faster processing of large data sets and avoids memory issues which can occur if doo much data is present in the flowchart at once (e.g., when processing image data through several stages). 
-
-See the flowchart example for more information.
 
 Graphical Canvas
 ----------------
