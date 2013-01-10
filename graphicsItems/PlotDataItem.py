@@ -369,9 +369,10 @@ class PlotDataItem(GraphicsObject):
         self.updateItems()
         prof.mark('update items')
         
-        view = self.getViewBox()
-        if view is not None:
-            view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
+        self.informViewBoundsChanged()
+        #view = self.getViewBox()
+        #if view is not None:
+            #view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
         
         self.sigPlotChanged.emit(self)
         prof.mark('emit')

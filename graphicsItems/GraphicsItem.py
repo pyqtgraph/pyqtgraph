@@ -3,7 +3,29 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import weakref
+from pyqtgraph.pgcollections import OrderedDict
 import operator
+
+class FiniteCache(OrderedDict):
+    """Caches a finite number of objects, removing
+    least-frequently used items."""
+    def __init__(self, length):
+        self._length = length
+        OrderedDict.__init__(self)
+        
+    def __setitem__(self, item, val):
+        self.pop(item, None) # make sure item is added to end
+        OrderedDict.__setitem__(self, item, val) 
+        while len(self) > self._length:
+            del self[self.keys()[0]]
+        
+    def __getitem__(self, item):
+        val = dict.__getitem__(self, item)
+        del self[item]
+        self[item] = val  ## promote this key        
+        return val
+        
+        
 
 class GraphicsItem(object):
     """
@@ -16,6 +38,8 @@ class GraphicsItem(object):
 
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
+    _pixelVectorGlobalCache = FiniteCache(100)
+    
     def __init__(self, register=True):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
@@ -25,6 +49,7 @@ class GraphicsItem(object):
         if not hasattr(self, '_qtBaseClass'):
             raise Exception('Could not determine Qt base class for GraphicsItem: %s' % str(self))
         
+        self._pixelVectorCache = [None, None]
         self._viewWidget = None
         self._viewBox = None
         self._connectedView = None
@@ -155,7 +180,6 @@ class GraphicsItem(object):
         
         
         
-
     def pixelVectors(self, direction=None):
         """Return vectors in local coordinates representing the width and height of a view pixel.
         If direction is specified, then return vectors parallel and orthogonal to it.
@@ -163,13 +187,28 @@ class GraphicsItem(object):
         Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)
         or if pixel size is below floating-point precision limit.
         """
-
+        
+        ## This is an expensive function that gets called very frequently.
+        ## We have two levels of cache to try speeding things up.
+        
         dt = self.deviceTransform()
         if dt is None:
             return None, None
         
+        ## check local cache
+        if direction is None and dt == self._pixelVectorCache[0]:
+            return self._pixelVectorCache[1]
+        
+        ## check global cache
+        key = (dt.m11(), dt.m21(), dt.m31(), dt.m12(), dt.m22(), dt.m32(), dt.m31(), dt.m32())
+        pv = self._pixelVectorGlobalCache.get(key, None)
+        if pv is not None:
+            self._pixelVectorCache = [dt, pv]
+            return pv
+        
+        
         if direction is None:
-            direction = Point(1, 0)  
+            direction = QtCore.QPointF(1, 0)  
         if direction.manhattanLength() == 0:
             raise Exception("Cannot compute pixel length for 0-length vector.")
             
@@ -184,28 +223,33 @@ class GraphicsItem(object):
             r = ((abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))) * (abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))))**0.5
         directionr = direction * r
         
-        viewDir = Point(dt.map(directionr) - dt.map(Point(0,0)))
-        if viewDir.manhattanLength() == 0:
+        ## map direction vector onto device
+        #viewDir = Point(dt.map(directionr) - dt.map(Point(0,0)))
+        #mdirection = dt.map(directionr)
+        dirLine = QtCore.QLineF(QtCore.QPointF(0,0), directionr)
+        viewDir = dt.map(dirLine)
+        if viewDir.length() == 0:
             return None, None   ##  pixel size cannot be represented on this scale
-            
-        orthoDir = Point(viewDir[1], -viewDir[0])  ## orthogonal to line in pixel-space
-        
+           
+        ## get unit vector and orthogonal vector (length of pixel)
+        #orthoDir = Point(viewDir[1], -viewDir[0])  ## orthogonal to line in pixel-space
         try:  
-            normView = viewDir.norm()  ## direction of one pixel orthogonal to line
-            normOrtho = orthoDir.norm()
+            normView = viewDir.unitVector()
+            #normView = viewDir.norm()  ## direction of one pixel orthogonal to line
+            normOrtho = normView.normalVector()
+            #normOrtho = orthoDir.norm()
         except:
             raise Exception("Invalid direction %s" %directionr)
             
-        
+        ## map back to item 
         dti = fn.invertQTransform(dt)
-        return Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))  
+        #pv = Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))
+        pv = Point(dti.map(normView).p2()), Point(dti.map(normOrtho).p2())
+        self._pixelVectorCache[1] = pv
+        self._pixelVectorCache[0] = dt
+        self._pixelVectorGlobalCache[key] = pv
+        return self._pixelVectorCache[1]
     
-        #vt = self.deviceTransform()
-        #if vt is None:
-            #return None
-        #vt = vt.inverted()[0]
-        #orig = vt.map(QtCore.QPointF(0, 0))
-        #return vt.map(QtCore.QPointF(1, 0))-orig, vt.map(QtCore.QPointF(0, 1))-orig
         
     def pixelLength(self, direction, ortho=False):
         """Return the length of one pixel in the direction indicated (in local coordinates)
@@ -219,7 +263,6 @@ class GraphicsItem(object):
         if ortho:
             return orthoV.length()
         return normV.length()
-        
         
 
     def pixelSize(self):
@@ -235,7 +278,7 @@ class GraphicsItem(object):
         if vt is None:
             return 0
         vt = fn.invertQTransform(vt)
-        return Point(vt.map(QtCore.QPointF(1, 0))-vt.map(QtCore.QPointF(0, 0))).length()
+        return vt.map(QtCore.QLineF(0, 0, 1, 0)).length()
         
     def pixelHeight(self):
         ## deprecated
@@ -243,7 +286,8 @@ class GraphicsItem(object):
         if vt is None:
             return 0
         vt = fn.invertQTransform(vt)
-        return Point(vt.map(QtCore.QPointF(0, 1))-vt.map(QtCore.QPointF(0, 0))).length()
+        return vt.map(QtCore.QLineF(0, 0, 0, 1)).length()
+        #return Point(vt.map(QtCore.QPointF(0, 1))-vt.map(QtCore.QPointF(0, 0))).length()
         
         
     def mapToDevice(self, obj):
@@ -357,10 +401,11 @@ class GraphicsItem(object):
 
         tr = self.itemTransform(relativeItem)
         if isinstance(tr, tuple):  ## difference between pyside and pyqt
-            tr = tr[0]  
-        vec = tr.map(Point(1,0)) - tr.map(Point(0,0))
-        return Point(vec).angle(Point(1,0))
-        
+            tr = tr[0]
+        #vec = tr.map(Point(1,0)) - tr.map(Point(0,0))
+        vec = tr.map(QtCore.QLineF(0,0,1,0))
+        #return Point(vec).angle(Point(1,0))
+        return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
     #def itemChange(self, change, value):
         #ret = self._qtBaseClass.itemChange(self, change, value)
@@ -500,3 +545,6 @@ class GraphicsItem(object):
         else:
             self._exportOpts = False
     
+    #def update(self):
+        #self._qtBaseClass.update(self)
+        #print "Update:", self

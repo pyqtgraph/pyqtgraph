@@ -75,6 +75,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
     sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
+    sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
+    
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
@@ -98,6 +100,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         self.clickEvents = []
         self.dragButtons = []
+        self.prepItems = weakref.WeakKeyDictionary()  ## set of items with prepareForPaintMethods
         self.mouseGrabber = None
         self.dragItem = None
         self.lastDrag = None
@@ -112,6 +115,17 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         self.exportDialog = None
         
+    def render(self, *args):
+        self.prepareForPaint()
+        return QGraphicsScene.render(self, *args)
+
+    def prepareForPaint(self):
+        """Called before every render. This method will inform items that the scene is about to
+        be rendered by emitting sigPrepareForPaint.
+        
+        This allows items to delay expensive processing until they know a paint will be required."""
+        self.sigPrepareForPaint.emit()
+    
 
     def setClickRadius(self, r):
         """
@@ -224,7 +238,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         else:
             acceptable = int(ev.buttons()) == 0  ## if we are in mid-drag, do not allow items to accept the hover event.
             event = HoverEvent(ev, acceptable)
-            items = self.itemsNearEvent(event)
+            items = self.itemsNearEvent(event, hoverable=True)
             self.sigMouseHover.emit(items)
             
         prevItems = list(self.hoverItems.keys())
@@ -402,7 +416,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #return item
         return self.translateGraphicsItem(item)
 
-    def itemsNearEvent(self, event, selMode=QtCore.Qt.IntersectsItemShape, sortOrder=QtCore.Qt.DescendingOrder):
+    def itemsNearEvent(self, event, selMode=QtCore.Qt.IntersectsItemShape, sortOrder=QtCore.Qt.DescendingOrder, hoverable=False):
         """
         Return an iterator that iterates first through the items that directly intersect point (in Z order)
         followed by any other items that are within the scene's click radius.
@@ -429,6 +443,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         ## remove items whose shape does not contain point (scene.items() apparently sucks at this)
         items2 = []
         for item in items:
+            if hoverable and not hasattr(item, 'hoverEvent'):
+                continue
             shape = item.shape()
             if shape is None:
                 continue

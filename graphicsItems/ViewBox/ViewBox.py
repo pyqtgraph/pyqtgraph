@@ -9,6 +9,7 @@ from pyqtgraph.GraphicsScene import GraphicsScene
 import pyqtgraph
 import weakref
 from copy import deepcopy
+import pyqtgraph.debug as debug
 
 __all__ = ['ViewBox']
 
@@ -110,6 +111,7 @@ class ViewBox(GraphicsWidget):
             'background': None,
         }
         self._updatingRange = False  ## Used to break recursive loops. See updateAutoRange.
+        self._itemBoundsCache = weakref.WeakKeyDictionary()
         
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
         
@@ -548,7 +550,7 @@ class ViewBox(GraphicsWidget):
                     fractionVisible[i] = 1.0
 
             childRange = None
-
+            
             order = [0,1]
             if self.state['autoVisibleOnly'][0] is True:
                 order = [1,0]
@@ -571,40 +573,18 @@ class ViewBox(GraphicsWidget):
                 if xr is not None:
                     if self.state['autoPan'][ax]:
                         x = sum(xr) * 0.5
-                        #x = childRect.center().x()
                         w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
-                        #childRect.setLeft(x-w2)
-                        #childRect.setRight(x+w2)
                         childRange[ax] = [x-w2, x+w2]
                     else:
-                        #wp = childRect.width() * 0.02
                         wp = (xr[1] - xr[0]) * 0.02
-                        #childRect = childRect.adjusted(-wp, 0, wp, 0)
                         childRange[ax][0] -= wp
                         childRange[ax][1] += wp
-                    #targetRect[ax][0] = childRect.left()
-                    #targetRect[ax][1] = childRect.right()
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
-                #else:
-                    ### Make corrections to Y range
-                    #if self.state['autoPan'][1]:
-                        #y = childRect.center().y()
-                        #h2 = (targetRect[1][1]-targetRect[1][0]) / 2.
-                        #childRect.setTop(y-h2)
-                        #childRect.setBottom(y+h2)
-                    #else:
-                        #hp = childRect.height() * 0.02
-                        #childRect = childRect.adjusted(0, -hp, 0, hp)
-                        
-                    #targetRect[1][0] = childRect.top()
-                    #targetRect[1][1] = childRect.bottom()
-                    #args['yRange'] = targetRect[1]
             if len(args) == 0:
                 return
             args['padding'] = 0
             args['disableAutoRange'] = False
-            #self.setRange(xRange=targetRect[0], yRange=targetRect[1], padding=0, disableAutoRange=False)
             self.setRange(**args)
         finally:
             self._updatingRange = False
@@ -744,6 +724,7 @@ class ViewBox(GraphicsWidget):
         self.updateAutoRange()
         
     def itemBoundsChanged(self, item):
+        self._itemBoundsCache.pop(item, None)
         self.updateAutoRange()
 
     def invertY(self, b=True):
@@ -1015,6 +996,8 @@ class ViewBox(GraphicsWidget):
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
         """
+        prof = debug.Profiler('updateAutoRange', disabled=True)
+            
         
         #items = self.allChildren()
         items = self.addedItems
@@ -1029,38 +1012,36 @@ class ViewBox(GraphicsWidget):
             if not item.isVisible():
                 continue
         
-            #print "=========", item
             useX = True
             useY = True
             if hasattr(item, 'dataBounds'):
-                if frac is None:
-                    frac = (1.0, 1.0)
-                xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
-                yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
-                #print "   xr:", xr, "   yr:", yr
-                if xr is None or xr == (None, None):
-                    useX = False
-                    xr = (0,0)
-                if yr is None or yr == (None, None):
-                    useY = False
-                    yr = (0,0)
+                bounds = self._itemBoundsCache.get(item, None)
+                if bounds is None:
+                    if frac is None:
+                        frac = (1.0, 1.0)
+                    xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
+                    yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
+                    if xr is None or xr == (None, None):
+                        useX = False
+                        xr = (0,0)
+                    if yr is None or yr == (None, None):
+                        useY = False
+                        yr = (0,0)
 
-                bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
-                #print "   xr:", xr, "   yr:", yr
-                #print "   item real:", bounds
+                    bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
+                    bounds = self.mapFromItemToView(item, bounds).boundingRect()
+                    self._itemBoundsCache[item] = (bounds, useX, useY)
+                else:
+                    bounds, useX, useY = bounds
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
                     continue
-                    #print "   empty"
                 else:
                     bounds = item.boundingRect()
-                    #bounds = [[item.left(), item.top()], [item.right(), item.bottom()]]
-                #print "   item:", bounds
-            #bounds = QtCore.QRectF(bounds[0][0], bounds[1][0], bounds[0][1]-bounds[0][0], bounds[1][1]-bounds[1][0])
-            bounds = self.mapFromItemToView(item, bounds).boundingRect()
-            #print "    ", bounds
+                bounds = self.mapFromItemToView(item, bounds).boundingRect()
             
-            #print "   useX:", useX, "   useY:", useY
+            prof.mark('1')
+            
             if not any([useX, useY]):
                 continue
             
@@ -1073,11 +1054,6 @@ class ViewBox(GraphicsWidget):
                 else:
                     continue  ## need to check for item rotations and decide how best to apply this boundary. 
                 
-            #print "   useX:", useX, "   useY:", useY
-            
-            #print "   range:", range
-            #print "   bounds (r,l,t,b):", bounds.right(), bounds.left(), bounds.top(), bounds.bottom()
-            
             if useY:
                 if range[1] is not None:
                     range[1] = [min(bounds.top(), range[1][0]), max(bounds.bottom(), range[1][1])]
@@ -1088,9 +1064,9 @@ class ViewBox(GraphicsWidget):
                     range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
                 else:
                     range[0] = [bounds.left(), bounds.right()]
+            prof.mark('2')
                     
-            #print "   range:", range
-        
+        prof.finish()
         return range
         
     def childrenBoundingRect(self, *args, **kwds):
@@ -1286,6 +1262,5 @@ class ViewBox(GraphicsWidget):
             return
         self.scene().removeItem(self.locateGroup)
         self.locateGroup = None
-
 
 from .ViewBoxMenu import ViewBoxMenu
