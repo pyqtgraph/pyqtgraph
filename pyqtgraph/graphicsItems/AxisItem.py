@@ -369,7 +369,7 @@ class AxisItem(GraphicsWidget):
         return [
             (intervals[minorIndex+2], 0),
             (intervals[minorIndex+1], 0),
-            (intervals[minorIndex], 0)
+            #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
         ]
         
         ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection

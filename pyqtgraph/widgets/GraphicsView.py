@@ -143,7 +143,11 @@ class GraphicsView(QtGui.QGraphicsView):
         else:
             brush = fn.mkBrush(background)
             self.setBackgroundBrush(brush)
-            
+         
+    def paintEvent(self, ev):
+        self.scene().prepareForPaint()
+        #print "GV: paint", ev.rect()
+        return QtGui.QGraphicsView.paintEvent(self, ev)
     
     def close(self):
         self.centralWidget = None
