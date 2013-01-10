@@ -18,6 +18,8 @@ class RemoteGraphicsView(QtGui.QWidget):
     def __init__(self, parent=None, *args, **kwds):
         self._img = None
         self._imgReq = None
+        self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
+                                    ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
         self._proc = mp.QtProcess()
         self.pg = self._proc._import('pyqtgraph')
@@ -26,12 +28,18 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)
         self.setFocusPolicy(self._view.focusPolicy())
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setMouseTracking(True)
         
         shmFileName = self._view.shmFileName()
         self.shmFile = open(shmFileName, 'r')
         self.shm = mmap.mmap(self.shmFile.fileno(), mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_READ)
         
-        self._view.sceneRendered.connect(mp.proxy(self.remoteSceneChanged))
+        self._view.sceneRendered.connect(mp.proxy(self.remoteSceneChanged)) #, callSync='off'))
+                                                                            ## Note: we need synchronous signals
+                                                                            ## even though there is no return value--
+                                                                            ## this informs the renderer that it is 
+                                                                            ## safe to begin rendering again. 
         
         for method in ['scene', 'setCentralItem']:
             setattr(self, method, getattr(self._view, method))
@@ -41,8 +49,12 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._view.resize(self.size(), _callSync='off')
         return ret
         
+    def sizeHint(self):
+        return QtCore.QSize(*self._sizeHint)
+        
     def remoteSceneChanged(self, data):
         w, h, size = data
+        #self._sizeHint = (whint, hhint)
         if self.shm.size != size:
             self.shm.close()
             self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
@@ -82,7 +94,17 @@ class RemoteGraphicsView(QtGui.QWidget):
             ev.accept()
         return QtGui.QWidget.keyEvent(self, ev)
         
-    
+    def enterEvent(self, ev):
+        self._view.enterEvent(ev.type(), _callSync='off')
+        return QtGui.QWidget.enterEvent(self, ev)
+        
+    def leaveEvent(self, ev):
+        self._view.leaveEvent(ev.type(), _callSync='off')
+        return QtGui.QWidget.leaveEvent(self, ev)
+        
+    def remoteProcess(self):
+        """Return the remote process handle. (see multiprocess.remoteproxy.RemoteEventHandler)"""
+        return self._proc
     
 class Renderer(GraphicsView):
     
@@ -126,6 +148,8 @@ class Renderer(GraphicsView):
     def renderView(self):
         if self.img is None:
             ## make sure shm is large enough and get its address
+            if self.width() == 0 or self.height() == 0:
+                return
             size = self.width() * self.height() * 4
             if size > self.shm.size():
                 self.shm.resize(size)
@@ -168,5 +192,14 @@ class Renderer(GraphicsView):
         GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
         return ev.accepted()
         
+    def enterEvent(self, typ):
+        ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
+        return GraphicsView.enterEvent(self, ev)
+
+    def leaveEvent(self, typ):
+        ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
+        return GraphicsView.leaveEvent(self, ev)
+
+
         
         

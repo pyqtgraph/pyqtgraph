@@ -1,9 +1,9 @@
-from remoteproxy import RemoteEventHandler, ExitError, NoResultError, LocalObjectProxy, ObjectProxy
+from remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
 import cPickle as pickle
 import multiprocessing.connection
 
-__all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ExitError', 'NoResultError']
+__all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
 class Process(RemoteEventHandler):
     """
@@ -100,7 +100,7 @@ def startEventLoop(name, port, authkey):
         try:
             HANDLER.processRequests()  # exception raised when the loop should exit
             time.sleep(0.01)
-        except ExitError:
+        except ClosedError:
             break
 
 
@@ -225,7 +225,7 @@ class ForkedProcess(RemoteEventHandler):
             try:
                 self.processRequests()  # exception raised when the loop should exit
                 time.sleep(0.01)
-            except ExitError:
+            except ClosedError:
                 break
             except:
                 print "Error occurred in forked event loop:"
@@ -267,11 +267,11 @@ class RemoteQtEventHandler(RemoteEventHandler):
     def processRequests(self):
         try:
             RemoteEventHandler.processRequests(self)
-        except ExitError:
+        except ClosedError:
             from pyqtgraph.Qt import QtGui, QtCore
             QtGui.QApplication.instance().quit()
             self.timer.stop()
-            #raise
+            #raise SystemExit
 
 class QtProcess(Process):
     """
@@ -315,7 +315,7 @@ class QtProcess(Process):
     def processRequests(self):
         try:
             Process.processRequests(self)
-        except ExitError:
+        except ClosedError:
             self.timer.stop()
     
 def startQtEventLoop(name, port, authkey):

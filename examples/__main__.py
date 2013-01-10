@@ -22,6 +22,7 @@ examples = OrderedDict([
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
+    ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
