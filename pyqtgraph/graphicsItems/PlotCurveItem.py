@@ -52,7 +52,7 @@ class PlotCurveItem(GraphicsObject):
         self.clear()
         self.path = None
         self.fillPath = None
-        
+        self._boundsCache = [None, None]
             
         ## this is disastrous for performance.
         #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
@@ -85,6 +85,12 @@ class PlotCurveItem(GraphicsObject):
         return self.xData, self.yData
         
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        ## Need this to run as fast as possible.
+        ## check cache first:
+        cache = self._boundsCache[ax]
+        if cache is not None and cache[0] == (frac, orthoRange):
+            return cache[1]
+        
         (x, y) = self.getData()
         if x is None or len(x) == 0:
             return (0, 0)
@@ -103,15 +109,22 @@ class PlotCurveItem(GraphicsObject):
 
             
         if frac >= 1.0:
-            return (d.min(), d.max())
+            b = (d.min(), d.max())
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
-            return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
+            b = (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
+        self._boundsCache[ax] = [(frac, orthoRange), b]
+        return b
+        
+    def invalidateBounds(self):
+        self._boundingRect = None
+        self._boundsCache = [None, None]
             
     def setPen(self, *args, **kargs):
         """Set the pen used to draw the curve."""
         self.opts['pen'] = fn.mkPen(*args, **kargs)
+        self.invalidateBounds()
         self.update()
         
     def setShadowPen(self, *args, **kargs):
@@ -120,51 +133,21 @@ class PlotCurveItem(GraphicsObject):
         pen to be visible.
         """
         self.opts['shadowPen'] = fn.mkPen(*args, **kargs)
+        self.invalidateBounds()
         self.update()
 
     def setBrush(self, *args, **kargs):
         """Set the brush used when filling the area under the curve"""
         self.opts['brush'] = fn.mkBrush(*args, **kargs)
+        self.invalidateBounds()
         self.update()
         
     def setFillLevel(self, level):
         """Set the level filled to when filling under the curve"""
         self.opts['fillLevel'] = level
         self.fillPath = None
+        self.invalidateBounds()
         self.update()
-
-    #def setColor(self, color):
-        #self.pen.setColor(color)
-        #self.update()
-        
-    #def setAlpha(self, alpha, auto):
-        #self.opts['alphaHint'] = alpha
-        #self.opts['alphaMode'] = auto
-        #self.update()
-        
-    #def setSpectrumMode(self, mode):
-        #self.opts['spectrumMode'] = mode
-        #self.xDisp = self.yDisp = None
-        #self.path = None
-        #self.update()
-    
-    #def setLogMode(self, mode):
-        #self.opts['logMode'] = mode
-        #self.xDisp = self.yDisp = None
-        #self.path = None
-        #self.update()
-    
-    #def setPointMode(self, mode):
-        #self.opts['pointMode'] = mode
-        #self.update()
-        
-
-    #def setDownsampling(self, ds):
-        #if self.opts['downsample'] != ds:
-            #self.opts['downsample'] = ds
-            #self.xDisp = self.yDisp = None
-            #self.path = None
-            #self.update()
 
     def setData(self, *args, **kargs):
         """
@@ -221,7 +204,9 @@ class PlotCurveItem(GraphicsObject):
         
         #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
+        self.invalidateBounds()
         self.prepareGeometryChange()
+        self.informViewBoundsChanged()
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
         
@@ -349,36 +334,38 @@ class PlotCurveItem(GraphicsObject):
         return self.path
 
     def boundingRect(self):
-        (x, y) = self.getData()
-        if x is None or y is None or len(x) == 0 or len(y) == 0:
-            return QtCore.QRectF()
+        if self._boundingRect is None:
+            (x, y) = self.getData()
+            if x is None or y is None or len(x) == 0 or len(y) == 0:
+                return QtCore.QRectF()
+                
+                
+            if self.opts['shadowPen'] is not None:
+                lineWidth = (max(self.opts['pen'].width(), self.opts['shadowPen'].width()) + 1)
+            else:
+                lineWidth = (self.opts['pen'].width()+1)
+                
             
+            pixels = self.pixelVectors()
+            if pixels == (None, None):
+                pixels = [Point(0,0), Point(0,0)]
+                
+            xmin = x.min()
+            xmax = x.max()
+            ymin = y.min()
+            ymax = y.max()
             
-        if self.opts['shadowPen'] is not None:
-            lineWidth = (max(self.opts['pen'].width(), self.opts['shadowPen'].width()) + 1)
-        else:
-            lineWidth = (self.opts['pen'].width()+1)
+            if self.opts['fillLevel'] is not None:
+                ymin = min(ymin, self.opts['fillLevel'])
+                ymax = max(ymax, self.opts['fillLevel'])
+                
+            xmin -= pixels[0].x() * lineWidth
+            xmax += pixels[0].x() * lineWidth
+            ymin -= abs(pixels[1].y()) * lineWidth
+            ymax += abs(pixels[1].y()) * lineWidth
             
-        
-        pixels = self.pixelVectors()
-        if pixels == (None, None):
-            pixels = [Point(0,0), Point(0,0)]
-            
-        xmin = x.min()
-        xmax = x.max()
-        ymin = y.min()
-        ymax = y.max()
-        
-        if self.opts['fillLevel'] is not None:
-            ymin = min(ymin, self.opts['fillLevel'])
-            ymax = max(ymax, self.opts['fillLevel'])
-            
-        xmin -= pixels[0].x() * lineWidth
-        xmax += pixels[0].x() * lineWidth
-        ymin -= abs(pixels[1].y()) * lineWidth
-        ymax += abs(pixels[1].y()) * lineWidth
-        
-        return QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
+            self._boundingRect = QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
+        return self._boundingRect
 
     def paint(self, p, opt, widget):
         prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
@@ -463,25 +450,6 @@ class PlotCurveItem(GraphicsObject):
         self.path = None
         #del self.xData, self.yData, self.xDisp, self.yDisp, self.path
         
-    #def mousePressEvent(self, ev):
-        ##GraphicsObject.mousePressEvent(self, ev)
-        #if not self.clickable:
-            #ev.ignore()
-        #if ev.button() != QtCore.Qt.LeftButton:
-            #ev.ignore()
-        #self.mousePressPos = ev.pos()
-        #self.mouseMoved = False
-        
-    #def mouseMoveEvent(self, ev):
-        ##GraphicsObject.mouseMoveEvent(self, ev)
-        #self.mouseMoved = True
-        ##print "move"
-        
-    #def mouseReleaseEvent(self, ev):
-        ##GraphicsObject.mouseReleaseEvent(self, ev)
-        #if not self.mouseMoved:
-            #self.sigClicked.emit(self)
-
     def mouseClickEvent(self, ev):
         if not self.clickable or ev.button() != QtCore.Qt.LeftButton:
             return

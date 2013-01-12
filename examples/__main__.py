@@ -22,6 +22,7 @@ examples = OrderedDict([
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
+    ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
@@ -182,6 +183,7 @@ def testFile(name, f, exe, lib, graphicsSystem=None):
     code = """
 try:
     %s
+    import initExample
     import pyqtgraph as pg
     %s
     import %s

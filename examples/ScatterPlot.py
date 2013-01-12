@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import sys, os
 ## Add path to library (just for examples; you do not need this)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import initExample
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg

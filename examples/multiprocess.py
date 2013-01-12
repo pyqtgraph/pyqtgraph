@@ -43,6 +43,9 @@ from pyqtgraph.Qt import QtCore, QtGui
 app = pg.QtGui.QApplication([])
 
 print "\n=================\nStart QtProcess"
+import sys
+if (sys.flags.interactive != 1):
+    print "   (not interactive; remote process will exit immediately.)"
 proc = mp.QtProcess()
 d1 = proc.transfer(np.random.normal(size=1000))
 d2 = proc.transfer(np.random.normal(size=1000))

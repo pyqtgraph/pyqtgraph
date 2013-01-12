@@ -1,10 +1,15 @@
 import os, __builtin__, time, sys, traceback, weakref
 import cPickle as pickle
+import numpy as np
 
-class ExitError(Exception):
+class ClosedError(Exception):
+    """Raised when an event handler receives a request to close the connection
+    or discovers that the connection has been closed."""
     pass
 
 class NoResultError(Exception):
+    """Raised when a request for the return value of a remote call fails
+    because the call has not yet returned."""
     pass
 
     
@@ -82,14 +87,14 @@ class RemoteEventHandler(object):
         Returns the number of events processed.
         """
         if self.exited:
-            raise ExitError()
+            raise ClosedError()
         
         numProcessed = 0
         while self.conn.poll():
             try:
                 self.handleRequest()
                 numProcessed += 1
-            except ExitError:
+            except ClosedError:
                 self.exited = True
                 raise
             except IOError as err:
@@ -108,13 +113,19 @@ class RemoteEventHandler(object):
         Blocks until a request is available."""
         result = None
         try:
-            cmd, reqId, optStr = self.conn.recv() ## args, kwds are double-pickled to ensure this recv() call never fails
-        except EOFError:
+            cmd, reqId, nByteMsgs, optStr = self.conn.recv() ## args, kwds are double-pickled to ensure this recv() call never fails
+        except (EOFError, IOError):
             ## remote process has shut down; end event loop
-            raise ExitError()
-        except IOError:
-            raise ExitError()
+            raise ClosedError()
         #print os.getpid(), "received request:", cmd, reqId
+            
+        ## read byte messages following the main request
+        byteData = []
+        for i in range(nByteMsgs):
+            try:
+                byteData.append(self.conn.recv_bytes())
+            except (EOFError, IOError):
+                raise ClosedError()
             
         
         try:
@@ -137,16 +148,35 @@ class RemoteEventHandler(object):
                 obj = opts['obj']
                 fnargs = opts['args']
                 fnkwds = opts['kwds']
+                
+                ## If arrays were sent as byte messages, they must be re-inserted into the 
+                ## arguments
+                if len(byteData) > 0:
+                    for i,arg in enumerate(fnargs):
+                        if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
+                            ind = arg[1]
+                            dtype, shape = arg[2]
+                            fnargs[i] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                    for k,arg in fnkwds.items():
+                        if isinstance(arg, tuple) and len(arg) > 0 and arg[0] == '__byte_message__':
+                            ind = arg[1]
+                            dtype, shape = arg[2]
+                            fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
+                
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
-                    #print obj, fnargs
                     result = obj(*fnargs)
                 else:
                     result = obj(*fnargs, **fnkwds)
+                    
             elif cmd == 'getObjValue':
                 result = opts['obj']  ## has already been unpickled into its local value
                 returnType = 'value'
             elif cmd == 'transfer':
                 result = opts['obj']
+                returnType = 'proxy'
+            elif cmd == 'transferArray':
+                ## read array data from next message:
+                result = np.fromstring(byteData[0], dtype=opts['dtype']).reshape(opts['shape'])
                 returnType = 'proxy'
             elif cmd == 'import':
                 name = opts['module']
@@ -201,7 +231,7 @@ class RemoteEventHandler(object):
                              ## (more importantly, do not call any code that would
                              ## normally be invoked at exit)
             else:
-                raise ExitError()
+                raise ClosedError()
         
     
     
@@ -216,7 +246,7 @@ class RemoteEventHandler(object):
         except:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=None, excString=excStr))
     
-    def send(self, request, opts=None, reqId=None, callSync='sync', timeout=10, returnType=None, **kwds):
+    def send(self, request, opts=None, reqId=None, callSync='sync', timeout=10, returnType=None, byteData=None, **kwds):
         """Send a request or return packet to the remote process.
         Generally it is not necessary to call this method directly; it is for internal use.
         (The docstring has information that is nevertheless useful to the programmer
@@ -235,6 +265,9 @@ class RemoteEventHandler(object):
         opts        Extra arguments sent to the remote process that determine the way
                     the request will be handled (see below)
         returnType  'proxy', 'value', or 'auto'
+        byteData    If specified, this is a list of objects to be sent as byte messages
+                    to the remote process.
+                    This is used to send large arrays without the cost of pickling.
         ==========  ====================================================================
         
         Description of request strings and options allowed for each:
@@ -312,7 +345,9 @@ class RemoteEventHandler(object):
         
         if returnType is not None:
             opts['returnType'] = returnType
-        #print "send", opts
+            
+        #print os.getpid(), "send request:", request, reqId, opts
+        
         ## double-pickle args to ensure that at least status and request ID get through
         try:
             optStr = pickle.dumps(opts)
@@ -322,8 +357,18 @@ class RemoteEventHandler(object):
             print "======================================="
             raise
         
-        request = (request, reqId, optStr)
+        nByteMsgs = 0
+        if byteData is not None:
+            nByteMsgs = len(byteData)
+            
+        ## Send primary request
+        request = (request, reqId, nByteMsgs, optStr)
         self.conn.send(request)
+        
+        ## follow up by sending byte messages
+        if byteData is not None:
+            for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
+                self.conn.send_bytes(obj)
         
         if callSync == 'off':
             return
@@ -345,10 +390,10 @@ class RemoteEventHandler(object):
         ## raises NoResultError if the result is not available yet
         #print self.results.keys(), os.getpid()
         if reqId not in self.results:
-            #self.readPipe()
             try:
                 self.processRequests()
-            except ExitError:
+            except ClosedError:  ## even if remote connection has closed, we may have 
+                                 ## received new data during this call to processRequests()
                 pass
         if reqId not in self.results:
             raise NoResultError()
@@ -393,17 +438,33 @@ class RemoteEventHandler(object):
         
     def callObj(self, obj, args, kwds, **opts):
         opts = opts.copy()
+        args = list(args)
+        
+        ## Decide whether to send arguments by value or by proxy
         noProxyTypes = opts.pop('noProxyTypes', None)
         if noProxyTypes is None:
             noProxyTypes = self.proxyOptions['noProxyTypes']
-        autoProxy = opts.pop('autoProxy', self.proxyOptions['autoProxy'])
             
+        autoProxy = opts.pop('autoProxy', self.proxyOptions['autoProxy'])
         if autoProxy is True:
-            args = tuple([self.autoProxy(v, noProxyTypes) for v in args])
+            args = [self.autoProxy(v, noProxyTypes) for v in args]
             for k, v in kwds.iteritems():
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
-        return self.send(request='callObj', opts=dict(obj=obj, args=args, kwds=kwds), **opts)
+        byteMsgs = []
+        
+        ## If there are arrays in the arguments, send those as byte messages.
+        ## We do this because pickling arrays is too expensive.
+        for i,arg in enumerate(args):
+            if arg.__class__ == np.ndarray:
+                args[i] = ("__byte_message__", len(byteMsgs), (arg.dtype, arg.shape))
+                byteMsgs.append(arg)
+        for k,v in kwds.items():
+            if v.__class__ == np.ndarray:
+                kwds[k] = ("__byte_message__", len(byteMsgs), (v.dtype, v.shape))
+                byteMsgs.append(v)
+        
+        return self.send(request='callObj', opts=dict(obj=obj, args=args, kwds=kwds), byteData=byteMsgs, **opts)
 
     def registerProxy(self, proxy):
         ref = weakref.ref(proxy, self.deleteProxy)
@@ -421,7 +482,11 @@ class RemoteEventHandler(object):
         Transfer an object by value to the remote host (the object must be picklable) 
         and return a proxy for the new remote object.
         """
-        return self.send(request='transfer', opts=dict(obj=obj), **kwds)
+        if obj.__class__ is np.ndarray:
+            opts = {'dtype': obj.dtype, 'shape': obj.shape}
+            return self.send(request='transferArray', opts=opts, byteData=[obj], **kwds)            
+        else:
+            return self.send(request='transfer', opts=dict(obj=obj), **kwds)
         
     def autoProxy(self, obj, noProxyTypes):
         ## Return object wrapped in LocalObjectProxy _unless_ its type is in noProxyTypes.
@@ -453,6 +518,8 @@ class Request(object):
         If block is True, wait until the result has arrived or *timeout* seconds passes.
         If the timeout is reached, raise NoResultError. (use timeout=None to disable)
         If block is False, raise NoResultError immediately if the result has not arrived yet.
+        
+        If the process's connection has closed before the result arrives, raise ClosedError.
         """
         
         if self.gotResult:
@@ -464,6 +531,8 @@ class Request(object):
         if block:
             start = time.time()
             while not self.hasResult():
+                if self.proc.exited:
+                    raise ClosedError()
                 time.sleep(0.005)
                 if timeout >= 0 and time.time() - start > timeout:
                     print "Request timed out:", self.description
