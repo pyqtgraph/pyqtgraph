@@ -1783,8 +1783,7 @@ class LineSegmentROI(ROI):
         dh = h2-h1
         if dh.length() == 0:
             return p
-        pxv = self.pixelVectors(h2-h1)[1]
-        
+        pxv = self.pixelVectors(dh)[1]
         if pxv is None:
             return p
             
