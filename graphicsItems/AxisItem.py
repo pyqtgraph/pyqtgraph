@@ -350,9 +350,7 @@ class AxisItem(GraphicsWidget):
         
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
         pixelSpacing = np.log(size+10) * 5
-        optimalTickCount = size / pixelSpacing
-        if optimalTickCount < 1:
-            optimalTickCount = 1
+        optimalTickCount = max(2., size / pixelSpacing)
         
         ## optimal minor tick spacing 
         optimalSpacing = dif / optimalTickCount
@@ -366,11 +364,20 @@ class AxisItem(GraphicsWidget):
         while intervals[minorIndex+1] <= optimalSpacing:
             minorIndex += 1
             
-        return [
+        levels = [
             (intervals[minorIndex+2], 0),
             (intervals[minorIndex+1], 0),
             #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
         ]
+        
+        ## decide whether to include the last level of ticks
+        minSpacing = min(size / 20., 30.)
+        maxTickCount = size / minSpacing
+        if dif / intervals[minorIndex] <= maxTickCount:
+            levels.append((intervals[minorIndex], 0))
+        return levels
+        
+        
         
         ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
         ### Determine major/minor tick spacings which flank the optimal spacing.
@@ -587,7 +594,7 @@ class AxisItem(GraphicsWidget):
             ticks = tickLevels[i][1]
         
             ## length of tick
-            tickLength = self.tickLength / ((i*1.0)+1.0)
+            tickLength = self.tickLength / ((i*0.5)+1.0)
                 
             lineAlpha = 255 / (i+1)
             if self.grid is not False:

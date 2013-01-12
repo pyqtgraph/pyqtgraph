@@ -164,6 +164,7 @@ class PlotDataItem(GraphicsObject):
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
         self.updateItems()
+        self.informViewBoundsChanged()
     
     def setLogMode(self, xMode, yMode):
         if self.opts['logMode'] == [xMode, yMode]:
@@ -171,6 +172,7 @@ class PlotDataItem(GraphicsObject):
         self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
         self.updateItems()
+        self.informViewBoundsChanged()
     
     def setPointMode(self, mode):
         if self.opts['pointMode'] == mode:
