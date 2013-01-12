@@ -16,7 +16,6 @@ if not hasattr(sys, 'frozen'):
                 sys.path.remove(p)
                 sys.path.insert(0, p)
 
-
 ## should force example to use PySide instead of PyQt
 if 'pyside' in sys.argv:  
     from PySide import QtGui

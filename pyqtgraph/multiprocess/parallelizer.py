@@ -1,6 +1,6 @@
 import os, sys, time, multiprocessing, re
 from processes import ForkedProcess
-from remoteproxy import ExitError
+from remoteproxy import ClosedError
 
 class CanceledError(Exception):
     """Raised when the progress dialog is canceled during a processing operation."""
@@ -152,7 +152,7 @@ class Parallelize(object):
                         n = ch.processRequests()
                         if n > 0:
                             waitingChildren += 1
-                    except ExitError:
+                    except ClosedError:
                         #print ch.childPid, 'process finished'
                         rem.append(ch)
                         if self.showProgress:
