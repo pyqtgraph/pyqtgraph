@@ -114,7 +114,7 @@ class RemoteEventHandler(object):
         result = None
         try:
             cmd, reqId, nByteMsgs, optStr = self.conn.recv() ## args, kwds are double-pickled to ensure this recv() call never fails
-        except EOFError, IOError:
+        except (EOFError, IOError):
             ## remote process has shut down; end event loop
             raise ClosedError()
         #print os.getpid(), "received request:", cmd, reqId
@@ -124,7 +124,7 @@ class RemoteEventHandler(object):
         for i in range(nByteMsgs):
             try:
                 byteData.append(self.conn.recv_bytes())
-            except EOFError, IOError:
+            except (EOFError, IOError):
                 raise ClosedError()
             
         

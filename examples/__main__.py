@@ -182,6 +182,7 @@ def testFile(name, f, exe, lib, graphicsSystem=None):
     code = """
 try:
     %s
+    import initExample
     import pyqtgraph as pg
     %s
     import %s
