@@ -267,14 +267,14 @@ class A(object):
         object.__init__(self)
         self.msg = msg
     def fn(self, pfx = ""):
-        print pfx+"A class:", self.__class__, id(self.__class__)
-        print pfx+"  %%s: %d" %% self.msg
+        print(pfx+"A class: %%s %%s" %% (str(self.__class__), str(id(self.__class__))))
+        print(pfx+"  %%s: %d" %% self.msg)
 
 class B(A):
     def fn(self, pfx=""):
-        print pfx+"B class:", self.__class__, id(self.__class__)
-        print pfx+"  %%s: %d" %% self.msg
-        print pfx+"  calling superclass.. (%%s)" %% id(A) 
+        print(pfx+"B class:", self.__class__, id(self.__class__))
+        print(pfx+"  %%s: %d" %% self.msg)
+        print(pfx+"  calling superclass.. (%%s)" %% id(A) )
         A.fn(self, "  ")
 """
 
@@ -294,7 +294,7 @@ class C(A):
         A.__init__(self, msg + "(init from C)")
         
 def fn():
-    print "fn: %s"
+    print("fn: %s")
 """ 
 
     open(modFile1, 'w').write(modCode1%(1,1))

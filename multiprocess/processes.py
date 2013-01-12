@@ -232,7 +232,7 @@ class ForkedProcess(RemoteEventHandler):
             except ClosedError:
                 break
             except:
-                print "Error occurred in forked event loop:"
+                print("Error occurred in forked event loop:")
                 sys.excepthook(*sys.exc_info())
         sys.exit(0)
         
@@ -297,7 +297,7 @@ class QtProcess(Process):
         btn.show()
         
         def slot():
-            print 'slot invoked on parent process'
+            print('slot invoked on parent process')
         btn.clicked.connect(proxy(slot))   # be sure to send a proxy of the slot
     """
     

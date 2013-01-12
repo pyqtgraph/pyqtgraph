@@ -220,7 +220,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         ## get list of sub-groups
         g2 = [n for n in g1.childNodes if isinstance(n, xml.Element) and n.tagName == 'g']
     except:
-        print doc.toxml()
+        print(doc.toxml())
         raise
 
 
