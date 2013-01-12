@@ -16,6 +16,9 @@ from .Qt import QtGui
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
 
+import numpy  ## pyqtgraph requires numpy
+              ## (import here to avoid massive error dump later on if numpy is not available)
+
 import os, sys
 
 ## check python version
