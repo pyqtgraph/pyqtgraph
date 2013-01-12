@@ -27,7 +27,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)
-        self.setFocusPolicy(self._view.focusPolicy())
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy(self._view.focusPolicy()))
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setMouseTracking(True)
         self.shm = None

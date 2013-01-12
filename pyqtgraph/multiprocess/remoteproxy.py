@@ -1,6 +1,11 @@
-import os, __builtin__, time, sys, traceback, weakref
-import cPickle as pickle
+import os, time, sys, traceback, weakref
 import numpy as np
+try:
+    import __builtin__ as builtins
+    import cPickle as pickle
+except ImportError:
+    import builtins
+    import pickle
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
@@ -181,7 +186,7 @@ class RemoteEventHandler(object):
             elif cmd == 'import':
                 name = opts['module']
                 fromlist = opts.get('fromlist', [])
-                mod = __builtin__.__import__(name, fromlist=fromlist)
+                mod = builtins.__import__(name, fromlist=fromlist)
                 
                 if len(fromlist) == 0:
                     parts = name.lstrip('.').split('.')

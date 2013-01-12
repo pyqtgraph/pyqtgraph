@@ -1198,7 +1198,7 @@ class ViewBox(GraphicsWidget):
         if ViewBox is None:     ## can happen as python is shutting down
             return
         ## Called with ID and name of view (the view itself is no longer available)
-        for v in ViewBox.AllViews.keys():
+        for v in list(ViewBox.AllViews.keys()):
             if id(v) == vid:
                 ViewBox.AllViews.pop(v)
                 break

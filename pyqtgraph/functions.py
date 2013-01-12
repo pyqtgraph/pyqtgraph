@@ -1260,7 +1260,7 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
         points[b[1]].append([b,a])
 
     ## rearrange into chains
-    for k in points.keys():
+    for k in list(points.keys()):
         try:
             chains = points[k]
         except KeyError:   ## already used this point elsewhere

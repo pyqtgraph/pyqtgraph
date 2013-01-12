@@ -4,7 +4,7 @@ from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 import weakref
 from pyqtgraph.pgcollections import OrderedDict
-import operator
+import operator, sys
 
 class FiniteCache(OrderedDict):
     """Caches a finite number of objects, removing
@@ -17,7 +17,7 @@ class FiniteCache(OrderedDict):
         self.pop(item, None) # make sure item is added to end
         OrderedDict.__setitem__(self, item, val) 
         while len(self) > self._length:
-            del self[self.keys()[0]]
+            del self[list(self.keys())[0]]
         
     def __getitem__(self, item):
         val = dict.__getitem__(self, item)
@@ -197,14 +197,14 @@ class GraphicsItem(object):
         
         ## check local cache
         if direction is None and dt == self._pixelVectorCache[0]:
-            return map(Point, self._pixelVectorCache[1])  ## return a *copy*
+            return tuple(map(Point, self._pixelVectorCache[1]))  ## return a *copy*
         
         ## check global cache
         key = (dt.m11(), dt.m21(), dt.m31(), dt.m12(), dt.m22(), dt.m32(), dt.m31(), dt.m32())
         pv = self._pixelVectorGlobalCache.get(key, None)
         if pv is not None:
             self._pixelVectorCache = [dt, pv]
-            return map(Point,pv)  ## return a *copy*
+            return tuple(map(Point,pv))  ## return a *copy*
         
         
         if direction is None:
