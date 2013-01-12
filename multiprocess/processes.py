@@ -1,7 +1,11 @@
-from remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
+from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
-import cPickle as pickle
 import multiprocessing.connection
+from pyqtgraph.Qt import USE_PYSIDE
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
@@ -75,7 +79,10 @@ class Process(RemoteEventHandler):
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must sent pid to child because windows does not have getppid
-        pickle.dump((name+'_child', port, authkey, pid, targetStr, sysPath), self.proc.stdin)
+        pyside = USE_PYSIDE
+        
+        ## Send everything the remote process needs to start correctly
+        pickle.dump((name+'_child', port, authkey, pid, targetStr, sysPath, pyside), self.proc.stdin)
         self.proc.stdin.close()
         
         ## open connection for remote process

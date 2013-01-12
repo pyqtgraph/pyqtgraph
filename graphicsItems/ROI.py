@@ -1808,7 +1808,7 @@ class LineSegmentROI(ROI):
         for i in range(len(imgPts)-1):
             d = Point(imgPts[i+1] - imgPts[i])
             o = Point(imgPts[i])
-            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[d.norm()], origin=o, axes=axes, order=1)
+            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=1)
             rgns.append(r)
             
         return np.concatenate(rgns, axis=axes[0])
