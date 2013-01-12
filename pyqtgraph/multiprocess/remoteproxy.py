@@ -68,7 +68,7 @@ class RemoteEventHandler(object):
         try:
             return cls.handlers[pid]
         except:
-            print pid, cls.handlers
+            print(pid, cls.handlers)
             raise
     
     def getProxyOption(self, opt):
@@ -103,7 +103,7 @@ class RemoteEventHandler(object):
                 else:
                     raise
             except:
-                print "Error in process %s" % self.name
+                print("Error in process %s" % self.name)
                 sys.excepthook(*sys.exc_info())
                 
         return numProcessed
@@ -239,7 +239,7 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        print "error:", self.name, reqId, exc[1]
+        print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -352,9 +352,9 @@ class RemoteEventHandler(object):
         try:
             optStr = pickle.dumps(opts)
         except:
-            print "====  Error pickling this object:  ===="
-            print opts
-            print "======================================="
+            print("====  Error pickling this object:  ====")
+            print(opts)
+            print("=======================================")
             raise
         
         nByteMsgs = 0
@@ -404,12 +404,12 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                print "===== Remote process raised exception on request: ====="
-                print ''.join(excStr)
-                print "===== Local Traceback to request follows: ====="
+                print("===== Remote process raised exception on request: =====")
+                print(''.join(excStr))
+                print("===== Local Traceback to request follows: =====")
                 raise exc
             else:
-                print ''.join(excStr)
+                print(''.join(excStr))
                 raise Exception("Error getting result. See above for exception from remote process.")
                 
         else:
@@ -535,7 +535,7 @@ class Request(object):
                     raise ClosedError()
                 time.sleep(0.005)
                 if timeout >= 0 and time.time() - start > timeout:
-                    print "Request timed out:", self.description
+                    print("Request timed out: %s" % self.description)
                     import traceback
                     traceback.print_stack()
                     raise NoResultError()

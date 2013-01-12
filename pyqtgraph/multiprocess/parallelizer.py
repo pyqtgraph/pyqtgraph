@@ -19,7 +19,7 @@ class Parallelize(object):
         for task in tasks:
             result = processTask(task)
             results.append(result)
-        print results
+        print(results)
         
         
         ## Here is the parallelized version:
@@ -30,7 +30,7 @@ class Parallelize(object):
             for task in tasker:
                 result = processTask(task)
                 tasker.results.append(result)
-        print results
+        print(results)
         
         
     The only major caveat is that *result* in the example above must be picklable,
