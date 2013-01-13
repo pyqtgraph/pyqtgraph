@@ -1,6 +1,11 @@
-import os, __builtin__, time, sys, traceback, weakref
-import cPickle as pickle
+import os, time, sys, traceback, weakref
 import numpy as np
+try:
+    import __builtin__ as builtins
+    import cPickle as pickle
+except ImportError:
+    import builtins
+    import pickle
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
@@ -68,7 +73,7 @@ class RemoteEventHandler(object):
         try:
             return cls.handlers[pid]
         except:
-            print pid, cls.handlers
+            print(pid, cls.handlers)
             raise
     
     def getProxyOption(self, opt):
@@ -103,7 +108,7 @@ class RemoteEventHandler(object):
                 else:
                     raise
             except:
-                print "Error in process %s" % self.name
+                print("Error in process %s" % self.name)
                 sys.excepthook(*sys.exc_info())
                 
         return numProcessed
@@ -181,7 +186,7 @@ class RemoteEventHandler(object):
             elif cmd == 'import':
                 name = opts['module']
                 fromlist = opts.get('fromlist', [])
-                mod = __builtin__.__import__(name, fromlist=fromlist)
+                mod = builtins.__import__(name, fromlist=fromlist)
                 
                 if len(fromlist) == 0:
                     parts = name.lstrip('.').split('.')
@@ -239,7 +244,7 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        print "error:", self.name, reqId, exc[1]
+        print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -352,9 +357,9 @@ class RemoteEventHandler(object):
         try:
             optStr = pickle.dumps(opts)
         except:
-            print "====  Error pickling this object:  ===="
-            print opts
-            print "======================================="
+            print("====  Error pickling this object:  ====")
+            print(opts)
+            print("=======================================")
             raise
         
         nByteMsgs = 0
@@ -404,12 +409,12 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                print "===== Remote process raised exception on request: ====="
-                print ''.join(excStr)
-                print "===== Local Traceback to request follows: ====="
+                print("===== Remote process raised exception on request: =====")
+                print(''.join(excStr))
+                print("===== Local Traceback to request follows: =====")
                 raise exc
             else:
-                print ''.join(excStr)
+                print(''.join(excStr))
                 raise Exception("Error getting result. See above for exception from remote process.")
                 
         else:
@@ -535,7 +540,7 @@ class Request(object):
                     raise ClosedError()
                 time.sleep(0.005)
                 if timeout >= 0 and time.time() - start > timeout:
-                    print "Request timed out:", self.description
+                    print("Request timed out: %s" % self.description)
                     import traceback
                     traceback.print_stack()
                     raise NoResultError()

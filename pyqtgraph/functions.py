@@ -23,6 +23,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
+from pyqtgraph import getConfigOption
 import numpy as np
 import decimal, re
 import ctypes
@@ -30,9 +31,10 @@ import ctypes
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
+    WEAVE_DEBUG = getConfigOption('weaveDebug')
     try:
         import scipy.weave
-        USE_WEAVE = True
+        USE_WEAVE = getConfigOption('useWeave')
     except:
         USE_WEAVE = False
 except ImportError:
@@ -631,7 +633,8 @@ def rescaleData(data, scale, offset, dtype=None):
         data = newData.reshape(data.shape)
     except:
         if USE_WEAVE:
-            debug.printExc("Error; disabling weave.")
+            if WEAVE_DEBUG:
+                debug.printExc("Error; disabling weave.")
             USE_WEAVE = False
         
         #p = np.poly1d([scale, -offset*scale])
@@ -795,7 +798,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if levels.shape != (data.shape[-1], 2):
                 raise Exception('levels must have shape (data.shape[-1], 2)')
         else:
-            print levels
+            print(levels)
             raise Exception("levels argument must be 1D or 2D.")
         #levels = np.array(levels)
         #if levels.shape == (2,):
@@ -1257,7 +1260,7 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
         points[b[1]].append([b,a])
 
     ## rearrange into chains
-    for k in points.keys():
+    for k in list(points.keys()):
         try:
             chains = points[k]
         except KeyError:   ## already used this point elsewhere
