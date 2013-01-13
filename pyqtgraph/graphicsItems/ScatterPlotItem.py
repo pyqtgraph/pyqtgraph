@@ -41,7 +41,7 @@ def drawSymbol(painter, symbol, size, pen, brush):
     if isinstance(symbol, basestring):
         symbol = Symbols[symbol]
     if np.isscalar(symbol):
-        symbol = Symbols.values()[symbol % len(Symbols)]
+        symbol = list(Symbols.values())[symbol % len(Symbols)]
     painter.drawPath(symbol)
 
     

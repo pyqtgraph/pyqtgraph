@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = None
+__version__ = '0.9.5'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -15,6 +15,9 @@ from .Qt import QtGui
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
+
+import numpy  ## pyqtgraph requires numpy
+              ## (import here to avoid massive error dump later on if numpy is not available)
 
 import os, sys
 
@@ -49,6 +52,8 @@ CONFIG_OPTIONS = {
     'background': (0, 0, 0),        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
+    'useWeave': True,       ## Use weave to speed up some operations, if it is available
+    'weaveDebug': False,    ## Print full error message if weave compile fails
 } 
 
 

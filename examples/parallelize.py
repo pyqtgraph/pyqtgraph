@@ -5,7 +5,7 @@ import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
 import time
 
-print "\n=================\nParallelize"
+print( "\n=================\nParallelize")
 
 ## Do a simple task: 
 ##   for x in range(N):
@@ -36,7 +36,7 @@ with pg.ProgressDialog('processing serially..', maximum=len(tasks)) as dlg:
         dlg += 1
         if dlg.wasCanceled():
             raise Exception('processing canceled')
-print "Serial time: %0.2f" % (time.time() - start)
+print( "Serial time: %0.2f" % (time.time() - start))
 
 ### Use parallelize, but force a single worker
 ### (this simulates the behavior seen on windows, which lacks os.fork)
@@ -47,8 +47,8 @@ with mp.Parallelize(enumerate(tasks), results=results2, workers=1, progressDialo
         for j in xrange(size):
             tot += j * x
         tasker.results[i] = tot
-print "\nParallel time, 1 worker: %0.2f" % (time.time() - start)
-print "Results match serial:   ", results2 == results
+print( "\nParallel time, 1 worker: %0.2f" % (time.time() - start))
+print( "Results match serial:  %s" % str(results2 == results))
 
 ### Use parallelize with multiple workers
 start = time.time()
@@ -58,6 +58,6 @@ with mp.Parallelize(enumerate(tasks), results=results3, progressDialog='processi
         for j in xrange(size):
             tot += j * x
         tasker.results[i] = tot
-print "\nParallel time, %d workers: %0.2f" % (mp.Parallelize.suggestedWorkerCount(), time.time() - start)
-print "Results match serial:      ", results3 == results
+print( "\nParallel time, %d workers: %0.2f" % (mp.Parallelize.suggestedWorkerCount(), time.time() - start))
+print( "Results match serial:      %s" % str(results3 == results))
 

@@ -1783,8 +1783,7 @@ class LineSegmentROI(ROI):
         dh = h2-h1
         if dh.length() == 0:
             return p
-        pxv = self.pixelVectors(h2-h1)[1]
-        
+        pxv = self.pixelVectors(dh)[1]
         if pxv is None:
             return p
             
@@ -1809,7 +1808,7 @@ class LineSegmentROI(ROI):
         for i in range(len(imgPts)-1):
             d = Point(imgPts[i+1] - imgPts[i])
             o = Point(imgPts[i])
-            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[d.norm()], origin=o, axes=axes, order=1)
+            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=1)
             rgns.append(r)
             
         return np.concatenate(rgns, axis=axes[0])

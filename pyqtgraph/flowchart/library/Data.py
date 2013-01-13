@@ -236,7 +236,7 @@ class EvalNode(Node):
             text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
             exec(text)
         except:
-            print "Error processing node:", self.name()
+            print("Error processing node: %s" % self.name())
             raise
         return output
         
