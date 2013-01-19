@@ -88,9 +88,10 @@ class Parameter(QtCore.QObject):
     @staticmethod
     def create(**opts):
         """
-        Create a new Parameter (or subclass) instance using opts['type'] to select the 
-        appropriate class.
+        Static method that creates a new Parameter (or subclass) instance using 
+        opts['type'] to select the appropriate class.
         
+        All options are passed directly to the new Parameter's __init__ method.
         Use registerParameterType() to add new class types.
         """
         typ = opts.get('type', None)
@@ -101,6 +102,41 @@ class Parameter(QtCore.QObject):
         return cls(**opts)
     
     def __init__(self, **opts):
+        """
+        Initialize a Parameter object. Although it is rare to directly create a
+        Parameter instance, the options available to this method are also allowed
+        by most Parameter subclasses.
+        
+        ================= =========================================================
+        Keyword Arguments
+        name              The name to give this Parameter. This is the name that 
+                          will appear in the left-most column of a ParameterTree
+                          for this Parameter.
+        value             The value to initially assign to this Parameter.
+        default           The default value for this Parameter (most Parameters
+                          provide an option to 'reset to default').
+        children          A list of children for this Parameter. Children
+                          may be given either as a Parameter instance or as a
+                          dictionary to pass to Parameter.create(). In this way,
+                          it is possible to specify complex hierarchies of
+                          Parameters from a single nested data structure.
+        readonly          If True, the user will not be allowed to edit this 
+                          Parameter. (default=False)
+        enabled           If False, any widget(s) for this parameter will appear
+                          disabled. (default=True)
+        visible           If False, the Parameter will not appear when displayed
+                          in a ParameterTree. (default=True)
+        renamable         If True, the user may rename this Parameter.
+                          (default=False)
+        removable         If True, the user may remove this Parameter.
+                          (default=False)
+        expanded          If True, the Parameter will appear expanded when 
+                          displayed in a ParameterTree (its children will be 
+                          visible). (default=True)
+        ================= =========================================================
+        """
+        
+        
         QtCore.QObject.__init__(self)
         
         self.opts = {
@@ -111,6 +147,7 @@ class Parameter(QtCore.QObject):
             'renamable': False,
             'removable': False,
             'strictNaming': False,  # forces name to be usable as a python variable
+            'expanded': True,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
         self.opts.update(opts)
@@ -148,6 +185,7 @@ class Parameter(QtCore.QObject):
         #self.watchParam(self)  ## emit treechange signals if our own state changes
         
     def name(self):
+        """Return the name of this Parameter."""
         return self.opts['name']
 
     def setName(self, name):
@@ -165,6 +203,7 @@ class Parameter(QtCore.QObject):
         return name
 
     def type(self):
+        """Return the type string for this Parameter."""
         return self.opts['type']
         
     def isType(self, typ):
@@ -197,8 +236,10 @@ class Parameter(QtCore.QObject):
         return path
 
     def setValue(self, value, blockSignal=None):
-        ## return the actual value that was set
-        ## (this may be different from the value that was requested)
+        """
+        Set the value of this Parameter; return the actual value that was set.
+        (this may be different from the value that was requested)
+        """
         try:
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
@@ -213,6 +254,9 @@ class Parameter(QtCore.QObject):
         return value
 
     def value(self):
+        """
+        Return the value of this Parameter.
+        """
         return self.opts['value']
 
     def getValues(self):
@@ -352,9 +396,12 @@ class Parameter(QtCore.QObject):
         return not self.opts.get('readonly', False)
 
     def setWritable(self, writable=True):
+        """Set whether this Parameter should be editable by the user. (This is 
+        exactly the opposite of setReadonly)."""
         self.setOpts(readonly=not writable)
         
     def setReadonly(self, readonly=True):
+        """Set whether this Parameter's value may be edited by the user."""
         self.setOpts(readonly=readonly)
         
     def setOpts(self, **opts):
@@ -362,7 +409,10 @@ class Parameter(QtCore.QObject):
         Set any arbitrary options on this parameter.
         The exact behavior of this function will depend on the parameter type, but
         most parameters will accept a common set of options: value, name, limits,
-        default, readonly, removable, renamable, visible, and enabled.
+        default, readonly, removable, renamable, visible, enabled, and expanded.
+        
+        See :func:`Parameter.__init__ <pyqtgraph.parametertree.Parameter.__init__>`
+        for more information on default options.
         """
         changed = OrderedDict()
         for k in opts:
@@ -390,7 +440,10 @@ class Parameter(QtCore.QObject):
         self.emitTreeChanges()
 
     def makeTreeItem(self, depth):
-        """Return a TreeWidgetItem suitable for displaying/controlling the content of this parameter.
+        """
+        Return a TreeWidgetItem suitable for displaying/controlling the content of 
+        this parameter. This is called automatically when a ParameterTree attempts
+        to display this Parameter.
         Most subclasses will want to override this function.
         """
         if hasattr(self, 'itemClass'):
@@ -424,7 +477,8 @@ class Parameter(QtCore.QObject):
         """
         Insert a new child at pos.
         If pos is a Parameter, then insert at the position of that Parameter.
-        If child is a dict, then a parameter is constructed as Parameter(\*\*child)
+        If child is a dict, then a parameter is constructed using
+        :func:`Parameter.create <pyqtgraph.parametertree.Parameter.create>`.
         """
         if isinstance(child, dict):
             child = Parameter.create(**child)
@@ -476,6 +530,7 @@ class Parameter(QtCore.QObject):
         return self.childs[:]
     
     def hasChildren(self):
+        """Return True if this Parameter has children."""
         return len(self.childs) > 0
 
     def parentChanged(self, parent):
@@ -553,6 +608,10 @@ class Parameter(QtCore.QObject):
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..
         #print type(self), attr
+        import traceback
+        traceback.print_stack()
+        print "Warning: Use of Parameter.subParam is deprecated. Use Parameter.param(name) instead."
+        
         if 'names' not in self.__dict__:
             raise AttributeError(attr)
         if attr in self.names:
@@ -581,36 +640,6 @@ class Parameter(QtCore.QObject):
         self.opts['visible'] = s
         self.sigOptionsChanged.emit(self, {'visible': s})
 
-
-    #def monitorChildren(self):
-        #if self.monitoringChildren:
-            #raise Exception("Already monitoring children.")
-        #self.watchParam(self)
-        #self.monitoringChildren = True
-
-    #def watchParam(self, param):
-        #param.sigChildAdded.connect(self.grandchildAdded)
-        #param.sigChildRemoved.connect(self.grandchildRemoved)
-        #param.sigStateChanged.connect(self.grandchildChanged)
-        #for ch in param:
-            #self.watchParam(ch)
-
-    #def unwatchParam(self, param):
-        #param.sigChildAdded.disconnect(self.grandchildAdded)
-        #param.sigChildRemoved.disconnect(self.grandchildRemoved)
-        #param.sigStateChanged.disconnect(self.grandchildChanged)
-        #for ch in param:
-            #self.unwatchParam(ch)
-
-    #def grandchildAdded(self, parent, child):
-        #self.watchParam(child)
-        
-    #def grandchildRemoved(self, parent, child):
-        #self.unwatchParam(child)
-        
-    #def grandchildChanged(self, param, change, data):
-        ##self.sigTreeStateChanged.emit(self, param, change, data)
-        #self.emitTreeChange((param, change, data))
 
     def treeChangeBlocker(self):
         """
