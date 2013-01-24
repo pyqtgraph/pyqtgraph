@@ -620,9 +620,12 @@ class ScatterPlotItem(GraphicsObject):
             
         if frac >= 1.0:
             ## increase size of bounds based on spot size and pen width
-            px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
+            #px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
+            px = self.pixelVectors()[ax]
             if px is None:
                 px = 0
+            else:
+                px = px.length()
             minIndex = np.argmin(d)
             maxIndex = np.argmax(d)
             minVal = d[minIndex]
