@@ -27,6 +27,7 @@ from pyqtgraph import getConfigOption
 import numpy as np
 import decimal, re
 import ctypes
+import sys, struct
 
 try:
     import scipy.ndimage
@@ -1040,6 +1041,97 @@ def colorToAlpha(data, color):
     return np.clip(output, 0, 255).astype(np.ubyte)
     
 
+
+def arrayToQPath(x, y, connect='all'):
+    """Convert an array of x,y coordinats to QPath as efficiently as possible.
+    The *connect* argument may be 'all', indicating that each point should be
+    connected to the next; 'pairs', indicating that each pair of points
+    should be connected, or an array of int32 values (0 or 1) indicating
+    connections.
+    """
+    
+    ## Create all vertices in path. The method used below creates a binary format so that all 
+    ## vertices can be read in at once. This binary format may change in future versions of Qt, 
+    ## so the original (slower) method is left here for emergencies:
+    #path.moveTo(x[0], y[0])
+    #for i in range(1, y.shape[0]):
+    #    path.lineTo(x[i], y[i])
+        
+    ## Speed this up using >> operator
+    ## Format is:
+    ##    numVerts(i4)   0(i4)
+    ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
+    ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
+    ##    ...
+    ##    0(i4)
+    ##
+    ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+    
+    path = QtGui.QPainterPath()
+    
+    #prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
+    if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
+        n = x.shape[0]
+        # create empty array, pad with extra space on either end
+        arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+        # write first two integers
+        #prof.mark('allocate empty')
+        arr.data[12:20] = struct.pack('>ii', n, 0)
+        #prof.mark('pack header')
+        # Fill array with vertex values
+        arr[1:-1]['x'] = x
+        arr[1:-1]['y'] = y
+        
+        # decide which points are connected by lines
+        if connect == 'pairs':
+            connect = np.empty((n/2,2), dtype=np.int32)
+            connect[:,0] = 1
+            connect[:,1] = 0
+            connect = connect.flatten()
+            
+        if connect == 'all':
+            arr[1:-1]['c'] = 1
+        elif isinstance(connect, np.ndarray):
+            arr[1:-1]['c'] = connect
+        else:
+            raise Exception('connect argument must be "all", "pairs", or array')
+            
+        #prof.mark('fill array')
+        # write last 0
+        lastInd = 20*(n+1)
+        arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+        #prof.mark('footer')
+        # create datastream object and stream into path
+        buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+        #prof.mark('create buffer')
+        ds = QtCore.QDataStream(buf)
+        #prof.mark('create datastream')
+        ds >> path
+        #prof.mark('load')
+        
+        #prof.finish()
+    else:
+        ## This does exactly the same as above, but less efficiently (and more simply).
+        path.moveTo(x[0], y[0])
+        if connect == 'all':
+            for i in range(1, y.shape[0]):
+                path.lineTo(x[i], y[i])
+        elif connect == 'pairs':
+            for i in range(1, y.shape[0]):
+                if i%2 == 0:
+                    path.lineTo(x[i], y[i])
+                else:
+                    path.moveTo(x[i], y[i])
+        elif isinstance(connect, np.ndarray):
+            for i in range(1, y.shape[0]):
+                if connect[i] == 1:
+                    path.lineTo(x[i], y[i])
+                else:
+                    path.moveTo(x[i], y[i])
+        else:
+            raise Exception('connect argument must be "all", "pairs", or array')
+            
+    return path
 
 #def isosurface(data, level):
     #"""

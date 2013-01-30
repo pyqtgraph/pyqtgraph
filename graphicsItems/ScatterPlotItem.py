@@ -671,6 +671,8 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         self.fragments = []
+        pts = np.clip(pts, -2**31, 2**31) ## prevent Qt segmentation fault.
+                                          ## Still won't be able to render correctly, though.
         for i in xrange(len(self.data)):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
@@ -683,8 +685,10 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
             
     def paint(self, p, *args):
+
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
+        
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
             scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
@@ -731,7 +735,6 @@ class ScatterPlotItem(GraphicsObject):
                 p2.end()
                 
             self.picture.play(p)
-
         
     def points(self):
         for rec in self.data:
