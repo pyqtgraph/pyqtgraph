@@ -599,7 +599,7 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
-        if frac >= 1.0 and self.bounds[ax] is not None:
+        if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
             return self.bounds[ax]
         
         #self.prepareGeometryChange()
