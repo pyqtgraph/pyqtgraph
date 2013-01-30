@@ -1054,6 +1054,21 @@ class PlotItem(GraphicsWidget):
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
         
+    def setLabels(self, **kwds):
+        """
+        Convenience function allowing multiple labels and/or title to be set in one call.
+        Keyword arguments can be 'title', 'left', 'bottom', 'right', or 'top'.
+        Values may be strings or a tuple of arguments to pass to setLabel.
+        """
+        for k,v in kwds.items():
+            if k == 'title':
+                self.setTitle(v)
+            else:
+                if isinstance(v, basestring):
+                    v = (v,)
+                self.setLabel(k, *v)
+        
+        
     def showLabel(self, axis, show=True):
         """
         Show or hide one of the plot's axis labels (the axis itself will be unaffected).
