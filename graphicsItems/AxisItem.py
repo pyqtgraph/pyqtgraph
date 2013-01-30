@@ -58,13 +58,14 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix=''
         self.labelStyle = {}
         self.logMode = False
+        self.tickFont = None
         
         self.textHeight = 18
         self.tickLength = maxTickLength
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self.scale = 1.0
         self.autoScale = True
-            
+        
         self.setRange(0, 1)
         
         self.setPen(pen)
@@ -72,12 +73,12 @@ class AxisItem(GraphicsWidget):
         self._linkedView = None
         if linkView is not None:
             self.linkToView(linkView)
-            
+        
         self.showLabel(False)
         
         self.grid = False
         #self.setCacheMode(self.DeviceCoordinateCache)
-            
+        
     def close(self):
         self.scene().removeItem(self.label)
         self.label = None
@@ -98,6 +99,14 @@ class AxisItem(GraphicsWidget):
         """
         self.logMode = log
         self.picture = None
+        self.update()
+        
+    def setTickFont(self, font):
+        self.tickFont = font
+        self.picture = None
+        self.prepareGeometryChange()
+        ## Need to re-allocate space depending on font size?
+        
         self.update()
         
     def resizeEvent(self, ev=None):
@@ -311,14 +320,21 @@ class AxisItem(GraphicsWidget):
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
             ## extend rect if ticks go in negative direction
+            ## also extend to account for text that flows past the edges
             if self.orientation == 'left':
-                rect.setRight(rect.right() - min(0,self.tickLength))
+                #rect.setRight(rect.right() - min(0,self.tickLength))
+                #rect.setTop(rect.top() - 15)
+                #rect.setBottom(rect.bottom() + 15)
+                rect = rect.adjusted(0, -15, -min(0,self.tickLength), 15)
             elif self.orientation == 'right':
-                rect.setLeft(rect.left() + min(0,self.tickLength))
+                #rect.setLeft(rect.left() + min(0,self.tickLength))
+                rect = rect.adjusted(min(0,self.tickLength), -15, 0, 15)
             elif self.orientation == 'top':
-                rect.setBottom(rect.bottom() - min(0,self.tickLength))
+                #rect.setBottom(rect.bottom() - min(0,self.tickLength))
+                rect = rect.adjusted(-15, 0, 15, -min(0,self.tickLength))
             elif self.orientation == 'bottom':
-                rect.setTop(rect.top() + min(0,self.tickLength))
+                #rect.setTop(rect.top() + min(0,self.tickLength))
+                rect = rect.adjusted(-15, min(0,self.tickLength), 15, 0)
             return rect
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
@@ -647,6 +663,9 @@ class AxisItem(GraphicsWidget):
         prof.mark('draw ticks')
 
         ## Draw text until there is no more room (or no more text)
+        if self.tickFont is not None:
+            p.setFont(self.tickFont)
+        
         textRects = []
         for i in range(len(tickLevels)):
             ## Get the list of strings to display for this level

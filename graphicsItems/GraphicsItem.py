@@ -202,7 +202,7 @@ class GraphicsItem(object):
         ## check global cache
         key = (dt.m11(), dt.m21(), dt.m31(), dt.m12(), dt.m22(), dt.m32(), dt.m31(), dt.m32())
         pv = self._pixelVectorGlobalCache.get(key, None)
-        if pv is not None:
+        if direction is None and pv is not None:
             self._pixelVectorCache = [dt, pv]
             return tuple(map(Point,pv))  ## return a *copy*
         

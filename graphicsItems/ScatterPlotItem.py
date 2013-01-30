@@ -620,9 +620,12 @@ class ScatterPlotItem(GraphicsObject):
             
         if frac >= 1.0:
             ## increase size of bounds based on spot size and pen width
-            px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
+            #px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
+            px = self.pixelVectors()[ax]
             if px is None:
                 px = 0
+            else:
+                px = px.length()
             minIndex = np.argmin(d)
             maxIndex = np.argmax(d)
             minVal = d[minIndex]
@@ -668,6 +671,8 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         self.fragments = []
+        pts = np.clip(pts, -2**31, 2**31) ## prevent Qt segmentation fault.
+                                          ## Still won't be able to render correctly, though.
         for i in xrange(len(self.data)):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
@@ -680,8 +685,10 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
             
     def paint(self, p, *args):
+
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
+        
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
             scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
@@ -728,7 +735,6 @@ class ScatterPlotItem(GraphicsObject):
                 p2.end()
                 
             self.picture.play(p)
-
         
     def points(self):
         for rec in self.data:
