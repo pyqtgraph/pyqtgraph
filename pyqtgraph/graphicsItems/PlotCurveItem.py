@@ -249,26 +249,6 @@ class PlotCurveItem(GraphicsObject):
         prof.finish()
         
     def generatePath(self, x, y):
-        prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
-        path = QtGui.QPainterPath()
-        
-        ## Create all vertices in path. The method used below creates a binary format so that all 
-        ## vertices can be read in at once. This binary format may change in future versions of Qt, 
-        ## so the original (slower) method is left here for emergencies:
-        #path.moveTo(x[0], y[0])
-        #for i in range(1, y.shape[0]):
-        #    path.lineTo(x[i], y[i])
-            
-        ## Speed this up using >> operator
-        ## Format is:
-        ##    numVerts(i4)   0(i4)
-        ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
-        ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
-        ##    ...
-        ##    0(i4)
-        ##
-        ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-        
         if self.opts['stepMode']:
             ## each value in the x/y arrays generates 2 points.
             x2 = np.empty((len(x),2), dtype=x.dtype)
@@ -286,41 +266,8 @@ class PlotCurveItem(GraphicsObject):
                 y = y2.reshape(y2.size)[1:-1]
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
-                
-                
-            
         
-        
-        if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
-            n = x.shape[0]
-            # create empty array, pad with extra space on either end
-            arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
-            # write first two integers
-            prof.mark('allocate empty')
-            arr.data[12:20] = struct.pack('>ii', n, 0)
-            prof.mark('pack header')
-            # Fill array with vertex values
-            arr[1:-1]['x'] = x
-            arr[1:-1]['y'] = y
-            arr[1:-1]['c'] = 1
-            prof.mark('fill array')
-            # write last 0
-            lastInd = 20*(n+1)
-            arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-            prof.mark('footer')
-            # create datastream object and stream into path
-            buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-            prof.mark('create buffer')
-            ds = QtCore.QDataStream(buf)
-            prof.mark('create datastream')
-            ds >> path
-            prof.mark('load')
-            
-            prof.finish()
-        else:
-            path.moveTo(x[0], y[0])
-            for i in range(1, y.shape[0]):
-                path.lineTo(x[i], y[i])
+        path = fn.arrayToQPath(x, y, connect='all')
         
         return path
 
