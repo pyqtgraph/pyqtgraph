@@ -138,7 +138,7 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
         self.rbScaleBox.hide()
-        self.addItem(self.rbScaleBox)
+        self.addItem(self.rbScaleBox, ignoreBounds=True)
         
         self.axHistory = [] # maintain a history of zoom locations
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"

@@ -148,7 +148,31 @@ class AxisItem(GraphicsWidget):
             self.setScale()
         
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
-        """Set the text displayed adjacent to the axis."""
+        """Set the text displayed adjacent to the axis.
+        
+        ============= =============================================================
+        Arguments
+        text          The text (excluding units) to display on the label for this
+                      axis.
+        units         The units for this axis. Units should generally be given
+                      without any scaling prefix (eg, 'V' instead of 'mV'). The
+                      scaling prefix will be automatically prepended based on the
+                      range of data displayed.
+        **args        All extra keyword arguments become CSS style options for 
+                      the <span> tag which will surround the axis label and units.
+        ============= =============================================================
+        
+        The final text generated for the label will look like::
+        
+            <span style="...options...">{text} (prefix{units})</span>
+            
+        Each extra keyword argument will become a CSS option in the above template. 
+        For example, you can set the font size and color of the label::
+        
+            labelStyle = {'color': '#FFF', 'font-size': '14pt'}
+            axis.setLabel('label text', units='V', **labelStyle)
+        
+        """
         if text is not None:
             self.labelText = text
             self.showLabel()

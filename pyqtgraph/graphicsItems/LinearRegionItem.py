@@ -245,7 +245,7 @@ class LinearRegionItem(UIGraphicsItem):
 
 
     def hoverEvent(self, ev):
-        if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
+        if self.movable and (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
             self.setMouseHover(True)
         else:
             self.setMouseHover(False)
