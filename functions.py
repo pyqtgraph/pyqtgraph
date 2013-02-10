@@ -1043,7 +1043,7 @@ def colorToAlpha(data, color):
 
 
 def arrayToQPath(x, y, connect='all'):
-    """Convert an array of x,y coordinats to QPath as efficiently as possible.
+    """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
     The *connect* argument may be 'all', indicating that each point should be
     connected to the next; 'pairs', indicating that each pair of points
     should be connected, or an array of int32 values (0 or 1) indicating
