@@ -566,8 +566,8 @@ def transformCoordinates(tr, coords, transpose=False):
     
 def solve3DTransform(points1, points2):
     """
-    Find a 3D transformation matrix that maps points1 onto points2
-    points must be specified as a list of 4 Vectors.
+    Find a 3D transformation matrix that maps points1 onto points2.
+    Points must be specified as a list of 4 Vectors.
     """
     if not HAVE_SCIPY:
         raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
@@ -583,8 +583,8 @@ def solve3DTransform(points1, points2):
     
 def solveBilinearTransform(points1, points2):
     """
-    Find a bilinear transformation matrix (2x4) that maps points1 onto points2
-    points must be specified as a list of 4 Vector, Point, QPointF, etc.
+    Find a bilinear transformation matrix (2x4) that maps points1 onto points2.
+    Points must be specified as a list of 4 Vector, Point, QPointF, etc.
     
     To use this matrix to map a point [x,y]::
     

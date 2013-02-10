@@ -9,9 +9,14 @@ __all__ = ['ColorMapWidget']
 class ColorMapWidget(ptree.ParameterTree):
     """
     This class provides a widget allowing the user to customize color mapping
-    for multi-column data. 
-    """
+    for multi-column data. Given a list of field names, the user may specify
+    multiple criteria for assigning colors to each record in a numpy record array.
+    Multiple criteria are evaluated and combined into a single color for each
+    record by user-defined compositing methods.
     
+    For simpler color mapping using a single gradient editor, see 
+    :class:`GradientWidget <pyqtgraph.GradientWidget>`
+    """
     sigColorMapChanged = QtCore.Signal(object)
     
     def __init__(self):
@@ -51,6 +56,25 @@ class ColorMapParameter(ptree.types.GroupParameter):
         return self.fields.keys()
     
     def setFields(self, fields):
+        """
+        Set the list of fields to be used by the mapper. 
+        
+        The format of *fields* is::
+        
+            [ (fieldName, {options}), ... ]
+        
+        ============== ============================================================
+        Field Options:
+        mode           Either 'range' or 'enum' (default is range). For 'range', 
+                       The user may specify a gradient of colors to be applied 
+                       linearly across a specific range of values. For 'enum', 
+                       the user specifies a single color for each unique value
+                       (see *values* option).
+        units          String indicating the units of the data for this field.
+        values         List of unique values for which the user may assign a 
+                       color when mode=='enum'.
+        ============== ============================================================
+        """
         self.fields = OrderedDict(fields)
         #self.fields = fields
         #self.fields.sort()
@@ -58,6 +82,18 @@ class ColorMapParameter(ptree.types.GroupParameter):
         self.setAddList(names)
         
     def map(self, data, mode='byte'):
+        """
+        Return an array of colors corresponding to *data*. 
+        
+        ========= =================================================================
+        Arguments
+        data      A numpy record array where the fields in data.dtype match those
+                  defined by a prior call to setFields().
+        mode      Either 'byte' or 'float'. For 'byte', the method returns an array
+                  of dtype ubyte with values scaled 0-255. For 'float', colors are
+                  returned as 0.0-1.0 float values.
+        ========= =================================================================
+        """
         colors = np.zeros((len(data),4))
         for item in self.children():
             if not item['Enabled']:

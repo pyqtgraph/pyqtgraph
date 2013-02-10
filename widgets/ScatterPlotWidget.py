@@ -57,7 +57,9 @@ class ScatterPlotWidget(QtGui.QSplitter):
     def setFields(self, fields):
         """
         Set the list of field names/units to be processed.
-        Format is: [(name, units), ...]   
+        
+        The format of *fields* is the same as used by 
+        :func:`ColorMapWidget.setFields <pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields>`
         """
         self.fields = OrderedDict(fields)
         self.fieldList.clear()

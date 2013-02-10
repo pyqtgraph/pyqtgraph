@@ -187,6 +187,7 @@ from .SRTTransform3D import SRTTransform3D
 from .functions import *
 from .graphicsWindows import *
 from .SignalProxy import *
+from .colormap import *
 from .ptime import time
 
 
