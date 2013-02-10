@@ -27,6 +27,7 @@ class ExportDialog(QtGui.QWidget):
         
         self.ui.closeBtn.clicked.connect(self.close)
         self.ui.exportBtn.clicked.connect(self.exportClicked)
+        self.ui.copyBtn.clicked.connect(self.copyClicked)
         self.ui.itemTree.currentItemChanged.connect(self.exportItemChanged)
         self.ui.formatList.currentItemChanged.connect(self.exportFormatChanged)
         
@@ -116,10 +117,15 @@ class ExportDialog(QtGui.QWidget):
         else:
             self.ui.paramTree.setParameters(params)
         self.currentExporter = exp
+        self.ui.copyBtn.setEnabled(exp.allowCopy)
         
     def exportClicked(self):
         self.selectBox.hide()
         self.currentExporter.export()
+        
+    def copyClicked(self):
+        self.selectBox.hide()
+        self.currentExporter.export(copy=True)
         
     def close(self):
         self.selectBox.setVisible(False)
