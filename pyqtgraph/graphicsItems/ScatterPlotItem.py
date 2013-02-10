@@ -384,7 +384,7 @@ class ScatterPlotItem(GraphicsObject):
         for k in ['pen', 'brush', 'symbol', 'size']:
             if k in kargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
-                setMethod(kargs[k], update=False, dataSet=newData)
+                setMethod(kargs[k], update=False, dataSet=newData, mask=kargs.get('mask', None))
         
         if 'data' in kargs:
             self.setPointData(kargs['data'], dataSet=newData)
@@ -425,6 +425,8 @@ class ScatterPlotItem(GraphicsObject):
         
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             pens = args[0]
+            if kargs['mask'] is not None:
+                pens = pens[kargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
             dataSet['pen'] = pens
@@ -445,6 +447,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             brushes = args[0]
+            if kargs['mask'] is not None:
+                brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
             #for i in xrange(len(brushes)):
@@ -458,7 +462,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
 
-    def setSymbol(self, symbol, update=True, dataSet=None):
+    def setSymbol(self, symbol, update=True, dataSet=None, mask=None):
         """Set the symbol(s) used to draw each spot. 
         If a list or array is provided, then the symbol for each spot will be set separately.
         Otherwise, the argument will be used as the default symbol for 
@@ -468,6 +472,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
             symbols = symbol
+            if kargs['mask'] is not None:
+                symbols = symbols[kargs['mask']]
             if len(symbols) != len(dataSet):
                 raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
             dataSet['symbol'] = symbols
@@ -479,7 +485,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
     
-    def setSize(self, size, update=True, dataSet=None):
+    def setSize(self, size, update=True, dataSet=None, mask=None):
         """Set the size(s) used to draw each spot. 
         If a list or array is provided, then the size for each spot will be set separately.
         Otherwise, the argument will be used as the default size for 
@@ -489,6 +495,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(size, np.ndarray) or isinstance(size, list):
             sizes = size
+            if kargs['mask'] is not None:
+                sizes = sizes[kargs['mask']]
             if len(sizes) != len(dataSet):
                 raise Exception("Number of sizes does not match number of points (%d != %d)" % (len(sizes), len(dataSet)))
             dataSet['size'] = sizes
@@ -505,6 +513,8 @@ class ScatterPlotItem(GraphicsObject):
             dataSet = self.data
             
         if isinstance(data, np.ndarray) or isinstance(data, list):
+            if kargs['mask'] is not None:
+                data = data[kargs['mask']]
             if len(data) != len(dataSet):
                 raise Exception("Length of meta data does not match number of points (%d != %d)" % (len(data), len(dataSet)))
         
@@ -881,7 +891,7 @@ class SpotItem(object):
 
     def updateItem(self):
         self._data['fragCoords'] = None
-        self._plot.updateSpots([self._data])
+        self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
 
 #class PixmapSpotItem(SpotItem, QtGui.QGraphicsPixmapItem):

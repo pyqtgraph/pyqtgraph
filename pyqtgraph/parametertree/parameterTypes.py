@@ -4,6 +4,7 @@ from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from pyqtgraph.widgets.SpinBox import SpinBox
 from pyqtgraph.widgets.ColorButton import ColorButton
+#from pyqtgraph.widgets.GradientWidget import GradientWidget ## creates import loop
 import pyqtgraph as pg
 import pyqtgraph.pixmaps as pixmaps
 import os
@@ -61,7 +62,11 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanging.connect(self.widgetValueChanging)
             
         ## update value shown in widget. 
-        self.valueChanged(self, opts['value'], force=True)
+        if opts.get('value', None) is not None:
+            self.valueChanged(self, opts['value'], force=True)
+        else:
+            ## no starting value was given; use whatever the widget has
+            self.widgetValueChanged()
 
 
     def makeWidget(self):
@@ -125,6 +130,14 @@ class WidgetParameterItem(ParameterItem):
             w.setValue = w.setColor
             self.hideWidget = False
             w.setFlat(True)
+        elif t == 'colormap':
+            from pyqtgraph.widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
+            w = GradientWidget(orientation='bottom')
+            w.sigChanged = w.sigGradientChangeFinished
+            w.sigChanging = w.sigGradientChanged
+            w.value = w.colorMap
+            w.setValue = w.setColorMap
+            self.hideWidget = False
         else:
             raise Exception("Unknown type '%s'" % asUnicode(t))
         return w
@@ -294,6 +307,7 @@ registerParameterType('float', SimpleParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
+registerParameterType('colormap', SimpleParameter, override=True)
 
 
 
