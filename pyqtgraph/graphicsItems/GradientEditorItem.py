@@ -5,6 +5,8 @@ from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 import weakref
 from pyqtgraph.pgcollections import OrderedDict
+from pyqtgraph.colormap import ColorMap
+
 import numpy as np
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
@@ -20,6 +22,9 @@ Gradients = OrderedDict([
     ('greyclip', {'ticks': [(0.0, (0, 0, 0, 255)), (0.99, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}),
     ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
 ])
+
+
+
 
 
 class TickSliderItem(GraphicsWidget):
@@ -490,6 +495,18 @@ class GradientEditorItem(TickSliderItem):
         self.colorMode = cm
         self.updateGradient()
         
+    def colorMap(self):
+        """Return a ColorMap object representing the current state of the editor."""
+        if self.colorMode == 'hsv':
+            raise NotImplementedError('hsv colormaps not yet supported')
+        pos = []
+        color = []
+        for t,x in self.listTicks():
+            pos.append(x)
+            c = t.color
+            color.append([c.red(), c.green(), c.blue(), c.alpha()])
+        return ColorMap(np.array(pos), np.array(color, dtype=np.ubyte))
+        
     def updateGradient(self):
         #private
         self.gradient = self.getGradient()
@@ -611,7 +628,7 @@ class GradientEditorItem(TickSliderItem):
             b = c1.blue() * (1.-f) + c2.blue() * f
             a = c1.alpha() * (1.-f) + c2.alpha() * f
             if toQColor:
-                return QtGui.QColor(r, g, b,a)
+                return QtGui.QColor(int(r), int(g), int(b), int(a))
             else:
                 return (r,g,b,a)
         elif self.colorMode == 'hsv':
@@ -749,6 +766,18 @@ class GradientEditorItem(TickSliderItem):
         for t in state['ticks']:
             c = QtGui.QColor(*t[1])
             self.addTick(t[0], c, finish=False)
+        self.updateGradient()
+        self.sigGradientChangeFinished.emit(self)
+        
+    def setColorMap(self, cm):
+        self.setColorMode('rgb')
+        for t in list(self.ticks.keys()):
+            self.removeTick(t, finish=False)
+        colors = cm.getColors(mode='qcolor')
+        for i in range(len(cm.pos)):
+            x = cm.pos[i]
+            c = colors[i]
+            self.addTick(x, c, finish=False)
         self.updateGradient()
         self.sigGradientChangeFinished.emit(self)
 
