@@ -104,6 +104,7 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
+        self.dataMask = None
         #self.curves = []
         #self.scatters = []
         self.curve = PlotCurveItem()
@@ -393,6 +394,7 @@ class PlotDataItem(GraphicsObject):
                 scatterArgs[v] = self.opts[k]
         
         x,y = self.getData()
+        scatterArgs['mask'] = self.dataMask
         
         if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
             self.curve.setData(x=x, y=y, **curveArgs)
@@ -413,11 +415,15 @@ class PlotDataItem(GraphicsObject):
         if self.xDisp is None:
             nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
             if any(nanMask):
-                x = self.xData[~nanMask]
-                y = self.yData[~nanMask]
+                self.dataMask = ~nanMask
+                x = self.xData[self.dataMask]
+                y = self.yData[self.dataMask]
             else:
+                self.dataMask = None
                 x = self.xData
                 y = self.yData
+                
+            
             ds = self.opts['downsample']
             if ds > 1:
                 x = x[::ds]
@@ -435,8 +441,11 @@ class PlotDataItem(GraphicsObject):
             if any(self.opts['logMode']):  ## re-check for NANs after log
                 nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
                 if any(nanMask):
-                    x = x[~nanMask]
-                    y = y[~nanMask]
+                    self.dataMask = ~nanMask
+                    x = x[self.dataMask]
+                    y = y[self.dataMask]
+                else:
+                    self.dataMask = None
             self.xDisp = x
             self.yDisp = y
         #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()

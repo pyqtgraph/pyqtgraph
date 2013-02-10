@@ -77,8 +77,14 @@ class ColorButton(QtGui.QPushButton):
     def restoreState(self, state):
         self.setColor(state)
         
-    def color(self):
-        return functions.mkColor(self._color)
+    def color(self, mode='qcolor'):
+        color = functions.mkColor(self._color)
+        if mode == 'qcolor':
+            return color
+        elif mode == 'byte':
+            return (color.red(), color.green(), color.blue(), color.alpha())
+        elif mode == 'float':
+            return (color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
 
     def widgetGroupInterface(self):
         return (self.sigColorChanged, ColorButton.saveState, ColorButton.restoreState)

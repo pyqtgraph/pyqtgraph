@@ -79,6 +79,13 @@
      </property>
     </widget>
    </item>
+   <item row="6" column="0">
+    <widget class="QPushButton" name="copyBtn">
+     <property name="text">
+      <string>Copy</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
