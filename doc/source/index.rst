@@ -15,6 +15,7 @@ Contents:
     mouse_interaction
     how_to_use
     installation
+    qtcrashcourse
     plotting
     images
     3dgraphics
