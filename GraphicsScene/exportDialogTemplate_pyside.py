@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './GraphicsScene/exportDialogTemplate.ui'
 #
-# Created: Sun Sep  9 14:41:31 2012
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Wed Jan 30 21:02:28 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -44,6 +44,9 @@ class Ui_Form(object):
         self.label_3 = QtGui.QLabel(Form)
         self.label_3.setObjectName("label_3")
         self.gridLayout.addWidget(self.label_3, 4, 0, 1, 3)
+        self.copyBtn = QtGui.QPushButton(Form)
+        self.copyBtn.setObjectName("copyBtn")
+        self.gridLayout.addWidget(self.copyBtn, 6, 0, 1, 1)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -55,5 +58,6 @@ class Ui_Form(object):
         self.exportBtn.setText(QtGui.QApplication.translate("Form", "Export", None, QtGui.QApplication.UnicodeUTF8))
         self.closeBtn.setText(QtGui.QApplication.translate("Form", "Close", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("Form", "Export options", None, QtGui.QApplication.UnicodeUTF8))
+        self.copyBtn.setText(QtGui.QApplication.translate("Form", "Copy", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph.parametertree import ParameterTree

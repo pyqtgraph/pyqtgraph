@@ -917,3 +917,21 @@ def qObjectReport(verbose=False):
     for t in typs:
         print(count[t], "\t", t)
         
+
+class PrintDetector(object):
+    def __init__(self):
+        self.stdout = sys.stdout
+        sys.stdout = self
+    
+    def remove(self):
+        sys.stdout = self.stdout
+        
+    def __del__(self):
+        self.remove()
+    
+    def write(self, x):
+        self.stdout.write(x)
+        traceback.print_stack()
+        
+    def flush(self):
+        self.stdout.flush()
