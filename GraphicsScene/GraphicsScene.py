@@ -117,7 +117,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
     def render(self, *args):
         self.prepareForPaint()
-        return QGraphicsScene.render(self, *args)
+        return QtGui.QGraphicsScene.render(self, *args)
 
     def prepareForPaint(self):
         """Called before every render. This method will inform items that the scene is about to
