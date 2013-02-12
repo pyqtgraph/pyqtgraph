@@ -3,6 +3,25 @@ import scipy.interpolate
 from pyqtgraph.Qt import QtGui, QtCore
 
 class ColorMap(object):
+    """
+    A ColorMap defines a relationship between a scalar value and a range of colors. 
+    ColorMaps are commonly used for false-coloring monochromatic images, coloring 
+    scatter-plot points, and coloring surface plots by height. 
+    
+    Each color map is defined by a set of colors, each corresponding to a
+    particular scalar value. For example:
+    
+        | 0.0  -> black
+        | 0.2  -> red
+        | 0.6  -> yellow
+        | 1.0  -> white
+        
+    The colors for intermediate values are determined by interpolating between 
+    the two nearest colors in either RGB or HSV color space.
+    
+    To provide user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
+    """
+    
     
     ## color interpolation modes
     RGB = 1
@@ -54,7 +73,16 @@ class ColorMap(object):
         
     def map(self, data, mode='byte'):
         """
+        Return an array of colors corresponding to the values in *data*. 
         Data must be either a scalar position or an array (any shape) of positions.
+        
+        The *mode* argument determines the type of data returned:
+        
+        =========== ===============================================================
+        byte        (default) Values are returned as 0-255 unsigned bytes.
+        float       Values are returned as 0.0-1.0 floats. 
+        qcolor      Values are returned as an array of QColor objects.
+        =========== ===============================================================
         """
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
@@ -80,16 +108,19 @@ class ColorMap(object):
             return interp
         
     def mapToQColor(self, data):
+        """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.QCOLOR)
 
     def mapToByte(self, data):
+        """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.BYTE)
 
     def mapToFloat(self, data):
+        """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.FLOAT)
     
     def getGradient(self, p1=None, p2=None):
-        """Return a QLinearGradient object."""
+        """Return a QLinearGradient object spanning from QPoints p1 to p2."""
         if p1 == None:
             p1 = QtCore.QPointF(0,0)
         if p2 == None:
@@ -119,7 +150,7 @@ class ColorMap(object):
         return g
     
     def getColors(self, mode=None):
-        """Return list of all colors converted to the specified mode.
+        """Return list of all color stops converted to the specified mode.
         If mode is None, then no conversion is done."""
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
@@ -158,75 +189,19 @@ class ColorMap(object):
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
         
-    #def getColor(self, x, toQColor=True):
-        #"""
-        #Return a color for a given value.
-        
-        #============= ==================================================================
-        #**Arguments** 
-        #x             Value (position on gradient) of requested color.
-        #toQColor      If true, returns a QColor object, else returns a (r,g,b,a) tuple.
-        #============= ==================================================================
-        #"""
-        #ticks = self.listTicks()
-        #if x <= ticks[0][1]:
-            #c = ticks[0][0].color
-            #if toQColor:
-                #return QtGui.QColor(c)  # always copy colors before handing them out
-            #else:
-                #return (c.red(), c.green(), c.blue(), c.alpha())
-        #if x >= ticks[-1][1]:
-            #c = ticks[-1][0].color
-            #if toQColor:
-                #return QtGui.QColor(c)  # always copy colors before handing them out
-            #else:
-                #return (c.red(), c.green(), c.blue(), c.alpha())
-            
-        #x2 = ticks[0][1]
-        #for i in range(1,len(ticks)):
-            #x1 = x2
-            #x2 = ticks[i][1]
-            #if x1 <= x and x2 >= x:
-                #break
-                
-        #dx = (x2-x1)
-        #if dx == 0:
-            #f = 0.
-        #else:
-            #f = (x-x1) / dx
-        #c1 = ticks[i-1][0].color
-        #c2 = ticks[i][0].color
-        #if self.colorMode == 'rgb':
-            #r = c1.red() * (1.-f) + c2.red() * f
-            #g = c1.green() * (1.-f) + c2.green() * f
-            #b = c1.blue() * (1.-f) + c2.blue() * f
-            #a = c1.alpha() * (1.-f) + c2.alpha() * f
-            #if toQColor:
-                #return QtGui.QColor(int(r), int(g), int(b), int(a))
-            #else:
-                #return (r,g,b,a)
-        #elif self.colorMode == 'hsv':
-            #h1,s1,v1,_ = c1.getHsv()
-            #h2,s2,v2,_ = c2.getHsv()
-            #h = h1 * (1.-f) + h2 * f
-            #s = s1 * (1.-f) + s2 * f
-            #v = v1 * (1.-f) + v2 * f
-            #c = QtGui.QColor()
-            #c.setHsv(h,s,v)
-            #if toQColor:
-                #return c
-            #else:
-                #return (c.red(), c.green(), c.blue(), c.alpha())
-                    
     def getLookupTable(self, start=0.0, stop=1.0, nPts=512, alpha=None, mode='byte'):
         """
         Return an RGB(A) lookup table (ndarray). 
         
         ============= ============================================================================
         **Arguments**
-        nPts           The number of points in the returned lookup table.
-        alpha          True, False, or None - Specifies whether or not alpha values are included 
-                       in the table. If alpha is None, it will be automatically determined.
+        start         The starting value in the lookup table (default=0.0) 
+        stop          The final value in the lookup table (default=1.0)
+        nPts          The number of points in the returned lookup table.
+        alpha         True, False, or None - Specifies whether or not alpha values are included 
+                      in the table. If alpha is None, it will be automatically determined.
+        mode          Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
+                      See :func:`map() <pyqtgraph.ColorMap.map>`.
         ============= ============================================================================
         """
         if isinstance(mode, basestring):
@@ -249,7 +224,9 @@ class ColorMap(object):
         return np.any(self.color[:,3] != max)
             
     def isMapTrivial(self):
-        """Return True if the gradient has exactly two stops in it: black at 0.0 and white at 1.0"""
+        """
+        Return True if the gradient has exactly two stops in it: black at 0.0 and white at 1.0.
+        """
         if len(self.pos) != 2:
             return False
         if self.pos[0] != 0.0 or self.pos[1] != 1.0:

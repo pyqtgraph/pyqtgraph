@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.9.5'
+__version__ = None
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -187,6 +187,7 @@ from .SRTTransform3D import SRTTransform3D
 from .functions import *
 from .graphicsWindows import *
 from .SignalProxy import *
+from .colormap import *
 from .ptime import time
 
 
