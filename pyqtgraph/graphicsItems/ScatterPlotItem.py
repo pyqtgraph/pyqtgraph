@@ -472,8 +472,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
             symbols = symbol
-            if kargs['mask'] is not None:
-                symbols = symbols[kargs['mask']]
+            if mask is not None:
+                symbols = symbols[mask]
             if len(symbols) != len(dataSet):
                 raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
             dataSet['symbol'] = symbols
@@ -554,6 +554,7 @@ class ScatterPlotItem(GraphicsObject):
                     #rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
         if invalidate:
             self.invalidate()
+        self.informViewBoundsChanged()
 
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
@@ -671,6 +672,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
         self.fragments = None
+        self.informViewBoundsChanged()
         
     def generateFragments(self):
         tr = self.deviceTransform()

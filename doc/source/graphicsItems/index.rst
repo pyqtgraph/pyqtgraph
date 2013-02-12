@@ -12,6 +12,7 @@ Contents:
     plotdataitem
     plotitem
     imageitem
+    graphitem
     viewbox
     linearregionitem
     infiniteline

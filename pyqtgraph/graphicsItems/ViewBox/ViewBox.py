@@ -298,9 +298,11 @@ class ViewBox(GraphicsWidget):
     def resizeEvent(self, ev):
         #self.setRange(self.range, padding=0)
         #self.updateAutoRange()
+        self._itemBoundsCache.clear()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
+        
         #self.linkedXChanged()
         #self.linkedYChanged()
         
@@ -728,7 +730,8 @@ class ViewBox(GraphicsWidget):
         
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
-        self.updateAutoRange()
+        if item in self.addedItems:
+            self.updateAutoRange()
 
     def invertY(self, b=True):
         """
