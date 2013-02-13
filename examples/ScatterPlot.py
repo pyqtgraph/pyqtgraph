@@ -70,7 +70,7 @@ s3 = pg.ScatterPlotItem(pxMode=False)   ## Set pxMode=False to allow spots to tr
 spots3 = []
 for i in range(10):
     for j in range(10):
-        spots3.append({'pos': (1e-6*i, 1e-6*j), 'size': 1e-6, 'pen': {'color': 'w', 'width': 8}, 'brush':pg.intColor(i*10+j, 100)})
+        spots3.append({'pos': (1e-6*i, 1e-6*j), 'size': 1e-6, 'pen': {'color': 'w', 'width': 2}, 'brush':pg.intColor(i*10+j, 100)})
 s3.addPoints(spots3)
 w3.addItem(s3)
 s3.sigClicked.connect(clicked)
