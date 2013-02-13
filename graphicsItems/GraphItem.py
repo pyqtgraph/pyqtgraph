@@ -1,6 +1,6 @@
 from .. import functions as fn
-from GraphicsObject import GraphicsObject
-from ScatterPlotItem import ScatterPlotItem
+from .GraphicsObject import GraphicsObject
+from .ScatterPlotItem import ScatterPlotItem
 import pyqtgraph as pg
 import numpy as np
 
