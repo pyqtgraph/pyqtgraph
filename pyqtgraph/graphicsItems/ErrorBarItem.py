@@ -127,7 +127,7 @@ class ErrorBarItem(GraphicsObject):
             
     def boundingRect(self):
         if self.path is None:
-            return QtCore.QRectF()
+            self.drawPath()
         return self.path.boundingRect()
     
         

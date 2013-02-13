@@ -13,6 +13,8 @@ import numpy as np
 import pyqtgraph as pg
 import numpy as np
 
+pg.setConfigOptions(antialias=True)
+
 x = np.arange(10)
 y = np.arange(10) %3
 top = np.linspace(1.0, 3.0, 10)
@@ -21,7 +23,7 @@ bottom = np.linspace(2, 0.5, 10)
 plt = pg.plot()
 err = pg.ErrorBarItem(x=x, y=y, top=top, bottom=bottom, beam=0.5)
 plt.addItem(err)
-plt.plot(x, y, symbol='o')
+plt.plot(x, y, symbol='o', pen={'color': 0.8, 'width': 2})
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
