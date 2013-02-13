@@ -566,8 +566,8 @@ def transformCoordinates(tr, coords, transpose=False):
     
 def solve3DTransform(points1, points2):
     """
-    Find a 3D transformation matrix that maps points1 onto points2
-    points must be specified as a list of 4 Vectors.
+    Find a 3D transformation matrix that maps points1 onto points2.
+    Points must be specified as a list of 4 Vectors.
     """
     if not HAVE_SCIPY:
         raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
@@ -583,8 +583,8 @@ def solve3DTransform(points1, points2):
     
 def solveBilinearTransform(points1, points2):
     """
-    Find a bilinear transformation matrix (2x4) that maps points1 onto points2
-    points must be specified as a list of 4 Vector, Point, QPointF, etc.
+    Find a bilinear transformation matrix (2x4) that maps points1 onto points2.
+    Points must be specified as a list of 4 Vector, Point, QPointF, etc.
     
     To use this matrix to map a point [x,y]::
     
@@ -951,8 +951,15 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
-        addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
-        img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
+        ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
+        ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
+        addr = ctypes.c_char.from_buffer(imgData, 0)
+        try:
+            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        except TypeError:  
+            addr = ctypes.addressof(addr)
+            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
     img.data = imgData
     return img
     #try:
@@ -1043,7 +1050,7 @@ def colorToAlpha(data, color):
 
 
 def arrayToQPath(x, y, connect='all'):
-    """Convert an array of x,y coordinats to QPath as efficiently as possible.
+    """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
     The *connect* argument may be 'all', indicating that each point should be
     connected to the next; 'pairs', indicating that each pair of points
     should be connected, or an array of int32 values (0 or 1) indicating

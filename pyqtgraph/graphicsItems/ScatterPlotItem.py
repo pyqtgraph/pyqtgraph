@@ -60,7 +60,7 @@ def renderSymbol(symbol, size, pen, brush, device=None):
         #return SymbolPixmapCache[key]
         
     ## Render a spot with the given parameters to a pixmap
-    penPxWidth = max(np.ceil(pen.width()), 1)
+    penPxWidth = max(np.ceil(pen.widthF()), 1)
     image = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
     image.fill(0)
     p = QtGui.QPainter(image)
@@ -115,7 +115,7 @@ class SymbolAtlas(object):
             symbol, size, pen, brush = rec['symbol'], rec['size'], rec['pen'], rec['brush']
             pen = fn.mkPen(pen) if not isinstance(pen, QtGui.QPen) else pen
             brush = fn.mkBrush(brush) if not isinstance(pen, QtGui.QBrush) else brush
-            key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
+            key = (symbol, size, fn.colorTuple(pen.color()), pen.widthF(), pen.style(), fn.colorTuple(brush.color()))
             if key not in self.symbolMap:
                 newCoords = SymbolAtlas.SymbolCoords()
                 self.symbolMap[key] = newCoords
@@ -472,8 +472,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
             symbols = symbol
-            if kargs['mask'] is not None:
-                symbols = symbols[kargs['mask']]
+            if mask is not None:
+                symbols = symbols[mask]
             if len(symbols) != len(dataSet):
                 raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
             dataSet['symbol'] = symbols
@@ -589,13 +589,13 @@ class ScatterPlotItem(GraphicsObject):
             width = 0
             pxWidth = 0
             if self.opts['pxMode']:
-                pxWidth = size + pen.width()
+                pxWidth = size + pen.widthF()
             else:
                 width = size
                 if pen.isCosmetic():
-                    pxWidth += pen.width()
+                    pxWidth += pen.widthF()
                 else:
-                    width += pen.width()
+                    width += pen.widthF()
             self._maxSpotWidth = max(self._maxSpotWidth, width)
             self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
         self.bounds = [None, None]
@@ -629,31 +629,15 @@ class ScatterPlotItem(GraphicsObject):
             d2 = d2[mask]
             
         if frac >= 1.0:
-            ## increase size of bounds based on spot size and pen width
-            #px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
-            px = self.pixelVectors()[ax]
-            if px is None:
-                px = 0
-            else:
-                px = px.length()
-            minIndex = np.argmin(d)
-            maxIndex = np.argmax(d)
-            minVal = d[minIndex]
-            maxVal = d[maxIndex]
-            spotSize = 0.5 * (self._maxSpotWidth + px * self._maxSpotPxWidth)
-            self.bounds[ax] = (minVal-spotSize, maxVal+spotSize)
+            self.bounds[ax] = (d.min() - self._maxSpotWidth*0.7072, d.max() + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
             
-
-    #def defaultSpotPixmap(self):
-        ### Return the default spot pixmap
-        #if self._spotPixmap is None:
-            #self._spotPixmap = makeSymbolPixmap(size=self.opts['size'], brush=self.opts['brush'], pen=self.opts['pen'], symbol=self.opts['symbol'])
-        #return self._spotPixmap
+    def pixelPadding(self):
+        return self._maxSpotPxWidth*0.7072
 
     def boundingRect(self):
         (xmn, xmx) = self.dataBounds(ax=0)
@@ -664,7 +648,19 @@ class ScatterPlotItem(GraphicsObject):
         if ymn is None or ymx is None:
             ymn = 0
             ymx = 0
-        return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
+        
+        px = py = 0.0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            # determine length of pixel in local x, y directions    
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length() 
+            py = 0 if py is None else py.length()
+            
+            # return bounds expanded by pixel size
+            px *= pxPad
+            py *= pxPad
+        return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
 
     def viewTransformChanged(self):
         self.prepareGeometryChange()

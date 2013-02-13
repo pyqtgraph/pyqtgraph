@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
 from .GraphicsView import GraphicsView
@@ -21,13 +21,14 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
                                     ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
-        self._proc = mp.QtProcess()
+        self._proc = mp.QtProcess(debug=False)
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)
-        self.setFocusPolicy(QtCore.Qt.FocusPolicy(self._view.focusPolicy()))
+        
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setMouseTracking(True)
         self.shm = None
@@ -114,6 +115,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         return self._proc
     
 class Renderer(GraphicsView):
+    ## Created by the remote process to handle render requests
     
     sceneRendered = QtCore.Signal(object)
     
@@ -175,7 +177,12 @@ class Renderer(GraphicsView):
             address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
             
             ## render the scene directly to shared memory
-            self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+            if USE_PYSIDE:
+                ch = ctypes.c_char.from_buffer(self.shm, 0)
+                #ch = ctypes.c_char_p(address)
+                self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+            else:
+                self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())

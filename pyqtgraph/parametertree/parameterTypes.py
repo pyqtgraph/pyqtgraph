@@ -14,10 +14,20 @@ class WidgetParameterItem(ParameterItem):
     """
     ParameterTree item with:
     
-    - label in second column for displaying value
-    - simple widget for editing value (displayed instead of label when item is selected)
-    - button that resets value to default
-    - provides SpinBox, CheckBox, LineEdit, and ColorButton types
+    * label in second column for displaying value
+    * simple widget for editing value (displayed instead of label when item is selected)
+    * button that resets value to default
+    
+    ================= =============================================================
+    Registered Types:
+    int               Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
+                      mode.
+    float             Displays a :class:`SpinBox <pyqtgraph.SpinBox>`.
+    bool              Displays a QCheckBox
+    str               Displays a QLineEdit
+    color             Displays a :class:`ColorButton <pyqtgraph.ColorButton>`
+    colormap          Displays a :class:`GradientWidget <pyqtgraph.GradientWidget>`
+    ================= =============================================================
     
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
