@@ -615,7 +615,7 @@ class Parameter(QtCore.QObject):
         if attr in self.names:
             import traceback
             traceback.print_stack()
-            print "Warning: Use of Parameter.subParam is deprecated. Use Parameter.param(name) instead."
+            print("Warning: Use of Parameter.subParam is deprecated. Use Parameter.param(name) instead.")
             return self.param(attr)
         else:
             raise AttributeError(attr)
