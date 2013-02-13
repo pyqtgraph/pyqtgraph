@@ -554,7 +554,6 @@ class ScatterPlotItem(GraphicsObject):
                     #rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
         if invalidate:
             self.invalidate()
-        self.informViewBoundsChanged()
 
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
@@ -632,23 +631,26 @@ class ScatterPlotItem(GraphicsObject):
         if frac >= 1.0:
             ## increase size of bounds based on spot size and pen width
             #px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
-            px = self.pixelVectors()[ax]
-            if px is None:
-                px = 0
-            else:
-                px = px.length()
-            minIndex = np.argmin(d)
-            maxIndex = np.argmax(d)
-            minVal = d[minIndex]
-            maxVal = d[maxIndex]
-            spotSize = 0.5 * (self._maxSpotWidth + px * self._maxSpotPxWidth)
-            self.bounds[ax] = (minVal-spotSize, maxVal+spotSize)
+            #px = self.pixelVectors()[ax]
+            #if px is None:
+                #px = 0
+            #else:
+                #px = px.length()
+            #minIndex = np.argmin(d)
+            #maxIndex = np.argmax(d)
+            #minVal = d[minIndex]
+            #maxVal = d[maxIndex]
+            #spotSize = 0.5 * (self._maxSpotWidth + px * self._maxSpotPxWidth)
+            #self.bounds[ax] = (minVal-spotSize, maxVal+spotSize)
+            self.bounds[ax] = (d.min() - 0.5*self._maxSpotWidth, d.max() + 0.5*self._maxSpotWidth)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
             
+    def pixelPadding(self):
+        return self._maxSpotPxWidth
 
     #def defaultSpotPixmap(self):
         ### Return the default spot pixmap
@@ -665,14 +667,26 @@ class ScatterPlotItem(GraphicsObject):
         if ymn is None or ymx is None:
             ymn = 0
             ymx = 0
-        return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
+        
+        px = py = 0.0
+        if self._maxSpotPxWidth > 0:
+            # determine length of pixel in local x, y directions    
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length() * 0.5
+            py = 0 if py is None else py.length() * 0.5
+            
+            # return bounds expanded by pixel size
+            px *= self._maxSpotPxWidth
+            py *= self._maxSpotPxWidth
+        px += self._maxSpotWidth * 0.5
+        py += self._maxSpotWidth * 0.5
+        return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
 
     def viewTransformChanged(self):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
         self.fragments = None
-        self.informViewBoundsChanged()
         
     def generateFragments(self):
         tr = self.deviceTransform()
