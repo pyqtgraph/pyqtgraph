@@ -1,9 +1,9 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
 from .GraphicsView import GraphicsView
 import numpy as np
-import mmap, tempfile, ctypes, atexit
+import mmap, tempfile, ctypes, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
 
@@ -21,19 +21,22 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
                                     ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
-        self._proc = mp.QtProcess()
+        self._proc = mp.QtProcess(debug=False)
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **kwds)
         self._view._setProxyOptions(deferGetattr=True)
-        self.setFocusPolicy(self._view.focusPolicy())
+        
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setMouseTracking(True)
-        
+        self.shm = None
         shmFileName = self._view.shmFileName()
-        self.shmFile = open(shmFileName, 'r')
-        self.shm = mmap.mmap(self.shmFile.fileno(), mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_READ)
+        if sys.platform.startswith('win'):
+            self.shmtag = shmFileName
+        else:
+            self.shmFile = open(shmFileName, 'r')
         
         self._view.sceneRendered.connect(mp.proxy(self.remoteSceneChanged)) #, callSync='off'))
                                                                             ## Note: we need synchronous signals
@@ -53,11 +56,16 @@ class RemoteGraphicsView(QtGui.QWidget):
         return QtCore.QSize(*self._sizeHint)
         
     def remoteSceneChanged(self, data):
-        w, h, size = data
+        w, h, size, newfile = data
         #self._sizeHint = (whint, hhint)
-        if self.shm.size != size:
-            self.shm.close()
-            self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
+        if self.shm is None or self.shm.size != size:
+            if self.shm is not None:
+                self.shm.close()
+            if sys.platform.startswith('win'):
+                self.shmtag = newfile   ## on windows, we create a new tag for every resize
+                self.shm = mmap.mmap(-1, size, self.shmtag) ## can't use tmpfile on windows because the file can only be opened once.
+            else:
+                self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
         self.shm.seek(0)
         self._img = QtGui.QImage(self.shm.read(w*h*4), w, h, QtGui.QImage.Format_ARGB32)
         self.update()
@@ -107,18 +115,20 @@ class RemoteGraphicsView(QtGui.QWidget):
         return self._proc
     
 class Renderer(GraphicsView):
+    ## Created by the remote process to handle render requests
     
     sceneRendered = QtCore.Signal(object)
     
     def __init__(self, *args, **kwds):
         ## Create shared memory for rendered image
-        #fd = os.open('/tmp/mmaptest', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
-        #os.write(fd, '\x00' * mmap.PAGESIZE)
-        self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
-        self.shmFile.write('\x00' * mmap.PAGESIZE)
-        #fh.flush()
-        fd = self.shmFile.fileno()
-        self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
+        if sys.platform.startswith('win'):
+            self.shmtag = "pyqtgraph_shmem_" + ''.join([chr((random.getrandbits(20)%25) + 97) for i in range(20)])
+            self.shm = mmap.mmap(-1, mmap.PAGESIZE, self.shmtag) # use anonymous mmap on windows
+        else:
+            self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
+            self.shmFile.write('\x00' * mmap.PAGESIZE)
+            fd = self.shmFile.fileno()
+            self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         atexit.register(self.close)
         
         GraphicsView.__init__(self, *args, **kwds)
@@ -130,10 +140,14 @@ class Renderer(GraphicsView):
         
     def close(self):
         self.shm.close()
-        self.shmFile.close()
+        if sys.platform.startswith('win'):
+            self.shmFile.close()
         
     def shmFileName(self):
-        return self.shmFile.name
+        if sys.platform.startswith('win'):
+            return self.shmtag
+        else:
+            return self.shmFile.name
         
     def update(self):
         self.img = None
@@ -152,16 +166,28 @@ class Renderer(GraphicsView):
                 return
             size = self.width() * self.height() * 4
             if size > self.shm.size():
-                self.shm.resize(size)
+                if sys.platform.startswith('win'):
+                    ## windows says "WindowsError: [Error 87] the parameter is incorrect" if we try to resize the mmap
+                    self.shm.close()
+                    ## it also says (sometimes) 'access is denied' if we try to reuse the tag.
+                    self.shmtag = "pyqtgraph_shmem_" + ''.join([chr((random.getrandbits(20)%25) + 97) for i in range(20)])
+                    self.shm = mmap.mmap(-1, size, self.shmtag)
+                else:
+                    self.shm.resize(size)
             address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
             
             ## render the scene directly to shared memory
-            self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+            if USE_PYSIDE:
+                ch = ctypes.c_char.from_buffer(self.shm, 0)
+                #ch = ctypes.c_char_p(address)
+                self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+            else:
+                self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())
             p.end()
-            self.sceneRendered.emit((self.width(), self.height(), self.shm.size()))
+            self.sceneRendered.emit((self.width(), self.height(), self.shm.size(), self.shmFileName()))
 
     def mousePressEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)

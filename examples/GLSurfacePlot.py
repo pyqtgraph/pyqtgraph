@@ -62,7 +62,7 @@ w.addItem(p3)
 
 ## Animated example
 ## compute surface vertex data
-cols = 100
+cols = 90
 rows = 100
 x = np.linspace(-8, 8, cols+1).reshape(cols+1,1)
 y = np.linspace(-8, 8, rows+1).reshape(1,rows+1)

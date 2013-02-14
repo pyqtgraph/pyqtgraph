@@ -138,7 +138,7 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
         self.rbScaleBox.hide()
-        self.addItem(self.rbScaleBox)
+        self.addItem(self.rbScaleBox, ignoreBounds=True)
         
         self.axHistory = [] # maintain a history of zoom locations
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
@@ -297,10 +297,11 @@ class ViewBox(GraphicsWidget):
         
     def resizeEvent(self, ev):
         #self.setRange(self.range, padding=0)
-        #self.updateAutoRange()
+        self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
+        #self._itemBoundsCache.clear()
         #self.linkedXChanged()
         #self.linkedYChanged()
         
@@ -576,9 +577,12 @@ class ViewBox(GraphicsWidget):
                         w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
                         childRange[ax] = [x-w2, x+w2]
                     else:
-                        wp = (xr[1] - xr[0]) * 0.02
-                        childRange[ax][0] -= wp
-                        childRange[ax][1] += wp
+                        l = self.width() if ax==0 else self.height()
+                        if l > 0:
+                            padding = np.clip(1./(l**0.5), 0.02, 0.1)
+                            wp = (xr[1] - xr[0]) * padding
+                            childRange[ax][0] -= wp
+                            childRange[ax][1] += wp
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
             if len(args) == 0:
@@ -997,63 +1001,71 @@ class ViewBox(GraphicsWidget):
         Values may be None if there are no specific bounds for an axis.
         """
         prof = debug.Profiler('updateAutoRange', disabled=True)
-            
-        
-        #items = self.allChildren()
         items = self.addedItems
         
-        #if item is None:
-            ##print "children bounding rect:"
-            #item = self.childGroup
-            
-        range = [None, None]
-            
+        ## measure pixel dimensions in view box
+        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
+        
+        ## First collect all boundary information
+        itemBounds = []
         for item in items:
             if not item.isVisible():
                 continue
         
             useX = True
             useY = True
+            
             if hasattr(item, 'dataBounds'):
-                bounds = self._itemBoundsCache.get(item, None)
-                if bounds is None:
-                    if frac is None:
-                        frac = (1.0, 1.0)
-                    xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
-                    yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
-                    if xr is None or xr == (None, None):
-                        useX = False
-                        xr = (0,0)
-                    if yr is None or yr == (None, None):
-                        useY = False
-                        yr = (0,0)
+                #bounds = self._itemBoundsCache.get(item, None)
+                #if bounds is None:
+                if frac is None:
+                    frac = (1.0, 1.0)
+                xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
+                yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
+                pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
+                if xr is None or xr == (None, None):
+                    useX = False
+                    xr = (0,0)
+                if yr is None or yr == (None, None):
+                    useY = False
+                    yr = (0,0)
 
-                    bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
-                    bounds = self.mapFromItemToView(item, bounds).boundingRect()
-                    self._itemBoundsCache[item] = (bounds, useX, useY)
-                else:
-                    bounds, useX, useY = bounds
+                bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
+                bounds = self.mapFromItemToView(item, bounds).boundingRect()
+                
+                if not any([useX, useY]):
+                    continue
+                
+                ## If we are ignoring only one axis, we need to check for rotations
+                if useX != useY:  ##   !=  means  xor
+                    ang = round(item.transformAngle())
+                    if ang == 0 or ang == 180:
+                        pass
+                    elif ang == 90 or ang == 270:
+                        useX, useY = useY, useX 
+                    else:
+                        ## Item is rotated at non-orthogonal angle, ignore bounds entirely.
+                        ## Not really sure what is the expected behavior in this case.
+                        continue  ## need to check for item rotations and decide how best to apply this boundary. 
+                
+                
+                itemBounds.append((bounds, useX, useY, pxPad))
+                    #self._itemBoundsCache[item] = (bounds, useX, useY)
+                #else:
+                    #bounds, useX, useY = bounds
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
                     continue
                 else:
                     bounds = item.boundingRect()
                 bounds = self.mapFromItemToView(item, bounds).boundingRect()
-            
-            prof.mark('1')
-            
-            if not any([useX, useY]):
-                continue
-            
-            if useX != useY:  ##   !=  means  xor
-                ang = item.transformAngle()
-                if ang == 0 or ang == 180:
-                    pass
-                elif ang == 90 or ang == 270:
-                    useX, useY = useY, useX 
-                else:
-                    continue  ## need to check for item rotations and decide how best to apply this boundary. 
-                
+                itemBounds.append((bounds, True, True, 0))
+        
+        #print itemBounds
+        
+        ## determine tentative new range
+        range = [None, None]
+        for bounds, useX, useY, px in itemBounds:
             if useY:
                 if range[1] is not None:
                     range[1] = [min(bounds.top(), range[1][0]), max(bounds.bottom(), range[1][1])]
@@ -1065,7 +1077,32 @@ class ViewBox(GraphicsWidget):
                 else:
                     range[0] = [bounds.left(), bounds.right()]
             prof.mark('2')
-                    
+        
+        #print "range", range
+        
+        ## Now expand any bounds that have a pixel margin
+        ## This must be done _after_ we have a good estimate of the new range
+        ## to ensure that the pixel size is roughly accurate.
+        w = self.width()
+        h = self.height()
+        #print "w:", w, "h:", h
+        if w > 0 and range[0] is not None:
+            pxSize = (range[0][1] - range[0][0]) / w
+            for bounds, useX, useY, px in itemBounds:
+                if px == 0 or not useX:
+                    continue
+                range[0][0] = min(range[0][0], bounds.left() - px*pxSize)
+                range[0][1] = max(range[0][1], bounds.right() + px*pxSize)
+        if h > 0 and range[1] is not None:
+            pxSize = (range[1][1] - range[1][0]) / h
+            for bounds, useX, useY, px in itemBounds:
+                if px == 0 or not useY:
+                    continue
+                range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
+                range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
+        
+        #print "final range", range
+        
         prof.finish()
         return range
         
@@ -1083,6 +1120,8 @@ class ViewBox(GraphicsWidget):
         
 
     def updateMatrix(self, changed=None):
+        ## Make the childGroup's transform match the requested range.
+        
         if changed is None:
             changed = [False, False]
         changed = list(changed)
@@ -1198,7 +1237,7 @@ class ViewBox(GraphicsWidget):
         if ViewBox is None:     ## can happen as python is shutting down
             return
         ## Called with ID and name of view (the view itself is no longer available)
-        for v in ViewBox.AllViews.keys():
+        for v in list(ViewBox.AllViews.keys()):
             if id(v) == vid:
                 ViewBox.AllViews.pop(v)
                 break

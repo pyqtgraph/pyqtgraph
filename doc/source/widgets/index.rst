@@ -17,6 +17,8 @@ Contents:
     gradientwidget
     histogramlutwidget
     parametertree
+    colormapwidget
+    scatterplotwidget
     graphicsview
     rawimagewidget
     datatreewidget

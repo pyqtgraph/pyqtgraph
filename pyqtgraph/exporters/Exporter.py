@@ -9,7 +9,8 @@ class Exporter(object):
     """
     Abstract class used for exporting graphics to file / printer / whatever.
     """    
-
+    allowCopy = False  # subclasses set this to True if they can use the copy buffer
+    
     def __init__(self, item):
         """
         Initialize with the item to be exported.
@@ -25,10 +26,11 @@ class Exporter(object):
         """Return the parameters used to configure this exporter."""
         raise Exception("Abstract method must be overridden in subclass.")
         
-    def export(self, fileName=None, toBytes=False):
+    def export(self, fileName=None, toBytes=False, copy=False):
         """
         If *fileName* is None, pop-up a file dialog.
-        If *toString* is True, return a bytes object rather than writing to file.
+        If *toBytes* is True, return a bytes object rather than writing to file.
+        If *copy* is True, export to the copy buffer rather than writing to file.
         """
         raise Exception("Abstract method must be overridden in subclass.")
 
@@ -64,7 +66,7 @@ class Exporter(object):
         if selectedExt is not None:
             selectedExt = selectedExt.groups()[0].lower()
             if ext != selectedExt:
-                fileName = fileName + selectedExt
+                fileName = fileName + '.' + selectedExt.lstrip('.')
         
         self.export(fileName=fileName, **self.fileDialog.opts)
         

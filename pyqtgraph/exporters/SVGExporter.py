@@ -11,6 +11,8 @@ __all__ = ['SVGExporter']
 
 class SVGExporter(Exporter):
     Name = "Scalable Vector Graphics (SVG)"
+    allowCopy=True
+    
     def __init__(self, item):
         Exporter.__init__(self, item)
         #tr = self.getTargetRect()
@@ -37,8 +39,8 @@ class SVGExporter(Exporter):
     def parameters(self):
         return self.params
     
-    def export(self, fileName=None, toBytes=False):
-        if toBytes is False and fileName is None:
+    def export(self, fileName=None, toBytes=False, copy=False):
+        if toBytes is False and copy is False and fileName is None:
             self.fileSaveDialog(filter="Scalable Vector Graphics (*.svg)")
             return
         #self.svg = QtSvg.QSvgGenerator()
@@ -83,10 +85,15 @@ class SVGExporter(Exporter):
         xml = generateSvg(self.item)
         
         if toBytes:
-            return bytes(xml)
+            return xml.encode('UTF-8')
+        elif copy:
+            md = QtCore.QMimeData()
+            md.setData('image/svg+xml', QtCore.QByteArray(xml.encode('UTF-8')))
+            QtGui.QApplication.clipboard().setMimeData(md)
         else:
             with open(fileName, 'w') as fh:
                 fh.write(xml.encode('UTF-8'))
+
 
 xmlHeader = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -148,7 +155,7 @@ def _generateItemSvg(item, nodes=None, root=None):
     ##    
     ##    Both 2 and 3 can be addressed by drawing all items in world coordinates.
     
-    
+    prof = pg.debug.Profiler('generateItemSvg %s' % str(item), disabled=True)
     
     if nodes is None:  ## nodes maps all node IDs to their XML element. 
                        ## this allows us to ensure all elements receive unique names.
@@ -170,8 +177,12 @@ def _generateItemSvg(item, nodes=None, root=None):
     tr = QtGui.QTransform()
     if isinstance(item, QtGui.QGraphicsScene):
         xmlStr = "<g>\n</g>\n"
-        childs = [i for i in item.items() if i.parentItem() is None]
         doc = xml.parseString(xmlStr)
+        childs = [i for i in item.items() if i.parentItem() is None]
+    elif item.__class__.paint == QtGui.QGraphicsItem.paint:
+        xmlStr = "<g>\n</g>\n"
+        doc = xml.parseString(xmlStr)
+        childs = item.childItems()
     else:
         childs = item.childItems()
         tr = itemTransform(item, item.scene())
@@ -220,14 +231,15 @@ def _generateItemSvg(item, nodes=None, root=None):
         ## get list of sub-groups
         g2 = [n for n in g1.childNodes if isinstance(n, xml.Element) and n.tagName == 'g']
     except:
-        print doc.toxml()
+        print(doc.toxml())
         raise
 
+    prof.mark('render')
 
     ## Get rid of group transformation matrices by applying
     ## transformation to inner coordinates
     correctCoordinates(g1, item)
-    
+    prof.mark('correct')
     ## make sure g1 has the transformation matrix
     #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
     #g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
@@ -277,6 +289,8 @@ def _generateItemSvg(item, nodes=None, root=None):
             childGroup = g1.ownerDocument.createElement('g')
             childGroup.setAttribute('clip-path', 'url(#%s)' % clip)
             g1.appendChild(childGroup)
+    prof.mark('clipping')
+            
     ## Add all child items as sub-elements.
     childs.sort(key=lambda c: c.zValue())
     for ch in childs:
@@ -284,7 +298,8 @@ def _generateItemSvg(item, nodes=None, root=None):
         if cg is None:
             continue
         childGroup.appendChild(cg)  ### this isn't quite right--some items draw below their parent (good enough for now)
-    
+    prof.mark('children')
+    prof.finish()
     return g1
 
 def correctCoordinates(node, item):

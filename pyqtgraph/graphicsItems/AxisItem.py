@@ -58,13 +58,14 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix=''
         self.labelStyle = {}
         self.logMode = False
+        self.tickFont = None
         
         self.textHeight = 18
         self.tickLength = maxTickLength
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self.scale = 1.0
         self.autoScale = True
-            
+        
         self.setRange(0, 1)
         
         self.setPen(pen)
@@ -72,12 +73,12 @@ class AxisItem(GraphicsWidget):
         self._linkedView = None
         if linkView is not None:
             self.linkToView(linkView)
-            
+        
         self.showLabel(False)
         
         self.grid = False
         #self.setCacheMode(self.DeviceCoordinateCache)
-            
+        
     def close(self):
         self.scene().removeItem(self.label)
         self.label = None
@@ -98,6 +99,14 @@ class AxisItem(GraphicsWidget):
         """
         self.logMode = log
         self.picture = None
+        self.update()
+        
+    def setTickFont(self, font):
+        self.tickFont = font
+        self.picture = None
+        self.prepareGeometryChange()
+        ## Need to re-allocate space depending on font size?
+        
         self.update()
         
     def resizeEvent(self, ev=None):
@@ -139,7 +148,31 @@ class AxisItem(GraphicsWidget):
             self.setScale()
         
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
-        """Set the text displayed adjacent to the axis."""
+        """Set the text displayed adjacent to the axis.
+        
+        ============= =============================================================
+        Arguments
+        text          The text (excluding units) to display on the label for this
+                      axis.
+        units         The units for this axis. Units should generally be given
+                      without any scaling prefix (eg, 'V' instead of 'mV'). The
+                      scaling prefix will be automatically prepended based on the
+                      range of data displayed.
+        **args        All extra keyword arguments become CSS style options for 
+                      the <span> tag which will surround the axis label and units.
+        ============= =============================================================
+        
+        The final text generated for the label will look like::
+        
+            <span style="...options...">{text} (prefix{units})</span>
+            
+        Each extra keyword argument will become a CSS option in the above template. 
+        For example, you can set the font size and color of the label::
+        
+            labelStyle = {'color': '#FFF', 'font-size': '14pt'}
+            axis.setLabel('label text', units='V', **labelStyle)
+        
+        """
         if text is not None:
             self.labelText = text
             self.showLabel()
@@ -287,14 +320,21 @@ class AxisItem(GraphicsWidget):
         if linkedView is None or self.grid is False:
             rect = self.mapRectFromParent(self.geometry())
             ## extend rect if ticks go in negative direction
+            ## also extend to account for text that flows past the edges
             if self.orientation == 'left':
-                rect.setRight(rect.right() - min(0,self.tickLength))
+                #rect.setRight(rect.right() - min(0,self.tickLength))
+                #rect.setTop(rect.top() - 15)
+                #rect.setBottom(rect.bottom() + 15)
+                rect = rect.adjusted(0, -15, -min(0,self.tickLength), 15)
             elif self.orientation == 'right':
-                rect.setLeft(rect.left() + min(0,self.tickLength))
+                #rect.setLeft(rect.left() + min(0,self.tickLength))
+                rect = rect.adjusted(min(0,self.tickLength), -15, 0, 15)
             elif self.orientation == 'top':
-                rect.setBottom(rect.bottom() - min(0,self.tickLength))
+                #rect.setBottom(rect.bottom() - min(0,self.tickLength))
+                rect = rect.adjusted(-15, 0, 15, -min(0,self.tickLength))
             elif self.orientation == 'bottom':
-                rect.setTop(rect.top() + min(0,self.tickLength))
+                #rect.setTop(rect.top() + min(0,self.tickLength))
+                rect = rect.adjusted(-15, min(0,self.tickLength), 15, 0)
             return rect
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
@@ -623,6 +663,9 @@ class AxisItem(GraphicsWidget):
         prof.mark('draw ticks')
 
         ## Draw text until there is no more room (or no more text)
+        if self.tickFont is not None:
+            p.setFont(self.tickFont)
+        
         textRects = []
         for i in range(len(tickLevels)):
             ## Get the list of strings to display for this level
@@ -640,7 +683,7 @@ class AxisItem(GraphicsWidget):
                 if tickPositions[i][j] is None:
                     strings[j] = None
 
-            textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, s) for s in strings if s is not None])
+            textRects.extend([p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, str(s)) for s in strings if s is not None])
             if i > 0:  ## always draw top level
                 ## measure all text, make sure there's enough room
                 if axis == 0:
@@ -656,8 +699,9 @@ class AxisItem(GraphicsWidget):
             #strings = self.tickStrings(values, self.scale, spacing)
             for j in range(len(strings)):
                 vstr = strings[j]
-                if vstr is None:## this tick was ignored because it is out of bounds
+                if vstr is None: ## this tick was ignored because it is out of bounds
                     continue
+                vstr = str(vstr)
                 x = tickPositions[i][j]
                 textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
                 height = textRect.height()

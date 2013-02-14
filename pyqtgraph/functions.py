@@ -23,16 +23,19 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
+from pyqtgraph import getConfigOption
 import numpy as np
 import decimal, re
 import ctypes
+import sys, struct
 
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
+    WEAVE_DEBUG = getConfigOption('weaveDebug')
     try:
         import scipy.weave
-        USE_WEAVE = True
+        USE_WEAVE = getConfigOption('useWeave')
     except:
         USE_WEAVE = False
 except ImportError:
@@ -563,8 +566,8 @@ def transformCoordinates(tr, coords, transpose=False):
     
 def solve3DTransform(points1, points2):
     """
-    Find a 3D transformation matrix that maps points1 onto points2
-    points must be specified as a list of 4 Vectors.
+    Find a 3D transformation matrix that maps points1 onto points2.
+    Points must be specified as a list of 4 Vectors.
     """
     if not HAVE_SCIPY:
         raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
@@ -580,8 +583,8 @@ def solve3DTransform(points1, points2):
     
 def solveBilinearTransform(points1, points2):
     """
-    Find a bilinear transformation matrix (2x4) that maps points1 onto points2
-    points must be specified as a list of 4 Vector, Point, QPointF, etc.
+    Find a bilinear transformation matrix (2x4) that maps points1 onto points2.
+    Points must be specified as a list of 4 Vector, Point, QPointF, etc.
     
     To use this matrix to map a point [x,y]::
     
@@ -631,7 +634,8 @@ def rescaleData(data, scale, offset, dtype=None):
         data = newData.reshape(data.shape)
     except:
         if USE_WEAVE:
-            debug.printExc("Error; disabling weave.")
+            if WEAVE_DEBUG:
+                debug.printExc("Error; disabling weave.")
             USE_WEAVE = False
         
         #p = np.poly1d([scale, -offset*scale])
@@ -795,7 +799,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if levels.shape != (data.shape[-1], 2):
                 raise Exception('levels must have shape (data.shape[-1], 2)')
         else:
-            print levels
+            print(levels)
             raise Exception("levels argument must be 1D or 2D.")
         #levels = np.array(levels)
         #if levels.shape == (2,):
@@ -947,8 +951,15 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
-        addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
-        img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
+        ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
+        ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
+        addr = ctypes.c_char.from_buffer(imgData, 0)
+        try:
+            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        except TypeError:  
+            addr = ctypes.addressof(addr)
+            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
     img.data = imgData
     return img
     #try:
@@ -1037,6 +1048,97 @@ def colorToAlpha(data, color):
     return np.clip(output, 0, 255).astype(np.ubyte)
     
 
+
+def arrayToQPath(x, y, connect='all'):
+    """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
+    The *connect* argument may be 'all', indicating that each point should be
+    connected to the next; 'pairs', indicating that each pair of points
+    should be connected, or an array of int32 values (0 or 1) indicating
+    connections.
+    """
+    
+    ## Create all vertices in path. The method used below creates a binary format so that all 
+    ## vertices can be read in at once. This binary format may change in future versions of Qt, 
+    ## so the original (slower) method is left here for emergencies:
+    #path.moveTo(x[0], y[0])
+    #for i in range(1, y.shape[0]):
+    #    path.lineTo(x[i], y[i])
+        
+    ## Speed this up using >> operator
+    ## Format is:
+    ##    numVerts(i4)   0(i4)
+    ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
+    ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
+    ##    ...
+    ##    0(i4)
+    ##
+    ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+    
+    path = QtGui.QPainterPath()
+    
+    #prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
+    if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
+        n = x.shape[0]
+        # create empty array, pad with extra space on either end
+        arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+        # write first two integers
+        #prof.mark('allocate empty')
+        arr.data[12:20] = struct.pack('>ii', n, 0)
+        #prof.mark('pack header')
+        # Fill array with vertex values
+        arr[1:-1]['x'] = x
+        arr[1:-1]['y'] = y
+        
+        # decide which points are connected by lines
+        if connect == 'pairs':
+            connect = np.empty((n/2,2), dtype=np.int32)
+            connect[:,0] = 1
+            connect[:,1] = 0
+            connect = connect.flatten()
+            
+        if connect == 'all':
+            arr[1:-1]['c'] = 1
+        elif isinstance(connect, np.ndarray):
+            arr[1:-1]['c'] = connect
+        else:
+            raise Exception('connect argument must be "all", "pairs", or array')
+            
+        #prof.mark('fill array')
+        # write last 0
+        lastInd = 20*(n+1)
+        arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+        #prof.mark('footer')
+        # create datastream object and stream into path
+        buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+        #prof.mark('create buffer')
+        ds = QtCore.QDataStream(buf)
+        #prof.mark('create datastream')
+        ds >> path
+        #prof.mark('load')
+        
+        #prof.finish()
+    else:
+        ## This does exactly the same as above, but less efficiently (and more simply).
+        path.moveTo(x[0], y[0])
+        if connect == 'all':
+            for i in range(1, y.shape[0]):
+                path.lineTo(x[i], y[i])
+        elif connect == 'pairs':
+            for i in range(1, y.shape[0]):
+                if i%2 == 0:
+                    path.lineTo(x[i], y[i])
+                else:
+                    path.moveTo(x[i], y[i])
+        elif isinstance(connect, np.ndarray):
+            for i in range(1, y.shape[0]):
+                if connect[i] == 1:
+                    path.lineTo(x[i], y[i])
+                else:
+                    path.moveTo(x[i], y[i])
+        else:
+            raise Exception('connect argument must be "all", "pairs", or array')
+            
+    return path
 
 #def isosurface(data, level):
     #"""
@@ -1257,7 +1359,7 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
         points[b[1]].append([b,a])
 
     ## rearrange into chains
-    for k in points.keys():
+    for k in list(points.keys()):
         try:
             chains = points[k]
         except KeyError:   ## already used this point elsewhere

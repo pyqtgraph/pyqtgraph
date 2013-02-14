@@ -104,6 +104,7 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
+        self.dataMask = None
         #self.curves = []
         #self.scatters = []
         self.curve = PlotCurveItem()
@@ -393,6 +394,7 @@ class PlotDataItem(GraphicsObject):
                 scatterArgs[v] = self.opts[k]
         
         x,y = self.getData()
+        scatterArgs['mask'] = self.dataMask
         
         if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
             self.curve.setData(x=x, y=y, **curveArgs)
@@ -413,11 +415,15 @@ class PlotDataItem(GraphicsObject):
         if self.xDisp is None:
             nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
             if any(nanMask):
-                x = self.xData[~nanMask]
-                y = self.yData[~nanMask]
+                self.dataMask = ~nanMask
+                x = self.xData[self.dataMask]
+                y = self.yData[self.dataMask]
             else:
+                self.dataMask = None
                 x = self.xData
                 y = self.yData
+                
+            
             ds = self.opts['downsample']
             if ds > 1:
                 x = x[::ds]
@@ -435,8 +441,11 @@ class PlotDataItem(GraphicsObject):
             if any(self.opts['logMode']):  ## re-check for NANs after log
                 nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
                 if any(nanMask):
-                    x = x[~nanMask]
-                    y = y[~nanMask]
+                    self.dataMask = ~nanMask
+                    x = x[self.dataMask]
+                    y = y[self.dataMask]
+                else:
+                    self.dataMask = None
             self.xDisp = x
             self.yDisp = y
         #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
@@ -462,33 +471,57 @@ class PlotDataItem(GraphicsObject):
                         and max)
         =============== =============================================================
         """
-        if frac <= 0.0:
-            raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         
-        (x, y) = self.getData()
-        if x is None or len(x) == 0:
-            return None
+        range = [None, None]
+        if self.curve.isVisible():
+            range = self.curve.dataBounds(ax, frac, orthoRange)
+        elif self.scatter.isVisible():
+            r2 = self.scatter.dataBounds(ax, frac, orthoRange)
+            range = [
+                r2[0] if range[0] is None else (range[0] if r2[0] is None else min(r2[0], range[0])),
+                r2[1] if range[1] is None else (range[1] if r2[1] is None else min(r2[1], range[1]))
+                ]
+        return range
+        
+        #if frac <= 0.0:
+            #raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
+        
+        #(x, y) = self.getData()
+        #if x is None or len(x) == 0:
+            #return None
             
-        if ax == 0:
-            d = x
-            d2 = y
-        elif ax == 1:
-            d = y
-            d2 = x
+        #if ax == 0:
+            #d = x
+            #d2 = y
+        #elif ax == 1:
+            #d = y
+            #d2 = x
             
-        if orthoRange is not None:
-            mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
-            d = d[mask]
-            #d2 = d2[mask]
+        #if orthoRange is not None:
+            #mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
+            #d = d[mask]
+            ##d2 = d2[mask]
             
-        if len(d) > 0:
-            if frac >= 1.0:
-                return (np.min(d), np.max(d))
-            else:
-                return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-        else:
-            return None
-
+        #if len(d) > 0:
+            #if frac >= 1.0:
+                #return (np.min(d), np.max(d))
+            #else:
+                #return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
+        #else:
+            #return None
+    
+    def pixelPadding(self):
+        """
+        Return the size in pixels that this item may draw beyond the values returned by dataBounds().
+        This method is called by ViewBox when auto-scaling.
+        """
+        pad = 0
+        if self.curve.isVisible():
+            pad = max(pad, self.curve.pixelPadding())
+        elif self.scatter.isVisible():
+            pad = max(pad, self.scatter.pixelPadding())
+        return pad
+        
 
     def clear(self):
         #for i in self.curves+self.scatters:

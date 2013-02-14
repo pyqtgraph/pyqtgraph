@@ -41,7 +41,7 @@ def drawSymbol(painter, symbol, size, pen, brush):
     if isinstance(symbol, basestring):
         symbol = Symbols[symbol]
     if np.isscalar(symbol):
-        symbol = Symbols.values()[symbol % len(Symbols)]
+        symbol = list(Symbols.values())[symbol % len(Symbols)]
     painter.drawPath(symbol)
 
     
@@ -60,7 +60,7 @@ def renderSymbol(symbol, size, pen, brush, device=None):
         #return SymbolPixmapCache[key]
         
     ## Render a spot with the given parameters to a pixmap
-    penPxWidth = max(np.ceil(pen.width()), 1)
+    penPxWidth = max(np.ceil(pen.widthF()), 1)
     image = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
     image.fill(0)
     p = QtGui.QPainter(image)
@@ -115,7 +115,7 @@ class SymbolAtlas(object):
             symbol, size, pen, brush = rec['symbol'], rec['size'], rec['pen'], rec['brush']
             pen = fn.mkPen(pen) if not isinstance(pen, QtGui.QPen) else pen
             brush = fn.mkBrush(brush) if not isinstance(pen, QtGui.QBrush) else brush
-            key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
+            key = (symbol, size, fn.colorTuple(pen.color()), pen.widthF(), pen.style(), fn.colorTuple(brush.color()))
             if key not in self.symbolMap:
                 newCoords = SymbolAtlas.SymbolCoords()
                 self.symbolMap[key] = newCoords
@@ -384,7 +384,7 @@ class ScatterPlotItem(GraphicsObject):
         for k in ['pen', 'brush', 'symbol', 'size']:
             if k in kargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
-                setMethod(kargs[k], update=False, dataSet=newData)
+                setMethod(kargs[k], update=False, dataSet=newData, mask=kargs.get('mask', None))
         
         if 'data' in kargs:
             self.setPointData(kargs['data'], dataSet=newData)
@@ -425,6 +425,8 @@ class ScatterPlotItem(GraphicsObject):
         
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             pens = args[0]
+            if kargs['mask'] is not None:
+                pens = pens[kargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
             dataSet['pen'] = pens
@@ -445,6 +447,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             brushes = args[0]
+            if kargs['mask'] is not None:
+                brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
             #for i in xrange(len(brushes)):
@@ -458,7 +462,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
 
-    def setSymbol(self, symbol, update=True, dataSet=None):
+    def setSymbol(self, symbol, update=True, dataSet=None, mask=None):
         """Set the symbol(s) used to draw each spot. 
         If a list or array is provided, then the symbol for each spot will be set separately.
         Otherwise, the argument will be used as the default symbol for 
@@ -468,6 +472,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(symbol, np.ndarray) or isinstance(symbol, list):
             symbols = symbol
+            if mask is not None:
+                symbols = symbols[mask]
             if len(symbols) != len(dataSet):
                 raise Exception("Number of symbols does not match number of points (%d != %d)" % (len(symbols), len(dataSet)))
             dataSet['symbol'] = symbols
@@ -479,7 +485,7 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
     
-    def setSize(self, size, update=True, dataSet=None):
+    def setSize(self, size, update=True, dataSet=None, mask=None):
         """Set the size(s) used to draw each spot. 
         If a list or array is provided, then the size for each spot will be set separately.
         Otherwise, the argument will be used as the default size for 
@@ -489,6 +495,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(size, np.ndarray) or isinstance(size, list):
             sizes = size
+            if kargs['mask'] is not None:
+                sizes = sizes[kargs['mask']]
             if len(sizes) != len(dataSet):
                 raise Exception("Number of sizes does not match number of points (%d != %d)" % (len(sizes), len(dataSet)))
             dataSet['size'] = sizes
@@ -505,6 +513,8 @@ class ScatterPlotItem(GraphicsObject):
             dataSet = self.data
             
         if isinstance(data, np.ndarray) or isinstance(data, list):
+            if kargs['mask'] is not None:
+                data = data[kargs['mask']]
             if len(data) != len(dataSet):
                 raise Exception("Length of meta data does not match number of points (%d != %d)" % (len(data), len(dataSet)))
         
@@ -579,13 +589,13 @@ class ScatterPlotItem(GraphicsObject):
             width = 0
             pxWidth = 0
             if self.opts['pxMode']:
-                pxWidth = size + pen.width()
+                pxWidth = size + pen.widthF()
             else:
                 width = size
                 if pen.isCosmetic():
-                    pxWidth += pen.width()
+                    pxWidth += pen.widthF()
                 else:
-                    width += pen.width()
+                    width += pen.widthF()
             self._maxSpotWidth = max(self._maxSpotWidth, width)
             self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
         self.bounds = [None, None]
@@ -599,7 +609,7 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
-        if frac >= 1.0 and self.bounds[ax] is not None:
+        if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
             return self.bounds[ax]
         
         #self.prepareGeometryChange()
@@ -619,28 +629,15 @@ class ScatterPlotItem(GraphicsObject):
             d2 = d2[mask]
             
         if frac >= 1.0:
-            ## increase size of bounds based on spot size and pen width
-            px = self.pixelLength(Point(1, 0) if ax == 0 else Point(0, 1))  ## determine length of pixel along this axis
-            if px is None:
-                px = 0
-            minIndex = np.argmin(d)
-            maxIndex = np.argmax(d)
-            minVal = d[minIndex]
-            maxVal = d[maxIndex]
-            spotSize = 0.5 * (self._maxSpotWidth + px * self._maxSpotPxWidth)
-            self.bounds[ax] = (minVal-spotSize, maxVal+spotSize)
+            self.bounds[ax] = (d.min() - self._maxSpotWidth*0.7072, d.max() + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
             
-
-    #def defaultSpotPixmap(self):
-        ### Return the default spot pixmap
-        #if self._spotPixmap is None:
-            #self._spotPixmap = makeSymbolPixmap(size=self.opts['size'], brush=self.opts['brush'], pen=self.opts['pen'], symbol=self.opts['symbol'])
-        #return self._spotPixmap
+    def pixelPadding(self):
+        return self._maxSpotPxWidth*0.7072
 
     def boundingRect(self):
         (xmn, xmx) = self.dataBounds(ax=0)
@@ -651,7 +648,19 @@ class ScatterPlotItem(GraphicsObject):
         if ymn is None or ymx is None:
             ymn = 0
             ymx = 0
-        return QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
+        
+        px = py = 0.0
+        pxPad = self.pixelPadding()
+        if pxPad > 0:
+            # determine length of pixel in local x, y directions    
+            px, py = self.pixelVectors()
+            px = 0 if px is None else px.length() 
+            py = 0 if py is None else py.length()
+            
+            # return bounds expanded by pixel size
+            px *= pxPad
+            py *= pxPad
+        return QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
 
     def viewTransformChanged(self):
         self.prepareGeometryChange()
@@ -668,6 +677,8 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         self.fragments = []
+        pts = np.clip(pts, -2**31, 2**31) ## prevent Qt segmentation fault.
+                                          ## Still won't be able to render correctly, though.
         for i in xrange(len(self.data)):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
@@ -680,8 +691,10 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
             
     def paint(self, p, *args):
+
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
+        
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
             scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
@@ -728,7 +741,6 @@ class ScatterPlotItem(GraphicsObject):
                 p2.end()
                 
             self.picture.play(p)
-
         
     def points(self):
         for rec in self.data:
@@ -875,7 +887,7 @@ class SpotItem(object):
 
     def updateItem(self):
         self._data['fragCoords'] = None
-        self._plot.updateSpots([self._data])
+        self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
 
 #class PixmapSpotItem(SpotItem, QtGui.QGraphicsPixmapItem):

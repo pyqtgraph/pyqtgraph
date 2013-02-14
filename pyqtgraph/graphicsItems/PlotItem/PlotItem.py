@@ -36,6 +36,7 @@ from .. LabelItem import LabelItem
 from .. LegendItem import LegendItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
+from .. InfiniteLine import InfiniteLine
 from pyqtgraph.WidgetGroup import WidgetGroup
 
 __all__ = ['PlotItem']
@@ -548,9 +549,34 @@ class PlotItem(GraphicsWidget):
         print("PlotItem.addDataItem is deprecated. Use addItem instead.")
         self.addItem(item, *args)
         
+    def listDataItems(self):
+        """Return a list of all data items (PlotDataItem, PlotCurveItem, ScatterPlotItem, etc)
+        contained in this PlotItem."""
+        return self.dataItems[:]
+        
     def addCurve(self, c, params=None):
         print("PlotItem.addCurve is deprecated. Use addItem instead.")
         self.addItem(c, params)
+
+    def addLine(self, x=None, y=None, z=None, **kwds):
+        """
+        Create an InfiniteLine and add to the plot. 
+        
+        If *x* is specified,
+        the line will be vertical. If *y* is specified, the line will be
+        horizontal. All extra keyword arguments are passed to
+        :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
+        Returns the item created.
+        """
+        angle = 0 if x is None else 90
+        pos = x if x is not None else y
+        line = InfiniteLine(pos, angle, **kwds)
+        self.addItem(line)
+        if z is not None:
+            line.setZValue(z)
+        return line
+        
+        
 
     def removeItem(self, item):
         """
@@ -1053,6 +1079,21 @@ class PlotItem(GraphicsWidget):
         ============= =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
+        
+    def setLabels(self, **kwds):
+        """
+        Convenience function allowing multiple labels and/or title to be set in one call.
+        Keyword arguments can be 'title', 'left', 'bottom', 'right', or 'top'.
+        Values may be strings or a tuple of arguments to pass to setLabel.
+        """
+        for k,v in kwds.items():
+            if k == 'title':
+                self.setTitle(v)
+            else:
+                if isinstance(v, basestring):
+                    v = (v,)
+                self.setLabel(k, *v)
+        
         
     def showLabel(self, axis, show=True):
         """

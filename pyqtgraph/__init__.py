@@ -16,6 +16,9 @@ from .Qt import QtGui
 #if QtGui.QApplication.instance() is None:
     #app = QtGui.QApplication([])
 
+import numpy  ## pyqtgraph requires numpy
+              ## (import here to avoid massive error dump later on if numpy is not available)
+
 import os, sys
 
 ## check python version
@@ -49,6 +52,8 @@ CONFIG_OPTIONS = {
     'background': (0, 0, 0),        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
+    'useWeave': True,       ## Use weave to speed up some operations, if it is available
+    'weaveDebug': False,    ## Print full error message if weave compile fails
 } 
 
 
@@ -182,6 +187,7 @@ from .SRTTransform3D import SRTTransform3D
 from .functions import *
 from .graphicsWindows import *
 from .SignalProxy import *
+from .colormap import *
 from .ptime import time
 
 

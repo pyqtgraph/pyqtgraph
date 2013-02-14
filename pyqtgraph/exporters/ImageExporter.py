@@ -8,6 +8,8 @@ __all__ = ['ImageExporter']
 
 class ImageExporter(Exporter):
     Name = "Image File (PNG, TIF, JPG, ...)"
+    allowCopy = True
+    
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
@@ -38,8 +40,8 @@ class ImageExporter(Exporter):
     def parameters(self):
         return self.params
     
-    def export(self, fileName=None):
-        if fileName is None:
+    def export(self, fileName=None, toBytes=False, copy=False):
+        if fileName is None and not toBytes and not copy:
             filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
             preferred = ['*.png', '*.tif', '*.jpg']
             for p in preferred[::-1]:
@@ -78,6 +80,12 @@ class ImageExporter(Exporter):
         finally:
             self.setExportMode(False)
         painter.end()
-        self.png.save(fileName)
+        
+        if copy:
+            QtGui.QApplication.clipboard().setImage(self.png)
+        elif toBytes:
+            return self.png
+        else:
+            self.png.save(fileName)
         
         

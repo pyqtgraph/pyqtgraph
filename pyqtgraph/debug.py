@@ -393,7 +393,7 @@ class Profiler:
         if self.delayed:
             self.msgs.append(msg2)
         else:
-            print msg2
+            print(msg2)
         self.t0 = ptime.time()
         self.t1 = self.t0
     
@@ -410,7 +410,7 @@ class Profiler:
         if self.delayed:
             self.msgs.append(msg2)
         else:
-            print msg2
+            print(msg2)
         self.t1 = ptime.time()  ## don't measure time it took to print
         
     def finish(self, msg=None):
@@ -425,10 +425,10 @@ class Profiler:
             self.msgs.append(msg)
             if self.depth == 0:
                 for line in self.msgs:
-                    print line
+                    print(line)
                 Profiler.msgs = []
         else:
-            print msg
+            print(msg)
         Profiler.depth = self.depth
         self.finished = True
         
@@ -917,3 +917,21 @@ def qObjectReport(verbose=False):
     for t in typs:
         print(count[t], "\t", t)
         
+
+class PrintDetector(object):
+    def __init__(self):
+        self.stdout = sys.stdout
+        sys.stdout = self
+    
+    def remove(self):
+        sys.stdout = self.stdout
+        
+    def __del__(self):
+        self.remove()
+    
+    def write(self, x):
+        self.stdout.write(x)
+        traceback.print_stack()
+        
+    def flush(self):
+        self.stdout.flush()

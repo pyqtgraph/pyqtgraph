@@ -1,7 +1,11 @@
-from remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
+from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
-import cPickle as pickle
 import multiprocessing.connection
+from pyqtgraph.Qt import USE_PYSIDE
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
@@ -31,7 +35,7 @@ class Process(RemoteEventHandler):
     ProxyObject for more information.
     """
     
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False):
         """
         ============  =============================================================
         Arguments:
@@ -42,7 +46,9 @@ class Process(RemoteEventHandler):
                       process to process requests from the parent process until it
                       is asked to quit. If you wish to specify a different target,
                       it must be picklable (bound methods are not).
-        copySysPath   If true, copy the contents of sys.path to the remote process
+        copySysPath   If True, copy the contents of sys.path to the remote process
+        debug         If True, print detailed information about communication
+                      with the child process.
         ============  =============================================================
         
         """
@@ -52,14 +58,16 @@ class Process(RemoteEventHandler):
             name = str(self)
         if executable is None:
             executable = sys.executable
+        self.debug = debug
         
         ## random authentication key
-        authkey = ''.join([chr(random.getrandbits(7)) for i in range(20)])
-        
+        authkey = os.urandom(20)
+        #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
         port = 10000
         while True:
             try:
+                ## hmac authentication appears to be broken on windows (says AuthenticationError: digest received was wrong)
                 l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
                 break
             except socket.error as ex:
@@ -70,19 +78,46 @@ class Process(RemoteEventHandler):
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
+        self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
         self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
-        pickle.dump((name+'_child', port, authkey, targetStr, sysPath), self.proc.stdin)
+        pid = os.getpid() # we must send pid to child because windows does not have getppid
+        pyside = USE_PYSIDE
+        
+        ## Send everything the remote process needs to start correctly
+        data = dict(
+            name=name+'_child', 
+            port=port, 
+            authkey=authkey, 
+            ppid=pid, 
+            targetStr=targetStr, 
+            path=sysPath, 
+            pyside=pyside,
+            debug=debug
+            )
+        pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
         
         ## open connection for remote process
-        conn = l.accept()
-        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid)
+        self.debugMsg('Listening for child process..')
+        while True:
+            try:
+                conn = l.accept()
+                break
+            except IOError as err:
+                if err.errno == 4:  # interrupted; try again
+                    continue
+                else:
+                    raise
+                
+        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid, debug=debug)
+        self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)
         
     def join(self, timeout=10):
+        self.debugMsg('Joining child process..')
         if self.proc.poll() is None:
             self.close()
             start = time.time()
@@ -90,12 +125,14 @@ class Process(RemoteEventHandler):
                 if timeout is not None and time.time() - start > timeout:
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
+        self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
         
         
-def startEventLoop(name, port, authkey):
+def startEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     global HANDLER
-    HANDLER = RemoteEventHandler(conn, name, os.getppid())
+    #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
+    HANDLER = RemoteEventHandler(conn, name, ppid, debug=debug)
     while True:
         try:
             HANDLER.processRequests()  # exception raised when the loop should exit
@@ -161,6 +198,7 @@ class ForkedProcess(RemoteEventHandler):
                 proxyId = LocalObjectProxy.registerObject(v)
                 proxyIDs[k] = proxyId
         
+        ppid = os.getpid()  # write this down now; windows doesn't have getppid
         pid = os.fork()
         if pid == 0:
             self.isParent = False
@@ -200,9 +238,9 @@ class ForkedProcess(RemoteEventHandler):
                 if 'random' in sys.modules:
                     sys.modules['random'].seed(os.getpid() ^ int(time.time()*10000%10000))
             
-            RemoteEventHandler.__init__(self, remoteConn, name+'_child', pid=os.getppid())
+            #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
+            RemoteEventHandler.__init__(self, remoteConn, name+'_child', pid=ppid)
             
-            ppid = os.getppid()
             self.forkedProxies = {}
             for name, proxyId in proxyIDs.iteritems():
                 self.forkedProxies[name] = ObjectProxy(ppid, proxyId=proxyId, typeStr=repr(preProxy[name]))
@@ -228,7 +266,7 @@ class ForkedProcess(RemoteEventHandler):
             except ClosedError:
                 break
             except:
-                print "Error occurred in forked event loop:"
+                print("Error occurred in forked event loop:")
                 sys.excepthook(*sys.exc_info())
         sys.exit(0)
         
@@ -293,7 +331,7 @@ class QtProcess(Process):
         btn.show()
         
         def slot():
-            print 'slot invoked on parent process'
+            print('slot invoked on parent process')
         btn.clicked.connect(proxy(slot))   # be sure to send a proxy of the slot
     """
     
@@ -318,7 +356,7 @@ class QtProcess(Process):
         except ClosedError:
             self.timer.stop()
     
-def startQtEventLoop(name, port, authkey):
+def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     from pyqtgraph.Qt import QtGui, QtCore
     #from PyQt4 import QtGui, QtCore
@@ -330,7 +368,8 @@ def startQtEventLoop(name, port, authkey):
                                               ## until it is explicitly closed by the parent process.
     
     global HANDLER
-    HANDLER = RemoteQtEventHandler(conn, name, os.getppid())
+    #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
+    HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
     app.exec_()
 

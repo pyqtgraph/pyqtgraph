@@ -93,7 +93,7 @@ class PlotCurveItem(GraphicsObject):
         
         (x, y) = self.getData()
         if x is None or len(x) == 0:
-            return (0, 0)
+            return (None, None)
             
         if ax == 0:
             d = x
@@ -102,20 +102,106 @@ class PlotCurveItem(GraphicsObject):
             d = y
             d2 = x
 
+        ## If an orthogonal range is specified, mask the data now
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
             d2 = d2[mask]
 
-            
+        ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
             b = (d.min(), d.max())
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             b = (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
+        
+        ## adjust for fill level
+        if ax == 1 and self.opts['fillLevel'] is not None:
+            b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))
+            
+        ## Add pen width only if it is non-cosmetic.
+        pen = self.opts['pen']
+        spen = self.opts['shadowPen']
+        if not pen.isCosmetic():
+            b = (b[0] - pen.widthF()*0.7072, b[1] + pen.widthF()*0.7072)
+        if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+            b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
+            
         self._boundsCache[ax] = [(frac, orthoRange), b]
         return b
+            
+    def pixelPadding(self):
+        pen = self.opts['pen']
+        spen = self.opts['shadowPen']
+        w = 0
+        if pen.isCosmetic():
+            w += pen.widthF()*0.7072
+        if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
+            w = max(w, spen.widthF()*0.7072)
+        return w
+
+    def boundingRect(self):
+        if self._boundingRect is None:
+            (xmn, xmx) = self.dataBounds(ax=0)
+            (ymn, ymx) = self.dataBounds(ax=1)
+            if xmn is None:
+                return QtCore.QRectF()
+            
+            px = py = 0.0
+            pxPad = self.pixelPadding()
+            if pxPad > 0:
+                # determine length of pixel in local x, y directions    
+                px, py = self.pixelVectors()
+                px = 0 if px is None else px.length()
+                py = 0 if py is None else py.length()
+                
+                # return bounds expanded by pixel size
+                px *= pxPad
+                py *= pxPad
+            #px += self._maxSpotWidth * 0.5
+            #py += self._maxSpotWidth * 0.5
+            self._boundingRect = QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
+        return self._boundingRect
+    
+    def viewTransformChanged(self):
+        self.invalidateBounds()
+        self.prepareGeometryChange()
+        
+    #def boundingRect(self):
+        #if self._boundingRect is None:
+            #(x, y) = self.getData()
+            #if x is None or y is None or len(x) == 0 or len(y) == 0:
+                #return QtCore.QRectF()
+                
+                
+            #if self.opts['shadowPen'] is not None:
+                #lineWidth = (max(self.opts['pen'].width(), self.opts['shadowPen'].width()) + 1)
+            #else:
+                #lineWidth = (self.opts['pen'].width()+1)
+                
+            
+            #pixels = self.pixelVectors()
+            #if pixels == (None, None):
+                #pixels = [Point(0,0), Point(0,0)]
+                
+            #xmin = x.min()
+            #xmax = x.max()
+            #ymin = y.min()
+            #ymax = y.max()
+            
+            #if self.opts['fillLevel'] is not None:
+                #ymin = min(ymin, self.opts['fillLevel'])
+                #ymax = max(ymax, self.opts['fillLevel'])
+                
+            #xmin -= pixels[0].x() * lineWidth
+            #xmax += pixels[0].x() * lineWidth
+            #ymin -= abs(pixels[1].y()) * lineWidth
+            #ymax += abs(pixels[1].y()) * lineWidth
+            
+            #self._boundingRect = QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
+        #return self._boundingRect
+
         
     def invalidateBounds(self):
         self._boundingRect = None
@@ -249,26 +335,6 @@ class PlotCurveItem(GraphicsObject):
         prof.finish()
         
     def generatePath(self, x, y):
-        prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
-        path = QtGui.QPainterPath()
-        
-        ## Create all vertices in path. The method used below creates a binary format so that all 
-        ## vertices can be read in at once. This binary format may change in future versions of Qt, 
-        ## so the original (slower) method is left here for emergencies:
-        #path.moveTo(x[0], y[0])
-        #for i in range(1, y.shape[0]):
-        #    path.lineTo(x[i], y[i])
-            
-        ## Speed this up using >> operator
-        ## Format is:
-        ##    numVerts(i4)   0(i4)
-        ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
-        ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
-        ##    ...
-        ##    0(i4)
-        ##
-        ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-        
         if self.opts['stepMode']:
             ## each value in the x/y arrays generates 2 points.
             x2 = np.empty((len(x),2), dtype=x.dtype)
@@ -286,41 +352,8 @@ class PlotCurveItem(GraphicsObject):
                 y = y2.reshape(y2.size)[1:-1]
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
-                
-                
-            
         
-        
-        if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
-            n = x.shape[0]
-            # create empty array, pad with extra space on either end
-            arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
-            # write first two integers
-            prof.mark('allocate empty')
-            arr.data[12:20] = struct.pack('>ii', n, 0)
-            prof.mark('pack header')
-            # Fill array with vertex values
-            arr[1:-1]['x'] = x
-            arr[1:-1]['y'] = y
-            arr[1:-1]['c'] = 1
-            prof.mark('fill array')
-            # write last 0
-            lastInd = 20*(n+1)
-            arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-            prof.mark('footer')
-            # create datastream object and stream into path
-            buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-            prof.mark('create buffer')
-            ds = QtCore.QDataStream(buf)
-            prof.mark('create datastream')
-            ds >> path
-            prof.mark('load')
-            
-            prof.finish()
-        else:
-            path.moveTo(x[0], y[0])
-            for i in range(1, y.shape[0]):
-                path.lineTo(x[i], y[i])
+        path = fn.arrayToQPath(x, y, connect='all')
         
         return path
 
@@ -332,40 +365,6 @@ class PlotCurveItem(GraphicsObject):
             except:
                 return QtGui.QPainterPath()
         return self.path
-
-    def boundingRect(self):
-        if self._boundingRect is None:
-            (x, y) = self.getData()
-            if x is None or y is None or len(x) == 0 or len(y) == 0:
-                return QtCore.QRectF()
-                
-                
-            if self.opts['shadowPen'] is not None:
-                lineWidth = (max(self.opts['pen'].width(), self.opts['shadowPen'].width()) + 1)
-            else:
-                lineWidth = (self.opts['pen'].width()+1)
-                
-            
-            pixels = self.pixelVectors()
-            if pixels == (None, None):
-                pixels = [Point(0,0), Point(0,0)]
-                
-            xmin = x.min()
-            xmax = x.max()
-            ymin = y.min()
-            ymax = y.max()
-            
-            if self.opts['fillLevel'] is not None:
-                ymin = min(ymin, self.opts['fillLevel'])
-                ymax = max(ymax, self.opts['fillLevel'])
-                
-            xmin -= pixels[0].x() * lineWidth
-            xmax += pixels[0].x() * lineWidth
-            ymin -= abs(pixels[1].y()) * lineWidth
-            ymax += abs(pixels[1].y()) * lineWidth
-            
-            self._boundingRect = QtCore.QRectF(xmin, ymin, xmax-xmin, ymax-ymin)
-        return self._boundingRect
 
     def paint(self, p, opt, widget):
         prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)

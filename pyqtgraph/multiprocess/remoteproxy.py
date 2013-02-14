@@ -1,6 +1,11 @@
-import os, __builtin__, time, sys, traceback, weakref
-import cPickle as pickle
+import os, time, sys, traceback, weakref
 import numpy as np
+try:
+    import __builtin__ as builtins
+    import cPickle as pickle
+except ImportError:
+    import builtins
+    import pickle
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
@@ -37,7 +42,8 @@ class RemoteEventHandler(object):
     handlers = {}   ## maps {process ID : handler}. This allows unpickler to determine which process
                     ## an object proxy belongs to
                          
-    def __init__(self, connection, name, pid):
+    def __init__(self, connection, name, pid, debug=False):
+        self.debug = debug
         self.conn = connection
         self.name = name
         self.results = {} ## reqId: (status, result); cache of request results received from the remote process
@@ -68,8 +74,13 @@ class RemoteEventHandler(object):
         try:
             return cls.handlers[pid]
         except:
-            print pid, cls.handlers
+            print(pid, cls.handlers)
             raise
+    
+    def debugMsg(self, msg):
+        if not self.debug:
+            return
+        print("[%d] %s" % (os.getpid(), str(msg)))
     
     def getProxyOption(self, opt):
         return self.proxyOptions[opt]
@@ -86,7 +97,9 @@ class RemoteEventHandler(object):
         after no more events are immediately available. (non-blocking)
         Returns the number of events processed.
         """
+        self.debugMsg('processRequests:')
         if self.exited:
+            self.debugMsg('  processRequests: exited already; raise ClosedError.')
             raise ClosedError()
         
         numProcessed = 0
@@ -95,37 +108,64 @@ class RemoteEventHandler(object):
                 self.handleRequest()
                 numProcessed += 1
             except ClosedError:
+                self.debugMsg('  processRequests: got ClosedError from handleRequest; setting exited=True.')
                 self.exited = True
                 raise
-            except IOError as err:
-                if err.errno == 4:  ## interrupted system call; try again
-                    continue
-                else:
-                    raise
+            #except IOError as err:  ## let handleRequest take care of this.
+                #self.debugMsg('  got IOError from handleRequest; try again.')
+                #if err.errno == 4:  ## interrupted system call; try again
+                    #continue
+                #else:
+                    #raise
             except:
-                print "Error in process %s" % self.name
+                print("Error in process %s" % self.name)
                 sys.excepthook(*sys.exc_info())
                 
+        self.debugMsg('  processRequests: finished %d requests' % numProcessed)
         return numProcessed
     
     def handleRequest(self):
         """Handle a single request from the remote process. 
         Blocks until a request is available."""
         result = None
-        try:
-            cmd, reqId, nByteMsgs, optStr = self.conn.recv() ## args, kwds are double-pickled to ensure this recv() call never fails
-        except (EOFError, IOError):
-            ## remote process has shut down; end event loop
-            raise ClosedError()
-        #print os.getpid(), "received request:", cmd, reqId
+        while True:
+            try:
+                ## args, kwds are double-pickled to ensure this recv() call never fails                
+                cmd, reqId, nByteMsgs, optStr = self.conn.recv() 
+                break
+            except EOFError:
+                self.debugMsg('  handleRequest: got EOFError from recv; raise ClosedError.')
+                ## remote process has shut down; end event loop
+                raise ClosedError()
+            except IOError as err:
+                if err.errno == 4:  ## interrupted system call; try again
+                    self.debugMsg('  handleRequest: got IOError 4 from recv; try again.')
+                    continue
+                else:
+                    self.debugMsg('  handleRequest: got IOError %d from recv (%s); raise ClosedError.' % (err.errno, err.strerror))
+                    raise ClosedError()
+        
+        self.debugMsg("  handleRequest: received %s %s" % (str(cmd), str(reqId)))
             
         ## read byte messages following the main request
         byteData = []
+        if nByteMsgs > 0:
+            self.debugMsg("    handleRequest: reading %d byte messages" % nByteMsgs)
         for i in range(nByteMsgs):
-            try:
-                byteData.append(self.conn.recv_bytes())
-            except (EOFError, IOError):
-                raise ClosedError()
+            while True:
+                try:
+                    byteData.append(self.conn.recv_bytes())
+                    break
+                except EOFError:
+                    self.debugMsg("    handleRequest: got EOF while reading byte messages; raise ClosedError.")
+                    raise ClosedError()
+                except IOError as err:
+                    if err.errno == 4:
+                        self.debugMsg("    handleRequest: got IOError 4 while reading byte messages; try again.")
+                        continue
+                    else:
+                        self.debugMsg("    handleRequest: got IOError while reading byte messages; raise ClosedError.")
+                        raise ClosedError()
             
         
         try:
@@ -135,6 +175,7 @@ class RemoteEventHandler(object):
                               ## (this is already a return from a previous request)
             
             opts = pickle.loads(optStr)
+            self.debugMsg("    handleRequest: id=%s opts=%s" % (str(reqId), str(opts)))
             #print os.getpid(), "received request:", cmd, reqId, opts
             returnType = opts.get('returnType', 'auto')
             
@@ -181,7 +222,7 @@ class RemoteEventHandler(object):
             elif cmd == 'import':
                 name = opts['module']
                 fromlist = opts.get('fromlist', [])
-                mod = __builtin__.__import__(name, fromlist=fromlist)
+                mod = builtins.__import__(name, fromlist=fromlist)
                 
                 if len(fromlist) == 0:
                     parts = name.lstrip('.').split('.')
@@ -208,6 +249,7 @@ class RemoteEventHandler(object):
             
         if reqId is not None:
             if exc is None:
+                self.debugMsg("    handleRequest: sending return value for %d: %s" % (reqId, str(result))) 
                 #print "returnValue:", returnValue, result
                 if returnType == 'auto':
                     result = self.autoProxy(result, self.proxyOptions['noProxyTypes'])
@@ -220,6 +262,7 @@ class RemoteEventHandler(object):
                     sys.excepthook(*sys.exc_info())
                     self.replyError(reqId, *sys.exc_info())
             else:
+                self.debugMsg("    handleRequest: returning exception for %d" % reqId) 
                 self.replyError(reqId, *exc)
                     
         elif exc is not None:
@@ -239,7 +282,7 @@ class RemoteEventHandler(object):
         self.send(request='result', reqId=reqId, callSync='off', opts=dict(result=result))
     
     def replyError(self, reqId, *exc):
-        print "error:", self.name, reqId, exc[1]
+        print("error: %s %s %s" % (self.name, str(reqId), str(exc[1])))
         excStr = traceback.format_exception(*exc)
         try:
             self.send(request='error', reqId=reqId, callSync='off', opts=dict(exception=exc[1], excString=excStr))
@@ -352,9 +395,9 @@ class RemoteEventHandler(object):
         try:
             optStr = pickle.dumps(opts)
         except:
-            print "====  Error pickling this object:  ===="
-            print opts
-            print "======================================="
+            print("====  Error pickling this object:  ====")
+            print(opts)
+            print("=======================================")
             raise
         
         nByteMsgs = 0
@@ -363,13 +406,16 @@ class RemoteEventHandler(object):
             
         ## Send primary request
         request = (request, reqId, nByteMsgs, optStr)
+        self.debugMsg('send request: cmd=%s nByteMsgs=%d id=%s opts=%s' % (str(request[0]), nByteMsgs, str(reqId), str(opts)))
         self.conn.send(request)
         
         ## follow up by sending byte messages
         if byteData is not None:
             for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
                 self.conn.send_bytes(obj)
+            self.debugMsg('  sent %d byte messages' % len(byteData))
         
+        self.debugMsg('  call sync: %s' % callSync)
         if callSync == 'off':
             return
         
@@ -404,12 +450,12 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                print "===== Remote process raised exception on request: ====="
-                print ''.join(excStr)
-                print "===== Local Traceback to request follows: ====="
+                print("===== Remote process raised exception on request: =====")
+                print(''.join(excStr))
+                print("===== Local Traceback to request follows: =====")
                 raise exc
             else:
-                print ''.join(excStr)
+                print(''.join(excStr))
                 raise Exception("Error getting result. See above for exception from remote process.")
                 
         else:
@@ -535,7 +581,7 @@ class Request(object):
                     raise ClosedError()
                 time.sleep(0.005)
                 if timeout >= 0 and time.time() - start > timeout:
-                    print "Request timed out:", self.description
+                    print("Request timed out: %s" % self.description)
                     import traceback
                     traceback.print_stack()
                     raise NoResultError()
