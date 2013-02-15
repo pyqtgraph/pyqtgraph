@@ -186,6 +186,7 @@ class Dock(QtGui.QWidget, DockDrop):
         
         
     def startDrag(self):
+        print('startDrag')
         self.drag = QtGui.QDrag(self)
         mime = QtCore.QMimeData()
         #mime.setPlainText("asd")
@@ -212,6 +213,19 @@ class Dock(QtGui.QWidget, DockDrop):
     def __repr__(self):
         return "<Dock %s %s>" % (self.name(), self.stretch())
 
+    ## PySide bug: We need to explicitly redefine these methods
+    ## or else drag/drop events will not be delivered.
+    def dragEnterEvent(self, *args):
+        DockDrop.dragEnterEvent(self, *args)
+
+    def dragMoveEvent(self, *args):
+        DockDrop.dragMoveEvent(self, *args)
+
+    def dragLeaveEvent(self, *args):
+        DockDrop.dragLeaveEvent(self, *args)
+
+    def dropEvent(self, *args):
+        DockDrop.dropEvent(self, *args)
 
 class DockLabel(VerticalLabel):
     
