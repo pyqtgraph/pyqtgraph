@@ -22,7 +22,7 @@ class PlotData(object):
         self.maxVals = {}  ## cache for max/min
         self.minVals = {}
 
-    def addFields(self, fields):
+    def addFields(self, **fields):
         for f in fields:
             if f not in self.fields:
                 self.fields[f] = None
