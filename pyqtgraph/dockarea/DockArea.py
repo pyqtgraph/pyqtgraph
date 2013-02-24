@@ -33,12 +33,13 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
     def type(self):
         return "top"
         
-    def addDock(self, dock, position='bottom', relativeTo=None):
+    def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
         """Adds a dock to this area.
         
         =========== =================================================================
         Arguments:
-        dock        The new Dock object to add.
+        dock        The new Dock object to add. If None, then a new Dock will be 
+                    created.
         position    'bottom', 'top', 'left', 'right', 'over', or 'under'
         relativeTo  If relativeTo is None, then the new Dock is added to fill an 
                     entire edge of the window. If relativeTo is another Dock, then 
@@ -46,7 +47,12 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
                     configuration for 'over' and 'under'). 
         =========== =================================================================
         
+        All extra keyword arguments are passed to Dock.__init__() if *dock* is
+        None.        
         """
+        if dock is None:
+            dock = Dock(**kwds)
+        
         
         ## Determine the container to insert this dock into.
         ## If there is no neighbor, then the container is the top.
@@ -99,6 +105,8 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         container.insert(dock, insertPos, neighbor)
         dock.area = self
         self.docks[dock.name()] = dock
+        
+        return dock
         
     def moveDock(self, dock, position, neighbor):
         """

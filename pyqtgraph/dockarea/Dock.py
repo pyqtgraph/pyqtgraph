@@ -186,7 +186,6 @@ class Dock(QtGui.QWidget, DockDrop):
         
         
     def startDrag(self):
-        print('startDrag')
         self.drag = QtGui.QDrag(self)
         mime = QtCore.QMimeData()
         #mime.setPlainText("asd")
