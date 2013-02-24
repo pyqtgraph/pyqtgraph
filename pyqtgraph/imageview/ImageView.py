@@ -205,7 +205,12 @@ class ImageView(QtGui.QWidget):
         *axes*         Dictionary indicating the interpretation for each axis.
                        This is only needed to override the default guess. Format is::
                        
-                           {'t':0, 'x':1, 'y':2, 'c':3}; 
+                           {'t':0, 'x':1, 'y':2, 'c':3};
+        
+        *pos*          Change the position of the displayed image
+        *scale*        Change the scale of the displayed image
+        *transform*    Set the transform of the dispalyed image. This option overrides *pos*
+                       and *scale*.
         ============== =======================================================================
         """
         prof = debug.Profiler('ImageView.setImage', disabled=True)

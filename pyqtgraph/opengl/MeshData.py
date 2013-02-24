@@ -436,7 +436,7 @@ class MeshData(object):
         elif self._faceColorsIndexedByFaces is not None:
             names.append('_faceColorsIndexedByFaces')
             
-        state = {n:getattr(self, n) for n in names}
+        state = dict([(n,getattr(self, n)) for n in names])
         return pickle.dumps(state)
         
     def restore(self, state):

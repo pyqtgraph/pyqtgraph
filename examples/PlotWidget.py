@@ -66,6 +66,7 @@ for i in range(0, 5):
 
 ## Test large numbers
 curve = pw3.plot(np.random.normal(size=100)*1e0, clickable=True)
+curve.curve.setClickable(True)
 curve.setPen('w')  ## white pen
 curve.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
 
