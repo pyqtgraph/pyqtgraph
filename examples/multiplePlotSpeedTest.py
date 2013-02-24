@@ -39,7 +39,7 @@ def plot():
             #plt.addItem(item)
             
     dt = pg.ptime.time() - start
-    print "Create plots took: %0.3fms" % (dt*1000)
+    print("Create plots took: %0.3fms" % (dt*1000))
 
 ## Plot and clear 5 times, printing the time it took
 for i in range(5):
@@ -72,7 +72,7 @@ def fastPlot():
     plt.addItem(item)
     
     dt = pg.ptime.time() - start
-    print "Create plots took: %0.3fms" % (dt*1000)
+    print("Create plots took: %0.3fms" % (dt*1000))
 
 
 ## Plot and clear 5 times, printing the time it took
@@ -82,7 +82,7 @@ if hasattr(pg, 'arrayToQPath'):
         fastPlot()
         app.processEvents()
 else:
-    print "Skipping fast tests--arrayToQPath function is missing."
+    print("Skipping fast tests--arrayToQPath function is missing.")
 
 plt.autoRange()
 
