@@ -17,6 +17,7 @@ import numpy as np
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
+w.setWindowTitle('pyqtgraph example: GLSurfacePlot')
 w.setCameraPosition(distance=50)
 
 ## Add a grid to the view

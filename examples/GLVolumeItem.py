@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates GLVolumeItem for displaying volumetric data.
+
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -9,7 +14,7 @@ app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.opts['distance'] = 200
 w.show()
-
+w.setWindowTitle('pyqtgraph example: GLVolumeItem')
 
 #b = gl.GLBoxItem()
 #w.addItem(b)

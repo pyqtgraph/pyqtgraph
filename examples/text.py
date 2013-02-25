@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-## This example shows how to insert text into a scene using QTextItem
+"""
+This example shows how to insert text into a scene using TextItem. This class 
+is for displaying text that is anchored to a particular location in the data
+coordinate system, but which is always displayed unscaled. 
 
+For text that scales with the data, use QTextItem. 
+For text that can be placed in a layout, use LabelItem.
+"""
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
@@ -13,6 +19,7 @@ x = np.linspace(-20, 20, 1000)
 y = np.sin(x) / x
 plot = pg.plot()   ## create an empty plot widget
 plot.setYRange(-1, 2)
+plot.setWindowTitle('pyqtgraph example: text')
 curve = plot.plot(x,y)  ## add a single curve
 
 ## Create text object, use HTML tags to specify color/size

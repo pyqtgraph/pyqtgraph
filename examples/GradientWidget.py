@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates the appearance / interactivity of GradientWidget
+(without actually doing anything useful with it)
+
+"""
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
@@ -10,6 +15,7 @@ import numpy as np
 app = QtGui.QApplication([])
 w = QtGui.QMainWindow()
 w.show()
+w.setWindowTitle('pyqtgraph example: GradientWidget')
 w.resize(400,400)
 cw = QtGui.QWidget()
 w.setCentralWidget(cw)

@@ -451,7 +451,7 @@ class ViewBox(GraphicsWidget):
         if item is None:
             bounds = self.childrenBoundingRect(items=items)
         else:
-            print "Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead."
+            print("Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead.")
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
             
         if bounds is not None:

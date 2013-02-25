@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+Test the speed of rapidly updating multiple plot curves
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -14,6 +18,7 @@ app = QtGui.QApplication([])
 #mw.resize(800,800)
 
 p = pg.plot()
+p.setWindowTitle('pyqtgraph example: MultiPlotSpeedTest')
 #p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
 p.setLabel('bottom', 'Index', units='B')
 

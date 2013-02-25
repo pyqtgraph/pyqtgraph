@@ -22,6 +22,7 @@ examples = OrderedDict([
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
+    ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
@@ -38,6 +39,7 @@ examples = OrderedDict([
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
         ('ViewBox', 'ViewBox.py'),
+        ('Custom Graphics', 'customGraphicsItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
@@ -58,6 +60,7 @@ examples = OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
         ('SpinBox', 'SpinBox.py'),
         ('ConsoleWidget', 'ConsoleWidget.py'),
+        ('Histogram / lookup table', 'HistogramLUT.py'),
         ('TreeWidget', 'TreeWidget.py'),
         ('DataTreeWidget', 'DataTreeWidget.py'),
         ('GradientWidget', 'GradientWidget.py'),
@@ -68,7 +71,7 @@ examples = OrderedDict([
         ('JoystickButton', 'JoystickButton.py'),
     ])),
     
-    ('GraphicsScene', 'GraphicsScene.py'),
+    #('GraphicsScene', 'GraphicsScene.py'),
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
     #('Canvas', '../canvas'),

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrate ability of ImageItem to be used as a canvas for painting with
+the mouse.
+
+"""
+
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
@@ -12,6 +18,7 @@ app = QtGui.QApplication([])
 w = pg.GraphicsView()
 w.show()
 w.resize(800,800)
+w.setWindowTitle('pyqtgraph example: Draw')
 
 view = pg.ViewBox()
 w.setCentralItem(view)

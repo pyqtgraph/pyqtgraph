@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
+
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -10,6 +15,7 @@ app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.opts['distance'] = 20
 w.show()
+w.setWindowTitle('pyqtgraph example: GLScatterPlotItem')
 
 g = gl.GLGridItem()
 w.addItem(g)

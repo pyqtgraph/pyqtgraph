@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates a variety of uses for ROI. This class provides a user-adjustable
+region of interest marker. It is possible to customize the layout and 
+function of the scale/rotate handles in very flexible ways. 
+"""
+
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
@@ -22,6 +28,7 @@ arr += np.random.normal(size=(100,100))
 ## create GUI
 app = QtGui.QApplication([])
 w = pg.GraphicsWindow(size=(800,800), border=True)
+w.setWindowTitle('pyqtgraph example: ROI Examples')
 
 text = """Data Selection From Image.<br>\n
 Drag an ROI or its handles to update the selected image.<br>
