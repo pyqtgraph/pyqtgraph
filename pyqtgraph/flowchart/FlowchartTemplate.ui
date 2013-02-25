@@ -90,7 +90,7 @@
   <customwidget>
    <class>FlowchartGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>FlowchartGraphicsView</header>
+   <header>pyqtgraph.flowchart.FlowchartGraphicsView</header>
   </customwidget>
  </customwidgets>
  <resources/>

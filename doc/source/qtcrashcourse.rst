@@ -66,6 +66,12 @@ Signals, Slots, and Events
 
 [ to be continued.. please post a request on the pyqtgraph forum if you'd like to read more ]
 
+Qt detects and reacts to user interaction by executing its *event loop*. 
+
+ - what happens in the event loop?
+ - when do I need to use QApplication.exec_() ?
+ - what control do I have over event loop execution? (QApplication.processEvents)
+
 
 GraphicsView and GraphicsItems
 ------------------------------
@@ -79,8 +85,8 @@ Mouse and Keyboard Input
 ------------------------
 
 
-QTimer, the Event Loop, and Multi-Threading
--------------------------------------------
+QTimer, Multi-Threading
+-----------------------
 
 
 Multi-threading vs Multi-processing in Qt

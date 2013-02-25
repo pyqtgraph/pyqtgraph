@@ -84,8 +84,41 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         QtGui.QGraphicsPathItem.paint(self, p, *args)
+        
+        #p.setPen(fn.mkPen('r'))
+        #p.setBrush(fn.mkBrush(None))
+        #p.drawRect(self.boundingRect())
 
     def shape(self):
         #if not self.opts['pxMode']:
             #return QtGui.QGraphicsPathItem.shape(self)
         return self.path
+    
+    ## dataBounds and pixelPadding methods are provided to ensure ViewBox can
+    ## properly auto-range 
+    def dataBounds(self, ax, frac, orthoRange=None):
+        pw = 0
+        pen = self.pen()
+        if not pen.isCosmetic():
+            pw = pen.width() * 0.7072
+        if self.opts['pxMode']:
+            return [0,0]
+        else:
+            br = self.boundingRect()
+            if ax == 0:
+                return [br.left()-pw, br.right()+pw]
+            else:
+                return [br.top()-pw, br.bottom()+pw]
+        
+    def pixelPadding(self):
+        pad = 0
+        if self.opts['pxMode']:
+            br = self.boundingRect()
+            pad += (br.width()**2 + br.height()**2) ** 0.5
+        pen = self.pen()
+        if pen.isCosmetic():
+            pad += max(1, pen.width()) * 0.7072
+        return pad
+        
+        
+    

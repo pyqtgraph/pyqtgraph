@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates basic use of LegendItem
+
+"""
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
 plt = pg.plot()
-
+plt.setWindowTitle('pyqtgraph example: Legend')
 plt.addLegend()
 #l = pg.LegendItem((100,60), offset=(70,30))  # args are (size, offset)
 #l.setParentItem(plt.graphicsItem())   # Note we do NOT call plt.addItem in this case

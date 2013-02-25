@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Simple demonstration of TreeWidget, which is an extension of QTreeWidget
+that allows widgets to be added and dragged within the tree more easily.
+"""
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
@@ -11,6 +15,7 @@ app = QtGui.QApplication([])
 w = pg.TreeWidget()
 w.setColumnCount(2)
 w.show()
+w.setWindowTitle('pyqtgraph example: TreeWidget')
 
 i1  = QtGui.QTreeWidgetItem(["Item 1"])
 i11  = QtGui.QTreeWidgetItem(["Item 1.1"])

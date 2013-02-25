@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates use of PlotWidget class. This is little more than a 
+GraphicsView with a PlotItem placed in its center.
+"""
+
+
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
@@ -9,6 +15,7 @@ import pyqtgraph as pg
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
+mw.setWindowTitle('pyqtgraph example: PlotWidget')
 mw.resize(800,800)
 cw = QtGui.QWidget()
 mw.setCentralWidget(cw)
@@ -66,6 +73,7 @@ for i in range(0, 5):
 
 ## Test large numbers
 curve = pw3.plot(np.random.normal(size=100)*1e0, clickable=True)
+curve.curve.setClickable(True)
 curve.setPen('w')  ## white pen
 curve.setShadowPen(pg.mkPen((70,70,30), width=6, cosmetic=True))
 

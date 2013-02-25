@@ -1,5 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+ViewBox is the general-purpose graphical container that allows the user to 
+zoom / pan to inspect any area of a 2D coordinate system. 
+
+This unimaginative example demonstrates the constrution of a ViewBox-based
+plot area with axes, very similar to the way PlotItem is built.
+"""
+
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -12,29 +21,22 @@ import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
-#cw = QtGui.QWidget()
-#vl = QtGui.QVBoxLayout()
-#cw.setLayout(vl)
-#mw.setCentralWidget(cw)
+mw.setWindowTitle('pyqtgraph example: ViewBox')
 mw.show()
 mw.resize(800, 600)
 
 gv = pg.GraphicsView()
 mw.setCentralWidget(gv)
-#gv.enableMouse(False)    ## Mouse interaction will be handled by the ViewBox
 l = QtGui.QGraphicsGridLayout()
 l.setHorizontalSpacing(0)
 l.setVerticalSpacing(0)
-#vl.addWidget(gv)
-
 
 vb = pg.ViewBox()
-#grid = pg.GridItem()
-#vb.addItem(grid)
 
 p1 = pg.PlotDataItem()
 vb.addItem(p1)
 
+## Just something to play with inside the ViewBox
 class movableRect(QtGui.QGraphicsRectItem):
     def __init__(self, *args):
         QtGui.QGraphicsRectItem.__init__(self, *args)
@@ -55,8 +57,6 @@ class movableRect(QtGui.QGraphicsRectItem):
     def mouseMoveEvent(self, ev):
         self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
         
-
-#rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 1))
 rect = movableRect(QtCore.QRectF(0, 0, 1, 1))
 rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
 vb.addItem(rect)

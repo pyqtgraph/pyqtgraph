@@ -1,3 +1,10 @@
+"""
+Demonstrate the use of layouts to control placement of multiple plots / views /
+labels
+
+
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -10,6 +17,7 @@ view = pg.GraphicsView()
 l = pg.GraphicsLayout(border=(100,100,100))
 view.setCentralItem(l)
 view.show()
+view.setWindowTitle('pyqtgraph example: GraphicsLayout')
 view.resize(800,600)
 
 ## Title at top

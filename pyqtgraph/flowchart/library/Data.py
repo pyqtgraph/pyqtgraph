@@ -152,7 +152,7 @@ class RegionSelectNode(CtrlNode):
                     #print "  new rgn:", c, region
                     #self.items[c].setYRange([0., 0.2], relative=True)
         
-        if self.selected.isConnected():
+        if self['selected'].isConnected():
             if data is None:
                 sliced = None
             elif (hasattr(data, 'implements') and data.implements('MetaArray')):
@@ -219,7 +219,6 @@ class EvalNode(Node):
         text = str(self.text.toPlainText())
         if text != self.lastText:
             self.lastText = text
-            print("eval node update")
             self.update()
         return QtGui.QTextEdit.focusOutEvent(self.text, ev)
         

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Demonstrates very basic use of ImageItem to display image data inside a ViewBox.
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -10,19 +14,17 @@ import pyqtgraph.ptime as ptime
 app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
-view = pg.GraphicsView()
-view.show()  ## show view alone in its own window
-
-## Allow mouse scale/pan. Normally we use a ViewBox for this, but
-## for simple examples this is easier.
-view.enableMouse()
+win = pg.GraphicsLayoutWidget()
+win.show()  ## show widget alone in its own window
+win.setWindowTitle('pyqtgraph example: ImageItem')
+view = win.addViewBox()
 
 ## lock the aspect ratio so pixels are always square
 view.setAspectLocked(True)
 
 ## Create image item
 img = pg.ImageItem(border='w')
-view.scene().addItem(img)
+view.addItem(img)
 
 ## Set initial view bounds
 view.setRange(QtCore.QRectF(0, 0, 600, 600))

@@ -17,7 +17,7 @@ Pyqtgraph makes it very easy to visualize data from the command line. Observe::
     import pyqtgraph as pg
     pg.plot(data)   # data can be a list of values or a numpy array
 
-The example above would open a window displaying a line plot of the data given. The call to :func:`pg.plot <pyqtgraph.plot>` returns a handle to the :class:`plot widget <pyqtgraph.PlotWidget>` that is created, allowing more data to be added to the same window.
+The example above would open a window displaying a line plot of the data given. The call to :func:`pg.plot <pyqtgraph.plot>` returns a handle to the :class:`plot widget <pyqtgraph.PlotWidget>` that is created, allowing more data to be added to the same window. **Note:** interactive plotting from the python prompt is only available with PyQt; PySide does not run the Qt event loop while the interactive prompt is running. If you wish to use pyqtgraph interactively with PySide, see the 'console' :ref:`example <examples>`.
 
 Further examples::
     

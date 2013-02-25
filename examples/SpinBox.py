@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+This example demonstrates the SpinBox widget, which is an extension of 
+QDoubleSpinBox providing some advanced features:
+
+  * SI-prefixed units
+  * Non-linear stepping modes
+  * Bounded/unbounded values
+
+"""
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
@@ -20,6 +29,7 @@ spins = [
 
 
 win = QtGui.QMainWindow()
+win.setWindowTitle('pyqtgraph example: SpinBox')
 cw = QtGui.QWidget()
 layout = QtGui.QGridLayout()
 cw.setLayout(layout)

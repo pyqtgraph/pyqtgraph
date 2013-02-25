@@ -34,7 +34,11 @@ class ExportDialog(QtGui.QWidget):
 
     def show(self, item=None):
         if item is not None:
+            ## Select next exportable parent of the item originally clicked on
             while not isinstance(item, pg.ViewBox) and not isinstance(item, pg.PlotItem) and item is not None:
+                item = item.parentItem()
+            ## if this is a ViewBox inside a PlotItem, select the parent instead.
+            if isinstance(item, pg.ViewBox) and isinstance(item.parentItem(), pg.PlotItem):
                 item = item.parentItem()
             self.updateItemList(select=item)
         self.setVisible(True)

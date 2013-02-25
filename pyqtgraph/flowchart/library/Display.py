@@ -21,7 +21,7 @@ class PlotWidgetNode(Node):
         self.items = {}
         
     def disconnected(self, localTerm, remoteTerm):
-        if localTerm is self.In and remoteTerm in self.items:
+        if localTerm is self['In'] and remoteTerm in self.items:
             self.plot.removeItem(self.items[remoteTerm])
             del self.items[remoteTerm]
         

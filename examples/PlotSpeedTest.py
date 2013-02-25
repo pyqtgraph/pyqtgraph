@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+Update a simple plot as rapidly as possible to measure speed.
+"""
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -8,12 +12,10 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
-#QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
-#mw = QtGui.QMainWindow()
-#mw.resize(800,800)
 
 p = pg.plot()
+p.setWindowTitle('pyqtgraph example: PlotSpeedTest')
 p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
 p.setLabel('bottom', 'Index', units='B')
 curve = p.plot()

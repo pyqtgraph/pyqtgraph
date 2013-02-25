@@ -206,17 +206,12 @@ class Flowchart(Node):
         item = node.graphicsItem()
         item.setZValue(self.nextZVal*2)
         self.nextZVal += 1
-        #item.setParentItem(self.chartGraphicsItem())
         self.viewBox.addItem(item)
-        #item.setPos(pos2.x(), pos2.y())
         item.moveBy(*pos)
         self._nodes[name] = node
         self.widget().addNode(node) 
-        #QtCore.QObject.connect(node, QtCore.SIGNAL('closed'), self.nodeClosed)
         node.sigClosed.connect(self.nodeClosed)
-        #QtCore.QObject.connect(node, QtCore.SIGNAL('renamed'), self.nodeRenamed)
         node.sigRenamed.connect(self.nodeRenamed)
-        #QtCore.QObject.connect(node, QtCore.SIGNAL('outputChanged'), self.nodeOutputChanged)
         node.sigOutputChanged.connect(self.nodeOutputChanged)
         
     def removeNode(self, node):
@@ -225,17 +220,14 @@ class Flowchart(Node):
     def nodeClosed(self, node):
         del self._nodes[node.name()]
         self.widget().removeNode(node)
-        #QtCore.QObject.disconnect(node, QtCore.SIGNAL('closed'), self.nodeClosed)
         try:
             node.sigClosed.disconnect(self.nodeClosed)
         except TypeError:
             pass
-        #QtCore.QObject.disconnect(node, QtCore.SIGNAL('renamed'), self.nodeRenamed)
         try:
             node.sigRenamed.disconnect(self.nodeRenamed)
         except TypeError:
             pass
-        #QtCore.QObject.disconnect(node, QtCore.SIGNAL('outputChanged'), self.nodeOutputChanged)
         try:
             node.sigOutputChanged.disconnect(self.nodeOutputChanged)
         except TypeError:
