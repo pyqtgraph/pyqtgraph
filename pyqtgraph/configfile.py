@@ -10,7 +10,7 @@ as it can be converted to/from a string using repr and eval.
 """
 
 import re, os, sys
-from pgcollections import OrderedDict
+from .pgcollections import OrderedDict
 GLOBAL_PATH = None # so not thread safe.
 from . import units
 from .python2_3 import asUnicode

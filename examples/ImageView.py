@@ -26,6 +26,7 @@ win.resize(800,800)
 imv = pg.ImageView()
 win.setCentralWidget(imv)
 win.show()
+win.setWindowTitle('pyqtgraph example: ImageView')
 
 ## Create random 3D data set with noisy signals
 img = scipy.ndimage.gaussian_filter(np.random.normal(size=(200, 200)), (5, 5)) * 20 + 100

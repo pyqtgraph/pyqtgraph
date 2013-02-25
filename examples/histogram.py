@@ -12,13 +12,14 @@ import numpy as np
 
 win = pg.GraphicsWindow()
 win.resize(800,350)
+win.setWindowTitle('pyqtgraph example: Histogram')
 plt1 = win.addPlot()
 plt2 = win.addPlot()
 
 ## make interesting distribution of values
 vals = np.hstack([np.random.normal(size=500), np.random.normal(size=260, loc=4)])
 
-## draw standard histogram
+## compute standard histogram
 y,x = np.histogram(vals, bins=np.linspace(-3, 8, 40))
 
 ## notice that len(x) == len(y)+1

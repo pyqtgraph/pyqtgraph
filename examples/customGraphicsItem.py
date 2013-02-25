@@ -1,6 +1,15 @@
+"""
+Demonstrate creation of a custom graphic (a candlestick plot)
+
+"""
+import initExample ## Add path to library (just for examples; you do not need this)
+
 import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
 
+## Create a subclass of GraphicsObject.
+## The only required methods are paint() and boundingRect() 
+## (see QGraphicsItem documentation)
 class CandlestickItem(pg.GraphicsObject):
     def __init__(self, data):
         pg.GraphicsObject.__init__(self)
@@ -8,6 +17,8 @@ class CandlestickItem(pg.GraphicsObject):
         self.generatePicture()
     
     def generatePicture(self):
+        ## pre-computing a QPicture object allows paint() to run much more quickly, 
+        ## rather than re-drawing the shapes every time.
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
         p.setPen(pg.mkPen('w'))
@@ -25,6 +36,9 @@ class CandlestickItem(pg.GraphicsObject):
         p.drawPicture(0, 0, self.picture)
     
     def boundingRect(self):
+        ## boundingRect _must_ indicate the entire area that will be drawn on
+        ## or else we will get artifacts and possibly crashing.
+        ## (in this case, QPicture does all the work of computing the bouning rect for us)
         return QtCore.QRectF(self.picture.boundingRect())
 
 data = [  ## fields are (time, open, close, min, max).
@@ -38,5 +52,10 @@ data = [  ## fields are (time, open, close, min, max).
 item = CandlestickItem(data)
 plt = pg.plot()
 plt.addItem(item)
+plt.setWindowTitle('pyqtgraph example: customGraphicsItem')
 
-QtGui.QApplication.exec_()
+## Start Qt event loop unless running in interactive mode or using pyside.
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

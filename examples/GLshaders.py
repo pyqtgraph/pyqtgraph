@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Demonstration of some of the shader programs included with pyqtgraph.
+Demonstration of some of the shader programs included with pyqtgraph that can be 
+used to affect the appearance of a surface.
 """
 
 
@@ -15,7 +16,7 @@ import pyqtgraph.opengl as gl
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
-
+w.setWindowTitle('pyqtgraph example: GL Shaders')
 w.setCameraPosition(distance=15, azimuth=-90)
 
 g = gl.GLGridItem()

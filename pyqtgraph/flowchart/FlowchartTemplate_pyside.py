@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './flowchart/FlowchartTemplate.ui'
 #
-# Created: Sun Sep  9 14:41:30 2012
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Sun Feb 24 19:47:30 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -51,4 +51,4 @@ class Ui_Form(object):
         Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
 
 from pyqtgraph.widgets.DataTreeWidget import DataTreeWidget
-from FlowchartGraphicsView import FlowchartGraphicsView
+from pyqtgraph.flowchart.FlowchartGraphicsView import FlowchartGraphicsView

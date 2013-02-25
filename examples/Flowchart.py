@@ -23,6 +23,7 @@ app = QtGui.QApplication([])
 
 ## Create main window with grid layout
 win = QtGui.QMainWindow()
+win.setWindowTitle('pyqtgraph example: Flowchart')
 cw = QtGui.QWidget()
 win.setCentralWidget(cw)
 layout = QtGui.QGridLayout()

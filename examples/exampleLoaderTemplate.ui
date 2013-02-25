@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>762</width>
-    <height>302</height>
+    <width>623</width>
+    <height>380</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QTreeWidget" name="exampleTree">
@@ -90,19 +90,40 @@
        <item>
         <widget class="QPushButton" name="loadBtn">
          <property name="text">
-          <string>Load Example</string>
+          <string>Run Example</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QTextBrowser" name="codeView">
-      <property name="font">
-       <font>
-        <family>Monospace</family>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
+     <widget class="QWidget" name="">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="loadedFileLabel">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="codeView">
+         <property name="font">
+          <font>
+           <family>FreeMono</family>
+          </font>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>

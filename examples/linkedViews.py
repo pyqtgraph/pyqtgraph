@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-
-## This example demonstrates the ability to link the axes of views together
-## Views can be linked manually using the context menu, but only if they are given names.
-
+"""
+This example demonstrates the ability to link the axes of views together
+Views can be linked manually using the context menu, but only if they are given 
+names.
+"""
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
@@ -19,7 +20,7 @@ app = QtGui.QApplication([])
 x = np.linspace(-50, 50, 1000)
 y = np.sin(x) / x
 
-win = pg.GraphicsWindow(title="View Linking Examples")
+win = pg.GraphicsWindow(title="pyqtgraph example: Linked Views")
 win.resize(800,600)
 
 win.addLabel("Linked Views", colspan=2)

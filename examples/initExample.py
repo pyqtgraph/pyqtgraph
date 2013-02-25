@@ -4,7 +4,10 @@
 import sys, os
 
 if not hasattr(sys, 'frozen'):
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if __file__ == '<stdin>':
+        path = os.getcwd()
+    else:
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     path.rstrip(os.path.sep)
     if 'pyqtgraph' in os.listdir(path):
         sys.path.insert(0, path) ## examples adjacent to pyqtgraph (as in source tree)

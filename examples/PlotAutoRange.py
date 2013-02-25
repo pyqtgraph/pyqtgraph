@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-## This example demonstrates the different auto-ranging capabilities of ViewBoxes
-
+"""
+This example demonstrates the different auto-ranging capabilities of ViewBoxes
+"""
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
@@ -17,7 +18,7 @@ app = QtGui.QApplication([])
 
 win = pg.GraphicsWindow(title="Plot auto-range examples")
 win.resize(800,600)
-
+win.setWindowTitle('pyqtgraph example: PlotAutoRange')
 
 d = np.random.normal(size=100)
 d[50:54] += 10

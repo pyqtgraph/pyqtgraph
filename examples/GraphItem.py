@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Simple example of GridItem use.
+Simple example of GraphItem use.
 """
 
 
@@ -11,6 +11,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 w = pg.GraphicsWindow()
+w.setWindowTitle('pyqtgraph example: GraphItem')
 v = w.addViewBox()
 v.setAspectLocked()
 
