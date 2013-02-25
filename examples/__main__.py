@@ -154,7 +154,8 @@ class ExampleLoader(QtGui.QMainWindow):
             #os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
         
         if edited:
-            proc = subprocess.Popen([sys.executable, '-'] + extra, stdin=subprocess.PIPE)
+            path = os.path.abspath(os.path.dirname(__file__))
+            proc = subprocess.Popen([sys.executable, '-'] + extra, stdin=subprocess.PIPE, cwd=path)
             code = str(self.ui.codeView.toPlainText()).encode('UTF-8')
             proc.stdin.write(code)
             proc.stdin.close()
