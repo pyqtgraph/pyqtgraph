@@ -36,6 +36,7 @@ vb = pg.ViewBox()
 p1 = pg.PlotDataItem()
 vb.addItem(p1)
 
+## Just something to play with inside the ViewBox
 class movableRect(QtGui.QGraphicsRectItem):
     def __init__(self, *args):
         QtGui.QGraphicsRectItem.__init__(self, *args)
@@ -56,8 +57,6 @@ class movableRect(QtGui.QGraphicsRectItem):
     def mouseMoveEvent(self, ev):
         self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
         
-
-#rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 1))
 rect = movableRect(QtCore.QRectF(0, 0, 1, 1))
 rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
 vb.addItem(rect)
