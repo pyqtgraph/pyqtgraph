@@ -235,9 +235,13 @@ except:
 
 """  % (import1, graphicsSystem, import2)
 
-    process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    process.stdin.write(code.encode('UTF-8'))
-    #process.stdin.close()
+    if sys.platform.startswith('win'):
+        process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(code.encode('UTF-8'))
+        process.stdin.close()
+    else:
+        process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(code.encode('UTF-8'))
     output = ''
     fail = False
     while True:
