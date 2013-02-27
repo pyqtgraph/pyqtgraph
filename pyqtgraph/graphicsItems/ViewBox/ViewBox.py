@@ -50,6 +50,7 @@ class ViewBox(GraphicsWidget):
     #sigActionPositionChanged = QtCore.Signal(object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
+    sigResized = QtCore.Signal(object)
     
     ## mouse modes
     PanMode = 3
@@ -304,6 +305,7 @@ class ViewBox(GraphicsWidget):
         #self._itemBoundsCache.clear()
         #self.linkedXChanged()
         #self.linkedYChanged()
+        self.sigResized.emit(self)
         
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""

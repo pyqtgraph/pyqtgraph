@@ -309,10 +309,18 @@ class AxisItem(GraphicsWidget):
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         
-    def linkedViewChanged(self, view, newRange):
+        if oldView is not None:
+            oldView.sigResized.disconnect(self.linkedViewChanged)
+        view.sigResized.connect(self.linkedViewChanged)
+        
+    def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left'] and view.yInverted():
+            if newRange is None:
+                newRange = view.viewRange()[1]
             self.setRange(*newRange[::-1])
         else:
+            if newRange is None:
+                newRange = view.viewRange()[0]
             self.setRange(*newRange)
         
     def boundingRect(self):
