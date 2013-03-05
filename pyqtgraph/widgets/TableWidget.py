@@ -26,6 +26,7 @@ class TableWidget(QtGui.QTableWidget):
         QtGui.QTableWidget.__init__(self, *args)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
+        self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         self.clear()
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
@@ -44,6 +45,8 @@ class TableWidget(QtGui.QTableWidget):
     def setData(self, data):
         self.clear()
         self.appendData(data)
+        self.setSortingEnabled(True)
+        self.resizeColumnsToContents()
         
     def appendData(self, data):
         """Types allowed:
@@ -135,9 +138,23 @@ class TableWidget(QtGui.QTableWidget):
                 s = str(val)
             item = QtGui.QTableWidgetItem(s)
             item.value = val
+            # by default this is enabled, selectable & editable, but
+            # we don't want editable
+            item.setFlags(QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
             self.items.append(item)
             self.setItem(row, col, item)
-            
+
+    def sizeHint(self):
+        # based on http://stackoverflow.com/a/7195443/54056
+        width = sum(self.columnWidth(i) for i in range(self.columnCount()))
+        width += self.verticalHeader().sizeHint().width()
+        width += self.verticalScrollBar().sizeHint().width()
+        width += self.frameWidth() * 2
+        height = sum(self.rowHeight(i) for i in range(self.rowCount()))
+        height += self.verticalHeader().sizeHint().height()
+        height += self.horizontalScrollBar().sizeHint().height()
+        return QtCore.QSize(width, height)
+         
     def serialize(self, useSelection=False):
         """Convert entire table (or just selected area) into tab-separated text values"""
         if useSelection:
