@@ -1,4 +1,10 @@
 from pyqtgraph.Qt import QtGui, QtCore
+try:
+    from pyqtgraph.Qt import QtOpenGL
+    HAVE_OPENGL = True
+except:
+    HAVE_OPENGL = False
+    
 from scipy.fftpack import fft
 import numpy as np
 import scipy.stats
@@ -370,12 +376,11 @@ class PlotCurveItem(GraphicsObject):
         prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
         if self.xData is None:
             return
-        #if self.opts['spectrumMode']:
-            #if self.specPath is None:
-                
-                #self.specPath = self.generatePath(*self.getData())
-            #path = self.specPath
-        #else:
+        
+        if HAVE_OPENGL and pg.getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
+            self.paintGL(p, opt, widget)
+            return
+        
         x = None
         y = None
         if self.path is None:
@@ -384,7 +389,6 @@ class PlotCurveItem(GraphicsObject):
                 return
             self.path = self.generatePath(x,y)
             self.fillPath = None
-            
             
         path = self.path
         prof.mark('generate path')
@@ -440,6 +444,65 @@ class PlotCurveItem(GraphicsObject):
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
         #p.drawRect(self.boundingRect())
         
+    def paintGL(self, p, opt, widget):
+        p.beginNativePainting()
+        import OpenGL.GL as gl
+        
+        ## set clipping viewport
+        view = self.getViewBox()
+        if view is not None:
+            rect = view.mapRectToItem(self, view.boundingRect())
+            #gl.glViewport(int(rect.x()), int(rect.y()), int(rect.width()), int(rect.height()))
+            
+            #gl.glTranslate(-rect.x(), -rect.y(), 0)
+            
+            gl.glEnable(gl.GL_STENCIL_TEST)
+            gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE) # disable drawing to frame buffer
+            gl.glDepthMask(gl.GL_FALSE)  # disable drawing to depth buffer
+            gl.glStencilFunc(gl.GL_NEVER, 1, 0xFF)  
+            gl.glStencilOp(gl.GL_REPLACE, gl.GL_KEEP, gl.GL_KEEP)  
+            
+            ## draw stencil pattern
+            gl.glStencilMask(0xFF);
+            gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex2f(rect.x(), rect.y())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y())
+            gl.glVertex2f(rect.x(), rect.y()+rect.height())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y()+rect.height())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y())
+            gl.glVertex2f(rect.x(), rect.y()+rect.height())
+            gl.glEnd()
+                       
+            gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
+            gl.glDepthMask(gl.GL_TRUE)
+            gl.glStencilMask(0x00)
+            gl.glStencilFunc(gl.GL_EQUAL, 1, 0xFF)
+            
+        try:
+            x, y = self.getData()
+            pos = np.empty((len(x), 2))
+            pos[:,0] = x
+            pos[:,1] = y
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            try:
+                gl.glVertexPointerf(pos)
+                pen = fn.mkPen(self.opts['pen'])
+                color = pen.color()
+                gl.glColor4f(color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
+                width = pen.width()
+                if pen.isCosmetic() and width < 1:
+                    width = 1
+                gl.glPointSize(width)
+                gl.glEnable(gl.GL_LINE_SMOOTH)
+                gl.glEnable(gl.GL_BLEND)
+                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST);
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
+            finally:
+                gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        finally:
+            p.endNativePainting()
         
     def clear(self):
         self.xData = None  ## raw values

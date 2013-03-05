@@ -683,6 +683,9 @@ class ScatterPlotItem(GraphicsObject):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
             x,y,w,h = rec['fragCoords']
+            if abs(w) > 10000 or abs(h) > 10000:
+                print self.data
+                raise Exception("fragment corrupt")
             rect = QtCore.QRectF(y, x, h, w)
             self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
             

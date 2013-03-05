@@ -54,6 +54,7 @@ CONFIG_OPTIONS = {
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'useWeave': True,       ## Use weave to speed up some operations, if it is available
     'weaveDebug': False,    ## Print full error message if weave compile fails
+    'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
 } 
 
 
