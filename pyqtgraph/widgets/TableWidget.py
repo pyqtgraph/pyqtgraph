@@ -6,7 +6,7 @@ import numpy as np
 try:
     import metaarray
     HAVE_METAARRAY = True
-except:
+except ImportError:
     HAVE_METAARRAY = False
 
 __all__ = ['TableWidget']
@@ -60,26 +60,19 @@ class TableWidget(QtGui.QTableWidget):
             first = next(it0)
         except StopIteration:
             return
-        #if type(first) == type(np.float64(1)):
-        #   return
         fn1, header1 = self.iteratorFn(first)
         if fn1 is None:
             self.clear()
             return
         
-        #print fn0, header0
-        #print fn1, header1
         firstVals = [x for x in fn1(first)]
         self.setColumnCount(len(firstVals))
         
-        #print header0, header1
         if not self.verticalHeadersSet and header0 is not None:
-            #print "set header 0:", header0
             self.setRowCount(len(header0))
             self.setVerticalHeaderLabels(header0)
             self.verticalHeadersSet = True
         if not self.horizontalHeadersSet and header1 is not None:
-            #print "set header 1:", header1
             self.setHorizontalHeaderLabels(header1)
             self.horizontalHeadersSet = True
         
@@ -110,13 +103,16 @@ class TableWidget(QtGui.QTableWidget):
         elif data is None:
             return (None,None)
         else:
-            raise Exception("Don't know how to iterate over data type: %s" % str(type(data)))
+            msg = "Don't know how to iterate over data type: {!s}".format(type(data))
+            raise TypeError(msg)
         
     def iterFirstAxis(self, data):
         for i in range(data.shape[0]):
             yield data[i]
             
-    def iterate(self, data):  ## for numpy.void, which can be iterated but mysteriously has no __iter__ (??)
+    def iterate(self, data):
+        # for numpy.void, which can be iterated but mysteriously 
+        # has no __iter__ (??)
         for x in data:
             yield x
         
@@ -124,14 +120,13 @@ class TableWidget(QtGui.QTableWidget):
         self.appendData([data])
         
     def addRow(self, vals):
-        #print "add row:", vals
         row = self.rowCount()
-        self.setRowCount(row+1)
+        self.setRowCount(row + 1)
         self.setRow(row, vals)
         
     def setRow(self, row, vals):
-        if row > self.rowCount()-1:
-            self.setRowCount(row+1)
+        if row > self.rowCount() - 1:
+            self.setRowCount(row + 1)
         for col in range(self.columnCount()):
             val = vals[col]
             if isinstance(val, float) or isinstance(val, np.floating):
@@ -140,7 +135,6 @@ class TableWidget(QtGui.QTableWidget):
                 s = str(val)
             item = QtGui.QTableWidgetItem(s)
             item.value = val
-            #print "add item to row %d:"%row, item, item.value
             self.items.append(item)
             self.setItem(row, col, item)
             
@@ -148,8 +142,10 @@ class TableWidget(QtGui.QTableWidget):
         """Convert entire table (or just selected area) into tab-separated text values"""
         if useSelection:
             selection = self.selectedRanges()[0]
-            rows = list(range(selection.topRow(), selection.bottomRow()+1))
-            columns = list(range(selection.leftColumn(), selection.rightColumn()+1))        
+            rows = list(range(selection.topRow(),
+                              selection.bottomRow() + 1))
+            columns = list(range(selection.leftColumn(),
+                                 selection.rightColumn() + 1))        
         else:
             rows = list(range(self.rowCount()))
             columns = list(range(self.columnCount()))
