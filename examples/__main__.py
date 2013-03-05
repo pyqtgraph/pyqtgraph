@@ -96,6 +96,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeBtn.hide()
         
         global examples
+        self.itemCache = []
         self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples)
         self.ui.exampleTree.expandAll()
         
@@ -122,6 +123,9 @@ class ExampleLoader(QtGui.QMainWindow):
     def populateTree(self, root, examples):
         for key, val in examples.items():
             item = QtGui.QTreeWidgetItem([key])
+            self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
+                                        # so we need to make an explicit reference or else the .file
+                                        # attribute will disappear.
             if isinstance(val, basestring):
                 item.file = val
             else:
