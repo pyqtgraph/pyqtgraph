@@ -27,6 +27,7 @@ class TableWidget(QtGui.QTableWidget):
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
         self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        self.setSortingEnabled(True)
         self.clear()
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
@@ -45,7 +46,6 @@ class TableWidget(QtGui.QTableWidget):
     def setData(self, data):
         self.clear()
         self.appendData(data)
-        self.setSortingEnabled(True)
         self.resizeColumnsToContents()
         
     def appendData(self, data):
