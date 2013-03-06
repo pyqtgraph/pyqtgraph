@@ -12,23 +12,20 @@ except ImportError:
 __all__ = ['TableWidget']
 class TableWidget(QtGui.QTableWidget):
     """Extends QTableWidget with some useful functions for automatic data handling
-    and copy / export context menu. Can automatically format and display:
-
-    - numpy arrays
-    - numpy record arrays 
-    - metaarrays
-    - list-of-lists  [[1,2,3], [4,5,6]]
-    - dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
-    - list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+    and copy / export context menu. Can automatically format and display a variety
+    of data types (see :func:`setData() <pyqtgraph.TableWidget.setData>` for more
+    information.
     """
     
-    def __init__(self, *args):
+    def __init__(self, *args, **kwds):
         QtGui.QTableWidget.__init__(self, *args)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
         self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         self.setSortingEnabled(True)
         self.clear()
+        editable = kwds.get('editable', False)
+        self.setEditable(editable)
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
         self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
@@ -36,6 +33,7 @@ class TableWidget(QtGui.QTableWidget):
         self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
         
     def clear(self):
+        """Clear all contents from the table."""
         QtGui.QTableWidget.clear(self)
         self.verticalHeadersSet = False
         self.horizontalHeadersSet = False
@@ -44,6 +42,16 @@ class TableWidget(QtGui.QTableWidget):
         self.setColumnCount(0)
         
     def setData(self, data):
+        """Set the data displayed in the table.
+        Allowed formats are:
+        
+        * numpy arrays
+        * numpy record arrays 
+        * metaarrays
+        * list-of-lists  [[1,2,3], [4,5,6]]
+        * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
+        * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+        """
         self.clear()
         self.appendData(data)
         self.resizeColumnsToContents()
@@ -84,10 +92,15 @@ class TableWidget(QtGui.QTableWidget):
         for row in it0:
             self.setRow(i, [x for x in fn1(row)])
             i += 1
+    
+    def setEditable(self, editable=True):
+        self.editable = editable
+        for item in self.items:
+            item.setEditable(editable)
             
     def iteratorFn(self, data):
-        """Return 1) a function that will provide an iterator for data and 2) a list of header strings"""
-        if isinstance(data, list):
+        ## Return 1) a function that will provide an iterator for data and 2) a list of header strings
+        if isinstance(data, list) or isinstance(data, tuple):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
             return lambda d: iter(d.values()), list(map(str, data.keys()))
@@ -130,17 +143,10 @@ class TableWidget(QtGui.QTableWidget):
     def setRow(self, row, vals):
         if row > self.rowCount() - 1:
             self.setRowCount(row + 1)
-        for col in range(self.columnCount()):
+        for col in range(len(vals)):
             val = vals[col]
-            if isinstance(val, float) or isinstance(val, np.floating):
-                s = "%0.3g" % val
-            else:
-                s = str(val)
-            item = QtGui.QTableWidgetItem(s)
-            item.value = val
-            # by default this is enabled, selectable & editable, but
-            # we don't want editable
-            item.setFlags(QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
+            item = TableWidgetItem(val)
+            item.setEditable(self.editable)
             self.items.append(item)
             self.setItem(row, col, item)
 
@@ -228,6 +234,28 @@ class TableWidget(QtGui.QTableWidget):
         else:
             ev.ignore()
 
+class TableWidgetItem(QtGui.QTableWidgetItem):
+    def __init__(self, val):
+        if isinstance(val, float) or isinstance(val, np.floating):
+            s = "%0.3g" % val
+        else:
+            s = str(val)
+        QtGui.QTableWidgetItem.__init__(self, s)
+        self.value = val
+        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        self.setFlags(flags)
+        
+    def setEditable(self, editable):
+        if editable:
+            self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
+        else:
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def __lt__(self, other):
+        if hasattr(other, 'value'):
+            return self.value < other.value
+        else:
+            return self.text() < other.text()
 
 
 if __name__ == '__main__':

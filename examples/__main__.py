@@ -64,7 +64,7 @@ examples = OrderedDict([
         ('TreeWidget', 'TreeWidget.py'),
         ('DataTreeWidget', 'DataTreeWidget.py'),
         ('GradientWidget', 'GradientWidget.py'),
-        #('TableWidget', '../widgets/TableWidget.py'),
+        ('TableWidget', 'TableWidget.py'),
         ('ColorButton', 'ColorButton.py'),
         #('CheckTable', '../widgets/CheckTable.py'),
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
