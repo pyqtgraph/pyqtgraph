@@ -97,6 +97,6 @@ Miscellaneous Functions
 
 .. autofunction:: pyqtgraph.systemInfo
 
-
+.. autofunction:: pyqtgraph.exit
 
 

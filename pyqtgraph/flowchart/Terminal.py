@@ -521,6 +521,8 @@ class ConnectionItem(GraphicsObject):
         self.target = target
         self.length = 0
         self.hovered = False
+        self.path = None
+        self.shapePath = None
         #self.line = QtGui.QGraphicsLineItem(self)
         self.source.getViewBox().addItem(self)
         self.updateLine()
@@ -544,13 +546,18 @@ class ConnectionItem(GraphicsObject):
         else:
             return
         self.prepareGeometryChange()
-        self.resetTransform()
-        ang = (stop-start).angle(Point(0, 1))
-        if ang is None:
-            ang = 0
-        self.rotate(ang)
-        self.setPos(start)
-        self.length = (start-stop).length()
+        
+        self.path = QtGui.QPainterPath()
+        self.path.moveTo(start)
+        self.path.cubicTo(Point(stop.x(), start.y()), Point(start.x(), stop.y()), Point(stop.x(), stop.y()))
+        self.shapePath = None
+        #self.resetTransform()
+        #ang = (stop-start).angle(Point(0, 1))
+        #if ang is None:
+            #ang = 0
+        #self.rotate(ang)
+        #self.setPos(start)
+        #self.length = (start-stop).length()
         self.update()
         #self.line.setLine(start.x(), start.y(), stop.x(), stop.y())
 
@@ -582,12 +589,23 @@ class ConnectionItem(GraphicsObject):
             
             
     def boundingRect(self):
-        #return self.line.boundingRect()
-        px = self.pixelWidth()
-        return QtCore.QRectF(-5*px, 0, 10*px, self.length)
+        return self.shape().boundingRect()
+        ##return self.line.boundingRect()
+        #px = self.pixelWidth()
+        #return QtCore.QRectF(-5*px, 0, 10*px, self.length)
+    def viewRangeChanged(self):
+        self.shapePath = None
+        self.prepareGeometryChange()
         
-    #def shape(self):
-        #return self.line.shape()
+    def shape(self):
+        if self.shapePath is None:
+            if self.path is None:
+                return QtGui.QPainterPath()
+            stroker = QtGui.QPainterPathStroker()
+            px = self.pixelWidth()
+            stroker.setWidth(px*8)
+            self.shapePath = stroker.createStroke(self.path)
+        return self.shapePath
         
     def paint(self, p, *args):
         if self.isSelected():
@@ -598,4 +616,6 @@ class ConnectionItem(GraphicsObject):
             else:
                 p.setPen(fn.mkPen(100, 100, 250, width=1))
                 
-        p.drawLine(0, 0, 0, self.length)
+        #p.drawLine(0, 0, 0, self.length)
+        
+        p.drawPath(self.path)

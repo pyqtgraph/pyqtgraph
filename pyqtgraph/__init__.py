@@ -54,6 +54,7 @@ CONFIG_OPTIONS = {
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'useWeave': True,       ## Use weave to speed up some operations, if it is available
     'weaveDebug': False,    ## Print full error message if weave compile fails
+    'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
 } 
 
 
@@ -190,9 +191,20 @@ from .SignalProxy import *
 from .colormap import *
 from .ptime import time
 
+##############################################################
+## PyQt and PySide both are prone to crashing on exit. 
+## There are two general approaches to dealing with this:
+##  1. Install atexit handlers that assist in tearing down to avoid crashes.
+##     This helps, but is never perfect.
+##  2. Terminate the process before python starts tearing down
+##     This is potentially dangerous
 
+## Attempts to work around exit crashes:
 import atexit
 def cleanup():
+    if not getConfigOption('exitCleanup'):
+        return
+    
     ViewBox.quit()  ## tell ViewBox that it doesn't need to deregister views anymore.
     
     ## Workaround for Qt exit crash:
@@ -211,6 +223,38 @@ def cleanup():
             continue
 atexit.register(cleanup)
 
+
+## Optional function for exiting immediately (with some manual teardown)
+def exit():
+    """
+    Causes python to exit without garbage-collecting any objects, and thus avoids
+    calling object destructor methods. This is a sledgehammer workaround for 
+    a variety of bugs in PyQt and Pyside that cause crashes on exit.
+    
+    This function does the following in an attempt to 'safely' terminate
+    the process:
+    
+    * Invoke atexit callbacks
+    * Close all open file handles
+    * os._exit()
+    
+    Note: there is some potential for causing damage with this function if you
+    are using objects that _require_ their destructors to be called (for example,
+    to properly terminate log files, disconnect from devices, etc). Situations
+    like this are probably quite rare, but use at your own risk.
+    """
+    
+    ## first disable our own cleanup function; won't be needing it.
+    setConfigOptions(exitCleanup=False)
+    
+    ## invoke atexit callbacks
+    atexit._run_exitfuncs()
+    
+    ## close file handles
+    os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
+    
+    os._exit(os.EX_OK)
+    
 
 
 ## Convenience functions for command-line use

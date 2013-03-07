@@ -1046,10 +1046,10 @@ class ViewBox(GraphicsWidget):
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                if xr is None or xr == (None, None):
+                if xr is None or (xr[0] is None and xr[1] is None):
                     useX = False
                     xr = (0,0)
-                if yr is None or yr == (None, None):
+                if yr is None or (yr[0] is None and yr[1] is None):
                     useY = False
                     yr = (0,0)
 

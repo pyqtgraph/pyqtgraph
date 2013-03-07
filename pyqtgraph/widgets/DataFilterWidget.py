@@ -92,14 +92,18 @@ class RangeFilterItem(ptree.types.SimpleParameter):
             
     def generateMask(self, data):
         vals = data[self.fieldName]
-        return (vals >= mn) & (vals < mx)  ## Use inclusive minimum and non-inclusive maximum. This makes it easier to create non-overlapping selections
+        return (vals >= self['Min']) & (vals < self['Max'])  ## Use inclusive minimum and non-inclusive maximum. This makes it easier to create non-overlapping selections
     
     
 class EnumFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):
         self.fieldName = name
         vals = opts.get('values', [])
-        childs = [{'name': v, 'type': 'bool', 'value': True} for v in vals]
+        childs = []
+        for v in vals:
+            ch = ptree.Parameter.create(name=str(v), type='bool', value=True)
+            ch.maskValue = v
+            childs.append(ch)
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=childs)
@@ -110,6 +114,6 @@ class EnumFilterItem(ptree.types.SimpleParameter):
         for c in self:
             if c.value() is True:
                 continue
-            key = c.name()
+            key = c.maskValue
             mask &= vals != key
         return mask

@@ -169,6 +169,13 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         self.fieldName = name
         vals = opts.get('values', [])
         childs = [{'name': v, 'type': 'color'} for v in vals]
+        
+        childs = []
+        for v in vals:
+            ch = ptree.Parameter.create(name=str(v), type='color')
+            ch.maskValue = v
+            childs.append(ch)
+        
         ptree.types.GroupParameter.__init__(self, 
             name=name, autoIncrementName=True, removable=True, renamable=True, 
             children=[
@@ -191,8 +198,7 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         colors[:] = default
         
         for v in self.param('Values'):
-            n = v.name()
-            mask = data == n
+            mask = data == v.maskValue
             c = np.array(fn.colorTuple(v.value())) / 255.
             colors[mask] = c
         #scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
