@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-Simple example demonstrating a button which displays a colored rectangle
-and allows the user to select a new color by clicking on the button.
+Simple demonstration of TableWidget, which is an extension of QTableWidget
+that automatically displays a variety of tabluar data formats.
 """
-
 import initExample ## Add path to library (just for examples; you do not need this)
-
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 app = QtGui.QApplication([])
-win = QtGui.QMainWindow()
-btn = pg.ColorButton()
-win.setCentralWidget(btn)
-win.show()
-win.setWindowTitle('pyqtgraph example: ColorButton')
 
-def change(btn):
-    print("change", btn.color())
-def done(btn):
-    print("done", btn.color())
+w = pg.TableWidget()
+w.show()
+w.resize(500,500)
+w.setWindowTitle('pyqtgraph example: TableWidget')
 
-btn.sigColorChanging.connect(change)
-btn.sigColorChanged.connect(done)
+    
+data = np.array([
+    (1,   1.6,   'x'),
+    (3,   5.4,   'y'),
+    (8,   12.5,  'z'),
+    (443, 1e-12, 'w'),
+    ], dtype=[('Column 1', int), ('Column 2', float), ('Column 3', object)])
+    
+w.setData(data)
+
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

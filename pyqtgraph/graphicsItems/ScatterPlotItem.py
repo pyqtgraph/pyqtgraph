@@ -495,8 +495,8 @@ class ScatterPlotItem(GraphicsObject):
             
         if isinstance(size, np.ndarray) or isinstance(size, list):
             sizes = size
-            if kargs['mask'] is not None:
-                sizes = sizes[kargs['mask']]
+            if mask is not None:
+                sizes = sizes[mask]
             if len(sizes) != len(dataSet):
                 raise Exception("Number of sizes does not match number of points (%d != %d)" % (len(sizes), len(dataSet)))
             dataSet['size'] = sizes
@@ -508,13 +508,13 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
         
-    def setPointData(self, data, dataSet=None):
+    def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
             
         if isinstance(data, np.ndarray) or isinstance(data, list):
-            if kargs['mask'] is not None:
-                data = data[kargs['mask']]
+            if mask is not None:
+                data = data[mask]
             if len(data) != len(dataSet):
                 raise Exception("Length of meta data does not match number of points (%d != %d)" % (len(data), len(dataSet)))
         
@@ -683,6 +683,9 @@ class ScatterPlotItem(GraphicsObject):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
             x,y,w,h = rec['fragCoords']
+            if abs(w) > 10000 or abs(h) > 10000:
+                print self.data
+                raise Exception("fragment corrupt")
             rect = QtCore.QRectF(y, x, h, w)
             self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
             

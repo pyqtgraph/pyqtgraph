@@ -140,6 +140,7 @@ p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(rest
 t = ParameterTree()
 t.setParameters(p, showTop=False)
 t.show()
+t.setWindowTitle('pyqtgraph example: Parameter Tree')
 t.resize(400,800)
 t2 = ParameterTree()
 t2.setParameters(p, showTop=False)

@@ -50,6 +50,7 @@ class ViewBox(GraphicsWidget):
     #sigActionPositionChanged = QtCore.Signal(object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
+    sigResized = QtCore.Signal(object)
     
     ## mouse modes
     PanMode = 3
@@ -304,6 +305,7 @@ class ViewBox(GraphicsWidget):
         #self._itemBoundsCache.clear()
         #self.linkedXChanged()
         #self.linkedYChanged()
+        self.sigResized.emit(self)
         
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -451,7 +453,7 @@ class ViewBox(GraphicsWidget):
         if item is None:
             bounds = self.childrenBoundingRect(items=items)
         else:
-            print "Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead."
+            print("Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead.")
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
             
         if bounds is not None:
@@ -1046,10 +1048,10 @@ class ViewBox(GraphicsWidget):
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                if xr is None or (xr[0] is None and xr[1] is None):
+                if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
                     useX = False
                     xr = (0,0)
-                if yr is None or (yr[0] is None and yr[1] is None):
+                if yr is None or (yr[0] is None and yr[1] is None) or np.isnan(yr).any() or np.isinf(yr).any():
                     useY = False
                     yr = (0,0)
 

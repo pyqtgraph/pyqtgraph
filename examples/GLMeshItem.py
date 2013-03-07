@@ -14,7 +14,7 @@ import pyqtgraph.opengl as gl
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
-
+w.setWindowTitle('pyqtgraph example: GLMeshItem')
 w.setCameraPosition(distance=40)
 
 g = gl.GLGridItem()

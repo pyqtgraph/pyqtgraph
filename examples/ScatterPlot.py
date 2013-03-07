@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Example demonstrating a variety of scatter plot features.
+"""
+
+
+
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
@@ -12,6 +18,7 @@ mw.resize(800,800)
 view = pg.GraphicsLayoutWidget()  ## GraphicsView with GraphicsLayout inserted by default
 mw.setCentralWidget(view)
 mw.show()
+mw.setWindowTitle('pyqtgraph example: ScatterPlot')
 
 ## create four areas to add plots
 w1 = view.addPlot()

@@ -29,6 +29,7 @@ app = QtGui.QApplication([])
 #mw.resize(800,800)
 
 win = QtGui.QMainWindow()
+win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
 ui = VideoTemplate.Ui_MainWindow()
 ui.setupUi(win)
 win.show()

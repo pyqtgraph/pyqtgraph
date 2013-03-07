@@ -18,6 +18,7 @@ app = QtGui.QApplication([])
 
 ## Create main window with a grid layout inside
 win = QtGui.QMainWindow()
+win.setWindowTitle('pyqtgraph example: FlowchartCustomNode')
 cw = QtGui.QWidget()
 win.setCentralWidget(cw)
 layout = QtGui.QGridLayout()

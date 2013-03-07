@@ -1109,10 +1109,15 @@ def arrayToQPath(x, y, connect='all'):
         arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
         #prof.mark('footer')
         # create datastream object and stream into path
-        buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+        
+        ## Avoiding this method because QByteArray(str) leaks memory in PySide
+        #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+        
+        path.strn = arr.data[12:lastInd+4] # make sure data doesn't run away
+        buf = QtCore.QByteArray.fromRawData(path.strn)
         #prof.mark('create buffer')
         ds = QtCore.QDataStream(buf)
-        #prof.mark('create datastream')
+            
         ds >> path
         #prof.mark('load')
         

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-## 
-## This example demonstrates the creation of a plot with a customized
-## AxisItem and ViewBox. 
-## 
+"""
+This example demonstrates the creation of a plot with a customized
+AxisItem and ViewBox. 
+"""
 
 
 import initExample ## Add path to library (just for examples; you do not need this)
@@ -72,6 +72,7 @@ pw = pg.PlotWidget(viewBox=vb, axisItems={'bottom': axis}, enableMenu=False, tit
 dates = np.arange(8) * (3600*24*356)
 pw.plot(x=dates, y=[1,6,2,4,3,5,6,8], symbol='o')
 pw.show()
+pw.setWindowTitle('pyqtgraph example: customPlot')
 
 r = pg.PolyLineROI([(0,0), (10, 10)])
 pw.addItem(r)
