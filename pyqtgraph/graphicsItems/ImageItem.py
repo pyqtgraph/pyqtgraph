@@ -249,7 +249,7 @@ class ImageItem(GraphicsObject):
 
     def render(self):
         prof = debug.Profiler('ImageItem.render', disabled=True)
-        if self.image is None:
+        if self.image is None or self.image.size == 0:
             return
         if isinstance(self.lut, collections.Callable):
             lut = self.lut(self.image)
@@ -269,6 +269,8 @@ class ImageItem(GraphicsObject):
             return
         if self.qimage is None:
             self.render()
+            if self.qimage is None:
+                return
             prof.mark('render QImage')
         if self.paintMode is not None:
             p.setCompositionMode(self.paintMode)
