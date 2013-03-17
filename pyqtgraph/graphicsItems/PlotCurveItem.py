@@ -112,7 +112,10 @@ class PlotCurveItem(GraphicsObject):
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
-            d2 = d2[mask]
+            #d2 = d2[mask]
+            
+        if len(d) == 0:
+            return (None, None)
 
         ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
