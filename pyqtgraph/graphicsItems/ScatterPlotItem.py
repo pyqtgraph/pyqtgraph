@@ -677,15 +677,12 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         self.fragments = []
-        pts = np.clip(pts, -2**31, 2**31) ## prevent Qt segmentation fault.
+        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
                                           ## Still won't be able to render correctly, though.
         for i in xrange(len(self.data)):
             rec = self.data[i]
             pos = QtCore.QPointF(pts[0,i], pts[1,i])
             x,y,w,h = rec['fragCoords']
-            if abs(w) > 10000 or abs(h) > 10000:
-                print self.data
-                raise Exception("fragment corrupt")
             rect = QtCore.QRectF(y, x, h, w)
             self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
             

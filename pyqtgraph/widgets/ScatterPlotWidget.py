@@ -48,13 +48,15 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.addWidget(self.plot)
         
         self.data = None
+        self.mouseOverField = None
+        self.scatterPlot = None
         self.style = dict(pen=None, symbol='o')
         
         self.fieldList.itemSelectionChanged.connect(self.fieldSelectionChanged)
         self.filter.sigFilterChanged.connect(self.filterChanged)
         self.colorMap.sigColorMapChanged.connect(self.updatePlot)
     
-    def setFields(self, fields):
+    def setFields(self, fields, mouseOverField=None):
         """
         Set the list of field names/units to be processed.
         
@@ -62,6 +64,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
         :func:`ColorMapWidget.setFields <pyqtgraph.widgets.ColorMapWidget.ColorMapParameter.setFields>`
         """
         self.fields = OrderedDict(fields)
+        self.mouseOverField = mouseOverField
         self.fieldList.clear()
         for f,opts in fields:
             item = QtGui.QListWidgetItem(f)
@@ -158,7 +161,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
             axis = self.plot.getAxis(['bottom', 'left'][i])
             if xy[i] is not None and xy[i].dtype.kind in ('S', 'O'):
                 vals = self.fields[sel[i]].get('values', list(set(xy[i])))
-                xy[i] = np.array([vals.index(x) if x in vals else None for x in xy[i]], dtype=float)
+                xy[i] = np.array([vals.index(x) if x in vals else len(vals) for x in xy[i]], dtype=float)
                 axis.setTicks([list(enumerate(vals))])
             else:
                 axis.setTicks(None)  # reset to automatic ticking
@@ -179,7 +182,16 @@ class ScatterPlotWidget(QtGui.QSplitter):
         else:
             y = y[mask]
                 
-            
-        self.plot.plot(x, y, **style)
+        if self.scatterPlot is not None:
+            try:
+                self.scatterPlot.sigPointsClicked.disconnect(self.plotClicked)
+            except:
+                pass
+        self.scatterPlot = self.plot.plot(x, y, data=data[mask], **style)
+        self.scatterPlot.sigPointsClicked.connect(self.plotClicked)
         
         
+    def plotClicked(self, plot, points):
+        pass
+
+

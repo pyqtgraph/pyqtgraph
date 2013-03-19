@@ -104,6 +104,10 @@ class EnumFilterItem(ptree.types.SimpleParameter):
             ch = ptree.Parameter.create(name=str(v), type='bool', value=True)
             ch.maskValue = v
             childs.append(ch)
+        ch = ptree.Parameter.create(name='(other)', type='bool', value=True)
+        ch.maskValue = '__other__'
+        childs.append(ch)
+            
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=childs)
@@ -111,9 +115,14 @@ class EnumFilterItem(ptree.types.SimpleParameter):
     def generateMask(self, data):
         vals = data[self.fieldName]
         mask = np.ones(len(data), dtype=bool)
+        otherMask = np.ones(len(data), dtype=bool)
         for c in self:
-            if c.value() is True:
-                continue
             key = c.maskValue
-            mask &= vals != key
+            if key == '__other__':
+                m = ~otherMask
+            else:
+                m = vals != key
+                otherMask &= m
+            if c.value() is False:
+                mask &= m
         return mask
