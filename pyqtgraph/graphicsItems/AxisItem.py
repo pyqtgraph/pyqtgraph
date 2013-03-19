@@ -314,10 +314,13 @@ class AxisItem(GraphicsWidget):
         view.sigResized.connect(self.linkedViewChanged)
         
     def linkedViewChanged(self, view, newRange=None):
-        if self.orientation in ['right', 'left'] and view.yInverted():
+        if self.orientation in ['right', 'left']:
             if newRange is None:
                 newRange = view.viewRange()[1]
-            self.setRange(*newRange[::-1])
+            if view.yInverted():
+                self.setRange(*newRange[::-1])
+            else:
+                self.setRange(*newRange)
         else:
             if newRange is None:
                 newRange = view.viewRange()[0]
@@ -330,18 +333,12 @@ class AxisItem(GraphicsWidget):
             ## extend rect if ticks go in negative direction
             ## also extend to account for text that flows past the edges
             if self.orientation == 'left':
-                #rect.setRight(rect.right() - min(0,self.tickLength))
-                #rect.setTop(rect.top() - 15)
-                #rect.setBottom(rect.bottom() + 15)
                 rect = rect.adjusted(0, -15, -min(0,self.tickLength), 15)
             elif self.orientation == 'right':
-                #rect.setLeft(rect.left() + min(0,self.tickLength))
                 rect = rect.adjusted(min(0,self.tickLength), -15, 0, 15)
             elif self.orientation == 'top':
-                #rect.setBottom(rect.bottom() - min(0,self.tickLength))
                 rect = rect.adjusted(-15, 0, 15, -min(0,self.tickLength))
             elif self.orientation == 'bottom':
-                #rect.setTop(rect.top() + min(0,self.tickLength))
                 rect = rect.adjusted(-15, min(0,self.tickLength), 15, 0)
             return rect
         else:

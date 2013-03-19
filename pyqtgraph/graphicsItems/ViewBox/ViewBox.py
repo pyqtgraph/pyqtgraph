@@ -467,12 +467,32 @@ class ViewBox(GraphicsWidget):
             padding = 0.02
         return padding
             
-    def scaleBy(self, s, center=None):
+    def scaleBy(self, s=None, center=None, x=None, y=None):
         """
         Scale by *s* around given center point (or center of view).
-        *s* may be a Point or tuple (x, y)
+        *s* may be a Point or tuple (x, y).
+        
+        Optionally, x or y may be specified individually. This allows the other 
+        axis to be left unaffected (note that using a scale factor of 1.0 may
+        cause slight changes due to floating-point error).
         """
-        scale = Point(s)
+        if s is not None:
+            scale = Point(s)
+        else:
+            scale = [x, y]
+        
+        affect = [True, True]
+        if scale[0] is None and scale[1] is None:
+            return
+        elif scale[0] is None:
+            affect[0] = False
+            scale[0] = 1.0
+        elif scale[1] is None:
+            affect[1] = False
+            scale[1] = 1.0
+            
+        scale = Point(scale)
+            
         if self.state['aspectLocked'] is not False:
             scale[0] = self.state['aspectLocked'] * scale[1]
 
@@ -481,21 +501,37 @@ class ViewBox(GraphicsWidget):
             center = Point(vr.center())
         else:
             center = Point(center)
+        
         tl = center + (vr.topLeft()-center) * scale
         br = center + (vr.bottomRight()-center) * scale
-        self.setRange(QtCore.QRectF(tl, br), padding=0)
         
-    def translateBy(self, t):
+        if not affect[0]:
+            self.setYRange(tl.y(), br.y(), padding=0)
+        elif not affect[1]:
+            self.setXRange(tl.x(), br.x(), padding=0)
+        else:
+            self.setRange(QtCore.QRectF(tl, br), padding=0)
+        
+    def translateBy(self, t=None, x=None, y=None):
         """
         Translate the view by *t*, which may be a Point or tuple (x, y).
-        """
-        t = Point(t)
-        #if viewCoords:  ## scale from pixels
-            #o = self.mapToView(Point(0,0))
-            #t = self.mapToView(t) - o
         
+        Alternately, x or y may be specified independently, leaving the other
+        axis unchanged (note that using a translation of 0 may still cause
+        small changes due to floating-point error).
+        """
         vr = self.targetRect()
-        self.setRange(vr.translated(t), padding=0)
+        if t is not None:
+            t = Point(t)
+            self.setRange(vr.translated(t), padding=0)
+        elif x is not None:
+            x1, x2 = vr.left()+x, vr.right()+x
+            self.setXRange(x1, x2, padding=0)
+        elif y is not None:
+            y1, y2 = vr.top()+y, vr.bottom()+y
+            self.setYRange(y1, y2, padding=0)
+            
+        
         
     def enableAutoRange(self, axis=None, enable=True):
         """
@@ -935,7 +971,10 @@ class ViewBox(GraphicsWidget):
             else:
                 tr = dif*mask
                 tr = self.mapToView(tr) - self.mapToView(Point(0,0))
-                self.translateBy(tr)
+                x = tr.x() if mask[0] == 1 else None
+                y = tr.y() if mask[1] == 1 else None
+                
+                self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
@@ -950,8 +989,11 @@ class ViewBox(GraphicsWidget):
             tr = self.childGroup.transform()
             tr = fn.invertQTransform(tr)
             
+            x = s[0] if mask[0] == 1 else None
+            y = s[1] if mask[1] == 1 else None
+            
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
-            self.scaleBy(s, center)
+            self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def keyPressEvent(self, ev):

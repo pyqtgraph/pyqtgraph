@@ -802,7 +802,11 @@ class ROI(GraphicsObject):
         Also returns the transform which maps the ROI into data coordinates.
         
         If returnSlice is set to False, the function returns a pair of tuples with the values that would have 
-        been used to generate the slice objects. ((ax0Start, ax0Stop), (ax1Start, ax1Stop))"""
+        been used to generate the slice objects. ((ax0Start, ax0Stop), (ax1Start, ax1Stop))
+        
+        If the slice can not be computed (usually because the scene/transforms are not properly
+        constructed yet), then the method returns None.
+        """
         #print "getArraySlice"
         
         ## Determine shape of array along ROI axes
@@ -810,8 +814,11 @@ class ROI(GraphicsObject):
         #print "  dshape", dShape
         
         ## Determine transform that maps ROI bounding box to image coordinates
-        tr = self.sceneTransform() * fn.invertQTransform(img.sceneTransform())
-        
+        try:
+            tr = self.sceneTransform() * fn.invertQTransform(img.sceneTransform())
+        except np.linalg.linalg.LinAlgError:
+            return None
+            
         ## Modify transform to scale from image coords to data coords
         #m = QtGui.QTransform()
         tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
@@ -1737,11 +1744,34 @@ class PolyLineROI(ROI):
 
     def shape(self):
         p = QtGui.QPainterPath()
+        if len(self.handles) == 0:
+            return p
         p.moveTo(self.handles[0]['item'].pos())
         for i in range(len(self.handles)):
             p.lineTo(self.handles[i]['item'].pos())
         p.lineTo(self.handles[0]['item'].pos())
-        return p    
+        return p        
+
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+        sl = self.getArraySlice(data, img, axes=(0,1))
+        if sl is None:
+            return None
+        sliced = data[sl[0]]
+        im = QtGui.QImage(sliced.shape[axes[0]], sliced.shape[axes[1]], QtGui.QImage.Format_ARGB32)
+        im.fill(0x0)
+        p = QtGui.QPainter(im)
+        p.setPen(fn.mkPen(None))
+        p.setBrush(fn.mkBrush('w'))
+        p.setTransform(self.itemTransform(img)[0])
+        bounds = self.mapRectToItem(img, self.boundingRect())
+        p.translate(-bounds.left(), -bounds.top()) 
+        p.drawPath(self.shape())
+        p.end()
+        mask = fn.imageToArray(im)[:,:,0].astype(float) / 255.
+        shape = [1] * data.ndim
+        shape[axes[0]] = sliced.shape[axes[0]]
+        shape[axes[1]] = sliced.shape[axes[1]]
+        return sliced * mask
 
 
 class LineSegmentROI(ROI):
@@ -1845,8 +1875,8 @@ class SpiralROI(ROI):
         #for h in self.handles:
             #h['pos'] = h['item'].pos()/self.state['size'][0]
             
-    def stateChanged(self):
-        ROI.stateChanged(self)
+    def stateChanged(self, finish=True):
+        ROI.stateChanged(self, finish=finish)
         if len(self.handles) > 1:
             self.path = QtGui.QPainterPath()
             h0 = Point(self.handles[0]['item'].pos()).length()
