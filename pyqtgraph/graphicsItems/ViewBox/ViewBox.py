@@ -524,12 +524,13 @@ class ViewBox(GraphicsWidget):
         if t is not None:
             t = Point(t)
             self.setRange(vr.translated(t), padding=0)
-        elif x is not None:
-            x1, x2 = vr.left()+x, vr.right()+x
-            self.setXRange(x1, x2, padding=0)
-        elif y is not None:
-            y1, y2 = vr.top()+y, vr.bottom()+y
-            self.setYRange(y1, y2, padding=0)
+        else:
+            if x is not None:
+                x1, x2 = vr.left()+x, vr.right()+x
+                self.setXRange(x1, x2, padding=0)
+            if y is not None:
+                y1, y2 = vr.top()+y, vr.bottom()+y
+                self.setYRange(y1, y2, padding=0)
             
         
         
