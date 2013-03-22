@@ -380,7 +380,7 @@ class AxisItem(GraphicsWidget):
         This method is called whenever the axis needs to be redrawn and is a 
         good method to override in subclasses that require control over tick locations.
         
-        The return value must be a list of three tuples::
+        The return value must be a list of tuples, one for each set of ticks::
         
             [
                 (major tick spacing, offset),

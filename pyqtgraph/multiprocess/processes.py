@@ -79,7 +79,11 @@ class Process(RemoteEventHandler):
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
-        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
+        
+        ## note: we need all three streams to have their own PIPE due to this bug:
+        ## http://bugs.python.org/issue3905 
+        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must send pid to child because windows does not have getppid
