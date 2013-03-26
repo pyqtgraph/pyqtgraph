@@ -84,13 +84,24 @@ class PlotDataItem(GraphicsObject):
         
         **Optimization keyword arguments:**
         
-            ==========   =====================================================================
+            ============ =====================================================================
             antialias    (bool) By default, antialiasing is disabled to improve performance.
                          Note that in some cases (in particluar, when pxMode=True), points 
                          will be rendered antialiased even if this is set to False.
+            decimate     (int) Sub-sample data by selecting every nth sample before plotting
+            onlyVisible  (bool) If True, only plot data that is visible within the X range of
+                         the containing ViewBox. This can improve performance when plotting
+                         very large data sets where only a fraction of the data is visible
+                         at any time.
+            autoResample (bool) If True, resample the data before plotting to avoid plotting
+                         multiple line segments per pixel. This can improve performance when
+                         viewing very high-density data, but increases the initial overhead 
+                         and memory usage.
+            sampleRate   (float) The sample rate of the data along the X axis (for data with
+                         a fixed sample rate). Providing this value improves performance of
+                         the *onlyVisible* and *autoResample* options.
             identical    *deprecated*
-            decimate     (int) sub-sample data by selecting every nth sample before plotting
-            ==========   =====================================================================
+            ============ =====================================================================
         
         **Meta-info keyword arguments:**
         

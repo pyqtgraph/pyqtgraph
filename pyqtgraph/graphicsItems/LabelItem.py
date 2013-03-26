@@ -2,11 +2,12 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.functions as fn
 import pyqtgraph as pg
 from .GraphicsWidget import GraphicsWidget
+from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 
 
 __all__ = ['LabelItem']
 
-class LabelItem(GraphicsWidget):
+class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     GraphicsWidget displaying text.
     Used mainly as axis labels, titles, etc.
@@ -17,6 +18,7 @@ class LabelItem(GraphicsWidget):
     
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
+        GraphicsWidgetAnchor.__init__(self)
         self.item = QtGui.QGraphicsTextItem(self)
         self.opts = {
             'color': None,

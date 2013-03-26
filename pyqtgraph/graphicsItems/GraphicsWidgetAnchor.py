@@ -5,7 +5,9 @@ from ..Point import Point
 class GraphicsWidgetAnchor(object):
     """
     Class used to allow GraphicsWidgets to anchor to a specific position on their
-    parent. 
+    parent. The item will be automatically repositioned if the parent is resized. 
+    This is used, for example, to anchor a LegendItem to a corner of its parent 
+    PlotItem.
 
     """
 

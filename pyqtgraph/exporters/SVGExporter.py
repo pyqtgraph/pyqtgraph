@@ -304,7 +304,36 @@ def _generateItemSvg(item, nodes=None, root=None):
 
 def correctCoordinates(node, item):
     ## Remove transformation matrices from <g> tags by applying matrix to coordinates inside.
+    ## Each item is represented by a single top-level group with one or more groups inside.
+    ## Each inner group contains one or more drawing primitives, possibly of different types.
     groups = node.getElementsByTagName('g')
+    
+    ## Since we leave text unchanged, groups which combine text and non-text primitives must be split apart.
+    ## (if at some point we start correcting text transforms as well, then it should be safe to remove this)
+    groups2 = []
+    for grp in groups:
+        subGroups = [grp.cloneNode(deep=False)]
+        textGroup = None
+        for ch in grp.childNodes[:]:
+            if isinstance(ch, xml.Element):
+                if textGroup is None:
+                    textGroup = ch.tagName == 'text'
+                if ch.tagName == 'text':
+                    if textGroup is False:
+                        subGroups.append(grp.cloneNode(deep=False))
+                        textGroup = True
+                else:
+                    if textGroup is True:
+                        subGroups.append(grp.cloneNode(deep=False))
+                        textGroup = False
+            subGroups[-1].appendChild(ch)
+        groups2.extend(subGroups)
+        for sg in subGroups:
+            node.insertBefore(sg, grp)
+        node.removeChild(grp)
+    groups = groups2
+        
+    
     for grp in groups:
         matrix = grp.getAttribute('transform')
         match = re.match(r'matrix\((.*)\)', matrix)
@@ -374,7 +403,6 @@ def correctCoordinates(node, item):
             
         if removeTransform:
             grp.removeAttribute('transform')
-        
 
 def itemTransform(item, root):
     ## Return the transformation mapping item to root

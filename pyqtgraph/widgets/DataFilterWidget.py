@@ -2,6 +2,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.parametertree as ptree
 import numpy as np
 from pyqtgraph.pgcollections import OrderedDict
+import pyqtgraph as pg
 
 __all__ = ['DataFilterWidget']
 
@@ -22,6 +23,7 @@ class DataFilterWidget(ptree.ParameterTree):
         
         self.setFields = self.params.setFields
         self.filterData = self.params.filterData
+        self.describe = self.params.describe
         
     def filterChanged(self):
         self.sigFilterChanged.emit(self)
@@ -70,18 +72,28 @@ class DataFilterParameter(ptree.types.GroupParameter):
         for fp in self:
             if fp.value() is False:
                 continue
-            mask &= fp.generateMask(data)
+            mask &= fp.generateMask(data, mask.copy())
             #key, mn, mx = fp.fieldName, fp['Min'], fp['Max']
             
             #vals = data[key]
             #mask &= (vals >= mn)
             #mask &= (vals < mx)  ## Use inclusive minimum and non-inclusive maximum. This makes it easier to create non-overlapping selections
         return mask
+    
+    def describe(self):
+        """Return a list of strings describing the currently enabled filters."""
+        desc = []
+        for fp in self:
+            if fp.value() is False:
+                continue
+            desc.append(fp.describe())
+        return desc
 
 class RangeFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):
         self.fieldName = name
         units = opts.get('units', '')
+        self.units = units
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=[
@@ -90,26 +102,49 @@ class RangeFilterItem(ptree.types.SimpleParameter):
                 dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
             ])
             
-    def generateMask(self, data):
-        vals = data[self.fieldName]
-        return (vals >= mn) & (vals < mx)  ## Use inclusive minimum and non-inclusive maximum. This makes it easier to create non-overlapping selections
+    def generateMask(self, data, mask):
+        vals = data[self.fieldName][mask]
+        mask[mask] = (vals >= self['Min']) & (vals < self['Max'])  ## Use inclusive minimum and non-inclusive maximum. This makes it easier to create non-overlapping selections
+        return mask
     
+    def describe(self):
+        return "%s < %s < %s" % (pg.siFormat(self['Min'], suffix=self.units), self.fieldName, pg.siFormat(self['Max'], suffix=self.units))
     
 class EnumFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):
         self.fieldName = name
         vals = opts.get('values', [])
-        childs = [{'name': v, 'type': 'bool', 'value': True} for v in vals]
+        childs = []
+        if isinstance(vals, list):
+            vals = OrderedDict([(v,str(v)) for v in vals])
+        for val,vname in vals.items():
+            ch = ptree.Parameter.create(name=vname, type='bool', value=True)
+            ch.maskValue = val
+            childs.append(ch)
+        ch = ptree.Parameter.create(name='(other)', type='bool', value=True)
+        ch.maskValue = '__other__'
+        childs.append(ch)
+            
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=childs)
     
-    def generateMask(self, data):
-        vals = data[self.fieldName]
-        mask = np.ones(len(data), dtype=bool)
+    def generateMask(self, data, startMask):
+        vals = data[self.fieldName][startMask]
+        mask = np.ones(len(vals), dtype=bool)
+        otherMask = np.ones(len(vals), dtype=bool)
         for c in self:
-            if c.value() is True:
-                continue
-            key = c.name()
-            mask &= vals != key
-        return mask
+            key = c.maskValue
+            if key == '__other__':
+                m = ~otherMask
+            else:
+                m = vals != key
+                otherMask &= m
+            if c.value() is False:
+                mask &= m
+        startMask[startMask] = mask
+        return startMask
+
+    def describe(self):
+        vals = [ch.name() for ch in self if ch.value() is True]
+        return "%s: %s" % (self.fieldName, ', '.join(vals))
