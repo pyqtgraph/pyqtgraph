@@ -1322,6 +1322,8 @@ class ViewBox(GraphicsWidget):
                 k.destroyed.disconnect()
             except RuntimeError:  ## signal is already disconnected.
                 pass
+            except TypeError:  ## view has already been deleted (?)
+                pass
             
     def locate(self, item, timeout=3.0, children=False):
         """
