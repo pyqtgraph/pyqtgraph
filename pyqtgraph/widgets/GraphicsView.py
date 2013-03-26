@@ -181,8 +181,9 @@ class GraphicsView(QtGui.QGraphicsView):
         if self.centralWidget is not None:
             self.scene().removeItem(self.centralWidget)
         self.centralWidget = item
-        self.sceneObj.addItem(item)
-        self.resizeEvent(None)
+        if item is not None:
+            self.sceneObj.addItem(item)
+            self.resizeEvent(None)
         
     def addItem(self, *args):
         return self.scene().addItem(*args)
@@ -272,7 +273,8 @@ class GraphicsView(QtGui.QGraphicsView):
             scaleChanged = True
         self.range = newRect
         #print "New Range:", self.range
-        self.centralWidget.setGeometry(self.range)
+        if self.centralWidget is not None:
+            self.centralWidget.setGeometry(self.range)
         self.updateMatrix(propagate)
         if scaleChanged:
             self.sigScaleChanged.emit(self)

@@ -950,7 +950,8 @@ class ViewBox(GraphicsWidget):
         dif = dif * -1
 
         ## Ignore axes if mouse is disabled
-        mask = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mask = mouseEnabled.copy()
         if axis is not None:
             mask[1-axis] = 0.0
 
@@ -990,8 +991,8 @@ class ViewBox(GraphicsWidget):
             tr = self.childGroup.transform()
             tr = fn.invertQTransform(tr)
             
-            x = s[0] if mask[0] == 1 else None
-            y = s[1] if mask[1] == 1 else None
+            x = s[0] if mouseEnabled[0] == 1 else None
+            y = s[1] if mouseEnabled[1] == 1 else None
             
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self.scaleBy(x=x, y=y, center=center)
@@ -1320,6 +1321,8 @@ class ViewBox(GraphicsWidget):
             try:
                 k.destroyed.disconnect()
             except RuntimeError:  ## signal is already disconnected.
+                pass
+            except TypeError:  ## view has already been deleted (?)
                 pass
             
     def locate(self, item, timeout=3.0, children=False):
