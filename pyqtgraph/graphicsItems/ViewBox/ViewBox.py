@@ -524,12 +524,13 @@ class ViewBox(GraphicsWidget):
         if t is not None:
             t = Point(t)
             self.setRange(vr.translated(t), padding=0)
-        elif x is not None:
-            x1, x2 = vr.left()+x, vr.right()+x
-            self.setXRange(x1, x2, padding=0)
-        elif y is not None:
-            y1, y2 = vr.top()+y, vr.bottom()+y
-            self.setYRange(y1, y2, padding=0)
+        else:
+            if x is not None:
+                x1, x2 = vr.left()+x, vr.right()+x
+                self.setXRange(x1, x2, padding=0)
+            if y is not None:
+                y1, y2 = vr.top()+y, vr.bottom()+y
+                self.setYRange(y1, y2, padding=0)
             
         
         
@@ -1090,10 +1091,10 @@ class ViewBox(GraphicsWidget):
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
+                if xr is None or xr == (None, None) or np.isnan(xr).any() or np.isinf(xr).any():
                     useX = False
                     xr = (0,0)
-                if yr is None or (yr[0] is None and yr[1] is None) or np.isnan(yr).any() or np.isinf(yr).any():
+                if yr is None or yr == (None, None) or np.isnan(yr).any() or np.isinf(yr).any():
                     useY = False
                     yr = (0,0)
 

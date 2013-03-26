@@ -72,7 +72,8 @@ class ColorMapParameter(ptree.types.GroupParameter):
                        (see *values* option).
         units          String indicating the units of the data for this field.
         values         List of unique values for which the user may assign a 
-                       color when mode=='enum'.
+                       color when mode=='enum'. Optionally may specify a dict 
+                       instead {value: name}.
         ============== ============================================================
         """
         self.fields = OrderedDict(fields)
@@ -168,12 +169,14 @@ class EnumColorMapItem(ptree.types.GroupParameter):
     def __init__(self, name, opts):
         self.fieldName = name
         vals = opts.get('values', [])
+        if isinstance(vals, list):
+            vals = OrderedDict([(v,str(v)) for v in vals])
         childs = [{'name': v, 'type': 'color'} for v in vals]
         
         childs = []
-        for v in vals:
-            ch = ptree.Parameter.create(name=str(v), type='color')
-            ch.maskValue = v
+        for val,vname in vals.items():
+            ch = ptree.Parameter.create(name=vname, type='color')
+            ch.maskValue = val
             childs.append(ch)
         
         ptree.types.GroupParameter.__init__(self, 

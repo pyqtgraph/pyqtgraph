@@ -740,6 +740,7 @@ class ScatterPlotItem(GraphicsObject):
                     drawSymbol(p2, *self.getSpotOpts(rec, scale))
                 p2.end()
                 
+            p.setRenderHint(p.Antialiasing, aa)
             self.picture.play(p)
         
     def points(self):

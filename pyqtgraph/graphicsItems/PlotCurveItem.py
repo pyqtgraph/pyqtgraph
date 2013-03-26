@@ -402,7 +402,6 @@ class PlotCurveItem(GraphicsObject):
             aa = self.opts['antialias']
         
         p.setRenderHint(p.Antialiasing, aa)
-        
             
         if self.opts['brush'] is not None and self.opts['fillLevel'] is not None:
             if self.fillPath is None:

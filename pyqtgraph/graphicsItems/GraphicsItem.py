@@ -446,6 +446,14 @@ class GraphicsItem(object):
                 #print "   --> ", ch2.scene()
             #self.setChildScene(ch2)
 
+    def parentChanged(self):
+        """Called when the item's parent has changed. 
+        This method handles connecting / disconnecting from ViewBox signals
+        to make sure viewRangeChanged works properly. It should generally be 
+        extended, not overridden."""
+        self._updateView()
+        
+
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
         ## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
@@ -496,6 +504,12 @@ class GraphicsItem(object):
         ## inform children that their view might have changed
         self._replaceView(oldView)
         
+        self.viewChanged(view, oldView)
+        
+    def viewChanged(self, view, oldView):
+        """Called when this item's view has changed
+        (ie, the item has been added to or removed from a ViewBox)"""
+        pass
         
     def _replaceView(self, oldView, item=None):
         if item is None:

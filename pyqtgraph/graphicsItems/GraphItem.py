@@ -103,6 +103,8 @@ class GraphItem(GraphicsObject):
     def paint(self, p, *args):
         if self.picture == None:
             self.generatePicture()
+        if pg.getConfigOption('antialias') is True:
+            p.setRenderHint(p.Antialiasing)
         self.picture.play(p)
         
     def boundingRect(self):

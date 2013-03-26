@@ -10,6 +10,9 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+# Enable antialiasing for prettier plots
+pg.setConfigOptions(antialias=True)
+
 w = pg.GraphicsWindow()
 w.setWindowTitle('pyqtgraph example: GraphItem')
 v = w.addViewBox()

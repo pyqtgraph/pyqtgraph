@@ -6,6 +6,7 @@ import pyqtgraph.parametertree as ptree
 import pyqtgraph.functions as fn
 import numpy as np
 from pyqtgraph.pgcollections import OrderedDict
+import pyqtgraph as pg
 
 __all__ = ['ScatterPlotWidget']
 
@@ -46,6 +47,12 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.ctrlPanel.addWidget(self.fieldList)
         self.ctrlPanel.addWidget(self.ptree)
         self.addWidget(self.plot)
+        
+        bg = pg.mkColor(pg.getConfigOption('background'))
+        bg.setAlpha(150)
+        self.filterText = pg.TextItem(border=pg.getConfigOption('foreground'), color=bg)
+        self.filterText.setPos(60,20)
+        self.filterText.setParentItem(self.plot.plotItem)
         
         self.data = None
         self.mouseOverField = None
@@ -97,6 +104,13 @@ class ScatterPlotWidget(QtGui.QSplitter):
     def filterChanged(self, f):
         self.filtered = None
         self.updatePlot()
+        desc = self.filter.describe()
+        if len(desc) == 0:
+            self.filterText.setVisible(False)
+        else:
+            self.filterText.setText('\n'.join(desc))
+            self.filterText.setVisible(True)
+            
         
     def updatePlot(self):
         self.plot.clear()
@@ -125,69 +139,69 @@ class ScatterPlotWidget(QtGui.QSplitter):
             self.plot.setLabels(left=('N', ''), bottom=(sel[0], units[0]), title='')
             if len(data) == 0:
                 return
-            x = data[sel[0]]
-            #if x.dtype.kind == 'f':
-                #mask = ~np.isnan(x)
-            #else:
-                #mask = np.ones(len(x), dtype=bool)
-            #x = x[mask]
-            #style['symbolBrush'] = colors[mask]
-            y = None
+            #x = data[sel[0]]
+            #y = None
+            xy = [data[sel[0]], None]
         elif len(sel) == 2:
             self.plot.setLabels(left=(sel[1],units[1]), bottom=(sel[0],units[0]))
             if len(data) == 0:
                 return
             
-            xydata = []
-            for ax in [0,1]:
-                d = data[sel[ax]]
-                ## scatter catecorical values just a bit so they show up better in the scatter plot.
-                #if sel[ax] in ['MorphologyBSMean', 'MorphologyTDMean', 'FIType']:
-                    #d += np.random.normal(size=len(cells), scale=0.1)
-                xydata.append(d)
-            x,y = xydata
-            #mask = np.ones(len(x), dtype=bool)
-            #if x.dtype.kind == 'f':
-                #mask |= ~np.isnan(x)
-            #if y.dtype.kind == 'f':
-                #mask |= ~np.isnan(y)
-            #x = x[mask]
-            #y = y[mask]
-            #style['symbolBrush'] = colors[mask]
+            xy = [data[sel[0]], data[sel[1]]]
+            #xydata = []
+            #for ax in [0,1]:
+                #d = data[sel[ax]]
+                ### scatter catecorical values just a bit so they show up better in the scatter plot.
+                ##if sel[ax] in ['MorphologyBSMean', 'MorphologyTDMean', 'FIType']:
+                    ##d += np.random.normal(size=len(cells), scale=0.1)
+                    
+                #xydata.append(d)
+            #x,y = xydata
 
         ## convert enum-type fields to float, set axis labels
-        xy = [x,y]
+        enum = [False, False]
         for i in [0,1]:
             axis = self.plot.getAxis(['bottom', 'left'][i])
-            if xy[i] is not None and xy[i].dtype.kind in ('S', 'O'):
+            if xy[i] is not None and (self.fields[sel[i]].get('mode', None) == 'enum' or xy[i].dtype.kind in ('S', 'O')):
                 vals = self.fields[sel[i]].get('values', list(set(xy[i])))
                 xy[i] = np.array([vals.index(x) if x in vals else len(vals) for x in xy[i]], dtype=float)
                 axis.setTicks([list(enumerate(vals))])
+                enum[i] = True
             else:
                 axis.setTicks(None)  # reset to automatic ticking
-        x,y = xy
         
         ## mask out any nan values
-        mask = np.ones(len(x), dtype=bool)
-        if x.dtype.kind == 'f':
-            mask &= ~np.isnan(x)
-        if y is not None and y.dtype.kind == 'f':
-            mask &= ~np.isnan(y)
-        x = x[mask]
+        mask = np.ones(len(xy[0]), dtype=bool)
+        if xy[0].dtype.kind == 'f':
+            mask &= ~np.isnan(xy[0])
+        if xy[1] is not None and xy[1].dtype.kind == 'f':
+            mask &= ~np.isnan(xy[1])
+        
+        xy[0] = xy[0][mask]
         style['symbolBrush'] = colors[mask]
 
         ## Scatter y-values for a histogram-like appearance
-        if y is None:
-            y = fn.pseudoScatter(x)
+        if xy[1] is None:
+            ## column scatter plot
+            xy[1] = fn.pseudoScatter(xy[0])
         else:
-            y = y[mask]
-                
+            ## beeswarm plots
+            xy[1] = xy[1][mask]
+            for ax in [0,1]:
+                if not enum[ax]:
+                    continue
+                for i in range(int(xy[ax].max())+1):
+                    keymask = xy[ax] == i
+                    scatter = pg.pseudoScatter(xy[1-ax][keymask], bidir=True)
+                    scatter *= 0.2 / np.abs(scatter).max()
+                    xy[ax][keymask] += scatter
+        
         if self.scatterPlot is not None:
             try:
                 self.scatterPlot.sigPointsClicked.disconnect(self.plotClicked)
             except:
                 pass
-        self.scatterPlot = self.plot.plot(x, y, data=data[mask], **style)
+        self.scatterPlot = self.plot.plot(xy[0], xy[1], data=data[mask], **style)
         self.scatterPlot.sigPointsClicked.connect(self.plotClicked)
         
         

@@ -19,7 +19,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
     def itemChange(self, change, value):
         ret = QtGui.QGraphicsObject.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
-            self._updateView()
+            self.parentChanged()
         if change in [self.ItemPositionHasChanged, self.ItemTransformHasChanged]:
             self.informViewBoundsChanged()
             
