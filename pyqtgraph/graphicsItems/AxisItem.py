@@ -383,7 +383,8 @@ class AxisItem(GraphicsWidget):
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
                 specs = self.generateDrawSpecs(painter)
-                self.drawPicture(painter, *specs)
+                if specs is not None:
+                    self.drawPicture(painter, *specs)
             finally:
                 painter.end()
             self.picture = picture
@@ -646,12 +647,16 @@ class AxisItem(GraphicsWidget):
         
         ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
-        if axis == 0:
-            xScale = -bounds.height() / dif
-            offset = self.range[0] * xScale - bounds.height()
+        if dif == 0:
+            xscale = 1
+            offset = 0
         else:
-            xScale = bounds.width() / dif
-            offset = self.range[0] * xScale
+            if axis == 0:
+                xScale = -bounds.height() / dif
+                offset = self.range[0] * xScale - bounds.height()
+            else:
+                xScale = bounds.width() / dif
+                offset = self.range[0] * xScale
             
         xRange = [x * xScale - offset for x in self.range]
         xMin = min(xRange)
