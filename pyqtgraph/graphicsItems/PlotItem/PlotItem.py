@@ -1079,6 +1079,7 @@ class PlotItem(GraphicsWidget):
         ============= =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.showAxis(axis)
         
     def setLabels(self, **kwds):
         """
