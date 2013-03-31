@@ -87,6 +87,7 @@ class ViewBox(GraphicsWidget):
         self.addedItems = []
         #self.gView = view
         #self.showGrid = showGrid
+        self.matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
         
         self.state = {
             
@@ -406,8 +407,11 @@ class ViewBox(GraphicsWidget):
                 
         self.sigStateChanged.emit(self)
         
-        if update:
+        if update and (any(changed) or self.matrixNeedsUpdate):
             self.updateMatrix(changed)
+        
+        if not update and any(changed):
+            self.matrixNeedsUpdate = True
             
         for ax, range in changes.items():
             link = self.linkedView(ax)
@@ -1246,6 +1250,7 @@ class ViewBox(GraphicsWidget):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
+        self.matrixNeedsUpdate = False
 
     def paint(self, p, opt, widget):
         if self.border is not None:
