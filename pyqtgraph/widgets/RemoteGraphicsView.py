@@ -1,4 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+if not USE_PYSIDE:
+    import sip
 import pyqtgraph.multiprocess as mp
 import pyqtgraph as pg
 from .GraphicsView import GraphicsView
@@ -21,7 +23,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
                                     ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
-        self._proc = mp.QtProcess(debug=False)
+        self._proc = mp.QtProcess(debug=kwds.pop('debug', False))
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
@@ -174,7 +176,6 @@ class Renderer(GraphicsView):
                     self.shm = mmap.mmap(-1, size, self.shmtag)
                 else:
                     self.shm.resize(size)
-            address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
             
             ## render the scene directly to shared memory
             if USE_PYSIDE:
@@ -182,7 +183,8 @@ class Renderer(GraphicsView):
                 #ch = ctypes.c_char_p(address)
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             else:
-                self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
+                self.img = QtGui.QImage(sip.voidptr(address), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())
