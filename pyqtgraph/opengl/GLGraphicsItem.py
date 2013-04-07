@@ -116,11 +116,11 @@ class GLGraphicsItem(QtCore.QObject):
         Items with negative depth values are drawn before their parent.
         (This is analogous to QGraphicsItem.zValue)
         The depthValue does NOT affect the position of the item or the values it imparts to the GL depth buffer.
-        '"""
+        """
         self.__depthValue = value
         
     def depthValue(self):
-        """Return the depth value of this item. See setDepthValue for mode information."""
+        """Return the depth value of this item. See setDepthValue for more information."""
         return self.__depthValue
         
     def setTransform(self, tr):
@@ -134,9 +134,12 @@ class GLGraphicsItem(QtCore.QObject):
     def applyTransform(self, tr, local):
         """
         Multiply this object's transform by *tr*. 
-        If local is True, then *tr* is multiplied on the right of the current transform:
+        If local is True, then *tr* is multiplied on the right of the current transform::
+        
             newTransform = transform * tr
-        If local is False, then *tr* is instead multiplied on the left:
+            
+        If local is False, then *tr* is instead multiplied on the left::
+        
             newTransform = tr * transform
         """
         if local:
