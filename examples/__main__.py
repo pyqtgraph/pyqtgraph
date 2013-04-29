@@ -1,12 +1,18 @@
 import sys, os, subprocess, time
 
-import initExample
+try:
+    from . import initExample
+except ValueError:
+    sys.excepthook(*sys.exc_info())
+    print("examples/ can not be executed as a script; please run 'python -m examples' instead.")
+    sys.exit(1)
+
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
 if USE_PYSIDE:
-    from exampleLoaderTemplate_pyside import Ui_Form
+    from .exampleLoaderTemplate_pyside import Ui_Form
 else:
-    from exampleLoaderTemplate_pyqt import Ui_Form
+    from .exampleLoaderTemplate_pyqt import Ui_Form
     
 import os, sys
 from pyqtgraph.pgcollections import OrderedDict

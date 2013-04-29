@@ -154,7 +154,8 @@ def importModules(path, globals, locals, excludes=()):
         try:
             if len(path) > 0:
                 modName = path + '.' + modName
-            mod = __import__(modName, globals, locals, fromlist=['*'])
+            #mod = __import__(modName, globals, locals, fromlist=['*'])
+            mod = __import__(modName, globals, locals, ['*'], 1)
             mods[modName] = mod
         except:
             import traceback
