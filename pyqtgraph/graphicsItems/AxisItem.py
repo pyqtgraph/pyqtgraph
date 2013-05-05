@@ -731,6 +731,7 @@ class AxisItem(GraphicsWidget):
         
         textRects = []
         textSpecs = []  ## list of draw
+        textSize2 = 0
         for i in range(len(tickLevels)):
             ## Get the list of strings to display for this level
             if tickStrings is None:
