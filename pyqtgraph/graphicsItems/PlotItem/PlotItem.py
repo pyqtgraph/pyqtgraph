@@ -295,19 +295,21 @@ class PlotItem(GraphicsWidget):
     
     
     
-    def setLogMode(self, x, y):
+    def setLogMode(self, x=None, y=None):
         """
-        Set log scaling for x and y axes.
+        Set log scaling for x and/or y axes.
         This informs PlotDataItems to transform logarithmically and switches
         the axes to use log ticking. 
         
         Note that *no other items* in the scene will be affected by
-        this; there is no generic way to redisplay a GraphicsItem
+        this; there is (currently) no generic way to redisplay a GraphicsItem
         with log coordinates.
         
         """
-        self.ctrl.logXCheck.setChecked(x)
-        self.ctrl.logYCheck.setChecked(y)
+        if x is not None:
+            self.ctrl.logXCheck.setChecked(x)
+        if y is not None:
+            self.ctrl.logYCheck.setChecked(y)
         
     def showGrid(self, x=None, y=None, alpha=None):
         """

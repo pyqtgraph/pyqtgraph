@@ -3,6 +3,7 @@ import sys, os, subprocess, time
 try:
     from . import initExample
 except ValueError:
+    #__package__ = os.path.split(os.path.dirname(__file__))[-1]
     sys.excepthook(*sys.exc_info())
     print("examples/ can not be executed as a script; please run 'python -m examples' instead.")
     sys.exit(1)

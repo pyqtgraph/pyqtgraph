@@ -73,6 +73,36 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
         self.updateSize()
+    
+    #
+    #
+    # Ulrich
+    def removeItem(self, name):
+        """
+        Removes one item from the legend. 
+
+        =========== ========================================================
+        Arguments
+        title       The title displayed for this item.
+        =========== ========================================================
+        """
+        # cycle for a match
+        for sample, label in self.items:
+            print label.text, name
+            if label.text == name:  # hit
+                self.items.remove( (sample, label) )    # remove from itemlist
+                self.layout.removeItem(sample)          # remove from layout
+                sample.close()                          # remove from drawing
+                self.layout.removeItem(label)
+                label.close()
+                self.updateSize()                       # redraq box
+
+    # hcirlU
+    #
+    #
+
+
+
         
     def updateSize(self):
         if self.size is not None:
