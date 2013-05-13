@@ -209,7 +209,7 @@ class ImageView(QtGui.QWidget):
         
         *pos*          Change the position of the displayed image
         *scale*        Change the scale of the displayed image
-        *transform*    Set the transform of the dispalyed image. This option overrides *pos*
+        *transform*    Set the transform of the displayed image. This option overrides *pos*
                        and *scale*.
         ============== =======================================================================
         """
@@ -271,8 +271,9 @@ class ImageView(QtGui.QWidget):
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
-            self.levelMax = levels[1]
-            self.levelMin = levels[0]
+            #self.levelMax = levels[1]
+            #self.levelMin = levels[0]
+            self.setLevels(*levels)
             
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
