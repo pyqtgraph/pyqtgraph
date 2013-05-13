@@ -619,7 +619,15 @@ def rescaleData(data, scale, offset, dtype=None):
         if not USE_WEAVE:
             raise Exception('Weave is disabled; falling back to slower version.')
         
-        newData = np.empty((data.size,), dtype=dtype)
+        ## require native dtype when using weave
+        if not data.dtype.isnative():
+            data = data.astype(data.dtype.newbyteorder('='))
+        if not dtype.isnative():
+            weaveDtype = dtype.newbyteorder('=')
+        else:
+            weaveDtype = dtype
+        
+        newData = np.empty((data.size,), dtype=weaveDtype)
         flat = np.ascontiguousarray(data).reshape(data.size)
         size = data.size
         
@@ -631,6 +639,8 @@ def rescaleData(data, scale, offset, dtype=None):
         }
         """
         scipy.weave.inline(code, ['flat', 'newData', 'size', 'offset', 'scale'], compiler='gcc')
+        if dtype != weaveDtype:
+            newData = newData.astype(dtype)
         data = newData.reshape(data.shape)
     except:
         if USE_WEAVE:
@@ -839,7 +849,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal == maxVal:
                 maxVal += 1e-16
             data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=int)
-        
     prof.mark('2')
 
 
@@ -849,7 +858,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         if data.dtype is not np.ubyte:
             data = np.clip(data, 0, 255).astype(np.ubyte)
-
     prof.mark('3')
 
 
