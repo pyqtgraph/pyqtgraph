@@ -1,1 +1,1 @@
-from __main__ import run
+from .__main__ import run

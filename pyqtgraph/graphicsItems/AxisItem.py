@@ -281,7 +281,7 @@ class AxisItem(GraphicsWidget):
     def setScale(self, scale=None):
         """
         Set the value scaling for this axis. Values on the axis are multiplied
-        by this scale factor before being displayed as text. By default,
+        by this scale factor before being displayed as text. By default (scale=None),
         this scaling value is automatically determined based on the visible range
         and the axis units are updated to reflect the chosen scale factor.
         
@@ -301,6 +301,7 @@ class AxisItem(GraphicsWidget):
                 self.setLabel(unitPrefix=prefix)
             else:
                 scale = 1.0
+            self.autoScale = True
         else:
             self.setLabel(unitPrefix='')
             self.autoScale = False
@@ -499,6 +500,10 @@ class AxisItem(GraphicsWidget):
         """
         minVal, maxVal = sorted((minVal, maxVal))
         
+
+        minVal *= self.scale  
+        maxVal *= self.scale
+        #size *= self.scale
             
         ticks = []
         tickLevels = self.tickSpacing(minVal, maxVal, size)
@@ -511,16 +516,25 @@ class AxisItem(GraphicsWidget):
             
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
-            values = np.arange(num) * spacing + start
+            values = (np.arange(num) * spacing + start) / self.scale
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
             values = list(filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) )
             allValues = np.concatenate([allValues, values])
-            ticks.append((spacing, values))
+            ticks.append((spacing/self.scale, values))
             
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
+        
+        
+        #nticks = []
+        #for t in ticks:
+            #nvals = []
+            #for v in t[1]:
+                #nvals.append(v/self.scale)
+            #nticks.append((t[0]/self.scale,nvals))
+        #ticks = nticks
             
         return ticks
     
@@ -731,6 +745,7 @@ class AxisItem(GraphicsWidget):
         
         textRects = []
         textSpecs = []  ## list of draw
+        textSize2 = 0
         for i in range(len(tickLevels)):
             ## Get the list of strings to display for this level
             if tickStrings is None:

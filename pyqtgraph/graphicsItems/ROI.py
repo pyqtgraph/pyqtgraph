@@ -1771,7 +1771,7 @@ class PolyLineROI(ROI):
         shape = [1] * data.ndim
         shape[axes[0]] = sliced.shape[axes[0]]
         shape[axes[1]] = sliced.shape[axes[1]]
-        return sliced * mask
+        return sliced * mask.reshape(shape)
 
 
 class LineSegmentROI(ROI):

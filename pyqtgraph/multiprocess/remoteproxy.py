@@ -803,7 +803,7 @@ class ObjectProxy(object):
         return val
     
     def _getProxyOptions(self):
-        return {k: self._getProxyOption(k) for k in self._proxyOptions}
+        return dict([(k, self._getProxyOption(k)) for k in self._proxyOptions])
     
     def __reduce__(self):
         return (unpickleObjectProxy, (self._processId, self._proxyId, self._typeStr, self._attributes))

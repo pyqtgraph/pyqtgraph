@@ -129,7 +129,7 @@ class Parallelize(object):
                 self.childs.append(proc)
         
         ## Keep track of the progress of each worker independently.
-        self.progress = {ch.childPid: [] for ch in self.childs}
+        self.progress = dict([(ch.childPid, []) for ch in self.childs])
         ## for each child process, self.progress[pid] is a list
         ## of task indexes. The last index is the task currently being
         ## processed; all others are finished.
