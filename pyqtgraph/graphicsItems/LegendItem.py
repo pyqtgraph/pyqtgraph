@@ -4,6 +4,7 @@ from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..Point import Point
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+import pyqtgraph as pg
 __all__ = ['LegendItem']
 
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
@@ -136,6 +137,7 @@ class ItemSample(GraphicsWidget):
         return QtCore.QRectF(0, 0, 20, 20)
         
     def paint(self, p, *args):
+        #p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
         opts = self.item.opts
         
         if opts.get('fillLevel',None) is not None and opts.get('fillBrush',None) is not None:
@@ -145,6 +147,13 @@ class ItemSample(GraphicsWidget):
         
         p.setPen(fn.mkPen(opts['pen']))
         p.drawLine(2, 18, 18, 2)
+        
+        symbol = opts.get('symbol', None)
+        if symbol is not None:
+            p.translate(10,10)
+            pen = pg.mkPen(opts['symbolPen'])
+            brush = pg.mkBrush(opts['symbolBrush'])
+            path = pg.graphicsItems.ScatterPlotItem.drawSymbol(p, symbol, opts['symbolSize'], pen, brush)
         
         
         
