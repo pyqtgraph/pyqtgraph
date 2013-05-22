@@ -240,7 +240,7 @@ class GLGraphicsItem(QtCore.QObject):
         v = self.view()
         if v is None:
             return
-        v.updateGL()
+        v.update()
         
     def mapToParent(self, point):
         tr = self.transform()

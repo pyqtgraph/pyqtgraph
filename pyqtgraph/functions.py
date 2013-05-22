@@ -23,7 +23,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph import getConfigOption
+import pyqtgraph as pg
 import numpy as np
 import decimal, re
 import ctypes
@@ -32,12 +32,12 @@ import sys, struct
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
-    WEAVE_DEBUG = getConfigOption('weaveDebug')
-    try:
-        import scipy.weave
-        USE_WEAVE = getConfigOption('useWeave')
-    except:
-        USE_WEAVE = False
+    WEAVE_DEBUG = pg.getConfigOption('weaveDebug')
+    if pg.getConfigOption('useWeave'):
+        try:
+            import scipy.weave
+        except ImportError:
+            pg.setConfigOptions(useWeave=False)
 except ImportError:
     HAVE_SCIPY = False
 
@@ -611,18 +611,19 @@ def rescaleData(data, scale, offset, dtype=None):
         
     Uses scipy.weave (if available) to improve performance.
     """
-    global USE_WEAVE
     if dtype is None:
         dtype = data.dtype
+    else:
+        dtype = np.dtype(dtype)
     
     try:
-        if not USE_WEAVE:
+        if not pg.getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
         
         ## require native dtype when using weave
-        if not data.dtype.isnative():
+        if not data.dtype.isnative:
             data = data.astype(data.dtype.newbyteorder('='))
-        if not dtype.isnative():
+        if not dtype.isnative:
             weaveDtype = dtype.newbyteorder('=')
         else:
             weaveDtype = dtype
@@ -643,10 +644,10 @@ def rescaleData(data, scale, offset, dtype=None):
             newData = newData.astype(dtype)
         data = newData.reshape(data.shape)
     except:
-        if USE_WEAVE:
-            if WEAVE_DEBUG:
+        if pg.getConfigOption('useWeave'):
+            if pg.getConfigOption('weaveDebug'):
                 debug.printExc("Error; disabling weave.")
-            USE_WEAVE = False
+            pg.setConfigOption('useWeave', False)
         
         #p = np.poly1d([scale, -offset*scale])
         #data = p(data).astype(dtype)
@@ -663,8 +664,6 @@ def applyLookupTable(data, lut):
     Uses scipy.weave to improve performance if it is available.
     Note: color gradient lookup tables can be generated using GradientWidget.
     """
-    global USE_WEAVE
-    
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
     
