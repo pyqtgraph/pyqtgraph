@@ -63,21 +63,23 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         =========== ========================================================
         Arguments
         item        A PlotDataItem from which the line and point style
-                    of the item will be determined
+                    of the item will be determined or an instance of 
+                    ItemSample (or a subclass), allowing the item display
+                    to be customized.
         title       The title to display for this item. Simple HTML allowed.
         =========== ========================================================
         """
         label = LabelItem(name)
-        sample = ItemSample(item)
+        if isinstance(item, ItemSample):
+            sample = item
+        else:
+            sample = ItemSample(item)        
         row = len(self.items)
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
         self.updateSize()
     
-    #
-    #
-    # Ulrich
     def removeItem(self, name):
         """
         Removes one item from the legend. 
@@ -87,6 +89,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         title       The title displayed for this item.
         =========== ========================================================
         """
+        # Thanks, Ulrich!
         # cycle for a match
         for sample, label in self.items:
             print label.text, name
@@ -97,12 +100,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 self.layout.removeItem(label)
                 label.close()
                 self.updateSize()                       # redraq box
-
-    # hcirlU
-    #
-    #
-
-
 
         
     def updateSize(self):
