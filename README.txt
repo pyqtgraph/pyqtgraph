@@ -2,10 +2,16 @@ PyQtGraph - A pure-Python graphics library for PyQt/PySide
 Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill
 http://www.pyqtgraph.org
 
-Authors:
+Maintainer:
     Luke Campagnola   ('luke.campagnola@%s.com' % 'gmail')
+
+Contributors:
     Megan Kratz
+    Paul Manis
     Ingo Breßler
+    Christian Gavin
+    Michael Cristopher Hogg
+    Ulrich Leutner
 
 Requirements:
     PyQt 4.7+ or PySide
