@@ -83,6 +83,16 @@ m3 = gl.GLMeshItem(meshdata=md, smooth=False)#, shader='balloon')
 w.addItem(m3)
 
 
+# Example 4:
+# wireframe
+
+md = gl.MeshData.sphere(rows=4, cols=8)
+m4 = gl.GLMeshItem(meshdata=md, smooth=False, drawFaces=False, drawEdges=True, edgeColor=(1,1,1,1))
+m4.translate(0,10,0)
+w.addItem(m4)
+
+
+
 
 
 

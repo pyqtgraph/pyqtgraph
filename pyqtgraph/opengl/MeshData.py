@@ -44,7 +44,7 @@ class MeshData(object):
         
         ## mappings between vertexes, faces, and edges
         self._faces = None   # Nx3 array of indexes into self._vertexes specifying three vertexes for each face
-        self._edges = None
+        self._edges = None   # Nx2 array of indexes into self._vertexes specifying two vertexes per edge
         self._vertexFaces = None  ## maps vertex ID to a list of face IDs (inverse mapping of _faces)
         self._vertexEdges = None  ## maps vertex ID to a list of edge IDs (inverse mapping of _edges)
         
@@ -143,12 +143,19 @@ class MeshData(object):
     def faces(self):
         """Return an array (Nf, 3) of vertex indexes, three per triangular face in the mesh."""
         return self._faces
+    
+    def edges(self):
+        """Return an array (Nf, 3) of vertex indexes, two per edge in the mesh."""
+        if self._edges is None:
+            self._computeEdges()
+        return self._edges
         
     def setFaces(self, faces):
         """Set the (Nf, 3) array of faces. Each rown in the array contains
         three indexes into the vertex array, specifying the three corners 
         of a triangular face."""
         self._faces = faces
+        self._edges = None
         self._vertexFaces = None
         self._vertexesIndexedByFaces = None
         self.resetNormals()
@@ -417,6 +424,25 @@ class MeshData(object):
         #Useful for displaying wireframe meshes.
         #"""
         #pass
+        
+    def _computeEdges(self):
+        ## generate self._edges from self._faces
+        #print self._faces
+        nf = len(self._faces)
+        edges = np.empty(nf*3, dtype=[('i', np.uint, 2)])
+        edges['i'][0:nf] = self._faces[:,:2]
+        edges['i'][nf:2*nf] = self._faces[:,1:3]
+        edges['i'][-nf:,0] = self._faces[:,2]
+        edges['i'][-nf:,1] = self._faces[:,0]
+        
+        # sort per-edge
+        mask = edges['i'][:,0] > edges['i'][:,1]
+        edges['i'][mask] = edges['i'][mask][:,::-1]
+        
+        # remove duplicate entries
+        self._edges = np.unique(edges)['i']
+        #print self._edges
+        
         
     def save(self):
         """Serialize this mesh to a string appropriate for disk storage"""
