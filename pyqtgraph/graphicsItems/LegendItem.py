@@ -126,6 +126,11 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         
         
 class ItemSample(GraphicsWidget):
+    """ Class responsible for drawing a single item in a LegendItem (sans label).
+    
+    This may be subclassed to draw custom graphics in a Legend.
+    """
+    ## Todo: make this more generic; let each item decide how it should be represented.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
@@ -142,15 +147,21 @@ class ItemSample(GraphicsWidget):
             p.setPen(fn.mkPen(None))
             p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
         
-        p.setPen(fn.mkPen(opts['pen']))
-        p.drawLine(2, 18, 18, 2)
+        if not isinstance(self.item, pg.ScatterPlotItem):
+            p.setPen(fn.mkPen(opts['pen']))
+            p.drawLine(2, 18, 18, 2)
         
         symbol = opts.get('symbol', None)
         if symbol is not None:
+            if isinstance(self.item, pg.PlotDataItem):
+                opts = self.item.scatter.opts
+                
+            pen = pg.mkPen(opts['pen'])
+            brush = pg.mkBrush(opts['brush'])
+            size = opts['size']
+            
             p.translate(10,10)
-            pen = pg.mkPen(opts['symbolPen'])
-            brush = pg.mkBrush(opts['symbolBrush'])
-            path = pg.graphicsItems.ScatterPlotItem.drawSymbol(p, symbol, opts['symbolSize'], pen, brush)
+            path = pg.graphicsItems.ScatterPlotItem.drawSymbol(p, symbol, size, pen, brush)
         
         
         

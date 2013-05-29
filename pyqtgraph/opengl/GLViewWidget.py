@@ -168,6 +168,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
         self.opts['azimuth'] += azim
+        #self.opts['elevation'] += elev
         self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
         self.update()
         
