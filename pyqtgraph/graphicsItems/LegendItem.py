@@ -101,7 +101,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 label.close()
                 self.updateSize()                       # redraq box
 
-        
     def updateSize(self):
         if self.size is not None:
             return
@@ -115,15 +114,22 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             #print(width, height)
         #print width, height
         self.setGeometry(0, 0, width+25, height)
-        
+    
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.width(), self.height())
-        
+    
     def paint(self, p, *args):
         p.setPen(fn.mkPen(255,255,255,100))
         p.setBrush(fn.mkBrush(100,100,100,50))
         p.drawRect(self.boundingRect())
+
+    def hoverEvent(self, ev):
+        ev.acceptDrags(QtCore.Qt.LeftButton)
         
+    def mouseDragEvent(self, ev):
+        if ev.button() == QtCore.Qt.LeftButton:
+            dpos = ev.pos() - ev.lastPos()
+            self.autoAnchor(self.pos() + dpos)
         
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
