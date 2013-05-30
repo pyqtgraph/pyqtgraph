@@ -18,6 +18,7 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(path, '..', '..'))
+sys.path.insert(0, os.path.join(path, '..', 'extensions'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -26,7 +27,7 @@ sys.path.insert(0, os.path.join(path, '..', '..'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'qt_doc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -215,3 +216,4 @@ man_pages = [
     ('index', 'pyqtgraph', 'pyqtgraph Documentation',
      ['Luke Campagnola'], 1)
 ]
+
