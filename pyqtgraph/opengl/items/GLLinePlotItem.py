@@ -11,6 +11,7 @@ class GLLinePlotItem(GLGraphicsItem):
     """Draws line plots in 3D."""
     
     def __init__(self, **kwds):
+        """All keyword arguments are passed to setData()"""
         GLGraphicsItem.__init__(self)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
@@ -22,7 +23,7 @@ class GLLinePlotItem(GLGraphicsItem):
     def setData(self, **kwds):
         """
         Update the data displayed by this item. All arguments are optional; 
-        for example it is allowed to update spot positions while leaving 
+        for example it is allowed to update vertex positions while leaving 
         colors unchanged, etc.
         
         ====================  ==================================================
