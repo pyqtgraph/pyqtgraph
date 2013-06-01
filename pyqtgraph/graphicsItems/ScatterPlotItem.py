@@ -53,25 +53,17 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     the symbol will be rendered into the device specified (See QPainter documentation 
     for more information).
     """
-    ## see if this pixmap is already cached
-    #global SymbolPixmapCache
-    #key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
-    #if key in SymbolPixmapCache:
-        #return SymbolPixmapCache[key]
-        
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(np.ceil(pen.widthF()), 1)
-    image = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
-    image.fill(0)
-    p = QtGui.QPainter(image)
+    if device is None:
+        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
+        device.fill(0)
+    p = QtGui.QPainter(device)
     p.setRenderHint(p.Antialiasing)
-    p.translate(image.width()*0.5, image.height()*0.5)
+    p.translate(device.width()*0.5, device.height()*0.5)
     drawSymbol(p, symbol, size, pen, brush)
     p.end()
-    return image
-    #pixmap = QtGui.QPixmap(image)
-    #SymbolPixmapCache[key] = pixmap
-    #return pixmap
+    return device
 
 def makeSymbolPixmap(size, pen, brush, symbol):
     ## deprecated
