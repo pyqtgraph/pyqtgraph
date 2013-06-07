@@ -560,6 +560,7 @@ class Flowchart(Node):
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
             #fileName = QtGui.QFileDialog.getSaveFileName(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
+        fileName = str(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
@@ -681,7 +682,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(fileName)
+        self.setCurrentFile(str(fileName))
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -710,7 +711,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = fileName
+        self.currentFileName = str(fileName)
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
