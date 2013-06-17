@@ -1,7 +1,10 @@
 from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
+import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from pyqtgraph import Vector
+import pyqtgraph.functions as fn
+
 ##Vector = QtGui.QVector3D
 
 class GLViewWidget(QtOpenGL.QGLWidget):
@@ -287,4 +290,65 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             raise
             
 
+            
+    def readQImage(self):
+        """
+        Read the current buffer pixels out as a QImage.
+        """
+        w = self.width()
+        h = self.height()
+        self.repaint()
+        pixels = np.empty((h, w, 4), dtype=np.ubyte)
+        pixels[:] = 128
+        pixels[...,0] = 50
+        pixels[...,3] = 255
+        
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+        
+        # swap B,R channels for Qt
+        tmp = pixels[...,0].copy()
+        pixels[...,0] = pixels[...,2]
+        pixels[...,2] = tmp
+        pixels = pixels[::-1] # flip vertical
+        
+        img = fn.makeQImage(pixels, transpose=False)
+        return img
+        
+        
+    def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE):
+        w,h = size
+        self.makeCurrent()
+        
+        try:
+            fb = glfbo.glGenFramebuffers(1)
+            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
+            
+            glEnable(GL_TEXTURE_2D)
+            tex = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            data = np.zeros((w,h,4), dtype=np.ubyte)
+            
+            ## Test texture dimensions first
+            glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+            if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
+                raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
+
+            ## render to texture
+            glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
+            glViewport(0, 0, w, h)
+            self.paintGL()
+            
+            ## read texture back to array
+            data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
+            data = np.fromstring(data, dtype=np.ubyte).reshape(h,w,4).transpose(1,0,2)[:, ::-1]
+            
+        finally:
+            glViewport(0, 0, self.width(), self.height())
+            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
+            glBindTexture(GL_TEXTURE_2D, 0)
+            
+        return data
+        
+        
         
