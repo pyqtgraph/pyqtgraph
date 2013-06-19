@@ -911,7 +911,8 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 array.shape[2] == 4.
     copy        If True, the data is copied before converting to QImage.
                 If False, the new QImage points directly to the data in the array.
-                Note that the array must be contiguous for this to work.
+                Note that the array must be contiguous for this to work
+                (see numpy.ascontiguousarray).
     transpose   If True (the default), the array x/y axes are transposed before 
                 creating the image. Note that Qt expects the axes to be in 
                 (height, width) order whereas pyqtgraph usually prefers the 
@@ -961,12 +962,22 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        addr = ctypes.c_char.from_buffer(imgData, 0)
+        #addr = ctypes.c_char.from_buffer(imgData, 0)
+        #try:
+            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        #except TypeError:  
+            #addr = ctypes.addressof(addr)
+            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
-            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        except TypeError:  
-            addr = ctypes.addressof(addr)
-            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+            img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
+        except:
+            if copy:
+                # does not leak memory, is not mutable
+                img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+            else:
+                # mutable, but leaks memory
+                img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+                
     img.data = imgData
     return img
     #try:
