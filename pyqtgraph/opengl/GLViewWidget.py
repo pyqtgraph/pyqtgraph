@@ -350,7 +350,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         w,h = map(int, size)
         
         self.makeCurrent()
-        
+        tex = None
+        fb = None
         try:
             output = np.empty((w, h, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
@@ -387,11 +388,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
                     data = np.fromstring(data, dtype=np.ubyte).reshape(texwidth,texwidth,4).transpose(1,0,2)[:, ::-1]
                     output[x:x2, y:y2] = data[:w2, -h2:]
-            
+                    
         finally:
             self.opts['viewport'] = None
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
             glBindTexture(GL_TEXTURE_2D, 0)
+            if tex is not None:
+                glDeleteTextures([tex])
+            if fb is not None:
+                glfbo.glDeleteFramebuffers([fb])
             
         return output
         
