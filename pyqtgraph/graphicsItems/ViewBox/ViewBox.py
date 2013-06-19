@@ -295,7 +295,7 @@ class ViewBox(GraphicsWidget):
         for i in self.addedItems[:]:
             self.removeItem(i)
         for ch in self.childGroup.childItems():
-            ch.setParent(None)
+            ch.setParentItem(None)
         
     def resizeEvent(self, ev):
         #self.setRange(self.range, padding=0)
