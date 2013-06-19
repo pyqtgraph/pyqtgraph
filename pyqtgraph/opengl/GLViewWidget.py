@@ -346,7 +346,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         return img
         
         
-    def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE):
+    def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
         
         self.makeCurrent()
@@ -360,7 +360,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             glEnable(GL_TEXTURE_2D)
             tex = glGenTextures(1)
             glBindTexture(GL_TEXTURE_2D, tex)
-            texwidth = 512
+            texwidth = textureSize
             data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
             
             ## Test texture dimensions first
@@ -372,22 +372,23 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             
             self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...) 
                                                   # is interpreted correctly.
-            
-            for x in range(0, w, texwidth):
-                for y in range(0, h, texwidth):
-                    x2 = min(x+texwidth, w)
-                    y2 = min(y+texwidth, h)
+            p2 = 2 * padding
+            for x in range(-padding, w-padding, texwidth-p2):
+                for y in range(-padding, h-padding, texwidth-p2):
+                    x2 = min(x+texwidth, w+padding)
+                    y2 = min(y+texwidth, h+padding)
                     w2 = x2-x
                     h2 = y2-y
                     
                     ## render to texture
                     glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
+                    
                     self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
                     
                     ## read texture back to array
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
                     data = np.fromstring(data, dtype=np.ubyte).reshape(texwidth,texwidth,4).transpose(1,0,2)[:, ::-1]
-                    output[x:x2, y:y2] = data[:w2, -h2:]
+                    output[x+padding:x2-padding, y+padding:y2-padding] = data[padding:w2-padding, -(h2-padding):-padding]
                     
         finally:
             self.opts['viewport'] = None
