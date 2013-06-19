@@ -92,7 +92,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         # Thanks, Ulrich!
         # cycle for a match
         for sample, label in self.items:
-            print label.text, name
             if label.text == name:  # hit
                 self.items.remove( (sample, label) )    # remove from itemlist
                 self.layout.removeItem(sample)          # remove from layout

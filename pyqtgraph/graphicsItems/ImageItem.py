@@ -196,10 +196,12 @@ class ImageItem(GraphicsObject):
                 return
         else:
             gotNewData = True
-            if self.image is None or image.shape != self.image.shape:
-                self.prepareGeometryChange()
+            shapeChanged = (self.image is None or image.shape != self.image.shape)
             self.image = image.view(np.ndarray)
-            
+            if shapeChanged:
+                self.prepareGeometryChange()
+                self.informViewBoundsChanged()
+                
         prof.mark('1')
             
         if autoLevels is None:

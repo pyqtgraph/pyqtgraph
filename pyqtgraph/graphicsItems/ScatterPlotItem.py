@@ -35,6 +35,8 @@ for k, c in coords.items():
 
     
 def drawSymbol(painter, symbol, size, pen, brush):
+    if symbol is None:
+        return
     painter.scale(size, size)
     painter.setPen(pen)
     painter.setBrush(brush)
