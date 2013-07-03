@@ -11,6 +11,12 @@ Extension for building Qt-like documentation.
 
 
 def setup(app):
+    # probably we will be making a wrapper around autodoc
+    app.setup_extension('sphinx.ext.autodoc')
+    
+    # would it be useful to define a new domain?
+    #app.add_domain(QtDomain) 
+    
     ## Add new configuration options
     app.add_config_value('todo_include_todos', False, False)
 

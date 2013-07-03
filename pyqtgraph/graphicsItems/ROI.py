@@ -1621,7 +1621,7 @@ class PolyLineROI(ROI):
         
         if pos is None:
             pos = [0,0]
-        #pen=args.get('pen', fn.mkPen((100,100,255)))
+            
         ROI.__init__(self, pos, size=[1,1], **args)
         self.closed = closed
         self.segments = []
@@ -1632,33 +1632,6 @@ class PolyLineROI(ROI):
         start = -1 if self.closed else 0
         for i in range(start, len(self.handles)-1):
             self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
-        #for i in range(len(positions)-1):
-            #h2 = self.addFreeHandle(positions[i+1])
-            #segment = LineSegmentROI(handles=(h, h2), pen=pen, parent=self, movable=False)
-            #self.segments.append(segment)
-            #h = h2
-            
-        
-        #for i, s in enumerate(self.segments):
-            #h = s.handles[0]
-            #self.addFreeHandle(h['pos'], item=h['item'])
-            #s.setZValue(self.zValue() +1)
-           
-        #h = self.segments[-1].handles[1]
-        #self.addFreeHandle(h['pos'], item=h['item'])
-            
-        #if closed:
-            #h1 = self.handles[-1]['item']
-            #h2 = self.handles[0]['item']
-            #self.segments.append(LineSegmentROI([positions[-1], positions[0]], pos=pos, handles=(h1, h2), pen=pen, parent=self, movable=False))
-            #h2.setParentItem(self.segments[-1])
-            
-            
-        #for s in self.segments:
-            #self.setSegmentSettings(s)
-            
-    #def movePoint(self, *args, **kargs):
-        #pass
 
     def addSegment(self, h1, h2, index=None):
         seg = LineSegmentROI(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
@@ -1675,9 +1648,6 @@ class PolyLineROI(ROI):
         
     def setMouseHover(self, hover):
         ## Inform all the ROI's segments that the mouse is(not) hovering over it
-        #if self.mouseHovering == hover:
-            #return
-        #self.mouseHovering = hover
         ROI.setMouseHover(self, hover)
         for s in self.segments:
             s.setMouseHover(hover)
@@ -1701,15 +1671,6 @@ class PolyLineROI(ROI):
         h3 = self.addFreeHandle(pos, index=self.indexOfHandle(h2))
         self.addSegment(h3, h2, index=i+1)
         segment.replaceHandle(h2, h3)
-        
-
-    #def report(self):
-        #for s in self.segments:
-            #print s
-            #for h in s.handles:
-                #print "  ", h
-        #for h in self.handles:
-            #print h
         
     def removeHandle(self, handle, updateSegments=True):
         ROI.removeHandle(self, handle)
