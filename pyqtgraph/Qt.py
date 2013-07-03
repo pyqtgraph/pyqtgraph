@@ -35,6 +35,8 @@ else:
         pass
 
     QtCore.Signal = QtCore.pyqtSignal
+    QtCore.Property = QtCore.pyqtProperty
+    QtCore.Slot = QtCore.pyqtSlot
     VERSION_INFO = 'PyQt4 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 
