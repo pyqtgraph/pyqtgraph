@@ -84,24 +84,28 @@ class PlotDataItem(GraphicsObject):
         
         **Optimization keyword arguments:**
         
-            ============ =====================================================================
-            antialias    (bool) By default, antialiasing is disabled to improve performance.
-                         Note that in some cases (in particluar, when pxMode=True), points 
-                         will be rendered antialiased even if this is set to False.
-            decimate     (int) Sub-sample data by selecting every nth sample before plotting
-            onlyVisible  (bool) If True, only plot data that is visible within the X range of
-                         the containing ViewBox. This can improve performance when plotting
-                         very large data sets where only a fraction of the data is visible
-                         at any time.
-            autoResample (bool) If True, resample the data before plotting to avoid plotting
-                         multiple line segments per pixel. This can improve performance when
-                         viewing very high-density data, but increases the initial overhead 
-                         and memory usage.
-            sampleRate   (float) The sample rate of the data along the X axis (for data with
-                         a fixed sample rate). Providing this value improves performance of
-                         the *onlyVisible* and *autoResample* options.
-            identical    *deprecated*
-            ============ =====================================================================
+            ================ =====================================================================
+            antialias        (bool) By default, antialiasing is disabled to improve performance.
+                             Note that in some cases (in particluar, when pxMode=True), points 
+                             will be rendered antialiased even if this is set to False.
+            decimate         deprecated.
+            downsample       (int) Reduce the number of samples displayed by this value
+            downsampleMethod 'subsample': Downsample by taking the first of N samples. 
+                                This method is fastest and least accurate.
+                             'mean': Downsample by taking the mean of N samples.
+                             'peak': Downsample by drawing a saw wave that follows the min 
+                                and max of the original data. This method produces the best 
+                                visual representation of the data but is slower.
+            autoDownsample   (bool) If True, resample the data before plotting to avoid plotting
+                             multiple line segments per pixel. This can improve performance when
+                             viewing very high-density data, but increases the initial overhead 
+                             and memory usage.
+            clipToView       (bool) If True, only plot data that is visible within the X range of
+                             the containing ViewBox. This can improve performance when plotting
+                             very large data sets where only a fraction of the data is visible
+                             at any time.
+            identical        *deprecated*
+            ================ =====================================================================
         
         **Meta-info keyword arguments:**
         
@@ -131,7 +135,6 @@ class PlotDataItem(GraphicsObject):
         self.opts = {
             'fftMode': False,
             'logMode': [False, False],
-            'downsample': False,
             'alphaHint': 1.0,
             'alphaMode': False,
             
@@ -148,6 +151,11 @@ class PlotDataItem(GraphicsObject):
             
             'antialias': pg.getConfigOption('antialias'),
             'pointMode': None,
+            
+            'downsample': 1,
+            'autoDownsample': False,
+            'downsampleMethod': 'peak',
+            'clipToView': False,
             
             'data': None,
         }
@@ -175,6 +183,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
     
@@ -183,6 +192,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
     
@@ -269,12 +279,50 @@ class PlotDataItem(GraphicsObject):
         #self.scatter.setSymbolSize(symbolSize)
         self.updateItems()
 
-    def setDownsampling(self, ds):
-        if self.opts['downsample'] == ds:
+    def setDownsampling(self, ds=None, auto=None, method=None):
+        """
+        Set the downsampling mode of this item. Downsampling reduces the number
+        of samples drawn to increase performance. 
+        
+        ===========  =================================================================
+        Arguments
+        ds           (int) Reduce visible plot samples by this factor. To disable,
+                     set ds=1.
+        auto         (bool) If True, automatically pick *ds* based on visible range
+        mode         'subsample': Downsample by taking the first of N samples. 
+                         This method is fastest and least accurate.
+                     'mean': Downsample by taking the mean of N samples.
+                     'peak': Downsample by drawing a saw wave that follows the min 
+                         and max of the original data. This method produces the best 
+                         visual representation of the data but is slower.
+        ===========  =================================================================
+        """
+        changed = False
+        if ds is not None:
+            if self.opts['downsample'] != ds:
+                changed = True
+                self.opts['downsample'] = ds
+                
+        if auto is not None and self.opts['autoDownsample'] != auto:
+            self.opts['autoDownsample'] = auto
+            changed = True
+                
+        if method is not None:
+            if self.opts['downsampleMethod'] != method:
+                changed = True
+                self.opts['downsampleMethod'] = method
+        
+        if changed:
+            self.xDisp = self.yDisp = None
+            self.updateItems()
+        
+    def setClipToView(self, clip):
+        if self.opts['clipToView'] == clip:
             return
-        self.opts['downsample'] = ds
+        self.opts['clipToView'] = clip
         self.xDisp = self.yDisp = None
         self.updateItems()
+        
         
     def setData(self, *args, **kargs):
         """
@@ -315,7 +363,7 @@ class PlotDataItem(GraphicsObject):
                 raise Exception('Invalid data type %s' % type(data))
             
         elif len(args) == 2:
-            seq = ('listOfValues', 'MetaArray')
+            seq = ('listOfValues', 'MetaArray', 'empty')
             if dataType(args[0]) not in seq or  dataType(args[1]) not in seq:
                 raise Exception('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
             if not isinstance(args[0], np.ndarray):
@@ -376,6 +424,7 @@ class PlotDataItem(GraphicsObject):
         
         self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
         self.yData = y.view(np.ndarray)
+        self.xClean = self.yClean = None
         self.xDisp = None
         self.yDisp = None
         prof.mark('set data')
@@ -423,23 +472,28 @@ class PlotDataItem(GraphicsObject):
     def getData(self):
         if self.xData is None:
             return (None, None)
-        if self.xDisp is None:
+        
+        if self.xClean is None:
             nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
             if any(nanMask):
                 self.dataMask = ~nanMask
-                x = self.xData[self.dataMask]
-                y = self.yData[self.dataMask]
+                self.xClean = self.xData[self.dataMask]
+                self.yClean = self.yData[self.dataMask]
             else:
                 self.dataMask = None
-                x = self.xData
-                y = self.yData
-                
+                self.xClean = self.xData
+                self.yClean = self.yData
             
-            ds = self.opts['downsample']
-            if ds > 1:
-                x = x[::ds]
-                #y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
-                y = y[::ds]
+        if self.xDisp is None:
+            x = self.xClean
+            y = self.yClean
+            
+            
+            #ds = self.opts['downsample']
+            #if isinstance(ds, int) and ds > 1:
+                #x = x[::ds]
+                ##y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
+                #y = y[::ds]
             if self.opts['fftMode']:
                 f = np.fft.fft(y) / len(y)
                 y = abs(f[1:len(f)/2])
@@ -457,6 +511,53 @@ class PlotDataItem(GraphicsObject):
                     y = y[self.dataMask]
                 else:
                     self.dataMask = None
+                    
+            ds = self.opts['downsample']
+            if not isinstance(ds, int):
+                ds = 1
+                
+            if self.opts['autoDownsample']:
+                # this option presumes that x-values have uniform spacing
+                range = self.viewRect()
+                if range is not None:
+                    dx = float(x[-1]-x[0]) / (len(x)-1)
+                    x0 = (range.left()-x[0]) / dx
+                    x1 = (range.right()-x[0]) / dx
+                    width = self.getViewBox().width()
+                    ds = int(max(1, int(0.2 * (x1-x0) / width)))
+                    ## downsampling is expensive; delay until after clipping.
+            
+            if self.opts['clipToView']:
+                # this option presumes that x-values have uniform spacing
+                range = self.viewRect()
+                if range is not None:
+                    dx = float(x[-1]-x[0]) / (len(x)-1)
+                    # clip to visible region extended by downsampling value
+                    x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)
+                    x1 = np.clip(int((range.right()-x[0])/dx)+2*ds , 0, len(x)-1)
+                    x = x[x0:x1]
+                    y = y[x0:x1]
+                    
+            if ds > 1:
+                if self.opts['downsampleMethod'] == 'subsample':
+                    x = x[::ds]
+                    y = y[::ds]
+                elif self.opts['downsampleMethod'] == 'mean':
+                    n = len(x) / ds
+                    x = x[:n*ds:ds]
+                    y = y[:n*ds].reshape(n,ds).mean(axis=1)
+                elif self.opts['downsampleMethod'] == 'peak':
+                    n = len(x) / ds
+                    x1 = np.empty((n,2))
+                    x1[:] = x[:n*ds:ds,np.newaxis]
+                    x = x1.reshape(n*2)
+                    y1 = np.empty((n,2))
+                    y2 = y[:n*ds].reshape((n, ds))
+                    y1[:,0] = y2.max(axis=1)
+                    y1[:,1] = y2.min(axis=1)
+                    y = y1.reshape(n*2)
+                
+                    
             self.xDisp = x
             self.yDisp = y
         #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
@@ -542,6 +643,8 @@ class PlotDataItem(GraphicsObject):
         #self.scatters = []
         self.xData = None
         self.yData = None
+        self.xClean = None
+        self.yClean = None
         self.xDisp = None
         self.yDisp = None
         self.curve.setData([])
@@ -556,6 +659,14 @@ class PlotDataItem(GraphicsObject):
     def scatterClicked(self, plt, points):
         self.sigClicked.emit(self)
         self.sigPointsClicked.emit(self, points)
+    
+    def viewRangeChanged(self):
+        # view range has changed; re-plot if needed
+        if self.opts['clipToView'] or self.opts['autoDownsample']:
+            self.xDisp = self.yDisp = None
+            self.updateItems()
+            
+    
     
     
 def dataType(obj):

@@ -264,6 +264,7 @@ def mkPen(*args, **kargs):
     color = kargs.get('color', None)
     width = kargs.get('width', 1)
     style = kargs.get('style', None)
+    dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
     hsv = kargs.get('hsv', None)
     
@@ -291,6 +292,8 @@ def mkPen(*args, **kargs):
     pen.setCosmetic(cosmetic)
     if style is not None:
         pen.setStyle(style)
+    if dash is not None:
+        pen.setDashPattern(dash)
     return pen
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
@@ -1966,6 +1969,8 @@ def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
     s2 = spacing**2
     
     yvals = np.empty(len(data))
+    if len(data) == 0:
+        return yvals
     yvals[0] = 0
     for i in range(1,len(data)):
         x = data[i]     # current x value to be placed

@@ -533,6 +533,7 @@ class GraphicsItem(object):
     def viewTransformChanged(self):
         """
         Called whenever the transformation matrix of the view has changed.
+        (eg, the view range has changed or the view was resized)
         """
         pass
     

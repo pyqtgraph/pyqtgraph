@@ -28,6 +28,15 @@ def ftrace(func):
         return rv
     return w
 
+def warnOnException(func):
+    """Decorator which catches/ignores exceptions and prints a stack trace."""
+    def w(*args, **kwds):
+        try:
+            func(*args, **kwds)
+        except:
+            printExc('Ignored exception:')
+    return w
+
 def getExc(indent=4, prefix='|  '):
     tb = traceback.format_exc()
     lines = []

@@ -42,12 +42,18 @@ class AxisItem(GraphicsWidget):
             self.label.rotate(-90)
             
         self.style = {
-            'tickTextOffset': 3,  ## spacing between text and axis
+            'tickTextOffset': (5, 2),  ## (horizontal, vertical) spacing between text and axis 
             'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18, 
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick 
+            'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally. 
+                (0, 0.8),    ## never fill more than 80% of the axis
+                (2, 0.6),    ## If we already have 2 ticks with text, fill no more than 60% of the axis
+                (4, 0.4),    ## If we already have 4 ticks with text, fill no more than 40% of the axis
+                (6, 0.2),    ## If we already have 6 ticks with text, fill no more than 20% of the axis
+                ]
         }
         
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text 
@@ -209,14 +215,14 @@ class AxisItem(GraphicsWidget):
         ## to accomodate.
         if self.orientation in ['left', 'right']:
             mx = max(self.textWidth, x)
-            if mx > self.textWidth:
+            if mx > self.textWidth or mx < self.textWidth-10:
                 self.textWidth = mx
                 if self.style['autoExpandTextSpace'] is True:
                     self.setWidth()
                     #return True  ## size has changed
         else:
             mx = max(self.textHeight, x)
-            if mx > self.textHeight:
+            if mx > self.textHeight or mx < self.textHeight-10:
                 self.textHeight = mx
                 if self.style['autoExpandTextSpace'] is True:
                     self.setHeight()
@@ -236,7 +242,7 @@ class AxisItem(GraphicsWidget):
                 h = self.textHeight
             else:
                 h = self.style['tickTextHeight']
-            h += max(0, self.tickLength) + self.style['tickTextOffset']
+            h += max(0, self.tickLength) + self.style['tickTextOffset'][1]
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
         self.setMaximumHeight(h)
@@ -252,7 +258,7 @@ class AxisItem(GraphicsWidget):
                 w = self.textWidth
             else:
                 w = self.style['tickTextWidth']
-            w += max(0, self.tickLength) + self.style['tickTextOffset']
+            w += max(0, self.tickLength) + self.style['tickTextOffset'][0]
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
         self.setMaximumWidth(w)
@@ -431,7 +437,7 @@ class AxisItem(GraphicsWidget):
             return []
         
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        pixelSpacing = np.log(size+10) * 5
+        pixelSpacing = size / np.log(size)
         optimalTickCount = max(2., size / pixelSpacing)
         
         ## optimal minor tick spacing 
@@ -734,7 +740,7 @@ class AxisItem(GraphicsWidget):
 
         
         
-        textOffset = self.style['tickTextOffset']  ## spacing between axis and text
+        textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
         #if self.style['autoExpandTextSpace'] is True:
             #textWidth = self.textWidth
             #textHeight = self.textHeight
@@ -742,7 +748,7 @@ class AxisItem(GraphicsWidget):
             #textWidth = self.style['tickTextWidth'] ## space allocated for horizontal text
             #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
             
-        
+        textSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
         textSize2 = 0
@@ -785,9 +791,16 @@ class AxisItem(GraphicsWidget):
                     textSize = np.sum([r.width() for r in textRects])
                     textSize2 = np.max([r.height() for r in textRects])
 
-                ## If the strings are too crowded, stop drawing text now
+                ## If the strings are too crowded, stop drawing text now.
+                ## We use three different crowding limits based on the number
+                ## of texts drawn so far.
                 textFillRatio = float(textSize) / lengthInPixels
-                if textFillRatio > 0.7:
+                finished = False
+                for nTexts, limit in self.style['textFillLimits']:
+                    if len(textSpecs) >= nTexts and textFillRatio >= limit:
+                        finished = True
+                        break
+                if finished:
                     break
             
             #spacing, values = tickLevels[best]
