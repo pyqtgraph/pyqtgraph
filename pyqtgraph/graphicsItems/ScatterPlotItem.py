@@ -15,7 +15,7 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 'd', '+']])
+Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 'd', '+', 'x']])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 coords = {
@@ -32,6 +32,9 @@ for k, c in coords.items():
     for x,y in c[1:]:
         Symbols[k].lineTo(x, y)
     Symbols[k].closeSubpath()
+tr = QtGui.QTransform()
+tr.rotate(45)
+Symbols['x'] = tr.map(Symbols['+'])
 
     
 def drawSymbol(painter, symbol, size, pen, brush):
@@ -689,7 +692,8 @@ class ScatterPlotItem(GraphicsObject):
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
-            
+        
+    @pg.debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
 
         #p.setPen(fn.mkPen('r'))

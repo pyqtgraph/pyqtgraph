@@ -887,6 +887,12 @@ class ObjectProxy(object):
     def __div__(self, *args):
         return self._getSpecialAttr('__div__')(*args)
         
+    def __truediv__(self, *args):
+        return self._getSpecialAttr('__truediv__')(*args)
+        
+    def __floordiv__(self, *args):
+        return self._getSpecialAttr('__floordiv__')(*args)
+        
     def __mul__(self, *args):
         return self._getSpecialAttr('__mul__')(*args)
         
@@ -902,6 +908,12 @@ class ObjectProxy(object):
     def __idiv__(self, *args):
         return self._getSpecialAttr('__idiv__')(*args, _callSync='off')
         
+    def __itruediv__(self, *args):
+        return self._getSpecialAttr('__itruediv__')(*args, _callSync='off')
+        
+    def __ifloordiv__(self, *args):
+        return self._getSpecialAttr('__ifloordiv__')(*args, _callSync='off')
+        
     def __imul__(self, *args):
         return self._getSpecialAttr('__imul__')(*args, _callSync='off')
         
@@ -914,17 +926,11 @@ class ObjectProxy(object):
     def __lshift__(self, *args):
         return self._getSpecialAttr('__lshift__')(*args)
         
-    def __floordiv__(self, *args):
-        return self._getSpecialAttr('__pow__')(*args)
-        
     def __irshift__(self, *args):
-        return self._getSpecialAttr('__rshift__')(*args, _callSync='off')
+        return self._getSpecialAttr('__irshift__')(*args, _callSync='off')
         
     def __ilshift__(self, *args):
-        return self._getSpecialAttr('__lshift__')(*args, _callSync='off')
-        
-    def __ifloordiv__(self, *args):
-        return self._getSpecialAttr('__pow__')(*args, _callSync='off')
+        return self._getSpecialAttr('__ilshift__')(*args, _callSync='off')
         
     def __eq__(self, *args):
         return self._getSpecialAttr('__eq__')(*args)
@@ -974,6 +980,12 @@ class ObjectProxy(object):
     def __rdiv__(self, *args):
         return self._getSpecialAttr('__rdiv__')(*args)
         
+    def __rfloordiv__(self, *args):
+        return self._getSpecialAttr('__rfloordiv__')(*args)
+        
+    def __rtruediv__(self, *args):
+        return self._getSpecialAttr('__rtruediv__')(*args)
+        
     def __rmul__(self, *args):
         return self._getSpecialAttr('__rmul__')(*args)
         
@@ -985,9 +997,6 @@ class ObjectProxy(object):
         
     def __rlshift__(self, *args):
         return self._getSpecialAttr('__rlshift__')(*args)
-        
-    def __rfloordiv__(self, *args):
-        return self._getSpecialAttr('__rpow__')(*args)
         
     def __rand__(self, *args):
         return self._getSpecialAttr('__rand__')(*args)

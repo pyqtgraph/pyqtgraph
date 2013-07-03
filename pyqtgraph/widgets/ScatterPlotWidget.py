@@ -190,10 +190,15 @@ class ScatterPlotWidget(QtGui.QSplitter):
             for ax in [0,1]:
                 if not enum[ax]:
                     continue
-                for i in range(int(xy[ax].max())+1):
+                imax = int(xy[ax].max()) if len(xy[ax]) > 0 else 0
+                for i in range(imax+1):
                     keymask = xy[ax] == i
                     scatter = pg.pseudoScatter(xy[1-ax][keymask], bidir=True)
-                    scatter *= 0.2 / np.abs(scatter).max()
+                    if len(scatter) == 0:
+                        continue
+                    smax = np.abs(scatter).max()
+                    if smax != 0:
+                        scatter *= 0.2 / smax
                     xy[ax][keymask] += scatter
         
         if self.scatterPlot is not None:
