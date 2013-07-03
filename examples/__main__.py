@@ -1,13 +1,12 @@
 import sys, os, subprocess, time
 
-try:
-    from . import initExample
-except ValueError:
-    #__package__ = os.path.split(os.path.dirname(__file__))[-1]
-    sys.excepthook(*sys.exc_info())
-    print("examples/ can not be executed as a script; please run 'python -m examples' instead.")
-    sys.exit(1)
+if __name__ == "__main__" and (__package__ is None or __package__==''):
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, parent_dir)
+    import examples
+    __package__ = "examples"
 
+from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
 if USE_PYSIDE:

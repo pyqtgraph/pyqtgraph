@@ -139,7 +139,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         else:
             items = item.childItems()
             items.append(item)
-        items.sort(lambda a,b: cmp(a.depthValue(), b.depthValue()))
+        items.sort(key=lambda x: x.depthValue())
         for i in items:
             if not i.visible():
                 continue
@@ -154,7 +154,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     ver = glGetString(GL_VERSION)
                     if ver is not None:
                         ver = ver.split()[0]
-                        if int(ver.split('.')[0]) < 2:
+                        if int(ver.split(b'.')[0]) < 2:
                             print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
                         else:
                             print(msg)

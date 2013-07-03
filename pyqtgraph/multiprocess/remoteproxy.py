@@ -932,9 +932,9 @@ class ObjectProxy(object):
     def __ilshift__(self, *args):
         return self._getSpecialAttr('__ilshift__')(*args, _callSync='off')
         
-    def __eq__(self, *args):
-        return self._getSpecialAttr('__eq__')(*args)
-    
+    #def __eq__(self, *args):
+    #   return self._getSpecialAttr('__eq__')(*args)
+
     def __ne__(self, *args):
         return self._getSpecialAttr('__ne__')(*args)
         

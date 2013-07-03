@@ -146,7 +146,7 @@ class GLScatterPlotItem(GLGraphicsItem):
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size
                     #glPointSize(self.size)
-                glDrawArrays(GL_POINTS, 0, pos.size / pos.shape[-1])
+                glDrawArrays(GL_POINTS, 0, int(pos.size / pos.shape[-1]))
             finally:
                 glDisableClientState(GL_NORMAL_ARRAY)
                 glDisableClientState(GL_VERTEX_ARRAY)

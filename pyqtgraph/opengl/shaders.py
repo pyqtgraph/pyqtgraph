@@ -354,7 +354,7 @@ class ShaderProgram(object):
         
     def uniform(self, name):
         """Return the location integer for a uniform variable in this program"""
-        return glGetUniformLocation(self.program(), name)
+        return glGetUniformLocation(self.program(), bytes(name,'utf_8'))
 
     #def uniformBlockInfo(self, blockName):
         #blockIndex = glGetUniformBlockIndex(self.program(), blockName)
