@@ -139,14 +139,19 @@ p.param('Save/Restore functionality', 'Restore State').sigActivated.connect(rest
 ## Create two ParameterTree widgets, both accessing the same data
 t = ParameterTree()
 t.setParameters(p, showTop=False)
-t.show()
 t.setWindowTitle('pyqtgraph example: Parameter Tree')
-t.resize(400,800)
 t2 = ParameterTree()
 t2.setParameters(p, showTop=False)
-t2.show()
-t2.resize(400,800)
-    
+
+win = QtGui.QWidget()
+layout = QtGui.QGridLayout()
+win.setLayout(layout)
+layout.addWidget(QtGui.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
+layout.addWidget(t, 1, 0, 1, 1)
+layout.addWidget(t2, 1, 1, 1, 1)
+win.show()
+win.resize(800,800)
+
 ## test save/restore
 s = p.saveState()
 p.restoreState(s)

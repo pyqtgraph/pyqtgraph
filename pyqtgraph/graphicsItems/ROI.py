@@ -49,7 +49,13 @@ class ROI(GraphicsObject):
     sigRegionChanged        Emitted any time the position of the ROI changes,
                             including while it is being dragged by the user.
     sigHoverEvent           Emitted when the mouse hovers over the ROI.
-    sigClicked              Emitted when the user clicks on the ROI
+    sigClicked              Emitted when the user clicks on the ROI.
+                            Note that clicking is disabled by default to prevent
+                            stealing clicks from objects behind the ROI. To 
+                            enable clicking, call 
+                            roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton). 
+                            See QtGui.QGraphicsItem documentation for more 
+                            details.
     sigRemoveRequested      Emitted when the user selects 'remove' from the 
                             ROI's context menu (if available).
     ----------------------- ----------------------------------------------------

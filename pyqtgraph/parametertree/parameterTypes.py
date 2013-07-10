@@ -619,9 +619,15 @@ class TextParameterItem(WidgetParameterItem):
         self.addChild(self.subItem)
 
     def treeWidgetChanged(self):
+        ## TODO: fix so that superclass method can be called
+        ## (WidgetParameter should just natively support this style)
+        #WidgetParameterItem.treeWidgetChanged(self)
         self.treeWidget().setFirstItemColumnSpanned(self.subItem, True)
         self.treeWidget().setItemWidget(self.subItem, 0, self.textBox)
-        self.setExpanded(True)
+        
+        # for now, these are copied from ParameterItem.treeWidgetChanged
+        self.setHidden(not self.param.opts.get('visible', True))
+        self.setExpanded(self.param.opts.get('expanded', True))
         
     def makeWidget(self):
         self.textBox = QtGui.QTextEdit()

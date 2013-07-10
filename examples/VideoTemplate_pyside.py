@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './examples/VideoTemplate.ui'
+# Form implementation generated from reading ui file './VideoTemplate.ui'
 #
-# Created: Sun Nov  4 18:24:21 2012
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Tue Jul  9 23:38:19 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,31 +12,55 @@ from PySide import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(985, 674)
+        MainWindow.resize(695, 798)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtGui.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
-        self.rawImg = RawImageWidget(self.centralwidget)
+        self.rawRadio = QtGui.QRadioButton(self.centralwidget)
+        self.rawRadio.setChecked(True)
+        self.rawRadio.setObjectName("rawRadio")
+        self.gridLayout.addWidget(self.rawRadio, 3, 0, 1, 1)
+        self.gfxRadio = QtGui.QRadioButton(self.centralwidget)
+        self.gfxRadio.setObjectName("gfxRadio")
+        self.gridLayout.addWidget(self.gfxRadio, 2, 0, 1, 1)
+        self.stack = QtGui.QStackedWidget(self.centralwidget)
+        self.stack.setObjectName("stack")
+        self.page = QtGui.QWidget()
+        self.page.setObjectName("page")
+        self.gridLayout_3 = QtGui.QGridLayout(self.page)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.graphicsView = GraphicsView(self.page)
+        self.graphicsView.setObjectName("graphicsView")
+        self.gridLayout_3.addWidget(self.graphicsView, 0, 0, 1, 1)
+        self.stack.addWidget(self.page)
+        self.page_2 = QtGui.QWidget()
+        self.page_2.setObjectName("page_2")
+        self.gridLayout_4 = QtGui.QGridLayout(self.page_2)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.rawImg = RawImageWidget(self.page_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.rawImg.sizePolicy().hasHeightForWidth())
         self.rawImg.setSizePolicy(sizePolicy)
         self.rawImg.setObjectName("rawImg")
-        self.gridLayout.addWidget(self.rawImg, 0, 0, 1, 1)
-        self.graphicsView = GraphicsView(self.centralwidget)
-        self.graphicsView.setObjectName("graphicsView")
-        self.gridLayout.addWidget(self.graphicsView, 0, 1, 1, 1)
-        self.rawRadio = QtGui.QRadioButton(self.centralwidget)
-        self.rawRadio.setChecked(True)
-        self.rawRadio.setObjectName("rawRadio")
-        self.gridLayout.addWidget(self.rawRadio, 1, 0, 1, 1)
-        self.gfxRadio = QtGui.QRadioButton(self.centralwidget)
-        self.gfxRadio.setObjectName("gfxRadio")
-        self.gridLayout.addWidget(self.gfxRadio, 1, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.rawImg, 0, 0, 1, 1)
+        self.stack.addWidget(self.page_2)
+        self.page_3 = QtGui.QWidget()
+        self.page_3.setObjectName("page_3")
+        self.gridLayout_5 = QtGui.QGridLayout(self.page_3)
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.rawGLImg = RawImageGLWidget(self.page_3)
+        self.rawGLImg.setObjectName("rawGLImg")
+        self.gridLayout_5.addWidget(self.rawGLImg, 0, 0, 1, 1)
+        self.stack.addWidget(self.page_3)
+        self.gridLayout.addWidget(self.stack, 0, 0, 1, 1)
+        self.rawGLRadio = QtGui.QRadioButton(self.centralwidget)
+        self.rawGLRadio.setObjectName("rawGLRadio")
+        self.gridLayout.addWidget(self.rawGLRadio, 4, 0, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 1, 0, 1, 4)
         self.label = QtGui.QLabel(self.centralwidget)
         self.label.setObjectName("label")
@@ -125,12 +149,14 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
+        self.stack.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.rawRadio.setText(QtGui.QApplication.translate("MainWindow", "RawImageWidget (unscaled; faster)", None, QtGui.QApplication.UnicodeUTF8))
-        self.gfxRadio.setText(QtGui.QApplication.translate("MainWindow", "GraphicsView + ImageItem (scaled; slower)", None, QtGui.QApplication.UnicodeUTF8))
+        self.rawRadio.setText(QtGui.QApplication.translate("MainWindow", "RawImageWidget", None, QtGui.QApplication.UnicodeUTF8))
+        self.gfxRadio.setText(QtGui.QApplication.translate("MainWindow", "GraphicsView + ImageItem", None, QtGui.QApplication.UnicodeUTF8))
+        self.rawGLRadio.setText(QtGui.QApplication.translate("MainWindow", "RawGLImageWidget", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("MainWindow", "Data type", None, QtGui.QApplication.UnicodeUTF8))
         self.dtypeCombo.setItemText(0, QtGui.QApplication.translate("MainWindow", "uint8", None, QtGui.QApplication.UnicodeUTF8))
         self.dtypeCombo.setItemText(1, QtGui.QApplication.translate("MainWindow", "uint16", None, QtGui.QApplication.UnicodeUTF8))
@@ -145,4 +171,5 @@ class Ui_MainWindow(object):
         self.fpsLabel.setText(QtGui.QApplication.translate("MainWindow", "FPS", None, QtGui.QApplication.UnicodeUTF8))
         self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph import SpinBox, GradientWidget, GraphicsView, RawImageWidget
+from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
+from pyqtgraph import GradientWidget, SpinBox, GraphicsView, RawImageWidget
