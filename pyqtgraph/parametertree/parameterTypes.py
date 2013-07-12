@@ -476,32 +476,16 @@ class ListParameterItem(WidgetParameterItem):
         return w
         
     def value(self):
-        #vals = self.param.opts['limits']
         key = asUnicode(self.widget.currentText())
-        #if isinstance(vals, dict):
-            #return vals[key]
-        #else:
-            #return key
-        #print key, self.forward
         
         return self.forward.get(key, None)
             
     def setValue(self, val):
-        #vals = self.param.opts['limits']
-        #if isinstance(vals, dict):
-            #key = None
-            #for k,v in vals.iteritems():
-                #if v == val:
-                    #key = k
-            #if key is None:
-                #raise Exception("Value '%s' not allowed." % val)
-        #else:
-            #key = unicode(val)
         self.targetValue = val
-        if val not in self.reverse:
+        if val not in self.reverse[0]:
             self.widget.setCurrentIndex(0)
         else:
-            key = self.reverse[val]
+            key = self.reverse[1][self.reverse[0].index(val)]
             ind = self.widget.findText(key)
             self.widget.setCurrentIndex(ind)
 
@@ -531,8 +515,8 @@ class ListParameter(Parameter):
     itemClass = ListParameterItem
 
     def __init__(self, **opts):
-        self.forward = OrderedDict()  ## name: value
-        self.reverse = OrderedDict()  ## value: name
+        self.forward = OrderedDict()  ## {name: value, ...}
+        self.reverse = ([], [])       ## ([value, ...], [name, ...])
         
         ## Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
@@ -547,23 +531,40 @@ class ListParameter(Parameter):
         
         Parameter.setLimits(self, limits)
         #print self.name(), self.value(), limits
-        if self.value() not in self.reverse and len(self.reverse) > 0:
-            self.setValue(list(self.reverse.keys())[0])
+        if len(self.reverse) > 0 and self.value() not in self.reverse[0]:
+            self.setValue(self.reverse[0][0])
+            
+    #def addItem(self, name, value=None):
+        #if name in self.forward:
+            #raise Exception("Name '%s' is already in use for this parameter" % name)
+        #limits = self.opts['limits']
+        #if isinstance(limits, dict):
+            #limits = limits.copy()
+            #limits[name] = value
+            #self.setLimits(limits)
+        #else:
+            #if value is not None:
+                #raise Exception  ## raise exception or convert to dict?
+            #limits = limits[:]
+            #limits.append(name)
+        ## what if limits == None?
             
     @staticmethod
     def mapping(limits):
-        ## Return forward and reverse mapping dictionaries given a limit specification
-        forward = OrderedDict()  ## name: value
-        reverse = OrderedDict()  ## value: name
+        ## Return forward and reverse mapping objects given a limit specification
+        forward = OrderedDict()  ## {name: value, ...}
+        reverse = ([], [])       ## ([value, ...], [name, ...])
         if isinstance(limits, dict):
             for k, v in limits.items():
                 forward[k] = v
-                reverse[v] = k
+                reverse[0].append(v)
+                reverse[1].append(k)
         else:
             for v in limits:
                 n = asUnicode(v)
                 forward[n] = v
-                reverse[v] = n
+                reverse[0].append(v)
+                reverse[1].append(n)
         return forward, reverse
 
 registerParameterType('list', ListParameter, override=True)
