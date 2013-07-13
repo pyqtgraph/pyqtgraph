@@ -30,8 +30,9 @@ class GLLinePlotItem(GLGraphicsItem):
         Arguments:
         ------------------------------------------------------------------------
         pos                   (N,3) array of floats specifying point locations.
-        color                 tuple of floats (0.0-1.0) specifying
-                              a color for the entire item.
+        color                 (N,4) array of floats (0.0-1.0) or
+                              tuple of floats specifying
+                              a single color for the entire item.
         width                 float specifying line width
         antialias             enables smooth line drawing
         ====================  ==================================================
@@ -71,9 +72,18 @@ class GLLinePlotItem(GLGraphicsItem):
         self.setupGLState()
         
         glEnableClientState(GL_VERTEX_ARRAY)
+
         try:
             glVertexPointerf(self.pos)
-            glColor4f(*self.color)
+            
+            if isinstance(self.color, np.ndarray):
+                glEnableClientState(GL_COLOR_ARRAY)
+                glColorPointerf(self.color)
+            else:
+                if isinstance(self.color, QtGui.QColor):
+                    glColor4f(*fn.glColor(self.color))
+                else:
+                    glColor4f(*self.color)
             glLineWidth(self.width)
             #glPointSize(self.width)
             
@@ -85,6 +95,7 @@ class GLLinePlotItem(GLGraphicsItem):
                 
             glDrawArrays(GL_LINE_STRIP, 0, self.pos.size / self.pos.shape[-1])
         finally:
+            glDisableClientState(GL_COLOR_ARRAY)
             glDisableClientState(GL_VERTEX_ARRAY)
     
         
