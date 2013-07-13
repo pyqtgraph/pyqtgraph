@@ -1,3 +1,4 @@
+import OpenGL
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 import re
@@ -218,6 +219,8 @@ class Shader(object):
         if self.compiled is None:
             try:
                 self.compiled = shaders.compileShader(self.code, self.shaderType)
+            except OpenGL.NullFunctionError:
+                raise Exception("This OpenGL implementation does not support shader programs; many features on pyqtgraph will not work.")
             except RuntimeError as exc:
                 ## Format compile errors a bit more nicely
                 if len(exc.args) == 3:
