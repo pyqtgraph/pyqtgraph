@@ -475,7 +475,7 @@ class PlotDataItem(GraphicsObject):
         
         if self.xClean is None:
             nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
-            if any(nanMask):
+            if nanMask.any():
                 self.dataMask = ~nanMask
                 self.xClean = self.xData[self.dataMask]
                 self.yClean = self.yData[self.dataMask]
