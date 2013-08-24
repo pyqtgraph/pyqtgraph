@@ -281,7 +281,7 @@ def plot(*args, **kargs):
     #if len(args)+len(kargs) > 0:
         #w.plot(*args, **kargs)
         
-    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom']
+    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
     for k in kargs:

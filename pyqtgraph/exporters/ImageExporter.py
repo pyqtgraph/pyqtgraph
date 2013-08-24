@@ -17,7 +17,11 @@ class ImageExporter(Exporter):
             scene = item.scene()
         else:
             scene = item
-        bg = scene.views()[0].backgroundBrush().color()
+        bgbrush = scene.views()[0].backgroundBrush()
+        bg = bgbrush.color()
+        if bgbrush.style() == QtCore.Qt.NoBrush:
+            bg.setAlpha(0)
+            
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'width', 'type': 'int', 'value': tr.width(), 'limits': (0, None)},
             {'name': 'height', 'type': 'int', 'value': tr.height(), 'limits': (0, None)},
