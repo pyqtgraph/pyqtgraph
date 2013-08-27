@@ -616,6 +616,7 @@ registerParameterType('action', ActionParameter, override=True)
 class TextParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         WidgetParameterItem.__init__(self, param, depth)
+        self.hideWidget = False
         self.subItem = QtGui.QTreeWidgetItem()
         self.addChild(self.subItem)
 
