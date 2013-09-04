@@ -376,10 +376,10 @@ class Flowchart(Node):
             #tdeps[t] = lastNode
             if lastInd is not None:
                 dels.append((lastInd+1, t))
-        dels.sort(lambda a,b: cmp(b[0], a[0]))
+        #dels.sort(lambda a,b: cmp(b[0], a[0]))
+        dels.sort(key=lambda a: a[0], reverse=True)
         for i, t in dels:
             ops.insert(i, ('d', t))
-            
         return ops
         
         
@@ -491,7 +491,8 @@ class Flowchart(Node):
                 self.clear()
             Node.restoreState(self, state)
             nodes = state['nodes']
-            nodes.sort(lambda a, b: cmp(a['pos'][0], b['pos'][0]))
+            #nodes.sort(lambda a, b: cmp(a['pos'][0], b['pos'][0]))
+            nodes.sort(key=lambda a: a['pos'][0])
             for n in nodes:
                 if n['name'] in self._nodes:
                     #self._nodes[n['name']].graphicsItem().moveBy(*n['pos'])

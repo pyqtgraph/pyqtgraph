@@ -167,7 +167,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         else:
             items = item.childItems()
             items.append(item)
-        items.sort(key=lambda x: x.depthValue())
+        items.sort(key=lambda a: a.depthValue())
         for i in items:
             if not i.visible():
                 continue

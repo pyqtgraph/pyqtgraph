@@ -139,6 +139,7 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
         self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
+        self.rbScaleBox.setZValue(1e9)
         self.rbScaleBox.hide()
         self.addItem(self.rbScaleBox, ignoreBounds=True)
         
@@ -792,12 +793,15 @@ class ViewBox(GraphicsWidget):
             else:
                 overlap = min(sg.bottom(), vg.bottom()) - max(sg.top(), vg.top())
                 if overlap < min(vg.height()/3, sg.height()/3):  ## if less than 1/3 of views overlap, 
-                                                               ## then just replicate the view
+                                                                 ## then just replicate the view
                     y1 = vr.top()
                     y2 = vr.bottom()
                 else:  ## views overlap; line them up
                     upp = float(vr.height()) / vg.height()
-                    y2 = vr.bottom() - (sg.y()-vg.y()) * upp
+                    if self.yInverted():
+                        y2 = vr.bottom() + (sg.bottom()-vg.bottom()) * upp
+                    else:
+                        y2 = vr.bottom() + (sg.top()-vg.top()) * upp
                     y1 = y2 - sg.height() * upp
                 self.enableAutoRange(ViewBox.YAxis, False)
                 self.setYRange(y1, y2, padding=0)

@@ -130,8 +130,13 @@ def update():
 
     if ui.rawRadio.isChecked():
         ui.rawImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
+        ui.stack.setCurrentIndex(1)
+    elif ui.rawGLRadio.isChecked():
+        ui.rawGLImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
+        ui.stack.setCurrentIndex(2)
     else:
         img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut)
+        ui.stack.setCurrentIndex(0)
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
         
     ptr += 1
