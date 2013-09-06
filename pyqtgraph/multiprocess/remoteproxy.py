@@ -205,7 +205,11 @@ class RemoteEventHandler(object):
                             fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
                 
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
-                    result = obj(*fnargs)
+                    try:
+                        result = obj(*fnargs)
+                    except:
+                        print("Failed to call object %s: %d, %s" % (obj, len(fnargs), fnargs[1:]))
+                        raise
                 else:
                     result = obj(*fnargs, **fnkwds)
                     
