@@ -5,7 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from .Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 
 class Vector(QtGui.QVector3D):
@@ -33,7 +33,13 @@ class Vector(QtGui.QVector3D):
 
     def __len__(self):
         return 3
-        
+
+    def __add__(self, b):
+        # workaround for pyside bug. see https://bugs.launchpad.net/pyqtgraph/+bug/1223173
+        if USE_PYSIDE and isinstance(b, QtGui.QVector3D):
+            b = Vector(b)
+        return QtGui.QVector3D.__add__(self, b)
+    
     #def __reduce__(self):
         #return (Point, (self.x(), self.y()))
         
