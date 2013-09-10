@@ -1,4 +1,5 @@
 from .Exporter import Exporter
+from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import pyqtgraph as pg
@@ -91,8 +92,8 @@ class SVGExporter(Exporter):
             md.setData('image/svg+xml', QtCore.QByteArray(xml.encode('UTF-8')))
             QtGui.QApplication.clipboard().setMimeData(md)
         else:
-            with open(fileName, 'w') as fh:
-                fh.write(xml.encode('UTF-8'))
+            with open(fileName, 'wt') as fh:
+                fh.write(asUnicode(xml))
 
 
 xmlHeader = """\
@@ -221,8 +222,8 @@ def _generateItemSvg(item, nodes=None, root=None):
             ## this is taken care of in generateSvg instead.
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
-            
-        xmlStr = str(arr)
+
+        xmlStr = bytes(arr).decode('utf-8')
         doc = xml.parseString(xmlStr)
         
     try:
@@ -340,7 +341,7 @@ def correctCoordinates(node, item):
         if match is None:
             vals = [1,0,0,1,0,0]
         else:
-            vals = map(float, match.groups()[0].split(','))
+            vals = [float(a) for a in match.groups()[0].split(',')]
         tr = np.array([[vals[0], vals[2], vals[4]], [vals[1], vals[3], vals[5]]])
         
         removeTransform = False
