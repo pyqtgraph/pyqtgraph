@@ -128,7 +128,7 @@ class Renderer(GraphicsView):
             self.shm = mmap.mmap(-1, mmap.PAGESIZE, self.shmtag) # use anonymous mmap on windows
         else:
             self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
-            self.shmFile.write('\x00' * mmap.PAGESIZE)
+            self.shmFile.write(b'\x00' * (mmap.PAGESIZE+1))
             fd = self.shmFile.fileno()
             self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         atexit.register(self.close)

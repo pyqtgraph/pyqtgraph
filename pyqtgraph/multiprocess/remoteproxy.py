@@ -1014,6 +1014,10 @@ class ObjectProxy(object):
     def __rmod__(self, *args):
         return self._getSpecialAttr('__rmod__')(*args)
         
+    def __hash__(self):
+        ## Required for python3 since __eq__ is defined.
+        return id(self)
+        
 class DeferredObjectProxy(ObjectProxy):
     """
     This class represents an attribute (or sub-attribute) of a proxied object.

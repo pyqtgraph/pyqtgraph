@@ -23,8 +23,8 @@ from pyqtgraph import importAll
 
 importAll('items', globals(), locals())
 \
-from MeshData import MeshData
+from .MeshData import MeshData
 ## for backward compatibility:
 #MeshData.MeshData = MeshData  ## breaks autodoc.
 
-import shaders
+from . import shaders

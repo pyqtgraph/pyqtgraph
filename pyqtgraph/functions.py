@@ -5,6 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from __future__ import division
 from .python2_3 import asUnicode
 Colors = {
     'b': (0,0,255,255),
@@ -1863,9 +1864,9 @@ def isosurface(data, level):
     for i in [0,1,2]:
         vim = vertexInds[:,3] == i
         vi = vertexInds[vim, :3]
-        viFlat = (vi * (np.array(data.strides[:3]) / data.itemsize)[np.newaxis,:]).sum(axis=1)
+        viFlat = (vi * (np.array(data.strides[:3]) // data.itemsize)[np.newaxis,:]).sum(axis=1)
         v1 = dataFlat[viFlat]
-        v2 = dataFlat[viFlat + data.strides[i]/data.itemsize]
+        v2 = dataFlat[viFlat + data.strides[i]//data.itemsize]
         vertexes[vim,i] += (level-v1) / (v2-v1)
     
     ### compute the set of vertex indexes for each face. 
@@ -1891,7 +1892,7 @@ def isosurface(data, level):
     #p = debug.Profiler('isosurface', disabled=False)
     
     ## this helps speed up an indexing operation later on
-    cs = np.array(cutEdges.strides)/cutEdges.itemsize
+    cs = np.array(cutEdges.strides)//cutEdges.itemsize
     cutEdges = cutEdges.flatten()
 
     ## this, strangely, does not seem to help.

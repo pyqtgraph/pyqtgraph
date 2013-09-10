@@ -93,7 +93,7 @@ class GLLinePlotItem(GLGraphicsItem):
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
                 glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
                 
-            glDrawArrays(GL_LINE_STRIP, 0, self.pos.size / self.pos.shape[-1])
+            glDrawArrays(GL_LINE_STRIP, 0, int(self.pos.size / self.pos.shape[-1]))
         finally:
             glDisableClientState(GL_COLOR_ARRAY)
             glDisableClientState(GL_VERTEX_ARRAY)

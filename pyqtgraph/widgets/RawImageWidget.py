@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtCore, QtGui
 try:
     from pyqtgraph.Qt import QtOpenGL
+    from OpenGL.GL import *
     HAVE_OPENGL = True
 except ImportError:
     HAVE_OPENGL = False
@@ -59,7 +60,6 @@ class RawImageWidget(QtGui.QWidget):
         p.end()
 
 if HAVE_OPENGL:
-    from OpenGL.GL import *
     class RawImageGLWidget(QtOpenGL.QGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
