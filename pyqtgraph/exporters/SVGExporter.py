@@ -350,9 +350,9 @@ def correctCoordinates(node, item):
                 continue
             if ch.tagName == 'polyline':
                 removeTransform = True
-                coords = np.array([map(float, c.split(',')) for c in ch.getAttribute('points').strip().split(' ')])
+                coords = np.array([[float(a) for a in c.split(',')] for c in ch.getAttribute('points').strip().split(' ')])
                 coords = pg.transformCoordinates(tr, coords, transpose=True)
-                ch.setAttribute('points', ' '.join([','.join(map(str, c)) for c in coords]))
+                ch.setAttribute('points', ' '.join([','.join([str(a) for a in c]) for c in coords]))
             elif ch.tagName == 'path':
                 removeTransform = True
                 newCoords = ''
