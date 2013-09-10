@@ -1,3 +1,7 @@
+try:
+    from OpenGL import NullFunctionError
+except ImportError:
+    from OpenGL.error import NullFunctionError
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 import re
@@ -218,15 +222,20 @@ class Shader(object):
         if self.compiled is None:
             try:
                 self.compiled = shaders.compileShader(self.code, self.shaderType)
+            except NullFunctionError:
+                raise Exception("This OpenGL implementation does not support shader programs; many OpenGL features in pyqtgraph will not work.")
             except RuntimeError as exc:
                 ## Format compile errors a bit more nicely
                 if len(exc.args) == 3:
                     err, code, typ = exc.args
                     if not err.startswith('Shader compile failure'):
                         raise
-                    code = code[0].split('\n')
+                    code = code[0].decode('utf_8').split('\n')
                     err, c, msgs = err.partition(':')
                     err = err + '\n'
+                    msgs = re.sub('b\'','',msgs)
+                    msgs = re.sub('\'$','',msgs)
+                    msgs = re.sub('\\\\n','\n',msgs)
                     msgs = msgs.split('\n')
                     errNums = [()] * len(code)
                     for i, msg in enumerate(msgs):
@@ -354,7 +363,7 @@ class ShaderProgram(object):
         
     def uniform(self, name):
         """Return the location integer for a uniform variable in this program"""
-        return glGetUniformLocation(self.program(), bytes(name,'utf_8'))
+        return glGetUniformLocation(self.program(), name.encode('utf_8'))
 
     #def uniformBlockInfo(self, blockName):
         #blockIndex = glGetUniformBlockIndex(self.program(), blockName)

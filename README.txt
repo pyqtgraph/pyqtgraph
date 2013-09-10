@@ -12,6 +12,8 @@ Contributors:
     Christian Gavin
     Michael Cristopher Hogg
     Ulrich Leutner
+    Felix Schill
+    Guillaume Poulin
 
 Requirements:
     PyQt 4.7+ or PySide

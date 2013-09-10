@@ -1,6 +1,7 @@
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.widgets.TreeWidget import TreeWidget
 import os, weakref, re
+from .ParameterItem import ParameterItem
 #import functions as fn
         
             
@@ -103,7 +104,7 @@ class ParameterTree(TreeWidget):
         sel = self.selectedItems()
         if len(sel) != 1:
             sel = None
-        if self.lastSel is not None:
+        if self.lastSel is not None and isinstance(self.lastSel, ParameterItem):
             self.lastSel.selected(False)
         if sel is None:
             self.lastSel = None

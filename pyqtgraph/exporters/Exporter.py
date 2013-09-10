@@ -119,7 +119,7 @@ class Exporter(object):
         else:
             childs = root.childItems()
             rootItem = [root]
-        childs.sort(lambda a,b: cmp(a.zValue(), b.zValue()))
+        childs.sort(key=lambda a: a.zValue())
         while len(childs) > 0:
             ch = childs.pop(0)
             tree = self.getPaintItems(ch)

@@ -247,9 +247,9 @@ class MeshData(object):
             return self._faceNormals
         elif indexed == 'faces':
             if self._faceNormalsIndexedByFaces is None:
-                    norms = np.empty((self._faceNormals.shape[0], 3, 3))
-                    norms[:] = self._faceNormals[:,np.newaxis,:]
-                    self._faceNormalsIndexedByFaces = norms
+                norms = np.empty((self._faceNormals.shape[0], 3, 3))
+                norms[:] = self._faceNormals[:,np.newaxis,:]
+                self._faceNormalsIndexedByFaces = norms
             return self._faceNormalsIndexedByFaces
         else:
             raise Exception("Invalid indexing mode. Accepts: None, 'faces'")

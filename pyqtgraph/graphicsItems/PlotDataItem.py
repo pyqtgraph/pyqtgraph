@@ -475,7 +475,7 @@ class PlotDataItem(GraphicsObject):
         
         if self.xClean is None:
             nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
-            if any(nanMask):
+            if nanMask.any():
                 self.dataMask = ~nanMask
                 self.xClean = self.xData[self.dataMask]
                 self.yClean = self.yData[self.dataMask]
@@ -495,10 +495,7 @@ class PlotDataItem(GraphicsObject):
                 ##y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
                 #y = y[::ds]
             if self.opts['fftMode']:
-                f = np.fft.fft(y) / len(y)
-                y = abs(f[1:len(f)/2])
-                dt = x[-1] - x[0]
-                x = np.linspace(0, 0.5*len(x)/dt, len(y))
+                x,y = self._fourierTransform(x, y)
             if self.opts['logMode'][0]:
                 x = np.log10(x)
             if self.opts['logMode'][1]:
@@ -666,8 +663,21 @@ class PlotDataItem(GraphicsObject):
             self.xDisp = self.yDisp = None
             self.updateItems()
             
-    
-    
+    def _fourierTransform(self, x, y):
+        ## Perform fourier transform. If x values are not sampled uniformly,
+        ## then use interpolate.griddata to resample before taking fft.
+        dx = np.diff(x)
+        uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
+        if not uniform:
+            import scipy.interpolate as interp
+            x2 = np.linspace(x[0], x[-1], len(x))
+            y = interp.griddata(x, y, x2, method='linear')
+            x = x2
+        f = np.fft.fft(y) / len(y)
+        y = abs(f[1:len(f)/2])
+        dt = x[-1] - x[0]
+        x = np.linspace(0, 0.5*len(x)/dt, len(y))
+        return x, y
     
 def dataType(obj):
     if hasattr(obj, '__len__') and len(obj) == 0:

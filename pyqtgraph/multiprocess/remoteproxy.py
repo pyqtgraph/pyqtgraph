@@ -205,7 +205,11 @@ class RemoteEventHandler(object):
                             fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
                 
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
-                    result = obj(*fnargs)
+                    try:
+                        result = obj(*fnargs)
+                    except:
+                        print("Failed to call object %s: %d, %s" % (obj, len(fnargs), fnargs[1:]))
+                        raise
                 else:
                     result = obj(*fnargs, **fnkwds)
                     
@@ -932,9 +936,9 @@ class ObjectProxy(object):
     def __ilshift__(self, *args):
         return self._getSpecialAttr('__ilshift__')(*args, _callSync='off')
         
-    #def __eq__(self, *args):
-    #   return self._getSpecialAttr('__eq__')(*args)
-
+    def __eq__(self, *args):
+        return self._getSpecialAttr('__eq__')(*args)
+    
     def __ne__(self, *args):
         return self._getSpecialAttr('__ne__')(*args)
         
@@ -1009,6 +1013,10 @@ class ObjectProxy(object):
         
     def __rmod__(self, *args):
         return self._getSpecialAttr('__rmod__')(*args)
+        
+    def __hash__(self):
+        ## Required for python3 since __eq__ is defined.
+        return id(self)
         
 class DeferredObjectProxy(ObjectProxy):
     """

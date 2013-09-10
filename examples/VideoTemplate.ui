@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>985</width>
-    <height>674</height>
+    <width>695</width>
+    <height>798</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,33 +17,62 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="1" column="0" colspan="4">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="RawImageWidget" name="rawImg" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="GraphicsView" name="graphicsView"/>
-      </item>
-      <item row="1" column="0">
+      <item row="3" column="0">
        <widget class="QRadioButton" name="rawRadio">
         <property name="text">
-         <string>RawImageWidget (unscaled; faster)</string>
+         <string>RawImageWidget</string>
         </property>
         <property name="checked">
          <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="0">
        <widget class="QRadioButton" name="gfxRadio">
         <property name="text">
-         <string>GraphicsView + ImageItem (scaled; slower)</string>
+         <string>GraphicsView + ImageItem</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QStackedWidget" name="stack">
+        <property name="currentIndex">
+         <number>2</number>
+        </property>
+        <widget class="QWidget" name="page">
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="GraphicsView" name="graphicsView"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_2">
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="RawImageWidget" name="rawImg" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="page_3">
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <widget class="RawImageGLWidget" name="rawGLImg" native="true"/>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QRadioButton" name="rawGLRadio">
+        <property name="text">
+         <string>RawGLImageWidget</string>
         </property>
        </widget>
       </item>
@@ -249,6 +278,12 @@
    <class>SpinBox</class>
    <extends>QDoubleSpinBox</extends>
    <header>pyqtgraph</header>
+  </customwidget>
+  <customwidget>
+   <class>RawImageGLWidget</class>
+   <extends>QWidget</extends>
+   <header>pyqtgraph.widgets.RawImageWidget</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

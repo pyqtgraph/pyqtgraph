@@ -82,6 +82,7 @@ class GraphicsView(QtGui.QGraphicsView):
         ## This might help, but it's probably dangerous in the general case..
         #self.setOptimizationFlag(self.DontSavePainterState, True)
         
+        self.setBackgroundRole(QtGui.QPalette.NoRole)
         self.setBackground(background)
         
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -138,12 +139,9 @@ class GraphicsView(QtGui.QGraphicsView):
         self._background = background
         if background == 'default':
             background = pyqtgraph.getConfigOption('background')
-        if background is None:
-            self.setBackgroundRole(QtGui.QPalette.NoRole)
-        else:
-            brush = fn.mkBrush(background)
-            self.setBackgroundBrush(brush)
-         
+        brush = fn.mkBrush(background)
+        self.setBackgroundBrush(brush)
+    
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
         #print "GV: paint", ev.rect()

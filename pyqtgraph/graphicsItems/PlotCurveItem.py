@@ -261,6 +261,9 @@ class PlotCurveItem(GraphicsObject):
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
+        stepMode        If True, two orthogonal lines are drawn for each sample
+                        as steps. This is commonly used when drawing histograms.
+                        Note that in this case, len(x) == len(y) + 1
         ==============  ========================================================
         
         If non-keyword arguments are used, they will be interpreted as

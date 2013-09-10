@@ -325,7 +325,8 @@ class QtProcess(Process):
       GUI.
     - A QTimer is also started on the parent process which polls for requests
       from the child process. This allows Qt signals emitted within the child 
-      process to invoke slots on the parent process and vice-versa.
+      process to invoke slots on the parent process and vice-versa. This can 
+      be disabled using processRequests=False in the constructor.
       
     Example::
     
@@ -342,18 +343,29 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
+        self._processRequests = kwds.pop('processRequests', True)
         Process.__init__(self, **kwds)
         self.startEventTimer()
         
     def startEventTimer(self):
         from pyqtgraph.Qt import QtGui, QtCore  ## avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
-        app = QtGui.QApplication.instance()
-        if app is None:
-            raise Exception("Must create QApplication before starting QtProcess")
+        if self._processRequests:
+            app = QtGui.QApplication.instance()
+            if app is None:
+                raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
+            self.startRequestProcessing()
+    
+    def startRequestProcessing(self, interval=0.01):
+        """Start listening for requests coming from the child process.
+        This allows signals to be connected from the child process to the parent.
+        """
         self.timer.timeout.connect(self.processRequests)
-        self.timer.start(10)
+        self.timer.start(interval*1000)
         
+    def stopRequestProcessing(self):
+        self.timer.stop()
+    
     def processRequests(self):
         try:
             Process.processRequests(self)
