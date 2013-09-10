@@ -92,8 +92,8 @@ class SVGExporter(Exporter):
             md.setData('image/svg+xml', QtCore.QByteArray(xml.encode('UTF-8')))
             QtGui.QApplication.clipboard().setMimeData(md)
         else:
-            with open(fileName, 'wt') as fh:
-                fh.write(asUnicode(xml))
+            with open(fileName, 'wb') as fh:
+                fh.write(asUnicode(xml).encode('utf-8'))
 
 
 xmlHeader = """\
