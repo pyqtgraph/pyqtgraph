@@ -69,7 +69,11 @@ class GLMeshItem(GLGraphicsItem):
         self.update()
         
     def shader(self):
-        return shaders.getShaderProgram(self.opts['shader'])
+        shader = self.opts['shader']
+        if isinstance(shader, shaders.ShaderProgram):
+            return shader
+        else:
+            return shaders.getShaderProgram(shader)
         
     def setColor(self, c):
         """Set the default color to use when no vertex or face colors are specified."""

@@ -223,7 +223,7 @@ class Shader(object):
             try:
                 self.compiled = shaders.compileShader(self.code, self.shaderType)
             except NullFunctionError:
-                raise Exception("This OpenGL implementation does not support shader programs; many features on pyqtgraph will not work.")
+                raise Exception("This OpenGL implementation does not support shader programs; many OpenGL features in pyqtgraph will not work.")
             except RuntimeError as exc:
                 ## Format compile errors a bit more nicely
                 if len(exc.args) == 3:

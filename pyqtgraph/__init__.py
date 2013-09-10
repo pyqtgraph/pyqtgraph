@@ -316,7 +316,7 @@ def dbg():
     Create a console window and begin watching for exceptions.
     """
     mkQApp()
-    import console
+    from . import console
     c = console.ConsoleWidget()
     c.catchAllExceptions()
     c.show()
