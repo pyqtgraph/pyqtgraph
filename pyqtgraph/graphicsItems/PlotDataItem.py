@@ -58,6 +58,8 @@ class PlotDataItem(GraphicsObject):
         
         **Line style keyword arguments:**
             ==========   ================================================
+            connect      Specifies how / whether vertexes should be connected. 
+                         See :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
             pen          Pen to use for drawing line between points. 
                          Default is solid grey, 1px width. Use None to disable line drawing.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
@@ -119,7 +121,7 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
-        self.dataMask = None
+        #self.dataMask = None
         #self.curves = []
         #self.scatters = []
         self.curve = PlotCurveItem()
@@ -133,6 +135,8 @@ class PlotDataItem(GraphicsObject):
         
         #self.clear()
         self.opts = {
+            'connect': 'all',
+            
             'fftMode': False,
             'logMode': [False, False],
             'alphaHint': 1.0,
@@ -386,6 +390,8 @@ class PlotDataItem(GraphicsObject):
         
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
+        if 'connect' in kargs:
+            self.opts['connect'] = kargs['connect']
 
         ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
         
@@ -445,7 +451,7 @@ class PlotDataItem(GraphicsObject):
     def updateItems(self):
         
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias')]:
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect')]:
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
@@ -454,7 +460,7 @@ class PlotDataItem(GraphicsObject):
                 scatterArgs[v] = self.opts[k]
         
         x,y = self.getData()
-        scatterArgs['mask'] = self.dataMask
+        #scatterArgs['mask'] = self.dataMask
         
         if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
             self.curve.setData(x=x, y=y, **curveArgs)
@@ -473,20 +479,20 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
         
-        if self.xClean is None:
-            nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
-            if nanMask.any():
-                self.dataMask = ~nanMask
-                self.xClean = self.xData[self.dataMask]
-                self.yClean = self.yData[self.dataMask]
-            else:
-                self.dataMask = None
-                self.xClean = self.xData
-                self.yClean = self.yData
+        #if self.xClean is None:
+            #nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
+            #if nanMask.any():
+                #self.dataMask = ~nanMask
+                #self.xClean = self.xData[self.dataMask]
+                #self.yClean = self.yData[self.dataMask]
+            #else:
+                #self.dataMask = None
+                #self.xClean = self.xData
+                #self.yClean = self.yData
             
         if self.xDisp is None:
-            x = self.xClean
-            y = self.yClean
+            x = self.xData
+            y = self.yData
             
             
             #ds = self.opts['downsample']
@@ -500,14 +506,14 @@ class PlotDataItem(GraphicsObject):
                 x = np.log10(x)
             if self.opts['logMode'][1]:
                 y = np.log10(y)
-            if any(self.opts['logMode']):  ## re-check for NANs after log
-                nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
-                if any(nanMask):
-                    self.dataMask = ~nanMask
-                    x = x[self.dataMask]
-                    y = y[self.dataMask]
-                else:
-                    self.dataMask = None
+            #if any(self.opts['logMode']):  ## re-check for NANs after log
+                #nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
+                #if any(nanMask):
+                    #self.dataMask = ~nanMask
+                    #x = x[self.dataMask]
+                    #y = y[self.dataMask]
+                #else:
+                    #self.dataMask = None
                     
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -640,8 +646,8 @@ class PlotDataItem(GraphicsObject):
         #self.scatters = []
         self.xData = None
         self.yData = None
-        self.xClean = None
-        self.yClean = None
+        #self.xClean = None
+        #self.yClean = None
         self.xDisp = None
         self.yDisp = None
         self.curve.setData([])

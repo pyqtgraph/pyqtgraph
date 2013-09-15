@@ -1166,7 +1166,9 @@ def arrayToQPath(x, y, connect='all'):
         connect[:,0] = 1
         connect[:,1] = 0
         connect = connect.flatten()
-
+    if connect == 'finite':
+        connect = np.isfinite(x) & np.isfinite(y)
+        arr[1:-1]['c'] = connect
     if connect == 'all':
         arr[1:-1]['c'] = 1
     elif isinstance(connect, np.ndarray):

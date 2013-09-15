@@ -71,7 +71,8 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': False,
             'name': None,
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': pg.getConfigOption('antialias'),\
+            'connect': 'all',
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -119,10 +120,12 @@ class PlotCurveItem(GraphicsObject):
 
         ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
-            b = (d.min(), d.max())
+            b = (np.nanmin(d), np.nanmax(d))
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
+            mask = np.isfinite(d)
+            d = d[mask]
             b = (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
         
         ## adjust for fill level
@@ -264,6 +267,12 @@ class PlotCurveItem(GraphicsObject):
         stepMode        If True, two orthogonal lines are drawn for each sample
                         as steps. This is commonly used when drawing histograms.
                         Note that in this case, len(x) == len(y) + 1
+        connect         Argument specifying how vertexes should be connected
+                        by line segments. Default is "all", indicating full
+                        connection. "pairs" causes only even-numbered segments
+                        to be drawn. "finite" causes segments to be omitted if
+                        they are attached to nan or inf values. For any other
+                        connectivity, specify an array of boolean values.
         ==============  ========================================================
         
         If non-keyword arguments are used, they will be interpreted as
@@ -326,7 +335,8 @@ class PlotCurveItem(GraphicsObject):
         
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
-        
+        if 'connect' in kargs:
+            self.opts['connect'] = kargs['connect']
         if 'pen' in kargs:
             self.setPen(kargs['pen'])
         if 'shadowPen' in kargs:
@@ -365,7 +375,7 @@ class PlotCurveItem(GraphicsObject):
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
         
-        path = fn.arrayToQPath(x, y, connect='all')
+        path = fn.arrayToQPath(x, y, connect=self.opts['connect'])
         
         return path
 

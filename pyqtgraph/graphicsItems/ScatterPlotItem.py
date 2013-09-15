@@ -626,11 +626,13 @@ class ScatterPlotItem(GraphicsObject):
             d2 = d2[mask]
             
         if frac >= 1.0:
-            self.bounds[ax] = (d.min() - self._maxSpotWidth*0.7072, d.max() + self._maxSpotWidth*0.7072)
+            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
+            mask = np.isfinite(d)
+            d = d[mask]
             return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
             
     def pixelPadding(self):
