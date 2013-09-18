@@ -183,7 +183,7 @@ class ViewBox(GraphicsWidget):
 
     def unregister(self):
         """
-        Remove this ViewBox forom the list of linkable views. (see :func:`register() <pyqtgraph.ViewBox.register>`)
+        Remove this ViewBox from the list of linkable views. (see :func:`register() <pyqtgraph.ViewBox.register>`)
         """
         del ViewBox.AllViews[self]
         if self.name is not None:
@@ -352,7 +352,7 @@ class ViewBox(GraphicsWidget):
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
-        Must specify at least one of *range*, *xRange*, or *yRange*. 
+        Must specify at least one of *rect*, *xRange*, or *yRange*. 
         
         ============= =====================================================================
         **Arguments**
