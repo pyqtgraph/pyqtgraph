@@ -3,7 +3,6 @@ SVG export test
 """
 import test
 import pyqtgraph as pg
-app = pg.mkQApp()
 
 class SVGTest(test.TestCase):
     #def test_plotscene(self):
@@ -67,4 +66,6 @@ class SVGTest(test.TestCase):
         
 
 if __name__ == '__main__':
+    from pyqtgraph.Qt import QtGui
+    app = QtGui.QApplication([])
     test.unittest.main()

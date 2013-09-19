@@ -9,6 +9,9 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 from . import test
 from .functions import siEval, siFormat, siScale
 from .svg import SVGTest
+from .widgets import ValueLabelTests
 
 if __name__ == "__main__":
+    from pyqtgraph.Qt import QtGui
+    app = QtGui.QApplication([])
     test.unittest.main()

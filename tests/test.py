@@ -1,5 +1,7 @@
 import unittest
 import os, sys
+
+
 ## make sure this instance of pyqtgraph gets imported first
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 

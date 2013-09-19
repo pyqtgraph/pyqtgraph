@@ -3,9 +3,9 @@
 Test for pyqtgraph/function.py
 """
 
+import test
 import pyqtgraph.functions as fnc
 from pyqtgraph.python2_3 import asUnicode as u
-import test
 
 class siScale(test.TestCase):
     expected_values=((0.0001,(1e6,u('µ'))),
