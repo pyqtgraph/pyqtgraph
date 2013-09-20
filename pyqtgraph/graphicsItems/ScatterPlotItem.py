@@ -98,31 +98,41 @@ class SymbolAtlas(object):
         # weak value; if all external refs to this list disappear, 
         # the symbol will be forgotten.
         self.symbolMap = weakref.WeakValueDictionary()
+        self.symbolPen = weakref.WeakValueDictionary()
+        self.symbolBrush = weakref.WeakValueDictionary()
         
         self.atlasData = None # numpy array of atlas image
         self.atlas = None     # atlas as QPixmap
         self.atlasValid = False
+        self.max_width=0
         
     def getSymbolCoords(self, opts):
         """
         Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
         """
         coords = np.empty(len(opts), dtype=object)
+        keyi = None
+        coordi = None
         for i, rec in enumerate(opts):
-            symbol, size, pen, brush = rec['symbol'], rec['size'], rec['pen'], rec['brush']
-            pen = fn.mkPen(pen) if not isinstance(pen, QtGui.QPen) else pen
-            brush = fn.mkBrush(brush) if not isinstance(pen, QtGui.QBrush) else brush
-            key = (symbol, size, fn.colorTuple(pen.color()), pen.widthF(), pen.style(), fn.colorTuple(brush.color()))
-            if key not in self.symbolMap:
-                newCoords = SymbolAtlas.SymbolCoords()
-                self.symbolMap[key] = newCoords
-                self.atlasValid = False
-                #try:
-                    #self.addToAtlas(key)  ## squeeze this into the atlas if there is room
-                #except:
-                    #self.buildAtlas()  ## otherwise, we need to rebuild
-            
-            coords[i] = self.symbolMap[key]
+            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))
+            if key == keyi:
+                coords[i]=coordi
+            else:
+                try:
+                    coords[i] = self.symbolMap[key]
+                except KeyError:
+                    newCoords = SymbolAtlas.SymbolCoords()
+                    self.symbolMap[key] = newCoords
+                    self.symbolPen[key] = rec['pen']
+                    self.symbolBrush[key] = rec['brush']
+                    self.atlasValid = False
+                    #try:
+                        #self.addToAtlas(key)  ## squeeze this into the atlas if there is room
+                    #except:
+                        #self.buildAtlas()  ## otherwise, we need to rebuild
+                    coords[i] = newCoords
+                    keyi = key
+                    coordi = newCoords
         return coords
         
     def buildAtlas(self):
@@ -133,8 +143,8 @@ class SymbolAtlas(object):
         images = []
         for key, coords in self.symbolMap.items():
             if len(coords) == 0:
-                pen = fn.mkPen(color=key[2], width=key[3], style=key[4])
-                brush = fn.mkBrush(color=key[5])
+                pen = self.symbolPen[key]
+                brush = self.symbolBrush[key]
                 img = renderSymbol(key[0], key[1], pen, brush)
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
@@ -181,6 +191,7 @@ class SymbolAtlas(object):
             self.atlasData[x:x+w, y:y+h] = rendered[key]
         self.atlas = None
         self.atlasValid = True
+        self.max_width=maxWidth
     
     def getAtlas(self):
         if not self.atlasValid:
@@ -237,8 +248,8 @@ class ScatterPlotItem(GraphicsObject):
             'antialias': pg.getConfigOption('antialias'),
         }   
         
-        self.setPen(200,200,200, update=False)
-        self.setBrush(100,100,150, update=False)
+        self.setPen('l', update=False)
+        self.setBrush('s', update=False)
         self.setSymbol('o', update=False)
         self.setSize(7, update=False)
         prof.mark('1')
@@ -533,10 +544,8 @@ class ScatterPlotItem(GraphicsObject):
     def updateSpots(self, dataSet=None):
         if dataSet is None:
             dataSet = self.data
-        self._maxSpotWidth = 0
-        self._maxSpotPxWidth = 0
+
         invalidate = False
-        self.measureSpotSizes(dataSet)
         if self.opts['pxMode']:
             mask = np.equal(dataSet['fragCoords'], None)
             if np.any(mask):
@@ -549,6 +558,13 @@ class ScatterPlotItem(GraphicsObject):
                 #if rec['fragCoords'] is None:
                     #invalidate = True
                     #rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
+            self.fragmentAtlas.getAtlas()
+            self._maxSpotPxWidth=self.fragmentAtlas.max_width
+        else:
+            self._maxSpotWidth = 0
+            self._maxSpotPxWidth = 0
+            self.measureSpotSizes(dataSet)
+
         if invalidate:
             self.invalidate()
 
@@ -666,7 +682,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
         self.fragments = None
-        
+
     def generateFragments(self):
         tr = self.deviceTransform()
         if tr is None:
@@ -711,7 +727,7 @@ class ScatterPlotItem(GraphicsObject):
             #self.lastAtlas = arr
             
             if self.fragments is None:
-                self.updateSpots()
+                #self.updateSpots()
                 self.generateFragments()
                     
             p.resetTransform()

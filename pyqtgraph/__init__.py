@@ -48,8 +48,8 @@ else:
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    'foreground': (150, 150, 150),  ## default foreground color for axes, labels, etc.
-    'background': (0, 0, 0),        ## default background for GraphicsWidget
+    'foreground': 'd',  ## default foreground color for axes, labels, etc.
+    'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'useWeave': True,       ## Use weave to speed up some operations, if it is available
