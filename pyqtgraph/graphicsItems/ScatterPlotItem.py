@@ -4,6 +4,10 @@ import pyqtgraph.functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from itertools import starmap
+try:
+    from itertools import imap
+except ImportError:
+    imap = map
 import numpy as np
 import scipy.stats
 import weakref
@@ -702,8 +706,8 @@ class ScatterPlotItem(GraphicsObject):
         #    rect = QtCore.QRectF(y, x, h, w)
         #    self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
         rect = starmap(QtCore.QRectF, self.data['fragCoords'])
-        pos = map(QtCore.QPointF, pts[0,:], pts[1,:])
-        self.fragments = map(QtGui.QPainter.PixmapFragment.create, pos, rect)
+        pos = imap(QtCore.QPointF, pts[0,:], pts[1,:])
+        self.fragments = list(imap(QtGui.QPainter.PixmapFragment.create, pos, rect))
             
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
