@@ -3,6 +3,7 @@ from pyqtgraph.Point import Point
 import pyqtgraph.functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
+from itertools import starmap
 import numpy as np
 import scipy.stats
 import weakref
@@ -149,7 +150,7 @@ class SymbolAtlas(object):
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
             else:
-                (x,y,w,h) = self.symbolMap[key]
+                (y,x,h,w) = self.symbolMap[key]
                 arr = self.atlasData[x:x+w, y:y+w]
             rendered[key] = arr
             w = arr.shape[0]
@@ -180,14 +181,14 @@ class SymbolAtlas(object):
                 x = 0
                 rowheight = h
                 self.atlasRows.append([y, rowheight, 0])
-            self.symbolMap[key][:] = x, y, w, h
+            self.symbolMap[key][:] = y, x, h, w
             x += w
             self.atlasRows[-1][2] = x
         height = y + rowheight
 
         self.atlasData = np.zeros((width, height, 4), dtype=np.ubyte)
         for key in symbols:
-            x, y, w, h = self.symbolMap[key]
+            y, x, h, w = self.symbolMap[key]
             self.atlasData[x:x+w, y:y+h] = rendered[key]
         self.atlas = None
         self.atlasValid = True
@@ -694,12 +695,15 @@ class ScatterPlotItem(GraphicsObject):
         self.fragments = []
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
                                           ## Still won't be able to render correctly, though.
-        for i in xrange(len(self.data)):
-            rec = self.data[i]
-            pos = QtCore.QPointF(pts[0,i], pts[1,i])
-            x,y,w,h = rec['fragCoords']
-            rect = QtCore.QRectF(y, x, h, w)
-            self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
+        #for i in xrange(len(self.data)):
+        #    rec = self.data[i]
+        #    pos = QtCore.QPointF(pts[0,i], pts[1,i])
+        #    x,y,w,h = rec['fragCoords']
+        #    rect = QtCore.QRectF(y, x, h, w)
+        #    self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
+        rect = starmap(QtCore.QRectF, self.data['fragCoords'])
+        pos = map(QtCore.QPointF, pts[0,:], pts[1,:])
+        self.fragments = map(QtGui.QPainter.PixmapFragment.create, pos, rect)
             
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
