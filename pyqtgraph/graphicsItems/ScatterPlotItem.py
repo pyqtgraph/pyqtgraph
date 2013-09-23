@@ -244,7 +244,7 @@ class ScatterPlotItem(GraphicsObject):
         
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragments = None # fragment specification for pxmode; updated every time the view changes.
-        self.tar = None
+        self.target = None
         self.fragmentAtlas = SymbolAtlas()
         
         self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('rectSrc', object), ('rectTarg', object)])
@@ -416,7 +416,7 @@ class ScatterPlotItem(GraphicsObject):
         ## clear any cached drawing state
         self.picture = None
         self.fragments = None
-        self.tar = None
+        self.target = None
         self.update()
         
     def getData(self):
@@ -693,7 +693,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
         self.fragments = None
-        self.tar = None
+        self.target = None
 
     def generateFragments(self):
         tr = self.deviceTransform()
@@ -755,9 +755,9 @@ class ScatterPlotItem(GraphicsObject):
                 pts[1] = self.data['y']
                 pts = fn.transformCoordinates(tr, pts)
                 pts = np.clip(pts, -2**30, 2**30)
-                if self.tar == None:
-                    self.tar = list(imap(QtCore.QRectF.translated, self.data['rectTarg'], pts[0,:], pts[1,:]))
-                p.drawPixmapFragments(self.tar, self.data['rectSrc'].tolist(), atlas)
+                if self.target == None:
+                    self.target = list(imap(QtCore.QRectF.translated, self.data['rectTarg'], pts[0,:], pts[1,:]))
+                p.drawPixmapFragments(self.target, self.data['rectSrc'].tolist(), atlas)
                 #p.drawPixmapFragments(self.fragments, atlas)
             else:
                 if self.fragments is None:
