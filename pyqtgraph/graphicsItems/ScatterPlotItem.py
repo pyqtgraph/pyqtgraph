@@ -687,35 +687,40 @@ class ScatterPlotItem(GraphicsObject):
         self.fragments = None
         self.target = None
 
-    def generateFragments(self):
+    def setExportMode(self, *args, **kwds):
+        GraphicsObject.setExportMode(self, *args, **kwds)
+        self.invalidate()
+
+
+    def getTransformedPoint(self):
         tr = self.deviceTransform()
         if tr is None:
-            return
-        mask = np.logical_and(
-               np.logical_and(self.data['x'] - self.data['width'] > range[0][0],
-                              self.data['x'] + self.data['width'] < range[0][1]), 
-               np.logical_and(self.data['y'] - self.data['width'] > range[1][0],
-                              self.data['y'] + self.data['width'] < range[1][1])) ## remove out of view points 
-        data = self.data[mask]
+            return None, None
+        ## Remove out of view points
+        w = np.empty((2,len(self.data['width'])))
+        w[0] = self.data['width']
+        w[1] = self.data['width']
+        q, intv = tr.inverted()
+        if intv:
+            w = fn.transformCoordinates(q, w)
+            w=np.abs(w)
+            range = self.getViewBox().viewRange()
+            mask = np.logical_and(
+               np.logical_and(self.data['x'] + w[0,:] > range[0][0],
+                              self.data['x'] - w[0,:] < range[0][1]), 
+               np.logical_and(self.data['y'] + w[0,:] > range[1][0],
+                              self.data['y'] - w[0,:] < range[1][1])) ## remove out of view points 
+            data = self.data[mask]
+        else:
+            data = self.data
+
         pts = np.empty((2,len(data['x'])))
         pts[0] = data['x']
         pts[1] = data['y']
         pts = fn.transformCoordinates(tr, pts)
-        self.fragments = []
-        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
-                                          ## Still won't be able to render correctly, though.
-        #for i in xrange(len(self.data)):
-        #    rec = self.data[i]
-        #    pos = QtCore.QPointF(pts[0,i], pts[1,i])
-        #    x,y,w,h = rec['fragCoords']
-        #    rect = QtCore.QRectF(y, x, h, w)
-        #    self.fragments.append(QtGui.QPainter.PixmapFragment.create(pos, rect))
-        pos = imap(QtCore.QPointF, pts[0,:], pts[1,:])
-        self.fragments = list(imap(QtGui.QPainter.PixmapFragment.create, pos, self.data['rectSrc']))
-            
-    def setExportMode(self, *args, **kwds):
-        GraphicsObject.setExportMode(self, *args, **kwds)
-        self.invalidate()
+        pts -= data['width']
+        pts = np.clip(pts, -2**30, 2**30)
+        return data, pts
         
     @pg.debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
@@ -732,44 +737,14 @@ class ScatterPlotItem(GraphicsObject):
             
         if self.opts['pxMode'] is True:
             atlas = self.fragmentAtlas.getAtlas()
-            #arr = fn.imageToArray(atlas.toImage(), copy=True)
-            #if hasattr(self, 'lastAtlas'):
-                #if np.any(self.lastAtlas != arr):
-                    #print "Atlas changed:", arr
-            #self.lastAtlas = arr
-            
-            #if self.fragments is None:
-                #self.updateSpots()
-                #self.generateFragments()
-                    
             p.resetTransform()
             
+            data, pts =  self.getTransformedPoint()
+            if data is None:
+                return
+            
             if self.opts['useCache'] and self._exportOpts is False:
-                tr = self.deviceTransform()
-                if tr is None:
-                    return
-                w = np.empty((2,len(self.data['width'])))
-                w[0] = self.data['width']
-                w[1] = self.data['width']
-                q, intv = tr.inverted()
-                if intv:
-                    w = fn.transformCoordinates(q, w)
-                    w=np.abs(w)
-                    range = self.getViewBox().viewRange()
-                    mask = np.logical_and(
-                       np.logical_and(self.data['x'] + w[0,:] > range[0][0],
-                                      self.data['x'] - w[0,:] < range[0][1]), 
-                       np.logical_and(self.data['y'] + w[0,:] > range[1][0],
-                                      self.data['y'] - w[0,:] < range[1][1])) ## remove out of view points 
-                    data = self.data[mask]
-                else:
-                    data = self.data
-                pts = np.empty((2,len(data['x'])))
-                pts[0] = data['x']
-                pts[1] = data['y']
-                pts = fn.transformCoordinates(tr, pts)
-                pts -= data['width']
-                pts = np.clip(pts, -2**30, 2**30)
+                
                 if self.target == None:
                     list(imap(QtCore.QRectF.moveTo, data['rectTarg'], pts[0,:], pts[1,:]))
                     self.target=data['rectTarg']
@@ -777,17 +752,13 @@ class ScatterPlotItem(GraphicsObject):
                     list(imap(p.drawPixmap, self.target, repeat(atlas), data['rectSrc']))
                 else:
                     p.drawPixmapFragments(self.target.tolist(), data['rectSrc'].tolist(), atlas)
-                #p.drawPixmapFragments(self.fragments, atlas)
             else:
-                if self.fragments is None:
-                    self.generateFragments()
                 p.setRenderHint(p.Antialiasing, aa)
-                
+
                 for i in range(len(self.data)):
-                    rec = self.data[i]
-                    frag = self.fragments[i]
+                    rec = data[i]
                     p.resetTransform()
-                    p.translate(frag.x, frag.y)
+                    p.translate(pts[0,i], pts[1,i])
                     drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
@@ -798,7 +769,7 @@ class ScatterPlotItem(GraphicsObject):
                         rec = rec.copy()
                         rec['size'] *= scale
                     p2.resetTransform()
-                    p2.translate(rec['x'], rec['y'])
+                    p2.translate(rec['x']+rec['width'], rec['y']+rec['width'])
                     drawSymbol(p2, *self.getSpotOpts(rec, scale))
                 p2.end()
                 
