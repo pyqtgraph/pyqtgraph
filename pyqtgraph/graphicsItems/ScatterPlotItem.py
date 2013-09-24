@@ -758,7 +758,7 @@ class ScatterPlotItem(GraphicsObject):
                 for i in range(len(self.data)):
                     rec = data[i]
                     p.resetTransform()
-                    p.translate(pts[0,i], pts[1,i])
+                    p.translate(pts[0,i] + rec['width'], pts[1,i] + rec['width'])
                     drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
@@ -769,7 +769,7 @@ class ScatterPlotItem(GraphicsObject):
                         rec = rec.copy()
                         rec['size'] *= scale
                     p2.resetTransform()
-                    p2.translate(rec['x']+rec['width'], rec['y']+rec['width'])
+                    p2.translate(rec['x'], rec['y'])
                     drawSymbol(p2, *self.getSpotOpts(rec, scale))
                 p2.end()
                 
