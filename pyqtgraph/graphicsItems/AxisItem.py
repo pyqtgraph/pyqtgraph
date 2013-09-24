@@ -266,8 +266,7 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         
     def pen(self):
-        if self._pen is None:
-            return fn.mkPen(pg.getConfigOption('foreground'))
+        #return self._pen
         return pg.mkPen(self._pen)
         
     def setPen(self, pen):
@@ -276,11 +275,11 @@ class AxisItem(GraphicsWidget):
         if pen == None, the default will be used (see :func:`setConfigOption 
         <pyqtgraph.setConfigOption>`)
         """
-        self._pen = pen
         self.picture = None
         if pen is None:
             pen = pg.getConfigOption('foreground')
-        self.labelStyle['color'] = '#' + pg.colorStr(pg.mkPen(pen).color())[:6]
+        self._pen = pg.mkPen(pen)
+        self.labelStyle['color'] = '#' + pg.colorStr(self._pen.color())[:6]
         self.setLabel()
         self.update()
         
