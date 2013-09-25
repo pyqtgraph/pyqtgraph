@@ -748,7 +748,6 @@ class AxisItem(GraphicsWidget):
             #textWidth = self.style['tickTextWidth'] ## space allocated for horizontal text
             #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
             
-        textSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
         textSize2 = 0
@@ -781,15 +780,22 @@ class AxisItem(GraphicsWidget):
                     
                     rects.append(br)
                     textRects.append(rects[-1])
-            
+
+            ## measure all text, make sure there's enough room
+            th = [r.height() for r in textRects]
+            tw = [r.width() for r in textRects]
+            if axis == 0:
+                if len(th)>0:
+                    textSize = np.sum(th)
+                if len(tw)>0:
+                    textSize2 = np.max(tw)
+            else:
+                if len(tw)>0:
+                    textSize = np.sum(tw)
+                if len(th)>0:
+                    textSize2 = np.max(th)
+
             if i > 0:  ## always draw top level
-                ## measure all text, make sure there's enough room
-                if axis == 0:
-                    textSize = np.sum([r.height() for r in textRects])
-                    textSize2 = np.max([r.width() for r in textRects])
-                else:
-                    textSize = np.sum([r.width() for r in textRects])
-                    textSize2 = np.max([r.height() for r in textRects])
 
                 ## If the strings are too crowded, stop drawing text now.
                 ## We use three different crowding limits based on the number
