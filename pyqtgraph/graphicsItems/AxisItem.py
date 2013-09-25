@@ -213,15 +213,17 @@ class AxisItem(GraphicsWidget):
         ## Informs that the maximum tick size orthogonal to the axis has
         ## changed; we use this to decide whether the item needs to be resized
         ## to accomodate.
+        if x == 0: ## No Ticks, we keep previous size
+            x = self.textWidth
         if self.orientation in ['left', 'right']:
-            mx = max(self.textWidth, x)
+            mx = x#max(self.textWidth, x)
             if mx > self.textWidth or mx < self.textWidth-10:
                 self.textWidth = mx
                 if self.style['autoExpandTextSpace'] is True:
                     self.setWidth()
                     #return True  ## size has changed
         else:
-            mx = max(self.textHeight, x)
+            mx = x#max(self.textHeight, x)
             if mx > self.textHeight or mx < self.textHeight-10:
                 self.textHeight = mx
                 if self.style['autoExpandTextSpace'] is True:
@@ -668,7 +670,7 @@ class AxisItem(GraphicsWidget):
         ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
         if dif == 0:
-            xscale = 1
+            xScale = 1
             offset = 0
         else:
             if axis == 0:
