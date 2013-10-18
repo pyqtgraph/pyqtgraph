@@ -287,32 +287,12 @@ class AxisItem(GraphicsWidget):
         
     def setScale(self, scale=None):
         """
-        Set the value scaling for this axis. Values on the axis are multiplied
-        by this scale factor before being displayed as text. By default (scale=None),
-        this scaling value is automatically determined based on the visible range
-        and the axis units are updated to reflect the chosen scale factor.
+        Set the value scaling for this axis. 
         
-        For example: If the axis spans values from -0.1 to 0.1 and has units set 
-        to 'V' then a scale of 1000 would cause the axis to display values -100 to 100
-        and the units would appear as 'mV'
+        Setting this value causes the axis to draw ticks and tick labels as if
+        the view coordinate system were scaled. By default, the axis scaling is 
+        1.0.
         """
-        #if scale is None:
-            ##if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
-            #if self.label.isVisible():
-                ##d = self.range[1] - self.range[0]
-                ##(scale, prefix) = fn.siScale(d / 2.)
-                #(scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
-                #if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
-                    #scale = 1.0
-                    #prefix = ''
-                #self.setLabel(unitPrefix=prefix)
-            #else:
-                #scale = 1.0
-            #self.autoScale = True
-        #else:
-            #self.setLabel(unitPrefix='')
-            #self.autoScale = False
-            
         if scale != self.scale:
             self.scale = scale
             self.setLabel()
@@ -320,6 +300,20 @@ class AxisItem(GraphicsWidget):
             self.update()
         
     def enableAutoSIPrefix(self, enable=True):
+        """
+        Enable (or disable) automatic SI prefix scaling on this axis. 
+        
+        When enabled, this feature automatically determines the best SI prefix 
+        to prepend to the label units, while ensuring that axis values are scaled
+        accordingly. 
+        
+        For example, if the axis spans values from -0.1 to 0.1 and has units set 
+        to 'V' then the axis would display values -100 to 100
+        and the units would appear as 'mV'
+        
+        This feature is enabled by default, and is only available when a suffix
+        (unit string) is provided to display on the label.
+        """
         self.autoSIPrefix = enable
         
     def updateAutoSIPrefix(self):
