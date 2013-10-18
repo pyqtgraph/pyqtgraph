@@ -69,7 +69,8 @@ class AxisItem(GraphicsWidget):
         self.tickLength = maxTickLength
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self.scale = 1.0
-        self.autoScale = True
+        self.autoSIPrefix = True
+        self.autoSIPrefixScale = 1.0
         
         self.setRange(0, 1)
         
@@ -149,8 +150,8 @@ class AxisItem(GraphicsWidget):
             self.setWidth()
         else:
             self.setHeight()
-        if self.autoScale:
-            self.setScale()
+        if self.autoSIPrefix:
+            self.updateAutoSIPrefix()
         
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Set the text displayed adjacent to the axis.
@@ -195,10 +196,10 @@ class AxisItem(GraphicsWidget):
             
     def labelString(self):
         if self.labelUnits == '':
-            if self.scale == 1.0:
+            if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = asUnicode('(x%g)') % (1.0/self.scale)
+                units = asUnicode('(x%g)') % (1.0/self.autoSIPrefixScale)
         else:
             #print repr(self.labelUnitPrefix), repr(self.labelUnits)
             units = asUnicode('(%s%s)') % (self.labelUnitPrefix, self.labelUnits)
@@ -295,22 +296,22 @@ class AxisItem(GraphicsWidget):
         to 'V' then a scale of 1000 would cause the axis to display values -100 to 100
         and the units would appear as 'mV'
         """
-        if scale is None:
-            #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
-            if self.label.isVisible():
-                #d = self.range[1] - self.range[0]
-                #(scale, prefix) = fn.siScale(d / 2.)
-                (scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
-                if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
-                    scale = 1.0
-                    prefix = ''
-                self.setLabel(unitPrefix=prefix)
-            else:
-                scale = 1.0
-            self.autoScale = True
-        else:
-            self.setLabel(unitPrefix='')
-            self.autoScale = False
+        #if scale is None:
+            ##if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
+            #if self.label.isVisible():
+                ##d = self.range[1] - self.range[0]
+                ##(scale, prefix) = fn.siScale(d / 2.)
+                #(scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
+                #if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
+                    #scale = 1.0
+                    #prefix = ''
+                #self.setLabel(unitPrefix=prefix)
+            #else:
+                #scale = 1.0
+            #self.autoScale = True
+        #else:
+            #self.setLabel(unitPrefix='')
+            #self.autoScale = False
             
         if scale != self.scale:
             self.scale = scale
@@ -318,14 +319,32 @@ class AxisItem(GraphicsWidget):
             self.picture = None
             self.update()
         
+    def enableAutoSIPrefix(self, enable=True):
+        self.autoSIPrefix = enable
+        
+    def updateAutoSIPrefix(self):
+        if self.label.isVisible():
+            (scale, prefix) = fn.siScale(max(abs(self.range[0]*self.scale), abs(self.range[1]*self.scale)))
+            if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
+                scale = 1.0
+                prefix = ''
+            self.setLabel(unitPrefix=prefix)
+        else:
+            scale = 1.0
+        
+        self.autoSIPrefixScale = scale
+        self.picture = None
+        self.update()
+        
+        
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
         if any(np.isinf((mn, mx))) or any(np.isnan((mn, mx))):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
-        if self.autoScale:
-            self.setScale()
+        if self.autoSIPrefix:
+            self.updateAutoSIPrefix()
         self.picture = None
         self.update()
         
@@ -756,7 +775,7 @@ class AxisItem(GraphicsWidget):
             ## Get the list of strings to display for this level
             if tickStrings is None:
                 spacing, values = tickLevels[i]
-                strings = self.tickStrings(values, self.scale, spacing)
+                strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
             else:
                 strings = tickStrings[i]
                 
