@@ -320,6 +320,7 @@ class AxisItem(GraphicsWidget):
         (unit string) is provided to display on the label.
         """
         self.autoSIPrefix = enable
+        self.updateAutoSIPrefix()
         
     def updateAutoSIPrefix(self):
         if self.label.isVisible():
