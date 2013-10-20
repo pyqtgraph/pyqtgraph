@@ -308,7 +308,10 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
         
     def resizeEvent(self, ev):
+        #print self.name, "ViewBox.resizeEvent", self.size()
         #self.setRange(self.range, padding=0)
+        self.linkedXChanged()
+        self.linkedYChanged()
         self.updateAutoRange()
         self.updateMatrix()
         self.sigStateChanged.emit(self)
@@ -365,6 +368,7 @@ class ViewBox(GraphicsWidget):
         ============= =====================================================================
         
         """
+        #print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
         
         changes = {}
         
@@ -770,6 +774,7 @@ class ViewBox(GraphicsWidget):
         if self.linksBlocked or view is None:
             return
         
+        #print self.name, "ViewBox.linkedViewChanged", axis, view.viewRange()[axis]
         vr = view.viewRect()
         vg = view.screenGeometry()
         sg = self.screenGeometry()
