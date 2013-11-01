@@ -69,7 +69,8 @@ class AxisItem(GraphicsWidget):
         self.tickLength = maxTickLength
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self.scale = 1.0
-        self.autoScale = True
+        self.autoSIPrefix = True
+        self.autoSIPrefixScale = 1.0
         
         self.setRange(0, 1)
         
@@ -149,8 +150,8 @@ class AxisItem(GraphicsWidget):
             self.setWidth()
         else:
             self.setHeight()
-        if self.autoScale:
-            self.setScale()
+        if self.autoSIPrefix:
+            self.updateAutoSIPrefix()
         
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Set the text displayed adjacent to the axis.
@@ -195,10 +196,10 @@ class AxisItem(GraphicsWidget):
             
     def labelString(self):
         if self.labelUnits == '':
-            if self.scale == 1.0:
+            if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
                 units = ''
             else:
-                units = asUnicode('(x%g)') % (1.0/self.scale)
+                units = asUnicode('(x%g)') % (1.0/self.autoSIPrefixScale)
         else:
             #print repr(self.labelUnitPrefix), repr(self.labelUnits)
             units = asUnicode('(%s%s)') % (self.labelUnitPrefix, self.labelUnits)
@@ -288,31 +289,16 @@ class AxisItem(GraphicsWidget):
         
     def setScale(self, scale=None):
         """
-        Set the value scaling for this axis. Values on the axis are multiplied
-        by this scale factor before being displayed as text. By default (scale=None),
-        this scaling value is automatically determined based on the visible range
-        and the axis units are updated to reflect the chosen scale factor.
+        Set the value scaling for this axis. 
         
-        For example: If the axis spans values from -0.1 to 0.1 and has units set 
-        to 'V' then a scale of 1000 would cause the axis to display values -100 to 100
-        and the units would appear as 'mV'
+        Setting this value causes the axis to draw ticks and tick labels as if
+        the view coordinate system were scaled. By default, the axis scaling is 
+        1.0.
         """
-        if scale is None:
-            #if self.drawLabel:  ## If there is a label, then we are free to rescale the values 
-            if self.label.isVisible():
-                #d = self.range[1] - self.range[0]
-                #(scale, prefix) = fn.siScale(d / 2.)
-                (scale, prefix) = fn.siScale(max(abs(self.range[0]), abs(self.range[1])))
-                if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
-                    scale = 1.0
-                    prefix = ''
-                self.setLabel(unitPrefix=prefix)
-            else:
-                scale = 1.0
-            self.autoScale = True
-        else:
-            self.setLabel(unitPrefix='')
-            self.autoScale = False
+        # Deprecated usage, kept for backward compatibility
+        if scale is None:  
+            scale = 1.0
+            self.enableAutoSIPrefix(True)
             
         if scale != self.scale:
             self.scale = scale
@@ -320,14 +306,47 @@ class AxisItem(GraphicsWidget):
             self.picture = None
             self.update()
         
+    def enableAutoSIPrefix(self, enable=True):
+        """
+        Enable (or disable) automatic SI prefix scaling on this axis. 
+        
+        When enabled, this feature automatically determines the best SI prefix 
+        to prepend to the label units, while ensuring that axis values are scaled
+        accordingly. 
+        
+        For example, if the axis spans values from -0.1 to 0.1 and has units set 
+        to 'V' then the axis would display values -100 to 100
+        and the units would appear as 'mV'
+        
+        This feature is enabled by default, and is only available when a suffix
+        (unit string) is provided to display on the label.
+        """
+        self.autoSIPrefix = enable
+        self.updateAutoSIPrefix()
+        
+    def updateAutoSIPrefix(self):
+        if self.label.isVisible():
+            (scale, prefix) = fn.siScale(max(abs(self.range[0]*self.scale), abs(self.range[1]*self.scale)))
+            if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
+                scale = 1.0
+                prefix = ''
+            self.setLabel(unitPrefix=prefix)
+        else:
+            scale = 1.0
+        
+        self.autoSIPrefixScale = scale
+        self.picture = None
+        self.update()
+        
+        
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
         if any(np.isinf((mn, mx))) or any(np.isnan((mn, mx))):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
-        if self.autoScale:
-            self.setScale()
+        if self.autoSIPrefix:
+            self.updateAutoSIPrefix()
         self.picture = None
         self.update()
         
@@ -757,7 +776,7 @@ class AxisItem(GraphicsWidget):
             ## Get the list of strings to display for this level
             if tickStrings is None:
                 spacing, values = tickLevels[i]
-                strings = self.tickStrings(values, self.scale, spacing)
+                strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
             else:
                 strings = tickStrings[i]
                 
