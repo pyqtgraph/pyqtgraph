@@ -12,6 +12,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
     """
     _qtBaseClass = QtGui.QGraphicsObject
     def __init__(self, *args):
+        self.__inform_view_on_changes = True
         QtGui.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
@@ -20,7 +21,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         ret = QtGui.QGraphicsObject.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
             self.parentChanged()
-        if change in [self.ItemPositionHasChanged, self.ItemTransformHasChanged]:
+        if self.__inform_view_on_changes and change in [self.ItemPositionHasChanged, self.ItemTransformHasChanged]:
             self.informViewBoundsChanged()
             
         ## workaround for pyqt bug:
