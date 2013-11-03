@@ -91,7 +91,8 @@ class ViewBox(GraphicsWidget):
         self.addedItems = []
         #self.gView = view
         #self.showGrid = showGrid
-        self.matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
+        self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
+        self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
         
         self.state = {
             
@@ -212,8 +213,11 @@ class ViewBox(GraphicsWidget):
         return ret
 
     def prepareForPaint(self):
-        #print "prepare"
-        pass
+        autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
+        if self._autoRangeNeedsUpdate and autoRangeEnabled:
+            self.updateAutoRange()
+        if self._matrixNeedsUpdate:
+            self.updateMatrix()
         
     def getState(self, copy=True):
         """Return the current state of the ViewBox. 
@@ -327,13 +331,14 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
         
     def resizeEvent(self, ev):
-        print self.name, "ViewBox.resizeEvent", self.size()
+        #print self.name, "ViewBox.resizeEvent", self.size()
         #self.setRange(self.range, padding=0)
-        x,y = self.targetRange()
-        self.setRange(xRange=x, yRange=y, padding=0)
+        #x,y = self.targetRange()
+        #self.setRange(xRange=x, yRange=y, padding=0)
         self.linkedXChanged()
         self.linkedYChanged()
         self.updateAutoRange()
+        self.updateViewRange()
         #self.updateMatrix()
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
@@ -393,7 +398,7 @@ class ViewBox(GraphicsWidget):
         ================== =====================================================================
         
         """
-        print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
+        #print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
         
         changes = {}   # axes
         setRequested = [False, False]
@@ -454,19 +459,6 @@ class ViewBox(GraphicsWidget):
             lockY = False
         self.updateViewRange(lockX, lockY)
             
-        # If ortho axes have auto-visible-only, update them now
-        # Note that aspect ratio constraints and auto-visible probably do not work together..
-        if changed[0] and self.state['autoVisibleOnly'][1]:
-            self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
-        elif changed[1] and self.state['autoVisibleOnly'][0]:
-            self.updateAutoRange()
-            
-        # If nothing has changed, we are done.
-        if not any(changed):
-            #if update and self.matrixNeedsUpdate:
-                #self.updateMatrix(changed)
-            return 
-        
         # Disable auto-range if needed
         if disableAutoRange:
             if all(changed):
@@ -476,13 +468,27 @@ class ViewBox(GraphicsWidget):
             elif changed[1]:
                 ax = ViewBox.YAxis
             self.enableAutoRange(ax, False)
+            changed.append(True)
+
+        # If nothing has changed, we are done.
+        if any(changed):
+            #if update and self.matrixNeedsUpdate:
+                #self.updateMatrix(changed)
+            #return 
+        
+            self.sigStateChanged.emit(self)
+            
+            # Update target rect for debugging
+            if self.target.isVisible():
+                self.target.setRect(self.mapRectFromItem(self.childGroup, self.targetRect()))
                 
-        self.sigStateChanged.emit(self)
-        
-        # Update target rect for debugging
-        if self.target.isVisible():
-            self.target.setRect(self.mapRectFromItem(self.childGroup, self.targetRect()))
-        
+        # If ortho axes have auto-visible-only, update them now
+        # Note that aspect ratio constraints and auto-visible probably do not work together..
+        if changed[0] and self.state['autoVisibleOnly'][1]:
+            self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
+        elif changed[1] and self.state['autoVisibleOnly'][0]:
+            self.updateAutoRange()
+            
         ## Update view matrix only if requested
         #if update:
             #self.updateMatrix(changed)
@@ -746,6 +752,7 @@ class ViewBox(GraphicsWidget):
             args['disableAutoRange'] = False
             self.setRange(**args)
         finally:
+            self._autoRangeNeedsUpdate = False
             self._updatingRange = False
         
     def setXLink(self, view):
@@ -891,7 +898,9 @@ class ViewBox(GraphicsWidget):
         
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
-        self.updateAutoRange()
+        self._autoRangeNeedsUpdate = True
+        self.update()
+        #self.updateAutoRange()
 
     def invertY(self, b=True):
         """
@@ -1293,17 +1302,19 @@ class ViewBox(GraphicsWidget):
             
     def updateViewRange(self, forceX=False, forceY=False):
         ## Update viewRange to match targetRange as closely as possible, given 
-        ## aspect ratio constraints.
+        ## aspect ratio constraints. The *force* arguments are used to indicate 
+        ## which axis (if any) should be unchanged when applying constraints.
         
         viewRange = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
+        changed = [False, False]
         
         # Make correction for aspect ratio constraint
+        
+        ## aspect is (widget w/h) / (view range w/h)
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
         if aspect is not False and tr.width() != 0 and bounds.width() != 0:
-            ## aspect is (widget w/h) / (view range w/h)
-            
             
             ## This is the view range aspect ratio we have requested
             targetRatio = tr.width() / tr.height()
@@ -1311,14 +1322,15 @@ class ViewBox(GraphicsWidget):
             viewRatio = (bounds.width() / bounds.height()) / aspect
             
             # Decide which range to keep unchanged
-            print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
-            if all(setRequested):
-                ax = 0 if targetRatio > viewRatio else 1
-                print "ax:", ax
-            elif setRequested[0]:
+            #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
+            if forceX:
                 ax = 0
-            else:
+            elif forceY:
                 ax = 1
+            else:
+                # if we are not required to keep a particular axis unchanged, 
+                # then make the entire target range visible
+                ax = 0 if targetRatio > viewRatio else 1
             
             #### these should affect viewRange, not targetRange!
             if ax == 0:  
@@ -1326,44 +1338,31 @@ class ViewBox(GraphicsWidget):
                 dy = 0.5 * (tr.width() / viewRatio - tr.height())
                 if dy != 0:
                     changed[1] = True
-                self.state['targetRange'][1] = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
-                changed[1] = True
+                viewRange[1] = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
             else:
                 ## view range needs to be wider than target
                 dx = 0.5 * (tr.height() * viewRatio - tr.width())
                 if dx != 0:
                     changed[0] = True
-                self.state['targetRange'][0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
-                changed[0] = True
+                viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
             
-            
-            ## need to adjust orthogonal target range to match
-            #size = [self.width(), self.height()]
-            #tr1 = self.state['targetRange'][ax]
-            #tr2 = self.state['targetRange'][1-ax]
-            #if size[1] == 0 or aspect == 0:
-                #ratio = 1.0
-            #else:
-                #ratio = (size[0] / float(size[1])) / aspect
-            #if ax == 0:
-                #ratio = 1.0 / ratio
-            #w = (tr1[1]-tr1[0]) * ratio
-            #d = 0.5 * (w - (tr2[1]-tr2[0]))
-            #self.state['targetRange'][1-ax] = [tr2[0]-d, tr2[1]+d]
-            #changed[1-ax] = True
-        
+        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) and (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
         
-        # emit range change signals here!
+        # emit range change signals
         if changed[0]:
             self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
         if changed[1]:
             self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
+        
         if any(changed):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
+            self.update()
         
-        # Inform linked views that the range has changed <<This should be moved>>
-        for ax, range in changes.items():
+        # Inform linked views that the range has changed
+        for ax in [0, 1]:
+            if not changed[ax]:
+                continue
             link = self.linkedView(ax)
             if link is not None:
                 link.linkedViewChanged(self, ax)
@@ -1377,7 +1376,7 @@ class ViewBox(GraphicsWidget):
             #changed = [False, False]
         #changed = list(changed)
         #tr = self.targetRect()
-        #bounds = self.rect()
+        bounds = self.rect()
         
         ## set viewRect, given targetRect and possibly aspect ratio constraint
         #self.state['viewRange'] = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
