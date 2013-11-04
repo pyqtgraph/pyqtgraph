@@ -246,7 +246,8 @@ class ViewBox(GraphicsWidget):
         del state['linkedViews']
         
         self.state.update(state)
-        self.updateMatrix()
+        #self.updateMatrix()
+        self.updateViewRange()
         self.sigStateChanged.emit(self)
 
 
@@ -485,9 +486,11 @@ class ViewBox(GraphicsWidget):
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
         if changed[0] and self.state['autoVisibleOnly'][1]:
-            self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
+            self._autoRangeNeedsUpdate = True
+            #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
         elif changed[1] and self.state['autoVisibleOnly'][0]:
-            self.updateAutoRange()
+            self._autoRangeNeedsUpdate = True
+            #self.updateAutoRange()
             
         ## Update view matrix only if requested
         #if update:
@@ -907,7 +910,8 @@ class ViewBox(GraphicsWidget):
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
         """
         self.state['yInverted'] = b
-        self.updateMatrix(changed=(False, True))
+        #self.updateMatrix(changed=(False, True))
+        self.updateViewRange()
         self.sigStateChanged.emit(self)
 
     def yInverted(self):
@@ -933,7 +937,7 @@ class ViewBox(GraphicsWidget):
             self.state['aspectLocked'] = ratio
             if ratio != currentRatio:  ## If this would change the current range, do that now
                 #self.setRange(0, self.state['viewRange'][0][0], self.state['viewRange'][0][1])
-                self.updateMatrix()
+                self.updateViewRange()
         self.sigStateChanged.emit(self)
         
     def childTransform(self):
