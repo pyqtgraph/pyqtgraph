@@ -23,7 +23,9 @@ p2 = win.addPlot(row=2, col=0)
 
 region = pg.LinearRegionItem()
 region.setZValue(10)
-p2.addItem(region)
+# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this 
+# item when doing auto-range calculations.
+p2.addItem(region, ignoreBounds=True)
 
 #pg.dbg()
 p1.setAutoVisible(y=True)

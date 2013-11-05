@@ -213,8 +213,9 @@ class ViewBox(GraphicsWidget):
         return ret
 
     def prepareForPaint(self):
-        autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
-        if self._autoRangeNeedsUpdate and autoRangeEnabled:
+        #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
+        # don't check whether auto range is enabled here--only check when setting dirty flag.
+        if self._autoRangeNeedsUpdate: # and autoRangeEnabled: 
             self.updateAutoRange()
         if self._matrixNeedsUpdate:
             self.updateMatrix()
@@ -332,21 +333,14 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
         
     def resizeEvent(self, ev):
-        #print self.name, "ViewBox.resizeEvent", self.size()
-        #self.setRange(self.range, padding=0)
-        #x,y = self.targetRange()
-        #self.setRange(xRange=x, yRange=y, padding=0)
         self.linkedXChanged()
         self.linkedYChanged()
         self.updateAutoRange()
         self.updateViewRange()
-        #self.updateMatrix()
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
-        #self._itemBoundsCache.clear()
-        #self.linkedXChanged()
-        #self.linkedYChanged()
         self.sigResized.emit(self)
+        
         
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -485,10 +479,10 @@ class ViewBox(GraphicsWidget):
                 
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
-        if changed[0] and self.state['autoVisibleOnly'][1]:
+        if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
             self._autoRangeNeedsUpdate = True
             #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
-        elif changed[1] and self.state['autoVisibleOnly'][0]:
+        elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
             self._autoRangeNeedsUpdate = True
             #self.updateAutoRange()
             
@@ -662,11 +656,18 @@ class ViewBox(GraphicsWidget):
         
         for ax in axes:
             if self.state['autoRange'][ax] != enable:
+                # If we are disabling, do one last auto-range to make sure that
+                # previously scheduled auto-range changes are enacted
+                if enable is False and self._autoRangeNeedsUpdate:
+                    self.updateAutoRange()
+                
                 self.state['autoRange'][ax] = enable
-                needAutoRangeUpdate |= (enable is not False)
-        
-        if needAutoRangeUpdate:
-            self.updateAutoRange()
+                self._autoRangeNeedsUpdate |= (enable is not False)
+                self.update()
+
+
+        #if needAutoRangeUpdate:
+        #    self.updateAutoRange()
         
         self.sigStateChanged.emit(self)
 
@@ -901,8 +902,9 @@ class ViewBox(GraphicsWidget):
         
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
-        self._autoRangeNeedsUpdate = True
-        self.update()
+        if (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False):
+            self._autoRangeNeedsUpdate = True
+            self.update()
         #self.updateAutoRange()
 
     def invertY(self, b=True):
