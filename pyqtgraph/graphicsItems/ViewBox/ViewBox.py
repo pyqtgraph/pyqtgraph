@@ -394,6 +394,8 @@ class ViewBox(GraphicsWidget):
         
         """
         #print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
+        #import traceback
+        #traceback.print_stack()
         
         changes = {}   # axes
         setRequested = [False, False]
@@ -454,15 +456,11 @@ class ViewBox(GraphicsWidget):
             lockY = False
         self.updateViewRange(lockX, lockY)
             
-        # Disable auto-range if needed
+        # Disable auto-range for each axis that was requested to be set
         if disableAutoRange:
-            if all(changed):
-                ax = ViewBox.XYAxes
-            elif changed[0]:
-                ax = ViewBox.XAxis
-            elif changed[1]:
-                ax = ViewBox.YAxis
-            self.enableAutoRange(ax, False)
+            xOff = False if setRequested[0] else None
+            yOff = False if setRequested[1] else None
+            self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
 
         # If nothing has changed, we are done.
@@ -1376,7 +1374,7 @@ class ViewBox(GraphicsWidget):
 
     def updateMatrix(self, changed=None):
         ## Make the childGroup's transform match the requested viewRange.
-        
+        #print self.name, "updateMAtrix", self.state['targetRange']
         #if changed is None:
             #changed = [False, False]
         #changed = list(changed)
