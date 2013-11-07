@@ -27,7 +27,7 @@ arr += np.random.normal(size=(100,100))
 
 ## create GUI
 app = QtGui.QApplication([])
-w = pg.GraphicsWindow(size=(800,800), border=True)
+w = pg.GraphicsWindow(size=(1000,800), border=True)
 w.setWindowTitle('pyqtgraph example: ROI Examples')
 
 text = """Data Selection From Image.<br>\n

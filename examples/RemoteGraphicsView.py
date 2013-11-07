@@ -13,7 +13,8 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 app = pg.mkQApp()
 
 ## Create the widget
-v = RemoteGraphicsView(debug=False)
+v = RemoteGraphicsView(debug=False)  # setting debug=True causes both processes to print information
+                                    # about interprocess communication
 v.show()
 v.setWindowTitle('pyqtgraph example: RemoteGraphicsView')
 

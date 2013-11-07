@@ -1320,7 +1320,6 @@ class Handle(UIGraphicsItem):
         ## determine rotation of transform
         #m = self.sceneTransform()  ## Qt bug: do not access sceneTransform() until we know this object has a scene.
         #mi = m.inverted()[0]
-        
         dt = self.deviceTransform()
         
         if dt is None:
@@ -1339,10 +1338,10 @@ class Handle(UIGraphicsItem):
         return dti.map(tr.map(self.path))
         
         
-    def viewRangeChanged(self):
-        GraphicsObject.viewRangeChanged(self)
+    def viewTransformChanged(self):
+        GraphicsObject.viewTransformChanged(self)
         self._shape = None  ## invalidate shape, recompute later if requested.
-        #self.updateShape()
+        self.update()
         
     #def itemChange(self, change, value):
         #if change == self.ItemScenePositionHasChanged:

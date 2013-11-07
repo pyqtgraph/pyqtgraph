@@ -48,9 +48,10 @@ class Process(RemoteEventHandler):
                       it must be picklable (bound methods are not).
         copySysPath   If True, copy the contents of sys.path to the remote process
         debug         If True, print detailed information about communication
-                      with the child process.
+                      with the child process. Note that this option may cause
+                      strange behavior on some systems due to a python bug:
+                      http://bugs.python.org/issue3905
         ============  =============================================================
-        
         """
         if target is None:
             target = startEventLoop
@@ -81,8 +82,14 @@ class Process(RemoteEventHandler):
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
         
         ## note: we need all three streams to have their own PIPE due to this bug:
-        ## http://bugs.python.org/issue3905 
-        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ## http://bugs.python.org/issue3905
+        if debug is True:  # when debugging, we need to keep the usual stdout
+            stdout = sys.stdout
+            stderr = sys.stderr
+        else:
+            stdout = subprocess.PIPE
+            stderr = subprocess.PIPE
+        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
         
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target

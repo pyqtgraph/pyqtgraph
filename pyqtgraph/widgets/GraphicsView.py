@@ -147,6 +147,11 @@ class GraphicsView(QtGui.QGraphicsView):
         #print "GV: paint", ev.rect()
         return QtGui.QGraphicsView.paintEvent(self, ev)
     
+    def render(self, *args, **kwds):
+        self.scene().prepareForPaint()
+        return QtGui.QGraphicsView.render(self, *args, **kwds)
+        
+    
     def close(self):
         self.centralWidget = None
         self.scene().clear()
