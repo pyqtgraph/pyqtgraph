@@ -18,12 +18,15 @@ class RemoteGraphicsView(QtGui.QWidget):
     
     """
     def __init__(self, parent=None, *args, **kwds):
+        """
+        The keyword arguments 'debug' and 'name', if specified, are passed to QtProcess.__init__().
+        """
         self._img = None
         self._imgReq = None
         self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
                                     ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
-        self._proc = mp.QtProcess(debug=kwds.pop('debug', False))
+        self._proc = mp.QtProcess(debug=kwds.pop('debug', False), name=kwds.pop('name', None))
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
@@ -123,6 +126,7 @@ class Renderer(GraphicsView):
     
     def __init__(self, *args, **kwds):
         ## Create shared memory for rendered image
+        #pg.dbg(namespace={'r': self})
         if sys.platform.startswith('win'):
             self.shmtag = "pyqtgraph_shmem_" + ''.join([chr((random.getrandbits(20)%25) + 97) for i in range(20)])
             self.shm = mmap.mmap(-1, mmap.PAGESIZE, self.shmtag) # use anonymous mmap on windows
@@ -184,7 +188,11 @@ class Renderer(GraphicsView):
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             else:
                 address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
-                self.img = QtGui.QImage(sip.voidptr(address), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                try:
+                    self.img = QtGui.QImage(sip.voidptr(address), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                except TypeError:
+                    # different versions of pyqt have different requirements here..
+                    self.img = QtGui.QImage(memoryview(buffer(self.shm)), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())

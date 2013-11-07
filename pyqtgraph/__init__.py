@@ -311,13 +311,15 @@ def image(*args, **kargs):
     return w
 show = image  ## for backward compatibility
 
-def dbg():
+def dbg(*args, **kwds):
     """
     Create a console window and begin watching for exceptions.
+    
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
     """
     mkQApp()
     from . import console
-    c = console.ConsoleWidget()
+    c = console.ConsoleWidget(*args, **kwds)
     c.catchAllExceptions()
     c.show()
     global consoles
