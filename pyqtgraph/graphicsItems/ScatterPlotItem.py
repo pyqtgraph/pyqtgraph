@@ -517,7 +517,7 @@ class ScatterPlotItem(GraphicsObject):
         
         ## Bug: If data is a numpy record array, then items from that array must be copied to dataSet one at a time.
         ## (otherwise they are converted to tuples and thus lose their field names.
-        if isinstance(data, np.ndarray) and len(data.dtype.fields) > 1:
+        if isinstance(data, np.ndarray) and (data.dtype.fields is not None)and len(data.dtype.fields) > 1:
             for i, rec in enumerate(data):
                 dataSet['data'][i] = rec
         else:

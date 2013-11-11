@@ -404,19 +404,24 @@ class AxisItem(GraphicsWidget):
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
         
     def paint(self, p, opt, widget):
+        prof = debug.Profiler('AxisItem.paint', disabled=True)
         if self.picture is None:
             try:
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
                 specs = self.generateDrawSpecs(painter)
+                prof.mark('generate specs')
                 if specs is not None:
                     self.drawPicture(painter, *specs)
+                    prof.mark('draw picture')
             finally:
                 painter.end()
             self.picture = picture
         #p.setRenderHint(p.Antialiasing, False)   ## Sometimes we get a segfault here ???
         #p.setRenderHint(p.TextAntialiasing, True)
         self.picture.play(p)
+        prof.finish()
+        
         
 
     def setTicks(self, ticks):
