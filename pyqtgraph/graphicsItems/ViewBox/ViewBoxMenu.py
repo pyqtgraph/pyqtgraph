@@ -65,8 +65,18 @@ class ViewBoxMenu(QtGui.QMenu):
         
         self.leftMenu = QtGui.QMenu("Mouse Mode")
         group = QtGui.QActionGroup(self)
-        pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
-        zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
+        
+        # This does not work! QAction _must_ be initialized with a permanent 
+        # object as the parent or else it may be collected prematurely.
+        #pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
+        #zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
+        pan = QtGui.QAction("3 button", self.leftMenu)
+        zoom = QtGui.QAction("1 button", self.leftMenu)
+        self.leftMenu.addAction(pan)
+        self.leftMenu.addAction(zoom)
+        pan.triggered.connect(self.set3ButtonMode)
+        zoom.triggered.connect(self.set1ButtonMode)
+        
         pan.setCheckable(True)
         zoom.setCheckable(True)
         pan.setActionGroup(group)
