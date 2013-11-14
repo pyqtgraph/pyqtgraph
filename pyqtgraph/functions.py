@@ -33,7 +33,6 @@ import sys, struct
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
-    WEAVE_DEBUG = pg.getConfigOption('weaveDebug')
     if pg.getConfigOption('useWeave'):
         try:
             import scipy.weave
