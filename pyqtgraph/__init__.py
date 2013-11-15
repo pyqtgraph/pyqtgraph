@@ -178,7 +178,8 @@ def importAll(path, globals, locals, excludes=()):
                 globals[k] = getattr(mod, k)
 
 importAll('graphicsItems', globals(), locals())
-importAll('widgets', globals(), locals(), excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
+importAll('widgets', globals(), locals(),
+          excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
 
 from .imageview import *
 from .WidgetGroup import *
