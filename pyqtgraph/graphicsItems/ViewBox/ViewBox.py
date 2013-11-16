@@ -201,7 +201,8 @@ class ViewBox(GraphicsWidget):
         return interface == 'ViewBox'
         
     def itemChange(self, change, value):
-        ret = GraphicsWidget.itemChange(self, change, value)
+        # Note: Calling QWidget.itemChange causes segv in python 3 + PyQt
+        ret = QtGui.QGraphicsItem.itemChange(self, change, value)
         if change == self.ItemSceneChange:
             scene = self.scene()
             if scene is not None:
