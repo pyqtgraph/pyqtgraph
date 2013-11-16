@@ -7,7 +7,6 @@ except:
     
 from scipy.fftpack import fft
 import numpy as np
-import scipy.stats
 from .GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 from pyqtgraph import debug
@@ -126,8 +125,8 @@ class PlotCurveItem(GraphicsObject):
         else:
             mask = np.isfinite(d)
             d = d[mask]
-            b = (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-        
+            b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
         ## adjust for fill level
         if ax == 1 and self.opts['fillLevel'] is not None:
             b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))

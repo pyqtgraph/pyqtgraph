@@ -4,7 +4,6 @@ import pyqtgraph.functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 import numpy as np
-import scipy.stats
 import weakref
 import pyqtgraph.debug as debug
 from pyqtgraph.pgcollections import OrderedDict
@@ -633,8 +632,8 @@ class ScatterPlotItem(GraphicsObject):
         else:
             mask = np.isfinite(d)
             d = d[mask]
-            return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-            
+            return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
     def pixelPadding(self):
         return self._maxSpotPxWidth*0.7072
 
