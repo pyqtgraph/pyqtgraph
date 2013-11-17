@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './VideoTemplate.ui'
 #
-# Created: Tue Jul  9 23:38:17 2013
-#      by: PyQt4 UI code generator 4.9.3
+# Created: Sat Nov 16 20:07:09 2013
+#      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -25,10 +34,10 @@ class Ui_MainWindow(object):
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.rawRadio = QtGui.QRadioButton(self.centralwidget)
-        self.rawRadio.setChecked(True)
         self.rawRadio.setObjectName(_fromUtf8("rawRadio"))
         self.gridLayout.addWidget(self.rawRadio, 3, 0, 1, 1)
         self.gfxRadio = QtGui.QRadioButton(self.centralwidget)
+        self.gfxRadio.setChecked(True)
         self.gfxRadio.setObjectName(_fromUtf8("gfxRadio"))
         self.gridLayout.addWidget(self.gfxRadio, 2, 0, 1, 1)
         self.stack = QtGui.QStackedWidget(self.centralwidget)
@@ -158,23 +167,23 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.rawRadio.setText(QtGui.QApplication.translate("MainWindow", "RawImageWidget", None, QtGui.QApplication.UnicodeUTF8))
-        self.gfxRadio.setText(QtGui.QApplication.translate("MainWindow", "GraphicsView + ImageItem", None, QtGui.QApplication.UnicodeUTF8))
-        self.rawGLRadio.setText(QtGui.QApplication.translate("MainWindow", "RawGLImageWidget", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("MainWindow", "Data type", None, QtGui.QApplication.UnicodeUTF8))
-        self.dtypeCombo.setItemText(0, QtGui.QApplication.translate("MainWindow", "uint8", None, QtGui.QApplication.UnicodeUTF8))
-        self.dtypeCombo.setItemText(1, QtGui.QApplication.translate("MainWindow", "uint16", None, QtGui.QApplication.UnicodeUTF8))
-        self.dtypeCombo.setItemText(2, QtGui.QApplication.translate("MainWindow", "float", None, QtGui.QApplication.UnicodeUTF8))
-        self.scaleCheck.setText(QtGui.QApplication.translate("MainWindow", "Scale Data", None, QtGui.QApplication.UnicodeUTF8))
-        self.rgbLevelsCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("MainWindow", "<--->", None, QtGui.QApplication.UnicodeUTF8))
-        self.lutCheck.setText(QtGui.QApplication.translate("MainWindow", "Use Lookup  Table", None, QtGui.QApplication.UnicodeUTF8))
-        self.alphaCheck.setText(QtGui.QApplication.translate("MainWindow", "alpha", None, QtGui.QApplication.UnicodeUTF8))
-        self.fpsLabel.setText(QtGui.QApplication.translate("MainWindow", "FPS", None, QtGui.QApplication.UnicodeUTF8))
-        self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
+        self.rawRadio.setText(_translate("MainWindow", "RawImageWidget", None))
+        self.gfxRadio.setText(_translate("MainWindow", "GraphicsView + ImageItem", None))
+        self.rawGLRadio.setText(_translate("MainWindow", "RawGLImageWidget", None))
+        self.label.setText(_translate("MainWindow", "Data type", None))
+        self.dtypeCombo.setItemText(0, _translate("MainWindow", "uint8", None))
+        self.dtypeCombo.setItemText(1, _translate("MainWindow", "uint16", None))
+        self.dtypeCombo.setItemText(2, _translate("MainWindow", "float", None))
+        self.scaleCheck.setText(_translate("MainWindow", "Scale Data", None))
+        self.rgbLevelsCheck.setText(_translate("MainWindow", "RGB", None))
+        self.label_2.setText(_translate("MainWindow", "<--->", None))
+        self.label_3.setText(_translate("MainWindow", "<--->", None))
+        self.label_4.setText(_translate("MainWindow", "<--->", None))
+        self.lutCheck.setText(_translate("MainWindow", "Use Lookup  Table", None))
+        self.alphaCheck.setText(_translate("MainWindow", "alpha", None))
+        self.fpsLabel.setText(_translate("MainWindow", "FPS", None))
+        self.rgbCheck.setText(_translate("MainWindow", "RGB", None))
 
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
-from pyqtgraph import GradientWidget, SpinBox, GraphicsView, RawImageWidget
+from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
+from pyqtgraph import GradientWidget, SpinBox, GraphicsView

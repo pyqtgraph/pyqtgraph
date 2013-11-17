@@ -22,15 +22,15 @@
         <property name="text">
          <string>RawImageWidget</string>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QRadioButton" name="gfxRadio">
         <property name="text">
          <string>GraphicsView + ImageItem</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -265,7 +265,7 @@
   <customwidget>
    <class>RawImageWidget</class>
    <extends>QWidget</extends>
-   <header>pyqtgraph</header>
+   <header>pyqtgraph.widgets.RawImageWidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>

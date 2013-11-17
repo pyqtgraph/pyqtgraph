@@ -13,7 +13,6 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph import RawImageWidget
 import scipy.ndimage as ndi
 import pyqtgraph.ptime as ptime
 

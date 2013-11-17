@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './VideoTemplate.ui'
 #
-# Created: Tue Jul  9 23:38:19 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.2
+# Created: Sat Nov 16 20:07:10 2013
+#      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -20,10 +20,10 @@ class Ui_MainWindow(object):
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.rawRadio = QtGui.QRadioButton(self.centralwidget)
-        self.rawRadio.setChecked(True)
         self.rawRadio.setObjectName("rawRadio")
         self.gridLayout.addWidget(self.rawRadio, 3, 0, 1, 1)
         self.gfxRadio = QtGui.QRadioButton(self.centralwidget)
+        self.gfxRadio.setChecked(True)
         self.gfxRadio.setObjectName("gfxRadio")
         self.gridLayout.addWidget(self.gfxRadio, 2, 0, 1, 1)
         self.stack = QtGui.QStackedWidget(self.centralwidget)
@@ -171,5 +171,5 @@ class Ui_MainWindow(object):
         self.fpsLabel.setText(QtGui.QApplication.translate("MainWindow", "FPS", None, QtGui.QApplication.UnicodeUTF8))
         self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
-from pyqtgraph import GradientWidget, SpinBox, GraphicsView, RawImageWidget
+from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
+from pyqtgraph import GradientWidget, SpinBox, GraphicsView

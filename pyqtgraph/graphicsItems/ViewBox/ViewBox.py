@@ -93,6 +93,8 @@ class ViewBox(GraphicsWidget):
         #self.showGrid = showGrid
         self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
         self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
+
+        self._lastScene = None  ## stores reference to the last known scene this view was a part of.
         
         self.state = {
             
@@ -200,18 +202,40 @@ class ViewBox(GraphicsWidget):
     def implements(self, interface):
         return interface == 'ViewBox'
         
-    def itemChange(self, change, value):
-        # Note: Calling QWidget.itemChange causes segv in python 3 + PyQt
-        ret = QtGui.QGraphicsItem.itemChange(self, change, value)
-        if change == self.ItemSceneChange:
-            scene = self.scene()
-            if scene is not None:
-                scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        elif change == self.ItemSceneHasChanged:
-            scene = self.scene()
-            if scene is not None:
-                scene.sigPrepareForPaint.connect(self.prepareForPaint)
-        return ret
+    # removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
+    #def itemChange(self, change, value):
+        ## Note: Calling QWidget.itemChange causes segv in python 3 + PyQt
+        ##ret = QtGui.QGraphicsItem.itemChange(self, change, value)
+        #ret = GraphicsWidget.itemChange(self, change, value)
+        #if change == self.ItemSceneChange:
+            #scene = self.scene()
+            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
+                #scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
+        #elif change == self.ItemSceneHasChanged:
+            #scene = self.scene()
+            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
+                #scene.sigPrepareForPaint.connect(self.prepareForPaint)
+        #return ret
+        
+    def checkSceneChange(self):
+        # ViewBox needs to receive sigPrepareForPaint from its scene before 
+        # being painted. However, we have no way of being informed when the
+        # scene has changed in order to make this connection. The usual way
+        # to do this is via itemChange(), but bugs prevent this approach
+        # (see above). Instead, we simply check at every paint to see whether
+        # (the scene has changed.
+        scene = self.scene()
+        if scene == self._lastScene:
+            return
+        if self._lastScene is not None and hasattr(self.lastScene, 'sigPrepareForPaint'):
+            self._lastScene.sigPrepareForPaint.disconnect(self.prepareForPaint)
+        if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
+            scene.sigPrepareForPaint.connect(self.prepareForPaint)
+        self.prepareForPaint()
+        self._lastScene = scene
+            
+            
+        
 
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
@@ -1446,6 +1470,8 @@ class ViewBox(GraphicsWidget):
         self._matrixNeedsUpdate = False
 
     def paint(self, p, opt, widget):
+        self.checkSceneChange()
+        
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)
