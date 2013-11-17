@@ -252,6 +252,7 @@ except:
     else:
         process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         process.stdin.write(code.encode('UTF-8'))
+        process.stdin.close() ##?
     output = ''
     fail = False
     while True:
@@ -266,8 +267,8 @@ except:
             break
     time.sleep(1)
     process.kill()
-    #process.wait()
-    res = process.communicate()
+    #res = process.communicate()
+    res = (process.stdout.read(), process.stderr.read())
     
     if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
         print('.' * (50-len(name)) + 'FAILED')
