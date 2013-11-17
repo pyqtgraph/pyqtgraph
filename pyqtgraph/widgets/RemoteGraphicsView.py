@@ -83,17 +83,17 @@ class RemoteGraphicsView(QtGui.QWidget):
         p.end()
         
     def mousePressEvent(self, ev):
-        self._view.mousePressEvent(ev.type(), ev.pos(), ev.globalPos(), ev.button(), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mousePressEvent(int(ev.type()), ev.pos(), ev.globalPos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
         ev.accept()
         return QtGui.QWidget.mousePressEvent(self, ev)
 
     def mouseReleaseEvent(self, ev):
-        self._view.mouseReleaseEvent(ev.type(), ev.pos(), ev.globalPos(), ev.button(), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mouseReleaseEvent(int(ev.type()), ev.pos(), ev.globalPos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
         ev.accept()
         return QtGui.QWidget.mouseReleaseEvent(self, ev)
 
     def mouseMoveEvent(self, ev):
-        self._view.mouseMoveEvent(ev.type(), ev.pos(), ev.globalPos(), ev.button(), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mouseMoveEvent(int(ev.type()), ev.pos(), ev.globalPos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
         ev.accept()
         return QtGui.QWidget.mouseMoveEvent(self, ev)
         
@@ -103,16 +103,16 @@ class RemoteGraphicsView(QtGui.QWidget):
         return QtGui.QWidget.wheelEvent(self, ev)
     
     def keyEvent(self, ev):
-        if self._view.keyEvent(ev.type(), int(ev.modifiers()), text, autorep, count):
+        if self._view.keyEvent(int(ev.type()), int(ev.modifiers()), text, autorep, count):
             ev.accept()
         return QtGui.QWidget.keyEvent(self, ev)
         
     def enterEvent(self, ev):
-        self._view.enterEvent(ev.type(), _callSync='off')
+        self._view.enterEvent(int(ev.type()), _callSync='off')
         return QtGui.QWidget.enterEvent(self, ev)
         
     def leaveEvent(self, ev):
-        self._view.leaveEvent(ev.type(), _callSync='off')
+        self._view.leaveEvent(int(ev.type()), _callSync='off')
         return QtGui.QWidget.leaveEvent(self, ev)
         
     def remoteProcess(self):
@@ -206,18 +206,21 @@ class Renderer(GraphicsView):
 
     def mousePressEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)
+        btn = QtCore.Qt.MouseButton(btn)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
         return GraphicsView.mousePressEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
 
     def mouseMoveEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)
+        btn = QtCore.Qt.MouseButton(btn)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
         return GraphicsView.mouseMoveEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
 
     def mouseReleaseEvent(self, typ, pos, gpos, btn, btns, mods):
         typ = QtCore.QEvent.Type(typ)
+        btn = QtCore.Qt.MouseButton(btn)
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
         return GraphicsView.mouseReleaseEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))

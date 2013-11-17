@@ -33,3 +33,10 @@ for gs in ['raster', 'native', 'opengl']:
         QtGui.QApplication.setGraphicsSystem(gs)
         break
 
+## Enable fault handling to give more helpful error messages on crash. 
+## Only available in python 3.3+
+try:
+    import faulthandler
+    faulthandler.enable()
+except ImportError:
+    pass
