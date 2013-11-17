@@ -97,7 +97,6 @@ class RemoteEventHandler(object):
         after no more events are immediately available. (non-blocking)
         Returns the number of events processed.
         """
-        self.debugMsg('processRequests:')
         if self.exited:
             self.debugMsg('  processRequests: exited already; raise ClosedError.')
             raise ClosedError()
@@ -108,7 +107,7 @@ class RemoteEventHandler(object):
                 self.handleRequest()
                 numProcessed += 1
             except ClosedError:
-                self.debugMsg('  processRequests: got ClosedError from handleRequest; setting exited=True.')
+                self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
                 self.exited = True
                 raise
             #except IOError as err:  ## let handleRequest take care of this.
@@ -121,7 +120,8 @@ class RemoteEventHandler(object):
                 print("Error in process %s" % self.name)
                 sys.excepthook(*sys.exc_info())
                 
-        self.debugMsg('  processRequests: finished %d requests' % numProcessed)
+        if numProcessed > 0:
+            self.debugMsg('processRequests: finished %d requests' % numProcessed)
         return numProcessed
     
     def handleRequest(self):

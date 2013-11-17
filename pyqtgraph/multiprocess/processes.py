@@ -35,7 +35,7 @@ class Process(RemoteEventHandler):
     ProxyObject for more information.
     """
     
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20):
         """
         ============  =============================================================
         Arguments:
@@ -63,19 +63,23 @@ class Process(RemoteEventHandler):
         
         ## random authentication key
         authkey = os.urandom(20)
+
+        ## Windows seems to have a hard time with hmac 
+        if sys.platform.startswith('win'):
+            authkey = None
+
         #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
         port = 10000
         while True:
             try:
-                ## hmac authentication appears to be broken on windows (says AuthenticationError: digest received was wrong)
                 l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
                 break
             except socket.error as ex:
                 if ex.errno != 98:
                     raise
                 port += 1
-        
+
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
@@ -111,7 +115,7 @@ class Process(RemoteEventHandler):
         self.proc.stdin.close()
         
         ## open connection for remote process
-        self.debugMsg('Listening for child process..')
+        self.debugMsg('Listening for child process on port %d, authkey=%s..' % (port, repr(authkey)))
         while True:
             try:
                 conn = l.accept()
@@ -140,7 +144,12 @@ class Process(RemoteEventHandler):
         
         
 def startEventLoop(name, port, authkey, ppid, debug=False):
+    if debug:
+        import os
+        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
+    if debug:
+        print('[%d] connected; starting remote proxy.' % os.getpid())
     global HANDLER
     #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
     HANDLER = RemoteEventHandler(conn, name, ppid, debug=debug)
@@ -380,7 +389,12 @@ class QtProcess(Process):
             self.timer.stop()
     
 def startQtEventLoop(name, port, authkey, ppid, debug=False):
+    if debug:
+        import os
+        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
+    if debug:
+        print('[%d] connected; starting remote proxy.' % os.getpid())
     from pyqtgraph.Qt import QtGui, QtCore
     #from PyQt4 import QtGui, QtCore
     app = QtGui.QApplication.instance()

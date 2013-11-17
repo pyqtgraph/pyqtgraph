@@ -188,11 +188,16 @@ class Renderer(GraphicsView):
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             else:
                 address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
+
+                # different versions of pyqt have different requirements here..
                 try:
                     self.img = QtGui.QImage(sip.voidptr(address), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
                 except TypeError:
-                    # different versions of pyqt have different requirements here..
-                    self.img = QtGui.QImage(memoryview(buffer(self.shm)), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                    try:
+                        self.img = QtGui.QImage(memoryview(buffer(self.shm)), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                    except TypeError:
+                        # Works on PyQt 4.9.6
+                        self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())
@@ -236,6 +241,3 @@ class Renderer(GraphicsView):
         ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
         return GraphicsView.leaveEvent(self, ev)
 
-
-        
-        
