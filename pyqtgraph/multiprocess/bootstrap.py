@@ -20,6 +20,7 @@ if __name__ == '__main__':
         
     if opts.pop('pyside', False):
         import PySide
+        
     
     targetStr = opts.pop('targetStr')
     target = pickle.loads(targetStr)  ## unpickling the target should import everything we need

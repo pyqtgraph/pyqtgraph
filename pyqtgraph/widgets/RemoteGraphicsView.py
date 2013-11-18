@@ -19,18 +19,26 @@ class RemoteGraphicsView(QtGui.QWidget):
     """
     def __init__(self, parent=None, *args, **kwds):
         """
-        The keyword arguments 'debug' and 'name', if specified, are passed to QtProcess.__init__().
+        The keyword arguments 'useOpenGL' and 'backgound', if specified, are passed to the remote
+        GraphicsView.__init__(). All other keyword arguments are passed to multiprocess.QtProcess.__init__().
         """
         self._img = None
         self._imgReq = None
         self._sizeHint = (640,480)  ## no clue why this is needed, but it seems to be the default sizeHint for GraphicsView.
                                     ## without it, the widget will not compete for space against another GraphicsView.
         QtGui.QWidget.__init__(self)
-        self._proc = mp.QtProcess(debug=kwds.pop('debug', False), name=kwds.pop('name', None))
+
+        # separate local keyword arguments from remote.
+        remoteKwds = {}
+        for kwd in ['useOpenGL', 'background']:
+            if kwd in kwds:
+                remoteKwds[kwd] = kwds.pop(kwd)
+
+        self._proc = mp.QtProcess(**kwds)
         self.pg = self._proc._import('pyqtgraph')
         self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
-        self._view = rpgRemote.Renderer(*args, **kwds)
+        self._view = rpgRemote.Renderer(*args, **remoteKwds)
         self._view._setProxyOptions(deferGetattr=True)
         
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -72,7 +80,9 @@ class RemoteGraphicsView(QtGui.QWidget):
             else:
                 self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
         self.shm.seek(0)
-        self._img = QtGui.QImage(self.shm.read(w*h*4), w, h, QtGui.QImage.Format_ARGB32)
+        data = self.shm.read(w*h*4)
+        self._img = QtGui.QImage(data, w, h, QtGui.QImage.Format_ARGB32)
+        self._img.data = data  # data must be kept alive or PySide 1.2.1 (and probably earlier) will crash.
         self.update()
         
     def paintEvent(self, ev):
@@ -118,7 +128,12 @@ class RemoteGraphicsView(QtGui.QWidget):
     def remoteProcess(self):
         """Return the remote process handle. (see multiprocess.remoteproxy.RemoteEventHandler)"""
         return self._proc
-    
+
+    def close(self):
+        """Close the remote process. After this call, the widget will no longer be updated."""
+        self._proc.close()
+
+
 class Renderer(GraphicsView):
     ## Created by the remote process to handle render requests
     
@@ -146,9 +161,9 @@ class Renderer(GraphicsView):
         
     def close(self):
         self.shm.close()
-        if sys.platform.startswith('win'):
+        if not sys.platform.startswith('win'):
             self.shmFile.close()
-        
+
     def shmFileName(self):
         if sys.platform.startswith('win'):
             return self.shmtag

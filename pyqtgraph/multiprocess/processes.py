@@ -35,7 +35,7 @@ class Process(RemoteEventHandler):
     ProxyObject for more information.
     """
     
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
         """
         ============  =============================================================
         Arguments:
@@ -48,9 +48,13 @@ class Process(RemoteEventHandler):
                       it must be picklable (bound methods are not).
         copySysPath   If True, copy the contents of sys.path to the remote process
         debug         If True, print detailed information about communication
-                      with the child process. Note that this option may cause
-                      strange behavior on some systems due to a python bug:
-                      http://bugs.python.org/issue3905
+                      with the child process.
+        wrapStdout    If True (default on windows) then stdout and stderr from the
+                      child process will be caught by the parent process and
+                      forwarded to its stdout/stderr. This provides a workaround
+                      for a python bug: http://bugs.python.org/issue3905
+                      but has the side effect that child output is significantly
+                      delayed relative to the parent output.
         ============  =============================================================
         """
         if target is None:
@@ -76,25 +80,32 @@ class Process(RemoteEventHandler):
                 l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
                 break
             except socket.error as ex:
-                if ex.errno != 98:
+                if ex.errno != 98 and ex.errno != 10048: # unix=98, win=10048
                     raise
                 port += 1
+
 
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
         
-        ## note: we need all three streams to have their own PIPE due to this bug:
-        ## http://bugs.python.org/issue3905
-        if debug is True:  # when debugging, we need to keep the usual stdout
-            stdout = sys.stdout
-            stderr = sys.stderr
-        else:
+        if wrapStdout is None:
+            wrapStdout = sys.platform.startswith('win')
+
+        if wrapStdout:
+            ## note: we need all three streams to have their own PIPE due to this bug:
+            ## http://bugs.python.org/issue3905
             stdout = subprocess.PIPE
             stderr = subprocess.PIPE
-        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
-        
+            self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
+            ## to circumvent the bug and still make the output visible, we use 
+            ## background threads to pass data from pipes to stdout/stderr
+            self._stdoutForwarder = FileForwarder(self.proc.stdout, "stdout")
+            self._stderrForwarder = FileForwarder(self.proc.stderr, "stderr")
+        else:
+            self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
+
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must send pid to child because windows does not have getppid
@@ -129,6 +140,7 @@ class Process(RemoteEventHandler):
         self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)
+
         
     def join(self, timeout=10):
         self.debugMsg('Joining child process..')
@@ -140,7 +152,16 @@ class Process(RemoteEventHandler):
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
-        
+
+    def debugMsg(self, msg):
+        if hasattr(self, '_stdoutForwarder'):
+            ## Lock output from subprocess to make sure we do not get line collisions
+            with self._stdoutForwarder.lock:
+                with self._stderrForwarder.lock:
+                    RemoteEventHandler.debugMsg(self, msg)
+        else:
+            RemoteEventHandler.debugMsg(self, msg)
+
         
 def startEventLoop(name, port, authkey, ppid, debug=False):
     if debug:
@@ -408,5 +429,44 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
     app.exec_()
+
+import threading
+class FileForwarder(threading.Thread):
+    """
+    Background thread that forwards data from one pipe to another. 
+    This is used to catch data from stdout/stderr of the child process
+    and print it back out to stdout/stderr. We need this because this
+    bug: http://bugs.python.org/issue3905  _requires_ us to catch
+    stdout/stderr.
+
+    *output* may be a file or 'stdout' or 'stderr'. In the latter cases,
+    sys.stdout/stderr are retrieved once for every line that is output,
+    which ensures that the correct behavior is achieved even if 
+    sys.stdout/stderr are replaced at runtime.
+    """
+    def __init__(self, input, output):
+        threading.Thread.__init__(self)
+        self.input = input
+        self.output = output
+        self.lock = threading.Lock()
+        self.start()
+
+    def run(self):
+        if self.output == 'stdout':
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    sys.stdout.write(line)
+        elif self.output == 'stderr':
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    sys.stderr.write(line)
+        else:
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    self.output.write(line)
+
 
 
