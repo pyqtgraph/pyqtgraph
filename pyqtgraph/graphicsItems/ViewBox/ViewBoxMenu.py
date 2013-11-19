@@ -88,15 +88,15 @@ class ViewBoxMenu(QtGui.QMenu):
         
         self.updateState()
 
-    def copy(self):
-        m = QtGui.QMenu()
-        for sm in self.subMenus():
-            if isinstance(sm, QtGui.QMenu):
-                m.addMenu(sm)
-            else:
-                m.addAction(sm)
-        m.setTitle(self.title())
-        return m
+    #def copy(self):
+        #m = QtGui.QMenu()
+        #for sm in self.subMenus():
+            #if isinstance(sm, QtGui.QMenu):
+                #m.addMenu(sm)
+            #else:
+                #m.addAction(sm)
+        #m.setTitle(self.title())
+        #return m
 
     def subMenus(self):
         if not self.valid:
@@ -159,6 +159,10 @@ class ViewBoxMenu(QtGui.QMenu):
         self.ctrl[1].invertCheck.setChecked(state['yInverted'])
         self.valid = True
         
+    def popup(self, *args):
+        if not self.valid:
+            self.updateState()
+        QtGui.QMenu.popup(self, *args)
         
     def autoRange(self):
         self.view().autoRange()  ## don't let signal call this directly--it'll add an unwanted argument
