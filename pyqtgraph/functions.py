@@ -1068,6 +1068,46 @@ def colorToAlpha(data, color):
     #raise Exception()
     return np.clip(output, 0, 255).astype(np.ubyte)
     
+def downsample(data, n, axis=0, xvals='subsample'):
+    """Downsample by averaging points together across axis.
+    If multiple axes are specified, runs once per axis.
+    If a metaArray is given, then the axis values can be either subsampled
+    or downsampled to match.
+    """
+    ma = None
+    if (hasattr(data, 'implements') and data.implements('MetaArray')):
+        ma = data
+        data = data.view(np.ndarray)
+        
+    
+    if hasattr(axis, '__len__'):
+        if not hasattr(n, '__len__'):
+            n = [n]*len(axis)
+        for i in range(len(axis)):
+            data = downsample(data, n[i], axis[i])
+        return data
+    
+    nPts = int(data.shape[axis] / n)
+    s = list(data.shape)
+    s[axis] = nPts
+    s.insert(axis+1, n)
+    sl = [slice(None)] * data.ndim
+    sl[axis] = slice(0, nPts*n)
+    d1 = data[tuple(sl)]
+    #print d1.shape, s
+    d1.shape = tuple(s)
+    d2 = d1.mean(axis+1)
+    
+    if ma is None:
+        return d2
+    else:
+        info = ma.infoCopy()
+        if 'values' in info[axis]:
+            if xvals == 'subsample':
+                info[axis]['values'] = info[axis]['values'][::n][:nPts]
+            elif xvals == 'downsample':
+                info[axis]['values'] = downsample(info[axis]['values'], n)
+        return MetaArray(d2, info=info)
 
 
 def arrayToQPath(x, y, connect='all'):

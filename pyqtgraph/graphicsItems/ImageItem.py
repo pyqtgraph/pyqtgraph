@@ -1,3 +1,4 @@
+import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import collections
@@ -44,6 +45,7 @@ class ImageItem(GraphicsObject):
         
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
+        self.autoDownsample = False
         
         #self.clipLevel = None
         self.drawKernel = None
@@ -140,6 +142,11 @@ class ImageItem(GraphicsObject):
         if update:
             self.updateImage()
 
+    def setAutoDownsample(self, ads):
+        self.autoDownsample = ads
+        self.qimage = None
+        self.update()
+
     def setOpts(self, update=True, **kargs):
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
@@ -156,6 +163,10 @@ class ImageItem(GraphicsObject):
         if 'removable' in kargs:
             self.removable = kargs['removable']
             self.menu = None
+        if 'autoDownsample' in kargs:
+            self.setAutoDownsample(kargs['autoDownsample'])
+        if update:
+            self.update()
 
     def setRect(self, rect):
         """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
@@ -198,6 +209,9 @@ class ImageItem(GraphicsObject):
             gotNewData = True
             shapeChanged = (self.image is None or image.shape != self.image.shape)
             self.image = image.view(np.ndarray)
+            if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
+                if 'autoDownsample' not in kargs:
+                    kargs['autoDownsample'] = True
             if shapeChanged:
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
@@ -259,8 +273,22 @@ class ImageItem(GraphicsObject):
             lut = self.lut
         #print lut.shape
         #print self.lut
-            
-        argb, alpha = fn.makeARGB(self.image, lut=lut, levels=self.levels)
+        if self.autoDownsample:
+            # reduce dimensions of image based on screen resolution
+            o = self.mapToDevice(QtCore.QPointF(0,0))
+            x = self.mapToDevice(QtCore.QPointF(1,0))
+            y = self.mapToDevice(QtCore.QPointF(0,1))
+            w = pg.Point(x-o).length()
+            h = pg.Point(y-o).length()
+            xds = max(1, int(1/w))
+            yds = max(1, int(1/h))
+            image = fn.downsample(self.image, xds, axis=0)
+            image = fn.downsample(image, yds, axis=1)
+        else:
+            image = self.image
+        
+        
+        argb, alpha = fn.makeARGB(image, lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha)
         prof.finish()
     
@@ -278,7 +306,7 @@ class ImageItem(GraphicsObject):
             p.setCompositionMode(self.paintMode)
             prof.mark('set comp mode')
         
-        p.drawImage(QtCore.QPointF(0,0), self.qimage)
+        p.drawImage(QtCore.QRectF(0,0,self.image.shape[0],self.image.shape[1]), self.qimage)
         prof.mark('p.drawImage')
         if self.border is not None:
             p.setPen(self.border)
@@ -327,6 +355,11 @@ class ImageItem(GraphicsObject):
         if self.image is None:
             return 1,1
         return br.width()/self.width(), br.height()/self.height()
+    
+    def viewTransformChanged(self):
+        if self.autoDownsample:
+            self.qimage = None
+            self.update()
 
     #def mousePressEvent(self, ev):
         #if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
