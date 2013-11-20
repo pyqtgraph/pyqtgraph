@@ -1064,12 +1064,7 @@ class ViewBox(GraphicsWidget):
         return self.menu
 
     def getContextMenus(self, event):
-        if self.menuEnabled():
-            return self.menu.subMenus()
-        else:
-            return None
-        #return [self.getMenu(event)]
-        
+        return self.menu.actions() if self.menuEnabled() else []
 
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.

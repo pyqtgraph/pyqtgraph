@@ -88,22 +88,6 @@ class ViewBoxMenu(QtGui.QMenu):
         
         self.updateState()
 
-    #def copy(self):
-        #m = QtGui.QMenu()
-        #for sm in self.subMenus():
-            #if isinstance(sm, QtGui.QMenu):
-                #m.addMenu(sm)
-            #else:
-                #m.addAction(sm)
-        #m.setTitle(self.title())
-        #return m
-
-    def subMenus(self):
-        if not self.valid:
-            self.updateState()
-        return [self.viewAll] + self.axes + [self.leftMenu]
-
-
     def setExportMethods(self, methods):
         self.exportMethods = methods
         self.export.clear()
