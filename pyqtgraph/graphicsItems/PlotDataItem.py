@@ -4,7 +4,6 @@ from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
 import numpy as np
-import scipy
 import pyqtgraph.functions as fn
 import pyqtgraph.debug as debug
 import pyqtgraph as pg
@@ -597,33 +596,6 @@ class PlotDataItem(GraphicsObject):
                 r2[1] if range[1] is None else (range[1] if r2[1] is None else min(r2[1], range[1]))
                 ]
         return range
-        
-        #if frac <= 0.0:
-            #raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
-        
-        #(x, y) = self.getData()
-        #if x is None or len(x) == 0:
-            #return None
-            
-        #if ax == 0:
-            #d = x
-            #d2 = y
-        #elif ax == 1:
-            #d = y
-            #d2 = x
-            
-        #if orthoRange is not None:
-            #mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
-            #d = d[mask]
-            ##d2 = d2[mask]
-            
-        #if len(d) > 0:
-            #if frac >= 1.0:
-                #return (np.min(d), np.max(d))
-            #else:
-                #return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-        #else:
-            #return None
     
     def pixelPadding(self):
         """

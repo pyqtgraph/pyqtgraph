@@ -5,7 +5,6 @@ try:
 except:
     HAVE_OPENGL = False
     
-from scipy.fftpack import fft
 import numpy as np
 from .GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
@@ -26,7 +25,6 @@ class PlotCurveItem(GraphicsObject):
     Features:
     
     - Fast data update
-    - FFT display mode (accessed via PlotItem context menu)
     - Fill under curve
     - Mouse interaction
     
