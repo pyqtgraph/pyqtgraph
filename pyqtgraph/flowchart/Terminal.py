@@ -436,10 +436,6 @@ class TerminalGraphicsItem(GraphicsObject):
     def toggleMulti(self):
         multi = self.menu.multiAct.isChecked()
         self.term.setMultiValue(multi)
-        
-    ## probably never need this
-    #def getContextMenus(self, ev):
-        #return [self.getMenu()]
     
     def removeSelf(self):
         self.term.node().removeTerminal(self.term)
