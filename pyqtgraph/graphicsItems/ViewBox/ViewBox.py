@@ -1352,7 +1352,7 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        if aspect is not False and tr.width() != 0 and bounds.width() != 0:
+        if aspect is not False and aspect != 0 and tr.height() != 0 and bounds.height() != 0:
             
             ## This is the view range aspect ratio we have requested
             targetRatio = tr.width() / tr.height()
