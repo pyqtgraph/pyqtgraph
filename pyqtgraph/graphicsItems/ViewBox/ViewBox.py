@@ -933,6 +933,9 @@ class ViewBox(GraphicsWidget):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
         """
+        if self.state['yInverted'] == b:
+            return
+        
         self.state['yInverted'] = b
         #self.updateMatrix(changed=(False, True))
         self.updateViewRange()
@@ -947,7 +950,10 @@ class ViewBox(GraphicsWidget):
         By default, the ratio is set to 1; x and y both have the same scaling.
         This ratio can be overridden (xScale/yScale), or use None to lock in the current ratio.
         """
+        
         if not lock:
+            if self.state['aspectLocked'] == False:
+                return
             self.state['aspectLocked'] = False
         else:
             rect = self.rect()
@@ -958,10 +964,15 @@ class ViewBox(GraphicsWidget):
                 currentRatio = (rect.width()/float(rect.height())) / (vr.width()/vr.height())
             if ratio is None:
                 ratio = currentRatio
+            if self.state['aspectLocked'] == ratio: # nothing to change
+                return
             self.state['aspectLocked'] = ratio
             if ratio != currentRatio:  ## If this would change the current range, do that now
                 #self.setRange(0, self.state['viewRange'][0][0], self.state['viewRange'][0][1])
                 self.updateViewRange()
+        
+        self.updateAutoRange()
+        self.updateViewRange()
         self.sigStateChanged.emit(self)
         
     def childTransform(self):
@@ -1332,7 +1343,6 @@ class ViewBox(GraphicsWidget):
         ## Update viewRange to match targetRange as closely as possible, given 
         ## aspect ratio constraints. The *force* arguments are used to indicate 
         ## which axis (if any) should be unchanged when applying constraints.
-        
         viewRange = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
         changed = [False, False]
         
@@ -1399,45 +1409,7 @@ class ViewBox(GraphicsWidget):
 
     def updateMatrix(self, changed=None):
         ## Make the childGroup's transform match the requested viewRange.
-        #print self.name, "updateMAtrix", self.state['targetRange']
-        #if changed is None:
-            #changed = [False, False]
-        #changed = list(changed)
-        #tr = self.targetRect()
         bounds = self.rect()
-        
-        ## set viewRect, given targetRect and possibly aspect ratio constraint
-        #self.state['viewRange'] = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
-        
-        #aspect = self.state['aspectLocked']
-        #if aspect is False or bounds.height() == 0:
-            #self.state['viewRange'] = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
-        #else:
-            ### aspect is (widget w/h) / (view range w/h)
-            
-            ### This is the view range aspect ratio we have requested
-            #targetRatio = tr.width() / tr.height()
-            ### This is the view range aspect ratio we need to obey aspect constraint
-            #viewRatio = (bounds.width() / bounds.height()) / aspect
-            
-            #if targetRatio > viewRatio:  
-                ### view range needs to be taller than target
-                #dy = 0.5 * (tr.width() / viewRatio - tr.height())
-                #if dy != 0:
-                    #changed[1] = True
-                #self.state['viewRange'] = [
-                    #self.state['targetRange'][0][:], 
-                    #[self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
-                    #]
-            #else:
-                ### view range needs to be wider than target
-                #dx = 0.5 * (tr.height() * viewRatio - tr.width())
-                #if dx != 0:
-                    #changed[0] = True
-                #self.state['viewRange'] = [
-                    #[self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx], 
-                    #self.state['targetRange'][1][:]
-                    #]
         
         vr = self.viewRect()
         if vr.height() == 0 or vr.width() == 0:
@@ -1458,14 +1430,6 @@ class ViewBox(GraphicsWidget):
         
         self.childGroup.setTransform(m)
         
-        # moved to viewRangeChanged
-        #if changed[0]:
-            #self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
-        #if changed[1]:
-            #self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
-        #if any(changed):
-            #self.sigRangeChanged.emit(self, self.state['viewRange'])
-            
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
         self._matrixNeedsUpdate = False
 
