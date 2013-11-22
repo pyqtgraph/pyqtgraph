@@ -585,3 +585,6 @@ class GraphicsItem(object):
     #def update(self):
         #self._qtBaseClass.update(self)
         #print "Update:", self
+
+    def getContextMenus(self, event):
+        return [self.getMenu()] if hasattr(self, "getMenu") else []
