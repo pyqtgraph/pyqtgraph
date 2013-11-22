@@ -5,7 +5,7 @@ from pyqtgraph.graphicsItems.GradientEditorItem import GradientEditorItem
 import weakref
 import numpy as np
 
-__all__ = ['TickSlider', 'GradientWidget', 'BlackWhiteSlider']
+__all__ = ['GradientWidget']
 
 
 class GradientWidget(GraphicsView):
