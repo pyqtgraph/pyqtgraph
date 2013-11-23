@@ -11,7 +11,7 @@
         #if hasattr(mod, k):
             #Exporters.append(getattr(mod, k))
 
-import Exporter
+from .Exporter import Exporter
 from .ImageExporter import *
 from .SVGExporter import *
 from .Matplotlib import *
@@ -20,5 +20,5 @@ from .PrintExporter import *
 
 
 def listExporters():
-    return Exporter.Exporter.Exporters[:]
+    return Exporter.Exporters[:]
 
