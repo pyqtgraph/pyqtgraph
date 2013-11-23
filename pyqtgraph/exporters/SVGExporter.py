@@ -404,6 +404,10 @@ def correctCoordinates(node, item):
         if removeTransform:
             grp.removeAttribute('transform')
 
+
+SVGExporter.register()        
+
+
 def itemTransform(item, root):
     ## Return the transformation mapping item to root
     ## (actually to parent coordinate system of root)

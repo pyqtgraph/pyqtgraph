@@ -98,4 +98,5 @@ class ImageExporter(Exporter):
         else:
             self.png.save(fileName)
         
+ImageExporter.register()        
         

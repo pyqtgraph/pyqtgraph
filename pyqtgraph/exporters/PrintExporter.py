@@ -63,3 +63,6 @@ class PrintExporter(Exporter):
         finally:
             self.setExportMode(False)
         painter.end()
+
+
+#PrintExporter.register()        

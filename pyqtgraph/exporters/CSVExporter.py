@@ -60,6 +60,6 @@ class CSVExporter(Exporter):
             fd.write('\n')
         fd.close()
 
-        
+CSVExporter.register()        
                 
         

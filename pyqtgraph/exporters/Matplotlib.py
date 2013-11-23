@@ -57,6 +57,7 @@ class MatplotlibExporter(Exporter):
         else:
             raise Exception("Matplotlib export currently only works with plot items")
                 
+MatplotlibExporter.register()        
         
 
 class MatplotlibWindow(QtGui.QMainWindow):
@@ -72,3 +73,5 @@ class MatplotlibWindow(QtGui.QMainWindow):
         
     def closeEvent(self, ev):
         MatplotlibExporter.windows.remove(self)
+
+

@@ -11,6 +11,14 @@ class Exporter(object):
     Abstract class used for exporting graphics to file / printer / whatever.
     """    
     allowCopy = False  # subclasses set this to True if they can use the copy buffer
+    Exporters = []
+    
+    @classmethod
+    def register(cls):
+        """
+        Used to register Exporter classes to appear in the export dialog.
+        """
+        Exporter.Exporters.append(cls)
     
     def __init__(self, item):
         """
@@ -20,9 +28,6 @@ class Exporter(object):
         object.__init__(self)
         self.item = item
         
-    #def item(self):
-        #return self.item
-    
     def parameters(self):
         """Return the parameters used to configure this exporter."""
         raise Exception("Abstract method must be overridden in subclass.")
@@ -131,45 +136,4 @@ class Exporter(object):
         return preItems + rootItem + postItems
 
     def render(self, painter, targetRect, sourceRect, item=None):
-    
-        #if item is None:
-            #item = self.item
-        #preItems = []
-        #postItems = []
-        #if isinstance(item, QtGui.QGraphicsScene):
-            #childs = [i for i in item.items() if i.parentItem() is None]
-            #rootItem = []
-        #else:
-            #childs = item.childItems()
-            #rootItem = [item]
-        #childs.sort(lambda a,b: cmp(a.zValue(), b.zValue()))
-        #while len(childs) > 0:
-            #ch = childs.pop(0)
-            #if int(ch.flags() & ch.ItemStacksBehindParent) > 0 or (ch.zValue() < 0 and int(ch.flags() & ch.ItemNegativeZStacksBehindParent) > 0):
-                #preItems.extend(tree)
-            #else:
-                #postItems.extend(tree)
-                
-        #for ch in preItems:
-            #self.render(painter, sourceRect, targetRect, item=ch)
-        ### paint root here
-        #for ch in postItems:
-            #self.render(painter, sourceRect, targetRect, item=ch)
-        
-    
         self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
-        
-    #def writePs(self, fileName=None, item=None):
-        #if fileName is None:
-            #self.fileSaveDialog(self.writeSvg, filter="PostScript (*.ps)")
-            #return
-        #if item is None:
-            #item = self
-        #printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
-        #printer.setOutputFileName(fileName)
-        #painter = QtGui.QPainter(printer)
-        #self.render(painter)
-        #painter.end()
-    
-    #def writeToPrinter(self):
-        #pass
