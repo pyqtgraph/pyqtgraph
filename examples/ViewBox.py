@@ -14,7 +14,6 @@ import initExample
 
 ## This example uses a ViewBox to create a PlotWidget-like interface
 
-#from scipy import random
 import numpy as np
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg

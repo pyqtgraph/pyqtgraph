@@ -13,11 +13,8 @@ of how to build an ROI at the bottom of the file.
 """
 
 from ..Qt import QtCore, QtGui
-#if not hasattr(QtCore, 'Signal'):
-    #QtCore.Signal = QtCore.pyqtSignal
 import numpy as np
-from numpy.linalg import norm
-import scipy.ndimage as ndimage
+#from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
 from math import cos, sin

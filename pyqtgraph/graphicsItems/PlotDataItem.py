@@ -655,7 +655,10 @@ class PlotDataItem(GraphicsObject):
         dx = np.diff(x)
         uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
         if not uniform:
-            import scipy.interpolate as interp
+            try:
+                import scipy.interpolate as interp
+            except:
+                raise Exception('Fourier transform of irregularly-sampled data requires the package scipy.interpolate.')
             x2 = np.linspace(x[0], x[-1], len(x))
             y = interp.griddata(x, y, x2, method='linear')
             x = x2

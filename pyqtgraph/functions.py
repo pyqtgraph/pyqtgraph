@@ -34,17 +34,6 @@ import decimal, re
 import ctypes
 import sys, struct
 
-try:
-    import scipy.ndimage
-    HAVE_SCIPY = True
-    if getConfigOption('useWeave'):
-        try:
-            import scipy.weave
-        except ImportError:
-            setConfigOptions(useWeave=False)
-except ImportError:
-    HAVE_SCIPY = False
-
 from . import debug
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
@@ -422,7 +411,9 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         affineSlice(data, shape=(20,20), origin=(40,0,0), vectors=((-1, 1, 0), (-1, 0, 1)), axes=(1,2,3))
     
     """
-    if not HAVE_SCIPY:
+    try:
+        import scipy.ndimage
+    except ImportError:
         raise Exception("This function requires the scipy library, but it does not appear to be importable.")
 
     # sanity check
@@ -579,15 +570,14 @@ def solve3DTransform(points1, points2):
     Find a 3D transformation matrix that maps points1 onto points2.
     Points must be specified as a list of 4 Vectors.
     """
-    if not HAVE_SCIPY:
-        raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
+    import numpy.linalg
     A = np.array([[points1[i].x(), points1[i].y(), points1[i].z(), 1] for i in range(4)])
     B = np.array([[points2[i].x(), points2[i].y(), points2[i].z(), 1] for i in range(4)])
     
     ## solve 3 sets of linear equations to determine transformation matrix elements
     matrix = np.zeros((4,4))
     for i in range(3):
-        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+        matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
     
@@ -600,8 +590,7 @@ def solveBilinearTransform(points1, points2):
     
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
-    if not HAVE_SCIPY:
-        raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
+    import numpy.linalg
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
@@ -610,7 +599,7 @@ def solveBilinearTransform(points1, points2):
     ## solve 2 sets of linear equations to determine transformation matrix elements
     matrix = np.zeros((2,4))
     for i in range(2):
-        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+        matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
     
@@ -629,6 +618,10 @@ def rescaleData(data, scale, offset, dtype=None):
     try:
         if not getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
+        try:
+            import scipy.weave
+        except ImportError:
+            raise Exception('scipy.weave is not importable; falling back to slower version.')
         
         ## require native dtype when using weave
         if not data.dtype.isnative:
@@ -671,68 +664,13 @@ def applyLookupTable(data, lut):
     Uses values in *data* as indexes to select values from *lut*.
     The returned data has shape data.shape + lut.shape[1:]
     
-    Uses scipy.weave to improve performance if it is available.
     Note: color gradient lookup tables can be generated using GradientWidget.
     """
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
     
-    ## using np.take appears to be faster than even the scipy.weave method and takes care of clipping as well.
     return np.take(lut, data, axis=0, mode='clip')  
     
-    ### old methods: 
-    #data = np.clip(data, 0, lut.shape[0]-1)
-    
-    #try:
-        #if not USE_WEAVE:
-            #raise Exception('Weave is disabled; falling back to slower version.')
-        
-        ### number of values to copy for each LUT lookup
-        #if lut.ndim == 1:
-            #ncol = 1
-        #else:
-            #ncol = sum(lut.shape[1:])
-        
-        ### output array
-        #newData = np.empty((data.size, ncol), dtype=lut.dtype)
-        
-        ### flattened input arrays
-        #flatData = data.flatten()
-        #flatLut = lut.reshape((lut.shape[0], ncol))
-        
-        #dataSize = data.size
-        
-        ### strides for accessing each item 
-        #newStride = newData.strides[0] / newData.dtype.itemsize
-        #lutStride = flatLut.strides[0] / flatLut.dtype.itemsize
-        #dataStride = flatData.strides[0] / flatData.dtype.itemsize
-        
-        ### strides for accessing individual values within a single LUT lookup
-        #newColStride = newData.strides[1] / newData.dtype.itemsize
-        #lutColStride = flatLut.strides[1] / flatLut.dtype.itemsize
-        
-        #code = """
-        
-        #for( int i=0; i<dataSize; i++ ) {
-            #for( int j=0; j<ncol; j++ ) {
-                #newData[i*newStride + j*newColStride] = flatLut[flatData[i*dataStride]*lutStride + j*lutColStride];
-            #}
-        #}
-        #"""
-        #scipy.weave.inline(code, ['flatData', 'flatLut', 'newData', 'dataSize', 'ncol', 'newStride', 'lutStride', 'dataStride', 'newColStride', 'lutColStride'])
-        #newData = newData.reshape(data.shape + lut.shape[1:])
-        ##if np.any(newData != lut[data]):
-            ##print "mismatch!"
-            
-        #data = newData
-    #except:
-        #if USE_WEAVE:
-            #debug.printExc("Error; disabling weave.")
-            #USE_WEAVE = False
-        #data = lut[data]
-        
-    #return data
-
 
 def makeRGBA(*args, **kwds):
     """Equivalent to makeARGB(..., useRGBA=True)"""
@@ -1473,7 +1411,11 @@ def traceImage(image, values, smooth=0.5):
     If image is RGB or RGBA, then the shape of values should be (nvals, 3/4)
     The parameter *smooth* is expressed in pixels.
     """
-    import scipy.ndimage as ndi
+    try:
+        import scipy.ndimage as ndi
+    except ImportError:
+        raise Exception("traceImage() requires the package scipy.ndimage, but it is not importable.")
+    
     if values.ndim == 2:
         values = values.T
     values = values[np.newaxis, np.newaxis, ...].astype(float)
@@ -1967,14 +1909,16 @@ def invertQTransform(tr):
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
-    if not HAVE_SCIPY:
+    try:
+        import numpy.linalg
+        arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+        inv = numpy.linalg.inv(arr)
+        return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
+    except ImportError:
         inv = tr.inverted()
         if inv[1] is False:
             raise Exception("Transform is not invertible.")
         return inv[0]
-    arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-    inv = scipy.linalg.inv(arr)
-    return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     
     
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):

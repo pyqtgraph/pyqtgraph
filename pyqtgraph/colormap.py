@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.interpolate
 from .Qt import QtGui, QtCore
 
 class ColorMap(object):
@@ -84,6 +83,11 @@ class ColorMap(object):
         qcolor      Values are returned as an array of QColor objects.
         =========== ===============================================================
         """
+        try:
+            import scipy.interpolate
+        except:
+            raise Exception("Colormap.map() requires the package scipy.interpolate, but it could not be imported.")
+        
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
             
