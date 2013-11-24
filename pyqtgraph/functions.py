@@ -733,7 +733,7 @@ def makeRGBA(*args, **kwds):
     kwds['useRGBA'] = True
     return makeARGB(*args, **kwds)
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, transpose=False): 
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False): 
     """ 
     Convert an array of values into an ARGB array suitable for building QImages, OpenGL textures, etc.
     
@@ -774,7 +774,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, transpose=F
                  The default is False, which returns in ARGB order for use with QImage 
                  (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
                  is BGRA).
-    transpose    Whether to pre-transpose the data in preparation for use in Qt
     ============ ==================================================================================
     """
     prof = debug.Profiler('functions.makeARGB', disabled=True)
@@ -866,10 +865,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, transpose=F
 
 
     ## copy data into ARGB ordered array
-    if transpose:
-        imgData = np.empty((data.shape[1], data.shape[0], 4), dtype=np.ubyte)
-    else:
-        imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
+    imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
 
     prof.mark('4')
 
@@ -880,22 +876,13 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, transpose=F
         
     if data.ndim == 2:
         for i in range(3):
-            if transpose:
-                imgData[..., i] = data.T
-            else:
-                imgData[..., i] = data
+            imgData[..., i] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            if transpose:
-                imgData[..., i] = data[..., 0].T
-            else:
-                imgData[..., i] = data[..., 0]
+            imgData[..., i] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            if transpose:
-                imgData[..., order[i]] = data[..., order[i]].T
-            else:
-                imgData[..., order[i]] = data[..., order[i]] 
+            imgData[..., order[i]] = data[..., order[i]] 
         
     prof.mark('5')
         
