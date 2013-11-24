@@ -13,7 +13,6 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph import RawImageWidget
 import scipy.ndimage as ndi
 import pyqtgraph.ptime as ptime
 
@@ -130,8 +129,13 @@ def update():
 
     if ui.rawRadio.isChecked():
         ui.rawImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
+        ui.stack.setCurrentIndex(1)
+    elif ui.rawGLRadio.isChecked():
+        ui.rawGLImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
+        ui.stack.setCurrentIndex(2)
     else:
         img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut)
+        ui.stack.setCurrentIndex(0)
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
         
     ptr += 1

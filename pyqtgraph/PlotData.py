@@ -15,6 +15,7 @@ class PlotData(object):
         - removal of nan/inf values
       - option for single value shared by entire column
       - cached downsampling
+      - cached min / max / hasnan / isuniform
     """
     def __init__(self):
         self.fields = {}

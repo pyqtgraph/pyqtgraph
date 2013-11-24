@@ -11,7 +11,7 @@ class GLBoxItem(GLGraphicsItem):
     
     Displays a wire-frame box.
     """
-    def __init__(self, size=None, color=None):
+    def __init__(self, size=None, color=None, glOptions='translucent'):
         GLGraphicsItem.__init__(self)
         if size is None:
             size = QtGui.QVector3D(1,1,1)
@@ -19,6 +19,7 @@ class GLBoxItem(GLGraphicsItem):
         if color is None:
             color = (255,255,255,80)
         self.setColor(color)
+        self.setGLOptions(glOptions)
     
     def setSize(self, x=None, y=None, z=None, size=None):
         """
@@ -43,12 +44,14 @@ class GLBoxItem(GLGraphicsItem):
         return self.__color
     
     def paint(self):
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
-        #glAlphaFunc( GL_ALWAYS,0.5 )
-        glEnable( GL_POINT_SMOOTH )
-        glDisable( GL_DEPTH_TEST )
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
+        ##glAlphaFunc( GL_ALWAYS,0.5 )
+        #glEnable( GL_POINT_SMOOTH )
+        #glDisable( GL_DEPTH_TEST )
+        self.setupGLState()
+        
         glBegin( GL_LINES )
         
         glColor4f(*self.color().glColor())

@@ -6,27 +6,26 @@ import numpy as np
 try:
     import metaarray
     HAVE_METAARRAY = True
-except:
+except ImportError:
     HAVE_METAARRAY = False
 
 __all__ = ['TableWidget']
 class TableWidget(QtGui.QTableWidget):
     """Extends QTableWidget with some useful functions for automatic data handling
-    and copy / export context menu. Can automatically format and display:
-
-    - numpy arrays
-    - numpy record arrays 
-    - metaarrays
-    - list-of-lists  [[1,2,3], [4,5,6]]
-    - dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
-    - list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+    and copy / export context menu. Can automatically format and display a variety
+    of data types (see :func:`setData() <pyqtgraph.TableWidget.setData>` for more
+    information.
     """
     
-    def __init__(self, *args):
+    def __init__(self, *args, **kwds):
         QtGui.QTableWidget.__init__(self, *args)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
+        self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        self.setSortingEnabled(True)
         self.clear()
+        editable = kwds.get('editable', False)
+        self.setEditable(editable)
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
         self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
@@ -34,6 +33,7 @@ class TableWidget(QtGui.QTableWidget):
         self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
         
     def clear(self):
+        """Clear all contents from the table."""
         QtGui.QTableWidget.clear(self)
         self.verticalHeadersSet = False
         self.horizontalHeadersSet = False
@@ -42,8 +42,19 @@ class TableWidget(QtGui.QTableWidget):
         self.setColumnCount(0)
         
     def setData(self, data):
+        """Set the data displayed in the table.
+        Allowed formats are:
+        
+        * numpy arrays
+        * numpy record arrays 
+        * metaarrays
+        * list-of-lists  [[1,2,3], [4,5,6]]
+        * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
+        * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+        """
         self.clear()
         self.appendData(data)
+        self.resizeColumnsToContents()
         
     def appendData(self, data):
         """Types allowed:
@@ -60,26 +71,19 @@ class TableWidget(QtGui.QTableWidget):
             first = next(it0)
         except StopIteration:
             return
-        #if type(first) == type(np.float64(1)):
-        #   return
         fn1, header1 = self.iteratorFn(first)
         if fn1 is None:
             self.clear()
             return
         
-        #print fn0, header0
-        #print fn1, header1
         firstVals = [x for x in fn1(first)]
         self.setColumnCount(len(firstVals))
         
-        #print header0, header1
         if not self.verticalHeadersSet and header0 is not None:
-            #print "set header 0:", header0
             self.setRowCount(len(header0))
             self.setVerticalHeaderLabels(header0)
             self.verticalHeadersSet = True
         if not self.horizontalHeadersSet and header1 is not None:
-            #print "set header 1:", header1
             self.setHorizontalHeaderLabels(header1)
             self.horizontalHeadersSet = True
         
@@ -88,10 +92,15 @@ class TableWidget(QtGui.QTableWidget):
         for row in it0:
             self.setRow(i, [x for x in fn1(row)])
             i += 1
+    
+    def setEditable(self, editable=True):
+        self.editable = editable
+        for item in self.items:
+            item.setEditable(editable)
             
     def iteratorFn(self, data):
-        """Return 1) a function that will provide an iterator for data and 2) a list of header strings"""
-        if isinstance(data, list):
+        ## Return 1) a function that will provide an iterator for data and 2) a list of header strings
+        if isinstance(data, list) or isinstance(data, tuple):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
             return lambda d: iter(d.values()), list(map(str, data.keys()))
@@ -110,13 +119,16 @@ class TableWidget(QtGui.QTableWidget):
         elif data is None:
             return (None,None)
         else:
-            raise Exception("Don't know how to iterate over data type: %s" % str(type(data)))
+            msg = "Don't know how to iterate over data type: {!s}".format(type(data))
+            raise TypeError(msg)
         
     def iterFirstAxis(self, data):
         for i in range(data.shape[0]):
             yield data[i]
             
-    def iterate(self, data):  ## for numpy.void, which can be iterated but mysteriously has no __iter__ (??)
+    def iterate(self, data):
+        # for numpy.void, which can be iterated but mysteriously 
+        # has no __iter__ (??)
         for x in data:
             yield x
         
@@ -124,32 +136,39 @@ class TableWidget(QtGui.QTableWidget):
         self.appendData([data])
         
     def addRow(self, vals):
-        #print "add row:", vals
         row = self.rowCount()
-        self.setRowCount(row+1)
+        self.setRowCount(row + 1)
         self.setRow(row, vals)
         
     def setRow(self, row, vals):
-        if row > self.rowCount()-1:
-            self.setRowCount(row+1)
-        for col in range(self.columnCount()):
+        if row > self.rowCount() - 1:
+            self.setRowCount(row + 1)
+        for col in range(len(vals)):
             val = vals[col]
-            if isinstance(val, float) or isinstance(val, np.floating):
-                s = "%0.3g" % val
-            else:
-                s = str(val)
-            item = QtGui.QTableWidgetItem(s)
-            item.value = val
-            #print "add item to row %d:"%row, item, item.value
+            item = TableWidgetItem(val)
+            item.setEditable(self.editable)
             self.items.append(item)
             self.setItem(row, col, item)
-            
+
+    def sizeHint(self):
+        # based on http://stackoverflow.com/a/7195443/54056
+        width = sum(self.columnWidth(i) for i in range(self.columnCount()))
+        width += self.verticalHeader().sizeHint().width()
+        width += self.verticalScrollBar().sizeHint().width()
+        width += self.frameWidth() * 2
+        height = sum(self.rowHeight(i) for i in range(self.rowCount()))
+        height += self.verticalHeader().sizeHint().height()
+        height += self.horizontalScrollBar().sizeHint().height()
+        return QtCore.QSize(width, height)
+         
     def serialize(self, useSelection=False):
         """Convert entire table (or just selected area) into tab-separated text values"""
         if useSelection:
             selection = self.selectedRanges()[0]
-            rows = list(range(selection.topRow(), selection.bottomRow()+1))
-            columns = list(range(selection.leftColumn(), selection.rightColumn()+1))        
+            rows = list(range(selection.topRow(),
+                              selection.bottomRow() + 1))
+            columns = list(range(selection.leftColumn(),
+                                 selection.rightColumn() + 1))        
         else:
             rows = list(range(self.rowCount()))
             columns = list(range(self.columnCount()))
@@ -215,6 +234,28 @@ class TableWidget(QtGui.QTableWidget):
         else:
             ev.ignore()
 
+class TableWidgetItem(QtGui.QTableWidgetItem):
+    def __init__(self, val):
+        if isinstance(val, float) or isinstance(val, np.floating):
+            s = "%0.3g" % val
+        else:
+            s = str(val)
+        QtGui.QTableWidgetItem.__init__(self, s)
+        self.value = val
+        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        self.setFlags(flags)
+        
+    def setEditable(self, editable):
+        if editable:
+            self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
+        else:
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def __lt__(self, other):
+        if hasattr(other, 'value'):
+            return self.value < other.value
+        else:
+            return self.text() < other.text()
 
 
 if __name__ == '__main__':

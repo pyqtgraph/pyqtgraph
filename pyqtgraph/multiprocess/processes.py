@@ -1,7 +1,7 @@
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
 import multiprocessing.connection
-from pyqtgraph.Qt import USE_PYSIDE
+import pyqtgraph as pg
 try:
     import cPickle as pickle
 except ImportError:
@@ -35,7 +35,7 @@ class Process(RemoteEventHandler):
     ProxyObject for more information.
     """
     
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
         """
         ============  =============================================================
         Arguments:
@@ -49,8 +49,13 @@ class Process(RemoteEventHandler):
         copySysPath   If True, copy the contents of sys.path to the remote process
         debug         If True, print detailed information about communication
                       with the child process.
+        wrapStdout    If True (default on windows) then stdout and stderr from the
+                      child process will be caught by the parent process and
+                      forwarded to its stdout/stderr. This provides a workaround
+                      for a python bug: http://bugs.python.org/issue3905
+                      but has the side effect that child output is significantly
+                      delayed relative to the parent output.
         ============  =============================================================
-        
         """
         if target is None:
             target = startEventLoop
@@ -62,28 +67,48 @@ class Process(RemoteEventHandler):
         
         ## random authentication key
         authkey = os.urandom(20)
+
+        ## Windows seems to have a hard time with hmac 
+        if sys.platform.startswith('win'):
+            authkey = None
+
         #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
         port = 10000
         while True:
             try:
-                ## hmac authentication appears to be broken on windows (says AuthenticationError: digest received was wrong)
                 l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
                 break
             except socket.error as ex:
-                if ex.errno != 98:
+                if ex.errno != 98 and ex.errno != 10048: # unix=98, win=10048
                     raise
                 port += 1
-        
+
+
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
-        self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
+        
+        if wrapStdout is None:
+            wrapStdout = sys.platform.startswith('win')
+
+        if wrapStdout:
+            ## note: we need all three streams to have their own PIPE due to this bug:
+            ## http://bugs.python.org/issue3905
+            stdout = subprocess.PIPE
+            stderr = subprocess.PIPE
+            self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
+            ## to circumvent the bug and still make the output visible, we use 
+            ## background threads to pass data from pipes to stdout/stderr
+            self._stdoutForwarder = FileForwarder(self.proc.stdout, "stdout")
+            self._stderrForwarder = FileForwarder(self.proc.stderr, "stderr")
+        else:
+            self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
+
         targetStr = pickle.dumps(target)  ## double-pickle target so that child has a chance to 
                                           ## set its sys.path properly before unpickling the target
         pid = os.getpid() # we must send pid to child because windows does not have getppid
-        pyside = USE_PYSIDE
         
         ## Send everything the remote process needs to start correctly
         data = dict(
@@ -93,14 +118,14 @@ class Process(RemoteEventHandler):
             ppid=pid, 
             targetStr=targetStr, 
             path=sysPath, 
-            pyside=pyside,
+            pyside=pg.Qt.USE_PYSIDE,
             debug=debug
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
         
         ## open connection for remote process
-        self.debugMsg('Listening for child process..')
+        self.debugMsg('Listening for child process on port %d, authkey=%s..' % (port, repr(authkey)))
         while True:
             try:
                 conn = l.accept()
@@ -115,6 +140,7 @@ class Process(RemoteEventHandler):
         self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)
+
         
     def join(self, timeout=10):
         self.debugMsg('Joining child process..')
@@ -126,10 +152,24 @@ class Process(RemoteEventHandler):
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
-        
+
+    def debugMsg(self, msg):
+        if hasattr(self, '_stdoutForwarder'):
+            ## Lock output from subprocess to make sure we do not get line collisions
+            with self._stdoutForwarder.lock:
+                with self._stderrForwarder.lock:
+                    RemoteEventHandler.debugMsg(self, msg)
+        else:
+            RemoteEventHandler.debugMsg(self, msg)
+
         
 def startEventLoop(name, port, authkey, ppid, debug=False):
+    if debug:
+        import os
+        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
+    if debug:
+        print('[%d] connected; starting remote proxy.' % os.getpid())
     global HANDLER
     #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
     HANDLER = RemoteEventHandler(conn, name, ppid, debug=debug)
@@ -321,7 +361,8 @@ class QtProcess(Process):
       GUI.
     - A QTimer is also started on the parent process which polls for requests
       from the child process. This allows Qt signals emitted within the child 
-      process to invoke slots on the parent process and vice-versa.
+      process to invoke slots on the parent process and vice-versa. This can 
+      be disabled using processRequests=False in the constructor.
       
     Example::
     
@@ -338,18 +379,29 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
+        self._processRequests = kwds.pop('processRequests', True)
         Process.__init__(self, **kwds)
         self.startEventTimer()
         
     def startEventTimer(self):
         from pyqtgraph.Qt import QtGui, QtCore  ## avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
-        app = QtGui.QApplication.instance()
-        if app is None:
-            raise Exception("Must create QApplication before starting QtProcess")
+        if self._processRequests:
+            app = QtGui.QApplication.instance()
+            if app is None:
+                raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
+            self.startRequestProcessing()
+    
+    def startRequestProcessing(self, interval=0.01):
+        """Start listening for requests coming from the child process.
+        This allows signals to be connected from the child process to the parent.
+        """
         self.timer.timeout.connect(self.processRequests)
-        self.timer.start(10)
+        self.timer.start(interval*1000)
         
+    def stopRequestProcessing(self):
+        self.timer.stop()
+    
     def processRequests(self):
         try:
             Process.processRequests(self)
@@ -357,7 +409,12 @@ class QtProcess(Process):
             self.timer.stop()
     
 def startQtEventLoop(name, port, authkey, ppid, debug=False):
+    if debug:
+        import os
+        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
+    if debug:
+        print('[%d] connected; starting remote proxy.' % os.getpid())
     from pyqtgraph.Qt import QtGui, QtCore
     #from PyQt4 import QtGui, QtCore
     app = QtGui.QApplication.instance()
@@ -372,5 +429,44 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
     app.exec_()
+
+import threading
+class FileForwarder(threading.Thread):
+    """
+    Background thread that forwards data from one pipe to another. 
+    This is used to catch data from stdout/stderr of the child process
+    and print it back out to stdout/stderr. We need this because this
+    bug: http://bugs.python.org/issue3905  _requires_ us to catch
+    stdout/stderr.
+
+    *output* may be a file or 'stdout' or 'stderr'. In the latter cases,
+    sys.stdout/stderr are retrieved once for every line that is output,
+    which ensures that the correct behavior is achieved even if 
+    sys.stdout/stderr are replaced at runtime.
+    """
+    def __init__(self, input, output):
+        threading.Thread.__init__(self)
+        self.input = input
+        self.output = output
+        self.lock = threading.Lock()
+        self.start()
+
+    def run(self):
+        if self.output == 'stdout':
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    sys.stdout.write(line)
+        elif self.output == 'stderr':
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    sys.stderr.write(line)
+        else:
+            while True:
+                line = self.input.readline()
+                with self.lock:
+                    self.output.write(line)
+
 
 

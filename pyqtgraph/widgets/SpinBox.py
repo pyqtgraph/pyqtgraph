@@ -313,7 +313,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         s = [D(-1), D(1)][n >= 0]  ## determine sign of step
         val = self.val
         
-        for i in range(abs(n)):
+        for i in range(int(abs(n))):
             
             if self.opts['log']:
                 raise Exception("Log mode no longer supported.")

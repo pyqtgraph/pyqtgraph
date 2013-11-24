@@ -1,12 +1,18 @@
 import sys, os, subprocess, time
 
-import initExample
+if __name__ == "__main__" and (__package__ is None or __package__==''):
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, parent_dir)
+    import examples
+    __package__ = "examples"
+
+from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
 
 if USE_PYSIDE:
-    from exampleLoaderTemplate_pyside import Ui_Form
+    from .exampleLoaderTemplate_pyside import Ui_Form
 else:
-    from exampleLoaderTemplate_pyqt import Ui_Form
+    from .exampleLoaderTemplate_pyqt import Ui_Form
     
 import os, sys
 from pyqtgraph.pgcollections import OrderedDict
@@ -64,7 +70,7 @@ examples = OrderedDict([
         ('TreeWidget', 'TreeWidget.py'),
         ('DataTreeWidget', 'DataTreeWidget.py'),
         ('GradientWidget', 'GradientWidget.py'),
-        #('TableWidget', '../widgets/TableWidget.py'),
+        ('TableWidget', 'TableWidget.py'),
         ('ColorButton', 'ColorButton.py'),
         #('CheckTable', '../widgets/CheckTable.py'),
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
@@ -96,6 +102,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeBtn.hide()
         
         global examples
+        self.itemCache = []
         self.populateTree(self.ui.exampleTree.invisibleRootItem(), examples)
         self.ui.exampleTree.expandAll()
         
@@ -122,6 +129,9 @@ class ExampleLoader(QtGui.QMainWindow):
     def populateTree(self, root, examples):
         for key, val in examples.items():
             item = QtGui.QTreeWidgetItem([key])
+            self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
+                                        # so we need to make an explicit reference or else the .file
+                                        # attribute will disappear.
             if isinstance(val, basestring):
                 item.file = val
             else:
@@ -235,9 +245,14 @@ except:
 
 """  % (import1, graphicsSystem, import2)
 
-    process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    process.stdin.write(code.encode('UTF-8'))
-    #process.stdin.close()
+    if sys.platform.startswith('win'):
+        process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(code.encode('UTF-8'))
+        process.stdin.close()
+    else:
+        process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        process.stdin.write(code.encode('UTF-8'))
+        process.stdin.close() ##?
     output = ''
     fail = False
     while True:
@@ -252,8 +267,8 @@ except:
             break
     time.sleep(1)
     process.kill()
-    #process.wait()
-    res = process.communicate()
+    #res = process.communicate()
+    res = (process.stdout.read(), process.stderr.read())
     
     if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
         print('.' * (50-len(name)) + 'FAILED')

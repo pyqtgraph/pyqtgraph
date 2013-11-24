@@ -328,6 +328,9 @@ class MetaArray(object):
     def __div__(self, b):
         return self._binop('__div__', b)
         
+    def __truediv__(self, b):
+        return self._binop('__truediv__', b)
+        
     def _binop(self, op, b):
         if isinstance(b, MetaArray):
             b = b.asarray()

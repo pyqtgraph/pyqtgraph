@@ -90,14 +90,6 @@ class ImageView(QtGui.QWidget):
         
         self.ignoreTimeLine = False
         
-        #if 'linux' in sys.platform.lower():   ## Stupid GL bug in linux.
-        #    self.ui.graphicsView.setViewport(QtGui.QWidget())
-        
-        #self.ui.graphicsView.enableMouse(True)
-        #self.ui.graphicsView.autoPixelRange = False
-        #self.ui.graphicsView.setAspectLocked(True)
-        #self.ui.graphicsView.invertY()
-        #self.ui.graphicsView.enableMouse()
         if view is None:
             self.view = ViewBox()
         else:
@@ -105,13 +97,6 @@ class ImageView(QtGui.QWidget):
         self.ui.graphicsView.setCentralItem(self.view)
         self.view.setAspectLocked(True)
         self.view.invertY()
-        
-        #self.ticks = [t[0] for t in self.ui.gradientWidget.listTicks()]
-        #self.ticks[0].colorChangeAllowed = False
-        #self.ticks[1].colorChangeAllowed = False
-        #self.ui.gradientWidget.allowAdd = False
-        #self.ui.gradientWidget.setTickColor(self.ticks[1], QtGui.QColor(255,255,255))
-        #self.ui.gradientWidget.setOrientation('right')
         
         if imageItem is None:
             self.imageItem = ImageItem()
@@ -133,7 +118,6 @@ class ImageView(QtGui.QWidget):
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
-        #self.ui.roiPlot.hide()
         self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
         self.timeLine.setPen(QtGui.QPen(QtGui.QColor(255, 255, 0, 200)))
@@ -147,13 +131,6 @@ class ImageView(QtGui.QWidget):
         self.playRate = 0
         self.lastPlayTime = 0
         
-        #self.normLines = []
-        #for i in [0,1]:
-            #l = InfiniteLine(self.ui.roiPlot, 0)
-            #l.setPen(QtGui.QPen(QtGui.QColor(0, 100, 200, 200)))
-            #self.ui.roiPlot.addItem(l)
-            #self.normLines.append(l)
-            #l.hide()
         self.normRgn = LinearRegionItem()
         self.normRgn.setZValue(0)
         self.ui.roiPlot.addItem(self.normRgn)
@@ -168,7 +145,6 @@ class ImageView(QtGui.QWidget):
             setattr(self, fn, getattr(self.ui.histogram, fn))
 
         self.timeLine.sigPositionChanged.connect(self.timeLineChanged)
-        #self.ui.gradientWidget.sigGradientChanged.connect(self.updateImage)
         self.ui.roiBtn.clicked.connect(self.roiClicked)
         self.roi.sigRegionChanged.connect(self.roiChanged)
         self.ui.normBtn.toggled.connect(self.normToggled)
@@ -187,31 +163,32 @@ class ImageView(QtGui.QWidget):
         
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         
-        
         self.roiClicked() ## initialize roi plot to correct shape / visibility
 
-    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None):
+    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
         """
         Set the image to be displayed in the widget.
         
-        ============== =======================================================================
+        ================== =======================================================================
         **Arguments:**
-        *img*          (numpy array) the image to be displayed.
-        *xvals*        (numpy array) 1D array of z-axis values corresponding to the third axis
-                       in a 3D image. For video, this array should contain the time of each frame.
-        *autoRange*    (bool) whether to scale/pan the view to fit the image.
-        *autoLevels*   (bool) whether to update the white/black levels to fit the image.
-        *levels*       (min, max); the white and black level values to use.
-        *axes*         Dictionary indicating the interpretation for each axis.
-                       This is only needed to override the default guess. Format is::
+        img                (numpy array) the image to be displayed.
+        xvals              (numpy array) 1D array of z-axis values corresponding to the third axis
+                           in a 3D image. For video, this array should contain the time of each frame.
+        autoRange          (bool) whether to scale/pan the view to fit the image.
+        autoLevels         (bool) whether to update the white/black levels to fit the image.
+        levels             (min, max); the white and black level values to use.
+        axes               Dictionary indicating the interpretation for each axis.
+                           This is only needed to override the default guess. Format is::
                        
-                           {'t':0, 'x':1, 'y':2, 'c':3};
+                               {'t':0, 'x':1, 'y':2, 'c':3};
         
-        *pos*          Change the position of the displayed image
-        *scale*        Change the scale of the displayed image
-        *transform*    Set the transform of the dispalyed image. This option overrides *pos*
-                       and *scale*.
-        ============== =======================================================================
+        pos                Change the position of the displayed image
+        scale              Change the scale of the displayed image
+        transform          Set the transform of the displayed image. This option overrides *pos*
+                           and *scale*.
+        autoHistogramRange If True, the histogram y-range is automatically scaled to fit the
+                           image data.
+        ================== =======================================================================
         """
         prof = debug.Profiler('ImageView.setImage', disabled=True)
         
@@ -231,9 +208,7 @@ class ImageView(QtGui.QWidget):
                 self.tVals = np.arange(img.shape[0])
         else:
             self.tVals = np.arange(img.shape[0])
-        #self.ui.timeSlider.setValue(0)
-        #self.ui.normStartSlider.setValue(0)
-        #self.ui.timeSlider.setMaximum(img.shape[0]-1)
+        
         prof.mark('1')
         
         if axes is None:
@@ -265,14 +240,13 @@ class ImageView(QtGui.QWidget):
         
         
         prof.mark('3')
-            
+        
         self.currentIndex = 0
-        self.updateImage()
+        self.updateImage(autoHistogramRange=autoHistogramRange)
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
-            self.levelMax = levels[1]
-            self.levelMin = levels[0]
+            self.setLevels(*levels)
             
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
@@ -328,15 +302,9 @@ class ImageView(QtGui.QWidget):
         if not self.playTimer.isActive():
             self.playTimer.start(16)
             
-        
-
     def autoLevels(self):
-        """Set the min/max levels automatically to match the image data."""
-        #image = self.getProcessedImage()
+        """Set the min/max intensity levels automatically to match the image data."""
         self.setLevels(self.levelMin, self.levelMax)
-        
-        #self.ui.histogram.imageChanged(autoLevel=True)
-            
 
     def setLevels(self, min, max):
         """Set the min/max (bright and dark) levels."""
@@ -345,17 +313,16 @@ class ImageView(QtGui.QWidget):
     def autoRange(self):
         """Auto scale and pan the view around the image."""
         image = self.getProcessedImage()
-        
-        #self.ui.graphicsView.setRange(QtCore.QRectF(0, 0, image.shape[self.axes['x']], image.shape[self.axes['y']]), padding=0., lockAspect=True)        
-        self.view.autoRange() ##setRange(self.imageItem.viewBoundingRect(), padding=0.)
+        self.view.autoRange()
         
     def getProcessedImage(self):
-        """Returns the image data after it has been processed by any normalization options in use."""
+        """Returns the image data after it has been processed by any normalization options in use.
+        This method also sets the attributes self.levelMin and self.levelMax 
+        to indicate the range of data in the image."""
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
             self.levelMin, self.levelMax = list(map(float, ImageView.quickMinMax(self.imageDisp)))
-            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
             
         return self.imageDisp
         
@@ -364,7 +331,6 @@ class ImageView(QtGui.QWidget):
         """Closes the widget nicely, making sure to clear the graphics scene and release memory."""
         self.ui.roiPlot.close()
         self.ui.graphicsView.close()
-        #self.ui.gradientWidget.sigGradientChanged.disconnect(self.updateImage)
         self.scene.clear()
         del self.image
         del self.imageDisp
@@ -467,20 +433,12 @@ class ImageView(QtGui.QWidget):
     def normRadioChanged(self):
         self.imageDisp = None
         self.updateImage()
+        self.autoLevels()
         self.roiChanged()
         self.sigProcessingChanged.emit(self)
         
     
     def updateNorm(self):
-        #for l, sl in zip(self.normLines, [self.ui.normStartSlider, self.ui.normStopSlider]):
-            #if self.ui.normTimeRangeCheck.isChecked():
-                #l.show()
-            #else:
-                #l.hide()
-            
-            #i, t = self.timeIndex(sl)
-            #l.setPos(t)
-        
         if self.ui.normTimeRangeCheck.isChecked():
             #print "show!"
             self.normRgn.show()
@@ -496,6 +454,7 @@ class ImageView(QtGui.QWidget):
         if not self.ui.normOffRadio.isChecked():
             self.imageDisp = None
             self.updateImage()
+            self.autoLevels()
             self.roiChanged()
             self.sigProcessingChanged.emit(self)
 
@@ -633,22 +592,19 @@ class ImageView(QtGui.QWidget):
         #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
         self.sigTimeChanged.emit(ind, time)
 
-    def updateImage(self):
+    def updateImage(self, autoHistogramRange=True):
         ## Redraw image on screen
         if self.image is None:
             return
             
         image = self.getProcessedImage()
-        #print "update:", image.ndim, image.max(), image.min(), self.blackLevel(), self.whiteLevel()
+        
+        if autoHistogramRange:
+            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
         if self.axes['t'] is None:
-            #self.ui.timeSlider.hide()
             self.imageItem.updateImage(image)
-            #self.ui.roiPlot.hide()
-            #self.ui.roiBtn.hide()
         else:
-            #self.ui.roiBtn.show()
             self.ui.roiPlot.show()
-            #self.ui.timeSlider.show()
             self.imageItem.updateImage(image[self.currentIndex])
             
             
@@ -656,38 +612,22 @@ class ImageView(QtGui.QWidget):
         ## Return the time and frame index indicated by a slider
         if self.image is None:
             return (0,0)
-        #v = slider.value()
-        #vmax = slider.maximum()
-        #f = float(v) / vmax
         
         t = slider.value()
         
-        #t = 0.0
-        #xv = self.image.xvals('Time') 
         xv = self.tVals
         if xv is None:
             ind = int(t)
-            #ind = int(f * self.image.shape[0])
         else:
             if len(xv) < 2:
                 return (0,0)
             totTime = xv[-1] + (xv[-1]-xv[-2])
-            #t = f * totTime
             inds = np.argwhere(xv < t)
             if len(inds) < 1:
                 return (0,t)
             ind = inds[-1,0]
-        #print ind
         return ind, t
 
-    #def whiteLevel(self):
-        #return self.levelMin + (self.levelMax-self.levelMin) * self.ui.gradientWidget.tickValue(self.ticks[1])
-        ##return self.levelMin + (self.levelMax-self.levelMin) * self.ui.whiteSlider.value() / self.ui.whiteSlider.maximum() 
-    
-    #def blackLevel(self):
-        #return self.levelMin + (self.levelMax-self.levelMin) * self.ui.gradientWidget.tickValue(self.ticks[0])
-        ##return self.levelMin + ((self.levelMax-self.levelMin) / self.ui.blackSlider.maximum()) * self.ui.blackSlider.value()
-        
     def getView(self):
         """Return the ViewBox (or other compatible object) which displays the ImageItem"""
         return self.view

@@ -80,6 +80,12 @@ class Point(QtCore.QPointF):
     def __div__(self, a):
         return self._math_('__div__', a)
     
+    def __truediv__(self, a):
+        return self._math_('__truediv__', a)
+    
+    def __rtruediv__(self, a):
+        return self._math_('__rtruediv__', a)
+    
     def __rpow__(self, a):
         return self._math_('__rpow__', a)
     

@@ -15,75 +15,9 @@ import threading, sys, copy, collections
 
 try:
     from collections import OrderedDict
-except:
-    # Deprecated; this class is now present in Python 2.7 as collections.OrderedDict
-    # Only keeping this around for python2.6 support.
-    class OrderedDict(dict):
-        """extends dict so that elements are iterated in the order that they were added.
-        Since this class can not be instantiated with regular dict notation, it instead uses
-        a list of tuples: 
-        od = OrderedDict([(key1, value1), (key2, value2), ...])
-        items set using __setattr__ are added to the end of the key list.
-        """
-        
-        def __init__(self, data=None):
-            self.order = []
-            if data is not None:
-                for i in data:
-                    self[i[0]] = i[1]
-        
-        def __setitem__(self, k, v):
-            if not self.has_key(k):
-                self.order.append(k)
-            dict.__setitem__(self, k, v)
-        
-        def __delitem__(self, k):
-            self.order.remove(k)
-            dict.__delitem__(self, k)
-
-        def keys(self):
-            return self.order[:]
-        
-        def items(self):
-            it = []
-            for k in self.keys():
-                it.append((k, self[k]))
-            return it
-        
-        def values(self):
-            return [self[k] for k in self.order]
-        
-        def remove(self, key):
-            del self[key]
-            #self.order.remove(key)
-        
-        def __iter__(self):
-            for k in self.order:
-                yield k
-                
-        def update(self, data):
-            """Works like dict.update, but accepts list-of-tuples as well as dict."""
-            if isinstance(data, dict):
-                for k, v in data.iteritems():
-                    self[k] = v
-            else:
-                for k,v in data:
-                    self[k] = v
-
-        def copy(self):
-            return OrderedDict(self.items())
-            
-        def itervalues(self):
-            for k in self.order:
-                yield self[k]
-                
-        def iteritems(self):
-            for k in self.order:
-                yield (k, self[k])
-                
-        def __deepcopy__(self, memo):
-            return OrderedDict([(k, copy.deepcopy(v, memo)) for k, v in self.iteritems()])
-        
+except ImportError:
+    # fallback: try to use the ordereddict backport when using python 2.6
+    from ordereddict import OrderedDict
         
 
 class ReverseDict(dict):

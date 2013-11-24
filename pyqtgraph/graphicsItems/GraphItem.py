@@ -103,11 +103,18 @@ class GraphItem(GraphicsObject):
     def paint(self, p, *args):
         if self.picture == None:
             self.generatePicture()
+        if pg.getConfigOption('antialias') is True:
+            p.setRenderHint(p.Antialiasing)
         self.picture.play(p)
         
     def boundingRect(self):
         return self.scatter.boundingRect()
         
+    def dataBounds(self, *args, **kwds):
+        return self.scatter.dataBounds(*args, **kwds)
+    
+    def pixelPadding(self):
+        return self.scatter.pixelPadding()
         
         
         

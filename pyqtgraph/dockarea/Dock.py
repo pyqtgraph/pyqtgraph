@@ -209,6 +209,13 @@ class Dock(QtGui.QWidget, DockDrop):
             
         self.setOrientation(force=True)
 
+    def close(self):
+        """Remove this dock from the DockArea it lives inside."""
+        self.setParent(None)
+        self.label.setParent(None)
+        self._container.apoptose()
+        self._container = None
+
     def __repr__(self):
         return "<Dock %s %s>" % (self.name(), self.stretch())
 

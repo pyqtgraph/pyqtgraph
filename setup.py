@@ -18,9 +18,13 @@ setup(name='pyqtgraph',
     version='',
     description='Scientific Graphics and GUI Library for Python',
     long_description="""\
-PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and numpy. 
+PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
+numpy. 
 
-It is intended for use in mathematics / scientific / engineering applications. Despite being written entirely in python, the library is very fast due to its heavy leverage of numpy for number crunching, Qt's GraphicsView framework for 2D display, and OpenGL for 3D display.
+It is intended for use in mathematics / scientific / engineering applications.
+Despite being written entirely in python, the library is very fast due to its
+heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
+2D display, and OpenGL for 3D display.
 """,
     license='MIT',
     url='http://www.pyqtgraph.org',

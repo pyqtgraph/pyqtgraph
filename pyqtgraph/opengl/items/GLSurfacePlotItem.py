@@ -1,5 +1,5 @@
 from OpenGL.GL import *
-from GLMeshItem import GLMeshItem
+from .GLMeshItem import GLMeshItem
 from .. MeshData import MeshData
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg

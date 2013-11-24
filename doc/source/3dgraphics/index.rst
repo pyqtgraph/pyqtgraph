@@ -20,6 +20,7 @@ Contents:
     glvolumeitem
     glimageitem
     glmeshitem
+    gllineplotitem
     glaxisitem
     glgraphicsitem
     glscatterplotitem

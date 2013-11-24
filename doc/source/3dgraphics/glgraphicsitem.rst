@@ -1,8 +1,8 @@
 GLGraphicsItem
 ==============
 
-.. autoclass:: pyqtgraph.opengl.GLGraphicsItem
+.. autoclass:: pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem
     :members:
 
-    .. automethod:: pyqtgraph.GLGraphicsItem.__init__
+    .. automethod:: pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem.__init__
 

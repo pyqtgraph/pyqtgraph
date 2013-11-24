@@ -18,6 +18,7 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(path, '..', '..'))
+sys.path.insert(0, os.path.join(path, '..', 'extensions'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -215,3 +216,4 @@ man_pages = [
     ('index', 'pyqtgraph', 'pyqtgraph Documentation',
      ['Luke Campagnola'], 1)
 ]
+

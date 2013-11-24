@@ -1,6 +1,6 @@
 from .Exporter import Exporter
 from pyqtgraph.parametertree import Parameter
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
+from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
 import pyqtgraph as pg
 import numpy as np
 
@@ -17,7 +17,11 @@ class ImageExporter(Exporter):
             scene = item.scene()
         else:
             scene = item
-        bg = scene.views()[0].backgroundBrush().color()
+        bgbrush = scene.views()[0].backgroundBrush()
+        bg = bgbrush.color()
+        if bgbrush.style() == QtCore.Qt.NoBrush:
+            bg.setAlpha(0)
+            
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'width', 'type': 'int', 'value': tr.width(), 'limits': (0, None)},
             {'name': 'height', 'type': 'int', 'value': tr.height(), 'limits': (0, None)},
@@ -42,7 +46,10 @@ class ImageExporter(Exporter):
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
-            filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
+            if USE_PYSIDE:
+                filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
+            else:
+                filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
             preferred = ['*.png', '*.tif', '*.jpg']
             for p in preferred[::-1]:
                 if p in filter:
@@ -57,6 +64,9 @@ class ImageExporter(Exporter):
         
         #self.png = QtGui.QImage(targetRect.size(), QtGui.QImage.Format_ARGB32)
         #self.png.fill(pyqtgraph.mkColor(self.params['background']))
+        w, h = self.params['width'], self.params['height']
+        if w == 0 or h == 0:
+            raise Exception("Cannot export image with size=0 (requested export size is %dx%d)" % (w,h))
         bg = np.empty((self.params['width'], self.params['height'], 4), dtype=np.ubyte)
         color = self.params['background']
         bg[:,:,0] = color.blue()
