@@ -1,4 +1,4 @@
-pyqtgraph-0.9.8
+pyqtgraph-0.9.8  2013-11-24
 
   API / behavior changes:
     - ViewBox will auto-range when ImageItem changes shape
@@ -94,7 +94,7 @@ pyqtgraph-0.9.8
     - Luke finished dissertation
 
 
-pyqtgraph-0.9.7
+pyqtgraph-0.9.7  2013-02-25
 
    Bugfixes:
      - ArrowItem auto range now works correctly
@@ -153,7 +153,7 @@ pyqtgraph-0.9.7
      - Workaround for change in QImage API (PyQt 4.9.6)
      - Fixed axis ordering bug in GLScatterPlotItem
 
-pyqtgraph-0.9.6
+pyqtgraph-0.9.6  2013-02-14
 
    Features:
      - Added GraphItem class for displaying networks/trees
@@ -215,7 +215,7 @@ pyqtgraph-0.9.6
    Added RemoteSpeedTest example
 
 
-pyqtgraph-0.9.5
+pyqtgraph-0.9.5  2013-01-11
 
    Plotting performance improvements:
      - AxisItem shows fewer tick levels in some cases.
@@ -239,7 +239,7 @@ pyqtgraph-0.9.5
    - prevent PlotCurveItem drawing shadow when unnecessary
    - deprecated flowchart.Node.__getattr__ -- causes too many problems.
 
-pyqtgraph-0.9.4
+pyqtgraph-0.9.4  2013-01-07
 
    Documentation:
    - Added documentation on export system
@@ -250,7 +250,7 @@ pyqtgraph-0.9.4
    - deprecated flowchart.Node.__getattr__ -- causes too many problems.
    Bugfix: prevent adding invalid entry to sys.path when running examples
 
-pyqtgraph-0.9.3
+pyqtgraph-0.9.3  2012-12-29
 
    Bugfix: prevent adding invalid entry to sys.path when running examples
    Bugfixes:
@@ -264,7 +264,7 @@ pyqtgraph-0.9.3
    - Added debian control files for building source packages
    - Fixed version numbering in doc, __init__.py
 
-pyqtgraph-0.9.2
+pyqtgraph-0.9.2  2012-12-29
 
    Bugfixes:
    - SVG export text elements use generic font-family as backup, corrected item
@@ -277,7 +277,7 @@ pyqtgraph-0.9.2
    - Added debian control files for building source packages
    - Fixed version numbering in doc, __init__.py
 
-pyqtgraph-0.9.1
+pyqtgraph-0.9.1  2012-12-27
 
    Removed incorrect version numbers
    Correction to setup.py - use install_requires to inform pip of dependencies.
@@ -285,6 +285,6 @@ pyqtgraph-0.9.1
    Added debian control files
    bugfixes for new package structure
 
-pyqtgraph-0.9.0
+pyqtgraph-0.9.0  2012-12-27
 
   * Initial release.
