@@ -875,6 +875,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
         
     if data.ndim == 2:
+        # This is tempting:
+        #   imgData[..., :3] = data[..., np.newaxis]
+        # ..but it turns out this is faster:
         for i in range(3):
             imgData[..., i] = data
     elif data.shape[2] == 1:
