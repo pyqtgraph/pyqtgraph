@@ -783,25 +783,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     if levels is not None and not isinstance(levels, np.ndarray):
         levels = np.array(levels)
     
-    ## sanity checks
-    #if data.ndim == 3:
-        #if data.shape[2] not in (3,4):
-            #raise Exception("data.shape[2] must be 3 or 4")
-        ##if lut is not None:
-            ##raise Exception("can not use lookup table with 3D data")
-    #elif data.ndim != 2:
-        #raise Exception("data must be 2D or 3D")
-        
-    #if lut is not None:
-        ##if lut.ndim == 2:
-            ##if lut.shape[1] :
-                ##raise Exception("lut.shape[1] must be 3 or 4")
-        ##elif lut.ndim != 1:
-            ##raise Exception("lut must be 1D or 2D")
-        #if lut.dtype != np.ubyte:
-            #raise Exception('lookup table must have dtype=ubyte (got %s instead)' % str(lut.dtype))
-            
-
     if levels is not None:
         if levels.ndim == 1:
             if len(levels) != 2:
@@ -814,16 +795,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         else:
             print(levels)
             raise Exception("levels argument must be 1D or 2D.")
-        #levels = np.array(levels)
-        #if levels.shape == (2,):
-            #pass
-        #elif levels.shape in [(3,2), (4,2)]:
-            #if data.ndim == 3:
-                #raise Exception("Can not use 2D levels with 3D data.")
-            #if lut is not None:
-                #raise Exception('Can not use 2D levels and lookup table together.')
-        #else:
-            #raise Exception("Levels must have shape (2,) or (3,2) or (4,2)")
         
     prof.mark('1')
 
@@ -885,7 +856,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             imgData[..., i] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., order[i]] = data[..., order[i]] 
+            imgData[..., i] = data[..., order[i]] 
         
     prof.mark('5')
         

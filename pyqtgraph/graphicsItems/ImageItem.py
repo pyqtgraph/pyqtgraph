@@ -260,7 +260,7 @@ class ImageItem(GraphicsObject):
         #print lut.shape
         #print self.lut
             
-        argb, alpha = fn.makeARGB(self.image.T, lut=lut, levels=self.levels)
+        argb, alpha = fn.makeARGB(self.image.transpose((1, 0, 2)[:self.image.ndim]), lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
         prof.finish()
     
