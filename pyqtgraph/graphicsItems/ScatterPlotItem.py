@@ -219,7 +219,7 @@ class ScatterPlotItem(GraphicsObject):
         """
         Accepts the same arguments as setData()
         """
-        prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
+        profiler = debug.Profiler()
         GraphicsObject.__init__(self)
         
         self.picture = None   # QPicture used for rendering when pxmode==False
@@ -240,11 +240,10 @@ class ScatterPlotItem(GraphicsObject):
         self.setBrush(100,100,150, update=False)
         self.setSymbol('o', update=False)
         self.setSize(7, update=False)
-        prof.mark('1')
+        profiler()
         self.setData(*args, **kargs)
-        prof.mark('setData')
-        prof.finish()
-        
+        profiler('setData')
+
         #self.setCacheMode(self.DeviceCoordinateCache)
         
     def setData(self, *args, **kargs):

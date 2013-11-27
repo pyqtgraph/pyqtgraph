@@ -190,7 +190,7 @@ class ImageView(QtGui.QWidget):
                            image data.
         ================== =======================================================================
         """
-        prof = debug.Profiler('ImageView.setImage', disabled=True)
+        profiler = debug.Profiler()
         
         if hasattr(img, 'implements') and img.implements('MetaArray'):
             img = img.asarray()
@@ -209,7 +209,7 @@ class ImageView(QtGui.QWidget):
         else:
             self.tVals = np.arange(img.shape[0])
         
-        prof.mark('1')
+        profiler()
         
         if axes is None:
             if img.ndim == 2:
@@ -234,13 +234,9 @@ class ImageView(QtGui.QWidget):
             
         for x in ['t', 'x', 'y', 'c']:
             self.axes[x] = self.axes.get(x, None)
-        prof.mark('2')
-            
-        self.imageDisp = None
-        
-        
-        prof.mark('3')
-        
+
+        profiler()
+
         self.currentIndex = 0
         self.updateImage(autoHistogramRange=autoHistogramRange)
         if levels is None and autoLevels:
@@ -250,9 +246,9 @@ class ImageView(QtGui.QWidget):
             
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
-        prof.mark('4')
-            
-            
+
+        profiler()
+
         if self.axes['t'] is not None:
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setXRange(self.tVals.min(), self.tVals.max())
@@ -271,8 +267,8 @@ class ImageView(QtGui.QWidget):
                 s.setBounds([start, stop])
         #else:
             #self.ui.roiPlot.hide()
-        prof.mark('5')
-            
+        profiler()
+
         self.imageItem.resetTransform()
         if scale is not None:
             self.imageItem.scale(*scale)
@@ -280,15 +276,15 @@ class ImageView(QtGui.QWidget):
             self.imageItem.setPos(*pos)
         if transform is not None:
             self.imageItem.setTransform(transform)
-        prof.mark('6')
-            
+
+        profiler()
+
         if autoRange:
             self.autoRange()
         self.roiClicked()
-        prof.mark('7')
-        prof.finish()
 
-        
+        profiler()
+
     def play(self, rate):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""

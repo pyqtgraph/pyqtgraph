@@ -281,7 +281,7 @@ class PlotCurveItem(GraphicsObject):
         self.updateData(*args, **kargs)
         
     def updateData(self, *args, **kargs):
-        prof = debug.Profiler('PlotCurveItem.updateData', disabled=True)
+        profiler = debug.Profiler()
 
         if len(args) == 1:
             kargs['y'] = args[0]
@@ -304,7 +304,7 @@ class PlotCurveItem(GraphicsObject):
             if 'complex' in str(data.dtype):
                 raise Exception("Can not plot complex data types.")
             
-        prof.mark("data checks")
+        profiler("data checks")
         
         #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
@@ -314,7 +314,7 @@ class PlotCurveItem(GraphicsObject):
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
         
-        prof.mark('copy')
+        profiler('copy')
         
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
@@ -346,12 +346,11 @@ class PlotCurveItem(GraphicsObject):
             self.opts['antialias'] = kargs['antialias']
         
         
-        prof.mark('set')
+        profiler('set')
         self.update()
-        prof.mark('update')
+        profiler('update')
         self.sigPlotChanged.emit(self)
-        prof.mark('emit')
-        prof.finish()
+        profiler('emit')
         
     def generatePath(self, x, y):
         if self.opts['stepMode']:
@@ -387,7 +386,7 @@ class PlotCurveItem(GraphicsObject):
 
     @pg.debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
-        prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
+        profiler = debug.Profiler()
         if self.xData is None:
             return
         
@@ -405,7 +404,7 @@ class PlotCurveItem(GraphicsObject):
             self.fillPath = None
             
         path = self.path
-        prof.mark('generate path')
+        profiler('generate path')
         
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
@@ -426,9 +425,9 @@ class PlotCurveItem(GraphicsObject):
                 p2.closeSubpath()
                 self.fillPath = p2
                 
-            prof.mark('generate fill path')
+            profiler('generate fill path')
             p.fillPath(self.fillPath, self.opts['brush'])
-            prof.mark('draw fill path')
+            profiler('draw fill path')
             
         sp = fn.mkPen(self.opts['shadowPen'])
         cp = fn.mkPen(self.opts['pen'])
@@ -451,10 +450,9 @@ class PlotCurveItem(GraphicsObject):
             p.drawPath(path)
         p.setPen(cp)
         p.drawPath(path)
-        prof.mark('drawPath')
+        profiler('drawPath')
         
         #print "Render hints:", int(p.renderHints())
-        prof.finish()
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
         #p.drawRect(self.boundingRect())
         

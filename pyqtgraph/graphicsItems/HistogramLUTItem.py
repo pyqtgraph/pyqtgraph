@@ -184,19 +184,18 @@ class HistogramLUTItem(GraphicsWidget):
         self.update()
 
     def imageChanged(self, autoLevel=False, autoRange=False):
-        prof = debug.Profiler('HistogramLUTItem.imageChanged', disabled=True)
+        profiler = debug.Profiler()
         h = self.imageItem.getHistogram()
-        prof.mark('get histogram')
+        profiler('get histogram')
         if h[0] is None:
             return
         self.plot.setData(*h)
-        prof.mark('set plot')
+        profiler('set plot')
         if autoLevel:
             mn = h[0][0]
             mx = h[0][-1]
             self.region.setRegion([mn, mx])
-            prof.mark('set region')
-        prof.finish()
+            profiler('set region')
             
     def getLevels(self):
         return self.region.getRegion()

@@ -339,9 +339,8 @@ class PlotItem(GraphicsWidget):
             self.ctrl.gridAlphaSlider.setValue(v)
         
     #def paint(self, *args):
-        #prof = debug.Profiler('PlotItem.paint', disabled=True)
+        #prof = debug.Profiler()
         #QtGui.QGraphicsWidget.paint(self, *args)
-        #prof.finish()
         
     ## bad idea. 
     #def __getattr__(self, attr):  ## wrap ms

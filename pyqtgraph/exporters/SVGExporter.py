@@ -156,7 +156,7 @@ def _generateItemSvg(item, nodes=None, root=None):
     ##    
     ##    Both 2 and 3 can be addressed by drawing all items in world coordinates.
     
-    prof = pg.debug.Profiler('generateItemSvg %s' % str(item), disabled=True)
+    profiler = pg.debug.Profiler()
     
     if nodes is None:  ## nodes maps all node IDs to their XML element. 
                        ## this allows us to ensure all elements receive unique names.
@@ -235,12 +235,12 @@ def _generateItemSvg(item, nodes=None, root=None):
         print(doc.toxml())
         raise
 
-    prof.mark('render')
+    profiler('render')
 
     ## Get rid of group transformation matrices by applying
     ## transformation to inner coordinates
     correctCoordinates(g1, item)
-    prof.mark('correct')
+    profiler('correct')
     ## make sure g1 has the transformation matrix
     #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
     #g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
@@ -290,7 +290,7 @@ def _generateItemSvg(item, nodes=None, root=None):
             childGroup = g1.ownerDocument.createElement('g')
             childGroup.setAttribute('clip-path', 'url(#%s)' % clip)
             g1.appendChild(childGroup)
-    prof.mark('clipping')
+    profiler('clipping')
             
     ## Add all child items as sub-elements.
     childs.sort(key=lambda c: c.zValue())
@@ -299,8 +299,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         if cg is None:
             continue
         childGroup.appendChild(cg)  ### this isn't quite right--some items draw below their parent (good enough for now)
-    prof.mark('children')
-    prof.finish()
+    profiler('children')
     return g1
 
 def correctCoordinates(node, item):

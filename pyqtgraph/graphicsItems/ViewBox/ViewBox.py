@@ -1205,7 +1205,7 @@ class ViewBox(GraphicsWidget):
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
         """
-        prof = debug.Profiler('updateAutoRange', disabled=True)
+        profiler = debug.Profiler()
         if items is None:
             items = self.addedItems
         
@@ -1282,7 +1282,7 @@ class ViewBox(GraphicsWidget):
                     range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
                 else:
                     range[0] = [bounds.left(), bounds.right()]
-            prof.mark('2')
+            profiler()
         
         #print "range", range
         
@@ -1306,10 +1306,7 @@ class ViewBox(GraphicsWidget):
                     continue
                 range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
-        
-        #print "final range", range
-        
-        prof.finish()
+
         return range
         
     def childrenBoundingRect(self, *args, **kwds):
