@@ -1,6 +1,7 @@
 from distutils.core import setup
 import distutils.dir_util
-import os
+import os, re
+from subprocess import check_output
 
 ## generate list of all sub-packages
 path = os.path.abspath(os.path.dirname(__file__))
@@ -14,8 +15,52 @@ buildPath = os.path.join(path, 'build')
 if os.path.isdir(buildPath):
     distutils.dir_util.remove_tree(buildPath)
 
+
+## Determine current version string
+init = open(os.path.join(path, 'pyqtgraph/__init__.py')).read()
+m = re.search(r'__version__ = (\S+)\n', init)
+if m is None:
+    raise Exception("Cannot determine version number!")
+version = m.group(1).strip('\'\"')
+
+# If this is a git checkout, append the current commit
+if os.path.isdir(os.path.join(path, '.git')):
+    def gitCommit(name):
+        commit = check_output(['git', 'show', name], universal_newlines=True).split('\n')[0]
+        assert commit[:7] == 'commit '
+        return commit[7:]
+    
+    # Find last tag matching "pyqtgraph-.*"
+    tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
+    while True:
+        if len(tagNames) == 0:
+            raise Exception("Could not determine last tagged version.")
+        lastTagName = tagNames.pop()
+        if re.match(r'pyqtgraph-.*', lastTagName):
+            break
+        
+    # is this commit an unchanged checkout of the last tagged version? 
+    lastTag = gitCommit(lastTagName)
+    head = gitCommit('HEAD')
+    if head != lastTag:
+        branch = re.search(r'\* (.*)', check_output(['git', 'branch'])).group(1)
+        version = version + "-%s-%s" % (branch, head[:10])
+    
+    # any uncommitted modifications?
+    modified = False
+    status = check_output(['git', 'status', '-s'], universal_newlines=True).strip().split('\n')
+    for line in status:
+        if line[:2] != '??':
+            modified = True
+            break        
+                
+    if modified:
+        version = version + '+'
+
+print("PyQtGraph version: " + version)
+
 setup(name='pyqtgraph',
-    version='',
+    version=version,
     description='Scientific Graphics and GUI Library for Python',
     long_description="""\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
