@@ -34,6 +34,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             'elevation':  30,         ## camera's angle of elevation in degrees
             'azimuth': 45,            ## camera's azimuthal angle in degrees
                                       ## (rotation around z-axis 0 points along x-axis)
+            'roll': 0,                ## roll about the camera axis
             'viewport': None,         ## glViewport params; None == whole widget
             'bgcolor': (0.0, 0.0, 0.0, 1.0), ## glClearColor param
         }
@@ -123,10 +124,16 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         glMultMatrixf(a.transpose())
 
     def viewMatrix(self):
+        # identity starts out at the origin
         tr = QtGui.QMatrix4x4()
+        # push it back in depth, and rotate according to el/az angles
         tr.translate( 0.0, 0.0, -self.opts['distance'])
         tr.rotate(self.opts['elevation']-90, 1, 0, 0)
         tr.rotate(self.opts['azimuth']+90, 0, 0, -1)
+        # now add roll rotation (about camera axis)
+        pos = tr.column(3)  # use current translation params as axis
+        tr.rotate(self.opts['roll'], pos.w(), pos.x(), pos.y())
+        # now let's move to the center position
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
@@ -207,16 +214,16 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
 
-    def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None):
+    def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, roll=None):
         if distance is not None:
             self.opts['distance'] = distance
         if elevation is not None:
             self.opts['elevation'] = elevation
         if azimuth is not None:
             self.opts['azimuth'] = azimuth
+        if roll is not None:
+            self.opts['roll'] = roll
         self.update()
-
-
 
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
