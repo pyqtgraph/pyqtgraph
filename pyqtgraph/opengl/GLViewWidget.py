@@ -15,33 +15,34 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Export options
 
     """
-    
+
     ShareWidget = None
-    
+
     def __init__(self, parent=None):
         if GLViewWidget.ShareWidget is None:
             ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
             GLViewWidget.ShareWidget = QtOpenGL.QGLWidget()
-            
+
         QtOpenGL.QGLWidget.__init__(self, parent, GLViewWidget.ShareWidget)
-        
+
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        
+
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
             'distance': 10.0,         ## distance of camera from center
             'fov':  60,               ## horizontal field of view in degrees
             'elevation':  30,         ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 
+            'azimuth': 45,            ## camera's azimuthal angle in degrees
                                       ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
+            'bgcolor': (0.0, 0.0, 0.0, 1.0), ## glClearColor param
         }
         self.items = []
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-        
+
         self.makeCurrent()
 
     def addItem(self, item):
@@ -52,32 +53,34 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 item.initializeGL()
             except:
                 self.checkOpenGLVersion('Error while adding item %s to GLViewWidget.' % str(item))
-                
+
         item._setView(self)
         #print "set view", item, self, item.view()
         self.update()
-        
+
     def removeItem(self, item):
         self.items.remove(item)
         item._setView(None)
         self.update()
-        
-        
+
     def initializeGL(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
-        self.resizeGL(self.width(), self.height())
-        
+        glClearColor(*self.opts['bgcolor'])
+
+    def setBackgroundColor(self, color):
+        color = np.array(color, np.float)
+        if color.ndim !=1 or color.size != 3:
+            raise ValueError('color must be a 3-element array-like vector')
+        color = np.concatenate((color, [0.0]))
+        self.opts['bgcolor'] = tuple(color.tolist())
+        glClearColor(*self.opts['bgcolor'])
+        self.update()
+
     def getViewport(self):
         vp = self.opts['viewport']
         if vp is None:
             return (0, 0, self.width(), self.height())
         else:
             return vp
-        
-    def resizeGL(self, w, h):
-        pass
-        #glViewport(*self.getViewport())
-        #self.update()
 
     def setProjection(self, region=None):
         m = self.projectionMatrix(region)
@@ -90,7 +93,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         # Xw = (Xnd + 1) * width/2 + X
         if region is None:
             region = (0, 0, self.width(), self.height())
-        
+
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
         fov = self.opts['fov']
@@ -111,14 +114,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         tr = QtGui.QMatrix4x4()
         tr.frustum(left, right, bottom, top, nearClip, farClip)
         return tr
-        
+
     def setModelview(self):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         m = self.viewMatrix()
         a = np.array(m.copyDataTo()).reshape((4,4))
         glMultMatrixf(a.transpose())
-        
+
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
         tr.translate( 0.0, 0.0, -self.opts['distance'])
@@ -137,15 +140,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             glPushName(0)
             self._itemNames = {}
             self.paintGL(region=region, useItemNames=True)
-            
+
         finally:
             hits = glRenderMode(GL_RENDER)
 
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
-        
+
         return [self._itemNames[i[1]] for i in items]
-        
+
     def paintGL(self, region=None, viewport=None, useItemNames=False):
         """
         viewport specifies the arguments to glViewport. If None, then we use self.opts['viewport']
@@ -160,7 +163,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setModelview()
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
-        
+
     def drawItemTree(self, item=None, useItemNames=False):
         if item is None:
             items = [x for x in self.items if x.parentItem() is None]
@@ -189,7 +192,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                             print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
                         else:
                             print(msg)
-                    
+
                 finally:
                     glPopAttrib()
             else:
@@ -203,7 +206,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 finally:
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
-            
+
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None):
         if distance is not None:
             self.opts['distance'] = distance
@@ -212,22 +215,22 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if azimuth is not None:
             self.opts['azimuth'] = azimuth
         self.update()
-        
-        
-        
+
+
+
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
         dist = self.opts['distance']
         elev = self.opts['elevation'] * np.pi/180.
         azim = self.opts['azimuth'] * np.pi/180.
-        
+
         pos = Vector(
             center.x() + dist * np.cos(elev) * np.cos(azim),
             center.y() + dist * np.cos(elev) * np.sin(azim),
             center.z() + dist * np.sin(elev)
         )
-        
+
         return pos
 
     def orbit(self, azim, elev):
@@ -236,17 +239,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #self.opts['elevation'] += elev
         self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
         self.update()
-        
+
     def pan(self, dx, dy, dz, relative=False):
         """
-        Moves the center (look-at) position while holding the camera in place. 
-        
+        Moves the center (look-at) position while holding the camera in place.
+
         If relative=True, then the coordinates are interpreted such that x
         if in the global xy plane and points to the right side of the view, y is
         in the global xy plane and orthogonal to x, and z points in the global z
         direction. Distances are scaled roughly such that a value of 1.0 moves
         by one pixel on screen.
-        
+
         """
         if not relative:
             self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
@@ -261,7 +264,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
             self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
         self.update()
-        
+
     def pixelSize(self, pos):
         """
         Return the approximate size of a screen pixel at the location pos
@@ -275,14 +278,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             dist = (pos-cam).length()
         xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
         return xDist / self.width()
-        
+
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
-        
+
     def mouseMoveEvent(self, ev):
         diff = ev.pos() - self.mousePos
         self.mousePos = ev.pos()
-        
+
         if ev.buttons() == QtCore.Qt.LeftButton:
             self.orbit(-diff.x(), diff.y())
             #print self.opts['azimuth'], self.opts['elevation']
@@ -291,10 +294,10 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 self.pan(diff.x(), 0, diff.y(), relative=True)
             else:
                 self.pan(diff.x(), diff.y(), 0, relative=True)
-        
+
     def mouseReleaseEvent(self, ev):
         pass
-        
+
     def wheelEvent(self, ev):
         if (ev.modifiers() & QtCore.Qt.ControlModifier):
             self.opts['fov'] *= 0.999**ev.delta()
@@ -309,7 +312,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 return
             self.keysPressed[ev.key()] = 1
             self.evalKeyState()
-      
+
     def keyReleaseEvent(self, ev):
         if ev.key() in self.noRepeatKeys:
             ev.accept()
@@ -320,7 +323,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             except:
                 self.keysPressed = {}
             self.evalKeyState()
-        
+
     def evalKeyState(self):
         speed = 2.0
         if len(self.keysPressed) > 0:
@@ -350,9 +353,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
         else:
             raise
-            
 
-            
+
+
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -364,22 +367,22 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         pixels[:] = 128
         pixels[...,0] = 50
         pixels[...,3] = 255
-        
+
         glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-        
+
         # swap B,R channels for Qt
         tmp = pixels[...,0].copy()
         pixels[...,0] = pixels[...,2]
         pixels[...,2] = tmp
         pixels = pixels[::-1] # flip vertical
-        
+
         img = fn.makeQImage(pixels, transpose=False)
         return img
-        
-        
+
+
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
-        
+
         self.makeCurrent()
         tex = None
         fb = None
@@ -387,21 +390,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             output = np.empty((w, h, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
-            
+
             glEnable(GL_TEXTURE_2D)
             tex = glGenTextures(1)
             glBindTexture(GL_TEXTURE_2D, tex)
             texwidth = textureSize
             data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
-            
+
             ## Test texture dimensions first
             glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
             if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
                 raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
             ## create teture
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
-            
-            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...) 
+
+            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
                                                   # is interpreted correctly.
             p2 = 2 * padding
             for x in range(-padding, w-padding, texwidth-p2):
@@ -410,17 +413,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     y2 = min(y+texwidth, h+padding)
                     w2 = x2-x
                     h2 = y2-y
-                    
+
                     ## render to texture
                     glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
-                    
+
                     self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
-                    
+
                     ## read texture back to array
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
                     data = np.fromstring(data, dtype=np.ubyte).reshape(texwidth,texwidth,4).transpose(1,0,2)[:, ::-1]
                     output[x+padding:x2-padding, y+padding:y2-padding] = data[padding:w2-padding, -(h2-padding):-padding]
-                    
+
         finally:
             self.opts['viewport'] = None
             glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
@@ -429,8 +432,5 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glDeleteTextures([tex])
             if fb is not None:
                 glfbo.glDeleteFramebuffers([fb])
-            
+
         return output
-        
-        
-        
