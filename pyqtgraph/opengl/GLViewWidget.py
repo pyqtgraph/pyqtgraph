@@ -69,7 +69,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
     def setBackgroundColor(self, color):
         color = np.array(color, np.float)
-        if color.ndim !=1 or color.size != 3:
+        if color.ndim != 1 or color.size != 3:
             raise ValueError('color must be a 3-element array-like vector')
         color = np.concatenate((color, [0.0]))
         self.opts['bgcolor'] = tuple(color.tolist())
