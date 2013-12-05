@@ -2,10 +2,12 @@ from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
+import copy
 from pyqtgraph import Vector
 import pyqtgraph.functions as fn
 
 ##Vector = QtGui.QVector3D
+
 
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
@@ -36,7 +38,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                                       ## (rotation around z-axis 0 points along x-axis)
             'roll': 0,                ## roll about the camera axis
             'viewport': None,         ## glViewport params; None == whole widget
-            'bgcolor': (0.0, 0.0, 0.0, 1.0), ## glClearColor param
+            'bgcolor': Vector(0.0, 0.0, 0.0), ## glClearColor param
         }
         self.items = []
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
@@ -65,15 +67,40 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.update()
 
     def initializeGL(self):
-        glClearColor(*self.opts['bgcolor'])
+        bgcolor = self.opts['bgcolor']
+        glClearColor(bgcolor.x(), bgcolor.y(), bgcolor.z(), 1.0)
+        self.setLighting()
+        glShadeModel(GL_SMOOTH)
+        #// Set material properties to follow glColor values
+        glEnable(GL_COLOR_MATERIAL)
+        #glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+
+    def setLighting(self, lights=None):
+        lights = _check_lights(lights)
+        # None means disable
+        if lights is None:
+            glDisable(GL_LIGHTING)
+            self.update()
+            return
+        self.setProjection()
+        self.setModelview()
+        glEnable(GL_LIGHTING)
+        for li, ld in enumerate(lights):
+            glLightfv(ld['gl_light'], GL_DIFFUSE, ld['diffuse'])
+            glLightfv(ld['gl_light'], GL_SPECULAR, ld['specular'])
+            glLightfv(ld['gl_light'], GL_AMBIENT, ld['ambient'])
+            glLightfv(ld['gl_light'], GL_POSITION, ld['pos'])
+            glEnable(ld['gl_light'])
+        self.update()
 
     def setBackgroundColor(self, color):
         color = np.array(color, np.float)
         if color.ndim != 1 or color.size != 3:
             raise ValueError('color must be a 3-element array-like vector')
-        color = np.concatenate((color, [0.0]))
-        self.opts['bgcolor'] = tuple(color.tolist())
-        glClearColor(*self.opts['bgcolor'])
+        color = color.tolist()
+        self.opts['bgcolor'] = Vector(*color)
+        color.append(0.0)
+        glClearColor(*color)
         self.update()
 
     def getViewport(self):
@@ -243,7 +270,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
         self.opts['azimuth'] += azim
-        #self.opts['elevation'] += elev
         self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
         self.update()
 
@@ -295,7 +321,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
         if ev.buttons() == QtCore.Qt.LeftButton:
             self.orbit(-diff.x(), diff.y())
-            #print self.opts['azimuth'], self.opts['elevation']
         elif ev.buttons() == QtCore.Qt.MidButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative=True)
@@ -361,8 +386,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         else:
             raise
 
-
-
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -385,7 +408,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
         img = fn.makeQImage(pixels, transpose=False)
         return img
-
 
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
@@ -441,3 +463,43 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glfbo.glDeleteFramebuffers([fb])
 
         return output
+
+
+def _check_lights(lights):
+    """Helper to check for OpenGL light parsing ability"""
+    if lights is None:
+        return None  # okay condition
+    if not isinstance(lights, list):
+        raise TypeError('"lights" must be a list or None')
+    lights = copy.deepcopy(lights)
+    if not all([isinstance(l, dict) for l in lights]):
+        raise TypeError('each entry in "lights" must be a dict')
+    if len(lights) > 8:
+        raise RuntimeError('Cannot have more than 8 lights')
+    # enumerate the GL lights here
+    glll = [GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,  # GL light list
+            GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7]
+    known_types = ['diffuse', 'ambient', 'specular']
+    for li, (ld, gl_light) in enumerate(zip(lights, glll[:len(lights)])):
+        if not any([k in ld for k in known_types]):
+            raise KeyError('lights[%s] must have one of %s'
+                           % (li, known_types))
+        for key in known_types:
+            if key not in ld:
+                ld[key] = (0.0, 0.0, 0.0, 1.0)  # default type
+            ld[key] = np.asanyarray(ld[key])
+            if ld[key].shape != (4,):
+                raise ValueError('lights[%s]["%s"] must be a '
+                                    '4-element array-like' % (li, key))
+        if 'pos' not in ld:
+            raise KeyError('lights[%s] is missing the "pos" '
+                            'parameter' % li)
+        ld['pos'] = np.asanyarray(ld['pos'])
+        if ld['pos'].shape != (4,):
+            raise ValueError('lights[%s]["pos"] must be a '
+                                '4-element array-like' % li)
+        # store the GL light number for ease of use
+        ld['gl_light'] = gl_light
+    for gl_light in glll:
+        glDisable(gl_light)
+    return lights
