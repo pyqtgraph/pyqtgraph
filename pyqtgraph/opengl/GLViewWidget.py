@@ -45,7 +45,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-
+        self._light_pos = []
         self.makeCurrent()
 
     def addItem(self, item):
@@ -70,7 +70,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         bgcolor = self.opts['bgcolor']
         glClearColor(bgcolor.x(), bgcolor.y(), bgcolor.z(), 1.0)
         self.setLighting()
-        glShadeModel(GL_SMOOTH)
+        glShadeModel(GL_SMOOTH)  # GL_FLAT, GL_SMOOTH
         #// Set material properties to follow glColor values
         glEnable(GL_COLOR_MATERIAL)
         #glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
@@ -85,13 +85,19 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setProjection()
         self.setModelview()
         glEnable(GL_LIGHTING)
+        light_pos = list()
         for li, ld in enumerate(lights):
             glLightfv(ld['gl_light'], GL_DIFFUSE, ld['diffuse'])
             glLightfv(ld['gl_light'], GL_SPECULAR, ld['specular'])
             glLightfv(ld['gl_light'], GL_AMBIENT, ld['ambient'])
-            glLightfv(ld['gl_light'], GL_POSITION, ld['pos'])
+            light_pos.append([ld['gl_light'], ld['pos']])
             glEnable(ld['gl_light'])
+        self._light_pos = light_pos
         self.update()
+
+    def positionLights(self):
+        for params in self._light_pos:
+            glLightfv(params[0], GL_POSITION, params[1])
 
     def setBackgroundColor(self, color):
         color = np.array(color, np.float)
@@ -114,6 +120,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
+        #glFrustum(l, r, b, t, n, f)
         a = np.array(m.copyDataTo()).reshape((4,4))
         glMultMatrixf(a.transpose())
 
@@ -138,7 +145,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         right = r * ((region[0]+region[2]-x0) * (2.0/w) - 1)
         bottom = t * ((region[1]-y0) * (2.0/h) - 1)
         top    = t * ((region[1]+region[3]-y0) * (2.0/h) - 1)
-
         tr = QtGui.QMatrix4x4()
         tr.frustum(left, right, bottom, top, nearClip, farClip)
         return tr
@@ -196,6 +202,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setProjection(region=region)
         self.setModelview()
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
+        self.positionLights()  # must be re-done in case view changed
         self.drawItemTree(useItemNames=useItemNames)
 
     def drawItemTree(self, item=None, useItemNames=False):
@@ -258,13 +265,11 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         dist = self.opts['distance']
         elev = self.opts['elevation'] * np.pi/180.
         azim = self.opts['azimuth'] * np.pi/180.
-
         pos = Vector(
             center.x() + dist * np.cos(elev) * np.cos(azim),
             center.y() + dist * np.cos(elev) * np.sin(azim),
             center.z() + dist * np.sin(elev)
         )
-
         return pos
 
     def orbit(self, azim, elev):
