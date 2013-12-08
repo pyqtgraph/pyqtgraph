@@ -118,6 +118,15 @@ class ViewBox(GraphicsWidget):
             'wheelScaleFactor': -1.0 / 8.0,
 
             'background': None,
+            
+            # Limits
+            'limits': {
+                'xRange': [None, None],   # Maximum and minimum visible X values 
+                'yRange': [None, None],   # Maximum and minimum visible Y values  
+                'minRange': [None, None],  # Minimum allowed range for both axes
+                'maxRange': [None, None],  # Maximum allowed range for both axes
+                }
+            
         }
         self._updatingRange = False  ## Used to break recursive loops. See updateAutoRange.
         self._itemBoundsCache = weakref.WeakKeyDictionary()
@@ -571,6 +580,40 @@ class ViewBox(GraphicsWidget):
         else:
             padding = 0.02
         return padding
+    
+    def setLimits(self, **kwds):
+        """
+        Set limits that constrain the possible view ranges.
+        
+        =========== ============================================================
+        Arguments
+        xRange      (min, max) limits for x-axis range
+        yRange      (min, max) limits for y-axis range
+        minRange    (x, y) minimum allowed span
+        maxRange    (x, y) maximum allowed span
+        xMin        Minimum allowed x-axis range
+        xMax        Maximum allowed x-axis range
+        yMin        Minimum allowed y-axis range
+        yMax        Maximum allowed y-axis range
+        =========== ============================================================
+        """
+        for kwd in ['xRange', 'yRange', 'minRange', 'maxRange']:
+            if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
+                self.state['limits'][kwd] = kwds[kwd]
+                update = True
+        for axis in [0,1]:
+            for mnmx in [0,1]:
+                kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
+                lname = ['xRange', 'yRange'][axis]
+                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
+                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                    update = True
+                    
+        if update:
+            self.updateViewRange()
+                    
+            
+            
             
     def scaleBy(self, s=None, center=None, x=None, y=None):
         """
@@ -1351,7 +1394,6 @@ class ViewBox(GraphicsWidget):
                 # then make the entire target range visible
                 ax = 0 if targetRatio > viewRatio else 1
             
-            #### these should affect viewRange, not targetRange!
             if ax == 0:  
                 ## view range needs to be taller than target
                 dy = 0.5 * (tr.width() / viewRatio - tr.height())
@@ -1364,6 +1406,44 @@ class ViewBox(GraphicsWidget):
                 if dx != 0:
                     changed[0] = True
                 viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
+                
+        # check for any requested limits
+        rng = (self.state['limits']['xRange'], self.state['limits']['yRange'])
+        minRng = self.state['limits']['minRange']
+        maxRng = self.state['limits']['maxRange']
+        
+        for axis in [0, 1]:
+            # max range cannot be larger than bounds, if they are given
+            if rng[axis][0] is not None and rng[axis][1] is not None:
+                maxRng[axis] = min(maxRng[axis], rng[axis][1]-rng[axis][0])
+            
+            diff = viewRange[axis][1] - viewRange[axis][0]
+            print axis, diff, maxRng[axis]
+            if maxRng[axis] is not None and diff > maxRng[axis]:
+                delta = maxRng[axis] - diff
+                changed[axis] = True
+            elif minRng[axis] is not None and diff < minRng[axis]:
+                delta = minRng[axis] - diff
+                changed[axis] = True
+            else:
+                delta = 0
+            
+            viewRange[axis][0] -= diff/2.
+            viewRange[axis][1] += diff/2.
+            print viewRange
+               
+            mn, mx = rng[axis]
+            if mn is not None and viewRange[axis][0] < mn:
+                delta = mn - viewRange[axis][0]
+                viewRange[axis][0] += delta
+                viewRange[axis][1] += delta
+            elif mx is not None and viewRange[axis][1] > mx:
+                delta = mx - viewRange[axis][1]
+                viewRange[axis][0] += delta
+                viewRange[axis][1] += delta
+            
+                
+            
             
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) and (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
