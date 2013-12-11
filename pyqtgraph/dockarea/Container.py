@@ -241,6 +241,13 @@ class TContainer(Container, QtGui.QWidget):
                 else:
                     w.label.setDim(True)
         
+    def raiseDock(self, dock):
+        """Move *dock* to the top of the stack"""
+        self.stack.currentWidget().label.setDim(True)
+        self.stack.setCurrentWidget(dock)
+        dock.label.setDim(False)
+        
+        
     def type(self):
         return 'tab'
 
