@@ -17,11 +17,12 @@ if os.path.isdir(buildPath):
 
 
 ## Determine current version string
-init = open(os.path.join(path, 'pyqtgraph/__init__.py')).read()
+init = open(os.path.join(path, 'pyqtgraph', '__init__.py')).read()
 m = re.search(r'__version__ = (\S+)\n', init)
 if m is None:
     raise Exception("Cannot determine version number!")
 version = m.group(1).strip('\'\"')
+initVersion = version
 
 # If this is a git checkout, append the current commit
 if os.path.isdir(os.path.join(path, '.git')):
@@ -59,8 +60,27 @@ if os.path.isdir(os.path.join(path, '.git')):
 
 print("PyQtGraph version: " + version)
 
+import distutils.command.build
+
+class Build(distutils.command.build.build):
+    def run(self):
+        ret = distutils.command.build.build.run(self)
+        
+        # If the version in __init__ is different from the automatically-generated
+        # version string, then we will update __init__ in the build directory
+        global path, version, initVersion
+        if initVersion == version:
+            return ret
+        
+        initfile = os.path.join(path, self.build_lib, 'pyqtgraph', '__init__.py')
+        data = open(initfile, 'r').read()
+        open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
+        return ret
+        
+
 setup(name='pyqtgraph',
     version=version,
+    cmdclass={'build': Build},
     description='Scientific Graphics and GUI Library for Python',
     long_description="""\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
