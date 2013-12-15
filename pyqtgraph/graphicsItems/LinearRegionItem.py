@@ -140,12 +140,11 @@ class LinearRegionItem(UIGraphicsItem):
         return br.normalized()
         
     def paint(self, p, *args):
-        #prof = debug.Profiler('LinearRegionItem.paint')
+        profiler = debug.Profiler()
         UIGraphicsItem.paint(self, p, *args)
         p.setBrush(self.currentBrush)
         p.setPen(fn.mkPen(None))
         p.drawRect(self.boundingRect())
-        #prof.finish()
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == self.orientation:

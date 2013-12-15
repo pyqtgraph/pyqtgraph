@@ -404,25 +404,22 @@ class AxisItem(GraphicsWidget):
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
         
     def paint(self, p, opt, widget):
-        prof = debug.Profiler('AxisItem.paint', disabled=True)
+        profiler = debug.Profiler()
         if self.picture is None:
             try:
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
                 specs = self.generateDrawSpecs(painter)
-                prof.mark('generate specs')
+                profiler('generate specs')
                 if specs is not None:
                     self.drawPicture(painter, *specs)
-                    prof.mark('draw picture')
+                    profiler('draw picture')
             finally:
                 painter.end()
             self.picture = picture
         #p.setRenderHint(p.Antialiasing, False)   ## Sometimes we get a segfault here ???
         #p.setRenderHint(p.TextAntialiasing, True)
         self.picture.play(p)
-        prof.finish()
-        
-        
 
     def setTicks(self, ticks):
         """Explicitly determine which ticks to display.
@@ -626,8 +623,8 @@ class AxisItem(GraphicsWidget):
         be drawn, then generates from this a set of drawing commands to be 
         interpreted by drawPicture().
         """
-        prof = debug.Profiler("AxisItem.generateDrawSpecs", disabled=True)
-        
+        profiler = debug.Profiler()
+
         #bounds = self.boundingRect()
         bounds = self.mapRectFromParent(self.geometry())
         
@@ -706,7 +703,7 @@ class AxisItem(GraphicsWidget):
         xMin = min(xRange)
         xMax = max(xRange)
         
-        prof.mark('init')
+        profiler('init')
             
         tickPositions = [] # remembers positions of previously drawn ticks
         
@@ -744,7 +741,7 @@ class AxisItem(GraphicsWidget):
                 color.setAlpha(lineAlpha)
                 tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
-        prof.mark('compute ticks')
+        profiler('compute ticks')
 
         ## This is where the long axis line should be drawn
         
@@ -857,7 +854,7 @@ class AxisItem(GraphicsWidget):
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
                 textSpecs.append((rect, textFlags, vstr))
-        prof.mark('compute text')
+        profiler('compute text')
         
         ## update max text size if needed.
         self._updateMaxTextSize(textSize2)
@@ -865,8 +862,8 @@ class AxisItem(GraphicsWidget):
         return (axisSpec, tickSpecs, textSpecs)
     
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
-        prof = debug.Profiler("AxisItem.drawPicture", disabled=True)
-        
+        profiler = debug.Profiler()
+
         p.setRenderHint(p.Antialiasing, False)
         p.setRenderHint(p.TextAntialiasing, True)
         
@@ -880,8 +877,8 @@ class AxisItem(GraphicsWidget):
         for pen, p1, p2 in tickSpecs:
             p.setPen(pen)
             p.drawLine(p1, p2)
-        prof.mark('draw ticks')
-        
+        profiler('draw ticks')
+
         ## Draw all text
         if self.tickFont is not None:
             p.setFont(self.tickFont)
@@ -889,10 +886,8 @@ class AxisItem(GraphicsWidget):
         for rect, flags, text in textSpecs:
             p.drawText(rect, flags, text)
             #p.drawRect(rect)
-        
-        prof.mark('draw text')
-        prof.finish()
-        
+        profiler('draw text')
+
     def show(self):
         
         if self.orientation in ['left', 'right']:
