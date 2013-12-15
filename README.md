@@ -23,6 +23,7 @@ Contributors
   * Ulrich Leutner
   * Felix Schill
   * Guillaume Poulin
+  * Antony Lee
 
 Requirements
 ------------
