@@ -1,6 +1,6 @@
 from distutils.core import setup
 import distutils.dir_util
-import os, re
+import os, sys, re
 from subprocess import check_output
 
 ## generate list of all sub-packages
@@ -17,48 +17,57 @@ if os.path.isdir(buildPath):
 
 
 ## Determine current version string
-init = open(os.path.join(path, 'pyqtgraph', '__init__.py')).read()
+initfile = os.path.join(path, 'pyqtgraph', '__init__.py')
+init = open(initfile).read()
 m = re.search(r'__version__ = (\S+)\n', init)
-if m is None:
-    raise Exception("Cannot determine version number!")
+if m is None or len(m.groups()) != 1:
+    raise Exception("Cannot determine __version__ from init file: '%s'!" % initfile)
 version = m.group(1).strip('\'\"')
 initVersion = version
 
-# If this is a git checkout, append the current commit
-if os.path.isdir(os.path.join(path, '.git')):
-    def gitCommit(name):
-        commit = check_output(['git', 'show', name], universal_newlines=True).split('\n')[0]
-        assert commit[:7] == 'commit '
-        return commit[7:]
-    
-    # Find last tag matching "pyqtgraph-.*"
-    tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
-    while True:
-        if len(tagNames) == 0:
-            raise Exception("Could not determine last tagged version.")
-        lastTagName = tagNames.pop()
-        if re.match(r'pyqtgraph-.*', lastTagName):
-            break
+# If this is a git checkout, try to generate a more decriptive version string
+try:
+    if os.path.isdir(os.path.join(path, '.git')):
+        def gitCommit(name):
+            commit = check_output(['git', 'show', name], universal_newlines=True).split('\n')[0]
+            assert commit[:7] == 'commit '
+            return commit[7:]
         
-    # is this commit an unchanged checkout of the last tagged version? 
-    lastTag = gitCommit(lastTagName)
-    head = gitCommit('HEAD')
-    if head != lastTag:
-        branch = re.search(r'\* (.*)', check_output(['git', 'branch'])).group(1)
-        version = version + "-%s-%s" % (branch, head[:10])
-    
-    # any uncommitted modifications?
-    modified = False
-    status = check_output(['git', 'status', '-s'], universal_newlines=True).strip().split('\n')
-    for line in status:
-        if line[:2] != '??':
-            modified = True
-            break        
-                
-    if modified:
-        version = version + '+'
+        # Find last tag matching "pyqtgraph-.*"
+        tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
+        while True:
+            if len(tagNames) == 0:
+                raise Exception("Could not determine last tagged version.")
+            lastTagName = tagNames.pop()
+            if re.match(r'pyqtgraph-.*', lastTagName):
+                break
+            
+        # is this commit an unchanged checkout of the last tagged version? 
+        lastTag = gitCommit(lastTagName)
+        head = gitCommit('HEAD')
+        if head != lastTag:
+            branch = re.search(r'\* (.*)', check_output(['git', 'branch'])).group(1)
+            version = version + "-%s-%s" % (branch, head[:10])
+        
+        # any uncommitted modifications?
+        modified = False
+        status = check_output(['git', 'status', '-s'], universal_newlines=True).strip().split('\n')
+        for line in status:
+            if line[:2] != '??':
+                modified = True
+                break        
+                    
+        if modified:
+            version = version + '+'
+    sys.stderr.write("Detected git commit; will use version string: '%s'\n" % version)
+except:
+    version = initVersion
+    sys.stderr.write("This appears to be a git checkout, but an error occurred "
+                     "while attempting to determine a version string for the "
+                     "current commit.\nUsing the unmodified version string "
+                     "instead: '%s'\n" % version)
+    sys.excepthook(*sys.exc_info())
 
-print("PyQtGraph version: " + version)
 
 import distutils.command.build
 
@@ -73,8 +82,16 @@ class Build(distutils.command.build.build):
             return ret
         
         initfile = os.path.join(path, self.build_lib, 'pyqtgraph', '__init__.py')
-        data = open(initfile, 'r').read()
-        open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
+        if not os.path.isfile(initfile):
+            sys.stderr.write("Warning: setup detected a git install and attempted "
+                             "to generate a descriptive version string; however, "
+                             "the expected build file at %s was not found. "
+                             "Installation will use the original version string "
+                             "%s instead.\n" % (initfile, initVersion)
+                             )
+        else:
+            data = open(initfile, 'r').read()
+            open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
         return ret
         
 
