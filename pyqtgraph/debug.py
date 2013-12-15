@@ -5,6 +5,8 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from __future__ import print_function
+
 import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile
 from . import ptime
 from numpy import ndarray
@@ -365,84 +367,99 @@ class GarbageWatcher(object):
         return self.objs[item]
 
     
-class Profiler:
+
+
+class Profiler(object):
     """Simple profiler allowing measurement of multiple time intervals.
-    Arguments:
-        msg: message to print at start and finish of profiling
-        disabled: If true, profiler does nothing (so you can leave it in place)
-        delayed: If true, all messages are printed after call to finish()
-                 (this can result in more accurate time step measurements)
-        globalDelay: if True, all nested profilers delay printing until the top level finishes
-    
+
+    By default, profilers are disabled.  To enable profiling, set the
+    environment variable `PYQTGRAPHPROFILE` to a comma-separated list of
+    fully-qualified names of profiled functions.
+
+    Calling a profiler registers a message (defaulting to an increasing
+    counter) that contains the time elapsed since the last call.  When the
+    profiler is about to be garbage-collected, the messages are passed to the
+    outer profiler if one is running, or printed to stdout otherwise.
+
+    If `delayed` is set to False, messages are immediately printed instead.
+
     Example:
-        prof = Profiler('Function')
-          ... do stuff ...
-        prof.mark('did stuff')
-          ... do other stuff ...
-        prof.mark('did other stuff')
-        prof.finish()
+        def function(...):
+            profiler = Profiler()
+            ... do stuff ...
+            profiler('did stuff')
+            ... do other stuff ...
+            profiler('did other stuff')
+            # profiler is garbage-collected and flushed at function end
+
+    If this function is a method of class C, setting `PYQTGRAPHPROFILE` to
+    "C.function" (without the module name) will enable this profiler.
+
+    For regular functions, use the qualified name of the function, stripping
+    only the initial "pyqtgraph." prefix from the module.
     """
-    depth = 0
-    msgs = []
-    
-    def __init__(self, msg="Profiler", disabled=False, delayed=True, globalDelay=True):
-        self.disabled = disabled
-        if disabled: 
-            return
-        
-        self.markCount = 0
-        self.finished = False
-        self.depth = Profiler.depth 
-        Profiler.depth += 1
-        if not globalDelay:
-            self.msgs = []
-        self.delayed = delayed
-        self.msg = "  "*self.depth + msg
-        msg2 = self.msg + " >>> Started"
-        if self.delayed:
-            self.msgs.append(msg2)
-        else:
-            print(msg2)
-        self.t0 = ptime.time()
-        self.t1 = self.t0
-    
-    def mark(self, msg=None):
-        if self.disabled: 
-            return
-        
+
+    _profilers = os.environ.get("PYQTGRAPHPROFILE", "")
+    _depth = 0
+    _msgs = []
+
+    if _profilers:
+        _profilers = _profilers.split(",")
+        def __new__(cls, delayed=True):
+            """Optionally create a new profiler based on caller's qualname.
+            """
+            # determine the qualified name of the caller function
+            caller_frame = sys._getframe(1)
+            try:
+                caller_object_type = type(caller_frame.f_locals["self"])
+            except KeyError: # we are in a regular function
+                qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            else: # we are in a method
+                qualifier = caller_object_type.__name__
+            func_qualname = qualifier + "." + caller_frame.f_code.co_name
+            if func_qualname not in cls._profilers: # don't do anything
+                return lambda msg=None: None
+            # create an actual profiling object
+            cls._depth += 1
+            obj = super(Profiler, cls).__new__(cls)
+            obj._name = func_qualname
+            obj._delayed = delayed
+            obj._markCount = 0
+            obj._firstTime = obj._lastTime = ptime.time()
+            obj._newMsg("> Entering " + func_qualname)
+            return obj
+    else:
+        def __new__(cls, delayed=True):
+            return lambda msg=None: None
+
+    def __call__(self, msg=None):
+        """Register or print a new message with timing information.
+        """
         if msg is None:
-            msg = str(self.markCount)
-        self.markCount += 1
-        
-        t1 = ptime.time()
-        msg2 = "  "+self.msg+" "+msg+" "+"%gms" % ((t1-self.t1)*1000)
-        if self.delayed:
-            self.msgs.append(msg2)
-        else:
-            print(msg2)
-        self.t1 = ptime.time()  ## don't measure time it took to print
-        
-    def finish(self, msg=None):
-        if self.disabled or self.finished: 
-            return
-        
-        if msg is not None:
-            self.mark(msg)
-        t1 = ptime.time()
-        msg = self.msg + ' <<< Finished, total time: %gms' % ((t1-self.t0)*1000)
-        if self.delayed:
-            self.msgs.append(msg)
-            if self.depth == 0:
-                for line in self.msgs:
-                    print(line)
-                Profiler.msgs = []
+            msg = str(self._markCount)
+        self._markCount += 1
+        newTime = ptime.time()
+        self._newMsg(
+            msg + ": " + str((newTime - self._lastTime) * 1000) + "ms")
+        self._lastTime = newTime
+
+    def _newMsg(self, msg):
+        msg = " " * (self._depth - 1) + msg
+        if self._delayed:
+            self._msgs.append(msg)
         else:
             print(msg)
-        Profiler.depth = self.depth
-        self.finished = True
-        
-            
-        
+
+    def __del__(self):
+        """Add a final message; flush the message list if no parent profiler.
+        """
+        self._newMsg("< Exiting " + self._name + ", total time: " +
+                     str((ptime.time() - self._firstTime) * 1000) + "ms")
+        type(self)._depth -= 1
+        if not self._depth and self._msgs:
+            print("\n".join(self._msgs))
+            type(self)._msgs = []
+
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
     """Common-use for cProfile"""

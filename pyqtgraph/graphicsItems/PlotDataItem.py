@@ -333,7 +333,7 @@ class PlotDataItem(GraphicsObject):
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
         #self.clear()
-        prof = debug.Profiler('PlotDataItem.setData (0x%x)' % id(self), disabled=True)
+        profiler = debug.Profiler()
         y = None
         x = None
         if len(args) == 1:
@@ -383,7 +383,7 @@ class PlotDataItem(GraphicsObject):
         if 'y' in kargs:
             y = kargs['y']
 
-        prof.mark('interpret data')
+        profiler('interpret data')
         ## pull in all style arguments. 
         ## Use self.opts to fill in anything not present in kargs.
         
@@ -432,10 +432,10 @@ class PlotDataItem(GraphicsObject):
         self.xClean = self.yClean = None
         self.xDisp = None
         self.yDisp = None
-        prof.mark('set data')
+        profiler('set data')
         
         self.updateItems()
-        prof.mark('update items')
+        profiler('update items')
         
         self.informViewBoundsChanged()
         #view = self.getViewBox()
@@ -443,9 +443,7 @@ class PlotDataItem(GraphicsObject):
             #view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
         
         self.sigPlotChanged.emit(self)
-        prof.mark('emit')
-        prof.finish()
-
+        profiler('emit')
 
     def updateItems(self):
         
