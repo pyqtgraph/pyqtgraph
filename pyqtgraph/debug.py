@@ -402,12 +402,27 @@ class Profiler(object):
     _profilers = os.environ.get("PYQTGRAPHPROFILE", "")
     _depth = 0
     _msgs = []
+    
+    class DisabledProfiler(object):
+        def __init__(self, *args, **kwds):
+            pass
+        def __call__(self, *args):
+            pass
+        def finish(self):
+            pass
+        def mark(self, msg=None):
+            pass
+    _disabledProfiler = DisabledProfiler()
+    
 
     if _profilers:
         _profilers = _profilers.split(",")
-        def __new__(cls, delayed=True):
+        def __new__(cls, msg=None, disabled='env', delayed=True):
             """Optionally create a new profiler based on caller's qualname.
             """
+            if disabled is True:
+                return cls._disabledProfiler
+                            
             # determine the qualified name of the caller function
             caller_frame = sys._getframe(1)
             try:
@@ -418,15 +433,16 @@ class Profiler(object):
                 qualifier = caller_object_type.__name__
             func_qualname = qualifier + "." + caller_frame.f_code.co_name
             if func_qualname not in cls._profilers: # don't do anything
-                return lambda msg=None: None
+                return cls._disabledProfiler
             # create an actual profiling object
             cls._depth += 1
             obj = super(Profiler, cls).__new__(cls)
-            obj._name = func_qualname
+            obj._name = msg or func_qualname
             obj._delayed = delayed
             obj._markCount = 0
+            obj._finished = False
             obj._firstTime = obj._lastTime = ptime.time()
-            obj._newMsg("> Entering " + func_qualname)
+            obj._newMsg("> Entering " + obj._name)
             return obj
     else:
         def __new__(cls, delayed=True):
@@ -439,26 +455,38 @@ class Profiler(object):
             msg = str(self._markCount)
         self._markCount += 1
         newTime = ptime.time()
-        self._newMsg(
-            msg + ": " + str((newTime - self._lastTime) * 1000) + "ms")
+        self._newMsg("  %s: %0.4f ms", 
+                     msg, (newTime - self._lastTime) * 1000)
         self._lastTime = newTime
+        
+    def mark(self, msg=None):
+        self(msg)
 
-    def _newMsg(self, msg):
-        msg = " " * (self._depth - 1) + msg
+    def _newMsg(self, msg, *args):
+        msg = "  " * (self._depth - 1) + msg
         if self._delayed:
-            self._msgs.append(msg)
+            self._msgs.append((msg, args))
         else:
-            print(msg)
+            print(msg % args)
 
     def __del__(self):
+        self.finish()
+    
+    def finish(self, msg=None):
         """Add a final message; flush the message list if no parent profiler.
         """
-        self._newMsg("< Exiting " + self._name + ", total time: " +
-                     str((ptime.time() - self._firstTime) * 1000) + "ms")
+        if self._finished:
+            return        
+        self._finished = True
+        if msg is not None:
+            self(msg)
+        self._newMsg("< Exiting %s, total time: %0.4f ms", 
+                     self._name, (ptime.time() - self._firstTime) * 1000)
         type(self)._depth -= 1
-        if not self._depth and self._msgs:
-            print("\n".join(self._msgs))
+        if self._depth < 1 and self._msgs:
+            print("\n".join([m[0]%m[1] for m in self._msgs]))
             type(self)._msgs = []
+        
 
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
