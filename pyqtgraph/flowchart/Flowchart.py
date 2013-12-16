@@ -14,7 +14,7 @@ else:
     
 from .Terminal import Terminal
 from numpy import ndarray
-from . import library
+from .library import LIBRARY
 from pyqtgraph.debug import printExc
 import pyqtgraph.configfile as configfile
 import pyqtgraph.dockarea as dockarea
@@ -67,7 +67,8 @@ class Flowchart(Node):
     sigChartLoaded = QtCore.Signal()
     sigStateChanged = QtCore.Signal()
     
-    def __init__(self, terminals=None, name=None, filePath=None):
+    def __init__(self, terminals=None, name=None, filePath=None, library=None):
+        self.library = library or LIBRARY
         if name is None:
             name = "Flowchart"
         if terminals is None:
@@ -104,6 +105,10 @@ class Flowchart(Node):
             
         for name, opts in terminals.items():
             self.addTerminal(name, **opts)
+      
+    def setLibrary(self, lib):
+        self.library = lib
+        self.widget().chartWidget.buildMenu()
       
     def setInput(self, **args):
         """Set the input values of the flowchart. This will automatically propagate
@@ -194,7 +199,7 @@ class Flowchart(Node):
                     break
                 n += 1
                 
-        node = library.getNodeType(nodeType)(name)
+        node = self.library.getNodeType(nodeType)(name)
         self.addNode(node, name, pos)
         return node
         
@@ -846,13 +851,13 @@ class FlowchartWidget(dockarea.DockArea):
         self.nodeMenu.triggered.disconnect(self.nodeMenuTriggered)
         self.nodeMenu = None
         self.subMenus = []
-        library.loadLibrary(reloadLibs=True)
+        self.chart.library.reload()
         self.buildMenu()
         
     def buildMenu(self, pos=None):
         self.nodeMenu = QtGui.QMenu()
         self.subMenus = []
-        for section, nodes in library.getNodeTree().items():
+        for section, nodes in self.chart.library.getNodeTree().items():
             menu = QtGui.QMenu(section)
             self.nodeMenu.addMenu(menu)
             for name in nodes:
