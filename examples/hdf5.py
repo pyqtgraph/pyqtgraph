@@ -25,7 +25,7 @@ if len(sys.argv) > 1:
 else:
     fileName = 'test.hdf5'
     if not os.path.isfile(fileName):
-        print "No suitable HDF5 file found. Use createFile() to generate an example file."
+        print("No suitable HDF5 file found. Use createFile() to generate an example file.")
         os._exit(1)
 
 plt = pg.plot()

@@ -46,7 +46,7 @@ try:
         lastTag = gitCommit(lastTagName)
         head = gitCommit('HEAD')
         if head != lastTag:
-            branch = re.search(r'\* (.*)', check_output(['git', 'branch'])).group(1)
+            branch = re.search(r'\* (.*)', check_output(['git', 'branch'], universal_newlines=True)).group(1)
             version = version + "-%s-%s" % (branch, head[:10])
         
         # any uncommitted modifications?
