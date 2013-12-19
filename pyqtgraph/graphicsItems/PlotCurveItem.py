@@ -65,7 +65,7 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': False,
             'name': None,
-            'antialias': pg.getConfigOption('antialias'),\
+            'antialias': pg.getConfigOption('antialias'),
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
         }
@@ -77,6 +77,9 @@ class PlotCurveItem(GraphicsObject):
         if interface is None:
             return ints
         return interface in ints
+    
+    def name(self):
+        return self.opts.get('name', None)
     
     def setClickable(self, s, width=None):
         """Sets whether the item responds to mouse clicks.

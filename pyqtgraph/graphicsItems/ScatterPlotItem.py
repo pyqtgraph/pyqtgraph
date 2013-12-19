@@ -234,6 +234,7 @@ class ScatterPlotItem(GraphicsObject):
             'pxMode': True, 
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint. 
             'antialias': pg.getConfigOption('antialias'),
+            'name': None,
         }   
         
         self.setPen(200,200,200, update=False)
@@ -281,6 +282,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are 
                                always rendered with antialiasing (since the rendered symbols can be cached, this 
                                incurs very little performance cost)
+        *name*                 The name of this item. Names are used for automatically
+                               generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
         """
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
@@ -409,6 +412,9 @@ class ScatterPlotItem(GraphicsObject):
         if interface is None:
             return ints
         return interface in ints
+    
+    def name(self):
+        return self.opts.get('name', None)
     
     def setPen(self, *args, **kargs):
         """Set the pen(s) used to draw the outline around each spot. 

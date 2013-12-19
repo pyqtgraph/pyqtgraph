@@ -292,7 +292,8 @@ def plot(*args, **kargs):
             dataArgs[k] = kargs[k]
         
     w = PlotWindow(**pwArgs)
-    w.plot(*args, **dataArgs)
+    if len(args) > 0 or len(dataArgs) > 0:
+        w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w

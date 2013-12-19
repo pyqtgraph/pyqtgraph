@@ -514,7 +514,9 @@ class PlotItem(GraphicsWidget):
         if 'ignoreBounds' in kargs:
             vbargs['ignoreBounds'] = kargs['ignoreBounds']
         self.vb.addItem(item, *args, **vbargs)
+        name = None
         if hasattr(item, 'implements') and item.implements('plotData'):
+            name = item.name()
             self.dataItems.append(item)
             #self.plotChanged()
             
@@ -547,7 +549,7 @@ class PlotItem(GraphicsWidget):
             #c.connect(c, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
-        name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
+        #name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)
             

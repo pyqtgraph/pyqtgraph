@@ -170,6 +170,9 @@ class PlotDataItem(GraphicsObject):
             return ints
         return interface in ints
     
+    def name(self):
+        return self.opts.get('name', None)
+    
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
 

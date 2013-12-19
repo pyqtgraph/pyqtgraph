@@ -27,9 +27,9 @@ pg.setConfigOptions(antialias=True)
 p1 = win.addPlot(title="Basic array plotting", y=np.random.normal(size=100))
 
 p2 = win.addPlot(title="Multiple curves")
-p2.plot(np.random.normal(size=100), pen=(255,0,0))
-p2.plot(np.random.normal(size=100)+5, pen=(0,255,0))
-p2.plot(np.random.normal(size=100)+10, pen=(0,0,255))
+p2.plot(np.random.normal(size=100), pen=(255,0,0), name="Red curve")
+p2.plot(np.random.normal(size=110)+5, pen=(0,255,0), name="Blue curve")
+p2.plot(np.random.normal(size=120)+10, pen=(0,0,255), name="Green curve")
 
 p3 = win.addPlot(title="Drawing with points")
 p3.plot(np.random.normal(size=100), pen=(200,200,200), symbolBrush=(255,0,0), symbolPen='w')
