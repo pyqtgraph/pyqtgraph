@@ -1,5 +1,5 @@
 from pyqtgraph.pgcollections import OrderedDict
-from Node import Node
+from .Node import Node
 
 def isNodeClass(cls):
     try:

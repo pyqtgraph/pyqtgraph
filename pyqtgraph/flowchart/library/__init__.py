@@ -19,11 +19,13 @@ getNodeTree = LIBRARY.getNodeTree
 getNodeType = LIBRARY.getNodeType
 
 # Add all nodes to the default library
-for modName in ['Data', 'Display', 'Filters', 'Operators']:
-    mod = __import__(modName, globals(), locals(), [], -1)
+from . import Data, Display, Filters, Operators
+for mod in [Data, Display, Filters, Operators]:
+    #mod = getattr(__import__('', fromlist=[modName], level=1), modName)
+    #mod = __import__(modName, level=1)
     nodes = [getattr(mod, name) for name in dir(mod) if isNodeClass(getattr(mod, name))]
     for node in nodes:
-        LIBRARY.addNodeType(node, [(modName,)])
+        LIBRARY.addNodeType(node, [(mod.__name__.split('.')[-1],)])
     
 #NODE_LIST = OrderedDict()  ## maps name:class for all registered Node subclasses
 #NODE_TREE = OrderedDict()  ## categorized tree of Node subclasses
