@@ -1,17 +1,17 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 try:
-    from pyqtgraph.Qt import QtOpenGL
+    from ..Qt import QtOpenGL
     HAVE_OPENGL = True
 except:
     HAVE_OPENGL = False
     
 import numpy as np
 from .GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
-from pyqtgraph import debug
-from pyqtgraph.Point import Point
-import pyqtgraph as pg
+from .. import functions as fn
+from ..Point import Point
 import struct, sys
+from .. import getConfigOption
+from .. import debug
 
 __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
@@ -65,7 +65,7 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': False,
             'name': None,
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': getConfigOption('antialias'),
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
         }
@@ -399,13 +399,13 @@ class PlotCurveItem(GraphicsObject):
             self._mouseShape = None
         return self.path
 
-    @pg.debug.warnOnException  ## raising an exception here causes crash
+    @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
         profiler = debug.Profiler()
         if self.xData is None:
             return
         
-        if HAVE_OPENGL and pg.getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
+        if HAVE_OPENGL and getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
             self.paintGL(p, opt, widget)
             return
         

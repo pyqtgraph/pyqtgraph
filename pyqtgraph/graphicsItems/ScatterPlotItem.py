@@ -1,14 +1,14 @@
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Point import Point
+from .. import functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 import numpy as np
 import weakref
-import pyqtgraph.debug as debug
-from pyqtgraph.pgcollections import OrderedDict
-import pyqtgraph as pg
-#import pyqtgraph as pg 
+from .. import getConfigOption
+from .. import debug as debug
+from ..pgcollections import OrderedDict
+from .. import debug
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -233,7 +233,7 @@ class ScatterPlotItem(GraphicsObject):
         self.opts = {
             'pxMode': True, 
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint. 
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': getConfigOption('antialias'),
             'name': None,
         }   
         
@@ -693,7 +693,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
         
-    @pg.debug.warnOnException  ## raising an exception here causes crash
+    @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
 
         #p.setPen(fn.mkPen('r'))

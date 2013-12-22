@@ -1,8 +1,8 @@
 
 
 from .GraphicsObject import *
-import pyqtgraph.functions as fn
-from pyqtgraph.Qt import QtGui, QtCore
+from .. import functions as fn
+from ..Qt import QtGui, QtCore
 
 
 class IsocurveItem(GraphicsObject):

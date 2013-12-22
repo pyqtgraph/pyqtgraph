@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.interpolate
-from pyqtgraph.Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore
 
 class ColorMap(object):
     """

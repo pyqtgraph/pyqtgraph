@@ -1,11 +1,11 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import asUnicode
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode
 import numpy as np
-from pyqtgraph.Point import Point
-import pyqtgraph.debug as debug
+from ..Point import Point
+from .. import debug as debug
 import weakref
-import pyqtgraph.functions as fn
-import pyqtgraph as pg
+from .. import functions as fn
+from .. import getConfigOption
 from .GraphicsWidget import GraphicsWidget
 
 __all__ = ['AxisItem']
@@ -268,8 +268,8 @@ class AxisItem(GraphicsWidget):
         
     def pen(self):
         if self._pen is None:
-            return fn.mkPen(pg.getConfigOption('foreground'))
-        return pg.mkPen(self._pen)
+            return fn.mkPen(getConfigOption('foreground'))
+        return fn.mkPen(self._pen)
         
     def setPen(self, pen):
         """
@@ -280,8 +280,8 @@ class AxisItem(GraphicsWidget):
         self._pen = pen
         self.picture = None
         if pen is None:
-            pen = pg.getConfigOption('foreground')
-        self.labelStyle['color'] = '#' + pg.colorStr(pg.mkPen(pen).color())[:6]
+            pen = getConfigOption('foreground')
+        self.labelStyle['color'] = '#' + fn.colorStr(fn.mkPen(pen).color())[:6]
         self.setLabel()
         self.update()
         

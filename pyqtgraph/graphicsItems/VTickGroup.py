@@ -3,8 +3,8 @@ if __name__ == '__main__':
     path = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, os.path.join(path, '..', '..'))
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 import weakref
 from .UIGraphicsItem import UIGraphicsItem
 
@@ -96,18 +96,4 @@ class VTickGroup(UIGraphicsItem):
         p.setPen(self.pen)
         p.drawPath(self.path)
 
-
-if __name__ == '__main__':
-    app = QtGui.QApplication([])
-    import pyqtgraph as pg
-    vt = VTickGroup([1,3,4,7,9], [0.8, 1.0])
-    p = pg.plot()
-    p.addItem(vt)
-    
-    if sys.flags.interactive == 0:
-        app.exec_()
-    
-    
-    
-    
     

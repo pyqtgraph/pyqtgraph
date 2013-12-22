@@ -1,7 +1,7 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.Point import Point
+from ..Qt import QtGui, QtCore
+from ..Point import Point
 from .GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
+from .. import functions as fn
 import numpy as np
 import weakref
 

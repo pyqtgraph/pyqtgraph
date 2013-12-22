@@ -3,8 +3,8 @@ GraphicsWidget displaying an image histogram along with gradient editor. Can be 
 """
 
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 from .ViewBox import *
 from .GradientEditorItem import *
@@ -12,10 +12,10 @@ from .LinearRegionItem import *
 from .PlotDataItem import *
 from .AxisItem import *
 from .GridItem import *
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Point import Point
+from .. import functions as fn
 import numpy as np
-import pyqtgraph.debug as debug
+from .. import debug as debug
 
 
 __all__ = ['HistogramLUTItem']

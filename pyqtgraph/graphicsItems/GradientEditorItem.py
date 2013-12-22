@@ -1,11 +1,11 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import sortList
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from ..python2_3 import sortList
+from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 import weakref
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.colormap import ColorMap
+from ..pgcollections import OrderedDict
+from ..colormap import ColorMap
 
 import numpy as np
 

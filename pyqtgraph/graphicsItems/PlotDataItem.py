@@ -1,12 +1,12 @@
-import pyqtgraph.metaarray as metaarray
-from pyqtgraph.Qt import QtCore
+from .. import metaarray as metaarray
+from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
 import numpy as np
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
-import pyqtgraph as pg
+from .. import functions as fn
+from .. import debug as debug
+from .. import getConfigOption
 
 class PlotDataItem(GraphicsObject):
     """
@@ -152,7 +152,7 @@ class PlotDataItem(GraphicsObject):
             'symbolBrush': (50, 50, 150),
             'pxMode': True,
             
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': getConfigOption('antialias'),
             'pointMode': None,
             
             'downsample': 1,

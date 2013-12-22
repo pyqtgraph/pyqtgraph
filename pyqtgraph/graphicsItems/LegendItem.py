@@ -3,8 +3,9 @@ from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..Point import Point
+from .ScatterPlotItem import ScatterPlotItem
+from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
-import pyqtgraph as pg
 __all__ = ['LegendItem']
 
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
@@ -152,21 +153,21 @@ class ItemSample(GraphicsWidget):
             p.setPen(fn.mkPen(None))
             p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
         
-        if not isinstance(self.item, pg.ScatterPlotItem):
+        if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(2, 18, 18, 2)
         
         symbol = opts.get('symbol', None)
         if symbol is not None:
-            if isinstance(self.item, pg.PlotDataItem):
+            if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
                 
-            pen = pg.mkPen(opts['pen'])
-            brush = pg.mkBrush(opts['brush'])
+            pen = fn.mkPen(opts['pen'])
+            brush = fn.mkBrush(opts['brush'])
             size = opts['size']
             
             p.translate(10,10)
-            path = pg.graphicsItems.ScatterPlotItem.drawSymbol(p, symbol, size, pen, brush)
+            path = ScatterPlotItem.drawSymbol(p, symbol, size, pen, brush)
         
         
         
