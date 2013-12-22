@@ -1,3 +1,35 @@
+pyqtgraph-0.9.9  [unreleased]
+
+  API / behavior changes:
+    - Dynamic import system abandoned; pg now uses static imports throughout.
+        - Flowcharts and exporters have new pluggin systems
+    - Version strings:
+        - __init__.py in git repo now contains latest release version string
+          (previously, only packaged releases had version strings).
+        - installing from git checkout that does not correspond to a release 
+          commit will result in a more descriptive version string.
+    - Speed improvements in functions.makeARGB
+    - ImageItem is faster by avoiding makeQImage(transpose=True)
+
+  New Features:
+    - New HDF5 example for working with very large datasets
+    - Added Qt.loadUiType function for PySide
+    - Simplified Profilers; can be activated with environmental variables
+    - Added Dock.raiseDock() method
+
+  Bugfixes:
+    - PlotCurveItem now has correct clicking behavior--clicks within a few px
+      of the line will trigger a signal.
+    - Fixes related to CSV exporter:
+        - CSV headers include data names, if available
+        - Exporter correctly handles items with no data
+        - pg.plot() avoids creating empty data item
+        - removed call to reduce() from exporter; not available in python 3
+        - Gave .name() methods to PlotDataItem, PlotCurveItem, and ScatterPlotItem
+    - fixed ImageItem handling of rgb images
+    - fixed makeARGB re-ordering of color channels
+
+
 pyqtgraph-0.9.8  2013-11-24
 
   API / behavior changes:

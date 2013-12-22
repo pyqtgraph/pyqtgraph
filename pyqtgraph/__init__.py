@@ -130,56 +130,119 @@ if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] ==
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
 ## these must be imported separately.
-from . import frozenSupport
-def importModules(path, globals, locals, excludes=()):
-    """Import all modules residing within *path*, return a dict of name: module pairs.
+#from . import frozenSupport
+#def importModules(path, globals, locals, excludes=()):
+    #"""Import all modules residing within *path*, return a dict of name: module pairs.
     
-    Note that *path* MUST be relative to the module doing the import.    
-    """
-    d = os.path.join(os.path.split(globals['__file__'])[0], path)
-    files = set()
-    for f in frozenSupport.listdir(d):
-        if frozenSupport.isdir(os.path.join(d, f)) and f not in ['__pycache__', 'tests']:
-            files.add(f)
-        elif f[-3:] == '.py' and f != '__init__.py':
-            files.add(f[:-3])
-        elif f[-4:] == '.pyc' and f != '__init__.pyc':
-            files.add(f[:-4])
+    #Note that *path* MUST be relative to the module doing the import.    
+    #"""
+    #d = os.path.join(os.path.split(globals['__file__'])[0], path)
+    #files = set()
+    #for f in frozenSupport.listdir(d):
+        #if frozenSupport.isdir(os.path.join(d, f)) and f not in ['__pycache__', 'tests']:
+            #files.add(f)
+        #elif f[-3:] == '.py' and f != '__init__.py':
+            #files.add(f[:-3])
+        #elif f[-4:] == '.pyc' and f != '__init__.pyc':
+            #files.add(f[:-4])
         
-    mods = {}
-    path = path.replace(os.sep, '.')
-    for modName in files:
-        if modName in excludes:
-            continue
-        try:
-            if len(path) > 0:
-                modName = path + '.' + modName
-            #mod = __import__(modName, globals, locals, fromlist=['*'])
-            mod = __import__(modName, globals, locals, ['*'], 1)
-            mods[modName] = mod
-        except:
-            import traceback
-            traceback.print_stack()
-            sys.excepthook(*sys.exc_info())
-            print("[Error importing module: %s]" % modName)
+    #mods = {}
+    #path = path.replace(os.sep, '.')
+    #for modName in files:
+        #if modName in excludes:
+            #continue
+        #try:
+            #if len(path) > 0:
+                #modName = path + '.' + modName
+            #print( "from .%s import * " % modName)
+            #mod = __import__(modName, globals, locals, ['*'], 1)
+            #mods[modName] = mod
+        #except:
+            #import traceback
+            #traceback.print_stack()
+            #sys.excepthook(*sys.exc_info())
+            #print("[Error importing module: %s]" % modName)
             
-    return mods
+    #return mods
 
-def importAll(path, globals, locals, excludes=()):
-    """Given a list of modules, import all names from each module into the global namespace."""
-    mods = importModules(path, globals, locals, excludes)
-    for mod in mods.values():
-        if hasattr(mod, '__all__'):
-            names = mod.__all__
-        else:
-            names = [n for n in dir(mod) if n[0] != '_']
-        for k in names:
-            if hasattr(mod, k):
-                globals[k] = getattr(mod, k)
+#def importAll(path, globals, locals, excludes=()):
+    #"""Given a list of modules, import all names from each module into the global namespace."""
+    #mods = importModules(path, globals, locals, excludes)
+    #for mod in mods.values():
+        #if hasattr(mod, '__all__'):
+            #names = mod.__all__
+        #else:
+            #names = [n for n in dir(mod) if n[0] != '_']
+        #for k in names:
+            #if hasattr(mod, k):
+                #globals[k] = getattr(mod, k)
 
-importAll('graphicsItems', globals(), locals())
-importAll('widgets', globals(), locals(),
-          excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
+# Dynamic imports are disabled. This causes too many problems.
+#importAll('graphicsItems', globals(), locals())
+#importAll('widgets', globals(), locals(),
+          #excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
+
+from .graphicsItems.VTickGroup import * 
+from .graphicsItems.GraphicsWidget import * 
+from .graphicsItems.ScaleBar import * 
+from .graphicsItems.PlotDataItem import * 
+from .graphicsItems.GraphItem import * 
+from .graphicsItems.TextItem import * 
+from .graphicsItems.GraphicsLayout import * 
+from .graphicsItems.UIGraphicsItem import * 
+from .graphicsItems.GraphicsObject import * 
+from .graphicsItems.PlotItem import * 
+from .graphicsItems.ROI import * 
+from .graphicsItems.InfiniteLine import * 
+from .graphicsItems.HistogramLUTItem import * 
+from .graphicsItems.GridItem import * 
+from .graphicsItems.GradientLegend import * 
+from .graphicsItems.GraphicsItem import * 
+from .graphicsItems.BarGraphItem import * 
+from .graphicsItems.ViewBox import * 
+from .graphicsItems.ArrowItem import * 
+from .graphicsItems.ImageItem import * 
+from .graphicsItems.AxisItem import * 
+from .graphicsItems.LabelItem import * 
+from .graphicsItems.CurvePoint import * 
+from .graphicsItems.GraphicsWidgetAnchor import * 
+from .graphicsItems.PlotCurveItem import * 
+from .graphicsItems.ButtonItem import * 
+from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.MultiPlotItem import * 
+from .graphicsItems.ErrorBarItem import * 
+from .graphicsItems.IsocurveItem import * 
+from .graphicsItems.LinearRegionItem import * 
+from .graphicsItems.FillBetweenItem import * 
+from .graphicsItems.LegendItem import * 
+from .graphicsItems.ScatterPlotItem import * 
+from .graphicsItems.ItemGroup import * 
+
+from .widgets.MultiPlotWidget import * 
+from .widgets.ScatterPlotWidget import * 
+from .widgets.ColorMapWidget import * 
+from .widgets.FileDialog import * 
+from .widgets.ValueLabel import * 
+from .widgets.HistogramLUTWidget import * 
+from .widgets.CheckTable import * 
+from .widgets.BusyCursor import * 
+from .widgets.PlotWidget import * 
+from .widgets.ComboBox import * 
+from .widgets.GradientWidget import * 
+from .widgets.DataFilterWidget import * 
+from .widgets.SpinBox import * 
+from .widgets.JoystickButton import * 
+from .widgets.GraphicsLayoutWidget import * 
+from .widgets.TreeWidget import * 
+from .widgets.PathButton import * 
+from .widgets.VerticalLabel import * 
+from .widgets.FeedbackButton import * 
+from .widgets.ColorButton import * 
+from .widgets.DataTreeWidget import * 
+from .widgets.GraphicsView import * 
+from .widgets.LayoutWidget import * 
+from .widgets.TableWidget import * 
+from .widgets.ProgressDialog import *
 
 from .imageview import *
 from .WidgetGroup import *
@@ -193,6 +256,7 @@ from .graphicsWindows import *
 from .SignalProxy import *
 from .colormap import *
 from .ptime import time
+
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 

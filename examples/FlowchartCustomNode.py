@@ -83,9 +83,8 @@ class ImageViewNode(Node):
             else:
                 self.view.setImage(data)
 
-## register the class so it will appear in the menu of node types.
-## It will appear in the 'display' sub-menu.
-fclib.registerNodeType(ImageViewNode, [('Display',)])
+
+
         
 ## We will define an unsharp masking filter node as a subclass of CtrlNode.
 ## CtrlNode is just a convenience class that automatically creates its
@@ -113,12 +112,25 @@ class UnsharpMaskNode(CtrlNode):
         strength = self.ctrls['strength'].value()
         output = dataIn - (strength * scipy.ndimage.gaussian_filter(dataIn, (sigma,sigma)))
         return {'dataOut': output}
+
+
+## To make our custom node classes available in the flowchart context menu,
+## we can either register them with the default node library or make a
+## new library.
+
         
-## register the class so it will appear in the menu of node types.
-## It will appear in a new 'image' sub-menu.
-fclib.registerNodeType(UnsharpMaskNode, [('Image',)])
-    
-    
+## Method 1: Register to global default library:
+#fclib.registerNodeType(ImageViewNode, [('Display',)])
+#fclib.registerNodeType(UnsharpMaskNode, [('Image',)])
+
+## Method 2: If we want to make our custom node available only to this flowchart,
+## then instead of registering the node type globally, we can create a new 
+## NodeLibrary:
+library = fclib.LIBRARY.copy() # start with the default node set
+library.addNodeType(ImageViewNode, [('Display',)])
+library.addNodeType(UnsharpMaskNode, [('Image',)])
+fc.setLibrary(library)
+
 
 ## Now we will programmatically add nodes to define the function of the flowchart.
 ## Normally, the user will do this manually or by loading a pre-generated
