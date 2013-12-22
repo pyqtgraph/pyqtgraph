@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.ptime import time
-import pyqtgraph as pg
+from ..Qt import QtCore, QtGui
+from ..ptime import time
+from .. import functions as fn
 from functools import reduce
 
 __all__ = ['ValueLabel']
@@ -67,7 +67,7 @@ class ValueLabel(QtGui.QLabel):
         avg = self.averageValue()
         val = self.values[-1][1]
         if self.siPrefix:
-            return pg.siFormat(avg, suffix=self.suffix)
+            return fn.siFormat(avg, suffix=self.suffix)
         else:
             return self.formatStr.format(value=val, avgValue=avg, suffix=self.suffix)
             

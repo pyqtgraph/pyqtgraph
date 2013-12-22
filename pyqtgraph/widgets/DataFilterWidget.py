@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.parametertree as ptree
+from ..Qt import QtGui, QtCore
+from .. import parametertree as ptree
 import numpy as np
-from pyqtgraph.pgcollections import OrderedDict
-import pyqtgraph as pg
+from ..pgcollections import OrderedDict
+from .. import functions as fn
 
 __all__ = ['DataFilterWidget']
 
@@ -108,7 +108,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         return mask
     
     def describe(self):
-        return "%s < %s < %s" % (pg.siFormat(self['Min'], suffix=self.units), self.fieldName, pg.siFormat(self['Max'], suffix=self.units))
+        return "%s < %s < %s" % (fn.siFormat(self['Min'], suffix=self.units), self.fieldName, fn.siFormat(self['Max'], suffix=self.units))
     
 class EnumFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):

@@ -1,8 +1,7 @@
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore, USE_PYSIDE
 if not USE_PYSIDE:
     import sip
-import pyqtgraph.multiprocess as mp
-import pyqtgraph as pg
+from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 import numpy as np
 import mmap, tempfile, ctypes, atexit, sys, random

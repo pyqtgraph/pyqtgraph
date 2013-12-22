@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.pgcollections import OrderedDict
+from ..Qt import QtGui, QtCore
+from ..pgcollections import OrderedDict
 import types, traceback
 import numpy as np
 

@@ -5,23 +5,22 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph as pg
+from ..Qt import QtCore, QtGui, USE_PYSIDE
 
 try:
-    from pyqtgraph.Qt import QtOpenGL
+    from ..Qt import QtOpenGL
     HAVE_OPENGL = True
 except ImportError:
     HAVE_OPENGL = False
 
-from pyqtgraph.Point import Point
+from ..Point import Point
 import sys, os
 from .FileDialog import FileDialog
-from pyqtgraph.GraphicsScene import GraphicsScene
+from ..GraphicsScene import GraphicsScene
 import numpy as np
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
-import pyqtgraph 
+from .. import functions as fn
+from .. import debug as debug
+from .. import getConfigOption
 
 __all__ = ['GraphicsView']
 
@@ -73,7 +72,7 @@ class GraphicsView(QtGui.QGraphicsView):
         QtGui.QGraphicsView.__init__(self, parent)
         
         if useOpenGL is None:
-            useOpenGL = pyqtgraph.getConfigOption('useOpenGL')
+            useOpenGL = getConfigOption('useOpenGL')
         
         self.useOpenGL(useOpenGL)
         
@@ -108,7 +107,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         ## Workaround for PySide crash
         ## This ensures that the scene will outlive the view.
-        if pyqtgraph.Qt.USE_PYSIDE:
+        if USE_PYSIDE:
             self.sceneObj._view_ref_workaround = self
         
         ## by default we set up a central widget with a grid layout.
@@ -138,7 +137,7 @@ class GraphicsView(QtGui.QGraphicsView):
         """
         self._background = background
         if background == 'default':
-            background = pyqtgraph.getConfigOption('background')
+            background = getConfigOption('background')
         brush = fn.mkBrush(background)
         self.setBackgroundBrush(brush)
     

@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from .GraphicsView import GraphicsView
-import pyqtgraph.graphicsItems.MultiPlotItem as MultiPlotItem
+from ..graphicsItems import MultiPlotItem as MultiPlotItem
 
 __all__ = ['MultiPlotWidget']
 class MultiPlotWidget(GraphicsView):

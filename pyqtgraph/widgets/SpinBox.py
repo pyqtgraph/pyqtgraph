@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import asUnicode
-from pyqtgraph.SignalProxy import SignalProxy
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode
+from ..SignalProxy import SignalProxy
 
-import pyqtgraph.functions as fn
+from .. import functions as fn
 from math import log
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 from decimal import *

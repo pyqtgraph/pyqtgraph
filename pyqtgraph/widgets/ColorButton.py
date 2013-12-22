@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as functions
+from ..Qt import QtGui, QtCore
+from .. import functions as functions
 
 __all__ = ['ColorButton']
 
