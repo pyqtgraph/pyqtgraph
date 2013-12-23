@@ -4,7 +4,6 @@ import pyqtgraph.functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 import numpy as np
-import scipy.stats
 import weakref
 import pyqtgraph.debug as debug
 from pyqtgraph.pgcollections import OrderedDict
@@ -15,7 +14,7 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 'd', '+']])
+Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 'd', '+', 'x']])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 coords = {
@@ -32,9 +31,14 @@ for k, c in coords.items():
     for x,y in c[1:]:
         Symbols[k].lineTo(x, y)
     Symbols[k].closeSubpath()
+tr = QtGui.QTransform()
+tr.rotate(45)
+Symbols['x'] = tr.map(Symbols['+'])
 
     
 def drawSymbol(painter, symbol, size, pen, brush):
+    if symbol is None:
+        return
     painter.scale(size, size)
     painter.setPen(pen)
     painter.setBrush(brush)
@@ -53,25 +57,17 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     the symbol will be rendered into the device specified (See QPainter documentation 
     for more information).
     """
-    ## see if this pixmap is already cached
-    #global SymbolPixmapCache
-    #key = (symbol, size, fn.colorTuple(pen.color()), pen.width(), pen.style(), fn.colorTuple(brush.color()))
-    #if key in SymbolPixmapCache:
-        #return SymbolPixmapCache[key]
-        
     ## Render a spot with the given parameters to a pixmap
     penPxWidth = max(np.ceil(pen.widthF()), 1)
-    image = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
-    image.fill(0)
-    p = QtGui.QPainter(image)
+    if device is None:
+        device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
+        device.fill(0)
+    p = QtGui.QPainter(device)
     p.setRenderHint(p.Antialiasing)
-    p.translate(image.width()*0.5, image.height()*0.5)
+    p.translate(device.width()*0.5, device.height()*0.5)
     drawSymbol(p, symbol, size, pen, brush)
     p.end()
-    return image
-    #pixmap = QtGui.QPixmap(image)
-    #SymbolPixmapCache[key] = pixmap
-    #return pixmap
+    return device
 
 def makeSymbolPixmap(size, pen, brush, symbol):
     ## deprecated
@@ -520,7 +516,7 @@ class ScatterPlotItem(GraphicsObject):
         
         ## Bug: If data is a numpy record array, then items from that array must be copied to dataSet one at a time.
         ## (otherwise they are converted to tuples and thus lose their field names.
-        if isinstance(data, np.ndarray) and len(data.dtype.fields) > 1:
+        if isinstance(data, np.ndarray) and (data.dtype.fields is not None)and len(data.dtype.fields) > 1:
             for i, rec in enumerate(data):
                 dataSet['data'][i] = rec
         else:
@@ -629,13 +625,15 @@ class ScatterPlotItem(GraphicsObject):
             d2 = d2[mask]
             
         if frac >= 1.0:
-            self.bounds[ax] = (d.min() - self._maxSpotWidth*0.7072, d.max() + self._maxSpotWidth*0.7072)
+            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
-            return (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-            
+            mask = np.isfinite(d)
+            d = d[mask]
+            return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
     def pixelPadding(self):
         return self._maxSpotPxWidth*0.7072
 
@@ -677,7 +675,7 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         self.fragments = []
-        pts = np.clip(pts, -2**31, 2**31) ## prevent Qt segmentation fault.
+        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
                                           ## Still won't be able to render correctly, though.
         for i in xrange(len(self.data)):
             rec = self.data[i]
@@ -689,7 +687,8 @@ class ScatterPlotItem(GraphicsObject):
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
-            
+        
+    @pg.debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
 
         #p.setPen(fn.mkPen('r'))
@@ -740,6 +739,7 @@ class ScatterPlotItem(GraphicsObject):
                     drawSymbol(p2, *self.getSpotOpts(rec, scale))
                 p2.end()
                 
+            p.setRenderHint(p.Antialiasing, aa)
             self.picture.play(p)
         
     def points(self):

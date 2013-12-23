@@ -1,7 +1,10 @@
 from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
+import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from pyqtgraph import Vector
+import pyqtgraph.functions as fn
+
 ##Vector = QtGui.QVector3D
 
 class GLViewWidget(QtOpenGL.QGLWidget):
@@ -31,6 +34,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             'elevation':  30,         ## camera's angle of elevation in degrees
             'azimuth': 45,            ## camera's azimuthal angle in degrees 
                                       ## (rotation around z-axis 0 points along x-axis)
+            'viewport': None,         ## glViewport params; None == whole widget
         }
         self.items = []
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
@@ -63,55 +67,116 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         glClearColor(0.0, 0.0, 0.0, 0.0)
         self.resizeGL(self.width(), self.height())
         
+    def getViewport(self):
+        vp = self.opts['viewport']
+        if vp is None:
+            return (0, 0, self.width(), self.height())
+        else:
+            return vp
+        
     def resizeGL(self, w, h):
-        glViewport(0, 0, w, h)
+        pass
+        #glViewport(*self.getViewport())
         #self.update()
 
-    def setProjection(self):
-        ## Create the projection matrix
+    def setProjection(self, region=None):
+        m = self.projectionMatrix(region)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        w = self.width()
-        h = self.height()
+        a = np.array(m.copyDataTo()).reshape((4,4))
+        glMultMatrixf(a.transpose())
+
+    def projectionMatrix(self, region=None):
+        # Xw = (Xnd + 1) * width/2 + X
+        if region is None:
+            region = (0, 0, self.width(), self.height())
+        
+        x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
         fov = self.opts['fov']
-        
         nearClip = dist * 0.001
         farClip = dist * 1000.
-        
+
         r = nearClip * np.tan(fov * 0.5 * np.pi / 180.)
         t = r * h / w
-        glFrustum( -r, r, -t, t, nearClip, farClip)
+
+        # convert screen coordinates (region) to normalized device coordinates
+        # Xnd = (Xw - X0) * 2/width - 1
+        ## Note that X0 and width in these equations must be the values used in viewport
+        left  = r * ((region[0]-x0) * (2.0/w) - 1)
+        right = r * ((region[0]+region[2]-x0) * (2.0/w) - 1)
+        bottom = t * ((region[1]-y0) * (2.0/h) - 1)
+        top    = t * ((region[1]+region[3]-y0) * (2.0/h) - 1)
+
+        tr = QtGui.QMatrix4x4()
+        tr.frustum(left, right, bottom, top, nearClip, farClip)
+        return tr
         
     def setModelview(self):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        glTranslatef( 0.0, 0.0, -self.opts['distance'])
-        glRotatef(self.opts['elevation']-90, 1, 0, 0)
-        glRotatef(self.opts['azimuth']+90, 0, 0, -1)
+        m = self.viewMatrix()
+        a = np.array(m.copyDataTo()).reshape((4,4))
+        glMultMatrixf(a.transpose())
+        
+    def viewMatrix(self):
+        tr = QtGui.QMatrix4x4()
+        tr.translate( 0.0, 0.0, -self.opts['distance'])
+        tr.rotate(self.opts['elevation']-90, 1, 0, 0)
+        tr.rotate(self.opts['azimuth']+90, 0, 0, -1)
         center = self.opts['center']
-        glTranslatef(-center.x(), -center.y(), -center.z())
+        tr.translate(-center.x(), -center.y(), -center.z())
+        return tr
+
+    def itemsAt(self, region=None):
+        #buf = np.zeros(100000, dtype=np.uint)
+        buf = glSelectBuffer(100000)
+        try:
+            glRenderMode(GL_SELECT)
+            glInitNames()
+            glPushName(0)
+            self._itemNames = {}
+            self.paintGL(region=region, useItemNames=True)
+            
+        finally:
+            hits = glRenderMode(GL_RENDER)
+
+        items = [(h.near, h.names[0]) for h in hits]
+        items.sort(key=lambda i: i[0])
         
+        return [self._itemNames[i[1]] for i in items]
         
-    def paintGL(self):
-        self.setProjection()
+    def paintGL(self, region=None, viewport=None, useItemNames=False):
+        """
+        viewport specifies the arguments to glViewport. If None, then we use self.opts['viewport']
+        region specifies the sub-region of self.opts['viewport'] that should be rendered.
+        Note that we may use viewport != self.opts['viewport'] when exporting.
+        """
+        if viewport is None:
+            glViewport(*self.getViewport())
+        else:
+            glViewport(*viewport)
+        self.setProjection(region=region)
         self.setModelview()
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
-        self.drawItemTree()
+        self.drawItemTree(useItemNames=useItemNames)
         
-    def drawItemTree(self, item=None):
+    def drawItemTree(self, item=None, useItemNames=False):
         if item is None:
             items = [x for x in self.items if x.parentItem() is None]
         else:
             items = item.childItems()
             items.append(item)
-        items.sort(lambda a,b: cmp(a.depthValue(), b.depthValue()))
+        items.sort(key=lambda a: a.depthValue())
         for i in items:
             if not i.visible():
                 continue
             if i is item:
                 try:
                     glPushAttrib(GL_ALL_ATTRIB_BITS)
+                    if useItemNames:
+                        glLoadName(id(i))
+                        self._itemNames[id(i)] = i
                     i.paint()
                 except:
                     import pyqtgraph.debug
@@ -120,7 +185,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     ver = glGetString(GL_VERSION)
                     if ver is not None:
                         ver = ver.split()[0]
-                        if int(ver.split('.')[0]) < 2:
+                        if int(ver.split(b'.')[0]) < 2:
                             print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
                         else:
                             print(msg)
@@ -134,7 +199,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     tr = i.transform()
                     a = np.array(tr.copyDataTo()).reshape((4,4))
                     glMultMatrixf(a.transpose())
-                    self.drawItemTree(i)
+                    self.drawItemTree(i, useItemNames=useItemNames)
                 finally:
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
@@ -168,6 +233,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
         self.opts['azimuth'] += azim
+        #self.opts['elevation'] += elev
         self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
         self.update()
         
@@ -286,4 +352,85 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             raise
             
 
+            
+    def readQImage(self):
+        """
+        Read the current buffer pixels out as a QImage.
+        """
+        w = self.width()
+        h = self.height()
+        self.repaint()
+        pixels = np.empty((h, w, 4), dtype=np.ubyte)
+        pixels[:] = 128
+        pixels[...,0] = 50
+        pixels[...,3] = 255
+        
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+        
+        # swap B,R channels for Qt
+        tmp = pixels[...,0].copy()
+        pixels[...,0] = pixels[...,2]
+        pixels[...,2] = tmp
+        pixels = pixels[::-1] # flip vertical
+        
+        img = fn.makeQImage(pixels, transpose=False)
+        return img
+        
+        
+    def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
+        w,h = map(int, size)
+        
+        self.makeCurrent()
+        tex = None
+        fb = None
+        try:
+            output = np.empty((w, h, 4), dtype=np.ubyte)
+            fb = glfbo.glGenFramebuffers(1)
+            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, fb )
+            
+            glEnable(GL_TEXTURE_2D)
+            tex = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex)
+            texwidth = textureSize
+            data = np.zeros((texwidth,texwidth,4), dtype=np.ubyte)
+            
+            ## Test texture dimensions first
+            glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+            if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
+                raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
+            ## create teture
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
+            
+            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...) 
+                                                  # is interpreted correctly.
+            p2 = 2 * padding
+            for x in range(-padding, w-padding, texwidth-p2):
+                for y in range(-padding, h-padding, texwidth-p2):
+                    x2 = min(x+texwidth, w+padding)
+                    y2 = min(y+texwidth, h+padding)
+                    w2 = x2-x
+                    h2 = y2-y
+                    
+                    ## render to texture
+                    glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
+                    
+                    self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
+                    
+                    ## read texture back to array
+                    data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)
+                    data = np.fromstring(data, dtype=np.ubyte).reshape(texwidth,texwidth,4).transpose(1,0,2)[:, ::-1]
+                    output[x+padding:x2-padding, y+padding:y2-padding] = data[padding:w2-padding, -(h2-padding):-padding]
+                    
+        finally:
+            self.opts['viewport'] = None
+            glfbo.glBindFramebuffer(glfbo.GL_FRAMEBUFFER, 0)
+            glBindTexture(GL_TEXTURE_2D, 0)
+            if tex is not None:
+                glDeleteTextures([tex])
+            if fb is not None:
+                glfbo.glDeleteFramebuffers([fb])
+            
+        return output
+        
+        
         

@@ -521,6 +521,17 @@ class ConnectionItem(GraphicsObject):
         self.target = target
         self.length = 0
         self.hovered = False
+        self.path = None
+        self.shapePath = None
+        self.style = {
+            'shape': 'line',
+            'color': (100, 100, 250),
+            'width': 1.0,
+            'hoverColor': (150, 150, 250),
+            'hoverWidth': 1.0,
+            'selectedColor': (200, 200, 0),
+            'selectedWidth': 3.0,
+            }
         #self.line = QtGui.QGraphicsLineItem(self)
         self.source.getViewBox().addItem(self)
         self.updateLine()
@@ -535,6 +546,13 @@ class ConnectionItem(GraphicsObject):
         self.target = target
         self.updateLine()
     
+    def setStyle(self, **kwds):
+        self.style.update(kwds)
+        if 'shape' in kwds:
+            self.updateLine()
+        else:
+            self.update()
+    
     def updateLine(self):
         start = Point(self.source.connectPoint())
         if isinstance(self.target, TerminalGraphicsItem):
@@ -544,15 +562,21 @@ class ConnectionItem(GraphicsObject):
         else:
             return
         self.prepareGeometryChange()
-        self.resetTransform()
-        ang = (stop-start).angle(Point(0, 1))
-        if ang is None:
-            ang = 0
-        self.rotate(ang)
-        self.setPos(start)
-        self.length = (start-stop).length()
+        
+        self.path = self.generatePath(start, stop)
+        self.shapePath = None
         self.update()
-        #self.line.setLine(start.x(), start.y(), stop.x(), stop.y())
+        
+    def generatePath(self, start, stop):
+        path = QtGui.QPainterPath()
+        path.moveTo(start)
+        if self.style['shape'] == 'line':
+            path.lineTo(stop)
+        elif self.style['shape'] == 'cubic':
+            path.cubicTo(Point(stop.x(), start.y()), Point(start.x(), stop.y()), Point(stop.x(), stop.y()))
+        else:
+            raise Exception('Invalid shape "%s"; options are "line" or "cubic"' % self.style['shape'])
+        return path
 
     def keyPressEvent(self, ev):
         if ev.key() == QtCore.Qt.Key_Delete or ev.key() == QtCore.Qt.Key_Backspace:
@@ -582,20 +606,33 @@ class ConnectionItem(GraphicsObject):
             
             
     def boundingRect(self):
-        #return self.line.boundingRect()
-        px = self.pixelWidth()
-        return QtCore.QRectF(-5*px, 0, 10*px, self.length)
+        return self.shape().boundingRect()
+        ##return self.line.boundingRect()
+        #px = self.pixelWidth()
+        #return QtCore.QRectF(-5*px, 0, 10*px, self.length)
+    def viewRangeChanged(self):
+        self.shapePath = None
+        self.prepareGeometryChange()
         
-    #def shape(self):
-        #return self.line.shape()
+    def shape(self):
+        if self.shapePath is None:
+            if self.path is None:
+                return QtGui.QPainterPath()
+            stroker = QtGui.QPainterPathStroker()
+            px = self.pixelWidth()
+            stroker.setWidth(px*8)
+            self.shapePath = stroker.createStroke(self.path)
+        return self.shapePath
         
     def paint(self, p, *args):
         if self.isSelected():
-            p.setPen(fn.mkPen(200, 200, 0, width=3))
+            p.setPen(fn.mkPen(self.style['selectedColor'], width=self.style['selectedWidth']))
         else:
             if self.hovered:
-                p.setPen(fn.mkPen(150, 150, 250, width=1))
+                p.setPen(fn.mkPen(self.style['hoverColor'], width=self.style['hoverWidth']))
             else:
-                p.setPen(fn.mkPen(100, 100, 250, width=1))
+                p.setPen(fn.mkPen(self.style['color'], width=self.style['width']))
                 
-        p.drawLine(0, 0, 0, self.length)
+        #p.drawLine(0, 0, 0, self.length)
+        
+        p.drawPath(self.path)

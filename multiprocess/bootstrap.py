@@ -20,10 +20,9 @@ if __name__ == '__main__':
         
     if opts.pop('pyside', False):
         import PySide
-    #import pyqtgraph
-    #import pyqtgraph.multiprocess.processes
+        
+    
     targetStr = opts.pop('targetStr')
     target = pickle.loads(targetStr)  ## unpickling the target should import everything we need
-    #target(name, port, authkey, ppid)
     target(**opts)  ## Send all other options to the target function
     sys.exit(0)

@@ -22,9 +22,15 @@ class GLMeshItem(GLGraphicsItem):
         Arguments
         meshdata       MeshData object from which to determine geometry for 
                        this item.
-        color          Default color used if no vertex or face colors are
-                       specified.
-        shader         Name of shader program to use (None for no shader)
+        color          Default face color used if no vertex or face colors 
+                       are specified.
+        edgeColor      Default edge color to use if no edge colors are
+                       specified in the mesh data.
+        drawEdges      If True, a wireframe mesh will be drawn. 
+                       (default=False)
+        drawFaces      If True, mesh faces are drawn. (default=True)
+        shader         Name of shader program to use when drawing faces.
+                       (None for no shader)
         smooth         If True, normal vectors are computed for each vertex
                        and interpolated within each face.
         computeNormals If False, then computation of normal vectors is 
@@ -35,6 +41,9 @@ class GLMeshItem(GLGraphicsItem):
         self.opts = {
             'meshdata': None,
             'color': (1., 1., 1., 1.),
+            'drawEdges': False,
+            'drawFaces': True,
+            'edgeColor': (0.5, 0.5, 0.5, 1.0),
             'shader': None,
             'smooth': True,
             'computeNormals': True,
@@ -60,7 +69,11 @@ class GLMeshItem(GLGraphicsItem):
         self.update()
         
     def shader(self):
-        return shaders.getShaderProgram(self.opts['shader'])
+        shader = self.opts['shader']
+        if isinstance(shader, shaders.ShaderProgram):
+            return shader
+        else:
+            return shaders.getShaderProgram(shader)
         
     def setColor(self, c):
         """Set the default color to use when no vertex or face colors are specified."""
@@ -100,6 +113,8 @@ class GLMeshItem(GLGraphicsItem):
         self.faces = None
         self.normals = None
         self.colors = None
+        self.edges = None
+        self.edgeColors = None
         self.update()
     
     def parseMeshData(self):
@@ -137,6 +152,9 @@ class GLMeshItem(GLGraphicsItem):
                 elif md.hasFaceColor():
                     self.colors = md.faceColors(indexed='faces')
                     
+            if self.opts['drawEdges']:
+                self.edges = md.edges()
+                self.edgeVerts = md.vertexes()
             return
     
     def paint(self):
@@ -144,19 +162,52 @@ class GLMeshItem(GLGraphicsItem):
         
         self.parseMeshData()        
         
-        with self.shader():
-            verts = self.vertexes
-            norms = self.normals
-            color = self.colors
-            faces = self.faces
-            if verts is None:
-                return
+        if self.opts['drawFaces']:
+            with self.shader():
+                verts = self.vertexes
+                norms = self.normals
+                color = self.colors
+                faces = self.faces
+                if verts is None:
+                    return
+                glEnableClientState(GL_VERTEX_ARRAY)
+                try:
+                    glVertexPointerf(verts)
+                    
+                    if self.colors is None:
+                        color = self.opts['color']
+                        if isinstance(color, QtGui.QColor):
+                            glColor4f(*pg.glColor(color))
+                        else:
+                            glColor4f(*color)
+                    else:
+                        glEnableClientState(GL_COLOR_ARRAY)
+                        glColorPointerf(color)
+                    
+                    
+                    if norms is not None:
+                        glEnableClientState(GL_NORMAL_ARRAY)
+                        glNormalPointerf(norms)
+                    
+                    if faces is None:
+                        glDrawArrays(GL_TRIANGLES, 0, np.product(verts.shape[:-1]))
+                    else:
+                        faces = faces.astype(np.uint).flatten()
+                        glDrawElements(GL_TRIANGLES, faces.shape[0], GL_UNSIGNED_INT, faces)
+                finally:
+                    glDisableClientState(GL_NORMAL_ARRAY)
+                    glDisableClientState(GL_VERTEX_ARRAY)
+                    glDisableClientState(GL_COLOR_ARRAY)
+            
+        if self.opts['drawEdges']:
+            verts = self.edgeVerts
+            edges = self.edges
             glEnableClientState(GL_VERTEX_ARRAY)
             try:
                 glVertexPointerf(verts)
                 
-                if self.colors is None:
-                    color = self.opts['color']
+                if self.edgeColors is None:
+                    color = self.opts['edgeColor']
                     if isinstance(color, QtGui.QColor):
                         glColor4f(*pg.glColor(color))
                     else:
@@ -164,19 +215,9 @@ class GLMeshItem(GLGraphicsItem):
                 else:
                     glEnableClientState(GL_COLOR_ARRAY)
                     glColorPointerf(color)
-                
-                
-                if norms is not None:
-                    glEnableClientState(GL_NORMAL_ARRAY)
-                    glNormalPointerf(norms)
-                
-                if faces is None:
-                    glDrawArrays(GL_TRIANGLES, 0, np.product(verts.shape[:-1]))
-                else:
-                    faces = faces.astype(np.uint).flatten()
-                    glDrawElements(GL_TRIANGLES, faces.shape[0], GL_UNSIGNED_INT, faces)
+                edges = edges.flatten()
+                glDrawElements(GL_LINES, edges.shape[0], GL_UNSIGNED_INT, edges)
             finally:
-                glDisableClientState(GL_NORMAL_ARRAY)
                 glDisableClientState(GL_VERTEX_ARRAY)
                 glDisableClientState(GL_COLOR_ARRAY)
             

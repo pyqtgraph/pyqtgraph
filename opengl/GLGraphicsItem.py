@@ -40,6 +40,7 @@ class GLGraphicsItem(QtCore.QObject):
         self.__glOpts = {}
         
     def setParentItem(self, item):
+        """Set this item's parent in the scenegraph hierarchy."""
         if self.__parent is not None:
             self.__parent.__children.remove(self)
         if item is not None:
@@ -98,9 +99,11 @@ class GLGraphicsItem(QtCore.QObject):
         
     
     def parentItem(self):
+        """Return a this item's parent in the scenegraph hierarchy."""
         return self.__parent
         
     def childItems(self):
+        """Return a list of this item's children in the scenegraph hierarchy."""
         return list(self.__children)
         
     def _setView(self, v):
@@ -116,27 +119,35 @@ class GLGraphicsItem(QtCore.QObject):
         Items with negative depth values are drawn before their parent.
         (This is analogous to QGraphicsItem.zValue)
         The depthValue does NOT affect the position of the item or the values it imparts to the GL depth buffer.
-        '"""
+        """
         self.__depthValue = value
         
     def depthValue(self):
-        """Return the depth value of this item. See setDepthValue for mode information."""
+        """Return the depth value of this item. See setDepthValue for more information."""
         return self.__depthValue
         
     def setTransform(self, tr):
+        """Set the local transform for this object.
+        Must be a :class:`Transform3D <pyqtgraph.Transform3D>` instance. This transform
+        determines how the local coordinate system of the item is mapped to the coordinate
+        system of its parent."""
         self.__transform = Transform3D(tr)
         self.update()
         
     def resetTransform(self):
+        """Reset this item's transform to an identity transformation."""
         self.__transform.setToIdentity()
         self.update()
         
     def applyTransform(self, tr, local):
         """
         Multiply this object's transform by *tr*. 
-        If local is True, then *tr* is multiplied on the right of the current transform:
+        If local is True, then *tr* is multiplied on the right of the current transform::
+        
             newTransform = transform * tr
-        If local is False, then *tr* is instead multiplied on the left:
+            
+        If local is False, then *tr* is instead multiplied on the left::
+        
             newTransform = tr * transform
         """
         if local:
@@ -145,9 +156,12 @@ class GLGraphicsItem(QtCore.QObject):
             self.setTransform(tr * self.transform())
         
     def transform(self):
+        """Return this item's transform object."""
         return self.__transform
         
     def viewTransform(self):
+        """Return the transform mapping this item's local coordinate system to the 
+        view coordinate system."""
         tr = self.__transform
         p = self
         while True:
@@ -187,16 +201,24 @@ class GLGraphicsItem(QtCore.QObject):
     
     
     def hide(self):
+        """Hide this item. 
+        This is equivalent to setVisible(False)."""
         self.setVisible(False)
         
     def show(self):
+        """Make this item visible if it was previously hidden.
+        This is equivalent to setVisible(True)."""
         self.setVisible(True)
     
     def setVisible(self, vis):
+        """Set the visibility of this item."""
         self.__visible = vis
         self.update()
         
     def visible(self):
+        """Return True if the item is currently set to be visible.
+        Note that this does not guarantee that the item actually appears in the
+        view, as it may be obscured or outside of the current view area."""
         return self.__visible
     
     
@@ -234,10 +256,14 @@ class GLGraphicsItem(QtCore.QObject):
         self.setupGLState()
         
     def update(self):
+        """
+        Indicates that this item needs to be redrawn, and schedules an update 
+        with the view it is displayed in.
+        """
         v = self.view()
         if v is None:
             return
-        v.updateGL()
+        v.update()
         
     def mapToParent(self, point):
         tr = self.transform()

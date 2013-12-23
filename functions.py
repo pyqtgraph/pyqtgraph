@@ -5,6 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from __future__ import division
 from .python2_3 import asUnicode
 Colors = {
     'b': (0,0,255,255),
@@ -23,7 +24,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph import getConfigOption
+import pyqtgraph as pg
 import numpy as np
 import decimal, re
 import ctypes
@@ -32,12 +33,11 @@ import sys, struct
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
-    WEAVE_DEBUG = getConfigOption('weaveDebug')
-    try:
-        import scipy.weave
-        USE_WEAVE = getConfigOption('useWeave')
-    except:
-        USE_WEAVE = False
+    if pg.getConfigOption('useWeave'):
+        try:
+            import scipy.weave
+        except ImportError:
+            pg.setConfigOptions(useWeave=False)
 except ImportError:
     HAVE_SCIPY = False
 
@@ -264,6 +264,7 @@ def mkPen(*args, **kargs):
     color = kargs.get('color', None)
     width = kargs.get('width', 1)
     style = kargs.get('style', None)
+    dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
     hsv = kargs.get('hsv', None)
     
@@ -291,6 +292,8 @@ def mkPen(*args, **kargs):
     pen.setCosmetic(cosmetic)
     if style is not None:
         pen.setStyle(style)
+    if dash is not None:
+        pen.setDashPattern(dash)
     return pen
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
@@ -611,15 +614,24 @@ def rescaleData(data, scale, offset, dtype=None):
         
     Uses scipy.weave (if available) to improve performance.
     """
-    global USE_WEAVE
     if dtype is None:
         dtype = data.dtype
+    else:
+        dtype = np.dtype(dtype)
     
     try:
-        if not USE_WEAVE:
+        if not pg.getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
         
-        newData = np.empty((data.size,), dtype=dtype)
+        ## require native dtype when using weave
+        if not data.dtype.isnative:
+            data = data.astype(data.dtype.newbyteorder('='))
+        if not dtype.isnative:
+            weaveDtype = dtype.newbyteorder('=')
+        else:
+            weaveDtype = dtype
+        
+        newData = np.empty((data.size,), dtype=weaveDtype)
         flat = np.ascontiguousarray(data).reshape(data.size)
         size = data.size
         
@@ -631,12 +643,14 @@ def rescaleData(data, scale, offset, dtype=None):
         }
         """
         scipy.weave.inline(code, ['flat', 'newData', 'size', 'offset', 'scale'], compiler='gcc')
+        if dtype != weaveDtype:
+            newData = newData.astype(dtype)
         data = newData.reshape(data.shape)
     except:
-        if USE_WEAVE:
-            if WEAVE_DEBUG:
+        if pg.getConfigOption('useWeave'):
+            if pg.getConfigOption('weaveDebug'):
                 debug.printExc("Error; disabling weave.")
-            USE_WEAVE = False
+            pg.setConfigOption('useWeave', False)
         
         #p = np.poly1d([scale, -offset*scale])
         #data = p(data).astype(dtype)
@@ -653,8 +667,6 @@ def applyLookupTable(data, lut):
     Uses scipy.weave to improve performance if it is available.
     Note: color gradient lookup tables can be generated using GradientWidget.
     """
-    global USE_WEAVE
-    
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
     
@@ -839,7 +851,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal == maxVal:
                 maxVal += 1e-16
             data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=int)
-        
     prof.mark('2')
 
 
@@ -849,7 +860,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         if data.dtype is not np.ubyte:
             data = np.clip(data, 0, 255).astype(np.ubyte)
-
     prof.mark('3')
 
 
@@ -904,7 +914,8 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 array.shape[2] == 4.
     copy        If True, the data is copied before converting to QImage.
                 If False, the new QImage points directly to the data in the array.
-                Note that the array must be contiguous for this to work.
+                Note that the array must be contiguous for this to work
+                (see numpy.ascontiguousarray).
     transpose   If True (the default), the array x/y axes are transposed before 
                 creating the image. Note that Qt expects the axes to be in 
                 (height, width) order whereas pyqtgraph usually prefers the 
@@ -954,12 +965,22 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        addr = ctypes.c_char.from_buffer(imgData, 0)
+        #addr = ctypes.c_char.from_buffer(imgData, 0)
+        #try:
+            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+        #except TypeError:  
+            #addr = ctypes.addressof(addr)
+            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
-            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        except TypeError:  
-            addr = ctypes.addressof(addr)
-            img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
+            img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
+        except:
+            if copy:
+                # does not leak memory, is not mutable
+                img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+            else:
+                # mutable, but leaks memory
+                img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+                
     img.data = imgData
     return img
     #try:
@@ -1056,14 +1077,29 @@ def arrayToQPath(x, y, connect='all'):
     should be connected, or an array of int32 values (0 or 1) indicating
     connections.
     """
-    
-    ## Create all vertices in path. The method used below creates a binary format so that all 
-    ## vertices can be read in at once. This binary format may change in future versions of Qt, 
+
+    ## Create all vertices in path. The method used below creates a binary format so that all
+    ## vertices can be read in at once. This binary format may change in future versions of Qt,
     ## so the original (slower) method is left here for emergencies:
-    #path.moveTo(x[0], y[0])
-    #for i in range(1, y.shape[0]):
-    #    path.lineTo(x[i], y[i])
-        
+        #path.moveTo(x[0], y[0])
+        #if connect == 'all':
+            #for i in range(1, y.shape[0]):
+                #path.lineTo(x[i], y[i])
+        #elif connect == 'pairs':
+            #for i in range(1, y.shape[0]):
+                #if i%2 == 0:
+                    #path.lineTo(x[i], y[i])
+                #else:
+                    #path.moveTo(x[i], y[i])
+        #elif isinstance(connect, np.ndarray):
+            #for i in range(1, y.shape[0]):
+                #if connect[i] == 1:
+                    #path.lineTo(x[i], y[i])
+                #else:
+                    #path.moveTo(x[i], y[i])
+        #else:
+            #raise Exception('connect argument must be "all", "pairs", or array')
+
     ## Speed this up using >> operator
     ## Format is:
     ##    numVerts(i4)   0(i4)
@@ -1073,71 +1109,62 @@ def arrayToQPath(x, y, connect='all'):
     ##    0(i4)
     ##
     ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-    
+
     path = QtGui.QPainterPath()
-    
+
     #prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
-    if sys.version_info[0] == 2:   ## So this is disabled for python 3... why??
-        n = x.shape[0]
-        # create empty array, pad with extra space on either end
-        arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
-        # write first two integers
-        #prof.mark('allocate empty')
-        arr.data[12:20] = struct.pack('>ii', n, 0)
-        #prof.mark('pack header')
-        # Fill array with vertex values
-        arr[1:-1]['x'] = x
-        arr[1:-1]['y'] = y
-        
-        # decide which points are connected by lines
-        if connect == 'pairs':
-            connect = np.empty((n/2,2), dtype=np.int32)
-            connect[:,0] = 1
-            connect[:,1] = 0
-            connect = connect.flatten()
-            
-        if connect == 'all':
-            arr[1:-1]['c'] = 1
-        elif isinstance(connect, np.ndarray):
-            arr[1:-1]['c'] = connect
-        else:
-            raise Exception('connect argument must be "all", "pairs", or array')
-            
-        #prof.mark('fill array')
-        # write last 0
-        lastInd = 20*(n+1)
-        arr.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-        #prof.mark('footer')
-        # create datastream object and stream into path
-        buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-        #prof.mark('create buffer')
-        ds = QtCore.QDataStream(buf)
-        #prof.mark('create datastream')
-        ds >> path
-        #prof.mark('load')
-        
-        #prof.finish()
+    n = x.shape[0]
+    # create empty array, pad with extra space on either end
+    arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+    # write first two integers
+    #prof.mark('allocate empty')
+    byteview = arr.view(dtype=np.ubyte)
+    byteview[:12] = 0
+    byteview.data[12:20] = struct.pack('>ii', n, 0)
+    #prof.mark('pack header')
+    # Fill array with vertex values
+    arr[1:-1]['x'] = x
+    arr[1:-1]['y'] = y
+
+    # decide which points are connected by lines
+    if connect == 'pairs':
+        connect = np.empty((n/2,2), dtype=np.int32)
+        connect[:,0] = 1
+        connect[:,1] = 0
+        connect = connect.flatten()
+    if connect == 'finite':
+        connect = np.isfinite(x) & np.isfinite(y)
+        arr[1:-1]['c'] = connect
+    if connect == 'all':
+        arr[1:-1]['c'] = 1
+    elif isinstance(connect, np.ndarray):
+        arr[1:-1]['c'] = connect
     else:
-        ## This does exactly the same as above, but less efficiently (and more simply).
-        path.moveTo(x[0], y[0])
-        if connect == 'all':
-            for i in range(1, y.shape[0]):
-                path.lineTo(x[i], y[i])
-        elif connect == 'pairs':
-            for i in range(1, y.shape[0]):
-                if i%2 == 0:
-                    path.lineTo(x[i], y[i])
-                else:
-                    path.moveTo(x[i], y[i])
-        elif isinstance(connect, np.ndarray):
-            for i in range(1, y.shape[0]):
-                if connect[i] == 1:
-                    path.lineTo(x[i], y[i])
-                else:
-                    path.moveTo(x[i], y[i])
-        else:
-            raise Exception('connect argument must be "all", "pairs", or array')
-            
+        raise Exception('connect argument must be "all", "pairs", or array')
+
+    #prof.mark('fill array')
+    # write last 0
+    lastInd = 20*(n+1)
+    byteview.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+    #prof.mark('footer')
+    # create datastream object and stream into path
+
+    ## Avoiding this method because QByteArray(str) leaks memory in PySide
+    #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
+
+    path.strn = byteview.data[12:lastInd+4] # make sure data doesn't run away
+    try:
+        buf = QtCore.QByteArray.fromRawData(path.strn)
+    except TypeError:
+        buf = QtCore.QByteArray(bytes(path.strn))
+    #prof.mark('create buffer')
+    ds = QtCore.QDataStream(buf)
+
+    ds >> path
+    #prof.mark('load')
+
+    #prof.finish()
+
     return path
 
 #def isosurface(data, level):
@@ -1838,9 +1865,9 @@ def isosurface(data, level):
     for i in [0,1,2]:
         vim = vertexInds[:,3] == i
         vi = vertexInds[vim, :3]
-        viFlat = (vi * (np.array(data.strides[:3]) / data.itemsize)[np.newaxis,:]).sum(axis=1)
+        viFlat = (vi * (np.array(data.strides[:3]) // data.itemsize)[np.newaxis,:]).sum(axis=1)
         v1 = dataFlat[viFlat]
-        v2 = dataFlat[viFlat + data.strides[i]/data.itemsize]
+        v2 = dataFlat[viFlat + data.strides[i]//data.itemsize]
         vertexes[vim,i] += (level-v1) / (v2-v1)
     
     ### compute the set of vertex indexes for each face. 
@@ -1866,7 +1893,7 @@ def isosurface(data, level):
     #p = debug.Profiler('isosurface', disabled=False)
     
     ## this helps speed up an indexing operation later on
-    cs = np.array(cutEdges.strides)/cutEdges.itemsize
+    cs = np.array(cutEdges.strides)//cutEdges.itemsize
     cutEdges = cutEdges.flatten()
 
     ## this, strangely, does not seem to help.
@@ -1925,9 +1952,9 @@ def invertQTransform(tr):
     return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     
     
-def pseudoScatter(data, spacing=None, shuffle=True):
+def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
     """
-    Used for examining the distribution of values in a set.
+    Used for examining the distribution of values in a set. Produces scattering as in beeswarm or column scatter plots.
     
     Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
     will not have overlapping points (it will look similar to a histogram).
@@ -1943,6 +1970,8 @@ def pseudoScatter(data, spacing=None, shuffle=True):
     s2 = spacing**2
     
     yvals = np.empty(len(data))
+    if len(data) == 0:
+        return yvals
     yvals[0] = 0
     for i in range(1,len(data)):
         x = data[i]     # current x value to be placed
@@ -1954,23 +1983,41 @@ def pseudoScatter(data, spacing=None, shuffle=True):
         xmask = dx < s2  # exclude anything too far away
         
         if xmask.sum() > 0:
-            dx = dx[xmask]
-            dy = (s2 - dx)**0.5   
-            limits = np.empty((2,len(dy)))  # ranges of y-values to exclude
-            limits[0] = y0[xmask] - dy
-            limits[1] = y0[xmask] + dy    
-            
-            while True:
-                # ignore anything below this y-value
-                mask = limits[1] >= y
-                limits = limits[:,mask]
-                
-                # are we inside an excluded region?
-                mask = (limits[0] < y) & (limits[1] > y)
-                if mask.sum() == 0:
-                    break
-                y = limits[:,mask].max()
-        
+            if bidir:
+                dirs = [-1, 1]
+            else:
+                dirs = [1]
+            yopts = []
+            for direction in dirs:
+                y = 0
+                dx2 = dx[xmask]
+                dy = (s2 - dx2)**0.5   
+                limits = np.empty((2,len(dy)))  # ranges of y-values to exclude
+                limits[0] = y0[xmask] - dy
+                limits[1] = y0[xmask] + dy    
+                while True:
+                    # ignore anything below this y-value
+                    if direction > 0:
+                        mask = limits[1] >= y
+                    else:
+                        mask = limits[0] <= y
+                        
+                    limits2 = limits[:,mask]
+                    
+                    # are we inside an excluded region?
+                    mask = (limits2[0] < y) & (limits2[1] > y)
+                    if mask.sum() == 0:
+                        break
+                        
+                    if direction > 0:
+                        y = limits2[:,mask].max()
+                    else:
+                        y = limits2[:,mask].min()
+                yopts.append(y)
+            if bidir:
+                y = yopts[0] if -yopts[0] < yopts[1] else yopts[1]
+            else:
+                y = yopts[0]
         yvals[i] = y
     
     return yvals[np.argsort(inds)]  ## un-shuffle values before returning

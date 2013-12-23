@@ -97,7 +97,6 @@ class RemoteEventHandler(object):
         after no more events are immediately available. (non-blocking)
         Returns the number of events processed.
         """
-        self.debugMsg('processRequests:')
         if self.exited:
             self.debugMsg('  processRequests: exited already; raise ClosedError.')
             raise ClosedError()
@@ -108,7 +107,7 @@ class RemoteEventHandler(object):
                 self.handleRequest()
                 numProcessed += 1
             except ClosedError:
-                self.debugMsg('  processRequests: got ClosedError from handleRequest; setting exited=True.')
+                self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
                 self.exited = True
                 raise
             #except IOError as err:  ## let handleRequest take care of this.
@@ -121,7 +120,8 @@ class RemoteEventHandler(object):
                 print("Error in process %s" % self.name)
                 sys.excepthook(*sys.exc_info())
                 
-        self.debugMsg('  processRequests: finished %d requests' % numProcessed)
+        if numProcessed > 0:
+            self.debugMsg('processRequests: finished %d requests' % numProcessed)
         return numProcessed
     
     def handleRequest(self):
@@ -205,7 +205,11 @@ class RemoteEventHandler(object):
                             fnkwds[k] = np.fromstring(byteData[ind], dtype=dtype).reshape(shape)
                 
                 if len(fnkwds) == 0:  ## need to do this because some functions do not allow keyword arguments.
-                    result = obj(*fnargs)
+                    try:
+                        result = obj(*fnargs)
+                    except:
+                        print("Failed to call object %s: %d, %s" % (obj, len(fnargs), fnargs[1:]))
+                        raise
                 else:
                     result = obj(*fnargs, **fnkwds)
                     
@@ -803,7 +807,7 @@ class ObjectProxy(object):
         return val
     
     def _getProxyOptions(self):
-        return {k: self._getProxyOption(k) for k in self._proxyOptions}
+        return dict([(k, self._getProxyOption(k)) for k in self._proxyOptions])
     
     def __reduce__(self):
         return (unpickleObjectProxy, (self._processId, self._proxyId, self._typeStr, self._attributes))
@@ -887,6 +891,12 @@ class ObjectProxy(object):
     def __div__(self, *args):
         return self._getSpecialAttr('__div__')(*args)
         
+    def __truediv__(self, *args):
+        return self._getSpecialAttr('__truediv__')(*args)
+        
+    def __floordiv__(self, *args):
+        return self._getSpecialAttr('__floordiv__')(*args)
+        
     def __mul__(self, *args):
         return self._getSpecialAttr('__mul__')(*args)
         
@@ -902,6 +912,12 @@ class ObjectProxy(object):
     def __idiv__(self, *args):
         return self._getSpecialAttr('__idiv__')(*args, _callSync='off')
         
+    def __itruediv__(self, *args):
+        return self._getSpecialAttr('__itruediv__')(*args, _callSync='off')
+        
+    def __ifloordiv__(self, *args):
+        return self._getSpecialAttr('__ifloordiv__')(*args, _callSync='off')
+        
     def __imul__(self, *args):
         return self._getSpecialAttr('__imul__')(*args, _callSync='off')
         
@@ -914,17 +930,11 @@ class ObjectProxy(object):
     def __lshift__(self, *args):
         return self._getSpecialAttr('__lshift__')(*args)
         
-    def __floordiv__(self, *args):
-        return self._getSpecialAttr('__pow__')(*args)
-        
     def __irshift__(self, *args):
-        return self._getSpecialAttr('__rshift__')(*args, _callSync='off')
+        return self._getSpecialAttr('__irshift__')(*args, _callSync='off')
         
     def __ilshift__(self, *args):
-        return self._getSpecialAttr('__lshift__')(*args, _callSync='off')
-        
-    def __ifloordiv__(self, *args):
-        return self._getSpecialAttr('__pow__')(*args, _callSync='off')
+        return self._getSpecialAttr('__ilshift__')(*args, _callSync='off')
         
     def __eq__(self, *args):
         return self._getSpecialAttr('__eq__')(*args)
@@ -974,6 +984,12 @@ class ObjectProxy(object):
     def __rdiv__(self, *args):
         return self._getSpecialAttr('__rdiv__')(*args)
         
+    def __rfloordiv__(self, *args):
+        return self._getSpecialAttr('__rfloordiv__')(*args)
+        
+    def __rtruediv__(self, *args):
+        return self._getSpecialAttr('__rtruediv__')(*args)
+        
     def __rmul__(self, *args):
         return self._getSpecialAttr('__rmul__')(*args)
         
@@ -986,9 +1002,6 @@ class ObjectProxy(object):
     def __rlshift__(self, *args):
         return self._getSpecialAttr('__rlshift__')(*args)
         
-    def __rfloordiv__(self, *args):
-        return self._getSpecialAttr('__rpow__')(*args)
-        
     def __rand__(self, *args):
         return self._getSpecialAttr('__rand__')(*args)
         
@@ -1000,6 +1013,10 @@ class ObjectProxy(object):
         
     def __rmod__(self, *args):
         return self._getSpecialAttr('__rmod__')(*args)
+        
+    def __hash__(self):
+        ## Required for python3 since __eq__ is defined.
+        return id(self)
         
 class DeferredObjectProxy(ObjectProxy):
     """

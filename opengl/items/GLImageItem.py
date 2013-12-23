@@ -13,7 +13,7 @@ class GLImageItem(GLGraphicsItem):
     """
     
     
-    def __init__(self, data, smooth=False):
+    def __init__(self, data, smooth=False, glOptions='translucent'):
         """
         
         ==============  =======================================================================================
@@ -27,6 +27,7 @@ class GLImageItem(GLGraphicsItem):
         self.smooth = smooth
         self.data = data
         GLGraphicsItem.__init__(self)
+        self.setGLOptions(glOptions)
         
     def initializeGL(self):
         glEnable(GL_TEXTURE_2D)
@@ -66,11 +67,13 @@ class GLImageItem(GLGraphicsItem):
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         
-        glEnable(GL_DEPTH_TEST)
-        #glDisable(GL_CULL_FACE)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
+        self.setupGLState()
+        
+        #glEnable(GL_DEPTH_TEST)
+        ##glDisable(GL_CULL_FACE)
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
         glColor4f(1,1,1,1)
 
         glBegin(GL_QUADS)

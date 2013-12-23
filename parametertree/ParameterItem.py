@@ -157,3 +157,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         ## since destroying the menu in mid-action will cause a crash.
         QtCore.QTimer.singleShot(0, self.param.remove)
 
+    ## for python 3 support, we need to redefine hash and eq methods.
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, x):
+        return x is self

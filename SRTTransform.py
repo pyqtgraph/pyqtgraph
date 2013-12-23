@@ -130,10 +130,13 @@ class SRTTransform(QtGui.QTransform):
         self._state['angle'] = angle
         self.update()
 
-    def __div__(self, t):
+    def __truediv__(self, t):
         """A / B  ==  B^-1 * A"""
         dt = t.inverted()[0] * self
         return SRTTransform(dt)
+        
+    def __div__(self, t):
+        return self.__truediv__(t)
         
     def __mul__(self, t):
         return SRTTransform(QtGui.QTransform.__mul__(self, t))

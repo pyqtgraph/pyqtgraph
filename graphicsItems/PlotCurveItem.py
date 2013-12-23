@@ -1,7 +1,11 @@
 from pyqtgraph.Qt import QtGui, QtCore
-from scipy.fftpack import fft
+try:
+    from pyqtgraph.Qt import QtOpenGL
+    HAVE_OPENGL = True
+except:
+    HAVE_OPENGL = False
+    
 import numpy as np
-import scipy.stats
 from .GraphicsObject import GraphicsObject
 import pyqtgraph.functions as fn
 from pyqtgraph import debug
@@ -21,7 +25,6 @@ class PlotCurveItem(GraphicsObject):
     Features:
     
     - Fast data update
-    - FFT display mode (accessed via PlotItem context menu)
     - Fill under curve
     - Mouse interaction
     
@@ -65,7 +68,8 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': False,
             'name': None,
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': pg.getConfigOption('antialias'),\
+            'connect': 'all',
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -106,16 +110,21 @@ class PlotCurveItem(GraphicsObject):
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
-            d2 = d2[mask]
+            #d2 = d2[mask]
+            
+        if len(d) == 0:
+            return (None, None)
 
         ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
-            b = (d.min(), d.max())
+            b = (np.nanmin(d), np.nanmax(d))
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
-            b = (scipy.stats.scoreatpercentile(d, 50 - (frac * 50)), scipy.stats.scoreatpercentile(d, 50 + (frac * 50)))
-        
+            mask = np.isfinite(d)
+            d = d[mask]
+            b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
         ## adjust for fill level
         if ax == 1 and self.opts['fillLevel'] is not None:
             b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))
@@ -252,6 +261,15 @@ class PlotCurveItem(GraphicsObject):
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
+        stepMode        If True, two orthogonal lines are drawn for each sample
+                        as steps. This is commonly used when drawing histograms.
+                        Note that in this case, len(x) == len(y) + 1
+        connect         Argument specifying how vertexes should be connected
+                        by line segments. Default is "all", indicating full
+                        connection. "pairs" causes only even-numbered segments
+                        to be drawn. "finite" causes segments to be omitted if
+                        they are attached to nan or inf values. For any other
+                        connectivity, specify an array of boolean values.
         ==============  ========================================================
         
         If non-keyword arguments are used, they will be interpreted as
@@ -303,10 +321,10 @@ class PlotCurveItem(GraphicsObject):
         
         if self.opts['stepMode'] is True:
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
-                raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (str(x.shape), str(y.shape)))
+                raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
             if self.xData.shape != self.yData.shape:  ## allow difference of 1 for step mode plots
-                raise Exception("X and Y arrays must be the same shape--got %s and %s." % (str(x.shape), str(y.shape)))
+                raise Exception("X and Y arrays must be the same shape--got %s and %s." % (self.xData.shape, self.yData.shape))
         
         self.path = None
         self.fillPath = None
@@ -314,7 +332,8 @@ class PlotCurveItem(GraphicsObject):
         
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
-        
+        if 'connect' in kargs:
+            self.opts['connect'] = kargs['connect']
         if 'pen' in kargs:
             self.setPen(kargs['pen'])
         if 'shadowPen' in kargs:
@@ -353,7 +372,7 @@ class PlotCurveItem(GraphicsObject):
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
         
-        path = fn.arrayToQPath(x, y, connect='all')
+        path = fn.arrayToQPath(x, y, connect=self.opts['connect'])
         
         return path
 
@@ -366,16 +385,16 @@ class PlotCurveItem(GraphicsObject):
                 return QtGui.QPainterPath()
         return self.path
 
+    @pg.debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
         prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
         if self.xData is None:
             return
-        #if self.opts['spectrumMode']:
-            #if self.specPath is None:
-                
-                #self.specPath = self.generatePath(*self.getData())
-            #path = self.specPath
-        #else:
+        
+        if HAVE_OPENGL and pg.getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
+            self.paintGL(p, opt, widget)
+            return
+        
         x = None
         y = None
         if self.path is None:
@@ -384,7 +403,6 @@ class PlotCurveItem(GraphicsObject):
                 return
             self.path = self.generatePath(x,y)
             self.fillPath = None
-            
             
         path = self.path
         prof.mark('generate path')
@@ -440,6 +458,65 @@ class PlotCurveItem(GraphicsObject):
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
         #p.drawRect(self.boundingRect())
         
+    def paintGL(self, p, opt, widget):
+        p.beginNativePainting()
+        import OpenGL.GL as gl
+        
+        ## set clipping viewport
+        view = self.getViewBox()
+        if view is not None:
+            rect = view.mapRectToItem(self, view.boundingRect())
+            #gl.glViewport(int(rect.x()), int(rect.y()), int(rect.width()), int(rect.height()))
+            
+            #gl.glTranslate(-rect.x(), -rect.y(), 0)
+            
+            gl.glEnable(gl.GL_STENCIL_TEST)
+            gl.glColorMask(gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE) # disable drawing to frame buffer
+            gl.glDepthMask(gl.GL_FALSE)  # disable drawing to depth buffer
+            gl.glStencilFunc(gl.GL_NEVER, 1, 0xFF)  
+            gl.glStencilOp(gl.GL_REPLACE, gl.GL_KEEP, gl.GL_KEEP)  
+            
+            ## draw stencil pattern
+            gl.glStencilMask(0xFF);
+            gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex2f(rect.x(), rect.y())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y())
+            gl.glVertex2f(rect.x(), rect.y()+rect.height())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y()+rect.height())
+            gl.glVertex2f(rect.x()+rect.width(), rect.y())
+            gl.glVertex2f(rect.x(), rect.y()+rect.height())
+            gl.glEnd()
+                       
+            gl.glColorMask(gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
+            gl.glDepthMask(gl.GL_TRUE)
+            gl.glStencilMask(0x00)
+            gl.glStencilFunc(gl.GL_EQUAL, 1, 0xFF)
+            
+        try:
+            x, y = self.getData()
+            pos = np.empty((len(x), 2))
+            pos[:,0] = x
+            pos[:,1] = y
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+            try:
+                gl.glVertexPointerf(pos)
+                pen = fn.mkPen(self.opts['pen'])
+                color = pen.color()
+                gl.glColor4f(color.red()/255., color.green()/255., color.blue()/255., color.alpha()/255.)
+                width = pen.width()
+                if pen.isCosmetic() and width < 1:
+                    width = 1
+                gl.glPointSize(width)
+                gl.glEnable(gl.GL_LINE_SMOOTH)
+                gl.glEnable(gl.GL_BLEND)
+                gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST);
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
+            finally:
+                gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        finally:
+            p.endNativePainting()
         
     def clear(self):
         self.xData = None  ## raw values

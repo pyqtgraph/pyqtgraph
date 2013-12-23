@@ -24,7 +24,15 @@ class BinOpNode(Node):
         })
         
     def process(self, **args):
-        fn = getattr(args['A'], self.fn)
+        if isinstance(self.fn, tuple):
+            for name in self.fn:
+                try:
+                    fn = getattr(args['A'], name)
+                    break
+                except AttributeError:
+                    pass
+        else:
+            fn = getattr(args['A'], self.fn)
         out = fn(args['B'])
         if out is NotImplemented:
             raise Exception("Operation %s not implemented between %s and %s" % (fn, str(type(args['A'])), str(type(args['B']))))
@@ -60,5 +68,7 @@ class DivideNode(BinOpNode):
     """Returns A / B. Does not check input types."""
     nodeName = 'Divide'
     def __init__(self, name):
-        BinOpNode.__init__(self, name, '__div__')
+        # try truediv first, followed by div
+        BinOpNode.__init__(self, name, ('__truediv__', '__div__'))
+        
 

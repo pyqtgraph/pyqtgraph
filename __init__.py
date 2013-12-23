@@ -54,6 +54,8 @@ CONFIG_OPTIONS = {
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
     'useWeave': True,       ## Use weave to speed up some operations, if it is available
     'weaveDebug': False,    ## Print full error message if weave compile fails
+    'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
+    'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
 } 
 
 
@@ -137,7 +139,7 @@ def importModules(path, globals, locals, excludes=()):
     d = os.path.join(os.path.split(globals['__file__'])[0], path)
     files = set()
     for f in frozenSupport.listdir(d):
-        if frozenSupport.isdir(os.path.join(d, f)) and f != '__pycache__':
+        if frozenSupport.isdir(os.path.join(d, f)) and f not in ['__pycache__', 'tests']:
             files.add(f)
         elif f[-3:] == '.py' and f != '__init__.py':
             files.add(f[:-3])
@@ -152,7 +154,8 @@ def importModules(path, globals, locals, excludes=()):
         try:
             if len(path) > 0:
                 modName = path + '.' + modName
-            mod = __import__(modName, globals, locals, fromlist=['*'])
+            #mod = __import__(modName, globals, locals, fromlist=['*'])
+            mod = __import__(modName, globals, locals, ['*'], 1)
             mods[modName] = mod
         except:
             import traceback
@@ -175,7 +178,8 @@ def importAll(path, globals, locals, excludes=()):
                 globals[k] = getattr(mod, k)
 
 importAll('graphicsItems', globals(), locals())
-importAll('widgets', globals(), locals(), excludes=['MatplotlibWidget', 'RemoteGraphicsView'])
+importAll('widgets', globals(), locals(),
+          excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
 
 from .imageview import *
 from .WidgetGroup import *
@@ -190,9 +194,20 @@ from .SignalProxy import *
 from .colormap import *
 from .ptime import time
 
+##############################################################
+## PyQt and PySide both are prone to crashing on exit. 
+## There are two general approaches to dealing with this:
+##  1. Install atexit handlers that assist in tearing down to avoid crashes.
+##     This helps, but is never perfect.
+##  2. Terminate the process before python starts tearing down
+##     This is potentially dangerous
 
+## Attempts to work around exit crashes:
 import atexit
 def cleanup():
+    if not getConfigOption('exitCleanup'):
+        return
+    
     ViewBox.quit()  ## tell ViewBox that it doesn't need to deregister views anymore.
     
     ## Workaround for Qt exit crash:
@@ -211,6 +226,38 @@ def cleanup():
             continue
 atexit.register(cleanup)
 
+
+## Optional function for exiting immediately (with some manual teardown)
+def exit():
+    """
+    Causes python to exit without garbage-collecting any objects, and thus avoids
+    calling object destructor methods. This is a sledgehammer workaround for 
+    a variety of bugs in PyQt and Pyside that cause crashes on exit.
+    
+    This function does the following in an attempt to 'safely' terminate
+    the process:
+    
+    * Invoke atexit callbacks
+    * Close all open file handles
+    * os._exit()
+    
+    Note: there is some potential for causing damage with this function if you
+    are using objects that _require_ their destructors to be called (for example,
+    to properly terminate log files, disconnect from devices, etc). Situations
+    like this are probably quite rare, but use at your own risk.
+    """
+    
+    ## first disable our own cleanup function; won't be needing it.
+    setConfigOptions(exitCleanup=False)
+    
+    ## invoke atexit callbacks
+    atexit._run_exitfuncs()
+    
+    ## close file handles
+    os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
+    
+    os._exit(0)
+    
 
 
 ## Convenience functions for command-line use
@@ -235,7 +282,7 @@ def plot(*args, **kargs):
     #if len(args)+len(kargs) > 0:
         #w.plot(*args, **kargs)
         
-    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom']
+    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
     for k in kargs:
@@ -265,13 +312,15 @@ def image(*args, **kargs):
     return w
 show = image  ## for backward compatibility
 
-def dbg():
+def dbg(*args, **kwds):
     """
     Create a console window and begin watching for exceptions.
+    
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
     """
     mkQApp()
-    import console
-    c = console.ConsoleWidget()
+    from . import console
+    c = console.ConsoleWidget(*args, **kwds)
     c.catchAllExceptions()
     c.show()
     global consoles

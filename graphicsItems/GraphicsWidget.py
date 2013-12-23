@@ -20,16 +20,17 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
-## Removed because this causes segmentation faults. Don't know why.
-#    def itemChange(self, change, value):
-#        ret = QtGui.QGraphicsWidget.itemChange(self, change, value)  ## segv occurs here
-#        if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
-#            self._updateView()
-#        return ret
+    # Removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
+    #def itemChange(self, change, value):
+        ## BEWARE: Calling QGraphicsWidget.itemChange can lead to crashing!
+        ##ret = QtGui.QGraphicsWidget.itemChange(self, change, value)  ## segv occurs here
+        ## The default behavior is just to return the value argument, so we'll do that
+        ## without calling the original method.
+        #ret = value
+        #if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
+            #self._updateView()
+        #return ret
 
-    #def getMenu(self):
-        #pass
-        
     def setFixedHeight(self, h):
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)

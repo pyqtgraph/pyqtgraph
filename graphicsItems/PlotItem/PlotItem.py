@@ -256,6 +256,11 @@ class PlotItem(GraphicsWidget):
         c.logYCheck.toggled.connect(self.updateLogMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
+        c.downsampleCheck.toggled.connect(self.updateDownsampling)
+        c.autoDownsampleCheck.toggled.connect(self.updateDownsampling)
+        c.subsampleRadio.toggled.connect(self.updateDownsampling)
+        c.meanRadio.toggled.connect(self.updateDownsampling)
+        c.clipToViewCheck.toggled.connect(self.updateDownsampling)
 
         self.ctrl.avgParamList.itemClicked.connect(self.avgParamListClicked)
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
@@ -295,19 +300,21 @@ class PlotItem(GraphicsWidget):
     
     
     
-    def setLogMode(self, x, y):
+    def setLogMode(self, x=None, y=None):
         """
-        Set log scaling for x and y axes.
+        Set log scaling for x and/or y axes.
         This informs PlotDataItems to transform logarithmically and switches
         the axes to use log ticking. 
         
         Note that *no other items* in the scene will be affected by
-        this; there is no generic way to redisplay a GraphicsItem
+        this; there is (currently) no generic way to redisplay a GraphicsItem
         with log coordinates.
         
         """
-        self.ctrl.logXCheck.setChecked(x)
-        self.ctrl.logYCheck.setChecked(y)
+        if x is not None:
+            self.ctrl.logXCheck.setChecked(x)
+        if y is not None:
+            self.ctrl.logYCheck.setChecked(y)
         
     def showGrid(self, x=None, y=None, alpha=None):
         """
@@ -526,7 +533,8 @@ class PlotItem(GraphicsWidget):
             (alpha, auto) = self.alphaState()
             item.setAlpha(alpha, auto)
             item.setFftMode(self.ctrl.fftCheck.isChecked())
-            item.setDownsampling(self.downsampleMode())
+            item.setDownsampling(*self.downsampleMode())
+            item.setClipToView(self.clipToViewMode())
             item.setPointMode(self.pointMode())
             
             ## Hide older plots if needed
@@ -568,8 +576,8 @@ class PlotItem(GraphicsWidget):
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
         """
-        angle = 0 if x is None else 90
-        pos = x if x is not None else y
+        pos = kwds.get('pos', x if x is not None else y)
+        angle = kwds.get('angle', 0 if x is None else 90)
         line = InfiniteLine(pos, angle, **kwds)
         self.addItem(line)
         if z is not None:
@@ -941,23 +949,81 @@ class PlotItem(GraphicsWidget):
         self.enableAutoRange()
         self.recomputeAverages()
         
+    def setDownsampling(self, ds=None, auto=None, mode=None):
+        """Change the default downsampling mode for all PlotDataItems managed by this plot.
         
+        ===========  =================================================================
+        Arguments
+        ds           (int) Reduce visible plot samples by this factor, or
+                     (bool) To enable/disable downsampling without changing the value.
+        auto         (bool) If True, automatically pick *ds* based on visible range
+        mode         'subsample': Downsample by taking the first of N samples. 
+                         This method is fastest and least accurate.
+                     'mean': Downsample by taking the mean of N samples.
+                     'peak': Downsample by drawing a saw wave that follows the min 
+                         and max of the original data. This method produces the best 
+                         visual representation of the data but is slower.
+        ===========  =================================================================
+        """
+        if ds is not None:
+            if ds is False:
+                self.ctrl.downsampleCheck.setChecked(False)
+            elif ds is True:
+                self.ctrl.downsampleCheck.setChecked(True)
+            else:
+                self.ctrl.downsampleCheck.setChecked(True)
+                self.ctrl.downsampleSpin.setValue(ds)
+                
+        if auto is not None:
+            if auto and ds is not False:
+                self.ctrl.downsampleCheck.setChecked(True)
+            self.ctrl.autoDownsampleCheck.setChecked(auto)
+            
+        if mode is not None:
+            if mode == 'subsample':
+                self.ctrl.subsampleRadio.setChecked(True)
+            elif mode == 'mean':
+                self.ctrl.meanRadio.setChecked(True)
+            elif mode == 'peak':
+                self.ctrl.peakRadio.setChecked(True)
+            else:
+                raise ValueError("mode argument must be 'subsample', 'mean', or 'peak'.")
+            
     def updateDownsampling(self):
-        ds = self.downsampleMode()
+        ds, auto, method = self.downsampleMode()
+        clip = self.ctrl.clipToViewCheck.isChecked()
         for c in self.curves:
-            c.setDownsampling(ds)
+            c.setDownsampling(ds, auto, method)
+            c.setClipToView(clip)
         self.recomputeAverages()
         
-        
     def downsampleMode(self):
-        if self.ctrl.decimateGroup.isChecked():
-            if self.ctrl.manualDecimateRadio.isChecked():
-                ds = self.ctrl.downsampleSpin.value()
-            else:
-                ds = True
+        if self.ctrl.downsampleCheck.isChecked():
+            ds = self.ctrl.downsampleSpin.value()
         else:
-            ds = False
-        return ds
+            ds = 1
+            
+        auto = self.ctrl.downsampleCheck.isChecked() and self.ctrl.autoDownsampleCheck.isChecked()
+            
+        if self.ctrl.subsampleRadio.isChecked():
+            method = 'subsample' 
+        elif self.ctrl.meanRadio.isChecked():
+            method = 'mean'
+        elif self.ctrl.peakRadio.isChecked():
+            method = 'peak'
+        
+        return ds, auto, method
+        
+    def setClipToView(self, clip):
+        """Set the default clip-to-view mode for all PlotDataItems managed by this plot.
+        If *clip* is True, then PlotDataItems will attempt to draw only points within the visible
+        range of the ViewBox."""
+        self.ctrl.clipToViewCheck.setChecked(clip)
+        
+    def clipToViewMode(self):
+        return self.ctrl.clipToViewCheck.isChecked()
+        
+        
         
     def updateDecimation(self):
         if self.ctrl.maxTracesCheck.isChecked():
@@ -1079,6 +1145,7 @@ class PlotItem(GraphicsWidget):
         ============= =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.showAxis(axis)
         
     def setLabels(self, **kwds):
         """

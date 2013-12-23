@@ -12,11 +12,13 @@ class GLAxisItem(GLGraphicsItem):
     
     """
     
-    def __init__(self, size=None):
+    def __init__(self, size=None, antialias=True, glOptions='translucent'):
         GLGraphicsItem.__init__(self)
         if size is None:
             size = QtGui.QVector3D(1,1,1)
+        self.antialias = antialias
         self.setSize(size=size)
+        self.setGLOptions(glOptions)
     
     def setSize(self, x=None, y=None, z=None, size=None):
         """
@@ -36,11 +38,15 @@ class GLAxisItem(GLGraphicsItem):
     
     def paint(self):
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable( GL_BLEND )
-        glEnable( GL_ALPHA_TEST )
-        glEnable( GL_POINT_SMOOTH )
-        #glDisable( GL_DEPTH_TEST )
+        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glEnable( GL_BLEND )
+        #glEnable( GL_ALPHA_TEST )
+        self.setupGLState()
+        
+        if self.antialias:
+            glEnable(GL_LINE_SMOOTH)
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+            
         glBegin( GL_LINES )
         
         x,y,z = self.size()

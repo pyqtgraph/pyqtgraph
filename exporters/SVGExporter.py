@@ -1,4 +1,5 @@
 from .Exporter import Exporter
+from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.parametertree import Parameter
 from pyqtgraph.Qt import QtGui, QtCore, QtSvg
 import pyqtgraph as pg
@@ -91,8 +92,8 @@ class SVGExporter(Exporter):
             md.setData('image/svg+xml', QtCore.QByteArray(xml.encode('UTF-8')))
             QtGui.QApplication.clipboard().setMimeData(md)
         else:
-            with open(fileName, 'w') as fh:
-                fh.write(xml.encode('UTF-8'))
+            with open(fileName, 'wb') as fh:
+                fh.write(asUnicode(xml).encode('utf-8'))
 
 
 xmlHeader = """\
@@ -221,8 +222,8 @@ def _generateItemSvg(item, nodes=None, root=None):
             ## this is taken care of in generateSvg instead.
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
-            
-        xmlStr = str(arr)
+
+        xmlStr = bytes(arr).decode('utf-8')
         doc = xml.parseString(xmlStr)
         
     try:
@@ -304,14 +305,43 @@ def _generateItemSvg(item, nodes=None, root=None):
 
 def correctCoordinates(node, item):
     ## Remove transformation matrices from <g> tags by applying matrix to coordinates inside.
+    ## Each item is represented by a single top-level group with one or more groups inside.
+    ## Each inner group contains one or more drawing primitives, possibly of different types.
     groups = node.getElementsByTagName('g')
+    
+    ## Since we leave text unchanged, groups which combine text and non-text primitives must be split apart.
+    ## (if at some point we start correcting text transforms as well, then it should be safe to remove this)
+    groups2 = []
+    for grp in groups:
+        subGroups = [grp.cloneNode(deep=False)]
+        textGroup = None
+        for ch in grp.childNodes[:]:
+            if isinstance(ch, xml.Element):
+                if textGroup is None:
+                    textGroup = ch.tagName == 'text'
+                if ch.tagName == 'text':
+                    if textGroup is False:
+                        subGroups.append(grp.cloneNode(deep=False))
+                        textGroup = True
+                else:
+                    if textGroup is True:
+                        subGroups.append(grp.cloneNode(deep=False))
+                        textGroup = False
+            subGroups[-1].appendChild(ch)
+        groups2.extend(subGroups)
+        for sg in subGroups:
+            node.insertBefore(sg, grp)
+        node.removeChild(grp)
+    groups = groups2
+        
+    
     for grp in groups:
         matrix = grp.getAttribute('transform')
         match = re.match(r'matrix\((.*)\)', matrix)
         if match is None:
             vals = [1,0,0,1,0,0]
         else:
-            vals = map(float, match.groups()[0].split(','))
+            vals = [float(a) for a in match.groups()[0].split(',')]
         tr = np.array([[vals[0], vals[2], vals[4]], [vals[1], vals[3], vals[5]]])
         
         removeTransform = False
@@ -320,9 +350,9 @@ def correctCoordinates(node, item):
                 continue
             if ch.tagName == 'polyline':
                 removeTransform = True
-                coords = np.array([map(float, c.split(',')) for c in ch.getAttribute('points').strip().split(' ')])
+                coords = np.array([[float(a) for a in c.split(',')] for c in ch.getAttribute('points').strip().split(' ')])
                 coords = pg.transformCoordinates(tr, coords, transpose=True)
-                ch.setAttribute('points', ' '.join([','.join(map(str, c)) for c in coords]))
+                ch.setAttribute('points', ' '.join([','.join([str(a) for a in c]) for c in coords]))
             elif ch.tagName == 'path':
                 removeTransform = True
                 newCoords = ''
@@ -374,7 +404,6 @@ def correctCoordinates(node, item):
             
         if removeTransform:
             grp.removeAttribute('transform')
-        
 
 def itemTransform(item, root):
     ## Return the transformation mapping item to root
