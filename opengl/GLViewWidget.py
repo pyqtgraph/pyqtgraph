@@ -1,9 +1,9 @@
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
+from ..Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
-from pyqtgraph import Vector
-import pyqtgraph.functions as fn
+from .. import Vector
+from .. import functions as fn
 
 ##Vector = QtGui.QVector3D
 
@@ -179,7 +179,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                         self._itemNames[id(i)] = i
                     i.paint()
                 except:
-                    import pyqtgraph.debug
+                    from .. import debug
                     pyqtgraph.debug.printExc()
                     msg = "Error while drawing item %s." % str(item)
                     ver = glGetString(GL_VERSION)
@@ -345,7 +345,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         ## Only to be called from within exception handler.
         ver = glGetString(GL_VERSION).split()[0]
         if int(ver.split('.')[0]) < 2:
-            import pyqtgraph.debug
+            from .. import debug
             pyqtgraph.debug.printExc()
             raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
         else:

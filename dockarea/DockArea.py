@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
-import pyqtgraph.debug as debug
+from .. import debug as debug
 import weakref
 
 ## TODO:

@@ -1,17 +1,17 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 try:
-    from pyqtgraph.Qt import QtOpenGL
+    from ..Qt import QtOpenGL
     HAVE_OPENGL = True
 except:
     HAVE_OPENGL = False
     
 import numpy as np
 from .GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
-from pyqtgraph import debug
-from pyqtgraph.Point import Point
-import pyqtgraph as pg
+from .. import functions as fn
+from ..Point import Point
 import struct, sys
+from .. import getConfigOption
+from .. import debug
 
 __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
@@ -53,9 +53,6 @@ class PlotCurveItem(GraphicsObject):
         """
         GraphicsObject.__init__(self, kargs.get('parent', None))
         self.clear()
-        self.path = None
-        self.fillPath = None
-        self._boundsCache = [None, None]
             
         ## this is disastrous for performance.
         #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
@@ -68,8 +65,9 @@ class PlotCurveItem(GraphicsObject):
             'brush': None,
             'stepMode': False,
             'name': None,
-            'antialias': pg.getConfigOption('antialias'),\
+            'antialias': getConfigOption('antialias'),
             'connect': 'all',
+            'mouseWidth': 8, # width of shape responding to mouse click
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -80,9 +78,20 @@ class PlotCurveItem(GraphicsObject):
             return ints
         return interface in ints
     
-    def setClickable(self, s):
-        """Sets whether the item responds to mouse clicks."""
+    def name(self):
+        return self.opts.get('name', None)
+    
+    def setClickable(self, s, width=None):
+        """Sets whether the item responds to mouse clicks.
+        
+        The *width* argument specifies the width in pixels orthogonal to the
+        curve that will respond to a mouse click.
+        """
         self.clickable = s
+        if width is not None:
+            self.opts['mouseWidth'] = width
+            self._mouseShape = None
+            self._boundingRect = None        
         
         
     def getData(self):
@@ -148,6 +157,8 @@ class PlotCurveItem(GraphicsObject):
             w += pen.widthF()*0.7072
         if spen is not None and spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
             w = max(w, spen.widthF()*0.7072)
+        if self.clickable:
+            w = max(w, self.opts['mouseWidth']//2 + 1)
         return w
 
     def boundingRect(self):
@@ -171,6 +182,7 @@ class PlotCurveItem(GraphicsObject):
             #px += self._maxSpotWidth * 0.5
             #py += self._maxSpotWidth * 0.5
             self._boundingRect = QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
+            
         return self._boundingRect
     
     def viewTransformChanged(self):
@@ -281,7 +293,7 @@ class PlotCurveItem(GraphicsObject):
         self.updateData(*args, **kargs)
         
     def updateData(self, *args, **kargs):
-        prof = debug.Profiler('PlotCurveItem.updateData', disabled=True)
+        profiler = debug.Profiler()
 
         if len(args) == 1:
             kargs['y'] = args[0]
@@ -304,7 +316,7 @@ class PlotCurveItem(GraphicsObject):
             if 'complex' in str(data.dtype):
                 raise Exception("Can not plot complex data types.")
             
-        prof.mark("data checks")
+        profiler("data checks")
         
         #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
@@ -314,7 +326,7 @@ class PlotCurveItem(GraphicsObject):
         self.yData = kargs['y'].view(np.ndarray)
         self.xData = kargs['x'].view(np.ndarray)
         
-        prof.mark('copy')
+        profiler('copy')
         
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
@@ -328,6 +340,7 @@ class PlotCurveItem(GraphicsObject):
         
         self.path = None
         self.fillPath = None
+        self._mouseShape = None
         #self.xDisp = self.yDisp = None
         
         if 'name' in kargs:
@@ -346,12 +359,11 @@ class PlotCurveItem(GraphicsObject):
             self.opts['antialias'] = kargs['antialias']
         
         
-        prof.mark('set')
+        profiler('set')
         self.update()
-        prof.mark('update')
+        profiler('update')
         self.sigPlotChanged.emit(self)
-        prof.mark('emit')
-        prof.finish()
+        profiler('emit')
         
     def generatePath(self, x, y):
         if self.opts['stepMode']:
@@ -377,35 +389,31 @@ class PlotCurveItem(GraphicsObject):
         return path
 
 
-    def shape(self):
+    def getPath(self):
         if self.path is None:
-            try:
-                self.path = self.generatePath(*self.getData())
-            except:
+            x,y = self.getData()
+            if x is None or len(x) == 0 or y is None or len(y) == 0:
                 return QtGui.QPainterPath()
+            self.path = self.generatePath(*self.getData())
+            self.fillPath = None
+            self._mouseShape = None
         return self.path
 
-    @pg.debug.warnOnException  ## raising an exception here causes crash
+    @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, opt, widget):
-        prof = debug.Profiler('PlotCurveItem.paint '+str(id(self)), disabled=True)
+        profiler = debug.Profiler()
         if self.xData is None:
             return
         
-        if HAVE_OPENGL and pg.getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
+        if HAVE_OPENGL and getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
             self.paintGL(p, opt, widget)
             return
         
         x = None
         y = None
-        if self.path is None:
-            x,y = self.getData()
-            if x is None or len(x) == 0 or y is None or len(y) == 0:
-                return
-            self.path = self.generatePath(x,y)
-            self.fillPath = None
-            
-        path = self.path
-        prof.mark('generate path')
+        path = self.getPath()
+        
+        profiler('generate path')
         
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
@@ -426,9 +434,9 @@ class PlotCurveItem(GraphicsObject):
                 p2.closeSubpath()
                 self.fillPath = p2
                 
-            prof.mark('generate fill path')
+            profiler('generate fill path')
             p.fillPath(self.fillPath, self.opts['brush'])
-            prof.mark('draw fill path')
+            profiler('draw fill path')
             
         sp = fn.mkPen(self.opts['shadowPen'])
         cp = fn.mkPen(self.opts['pen'])
@@ -451,10 +459,9 @@ class PlotCurveItem(GraphicsObject):
             p.drawPath(path)
         p.setPen(cp)
         p.drawPath(path)
-        prof.mark('drawPath')
+        profiler('drawPath')
         
         #print "Render hints:", int(p.renderHints())
-        prof.finish()
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
         #p.drawRect(self.boundingRect())
         
@@ -524,13 +531,36 @@ class PlotCurveItem(GraphicsObject):
         self.xDisp = None  ## display values (after log / fft)
         self.yDisp = None
         self.path = None
+        self.fillPath = None
+        self._mouseShape = None
+        self._mouseBounds = None
+        self._boundsCache = [None, None]
         #del self.xData, self.yData, self.xDisp, self.yDisp, self.path
+
+    def mouseShape(self):
+        """
+        Return a QPainterPath representing the clickable shape of the curve
+        
+        """
+        if self._mouseShape is None:
+            view = self.getViewBox()
+            if view is None:
+                return QtGui.QPainterPath()
+            stroker = QtGui.QPainterPathStroker()
+            path = self.getPath()
+            path = self.mapToItem(view, path)
+            stroker.setWidth(self.opts['mouseWidth'])
+            mousePath = stroker.createStroke(path)
+            self._mouseShape = self.mapFromItem(view, mousePath)
+        return self._mouseShape
         
     def mouseClickEvent(self, ev):
         if not self.clickable or ev.button() != QtCore.Qt.LeftButton:
             return
-        ev.accept()
-        self.sigClicked.emit(self)
+        if self.mouseShape().contains(ev.pos()):
+            ev.accept()
+            self.sigClicked.emit(self)
+            
 
 
 class ROIPlotItem(PlotCurveItem):

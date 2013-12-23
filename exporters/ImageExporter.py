@@ -1,7 +1,7 @@
 from .Exporter import Exporter
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
-import pyqtgraph as pg
+from ..parametertree import Parameter
+from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE\
+from .. import functions as fn
 import numpy as np
 
 __all__ = ['ImageExporter']
@@ -73,7 +73,7 @@ class ImageExporter(Exporter):
         bg[:,:,1] = color.green()
         bg[:,:,2] = color.red()
         bg[:,:,3] = color.alpha()
-        self.png = pg.makeQImage(bg, alpha=True)
+        self.png = fn.makeQImage(bg, alpha=True)
         
         ## set resolution of image:
         origTargetRect = self.getTargetRect()
@@ -98,4 +98,5 @@ class ImageExporter(Exporter):
         else:
             self.png.save(fileName)
         
+ImageExporter.register()        
         

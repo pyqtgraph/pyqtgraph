@@ -1,6 +1,8 @@
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
-import pyqtgraph as pg
-import pyqtgraph.exporters as exporters
+from ..Qt import QtCore, QtGui, USE_PYSIDE
+from .. import exporters as exporters
+from .. import functions as fn
+from ..graphicsItems.ViewBox import ViewBox
+from ..graphicsItems.PlotItem import PlotItem
 
 if USE_PYSIDE:
     from . import exportDialogTemplate_pyside as exportDialogTemplate
@@ -18,7 +20,7 @@ class ExportDialog(QtGui.QWidget):
         self.scene = scene
             
         self.selectBox = QtGui.QGraphicsRectItem()
-        self.selectBox.setPen(pg.mkPen('y', width=3, style=QtCore.Qt.DashLine))
+        self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.DashLine))
         self.selectBox.hide()
         self.scene.addItem(self.selectBox)
         
@@ -35,10 +37,10 @@ class ExportDialog(QtGui.QWidget):
     def show(self, item=None):
         if item is not None:
             ## Select next exportable parent of the item originally clicked on
-            while not isinstance(item, pg.ViewBox) and not isinstance(item, pg.PlotItem) and item is not None:
+            while not isinstance(item, ViewBox) and not isinstance(item, PlotItem) and item is not None:
                 item = item.parentItem()
             ## if this is a ViewBox inside a PlotItem, select the parent instead.
-            if isinstance(item, pg.ViewBox) and isinstance(item.parentItem(), pg.PlotItem):
+            if isinstance(item, ViewBox) and isinstance(item.parentItem(), PlotItem):
                 item = item.parentItem()
             self.updateItemList(select=item)
         self.setVisible(True)
@@ -64,9 +66,9 @@ class ExportDialog(QtGui.QWidget):
                 
     def updateItemTree(self, item, treeItem, select=None):
         si = None
-        if isinstance(item, pg.ViewBox):
+        if isinstance(item, ViewBox):
             si = QtGui.QTreeWidgetItem(['ViewBox'])
-        elif isinstance(item, pg.PlotItem):
+        elif isinstance(item, PlotItem):
             si = QtGui.QTreeWidgetItem(['Plot'])
             
         if si is not None:

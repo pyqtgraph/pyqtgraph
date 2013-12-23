@@ -92,7 +92,7 @@
   <customwidget>
    <class>ParameterTree</class>
    <extends>QTreeWidget</extends>
-   <header>pyqtgraph.parametertree</header>
+   <header>..parametertree</header>
   </customwidget>
  </customwidgets>
  <resources/>

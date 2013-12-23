@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.parametertree as ptree
+from ..Qt import QtGui, QtCore
+from .. import parametertree as ptree
 import numpy as np
-from pyqtgraph.pgcollections import OrderedDict
-import pyqtgraph.functions as fn
+from ..pgcollections import OrderedDict
+from .. import functions as fn
 
 __all__ = ['ColorMapWidget']
 

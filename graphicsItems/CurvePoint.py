@@ -1,7 +1,7 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from . import ArrowItem
 import numpy as np
-from pyqtgraph.Point import Point
+from ..Point import Point
 import weakref
 from .GraphicsObject import GraphicsObject
 

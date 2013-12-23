@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.widgets.SpinBox import SpinBox
-#from pyqtgraph.SignalProxy import SignalProxy
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...Qt import QtCore, QtGui
+from ...widgets.SpinBox import SpinBox
+#from ...SignalProxy import SignalProxy
+from ...WidgetGroup import WidgetGroup
 #from ColorMapper import ColorMapper
 from ..Node import Node
 import numpy as np
-from pyqtgraph.widgets.ColorButton import ColorButton
+from ...widgets.ColorButton import ColorButton
 try:
     import metaarray
     HAVE_METAARRAY = True

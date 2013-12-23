@@ -16,16 +16,16 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
-import pyqtgraph.pixmaps
+from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ... import pixmaps
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
 else:
     from .plotConfigTemplate_pyqt import *
 
-import pyqtgraph.functions as fn
-from pyqtgraph.widgets.FileDialog import FileDialog
+from ... import functions as fn
+from ...widgets.FileDialog import FileDialog
 import weakref
 import numpy as np
 import os
@@ -37,7 +37,7 @@ from .. LegendItem import LegendItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from .. InfiniteLine import InfiniteLine
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...WidgetGroup import WidgetGroup
 
 __all__ = ['PlotItem']
 
@@ -129,7 +129,7 @@ class PlotItem(GraphicsWidget):
         path = os.path.dirname(__file__)
         #self.autoImageFile = os.path.join(path, 'auto.png')
         #self.lockImageFile = os.path.join(path, 'lock.png')
-        self.autoBtn = ButtonItem(pyqtgraph.pixmaps.getPixmap('auto'), 14, self)
+        self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         #self.autoBtn.hide()
@@ -339,9 +339,8 @@ class PlotItem(GraphicsWidget):
             self.ctrl.gridAlphaSlider.setValue(v)
         
     #def paint(self, *args):
-        #prof = debug.Profiler('PlotItem.paint', disabled=True)
+        #prof = debug.Profiler()
         #QtGui.QGraphicsWidget.paint(self, *args)
-        #prof.finish()
         
     ## bad idea. 
     #def __getattr__(self, attr):  ## wrap ms
@@ -515,7 +514,9 @@ class PlotItem(GraphicsWidget):
         if 'ignoreBounds' in kargs:
             vbargs['ignoreBounds'] = kargs['ignoreBounds']
         self.vb.addItem(item, *args, **vbargs)
+        name = None
         if hasattr(item, 'implements') and item.implements('plotData'):
+            name = item.name()
             self.dataItems.append(item)
             #self.plotChanged()
             
@@ -548,7 +549,7 @@ class PlotItem(GraphicsWidget):
             #c.connect(c, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
-        name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
+        #name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)
             

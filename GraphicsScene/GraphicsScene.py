@@ -1,19 +1,11 @@
-from pyqtgraph.Qt import QtCore, QtGui
-
-from pyqtgraph.python2_3 import sortList
-#try:
-    #from PyQt4 import QtOpenGL
-    #HAVE_OPENGL = True
-#except ImportError:
-    #HAVE_OPENGL = False
-
+from ..Qt import QtCore, QtGui
+from ..python2_3 import sortList
 import weakref
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
-import pyqtgraph.ptime as ptime
+from ..Point import Point
+from .. import functions as fn
+from .. import ptime as ptime
 from .mouseEvents import *
-import pyqtgraph.debug as debug
-from . import exportDialog
+from .. import debug as debug
 
 if hasattr(QtCore, 'PYQT_VERSION'):
     try:
@@ -489,7 +481,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     #return v
         #else:
             #return widget
-        
+
     def addParentContextMenus(self, item, menu, event):
         """
         Can be called by any item in the scene to expand its context menu to include parent context menus.
@@ -519,30 +511,23 @@ class GraphicsScene(QtGui.QGraphicsScene):
         event           The original event that triggered the menu to appear.
         ==============  ==================================================
         """
-        
-        #items = self.itemsNearEvent(ev)
+
         menusToAdd = []
         while item is not self:
             item = item.parentItem()
-            
             if item is None:
                 item = self
-                
             if not hasattr(item, "getContextMenus"):
                 continue
-            
-            subMenus = item.getContextMenus(event)
-            if subMenus is None:
-                continue
-            if type(subMenus) is not list: ## so that some items (like FlowchartViewBox) can return multiple menus
-                subMenus = [subMenus]
-            
-            for sm in subMenus:
-                menusToAdd.append(sm)
-        
-        if len(menusToAdd) > 0:
+            subMenus = item.getContextMenus(event) or []
+            if isinstance(subMenus, list): ## so that some items (like FlowchartViewBox) can return multiple menus
+                menusToAdd.extend(subMenus)
+            else:
+                menusToAdd.append(subMenus)
+
+        if menusToAdd:
             menu.addSeparator()
-            
+
         for m in menusToAdd:
             if isinstance(m, QtGui.QMenu):
                 menu.addMenu(m)
@@ -559,6 +544,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     def showExportDialog(self):
         if self.exportDialog is None:
+            from . import exportDialog
             self.exportDialog = exportDialog.ExportDialog(self)
         self.exportDialog.show(self.contextMenuItem)
 

@@ -1,15 +1,15 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import sortList
+from ...Qt import QtGui, QtCore
+from ...python2_3 import sortList
 import numpy as np
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ...Point import Point
+from ... import functions as fn
 from .. ItemGroup import ItemGroup
 from .. GraphicsWidget import GraphicsWidget
-from pyqtgraph.GraphicsScene import GraphicsScene
-import pyqtgraph
+from ...GraphicsScene import GraphicsScene
 import weakref
 from copy import deepcopy
-import pyqtgraph.debug as debug
+from ... import debug as debug
+from ... import getConfigOption
 
 __all__ = ['ViewBox']
 
@@ -113,7 +113,7 @@ class ViewBox(GraphicsWidget):
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
             
             'mouseEnabled': [enableMouse, enableMouse],
-            'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
+            'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,  
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
 
@@ -1065,33 +1065,17 @@ class ViewBox(GraphicsWidget):
         if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():
             ev.accept()
             self.raiseContextMenu(ev)
-    
+
     def raiseContextMenu(self, ev):
-        #print "viewbox.raiseContextMenu called."
-        
-        #menu = self.getMenu(ev)
         menu = self.getMenu(ev)
         self.scene().addParentContextMenus(self, menu, ev)
-        #print "2:", [str(a.text()) for a in self.menu.actions()]
-        pos = ev.screenPos()
-        #pos2 = ev.scenePos()
-        #print "3:", [str(a.text()) for a in self.menu.actions()]
-        #self.sigActionPositionChanged.emit(pos2)
+        menu.popup(ev.screenPos().toPoint())
 
-        menu.popup(QtCore.QPoint(pos.x(), pos.y()))
-        #print "4:", [str(a.text()) for a in self.menu.actions()]
-        
     def getMenu(self, ev):
-        self._menuCopy = self.menu.copy()  ## temporary storage to prevent menu disappearing
-        return self._menuCopy
-        
+        return self.menu
+
     def getContextMenus(self, event):
-        if self.menuEnabled():
-            return self.menu.subMenus()
-        else:
-            return None
-        #return [self.getMenu(event)]
-        
+        return self.menu.actions() if self.menuEnabled() else []
 
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.
@@ -1221,7 +1205,7 @@ class ViewBox(GraphicsWidget):
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
         """
-        prof = debug.Profiler('updateAutoRange', disabled=True)
+        profiler = debug.Profiler()
         if items is None:
             items = self.addedItems
         
@@ -1298,7 +1282,7 @@ class ViewBox(GraphicsWidget):
                     range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
                 else:
                     range[0] = [bounds.left(), bounds.right()]
-            prof.mark('2')
+            profiler()
         
         #print "range", range
         
@@ -1322,10 +1306,7 @@ class ViewBox(GraphicsWidget):
                     continue
                 range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
-        
-        #print "final range", range
-        
-        prof.finish()
+
         return range
         
     def childrenBoundingRect(self, *args, **kwds):

@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import *
-import pyqtgraph.functions as fn
+from .. import functions as fn
 
 __all__ = ['GradientLegend']
 

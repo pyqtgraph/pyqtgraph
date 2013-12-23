@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsView import GraphicsView
-from pyqtgraph.graphicsItems.GradientEditorItem import GradientEditorItem
+from ..graphicsItems.GradientEditorItem import GradientEditorItem
 import weakref
 import numpy as np
 
-__all__ = ['TickSlider', 'GradientWidget', 'BlackWhiteSlider']
+__all__ = ['GradientWidget']
 
 
 class GradientWidget(GraphicsView):

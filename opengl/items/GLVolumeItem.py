@@ -1,6 +1,6 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
-from pyqtgraph.Qt import QtGui
+from ...Qt import QtGui
 import numpy as np
 
 __all__ = ['GLVolumeItem']

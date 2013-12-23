@@ -24,7 +24,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
-import pyqtgraph as pg
+from . import getConfigOption, setConfigOptions
 import numpy as np
 import decimal, re
 import ctypes
@@ -33,11 +33,11 @@ import sys, struct
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
-    if pg.getConfigOption('useWeave'):
+    if getConfigOption('useWeave'):
         try:
             import scipy.weave
         except ImportError:
-            pg.setConfigOptions(useWeave=False)
+            setConfigOptions(useWeave=False)
 except ImportError:
     HAVE_SCIPY = False
 
@@ -620,7 +620,7 @@ def rescaleData(data, scale, offset, dtype=None):
         dtype = np.dtype(dtype)
     
     try:
-        if not pg.getConfigOption('useWeave'):
+        if not getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
         
         ## require native dtype when using weave
@@ -647,10 +647,10 @@ def rescaleData(data, scale, offset, dtype=None):
             newData = newData.astype(dtype)
         data = newData.reshape(data.shape)
     except:
-        if pg.getConfigOption('useWeave'):
-            if pg.getConfigOption('weaveDebug'):
+        if getConfigOption('useWeave'):
+            if getConfigOption('weaveDebug'):
                 debug.printExc("Error; disabling weave.")
-            pg.setConfigOption('useWeave', False)
+            setConfigOptions(useWeave=False)
         
         #p = np.poly1d([scale, -offset*scale])
         #data = p(data).astype(dtype)
@@ -775,32 +775,13 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                  is BGRA).
     ============ ==================================================================================
     """
-    prof = debug.Profiler('functions.makeARGB', disabled=True)
+    profile = debug.Profiler()
     
     if lut is not None and not isinstance(lut, np.ndarray):
         lut = np.array(lut)
     if levels is not None and not isinstance(levels, np.ndarray):
         levels = np.array(levels)
     
-    ## sanity checks
-    #if data.ndim == 3:
-        #if data.shape[2] not in (3,4):
-            #raise Exception("data.shape[2] must be 3 or 4")
-        ##if lut is not None:
-            ##raise Exception("can not use lookup table with 3D data")
-    #elif data.ndim != 2:
-        #raise Exception("data must be 2D or 3D")
-        
-    #if lut is not None:
-        ##if lut.ndim == 2:
-            ##if lut.shape[1] :
-                ##raise Exception("lut.shape[1] must be 3 or 4")
-        ##elif lut.ndim != 1:
-            ##raise Exception("lut must be 1D or 2D")
-        #if lut.dtype != np.ubyte:
-            #raise Exception('lookup table must have dtype=ubyte (got %s instead)' % str(lut.dtype))
-            
-
     if levels is not None:
         if levels.ndim == 1:
             if len(levels) != 2:
@@ -813,18 +794,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         else:
             print(levels)
             raise Exception("levels argument must be 1D or 2D.")
-        #levels = np.array(levels)
-        #if levels.shape == (2,):
-            #pass
-        #elif levels.shape in [(3,2), (4,2)]:
-            #if data.ndim == 3:
-                #raise Exception("Can not use 2D levels with 3D data.")
-            #if lut is not None:
-                #raise Exception('Can not use 2D levels and lookup table together.')
-        #else:
-            #raise Exception("Levels must have shape (2,) or (3,2) or (4,2)")
-        
-    prof.mark('1')
+
+    profile()
 
     if scale is None:
         if lut is not None:
@@ -851,8 +822,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal == maxVal:
                 maxVal += 1e-16
             data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=int)
-    prof.mark('2')
 
+    profile()
 
     ## apply LUT if given
     if lut is not None:
@@ -860,41 +831,43 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         if data.dtype is not np.ubyte:
             data = np.clip(data, 0, 255).astype(np.ubyte)
-    prof.mark('3')
 
+    profile()
 
     ## copy data into ARGB ordered array
     imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
-    if data.ndim == 2:
-        data = data[..., np.newaxis]
 
-    prof.mark('4')
+    profile()
 
     if useRGBA:
         order = [0,1,2,3] ## array comes out RGBA
     else:
         order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
         
-    if data.shape[2] == 1:
+    if data.ndim == 2:
+        # This is tempting:
+        #   imgData[..., :3] = data[..., np.newaxis]
+        # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., order[i]] = data[..., 0]    
+            imgData[..., i] = data
+    elif data.shape[2] == 1:
+        for i in range(3):
+            imgData[..., i] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., order[i]] = data[..., i]    
+            imgData[..., i] = data[..., order[i]] 
         
-    prof.mark('5')
+    profile()
         
-    if data.shape[2] == 4:
-        alpha = True
-    else:
+    if data.ndim == 2 or data.shape[2] == 3:
         alpha = False
         imgData[..., 3] = 255
+    else:
+        alpha = True
         
-    prof.mark('6')
-        
-    prof.finish()
+    profile()
     return imgData, alpha
-    
+
 
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     """
@@ -923,7 +896,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     =========== ===================================================================    
     """
     ## create QImage from buffer
-    prof = debug.Profiler('functions.makeQImage', disabled=True)
+    profile = debug.Profiler()
     
     ## If we didn't explicitly specify alpha, check the array shape.
     if alpha is None:
@@ -947,7 +920,9 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if transpose:
         imgData = imgData.transpose((1, 0, 2))  ## QImage expects the row/column order to be opposite
-    
+
+    profile()
+
     if not imgData.flags['C_CONTIGUOUS']:
         if copy is False:
             extra = ' (try setting transpose=False)' if transpose else ''
@@ -988,11 +963,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     #except AttributeError:  ## happens when image data is non-contiguous
         #buf = imgData.data
         
-    #prof.mark('1')
+    #profiler()
     #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    #prof.mark('2')
+    #profiler()
     #qimage.data = imgData
-    #prof.finish()
     #return qimage
 
 def imageToArray(img, copy=False, transpose=True):
@@ -1112,16 +1086,16 @@ def arrayToQPath(x, y, connect='all'):
 
     path = QtGui.QPainterPath()
 
-    #prof = debug.Profiler('PlotCurveItem.generatePath', disabled=True)
+    #profiler = debug.Profiler()
     n = x.shape[0]
     # create empty array, pad with extra space on either end
     arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
     # write first two integers
-    #prof.mark('allocate empty')
+    #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
     byteview[:12] = 0
     byteview.data[12:20] = struct.pack('>ii', n, 0)
-    #prof.mark('pack header')
+    #profiler('pack header')
     # Fill array with vertex values
     arr[1:-1]['x'] = x
     arr[1:-1]['y'] = y
@@ -1142,11 +1116,11 @@ def arrayToQPath(x, y, connect='all'):
     else:
         raise Exception('connect argument must be "all", "pairs", or array')
 
-    #prof.mark('fill array')
+    #profiler('fill array')
     # write last 0
     lastInd = 20*(n+1)
     byteview.data[lastInd:lastInd+4] = struct.pack('>i', 0)
-    #prof.mark('footer')
+    #profiler('footer')
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
@@ -1157,13 +1131,11 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
         buf = QtCore.QByteArray(bytes(path.strn))
-    #prof.mark('create buffer')
+    #profiler('create buffer')
     ds = QtCore.QDataStream(buf)
 
     ds >> path
-    #prof.mark('load')
-
-    #prof.finish()
+    #profiler('load')
 
     return path
 
@@ -1890,7 +1862,7 @@ def isosurface(data, level):
     faces = np.empty((totFaces, 3), dtype=np.uint32)
     ptr = 0
     #import debug
-    #p = debug.Profiler('isosurface', disabled=False)
+    #p = debug.Profiler()
     
     ## this helps speed up an indexing operation later on
     cs = np.array(cutEdges.strides)//cutEdges.itemsize
@@ -1902,32 +1874,32 @@ def isosurface(data, level):
 
     for i in range(1,6):
         ### expensive:
-        #p.mark('1')
+        #profiler()
         cells = np.argwhere(nFaces == i)  ## all cells which require i faces  (argwhere is expensive)
-        #p.mark('2')
+        #profiler()
         if cells.shape[0] == 0:
             continue
         #cellInds = index[(cells*ins[np.newaxis,:]).sum(axis=1)]
         cellInds = index[cells[:,0], cells[:,1], cells[:,2]]   ## index values of cells to process for this round
-        #p.mark('3')
+        #profiler()
         
         ### expensive:
         verts = faceShiftTables[i][cellInds]
-        #p.mark('4')
+        #profiler()
         verts[...,:3] += cells[:,np.newaxis,np.newaxis,:]  ## we now have indexes into cutEdges
         verts = verts.reshape((verts.shape[0]*i,)+verts.shape[2:])
-        #p.mark('5')
+        #profiler()
         
         ### expensive:
         #print verts.shape
         verts = (verts * cs[np.newaxis, np.newaxis, :]).sum(axis=2)
         #vertInds = cutEdges[verts[...,0], verts[...,1], verts[...,2], verts[...,3]]  ## and these are the vertex indexes we want.
         vertInds = cutEdges[verts]
-        #p.mark('6')
+        #profiler()
         nv = vertInds.shape[0]
-        #p.mark('7')
+        #profiler()
         faces[ptr:ptr+nv] = vertInds #.reshape((nv, 3))
-        #p.mark('8')
+        #profiler()
         ptr += nv
         
     return vertexes, faces

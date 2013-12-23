@@ -12,16 +12,16 @@ The ROI class is meant to serve as the base for more specific types; see several
 of how to build an ROI at the bottom of the file.
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 #if not hasattr(QtCore, 'Signal'):
     #QtCore.Signal = QtCore.pyqtSignal
 import numpy as np
 from numpy.linalg import norm
 import scipy.ndimage as ndimage
-from pyqtgraph.Point import *
-from pyqtgraph.SRTTransform import SRTTransform
+from ..Point import *
+from ..SRTTransform import SRTTransform
 from math import cos, sin
-import pyqtgraph.functions as fn
+from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 
@@ -1202,11 +1202,7 @@ class Handle(UIGraphicsItem):
         
     def getMenu(self):
         return self.menu
-                
-            
-    def getContextMenus(self, event):
-        return [self.menu]
-    
+
     def raiseContextMenu(self, ev):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         

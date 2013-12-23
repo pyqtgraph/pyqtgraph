@@ -1,14 +1,14 @@
 
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE
 import sys, re, os, time, traceback, subprocess
-import pyqtgraph as pg
 if USE_PYSIDE:
     from . import template_pyside as template
 else:
     from . import template_pyqt as template
     
-import pyqtgraph.exceptionHandling as exceptionHandling
+from .. import exceptionHandling as exceptionHandling
 import pickle
+from .. import getConfigOption
 
 class ConsoleWidget(QtGui.QWidget):
     """
@@ -281,7 +281,7 @@ class ConsoleWidget(QtGui.QWidget):
     def stackItemDblClicked(self, item):
         editor = self.editor
         if editor is None:
-            editor = pg.getConfigOption('editorCommand')
+            editor = getConfigOption('editorCommand')
         if editor is None:
             return
         tb = self.currentFrame()

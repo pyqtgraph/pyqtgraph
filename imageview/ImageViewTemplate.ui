@@ -233,18 +233,18 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QWidget</extends>
-   <header>pyqtgraph.widgets.PlotWidget</header>
+   <header>..widgets.PlotWidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>GraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph.widgets.GraphicsView</header>
+   <header>..widgets.GraphicsView</header>
   </customwidget>
   <customwidget>
    <class>HistogramLUTWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph.widgets.HistogramLUTWidget</header>
+   <header>..widgets.HistogramLUTWidget</header>
   </customwidget>
  </customwidgets>
  <resources/>

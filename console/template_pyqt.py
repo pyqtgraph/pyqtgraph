@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './console/template.ui'
+# Form implementation generated from reading ui file './pyqtgraph/console/template.ui'
 #
-# Created: Sun Sep  9 14:41:30 2012
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Mon Dec 23 10:10:53 2013
+#      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -97,15 +106,15 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Console", None, QtGui.QApplication.UnicodeUTF8))
-        self.historyBtn.setText(QtGui.QApplication.translate("Form", "History..", None, QtGui.QApplication.UnicodeUTF8))
-        self.exceptionBtn.setText(QtGui.QApplication.translate("Form", "Exceptions..", None, QtGui.QApplication.UnicodeUTF8))
-        self.exceptionGroup.setTitle(QtGui.QApplication.translate("Form", "Exception Handling", None, QtGui.QApplication.UnicodeUTF8))
-        self.catchAllExceptionsBtn.setText(QtGui.QApplication.translate("Form", "Show All Exceptions", None, QtGui.QApplication.UnicodeUTF8))
-        self.catchNextExceptionBtn.setText(QtGui.QApplication.translate("Form", "Show Next Exception", None, QtGui.QApplication.UnicodeUTF8))
-        self.onlyUncaughtCheck.setText(QtGui.QApplication.translate("Form", "Only Uncaught Exceptions", None, QtGui.QApplication.UnicodeUTF8))
-        self.runSelectedFrameCheck.setText(QtGui.QApplication.translate("Form", "Run commands in selected stack frame", None, QtGui.QApplication.UnicodeUTF8))
-        self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Exception Info", None, QtGui.QApplication.UnicodeUTF8))
-        self.clearExceptionBtn.setText(QtGui.QApplication.translate("Form", "Clear Exception", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(_translate("Form", "Console", None))
+        self.historyBtn.setText(_translate("Form", "History..", None))
+        self.exceptionBtn.setText(_translate("Form", "Exceptions..", None))
+        self.exceptionGroup.setTitle(_translate("Form", "Exception Handling", None))
+        self.catchAllExceptionsBtn.setText(_translate("Form", "Show All Exceptions", None))
+        self.catchNextExceptionBtn.setText(_translate("Form", "Show Next Exception", None))
+        self.onlyUncaughtCheck.setText(_translate("Form", "Only Uncaught Exceptions", None))
+        self.runSelectedFrameCheck.setText(_translate("Form", "Run commands in selected stack frame", None))
+        self.exceptionInfoLabel.setText(_translate("Form", "Exception Info", None))
+        self.clearExceptionBtn.setText(_translate("Form", "Clear Exception", None))
 
 from .CmdInput import CmdInput

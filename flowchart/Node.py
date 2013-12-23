@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
+from ..Qt import QtCore, QtGui
+from ..graphicsItems.GraphicsObject import GraphicsObject
+from .. import functions as fn
 from .Terminal import *
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.debug import *
+from ..pgcollections import OrderedDict
+from ..debug import *
 import numpy as np
 from .eq import *
 
@@ -617,9 +617,6 @@ class NodeGraphicsItem(GraphicsObject):
 
     def getMenu(self):
         return self.menu
-
-    def getContextMenus(self, event):
-        return [self.menu]
     
     def raiseContextMenu(self, ev):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)

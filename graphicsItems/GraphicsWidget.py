@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore  
-from pyqtgraph.GraphicsScene import GraphicsScene
+from ..Qt import QtGui, QtCore  
+from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']

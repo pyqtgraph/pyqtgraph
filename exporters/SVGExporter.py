@@ -1,8 +1,9 @@
 from .Exporter import Exporter
-from pyqtgraph.python2_3 import asUnicode
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
-import pyqtgraph as pg
+from ..python2_3 import asUnicode
+from ..parametertree import Parameter
+from ..Qt import QtGui, QtCore, QtSvg
+from .. import debug
+from .. import functions as fn
 import re
 import xml.dom.minidom as xml
 import numpy as np
@@ -156,7 +157,7 @@ def _generateItemSvg(item, nodes=None, root=None):
     ##    
     ##    Both 2 and 3 can be addressed by drawing all items in world coordinates.
     
-    prof = pg.debug.Profiler('generateItemSvg %s' % str(item), disabled=True)
+    profiler = debug.Profiler()
     
     if nodes is None:  ## nodes maps all node IDs to their XML element. 
                        ## this allows us to ensure all elements receive unique names.
@@ -196,17 +197,12 @@ def _generateItemSvg(item, nodes=None, root=None):
         tr2 = QtGui.QTransform()
         tr2.translate(-rootPos.x(), -rootPos.y())
         tr = tr * tr2
-        #print item, pg.SRTTransform(tr)
 
-        #tr.translate(item.pos().x(), item.pos().y())
-        #tr = tr * item.transform()
         arr = QtCore.QByteArray()
         buf = QtCore.QBuffer(arr)
         svg = QtSvg.QSvgGenerator()
         svg.setOutputDevice(buf)
         dpi = QtGui.QDesktopWidget().physicalDpiX()
-        ### not really sure why this works, but it seems to be important:
-        #self.svg.setSize(QtCore.QSize(self.params['width']*dpi/90., self.params['height']*dpi/90.))
         svg.setResolution(dpi)
 
         p = QtGui.QPainter()
@@ -235,12 +231,12 @@ def _generateItemSvg(item, nodes=None, root=None):
         print(doc.toxml())
         raise
 
-    prof.mark('render')
+    profiler('render')
 
     ## Get rid of group transformation matrices by applying
     ## transformation to inner coordinates
     correctCoordinates(g1, item)
-    prof.mark('correct')
+    profiler('correct')
     ## make sure g1 has the transformation matrix
     #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
     #g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
@@ -290,7 +286,7 @@ def _generateItemSvg(item, nodes=None, root=None):
             childGroup = g1.ownerDocument.createElement('g')
             childGroup.setAttribute('clip-path', 'url(#%s)' % clip)
             g1.appendChild(childGroup)
-    prof.mark('clipping')
+    profiler('clipping')
             
     ## Add all child items as sub-elements.
     childs.sort(key=lambda c: c.zValue())
@@ -299,8 +295,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         if cg is None:
             continue
         childGroup.appendChild(cg)  ### this isn't quite right--some items draw below their parent (good enough for now)
-    prof.mark('children')
-    prof.finish()
+    profiler('children')
     return g1
 
 def correctCoordinates(node, item):
@@ -351,7 +346,7 @@ def correctCoordinates(node, item):
             if ch.tagName == 'polyline':
                 removeTransform = True
                 coords = np.array([[float(a) for a in c.split(',')] for c in ch.getAttribute('points').strip().split(' ')])
-                coords = pg.transformCoordinates(tr, coords, transpose=True)
+                coords = fn.transformCoordinates(tr, coords, transpose=True)
                 ch.setAttribute('points', ' '.join([','.join([str(a) for a in c]) for c in coords]))
             elif ch.tagName == 'path':
                 removeTransform = True
@@ -366,7 +361,7 @@ def correctCoordinates(node, item):
                         x = x[1:]
                     else:
                         t = ''
-                    nc = pg.transformCoordinates(tr, np.array([[float(x),float(y)]]), transpose=True)
+                    nc = fn.transformCoordinates(tr, np.array([[float(x),float(y)]]), transpose=True)
                     newCoords += t+str(nc[0,0])+','+str(nc[0,1])+' '
                 ch.setAttribute('d', newCoords)
             elif ch.tagName == 'text':
@@ -376,7 +371,7 @@ def correctCoordinates(node, item):
                     #[float(ch.getAttribute('x')), float(ch.getAttribute('y'))], 
                     #[float(ch.getAttribute('font-size')), 0], 
                     #[0,0]])
-                #c = pg.transformCoordinates(tr, c, transpose=True)
+                #c = fn.transformCoordinates(tr, c, transpose=True)
                 #ch.setAttribute('x', str(c[0,0]))
                 #ch.setAttribute('y', str(c[0,1]))
                 #fs = c[1]-c[2]
@@ -398,12 +393,16 @@ def correctCoordinates(node, item):
             ## correct line widths if needed
             if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke':
                 w = float(grp.getAttribute('stroke-width'))
-                s = pg.transformCoordinates(tr, np.array([[w,0], [0,0]]), transpose=True)
+                s = fn.transformCoordinates(tr, np.array([[w,0], [0,0]]), transpose=True)
                 w = ((s[0]-s[1])**2).sum()**0.5
                 ch.setAttribute('stroke-width', str(w))
             
         if removeTransform:
             grp.removeAttribute('transform')
+
+
+SVGExporter.register()        
+
 
 def itemTransform(item, root):
     ## Return the transformation mapping item to root
@@ -440,35 +439,9 @@ def itemTransform(item, root):
             tr = item.sceneTransform()
         else:
             tr = itemTransform(nextRoot, root) * item.itemTransform(nextRoot)[0]
-            #pos = QtGui.QTransform()
-            #pos.translate(root.pos().x(), root.pos().y())
-            #tr = pos * root.transform() * item.itemTransform(root)[0]
-        
     
     return tr
 
-
-#def correctStroke(node, item, root, width=1):
-    ##print "==============", item, node
-    #if node.hasAttribute('stroke-width'):
-        #width = float(node.getAttribute('stroke-width'))
-    #if node.getAttribute('vector-effect') == 'non-scaling-stroke':
-        #node.removeAttribute('vector-effect')
-        #if isinstance(root, QtGui.QGraphicsScene):
-            #w = item.mapFromScene(pg.Point(width,0))
-            #o = item.mapFromScene(pg.Point(0,0))
-        #else:
-            #w = item.mapFromItem(root, pg.Point(width,0))
-            #o = item.mapFromItem(root, pg.Point(0,0))
-        #w = w-o
-        ##print "   ", w, o, w-o
-        #w = (w.x()**2 + w.y()**2) ** 0.5
-        ##print "   ", w
-        #node.setAttribute('stroke-width', str(w))
-    
-    #for ch in node.childNodes:
-        #if isinstance(ch, xml.Element):
-            #correctStroke(ch, item, root, width)
             
 def cleanXml(node):
     ## remove extraneous text; let the xml library do the formatting.

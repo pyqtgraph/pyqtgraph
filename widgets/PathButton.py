@@ -1,5 +1,6 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph as pg
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
+
 __all__ = ['PathButton']
 
 
@@ -20,10 +21,10 @@ class PathButton(QtGui.QPushButton):
             
             
     def setBrush(self, brush):
-        self.brush = pg.mkBrush(brush)
+        self.brush = fn.mkBrush(brush)
         
     def setPen(self, pen):
-        self.pen = pg.mkPen(pen)
+        self.pen = fn.mkPen(pen)
         
     def setPath(self, path):
         self.path = path

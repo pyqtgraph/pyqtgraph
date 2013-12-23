@@ -1,7 +1,7 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 
 from .DockDrop import *
-from pyqtgraph.widgets.VerticalLabel import VerticalLabel
+from ..widgets.VerticalLabel import VerticalLabel
 
 class Dock(QtGui.QWidget, DockDrop):
     
@@ -208,6 +208,11 @@ class Dock(QtGui.QWidget, DockDrop):
             self.moveLabel = False
             
         self.setOrientation(force=True)
+        
+    def raiseDock(self):
+        """If this Dock is stacked underneath others, raise it to the top."""
+        self.container().raiseDock(self)
+        
 
     def close(self):
         """Remove this dock from the DockArea it lives inside."""

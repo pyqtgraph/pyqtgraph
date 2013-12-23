@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 import numpy as np
 import collections
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
+from .. import functions as fn
+from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ImageItem']
@@ -188,8 +188,8 @@ class ImageItem(GraphicsObject):
         border             Sets the pen used when drawing the image border. Default is None.
         =================  =========================================================================
         """
-        prof = debug.Profiler('ImageItem.setImage', disabled=True)
-        
+        profile = debug.Profiler()
+
         gotNewData = False
         if image is None:
             if self.image is None:
@@ -201,9 +201,9 @@ class ImageItem(GraphicsObject):
             if shapeChanged:
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
-                
-        prof.mark('1')
-            
+
+        profile()
+
         if autoLevels is None:
             if 'levels' in kargs:
                 autoLevels = False
@@ -218,21 +218,20 @@ class ImageItem(GraphicsObject):
                 mn = 0
                 mx = 255
             kargs['levels'] = [mn,mx]
-        prof.mark('2')
-        
+
+        profile()
+
         self.setOpts(update=False, **kargs)
-        prof.mark('3')
-        
+
+        profile()
+
         self.qimage = None
         self.update()
-        prof.mark('4')
+
+        profile()
 
         if gotNewData:
             self.sigImageChanged.emit()
-
-
-        prof.finish()
-
 
 
     def updateImage(self, *args, **kargs):
@@ -250,7 +249,7 @@ class ImageItem(GraphicsObject):
 
 
     def render(self):
-        prof = debug.Profiler('ImageItem.render', disabled=True)
+        profile = debug.Profiler()
         if self.image is None or self.image.size == 0:
             return
         if isinstance(self.lut, collections.Callable):
@@ -260,30 +259,27 @@ class ImageItem(GraphicsObject):
         #print lut.shape
         #print self.lut
             
-        argb, alpha = fn.makeARGB(self.image, lut=lut, levels=self.levels)
-        self.qimage = fn.makeQImage(argb, alpha)
-        prof.finish()
-    
+        argb, alpha = fn.makeARGB(self.image.transpose((1, 0, 2)[:self.image.ndim]), lut=lut, levels=self.levels)
+        self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
-        prof = debug.Profiler('ImageItem.paint', disabled=True)
+        profile = debug.Profiler()
         if self.image is None:
             return
         if self.qimage is None:
             self.render()
             if self.qimage is None:
                 return
-            prof.mark('render QImage')
+            profile('render QImage')
         if self.paintMode is not None:
             p.setCompositionMode(self.paintMode)
-            prof.mark('set comp mode')
-        
+            profile('set comp mode')
+
         p.drawImage(QtCore.QPointF(0,0), self.qimage)
-        prof.mark('p.drawImage')
+        profile('p.drawImage')
         if self.border is not None:
             p.setPen(self.border)
             p.drawRect(self.boundingRect())
-        prof.finish()
 
     def save(self, fileName, *args):
         """Save this image to file. Note that this saves the visible image (after scale/color changes), not the original data."""

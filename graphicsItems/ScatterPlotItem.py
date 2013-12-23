@@ -1,14 +1,14 @@
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Point import Point
+from .. import functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 import numpy as np
 import weakref
-import pyqtgraph.debug as debug
-from pyqtgraph.pgcollections import OrderedDict
-import pyqtgraph as pg
-#import pyqtgraph as pg 
+from .. import getConfigOption
+from .. import debug as debug
+from ..pgcollections import OrderedDict
+from .. import debug
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -219,7 +219,7 @@ class ScatterPlotItem(GraphicsObject):
         """
         Accepts the same arguments as setData()
         """
-        prof = debug.Profiler('ScatterPlotItem.__init__', disabled=True)
+        profiler = debug.Profiler()
         GraphicsObject.__init__(self)
         
         self.picture = None   # QPicture used for rendering when pxmode==False
@@ -233,18 +233,18 @@ class ScatterPlotItem(GraphicsObject):
         self.opts = {
             'pxMode': True, 
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint. 
-            'antialias': pg.getConfigOption('antialias'),
+            'antialias': getConfigOption('antialias'),
+            'name': None,
         }   
         
         self.setPen(200,200,200, update=False)
         self.setBrush(100,100,150, update=False)
         self.setSymbol('o', update=False)
         self.setSize(7, update=False)
-        prof.mark('1')
+        profiler()
         self.setData(*args, **kargs)
-        prof.mark('setData')
-        prof.finish()
-        
+        profiler('setData')
+
         #self.setCacheMode(self.DeviceCoordinateCache)
         
     def setData(self, *args, **kargs):
@@ -282,6 +282,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are 
                                always rendered with antialiasing (since the rendered symbols can be cached, this 
                                incurs very little performance cost)
+        *name*                 The name of this item. Names are used for automatically
+                               generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
         """
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
@@ -410,6 +412,9 @@ class ScatterPlotItem(GraphicsObject):
         if interface is None:
             return ints
         return interface in ints
+    
+    def name(self):
+        return self.opts.get('name', None)
     
     def setPen(self, *args, **kargs):
         """Set the pen(s) used to draw the outline around each spot. 
@@ -688,7 +693,7 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
         
-    @pg.debug.warnOnException  ## raising an exception here causes crash
+    @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
 
         #p.setPen(fn.mkPen('r'))

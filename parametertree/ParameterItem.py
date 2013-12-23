@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 import os, weakref, re
 
 class ParameterItem(QtGui.QTreeWidgetItem):

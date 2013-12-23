@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .Qt import QtCore, QtGui
-import pyqtgraph as pg
+from . import functions as fn
 import numpy as np
 
 class Transform3D(QtGui.QMatrix4x4):
@@ -26,7 +26,7 @@ class Transform3D(QtGui.QMatrix4x4):
         Extends QMatrix4x4.map() to allow mapping (3, ...) arrays of coordinates
         """
         if isinstance(obj, np.ndarray) and obj.ndim >= 2 and obj.shape[0] in (2,3):
-            return pg.transformCoordinates(self, obj)
+            return fn.transformCoordinates(self, obj)
         else:
             return QtGui.QMatrix4x4.map(self, obj)
             

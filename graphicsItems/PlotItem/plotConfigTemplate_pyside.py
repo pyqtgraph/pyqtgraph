@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
 #
-# Created: Mon Jul  1 23:21:08 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.2
+# Created: Mon Dec 23 10:10:52 2013
+#      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 

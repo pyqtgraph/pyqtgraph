@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import asUnicode
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode
 
 import numpy as np
 try:

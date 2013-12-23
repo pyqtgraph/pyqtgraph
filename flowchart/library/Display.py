@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
 import weakref
-#from pyqtgraph import graphicsItems
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.graphicsItems.ScatterPlotItem import ScatterPlotItem
-from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
-from pyqtgraph import PlotDataItem
+from ...Qt import QtCore, QtGui
+from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
+from ...graphicsItems.PlotCurveItem import PlotCurveItem
+from ... import PlotDataItem
 
 from .common import *
 import numpy as np

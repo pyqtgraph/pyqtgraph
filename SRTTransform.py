@@ -2,7 +2,6 @@
 from .Qt import QtCore, QtGui
 from .Point import Point
 import numpy as np
-import pyqtgraph as pg
 
 class SRTTransform(QtGui.QTransform):
     """Transform that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -77,7 +76,7 @@ class SRTTransform(QtGui.QTransform):
         self.update()
         
     def setFromMatrix4x4(self, m):
-        m = pg.SRTTransform3D(m)
+        m = SRTTransform3D(m)
         angle, axis = m.getRotation()
         if angle != 0 and (axis[0] != 0 or axis[1] != 0 or axis[2] != 1):
             print("angle: %s  axis: %s" % (str(angle), str(axis)))
@@ -256,4 +255,4 @@ if __name__ == '__main__':
     w1.sigRegionChanged.connect(update)
     #w2.sigRegionChanged.connect(update2)
     
-    
+from .SRTTransform3D import SRTTransform3D

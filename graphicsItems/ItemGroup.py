@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ItemGroup']

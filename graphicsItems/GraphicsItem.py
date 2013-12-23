@@ -1,9 +1,9 @@
-from pyqtgraph.Qt import QtGui, QtCore  
-from pyqtgraph.GraphicsScene import GraphicsScene
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore  
+from ..GraphicsScene import GraphicsScene
+from ..Point import Point
+from .. import functions as fn
 import weakref
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
 import operator, sys
 
 class FiniteCache(OrderedDict):
@@ -585,3 +585,6 @@ class GraphicsItem(object):
     #def update(self):
         #self._qtBaseClass.update(self)
         #print "Update:", self
+
+    def getContextMenus(self, event):
+        return [self.getMenu()] if hasattr(self, "getMenu") else []

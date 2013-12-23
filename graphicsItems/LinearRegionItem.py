@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import UIGraphicsItem
 from .InfiniteLine import InfiniteLine
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
+from .. import functions as fn
+from .. import debug as debug
 
 __all__ = ['LinearRegionItem']
 
@@ -140,12 +140,11 @@ class LinearRegionItem(UIGraphicsItem):
         return br.normalized()
         
     def paint(self, p, *args):
-        #prof = debug.Profiler('LinearRegionItem.paint')
+        profiler = debug.Profiler()
         UIGraphicsItem.paint(self, p, *args)
         p.setBrush(self.currentBrush)
         p.setPen(fn.mkPen(None))
         p.drawRect(self.boundingRect())
-        #prof.finish()
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == self.orientation:

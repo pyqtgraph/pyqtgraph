@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 import numpy as np
 __all__ = ['ArrowItem']
 

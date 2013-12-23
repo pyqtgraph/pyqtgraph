@@ -1,7 +1,7 @@
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph as pg
+from ..Qt import QtCore, QtGui
+from ..Point import Point
 from .UIGraphicsItem import *
-import pyqtgraph.functions as fn
+from .. import functions as fn
 
 class TextItem(UIGraphicsItem):
     """
@@ -27,7 +27,7 @@ class TextItem(UIGraphicsItem):
         #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
                      #transformation will be ignored)
                      
-        self.anchor = pg.Point(anchor)
+        self.anchor = Point(anchor)
         #self.angle = 0
         UIGraphicsItem.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
@@ -38,13 +38,13 @@ class TextItem(UIGraphicsItem):
             self.setText(text, color)
         else:
             self.setHtml(html)
-        self.fill = pg.mkBrush(fill)
-        self.border = pg.mkPen(border)
+        self.fill = fn.mkBrush(fill)
+        self.border = fn.mkPen(border)
         self.rotate(angle)
         self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
-        color = pg.mkColor(color)
+        color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
         self.updateText()
@@ -89,7 +89,7 @@ class TextItem(UIGraphicsItem):
         #br = self.textItem.mapRectToParent(self.textItem.boundingRect())
         self.textItem.setPos(0,0)
         br = self.textItem.boundingRect()
-        apos = self.textItem.mapToParent(pg.Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
+        apos = self.textItem.mapToParent(Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
         #print br, apos
         self.textItem.setPos(-apos.x(), -apos.y())
         

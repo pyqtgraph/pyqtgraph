@@ -929,7 +929,7 @@ class MetaArray(object):
         if proc == False:
             raise Exception('remote read failed')
         if proc == None:
-            import pyqtgraph.multiprocess as mp
+            from .. import multiprocess as mp
             #print "new process"
             proc = mp.Process(executable='/usr/bin/python')
             proc.setProxyOptions(deferGetattr=True)

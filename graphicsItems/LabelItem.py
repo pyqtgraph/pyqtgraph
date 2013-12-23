@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
-import pyqtgraph as pg
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
+from .. import getConfigOption
 
 
 __all__ = ['LabelItem']
@@ -54,7 +54,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         
         color = self.opts['color']
         if color is None:
-            color = pg.getConfigOption('foreground')
+            color = getConfigOption('foreground')
         color = fn.mkColor(color)
         optlist.append('color: #' + fn.colorStr(color)[:6])
         if 'size' in opts:
