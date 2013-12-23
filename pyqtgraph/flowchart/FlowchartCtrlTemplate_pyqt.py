@@ -67,5 +67,5 @@ class Ui_Form(object):
         self.reloadBtn.setText(QtGui.QApplication.translate("Form", "Reload Libs", None, QtGui.QApplication.UnicodeUTF8))
         self.showChartBtn.setText(QtGui.QApplication.translate("Form", "Flowchart", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.widgets.FeedbackButton import FeedbackButton
-from pyqtgraph.widgets.TreeWidget import TreeWidget
+from ..widgets.FeedbackButton import FeedbackButton
+from ..widgets.TreeWidget import TreeWidget
