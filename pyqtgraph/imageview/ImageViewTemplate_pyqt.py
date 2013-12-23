@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './imageview/ImageViewTemplate.ui'
+# Form implementation generated from reading ui file './pyqtgraph/imageview/ImageViewTemplate.ui'
 #
-# Created: Sun Sep  9 14:41:30 2012
-#      by: PyQt4 UI code generator 4.9.1
+# Created: Mon Dec 23 10:10:52 2013
+#      by: PyQt4 UI code generator 4.10
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,16 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -138,23 +147,23 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.roiBtn.setText(QtGui.QApplication.translate("Form", "ROI", None, QtGui.QApplication.UnicodeUTF8))
-        self.normBtn.setText(QtGui.QApplication.translate("Form", "Norm", None, QtGui.QApplication.UnicodeUTF8))
-        self.normGroup.setTitle(QtGui.QApplication.translate("Form", "Normalization", None, QtGui.QApplication.UnicodeUTF8))
-        self.normSubtractRadio.setText(QtGui.QApplication.translate("Form", "Subtract", None, QtGui.QApplication.UnicodeUTF8))
-        self.normDivideRadio.setText(QtGui.QApplication.translate("Form", "Divide", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("Form", "Operation:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("Form", "Mean:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("Form", "Blur:", None, QtGui.QApplication.UnicodeUTF8))
-        self.normROICheck.setText(QtGui.QApplication.translate("Form", "ROI", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_8.setText(QtGui.QApplication.translate("Form", "X", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_9.setText(QtGui.QApplication.translate("Form", "Y", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_10.setText(QtGui.QApplication.translate("Form", "T", None, QtGui.QApplication.UnicodeUTF8))
-        self.normOffRadio.setText(QtGui.QApplication.translate("Form", "Off", None, QtGui.QApplication.UnicodeUTF8))
-        self.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Time range", None, QtGui.QApplication.UnicodeUTF8))
-        self.normFrameCheck.setText(QtGui.QApplication.translate("Form", "Frame", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(_translate("Form", "Form", None))
+        self.roiBtn.setText(_translate("Form", "ROI", None))
+        self.normBtn.setText(_translate("Form", "Norm", None))
+        self.normGroup.setTitle(_translate("Form", "Normalization", None))
+        self.normSubtractRadio.setText(_translate("Form", "Subtract", None))
+        self.normDivideRadio.setText(_translate("Form", "Divide", None))
+        self.label_5.setText(_translate("Form", "Operation:", None))
+        self.label_3.setText(_translate("Form", "Mean:", None))
+        self.label_4.setText(_translate("Form", "Blur:", None))
+        self.normROICheck.setText(_translate("Form", "ROI", None))
+        self.label_8.setText(_translate("Form", "X", None))
+        self.label_9.setText(_translate("Form", "Y", None))
+        self.label_10.setText(_translate("Form", "T", None))
+        self.normOffRadio.setText(_translate("Form", "Off", None))
+        self.normTimeRangeCheck.setText(_translate("Form", "Time range", None))
+        self.normFrameCheck.setText(_translate("Form", "Frame", None))
 
+from ..widgets.HistogramLUTWidget import HistogramLUTWidget
 from ..widgets.GraphicsView import GraphicsView
 from ..widgets.PlotWidget import PlotWidget
-from ..widgets.HistogramLUTWidget import HistogramLUTWidget
