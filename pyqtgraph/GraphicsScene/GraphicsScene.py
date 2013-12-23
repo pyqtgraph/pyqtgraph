@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 
-from pyqtgraph.python2_3 import sortList
+from ..python2_3 import sortList
 #try:
     #from PyQt4 import QtOpenGL
     #HAVE_OPENGL = True
@@ -8,11 +8,11 @@ from pyqtgraph.python2_3 import sortList
     #HAVE_OPENGL = False
 
 import weakref
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
-import pyqtgraph.ptime as ptime
+from ..Point import Point
+from .. import functions as fn
+from .. import ptime as ptime
 from .mouseEvents import *
-import pyqtgraph.debug as debug
+from .. import debug as debug
 from . import exportDialog
 
 if hasattr(QtCore, 'PYQT_VERSION'):

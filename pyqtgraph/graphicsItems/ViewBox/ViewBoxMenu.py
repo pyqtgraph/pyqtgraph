@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
-from pyqtgraph.python2_3 import asUnicode
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...Qt import QtCore, QtGui, USE_PYSIDE
+from ...python2_3 import asUnicode
+from ...WidgetGroup import WidgetGroup
 
 if USE_PYSIDE:
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate

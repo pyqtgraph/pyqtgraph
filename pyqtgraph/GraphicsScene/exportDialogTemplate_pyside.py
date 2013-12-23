@@ -60,4 +60,4 @@ class Ui_Form(object):
         self.label_3.setText(QtGui.QApplication.translate("Form", "Export options", None, QtGui.QApplication.UnicodeUTF8))
         self.copyBtn.setText(QtGui.QApplication.translate("Form", "Copy", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.parametertree import ParameterTree
+from ..parametertree import ParameterTree
