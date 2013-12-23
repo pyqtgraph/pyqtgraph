@@ -336,7 +336,7 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
-    def setRange(self, rect=None, xRange=None, yRange=None, padding=0.02, update=True, disableAutoRange=True):
+    def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
         Must specify at least one of *range*, *xRange*, or *yRange*. 
@@ -347,7 +347,8 @@ class ViewBox(GraphicsWidget):
         *xRange*      (min,max) The range that should be visible along the x-axis.
         *yRange*      (min,max) The range that should be visible along the y-axis.
         *padding*     (float) Expand the view by a fraction of the requested range. 
-                      By default, this value is 0.02 (2%)
+                      By default, this value is set between 0.02 and 0.1 depending on
+                      the size of the ViewBox.
         ============= =====================================================================
         
         """
@@ -367,6 +368,10 @@ class ViewBox(GraphicsWidget):
         
         changed = [False, False]
         for ax, range in changes.items():
+            if padding is None:
+                xpad = self.suggestPadding(ax)
+            else:
+                xpad = padding
             mn = min(range)
             mx = max(range)
             if mn == mx:   ## If we requested 0 range, try to preserve previous scale. Otherwise just pick an arbitrary scale.
@@ -375,11 +380,11 @@ class ViewBox(GraphicsWidget):
                     dy = 1
                 mn -= dy*0.5
                 mx += dy*0.5
-                padding = 0.0
+                xpad = 0.0
             if any(np.isnan([mn, mx])) or any(np.isinf([mn, mx])):
                 raise Exception("Not setting range [%s, %s]" % (str(mn), str(mx)))
                 
-            p = (mx-mn) * padding
+            p = (mx-mn) * xpad
             mn -= p
             mx += p
             
@@ -412,34 +417,53 @@ class ViewBox(GraphicsWidget):
         elif changed[1] and self.state['autoVisibleOnly'][0]:
             self.updateAutoRange()
             
-    def setYRange(self, min, max, padding=0.02, update=True):
+    def setYRange(self, min, max, padding=None, update=True):
         """
         Set the visible Y range of the view to [*min*, *max*]. 
         The *padding* argument causes the range to be set larger by the fraction specified.
+        (by default, this value is between 0.02 and 0.1 depending on the size of the ViewBox)
         """
         self.setRange(yRange=[min, max], update=update, padding=padding)
         
-    def setXRange(self, min, max, padding=0.02, update=True):
+    def setXRange(self, min, max, padding=None, update=True):
         """
         Set the visible X range of the view to [*min*, *max*]. 
         The *padding* argument causes the range to be set larger by the fraction specified.
+        (by default, this value is between 0.02 and 0.1 depending on the size of the ViewBox)
         """
         self.setRange(xRange=[min, max], update=update, padding=padding)
 
-    def autoRange(self, padding=0.02, item=None):
+    def autoRange(self, padding=None, items=None, item=None):
         """
         Set the range of the view box to make all children visible.
         Note that this is not the same as enableAutoRange, which causes the view to 
         automatically auto-range whenever its contents are changed.
+        
+        =========== ============================================================
+        Arguments
+        padding     The fraction of the total data range to add on to the final
+                    visible range. By default, this value is set between 0.02
+                    and 0.1 depending on the size of the ViewBox.
+        items       If specified, this is a list of items to consider when 
+                    determining the visible range. 
+        =========== ============================================================
         """
         if item is None:
-            bounds = self.childrenBoundingRect()
+            bounds = self.childrenBoundingRect(items=items)
         else:
+            print("Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead.")
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
             
         if bounds is not None:
             self.setRange(bounds, padding=padding)
             
+    def suggestPadding(self, axis):
+        l = self.width() if axis==0 else self.height()
+        if l > 0:
+            padding = np.clip(1./(l**0.5), 0.02, 0.1)
+        else:
+            padding = 0.02
+        return padding
             
     def scaleBy(self, s, center=None):
         """
@@ -577,12 +601,10 @@ class ViewBox(GraphicsWidget):
                         w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
                         childRange[ax] = [x-w2, x+w2]
                     else:
-                        l = self.width() if ax==0 else self.height()
-                        if l > 0:
-                            padding = np.clip(1./(l**0.5), 0.02, 0.1)
-                            wp = (xr[1] - xr[0]) * padding
-                            childRange[ax][0] -= wp
-                            childRange[ax][1] += wp
+                        padding = self.suggestPadding(ax)
+                        wp = (xr[1] - xr[0]) * padding
+                        childRange[ax][0] -= wp
+                        childRange[ax][1] += wp
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
             if len(args) == 0:
@@ -995,13 +1017,14 @@ class ViewBox(GraphicsWidget):
         
         
     
-    def childrenBounds(self, frac=None, orthoRange=(None,None)):
+    def childrenBounds(self, frac=None, orthoRange=(None,None), items=None):
         """Return the bounding range of all children.
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
         """
         prof = debug.Profiler('updateAutoRange', disabled=True)
-        items = self.addedItems
+        if items is None:
+            items = self.addedItems
         
         ## measure pixel dimensions in view box
         px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]

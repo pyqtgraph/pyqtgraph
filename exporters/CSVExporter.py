@@ -14,6 +14,7 @@ class CSVExporter(Exporter):
         Exporter.__init__(self, item)
         self.params = Parameter(name='params', type='group', children=[
             {'name': 'separator', 'type': 'list', 'value': 'comma', 'values': ['comma', 'tab']},
+            {'name': 'precision', 'type': 'int', 'value': 10, 'limits': [0, None]},
         ])
         
     def parameters(self):
@@ -42,18 +43,15 @@ class CSVExporter(Exporter):
             
         fd.write(sep.join(header) + '\n')
         i = 0
-        while True:
-            done = True
+        numFormat = '%%0.%dg' % self.params['precision']
+        numRows = reduce(max, [len(d[0]) for d in data])
+        for i in range(numRows):
             for d in data:
                 if i < len(d[0]):
-                    fd.write('%g%s%g%s'%(d[0][i], sep, d[1][i], sep))
-                    done = False
+                    fd.write(numFormat % d[0][i] + sep + numFormat % d[1][i] + sep)
                 else:
                     fd.write(' %s %s' % (sep, sep))
             fd.write('\n')
-            if done:
-                break
-            i += 1
         fd.close()
 
         

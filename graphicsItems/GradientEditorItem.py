@@ -782,7 +782,8 @@ class GradientEditorItem(TickSliderItem):
         self.sigGradientChangeFinished.emit(self)
 
         
-class Tick(GraphicsObject):
+class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsObject instead results in 
+                                    ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
     ## private class
     
     sigMoving = QtCore.Signal(object)
@@ -802,7 +803,7 @@ class Tick(GraphicsObject):
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        GraphicsObject.__init__(self)
+        QtGui.QGraphicsObject.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)
