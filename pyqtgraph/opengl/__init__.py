@@ -1,7 +1,7 @@
 from .GLViewWidget import GLViewWidget
 
 ## dynamic imports cause too many problems.
-#from pyqtgraph import importAll
+#from .. import importAll
 #importAll('items', globals(), locals())
 
 from .items.GLGridItem import * 

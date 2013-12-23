@@ -63,8 +63,8 @@ class Parallelize(object):
             self.showProgress = True
             if isinstance(progressDialog, basestring):
                 progressDialog = {'labelText': progressDialog}
-            import pyqtgraph as pg
-            self.progressDlg = pg.ProgressDialog(**progressDialog)
+            from ..widgets.ProgressDialog import ProgressDialog
+            self.progressDlg = ProgressDialog(**progressDialog)
         
         if workers is None:
             workers = self.suggestedWorkerCount()

@@ -1,6 +1,6 @@
 from .Exporter import Exporter
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
+from ..parametertree import Parameter
+from ..Qt import QtGui, QtCore, QtSvg
 import re
 
 __all__ = ['PrintExporter']  

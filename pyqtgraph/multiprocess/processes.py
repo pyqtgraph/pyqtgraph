@@ -1,7 +1,8 @@
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
 import multiprocessing.connection
-import pyqtgraph as pg
+from ..Qt import USE_PYSIDE
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -118,7 +119,7 @@ class Process(RemoteEventHandler):
             ppid=pid, 
             targetStr=targetStr, 
             path=sysPath, 
-            pyside=pg.Qt.USE_PYSIDE,
+            pyside=USE_PYSIDE,
             debug=debug
             )
         pickle.dump(data, self.proc.stdin)
@@ -337,7 +338,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         RemoteEventHandler.__init__(self, *args, **kwds)
         
     def startEventTimer(self):
-        from pyqtgraph.Qt import QtGui, QtCore
+        from ..Qt import QtGui, QtCore
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.processRequests)
         self.timer.start(10)
@@ -346,7 +347,7 @@ class RemoteQtEventHandler(RemoteEventHandler):
         try:
             RemoteEventHandler.processRequests(self)
         except ClosedError:
-            from pyqtgraph.Qt import QtGui, QtCore
+            from ..Qt import QtGui, QtCore
             QtGui.QApplication.instance().quit()
             self.timer.stop()
             #raise SystemExit
@@ -384,7 +385,7 @@ class QtProcess(Process):
         self.startEventTimer()
         
     def startEventTimer(self):
-        from pyqtgraph.Qt import QtGui, QtCore  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import QtGui, QtCore  ## avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
         if self._processRequests:
             app = QtGui.QApplication.instance()
@@ -415,7 +416,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
         print('[%d] connected; starting remote proxy.' % os.getpid())
-    from pyqtgraph.Qt import QtGui, QtCore
+    from ..Qt import QtGui, QtCore
     #from PyQt4 import QtGui, QtCore
     app = QtGui.QApplication.instance()
     #print app
