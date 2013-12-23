@@ -1,7 +1,7 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
-from pyqtgraph.Qt import QtGui
-import pyqtgraph as pg
+from ...Qt import QtGui
+from ... import functions as fn
 
 __all__ = ['GLBoxItem']
 
@@ -38,7 +38,7 @@ class GLBoxItem(GLGraphicsItem):
     
     def setColor(self, *args):
         """Set the color of the box. Arguments are the same as those accepted by functions.mkColor()"""
-        self.__color = pg.Color(*args)
+        self.__color = fn.Color(*args)
         
     def color(self):
         return self.__color

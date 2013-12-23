@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 import numpy as np
 import collections
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
+from .. import functions as fn
+from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ImageItem']

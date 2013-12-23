@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
-from pyqtgraph.Qt import QtGui, QtCore
+from ...Qt import QtGui, QtCore
 import numpy as np
 from .common import *
-from pyqtgraph.SRTTransform import SRTTransform
-from pyqtgraph.Point import Point
-from pyqtgraph.widgets.TreeWidget import TreeWidget
-from pyqtgraph.graphicsItems.LinearRegionItem import LinearRegionItem
+from ...SRTTransform import SRTTransform
+from ...Point import Point
+from ...widgets.TreeWidget import TreeWidget
+from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
 from . import functions
 

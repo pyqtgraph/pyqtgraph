@@ -1,14 +1,14 @@
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.python2_3 import asUnicode
+from ..Qt import QtCore, QtGui
+from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
-from pyqtgraph.widgets.SpinBox import SpinBox
-from pyqtgraph.widgets.ColorButton import ColorButton
-#from pyqtgraph.widgets.GradientWidget import GradientWidget ## creates import loop
-import pyqtgraph as pg
-import pyqtgraph.pixmaps as pixmaps
+from ..widgets.SpinBox import SpinBox
+from ..widgets.ColorButton import ColorButton
+#from ..widgets.GradientWidget import GradientWidget ## creates import loop
+from .. import pixmaps as pixmaps
+from .. import functions as fn
 import os
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -141,7 +141,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
             w.setFlat(True)
         elif t == 'colormap':
-            from pyqtgraph.widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
+            from ..widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
             w = GradientWidget(orientation='bottom')
             w.sigChanged = w.sigGradientChangeFinished
             w.sigChanging = w.sigGradientChanged
@@ -304,11 +304,11 @@ class SimpleParameter(Parameter):
             self.saveState = self.saveColorState
     
     def colorValue(self):
-        return pg.mkColor(Parameter.value(self))
+        return fn.mkColor(Parameter.value(self))
     
     def saveColorState(self):
         state = Parameter.saveState(self)
-        state['value'] = pg.colorTuple(self.value())
+        state['value'] = fn.colorTuple(self.value())
         return state
         
     

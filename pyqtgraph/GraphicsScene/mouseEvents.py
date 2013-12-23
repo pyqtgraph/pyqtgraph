@@ -1,7 +1,7 @@
-from pyqtgraph.Point import Point
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Point import Point
+from ..Qt import QtCore, QtGui
 import weakref
-import pyqtgraph.ptime as ptime
+from .. import ptime as ptime
 
 class MouseDragEvent(object):
     """

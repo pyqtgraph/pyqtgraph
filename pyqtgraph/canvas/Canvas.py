@@ -3,29 +3,21 @@ if __name__ == '__main__':
     import sys, os
     md = os.path.dirname(os.path.abspath(__file__))
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
-    #print md
 
-
-#from pyqtgraph.GraphicsView import GraphicsView
-#import pyqtgraph.graphicsItems as graphicsItems
-#from pyqtgraph.PlotWidget import PlotWidget
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph.graphicsItems.ROI import ROI
-from pyqtgraph.graphicsItems.ViewBox import ViewBox
-from pyqtgraph.graphicsItems.GridItem import GridItem
+from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..graphicsItems.ROI import ROI
+from ..graphicsItems.ViewBox import ViewBox
+from ..graphicsItems.GridItem import GridItem
 
 if USE_PYSIDE:
     from .CanvasTemplate_pyside import *
 else:
     from .CanvasTemplate_pyqt import *
     
-#import DataManager
 import numpy as np
-from pyqtgraph import debug
-#import pyqtgraph as pg
+from .. import debug
 import weakref
 from .CanvasManager import CanvasManager
-#import items
 from .CanvasItem import CanvasItem, GroupCanvasItem
 
 class Canvas(QtGui.QWidget):

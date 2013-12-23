@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph import Transform3D
+from ..Qt import QtGui, QtCore
+from .. import Transform3D
 from OpenGL.GL import *
 from OpenGL import GL
 

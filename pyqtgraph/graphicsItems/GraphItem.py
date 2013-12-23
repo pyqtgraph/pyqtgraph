@@ -1,8 +1,9 @@
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import ScatterPlotItem
-import pyqtgraph as pg
+from ..Qt import QtGui, QtCore
 import numpy as np
+from .. import getConfigOption
 
 __all__ = ['GraphItem']
 
@@ -71,11 +72,11 @@ class GraphItem(GraphicsObject):
         self.picture = None
 
     def generatePicture(self):
-        self.picture = pg.QtGui.QPicture()
+        self.picture = QtGui.QPicture()
         if self.pen is None or self.pos is None or self.adjacency is None:
             return
         
-        p = pg.QtGui.QPainter(self.picture)
+        p = QtGui.QPainter(self.picture)
         try:
             pts = self.pos[self.adjacency]
             pen = self.pen
@@ -86,14 +87,14 @@ class GraphItem(GraphicsObject):
                     if np.any(pen != lastPen):
                         lastPen = pen
                         if pen.dtype.fields is None:
-                            p.setPen(pg.mkPen(color=(pen[0], pen[1], pen[2], pen[3]), width=1))                            
+                            p.setPen(fn.mkPen(color=(pen[0], pen[1], pen[2], pen[3]), width=1))                            
                         else:
-                            p.setPen(pg.mkPen(color=(pen['red'], pen['green'], pen['blue'], pen['alpha']), width=pen['width']))
-                    p.drawLine(pg.QtCore.QPointF(*pts[i][0]), pg.QtCore.QPointF(*pts[i][1]))
+                            p.setPen(fn.mkPen(color=(pen['red'], pen['green'], pen['blue'], pen['alpha']), width=pen['width']))
+                    p.drawLine(QtCore.QPointF(*pts[i][0]), QtCore.QPointF(*pts[i][1]))
             else:
                 if pen == 'default':
-                    pen = pg.getConfigOption('foreground')
-                p.setPen(pg.mkPen(pen))
+                    pen = getConfigOption('foreground')
+                p.setPen(fn.mkPen(pen))
                 pts = pts.reshape((pts.shape[0]*pts.shape[1], pts.shape[2]))
                 path = fn.arrayToQPath(x=pts[:,0], y=pts[:,1], connect='pairs')
                 p.drawPath(path)
@@ -103,7 +104,7 @@ class GraphItem(GraphicsObject):
     def paint(self, p, *args):
         if self.picture == None:
             self.generatePicture()
-        if pg.getConfigOption('antialias') is True:
+        if getConfigOption('antialias') is True:
             p.setRenderHint(p.Antialiasing)
         self.picture.play(p)
         

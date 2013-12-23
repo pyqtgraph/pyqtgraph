@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.SignalProxy import SignalProxy
+from ..Qt import QtGui, QtCore
+from ..SignalProxy import SignalProxy
 
 
 class ComboBox(QtGui.QComboBox):

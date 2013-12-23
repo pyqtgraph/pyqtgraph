@@ -1,4 +1,4 @@
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
 from .Node import Node
 
 def isNodeClass(cls):

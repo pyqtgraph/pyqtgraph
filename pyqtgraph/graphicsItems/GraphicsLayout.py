@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox

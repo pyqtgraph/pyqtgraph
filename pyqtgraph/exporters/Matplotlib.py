@@ -1,7 +1,7 @@
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
-
+from .. import PlotItem
+from .. import functions as fn
 
 __all__ = ['MatplotlibExporter']
     
@@ -17,7 +17,7 @@ class MatplotlibExporter(Exporter):
     
     def export(self, fileName=None):
         
-        if isinstance(self.item, pg.PlotItem):
+        if isinstance(self.item, PlotItem):
             mpw = MatplotlibWindow()
             MatplotlibExporter.windows.append(mpw)
             fig = mpw.getFigure()
@@ -29,23 +29,23 @@ class MatplotlibExporter(Exporter):
             for item in self.item.curves:
                 x, y = item.getData()
                 opts = item.opts
-                pen = pg.mkPen(opts['pen'])
+                pen = fn.mkPen(opts['pen'])
                 if pen.style() == QtCore.Qt.NoPen:
                     linestyle = ''
                 else:
                     linestyle = '-'
-                color = tuple([c/255. for c in pg.colorTuple(pen.color())])
+                color = tuple([c/255. for c in fn.colorTuple(pen.color())])
                 symbol = opts['symbol']
                 if symbol == 't':
                     symbol = '^'
-                symbolPen = pg.mkPen(opts['symbolPen'])
-                symbolBrush = pg.mkBrush(opts['symbolBrush'])
-                markeredgecolor = tuple([c/255. for c in pg.colorTuple(symbolPen.color())])
-                markerfacecolor = tuple([c/255. for c in pg.colorTuple(symbolBrush.color())])
+                symbolPen = fn.mkPen(opts['symbolPen'])
+                symbolBrush = fn.mkBrush(opts['symbolBrush'])
+                markeredgecolor = tuple([c/255. for c in fn.colorTuple(symbolPen.color())])
+                markerfacecolor = tuple([c/255. for c in fn.colorTuple(symbolBrush.color())])
                 
                 if opts['fillLevel'] is not None and opts['fillBrush'] is not None:
-                    fillBrush = pg.mkBrush(opts['fillBrush'])
-                    fillcolor = tuple([c/255. for c in pg.colorTuple(fillBrush.color())])
+                    fillBrush = fn.mkBrush(opts['fillBrush'])
+                    fillcolor = tuple([c/255. for c in fn.colorTuple(fillBrush.color())])
                     ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
                 
                 ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(), linestyle=linestyle, markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor)
@@ -62,7 +62,7 @@ MatplotlibExporter.register()
 
 class MatplotlibWindow(QtGui.QMainWindow):
     def __init__(self):
-        import pyqtgraph.widgets.MatplotlibWidget
+        from .. import widgets.MatplotlibWidget
         QtGui.QMainWindow.__init__(self)
         self.mpl = pyqtgraph.widgets.MatplotlibWidget.MatplotlibWidget()
         self.setCentralWidget(self.mpl)

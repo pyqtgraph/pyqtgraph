@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui
-from pyqtgraph.graphicsItems.GraphicsLayout import GraphicsLayout
+from ..Qt import QtGui
+from ..graphicsItems.GraphicsLayout import GraphicsLayout
 from .GraphicsView import GraphicsView
 
 __all__ = ['GraphicsLayoutWidget']

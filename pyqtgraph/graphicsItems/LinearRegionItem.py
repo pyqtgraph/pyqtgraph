@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import UIGraphicsItem
 from .InfiniteLine import InfiniteLine
-import pyqtgraph.functions as fn
-import pyqtgraph.debug as debug
+from .. import functions as fn
+from .. import debug as debug
 
 __all__ = ['LinearRegionItem']
 

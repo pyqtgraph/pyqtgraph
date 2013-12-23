@@ -1,8 +1,7 @@
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
-from pyqtgraph.parametertree import Parameter
-
+from ..parametertree import Parameter
+from .. import PlotItem
 
 __all__ = ['CSVExporter']
     
@@ -22,7 +21,7 @@ class CSVExporter(Exporter):
     
     def export(self, fileName=None):
         
-        if not isinstance(self.item, pg.PlotItem):
+        if not isinstance(self.item, PlotItem):
             raise Exception("Must have a PlotItem selected for CSV export.")
         
         if fileName is None:

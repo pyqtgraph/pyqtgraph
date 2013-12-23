@@ -1,15 +1,15 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import sortList
+from ...Qt import QtGui, QtCore
+from ...python2_3 import sortList
 import numpy as np
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ...Point import Point
+from ... import functions as fn
 from .. ItemGroup import ItemGroup
 from .. GraphicsWidget import GraphicsWidget
-from pyqtgraph.GraphicsScene import GraphicsScene
-import pyqtgraph
+from ...GraphicsScene import GraphicsScene
 import weakref
 from copy import deepcopy
-import pyqtgraph.debug as debug
+from ... import debug as debug
+from ... import getConfigOption
 
 __all__ = ['ViewBox']
 
@@ -113,7 +113,7 @@ class ViewBox(GraphicsWidget):
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
             
             'mouseEnabled': [enableMouse, enableMouse],
-            'mouseMode': ViewBox.PanMode if pyqtgraph.getConfigOption('leftButtonPan') else ViewBox.RectMode,  
+            'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,  
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
 

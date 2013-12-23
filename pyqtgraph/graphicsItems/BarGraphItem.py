@@ -1,7 +1,9 @@
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
+from .. import getConfigOption
+from .. import functions as fn
 import numpy as np
+
 
 __all__ = ['BarGraphItem']
 
@@ -61,7 +63,7 @@ class BarGraphItem(GraphicsObject):
         pens = self.opts['pens']
         
         if pen is None and pens is None:
-            pen = pg.getConfigOption('foreground')
+            pen = getConfigOption('foreground')
         
         brush = self.opts['brush']
         brushes = self.opts['brushes']
@@ -112,13 +114,13 @@ class BarGraphItem(GraphicsObject):
                 raise Exception('must specify either y1 or height')
             height = y1 - y0
         
-        p.setPen(pg.mkPen(pen))
-        p.setBrush(pg.mkBrush(brush))
+        p.setPen(fn.mkPen(pen))
+        p.setBrush(fn.mkBrush(brush))
         for i in range(len(x0)):
             if pens is not None:
-                p.setPen(pg.mkPen(pens[i]))
+                p.setPen(fn.mkPen(pens[i]))
             if brushes is not None:
-                p.setBrush(pg.mkBrush(brushes[i]))
+                p.setBrush(fn.mkBrush(brushes[i]))
                 
             if np.isscalar(y0):
                 y = y0

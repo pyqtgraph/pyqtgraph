@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE
 from .Node import *
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.widgets.TreeWidget import *
+from ..pgcollections import OrderedDict
+from ..widgets.TreeWidget import *
+from .. import FileDialog, DataTreeWidget
 
 ## pyside and pyqt use incompatible ui files.
 if USE_PYSIDE:
@@ -15,10 +16,9 @@ else:
 from .Terminal import Terminal
 from numpy import ndarray
 from .library import LIBRARY
-from pyqtgraph.debug import printExc
-import pyqtgraph.configfile as configfile
-import pyqtgraph.dockarea as dockarea
-import pyqtgraph as pg
+from ..debug import printExc
+from .. import configfile as configfile
+from .. import dockarea as dockarea
 from . import FlowchartGraphicsView
 
 def strDict(d):
@@ -537,7 +537,7 @@ class Flowchart(Node):
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
-            self.fileDialog = pg.FileDialog(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog = FileDialog(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
             #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
             #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             self.fileDialog.show()
@@ -558,7 +558,7 @@ class Flowchart(Node):
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
-            self.fileDialog = pg.FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog = FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
             #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
             self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             #self.fileDialog.setDirectory(startDir)
@@ -821,7 +821,7 @@ class FlowchartWidget(dockarea.DockArea):
         self.selDescLabel = QtGui.QLabel()
         self.selNameLabel = QtGui.QLabel()
         self.selDescLabel.setWordWrap(True)
-        self.selectedTree = pg.DataTreeWidget()
+        self.selectedTree = DataTreeWidget()
         #self.selectedTree.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         #self.selInfoLayout.addWidget(self.selNameLabel)
         self.selInfoLayout.addWidget(self.selDescLabel)

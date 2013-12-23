@@ -1,6 +1,6 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
-from pyqtgraph import QtGui
+from ... import QtGui
 
 __all__ = ['GLAxisItem']
 

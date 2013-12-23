@@ -24,7 +24,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 from .Qt import QtGui, QtCore, USE_PYSIDE
-import pyqtgraph as pg
+from . import getConfigOption, setConfigOptions
 import numpy as np
 import decimal, re
 import ctypes
@@ -33,11 +33,11 @@ import sys, struct
 try:
     import scipy.ndimage
     HAVE_SCIPY = True
-    if pg.getConfigOption('useWeave'):
+    if getConfigOption('useWeave'):
         try:
             import scipy.weave
         except ImportError:
-            pg.setConfigOptions(useWeave=False)
+            setConfigOptions(useWeave=False)
 except ImportError:
     HAVE_SCIPY = False
 
@@ -620,7 +620,7 @@ def rescaleData(data, scale, offset, dtype=None):
         dtype = np.dtype(dtype)
     
     try:
-        if not pg.getConfigOption('useWeave'):
+        if not getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
         
         ## require native dtype when using weave
@@ -647,10 +647,10 @@ def rescaleData(data, scale, offset, dtype=None):
             newData = newData.astype(dtype)
         data = newData.reshape(data.shape)
     except:
-        if pg.getConfigOption('useWeave'):
-            if pg.getConfigOption('weaveDebug'):
+        if getConfigOption('useWeave'):
+            if getConfigOption('weaveDebug'):
                 debug.printExc("Error; disabling weave.")
-            pg.setConfigOption('useWeave', False)
+            setConfigOptions(useWeave=False)
         
         #p = np.poly1d([scale, -offset*scale])
         #data = p(data).astype(dtype)

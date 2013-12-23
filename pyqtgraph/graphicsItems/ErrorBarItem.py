@@ -1,6 +1,7 @@
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
+from .. import getConfigOption
+from .. import functions as fn
 
 __all__ = ['ErrorBarItem']
 
@@ -121,8 +122,8 @@ class ErrorBarItem(GraphicsObject):
             self.drawPath()
         pen = self.opts['pen']
         if pen is None:
-            pen = pg.getConfigOption('foreground')
-        p.setPen(pg.mkPen(pen))
+            pen = getConfigOption('foreground')
+        p.setPen(fn.mkPen(pen))
         p.drawPath(self.path)
             
     def boundingRect(self):

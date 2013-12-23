@@ -16,16 +16,16 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
-import pyqtgraph.pixmaps
+from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ... import pixmaps
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
 else:
     from .plotConfigTemplate_pyqt import *
 
-import pyqtgraph.functions as fn
-from pyqtgraph.widgets.FileDialog import FileDialog
+from ... import functions as fn
+from ...widgets.FileDialog import FileDialog
 import weakref
 import numpy as np
 import os
@@ -37,7 +37,7 @@ from .. LegendItem import LegendItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from .. InfiniteLine import InfiniteLine
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...WidgetGroup import WidgetGroup
 
 __all__ = ['PlotItem']
 
@@ -129,7 +129,7 @@ class PlotItem(GraphicsWidget):
         path = os.path.dirname(__file__)
         #self.autoImageFile = os.path.join(path, 'auto.png')
         #self.lockImageFile = os.path.join(path, 'lock.png')
-        self.autoBtn = ButtonItem(pyqtgraph.pixmaps.getPixmap('auto'), 14, self)
+        self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         #self.autoBtn.hide()

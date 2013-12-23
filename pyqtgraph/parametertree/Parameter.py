@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 import os, weakref, re
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}

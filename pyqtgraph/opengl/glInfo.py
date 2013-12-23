@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
+from ..Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
 app = QtGui.QApplication([])
 

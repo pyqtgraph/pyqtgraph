@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore, USE_PYSIDE
 import weakref
 from .GraphicsObject import GraphicsObject
 if not USE_PYSIDE:

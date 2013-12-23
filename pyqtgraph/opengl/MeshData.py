@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui
-import pyqtgraph.functions as fn
+from ..Qt import QtGui
+from .. import functions as fn
 import numpy as np
 
 class MeshData(object):

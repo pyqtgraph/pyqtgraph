@@ -1,9 +1,9 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from .. MeshData import MeshData
-from pyqtgraph.Qt import QtGui
-import pyqtgraph as pg
+from ...Qt import QtGui
 from .. import shaders
+from ... import functions as fn
 import numpy as np
 
 
@@ -177,7 +177,7 @@ class GLMeshItem(GLGraphicsItem):
                     if self.colors is None:
                         color = self.opts['color']
                         if isinstance(color, QtGui.QColor):
-                            glColor4f(*pg.glColor(color))
+                            glColor4f(*fn.glColor(color))
                         else:
                             glColor4f(*color)
                     else:
@@ -209,7 +209,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.edgeColors is None:
                     color = self.opts['edgeColor']
                     if isinstance(color, QtGui.QColor):
-                        glColor4f(*pg.glColor(color))
+                        glColor4f(*fn.glColor(color))
                     else:
                         glColor4f(*color)
                 else:

@@ -1,10 +1,10 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import *
 from .GraphicsWidgetAnchor import *
 from .TextItem import TextItem
 import numpy as np
-import pyqtgraph.functions as fn
-import pyqtgraph as pg
+from .. import functions as fn
+from .. import getConfigOption
 
 __all__ = ['ScaleBar']
 
@@ -19,7 +19,7 @@ class ScaleBar(GraphicsObject, GraphicsWidgetAnchor):
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         
         if brush is None:
-            brush = pg.getConfigOption('foreground')
+            brush = getConfigOption('foreground')
         self.brush = fn.mkBrush(brush)
         self.pen = fn.mkPen(pen)
         self._width = width
