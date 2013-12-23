@@ -150,6 +150,6 @@ class Ui_Form(object):
         self.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Time range", None, QtGui.QApplication.UnicodeUTF8))
         self.normFrameCheck.setText(QtGui.QApplication.translate("Form", "Frame", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.widgets.GraphicsView import GraphicsView
-from pyqtgraph.widgets.PlotWidget import PlotWidget
-from pyqtgraph.widgets.HistogramLUTWidget import HistogramLUTWidget
+from ..widgets.GraphicsView import GraphicsView
+from ..widgets.PlotWidget import PlotWidget
+from ..widgets.HistogramLUTWidget import HistogramLUTWidget
