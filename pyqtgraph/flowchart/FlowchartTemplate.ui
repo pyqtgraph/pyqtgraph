@@ -85,12 +85,12 @@
   <customwidget>
    <class>DataTreeWidget</class>
    <extends>QTreeWidget</extends>
-   <header>pyqtgraph.widgets.DataTreeWidget</header>
+   <header>..widgets.DataTreeWidget</header>
   </customwidget>
   <customwidget>
    <class>FlowchartGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph.flowchart.FlowchartGraphicsView</header>
+   <header>..flowchart.FlowchartGraphicsView</header>
   </customwidget>
  </customwidgets>
  <resources/>
