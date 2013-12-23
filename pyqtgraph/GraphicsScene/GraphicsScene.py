@@ -1,19 +1,11 @@
 from ..Qt import QtCore, QtGui
-
 from ..python2_3 import sortList
-#try:
-    #from PyQt4 import QtOpenGL
-    #HAVE_OPENGL = True
-#except ImportError:
-    #HAVE_OPENGL = False
-
 import weakref
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
-from . import exportDialog
 
 if hasattr(QtCore, 'PYQT_VERSION'):
     try:
@@ -552,6 +544,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     def showExportDialog(self):
         if self.exportDialog is None:
+            from . import exportDialog
             self.exportDialog = exportDialog.ExportDialog(self)
         self.exportDialog.show(self.contextMenuItem)
 

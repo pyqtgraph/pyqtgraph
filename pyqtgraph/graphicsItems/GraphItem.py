@@ -3,6 +3,7 @@ from .GraphicsObject import GraphicsObject
 from .ScatterPlotItem import ScatterPlotItem
 from ..Qt import QtGui, QtCore
 import numpy as np
+from .. import getConfigOption
 
 __all__ = ['GraphItem']
 
