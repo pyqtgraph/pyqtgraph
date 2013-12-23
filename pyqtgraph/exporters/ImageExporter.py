@@ -1,6 +1,6 @@
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE\
+from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
 from .. import functions as fn
 import numpy as np
 
