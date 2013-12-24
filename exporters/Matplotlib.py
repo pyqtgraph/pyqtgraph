@@ -62,9 +62,9 @@ MatplotlibExporter.register()
 
 class MatplotlibWindow(QtGui.QMainWindow):
     def __init__(self):
-        from .. import widgets.MatplotlibWidget
+        from ..widgets import MatplotlibWidget
         QtGui.QMainWindow.__init__(self)
-        self.mpl = pyqtgraph.widgets.MatplotlibWidget.MatplotlibWidget()
+        self.mpl = MatplotlibWidget.MatplotlibWidget()
         self.setCentralWidget(self.mpl)
         self.show()
         
