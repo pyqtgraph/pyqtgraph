@@ -1,3 +1,5 @@
+from __future__ import division
+
 from ..Qt import QtGui, QtCore
 import numpy as np
 import collections
@@ -295,7 +297,15 @@ class ImageItem(GraphicsObject):
         if self.image is None:
             return None,None
         stepData = self.image[::step, ::step]
-        hist = np.histogram(stepData, bins=bins)
+        if not np.iterable(bins):
+            mn = stepData.min()
+            mx = stepData.max()
+            if stepData.dtype.kind in "ui": # unsigned or signed int
+                # we want max - min to be a multiple of nbins
+                range = mn, mn + np.ceil((mx - mn) / bins) * bins
+            else:
+                range = mn, mx
+        hist = np.histogram(stepData, bins=bins, range=range)
         return hist[1][:-1], hist[0]
 
     def setPxMode(self, b):
