@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 8)
 
 Package: python-pyqtgraph
 Architecture: all
-Homepage: http://luke.campagnola.me/code/pyqtgraph
+Homepage: http://www.pyqtgraph.org
 Depends: python (>= 2.6), python-support (>= 0.90), python-qt4 | python-pyside, python-scipy, python-numpy, ${misc:Depends}
 Suggests: python-opengl, python-qt4-gl
 Description: Scientific Graphics and GUI Library for Python
