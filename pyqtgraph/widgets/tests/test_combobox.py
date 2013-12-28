@@ -24,7 +24,7 @@ def test_combobox():
     assert cb.value() == 5
     
     # Set list instead of dict
-    cb.setItems(items.keys())
+    cb.setItems(list(items.keys()))
     assert str(cb.currentText()) == 'b'
     
     cb.setValue('c')
@@ -40,5 +40,5 @@ if __name__ == '__main__':
     cb.show()
     cb.setItems({'': None, 'a': 1, 'b': 2, 'c': 3})
     def fn(ind):
-        print "New value:", cb.value()
+        print("New value: %s" % cb.value())
     cb.currentIndexChanged.connect(fn)

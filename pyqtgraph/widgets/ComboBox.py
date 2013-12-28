@@ -1,6 +1,6 @@
 from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
-from ..ordereddict import OrderedDict
+from ..pgcollections import OrderedDict
 from ..python2_3 import asUnicode
 
 class ComboBox(QtGui.QComboBox):
@@ -189,9 +189,9 @@ class ComboBox(QtGui.QComboBox):
             texts = items
             items = dict([(x, x) for x in items])
         elif isinstance(items, dict):
-            texts = items.keys()
+            texts = list(items.keys())
         else:
-            raise TypeError("items argument must be list or dict.")
+            raise TypeError("items argument must be list or dict (got %s)." % type(items))
         
         for t in texts:
             if t in self._items:
@@ -200,7 +200,7 @@ class ComboBox(QtGui.QComboBox):
         
         for k,v in items.items():
             self._items[k] = v
-        QtGui.QComboBox.addItems(self, texts)
+        QtGui.QComboBox.addItems(self, list(texts))
         
         self.itemsChanged()
         
