@@ -95,7 +95,6 @@ class PlotItem(GraphicsWidget):
     
     
     lastFileDir = None
-    managers = {}
     
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
@@ -369,28 +368,6 @@ class PlotItem(GraphicsWidget):
         self.scene().removeItem(self.vb)
         self.vb = None
         
-        ## causes invalid index errors:
-        #for i in range(self.layout.count()):
-            #self.layout.removeAt(i)
-            
-        #for p in self.proxies:
-            #try:
-                #p.setWidget(None)
-            #except RuntimeError:
-                #break
-            #self.scene().removeItem(p)
-        #self.proxies = []
-        
-        #self.menuAction.releaseWidget(self.menuAction.defaultWidget())
-        #self.menuAction.setParent(None)
-        #self.menuAction = None
-        
-        #if self.manager is not None:
-            #self.manager.sigWidgetListChanged.disconnect(self.updatePlotList)
-            #self.manager.removeWidget(self.name)
-        #else:
-            #print "no manager"
-
     def registerPlot(self, name):   ## for backward compatibility
         self.vb.register(name)
         
