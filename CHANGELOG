@@ -10,12 +10,18 @@ pyqtgraph-0.9.9  [unreleased]
           commit will result in a more descriptive version string.
     - Speed improvements in functions.makeARGB
     - ImageItem is faster by avoiding makeQImage(transpose=True)
+    - ComboBox will raise error when adding multiple items of the same name
 
   New Features:
     - New HDF5 example for working with very large datasets
     - Added Qt.loadUiType function for PySide
     - Simplified Profilers; can be activated with environmental variables
     - Added Dock.raiseDock() method
+    - ComboBox updates:
+        - Essentially a graphical interface to dict; all items have text and value
+        - Assigns previously-selected text after list is cleared and repopulated
+        - Get, set current value
+    - Added Flowchart.sigChartChanged
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
