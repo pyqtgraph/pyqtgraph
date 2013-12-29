@@ -24,6 +24,7 @@ Contributors
   * Felix Schill
   * Guillaume Poulin
   * Antony Lee
+  * Mattias Põldaru
 
 Requirements
 ------------
@@ -43,7 +44,8 @@ Installation Methods
 --------------------
 
   * To use with a specific project, simply copy the pyqtgraph subdirectory
-      anywhere that is importable from your project
+      anywhere that is importable from your project. PyQtGraph may also be
+      used as a git subtree by cloning the git-core repository from github.
   * To install system-wide from source distribution:
         `$ python setup.py install`
   * For instalation packages, see the website (pyqtgraph.org)
@@ -62,4 +64,4 @@ Some (incomplete) documentation exists at this time.
           `$ make html`
   
 Please feel free to pester Luke or post to the forum if you need a specific
-  section of documentation.
+  section of documentation to be expanded.

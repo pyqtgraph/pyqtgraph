@@ -34,6 +34,7 @@ pyqtgraph-0.9.9  [unreleased]
         - Gave .name() methods to PlotDataItem, PlotCurveItem, and ScatterPlotItem
     - fixed ImageItem handling of rgb images
     - fixed makeARGB re-ordering of color channels
+    - fixed unicode usage in AxisItem tick strings
 
 
 pyqtgraph-0.9.8  2013-11-24
