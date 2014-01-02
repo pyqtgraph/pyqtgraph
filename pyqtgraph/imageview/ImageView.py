@@ -198,6 +198,7 @@ class ImageView(QtGui.QWidget):
         if not isinstance(img, np.ndarray):
             raise Exception("Image must be specified as ndarray.")
         self.image = img
+        self.imageDisp = None
         
         if xvals is not None:
             self.tVals = xvals

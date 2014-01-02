@@ -35,6 +35,8 @@ pyqtgraph-0.9.9  [unreleased]
     - fixed ImageItem handling of rgb images
     - fixed makeARGB re-ordering of color channels
     - fixed unicode usage in AxisItem tick strings
+    - fixed PlotCurveItem generating exceptions when data has length=0
+    - fixed ImageView.setImage only working once
 
 
 pyqtgraph-0.9.8  2013-11-24
