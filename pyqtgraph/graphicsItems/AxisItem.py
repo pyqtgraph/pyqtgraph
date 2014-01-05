@@ -458,8 +458,7 @@ class AxisItem(GraphicsWidget):
             return []
         
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        pixelSpacing = size / np.log(size)
-        optimalTickCount = max(2., size / pixelSpacing)
+        optimalTickCount = max(2., np.log(size))
         
         ## optimal minor tick spacing 
         optimalSpacing = dif / optimalTickCount

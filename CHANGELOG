@@ -38,7 +38,7 @@ pyqtgraph-0.9.9  [unreleased]
     - fixed PlotCurveItem generating exceptions when data has length=0
     - fixed ImageView.setImage only working once
     - PolyLineROI.setPen() now changes the pen of its segments as well
-
+    - Prevent divide-by-zero in AxisItem
 
 pyqtgraph-0.9.8  2013-11-24
 
