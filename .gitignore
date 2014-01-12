@@ -2,3 +2,6 @@ __pycache__
 build
 *.pyc
 *.swp
+MANIFEST
+deb_build
+dist
