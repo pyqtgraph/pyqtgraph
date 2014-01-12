@@ -59,7 +59,7 @@ class Build(distutils.command.build.build):
     def run(self):
         global path, version, initVersion, forcedVersion
         global buildVersion
-        
+
         ## Make sure build directory is clean
         buildPath = os.path.join(path, self.build_lib)
         if os.path.isdir(buildPath):
@@ -88,62 +88,11 @@ class Build(distutils.command.build.build):
             sys.excepthook(*sys.exc_info())
         return ret
         
-from distutils.core import Command
-import shutil, subprocess
 
-class DebCommand(Command):
-    description = "build .deb package"
-    user_options = []
-    def initialize_options(self):
-        self.cwd = None
-    def finalize_options(self):
-        self.cwd = os.getcwd()
-    def run(self):
-        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
-        global version
-        pkgName = "python-pyqtgraph-" + version
-        debDir = "deb_build"
-        if os.path.isdir(debDir):
-            raise Exception('DEB build dir already exists: "%s"' % debDir)
-        sdist = "dist/pyqtgraph-%s.tar.gz" % version
-        if not os.path.isfile(sdist):
-            raise Exception("No source distribution; run `setup.py sdist` first.")
-        
-        # copy sdist to build directory and extract
-        os.mkdir(debDir)
-        renamedSdist = 'python-pyqtgraph_%s.orig.tar.gz' % version
-        shutil.copy(sdist, os.path.join(debDir, renamedSdist))
-        if os.system("cd %s; tar -xzf %s" % (debDir, renamedSdist)) != 0:
-            raise Exception("Error extracting source distribution.")
-        buildDir = '%s/pyqtgraph-%s' % (debDir, version)
-        
-        # copy debian control structure
-        shutil.copytree('tools/debian', buildDir+'/debian')
-        
-        # Write changelog
-        #chlog = subprocess.check_output([sys.executable, 'tools/generateChangelog.py', 'CHANGELOG'])
-        #open('%s/pyqtgraph-%s/debian/changelog', 'w').write(chlog)
-        if os.system('python tools/generateChangelog.py CHANGELOG %s > %s/debian/changelog' % (version, buildDir)) != 0:
-            raise Exception("Error writing debian/changelog")
-        
-        # build package
-        if os.system('cd %s; debuild -us -uc' % buildDir) != 0:
-            raise Exception("Error during debuild.")
-
-class TestCommand(Command):
-    description = ""
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
-    def run(self):
-        global cmd
-        cmd = self
         
 setup(
     version=version,
-    cmdclass={'build': Build, 'deb': DebCommand, 'test': TestCommand},
+    cmdclass={'build': Build, 'deb': helpers.DebCommand, 'test': helpers.TestCommand},
     packages=allPackages,
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},

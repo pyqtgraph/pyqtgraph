@@ -112,3 +112,71 @@ def getVersionStrings(pkg):
         version = initVersion
 
     return version, forcedVersion, gitVersion, initVersion
+
+
+
+from distutils.core import Command
+import shutil, subprocess
+from generateChangelog import generateDebianChangelog
+
+class DebCommand(Command):
+    description = "build .deb package using `debuild -us -uc`"
+    maintainer = "Luke <luke.campagnola@gmail.com>"
+    debTemplate = "tools/debian"
+    debDir = "deb_build"
+    
+    user_options = []
+    
+    def initialize_options(self):
+        self.cwd = None
+        
+    def finalize_options(self):
+        self.cwd = os.getcwd()
+        
+    def run(self):
+        version = self.distribution.get_version()
+        pkgName = self.distribution.get_name()
+        debName = "python-" + pkgName
+        debDir = self.debDir
+        
+        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
+        
+        if os.path.isdir(debDir):
+            raise Exception('DEB build dir already exists: "%s"' % debDir)
+        sdist = "dist/%s-%s.tar.gz" % (pkgName, version)
+        if not os.path.isfile(sdist):
+            raise Exception("No source distribution; run `setup.py sdist` first.")
+        
+        # copy sdist to build directory and extract
+        os.mkdir(debDir)
+        renamedSdist = '%s_%s.orig.tar.gz' % (debName, version)
+        shutil.copy(sdist, os.path.join(debDir, renamedSdist))
+        if os.system("cd %s; tar -xzf %s" % (debDir, renamedSdist)) != 0:
+            raise Exception("Error extracting source distribution.")
+        buildDir = '%s/%s-%s' % (debDir, pkgName, version)
+        
+        # copy debian control structure
+        shutil.copytree(self.debTemplate, buildDir+'/debian')
+        
+        # Write new changelog
+        chlog = generateDebianChangelog(pkgName, 'CHANGELOG', version, self.maintainer)
+        open(buildDir+'/debian/changelog', 'w').write(chlog)
+        
+        # build package
+        if os.system('cd %s; debuild -us -uc' % buildDir) != 0:
+            raise Exception("Error during debuild.")
+
+
+class TestCommand(Command):
+    description = ""
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        global cmd
+        cmd = self
+        print self.distribution.name
+        print self.distribution.version
+    
