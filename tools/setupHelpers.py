@@ -114,14 +114,13 @@ def getVersionStrings(pkg):
     return version, forcedVersion, gitVersion, initVersion
 
 
-
 from distutils.core import Command
 import shutil, subprocess
 from generateChangelog import generateDebianChangelog
 
 class DebCommand(Command):
     description = "build .deb package using `debuild -us -uc`"
-    maintainer = "Luke <luke.campagnola@gmail.com>"
+    maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
     debTemplate = "tools/debian"
     debDir = "deb_build"
     
@@ -150,24 +149,30 @@ class DebCommand(Command):
         # copy sdist to build directory and extract
         os.mkdir(debDir)
         renamedSdist = '%s_%s.orig.tar.gz' % (debName, version)
+        print("copy %s => %s" % (sdist, os.path.join(debDir, renamedSdist)))
         shutil.copy(sdist, os.path.join(debDir, renamedSdist))
+        print("cd %s; tar -xzf %s" % (debDir, renamedSdist))
         if os.system("cd %s; tar -xzf %s" % (debDir, renamedSdist)) != 0:
             raise Exception("Error extracting source distribution.")
         buildDir = '%s/%s-%s' % (debDir, pkgName, version)
         
         # copy debian control structure
+        print("copytree %s => %s" % (self.debTemplate, buildDir+'/debian'))
         shutil.copytree(self.debTemplate, buildDir+'/debian')
         
         # Write new changelog
         chlog = generateDebianChangelog(pkgName, 'CHANGELOG', version, self.maintainer)
+        print("write changelog %s" % buildDir+'/debian/changelog')
         open(buildDir+'/debian/changelog', 'w').write(chlog)
         
         # build package
+        print('cd %s; debuild -us -uc' % buildDir)
         if os.system('cd %s; debuild -us -uc' % buildDir) != 0:
             raise Exception("Error during debuild.")
 
 
 class TestCommand(Command):
+    """Just for learning about distutils; not for running package tests."""
     description = ""
     user_options = []
     def initialize_options(self):
@@ -177,6 +182,5 @@ class TestCommand(Command):
     def run(self):
         global cmd
         cmd = self
-        print self.distribution.name
-        print self.distribution.version
-    
+        print(self.distribution.name)
+        print(self.distribution.version)

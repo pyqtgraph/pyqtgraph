@@ -1,4 +1,15 @@
 #!/usr/bin/make -f
+#export DH_VERBOSE=1
+export PYBUILD_NAME=pyqtgraph
 
 %:
-	dh $@
+	dh $@ --with python2,python3,sphinxdoc --buildsystem=pybuild
+
+override_dh_installdocs:
+	PYTHONPATH=`pwd` make -C doc html
+	dh_installdocs -ppython-pyqtgraph-doc doc/build/html
+	dh_installdocs -A
+
+override_dh_clean:
+	dh_clean
+	find ./ -name "*.pyc" -delete

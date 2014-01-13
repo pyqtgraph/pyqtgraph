@@ -76,5 +76,5 @@ if __name__ == '__main__':
         sys.stderr.write('Usage: generateChangelog.py package_name log_file version "Maintainer <maint@email.com>"\n')
         sys.exit(-1)
     
-    print generateDebianChangelog(*sys.argv[1:])
+    print(generateDebianChangelog(*sys.argv[1:]))
 
