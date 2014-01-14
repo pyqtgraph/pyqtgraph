@@ -123,8 +123,8 @@ class PlotDataItem(GraphicsObject):
         #self.dataMask = None
         #self.curves = []
         #self.scatters = []
-        self.curve = PlotCurveItem()
-        self.scatter = ScatterPlotItem()
+        self.curve = self._getPlotCurveItem()
+        self.scatter = self._getScatterPlotItem()
         self.curve.setParentItem(self)
         self.scatter.setParentItem(self)
         
@@ -163,6 +163,13 @@ class PlotDataItem(GraphicsObject):
             'data': None,
         }
         self.setData(*args, **kargs)
+
+
+    def _getScatterPlotItem(self):
+        return ScatterPlotItem()
+
+    def _getPlotCurveItem(self):
+        return PlotCurveItem()
     
     def implements(self, interface=None):
         ints = ['plotData']
@@ -628,7 +635,7 @@ class PlotDataItem(GraphicsObject):
     def appendData(self, *args, **kargs):
         pass
     
-    def curveClicked(self):
+    def curveClicked(self, curve=None):
         self.sigClicked.emit(self)
         
     def scatterClicked(self, plt, points):
