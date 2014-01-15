@@ -22,6 +22,7 @@ pyqtgraph-0.9.9  [unreleased]
         - Assigns previously-selected text after list is cleared and repopulated
         - Get, set current value
     - Added Flowchart.sigChartChanged
+    - ImageItem.getHistogram is more clever about constructing histograms
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
