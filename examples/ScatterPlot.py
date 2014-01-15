@@ -27,7 +27,6 @@ w2.setAspectLocked(True)
 view.nextRow()
 w3 = view.addPlot()
 w4 = view.addPlot()
-print("Generating data, this takes a few seconds...")
 
 ## There are a few different ways we can draw scatter plots; each is optimized for different types of data:
 
@@ -58,8 +57,9 @@ s1.sigClicked.connect(clicked)
 
 
 ## 2) Spots are transform-invariant, but not identical (top-right plot). 
-## In this case, drawing is as fast as 1), but there is more startup overhead
-## and memory usage since each spot generates its own pre-rendered image.
+## In this case, drawing is almsot as fast as 1), but there is more startup 
+## overhead and memory usage since each spot generates its own pre-rendered 
+## image.
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
 pos = np.random.normal(size=(2,n), scale=1e-5)
