@@ -289,23 +289,45 @@ class ImageItem(GraphicsObject):
             self.render()
         self.qimage.save(fileName, *args)
 
-    def getHistogram(self, bins=500, step=3):
+    def getHistogram(self, bins='auto', step='auto', targetImageSize=200, targetHistogramSize=500, **kwds):
         """Returns x and y arrays containing the histogram values for the current image.
-        The step argument causes pixels to be skipped when computing the histogram to save time.
+        For an explanation of the return format, see numpy.histogram().
+        
+        The *step* argument causes pixels to be skipped when computing the histogram to save time.
+        If *step* is 'auto', then a step is chosen such that the analyzed data has
+        dimensions roughly *targetImageSize* for each axis.
+        
+        The *bins* argument and any extra keyword arguments are passed to 
+        np.histogram(). If *bins* is 'auto', then a bin number is automatically
+        chosen based on the image characteristics:
+        
+        * Integer images will have approximately *targetHistogramSize* bins, 
+          with each bin having an integer width.
+        * All other types will have *targetHistogramSize* bins.
+        
         This method is also used when automatically computing levels.
         """
         if self.image is None:
             return None,None
-        stepData = self.image[::step, ::step]
-        if not np.iterable(bins):
-            mn = stepData.min()
-            mx = stepData.max()
-            if stepData.dtype.kind in "ui": # unsigned or signed int
-                # we want max - min to be a multiple of nbins
-                range = mn, mn + np.ceil((mx - mn) / bins) * bins
+        if step == 'auto':
+            step = (np.ceil(self.image.shape[0] / targetSize),
+                    np.ceil(self.image.shape[1] / targetSize))
+        if np.isscalar(step):
+            step = (step, step)
+        stepData = self.image[::step[0], ::step[1]]
+        
+        if bins == 'auto':
+            if stepData.dtype.kind in "ui":
+                mn = stepData.min()
+                mx = stepData.max()
+                step = np.ceil((mx-mn) / 500.)
+                bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
             else:
-                range = mn, mx
-        hist = np.histogram(stepData, bins=bins, range=range)
+                bins = 500
+
+        kwds['bins'] = bins
+        hist = np.histogram(stepData, **kwds)
+        
         return hist[1][:-1], hist[0]
 
     def setPxMode(self, b):
