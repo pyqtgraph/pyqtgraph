@@ -693,34 +693,31 @@ class ScatterPlotItem(GraphicsObject):
 
 
     def getTransformedPoint(self):
+        # Map point locations to device
+        
+        vb = self.getViewBox()
+        if vb is None:
+            return None, None
         tr = self.deviceTransform()
         if tr is None:
             return None, None
-        ## Remove out of view points
-        w = np.empty((2,len(self.data['width'])))
-        w[0] = self.data['width']
-        w[1] = self.data['width']
-        q, intv = tr.inverted()
-        if intv:
-            w = fn.transformCoordinates(q, w)
-            w=np.abs(w)
-            range = self.getViewBox().viewRange()
-            mask = np.logical_and(
-               np.logical_and(self.data['x'] + w[0,:] > range[0][0],
-                              self.data['x'] - w[0,:] < range[0][1]), 
-               np.logical_and(self.data['y'] + w[0,:] > range[1][0],
-                              self.data['y'] - w[0,:] < range[1][1])) ## remove out of view points 
-            data = self.data[mask]
-        else:
-            data = self.data
 
-        pts = np.empty((2,len(data['x'])))
-        pts[0] = data['x']
-        pts[1] = data['y']
+        pts = np.empty((2,len(self.data['x'])))
+        pts[0] = self.data['x']
+        pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
-        pts -= data['width']
+        pts -= self.data['width']
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
-        return data, pts
+        
+        ## Remove out of view points
+        viewBounds = vb.mapRectToDevice(vb.boundingRect())
+        w = self.data['width']
+        mask = ((pts[0] + w > viewBounds.left()) &
+                (pts[0] - w < viewBounds.right()) &
+                (pts[1] + w > viewBounds.top()) &
+                (pts[1] - w < viewBounds.bottom())) ## remove out of view points 
+        print np.sum(mask)
+        return self.data[mask], pts[:, mask]
         
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
