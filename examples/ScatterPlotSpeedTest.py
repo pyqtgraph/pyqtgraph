@@ -32,6 +32,7 @@ ui.setupUi(win)
 win.show()
 
 p = ui.plot
+p.setRange(xRange=[-500, 500], yRange=[-500, 500])
 
 data = np.random.normal(size=(50,500), scale=100)
 sizeArray = (np.random.random(500) * 20.).astype(int)
@@ -45,7 +46,9 @@ def update():
         size = sizeArray
     else:
         size = ui.sizeSpin.value()
-    curve = pg.ScatterPlotItem(x=data[ptr%50], y=data[(ptr+1)%50], pen='w', brush='b', size=size, pxMode=ui.pixelModeCheck.isChecked())
+    curve = pg.ScatterPlotItem(x=data[ptr%50], y=data[(ptr+1)%50], 
+                               pen='w', brush='b', size=size, 
+                               pxMode=ui.pixelModeCheck.isChecked())
     p.addItem(curve)
     ptr += 1
     now = time()

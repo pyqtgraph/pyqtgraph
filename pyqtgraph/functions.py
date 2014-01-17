@@ -180,7 +180,7 @@ def mkColor(*args):
                 try:
                     return Colors[c]
                 except KeyError:
-                    raise Exception(err)
+                    raise Exception('No color named "%s"' % c)
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)

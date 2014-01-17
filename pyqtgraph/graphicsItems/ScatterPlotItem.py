@@ -92,15 +92,13 @@ class SymbolAtlas(object):
         
     """
     def __init__(self):
-        # symbol key : [x, y, w, h] atlas coordinates
+        # symbol key : QRect(...) coordinates where symbol can be found in atlas.
         # note that the coordinate list will always be the same list object as 
         # long as the symbol is in the atlas, but the coordinates may
         # change if the atlas is rebuilt.
         # weak value; if all external refs to this list disappear, 
         # the symbol will be forgotten.
-        self.symbolPen = weakref.WeakValueDictionary()
-        self.symbolBrush = weakref.WeakValueDictionary()
-        self.symbolRectSrc = weakref.WeakValueDictionary()
+        self.symbolMap = weakref.WeakValueDictionary()
         
         self.atlasData = None # numpy array of atlas image
         self.atlas = None     # atlas as QPixmap
@@ -111,26 +109,26 @@ class SymbolAtlas(object):
         """
         Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
         """
-        rectSrc = np.empty(len(opts), dtype=object)
+        sourceRect = np.empty(len(opts), dtype=object)
         keyi = None
-        rectSrci = None
+        sourceRecti = None
         for i, rec in enumerate(opts):
-            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))
+            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
             if key == keyi:
-                rectSrc[i] = rectSrci
+                sourceRect[i] = sourceRecti
             else:
                 try:
-                    rectSrc[i] = self.symbolRectSrc[key]
+                    sourceRect[i] = self.symbolMap[key]
                 except KeyError:
                     newRectSrc = QtCore.QRectF()
-                    self.symbolPen[key] = rec['pen']
-                    self.symbolBrush[key] = rec['brush']
-                    self.symbolRectSrc[key] = newRectSrc
+                    newRectSrc.pen = rec['pen']
+                    newRectSrc.brush = rec['brush']
+                    self.symbolMap[key] = newRectSrc
                     self.atlasValid = False
-                    rectSrc[i] = self.symbolRectSrc[key]
+                    sourceRect[i] = newRectSrc
                     keyi = key
-                    rectSrci = self.symbolRectSrc[key]
-        return rectSrc
+                    sourceRecti = newRectSrc
+        return sourceRect
         
     def buildAtlas(self):
         # get rendered array for all symbols, keep track of avg/max width
@@ -138,15 +136,13 @@ class SymbolAtlas(object):
         avgWidth = 0.0
         maxWidth = 0
         images = []
-        for key, rectSrc in self.symbolRectSrc.items():
-            if rectSrc.width() == 0:
-                pen = self.symbolPen[key]
-                brush = self.symbolBrush[key]
-                img = renderSymbol(key[0], key[1], pen, brush)
+        for key, sourceRect in self.symbolMap.items():
+            if sourceRect.width() == 0:
+                img = renderSymbol(key[0], key[1], sourceRect.pen, sourceRect.brush)
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
             else:
-                (y,x,h,w) = rectSrc.getRect()
+                (y,x,h,w) = sourceRect.getRect()
                 arr = self.atlasData[x:x+w, y:y+w]
             rendered[key] = arr
             w = arr.shape[0]
@@ -177,18 +173,18 @@ class SymbolAtlas(object):
                 x = 0
                 rowheight = h
                 self.atlasRows.append([y, rowheight, 0])
-            self.symbolRectSrc[key].setRect(y, x, h, w)
+            self.symbolMap[key].setRect(y, x, h, w)
             x += w
             self.atlasRows[-1][2] = x
         height = y + rowheight
 
         self.atlasData = np.zeros((width, height, 4), dtype=np.ubyte)
         for key in symbols:
-            y, x, h, w = self.symbolRectSrc[key].getRect()
+            y, x, h, w = self.symbolMap[key].getRect()
             self.atlasData[x:x+w, y:y+h] = rendered[key]
         self.atlas = None
         self.atlasValid = True
-        self.max_width=maxWidth
+        self.max_width = maxWidth
     
     def getAtlas(self):
         if not self.atlasValid:
@@ -236,7 +232,7 @@ class ScatterPlotItem(GraphicsObject):
         self.target = None
         self.fragmentAtlas = SymbolAtlas()
         
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('rectSrc', object), ('rectTarg', object), ('width', float)])
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('width', float)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -247,8 +243,8 @@ class ScatterPlotItem(GraphicsObject):
             'name': None,
         }   
         
-        self.setPen('l', update=False)
-        self.setBrush('s', update=False)
+        self.setPen(fn.mkPen(getConfigOption('foreground')), update=False)
+        self.setBrush(fn.mkBrush(100,100,150), update=False)
         self.setSymbol('o', update=False)
         self.setSize(7, update=False)
         profiler()
@@ -445,7 +441,7 @@ class ScatterPlotItem(GraphicsObject):
         else:
             self.opts['pen'] = fn.mkPen(*args, **kargs)
         
-        dataSet['rectSrc'] = None
+        dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
         
@@ -470,7 +466,7 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['brush'] = fn.mkBrush(*args, **kargs)
             #self._spotPixmap = None
         
-        dataSet['rectSrc'] = None
+        dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
 
@@ -493,7 +489,7 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['symbol'] = symbol
             self._spotPixmap = None
         
-        dataSet['rectSrc'] = None
+        dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
     
@@ -516,7 +512,7 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['size'] = size
             self._spotPixmap = None
             
-        dataSet['rectSrc'] = None
+        dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
         
@@ -551,12 +547,12 @@ class ScatterPlotItem(GraphicsObject):
 
         invalidate = False
         if self.opts['pxMode']:
-            mask = np.equal(dataSet['rectSrc'], None)
+            mask = np.equal(dataSet['sourceRect'], None)
             if np.any(mask):
                 invalidate = True
                 opts = self.getSpotOpts(dataSet[mask])
-                rectSrc = self.fragmentAtlas.getSymbolCoords(opts)
-                dataSet['rectSrc'][mask] = rectSrc
+                sourceRect = self.fragmentAtlas.getSymbolCoords(opts)
+                dataSet['sourceRect'][mask] = sourceRect
                 
                 
             #for rec in dataSet:
@@ -564,9 +560,9 @@ class ScatterPlotItem(GraphicsObject):
                     #invalidate = True
                     #rec['fragCoords'] = self.fragmentAtlas.getSymbolCoords(*self.getSpotOpts(rec))
             self.fragmentAtlas.getAtlas()
-            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['rectSrc'])))/2
-            dataSet['rectTarg'] = list(imap(QtCore.QRectF, repeat(0), repeat(0), dataSet['width']*2, dataSet['width']*2))
-            self._maxSpotPxWidth=self.fragmentAtlas.max_width
+            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
+            dataSet['targetRect'] = list(imap(QtCore.QRectF, repeat(0), repeat(0), dataSet['width']*2, dataSet['width']*2))
+            self._maxSpotPxWidth = self.fragmentAtlas.max_width
         else:
             self._maxSpotWidth = 0
             self._maxSpotPxWidth = 0
@@ -723,7 +719,7 @@ class ScatterPlotItem(GraphicsObject):
         pts[1] = data['y']
         pts = fn.transformCoordinates(tr, pts)
         pts -= data['width']
-        pts = np.clip(pts, -2**30, 2**30)
+        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
         return data, pts
         
     @debug.warnOnException  ## raising an exception here causes crash
@@ -750,12 +746,12 @@ class ScatterPlotItem(GraphicsObject):
             if self.opts['useCache'] and self._exportOpts is False:
                 
                 if self.target == None:
-                    list(imap(QtCore.QRectF.moveTo, data['rectTarg'], pts[0,:], pts[1,:]))
-                    self.target=data['rectTarg']
+                    list(imap(QtCore.QRectF.moveTo, data['targetRect'], pts[0,:], pts[1,:]))
+                    self.target = data['targetRect']
                 if USE_PYSIDE:
-                    list(imap(p.drawPixmap, self.target, repeat(atlas), data['rectSrc']))
+                    list(imap(p.drawPixmap, self.target, repeat(atlas), data['sourceRect']))
                 else:
-                    p.drawPixmapFragments(self.target.tolist(), data['rectSrc'].tolist(), atlas)
+                    p.drawPixmapFragments(self.target.tolist(), data['sourceRect'].tolist(), atlas)
             else:
                 p.setRenderHint(p.Antialiasing, aa)
 
@@ -924,7 +920,7 @@ class SpotItem(object):
         self._data['data'] = data
 
     def updateItem(self):
-        self._data['rectSrc'] = None
+        self._data['sourceRect'] = None
         self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
 
