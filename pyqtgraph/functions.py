@@ -7,15 +7,19 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 from __future__ import division
 from .python2_3 import asUnicode
+from .Qt import QtGui, QtCore, USE_PYSIDE
 Colors = {
-    'b': (0,0,255,255),
-    'g': (0,255,0,255),
-    'r': (255,0,0,255),
-    'c': (0,255,255,255),
-    'm': (255,0,255,255),
-    'y': (255,255,0,255),
-    'k': (0,0,0,255),
-    'w': (255,255,255,255),
+    'b': QtGui.QColor(0,0,255,255),
+    'g': QtGui.QColor(0,255,0,255),
+    'r': QtGui.QColor(255,0,0,255),
+    'c': QtGui.QColor(0,255,255,255),
+    'm': QtGui.QColor(255,0,255,255),
+    'y': QtGui.QColor(255,255,0,255),
+    'k': QtGui.QColor(0,0,0,255),
+    'w': QtGui.QColor(255,255,255,255),
+    'd': QtGui.QColor(150,150,150,255),
+    'l': QtGui.QColor(200,200,200,255),
+    's': QtGui.QColor(100,100,150,255),
 }  
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
@@ -168,17 +172,15 @@ def mkColor(*args):
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
-        if isinstance(args[0], QtGui.QColor):
-            return QtGui.QColor(args[0])
-        elif isinstance(args[0], float):
-            r = g = b = int(args[0] * 255)
-            a = 255
-        elif isinstance(args[0], basestring):
+        if isinstance(args[0], basestring):
             c = args[0]
             if c[0] == '#':
                 c = c[1:]
             if len(c) == 1:
-                (r, g, b, a) = Colors[c]
+                try:
+                    return Colors[c]
+                except KeyError:
+                    raise Exception('No color named "%s"' % c)
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -199,6 +201,11 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+        elif isinstance(args[0], QtGui.QColor):
+            return QtGui.QColor(args[0])
+        elif isinstance(args[0], float):
+            r = g = b = int(args[0] * 255)
+            a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
                 (r, g, b) = args[0]
@@ -282,7 +289,7 @@ def mkPen(*args, **kargs):
         color = args
         
     if color is None:
-        color = mkColor(200, 200, 200)
+        color = mkColor('l')
     if hsv is not None:
         color = hsvColor(*hsv)
     else:
