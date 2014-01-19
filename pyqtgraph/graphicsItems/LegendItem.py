@@ -3,7 +3,7 @@ from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..Point import Point
-from .ScatterPlotItem import ScatterPlotItem
+from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 __all__ = ['LegendItem']
@@ -167,7 +167,7 @@ class ItemSample(GraphicsWidget):
             size = opts['size']
             
             p.translate(10,10)
-            path = ScatterPlotItem.drawSymbol(p, symbol, size, pen, brush)
+            path = drawSymbol(p, symbol, size, pen, brush)
         
         
         
