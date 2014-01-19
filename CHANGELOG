@@ -41,6 +41,7 @@ pyqtgraph-0.9.9  [unreleased]
     - PolyLineROI.setPen() now changes the pen of its segments as well
     - Prevent divide-by-zero in AxisItem
     - Major speedup when using ScatterPlotItem in pxMode
+    - PlotCurveItem ignores clip-to-view when auto range is enabled
 
 pyqtgraph-0.9.8  2013-11-24
 
