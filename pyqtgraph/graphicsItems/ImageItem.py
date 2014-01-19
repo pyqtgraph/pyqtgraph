@@ -310,8 +310,8 @@ class ImageItem(GraphicsObject):
         if self.image is None:
             return None,None
         if step == 'auto':
-            step = (np.ceil(self.image.shape[0] / targetSize),
-                    np.ceil(self.image.shape[1] / targetSize))
+            step = (np.ceil(self.image.shape[0] / targetImageSize),
+                    np.ceil(self.image.shape[1] / targetImageSize))
         if np.isscalar(step):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]
