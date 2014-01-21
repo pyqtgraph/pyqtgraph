@@ -9,23 +9,23 @@ from numpy import ndarray
 from . import GraphicsLayout
 
 try:
-    from metaarray import *
+    from ..metaarray import *
     HAVE_METAARRAY = True
 except:
     #raise
     HAVE_METAARRAY = False
-    
+
 
 __all__ = ['MultiPlotItem']
 class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     """
     Automaticaly generates a grid of plots from a multi-dimensional array
     """
-    
+
     def plot(self, data):
         #self.layout.clear()
         self.plots = []
-            
+
         if HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             if data.ndim != 2:
                 raise Exception("MultiPlot currently only accepts 2D MetaArray.")
@@ -53,12 +53,12 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
                     title = info['name']
                 if 'units' in info:
                     units = info['units']
-                    
+
                 pi.setLabel('left', text=title, units=units)
-                
+
         else:
             raise Exception("Data type %s not (yet?) supported for MultiPlot." % type(data))
-            
+
     def close(self):
         for p in self.plots:
             p[0].close()
