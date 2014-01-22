@@ -5,4 +5,5 @@ recursive-include doc *.rst *.py *.svg *.png *.jpg
 recursive-include doc/build/html *
 recursive-include tools *
 include doc/Makefile doc/make.bat README.md LICENSE.txt CHANGELOG
+global-exclude *.pyc
 

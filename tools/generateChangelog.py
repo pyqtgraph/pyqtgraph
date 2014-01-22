@@ -1,66 +1,80 @@
-from  subprocess import check_output
-import re, time
+import re, time, sys
 
-def run(cmd):
-    return check_output(cmd, shell=True)
 
-tags = run('bzr tags')
-versions = []
-for tag in tags.split('\n'):
-    if tag.strip() == '':
-        continue
-    ver, rev = re.split(r'\s+', tag)
-    if ver.startswith('pyqtgraph-'):
-        versions.append(ver)
+def generateDebianChangelog(package, logFile, version, maintainer):
+    """
+    ------- Convert CHANGELOG format like:
+    pyqtgraph-0.9.1  2012-12-29
 
-for i in range(len(versions)-1)[::-1]:
-    log = run('bzr log -r tag:%s..tag:%s' % (versions[i], versions[i+1]))
-    changes = []
-    times = []
-    inmsg = False
-    for line in log.split('\n'):
-        if line.startswith('message:'):
-            inmsg = True
-            continue
-        elif line.startswith('-----------------------'):
-            inmsg = False
-            continue
-        
-        if inmsg:
-            changes.append(line)
+    - change
+    - change
+
+
+    -------- to debian changelog format:
+    python-pyqtgraph (0.9.1-1) UNRELEASED; urgency=low
+
+    * Initial release.
+
+    -- Luke <luke.campagnola@gmail.com>  Sat, 29 Dec 2012 01:07:23 -0500
+    
+    
+    *package* is the name of the python package.
+    *logFile* is the CHANGELOG file to read; must have the format described above.
+    *version* will be used to check that the most recent log entry corresponds
+              to the current package version.
+    *maintainer* should be string like "Luke <luke.campagnola@gmail.com>".
+    """
+    releases = []
+    current_version = None
+    current_log = None
+    current_date = None
+    for line in open(logFile).readlines():
+        match = re.match(package+r'-(\d+\.\d+\.\d+(\.\d+)?)\s*(\d+-\d+-\d+)\s*$', line)
+        if match is None:
+            if current_log is not None:
+                current_log.append(line)
         else:
-            m = re.match(r'timestamp:\s+(.*)$', line)
-            if m is not None:
-                times.append(m.groups()[0])
+            if current_log is not None:
+                releases.append((current_version, current_log, current_date))
+            current_version, current_date = match.groups()[0], match.groups()[2]
+            #sys.stderr.write("Found release %s\n" % current_version)
+            current_log = []
 
-    citime = time.strptime(times[0][:-6], '%a %Y-%m-%d %H:%M:%S')
+    if releases[0][0] != version:
+        raise Exception("Latest release in changelog (%s) does not match current release (%s)\n" % (releases[0][0],  version))
+    
+    output = []
+    for release, changes, date in releases:
+        date = time.strptime(date, '%Y-%m-%d')
+        changeset = [ 
+            "python-%s (%s-1) UNRELEASED; urgency=low\n" % (package, release),
+            "\n"] + changes + [
+            " -- %s  %s -0%d00\n"  % (maintainer, time.strftime('%a, %d %b %Y %H:%M:%S', date), time.timezone/3600),
+            "\n" ]
 
-    print "python-pyqtgraph (%s-1) UNRELEASED; urgency=low" % versions[i+1].split('-')[1]
-    print ""
-    for line in changes:
-        for n in range(len(line)):
-            if line[n] != ' ':
-                n += 1
-                break
-
-        words = line.split(' ')
-        nextline = ''
-        for w in words:
-            if len(w) + len(nextline) > 79:
-                print nextline
-                nextline = (' '*n) + w
+        # remove consecutive blank lines except between releases
+        clean = ""
+        lastBlank = True
+        for line in changeset:
+            if line.strip() == '':
+                if lastBlank:
+                    continue
+                else:
+                    clean += line
+                lastBlank = True
             else:
-                nextline += ' ' + w
-        print nextline
-    #print '\n'.join(changes)
-    print ""
-    print " -- Luke <luke.campagnola@gmail.com>  %s -0%d00" % (time.strftime('%a, %d %b %Y %H:%M:%S', citime), time.timezone/3600) 
-    #print " -- Luke <luke.campagnola@gmail.com>  %s -0%d00" % (times[0], time.timezone/3600) 
-    print ""
+                clean += line
+                lastBlank = False
+                
+        output.append(clean)
+        output.append("")
+    return "\n".join(output) + "\n"
 
-print """python-pyqtgraph (0.9.0-1) UNRELEASED; urgency=low
 
-  * Initial release.
-
- -- Luke <luke.campagnola@gmail.com>  Thu, 27 Dec 2012 02:46:26 -0500"""
+if __name__ == '__main__':
+    if len(sys.argv) < 5:
+        sys.stderr.write('Usage: generateChangelog.py package_name log_file version "Maintainer <maint@email.com>"\n')
+        sys.exit(-1)
+    
+    print(generateDebianChangelog(*sys.argv[1:]))
 
