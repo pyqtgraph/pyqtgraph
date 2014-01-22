@@ -49,7 +49,7 @@ def getGitVersion(tagPrefix):
     lastTag = gitCommit(lastTagName)
     head = gitCommit('HEAD')
     if head != lastTag:
-        branch = re.search(r'\* (.*)', check_output(['git', 'branch'], universal_newlines=True)).group(1)
+        branch = getGitBranch()
         gitVersion = gitVersion + "-%s-%s" % (branch, head[:10])
     
     # any uncommitted modifications?
@@ -64,6 +64,13 @@ def getGitVersion(tagPrefix):
         gitVersion = gitVersion + '+'
 
     return gitVersion
+
+def getGitBranch():
+    m = re.search(r'\* (.*)', check_output(['git', 'branch'], universal_newlines=True))
+    if m is None:
+        return ''
+    else:
+        return m.group(1)
 
 def getVersionStrings(pkg):
     """
@@ -102,10 +109,11 @@ def getVersionStrings(pkg):
                 forcedVersion = sys.argv[i].replace('--force-version=', '')
                 sys.argv.pop(i)
                 
+                
     ## Finally decide on a version string to use:
     if forcedVersion is not None:
         version = forcedVersion
-    elif gitVersion is not None:
+    elif gitVersion is not None and getGitBranch() != 'debian': # ignore git version if this is debian branch
         version = gitVersion
         sys.stderr.write("Detected git commit; will use version string: '%s'\n" % version)
     else:
@@ -121,7 +129,7 @@ from generateChangelog import generateDebianChangelog
 class DebCommand(Command):
     description = "build .deb package using `debuild -us -uc`"
     maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
-    debTemplate = "tools/debian"
+    debTemplate = "debian"
     debDir = "deb_build"
     
     user_options = []
