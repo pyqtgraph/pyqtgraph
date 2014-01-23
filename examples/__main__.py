@@ -37,6 +37,7 @@ examples = OrderedDict([
         ('IsocurveItem', 'isocurve.py'),
         ('GraphItem', 'GraphItem.py'),
         ('ErrorBarItem', 'ErrorBarItem.py'),
+        ('FillBetweenItem', 'FillBetweenItem.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROIExamples.py'),

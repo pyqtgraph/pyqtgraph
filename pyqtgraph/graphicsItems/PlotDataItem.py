@@ -15,7 +15,7 @@ class PlotDataItem(GraphicsObject):
     GraphicsItem for displaying plot curves, scatter plots, or both. 
     While it is possible to use :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` or
     :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` individually, this class
-    provides a unified interface to both. Inspances of :class:`PlotDataItem` are 
+    provides a unified interface to both. Instances of :class:`PlotDataItem` are 
     usually created by plot() methods such as :func:`pyqtgraph.plot` and
     :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
     

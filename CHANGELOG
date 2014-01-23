@@ -23,6 +23,7 @@ pyqtgraph-0.9.9  [unreleased]
         - Get, set current value
     - Added Flowchart.sigChartChanged
     - ImageItem.getHistogram is more clever about constructing histograms
+    - Added FillBetweenItem.setCurves()
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
@@ -42,6 +43,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Prevent divide-by-zero in AxisItem
     - Major speedup when using ScatterPlotItem in pxMode
     - PlotCurveItem ignores clip-to-view when auto range is enabled
+    - FillBetweenItem now forces PlotCurveItem to generate path
 
 pyqtgraph-0.9.8  2013-11-24
 
