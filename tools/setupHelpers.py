@@ -2,7 +2,6 @@ import os, sys, re
 try:
     from subprocess import check_output
 except ImportError:
-    print "fake check_output"
     import subprocess as sp
     def check_output(*args, **kwds):
         kwds['stdout'] = sp.PIPE
