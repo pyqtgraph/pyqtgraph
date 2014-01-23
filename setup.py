@@ -37,6 +37,11 @@ setupOpts = dict(
 from distutils.core import setup
 import distutils.dir_util
 import os, sys, re
+try:
+    # just avoids warning about install_requires
+    import setuptools
+except ImportError:
+    pass
 
 path = os.path.split(__file__)[0]
 sys.path.insert(0, os.path.join(path, 'tools'))

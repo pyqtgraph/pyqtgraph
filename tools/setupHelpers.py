@@ -1,5 +1,16 @@
 import os, sys, re
-from subprocess import check_output
+try:
+    from subprocess import check_output
+except ImportError:
+    import subprocess as sp
+    def check_output(*args, **kwds):
+        kwds['stdout'] = sp.PIPE
+        proc = sp.Popen(*args, **kwds)
+        output = proc.stdout.read()
+        proc.wait()
+        if proc.returncode != 0:
+            raise Exception("Process had nonzero return value", proc.returncode)
+        return output
 
 def listAllPackages(pkgroot):
     path = os.getcwd()
