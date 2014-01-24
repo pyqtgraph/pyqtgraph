@@ -58,14 +58,15 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
         
 
 class Flowchart(Node):
-    
     sigFileLoaded = QtCore.Signal(object)
     sigFileSaved = QtCore.Signal(object)
     
     
     #sigOutputChanged = QtCore.Signal() ## inherited from Node
     sigChartLoaded = QtCore.Signal()
-    sigStateChanged = QtCore.Signal()
+    sigStateChanged = QtCore.Signal()  # called when output is expected to have changed
+    sigChartChanged = QtCore.Signal(object, object, object) # called when nodes are added, removed, or renamed.
+                                                            # (self, action, node)
     
     def __init__(self, terminals=None, name=None, filePath=None, library=None):
         self.library = library or LIBRARY
@@ -218,6 +219,7 @@ class Flowchart(Node):
         node.sigClosed.connect(self.nodeClosed)
         node.sigRenamed.connect(self.nodeRenamed)
         node.sigOutputChanged.connect(self.nodeOutputChanged)
+        self.sigChartChanged.emit(self, 'add', node)
         
     def removeNode(self, node):
         node.close()
@@ -237,11 +239,13 @@ class Flowchart(Node):
             node.sigOutputChanged.disconnect(self.nodeOutputChanged)
         except TypeError:
             pass
+        self.sigChartChanged.emit(self, 'remove', node)
         
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
         self.widget().nodeRenamed(node, oldName)
+        self.sigChartChanged.emit(self, 'rename', node)
         
     def arrangeNodes(self):
         pass

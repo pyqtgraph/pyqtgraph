@@ -15,7 +15,7 @@ class PlotDataItem(GraphicsObject):
     GraphicsItem for displaying plot curves, scatter plots, or both. 
     While it is possible to use :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` or
     :class:`ScatterPlotItem <pyqtgraph.ScatterPlotItem>` individually, this class
-    provides a unified interface to both. Inspances of :class:`PlotDataItem` are 
+    provides a unified interface to both. Instances of :class:`PlotDataItem` are 
     usually created by plot() methods such as :func:`pyqtgraph.plot` and
     :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
     
@@ -531,15 +531,17 @@ class PlotDataItem(GraphicsObject):
                     ## downsampling is expensive; delay until after clipping.
             
             if self.opts['clipToView']:
-                # this option presumes that x-values have uniform spacing
-                range = self.viewRect()
-                if range is not None:
-                    dx = float(x[-1]-x[0]) / (len(x)-1)
-                    # clip to visible region extended by downsampling value
-                    x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)
-                    x1 = np.clip(int((range.right()-x[0])/dx)+2*ds , 0, len(x)-1)
-                    x = x[x0:x1]
-                    y = y[x0:x1]
+                view = self.getViewBox()
+                if view is None or not view.autoRangeEnabled()[0]:
+                    # this option presumes that x-values have uniform spacing
+                    range = self.viewRect()
+                    if range is not None:
+                        dx = float(x[-1]-x[0]) / (len(x)-1)
+                        # clip to visible region extended by downsampling value
+                        x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)
+                        x1 = np.clip(int((range.right()-x[0])/dx)+2*ds , 0, len(x)-1)
+                        x = x[x0:x1]
+                        y = y[x0:x1]
                     
             if ds > 1:
                 if self.opts['downsampleMethod'] == 'subsample':

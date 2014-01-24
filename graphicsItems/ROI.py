@@ -1623,9 +1623,9 @@ class PolyLineROI(ROI):
         if pos is None:
             pos = [0,0]
             
-        ROI.__init__(self, pos, size=[1,1], **args)
         self.closed = closed
         self.segments = []
+        ROI.__init__(self, pos, size=[1,1], **args)
         
         for p in positions:
             self.addFreeHandle(p)
@@ -1750,6 +1750,10 @@ class PolyLineROI(ROI):
         shape[axes[1]] = sliced.shape[axes[1]]
         return sliced * mask.reshape(shape)
 
+    def setPen(self, *args, **kwds):
+        ROI.setPen(self, *args, **kwds)
+        for seg in self.segments:
+            seg.setPen(*args, **kwds)
 
 class LineSegmentROI(ROI):
     """

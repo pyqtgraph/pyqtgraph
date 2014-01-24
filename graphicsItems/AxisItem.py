@@ -277,11 +277,11 @@ class AxisItem(GraphicsWidget):
         if pen == None, the default will be used (see :func:`setConfigOption 
         <pyqtgraph.setConfigOption>`)
         """
-        self._pen = pen
         self.picture = None
         if pen is None:
             pen = getConfigOption('foreground')
-        self.labelStyle['color'] = '#' + fn.colorStr(fn.mkPen(pen).color())[:6]
+        self._pen = fn.mkPen(pen)
+        self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
         self.setLabel()
         self.update()
         
@@ -458,8 +458,7 @@ class AxisItem(GraphicsWidget):
             return []
         
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        pixelSpacing = size / np.log(size)
-        optimalTickCount = max(2., size / pixelSpacing)
+        optimalTickCount = max(2., np.log(size))
         
         ## optimal minor tick spacing 
         optimalSpacing = dif / optimalTickCount
@@ -795,7 +794,7 @@ class AxisItem(GraphicsWidget):
                 if s is None:
                     rects.append(None)
                 else:
-                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, str(s))
+                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, asUnicode(s))
                     ## boundingRect is usually just a bit too large
                     ## (but this probably depends on per-font metrics?)
                     br.setHeight(br.height() * 0.8)
@@ -830,7 +829,7 @@ class AxisItem(GraphicsWidget):
                 vstr = strings[j]
                 if vstr is None: ## this tick was ignored because it is out of bounds
                     continue
-                vstr = str(vstr)
+                vstr = asUnicode(vstr)
                 x = tickPositions[i][j]
                 #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
                 textRect = rects[j]
