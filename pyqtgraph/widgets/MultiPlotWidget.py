@@ -12,7 +12,7 @@ __all__ = ['MultiPlotWidget']
 class MultiPlotWidget(GraphicsView):
     """Widget implementing a graphicsView with a single MultiPlotItem inside."""
     def __init__(self, parent=None):
-        self.minPlotHeight = 150
+        self.minPlotHeight = 50
         self.mPlotItem = MultiPlotItem.MultiPlotItem()
         GraphicsView.__init__(self, parent)
         self.enableMouse(False)
@@ -29,7 +29,16 @@ class MultiPlotWidget(GraphicsView):
             if hasattr(m, '__call__'):
                 return m
         raise AttributeError(attr)
-    
+
+    def setMinimumPlotHeight(self, min):
+        """Set the minimum height for each sub-plot displayed. 
+        
+        If the total height of all plots is greater than the height of the 
+        widget, then a scroll bar will appear to provide access to the entire
+        set of plots.
+        """
+        self.minPlotHeight = min
+        self.resizeEvent(None)
 
     def widgetGroupInterface(self):
         return (None, MultiPlotWidget.saveState, MultiPlotWidget.restoreState)
@@ -55,7 +64,7 @@ class MultiPlotWidget(GraphicsView):
             minHeight = len(self.mPlotItem.plots) * self.minPlotHeight
             if r.height() < minHeight:
                 r.setHeight(minHeight)
-                r.setWidth(r.width() - 25)
+                r.setWidth(r.width() - self.verticalScrollBar().width())
             self.centralWidget.setGeometry(r)
 
     def resizeEvent(self, ev):
