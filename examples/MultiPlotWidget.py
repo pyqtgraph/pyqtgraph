@@ -22,7 +22,15 @@ pw = MultiPlotWidget()
 mw.setCentralWidget(pw)
 mw.show()
 
-ma = MetaArray(random.random((3, 1000)), info=[{'name': 'Signal', 'cols': [{'name': 'Col1'}, {'name': 'Col2'}, {'name': 'Col3'}]}, {'name': 'Time', 'values': linspace(0., 1., 1000)}])
+data = random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
+ma = MetaArray(data, info=[
+    {'name': 'Signal', 'cols': [
+        {'name': 'Col1', 'units': 'V'}, 
+        {'name': 'Col2', 'units': 'A'}, 
+        {'name': 'Col3'},
+        ]}, 
+    {'name': 'Time', 'values': linspace(0., 1., 1000), 'units': 's'}
+    ])
 pw.plot(ma)
 
 ## Start Qt event loop unless running in interactive mode.
