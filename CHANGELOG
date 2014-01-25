@@ -24,6 +24,8 @@ pyqtgraph-0.9.9  [unreleased]
     - Added Flowchart.sigChartChanged
     - ImageItem.getHistogram is more clever about constructing histograms
     - Added FillBetweenItem.setCurves()
+    - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
+      when plots do not fit inside the widget.
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
@@ -44,6 +46,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Major speedup when using ScatterPlotItem in pxMode
     - PlotCurveItem ignores clip-to-view when auto range is enabled
     - FillBetweenItem now forces PlotCurveItem to generate path
+    - Fixed import errors and py3 issues in MultiPlotWidget
 
 pyqtgraph-0.9.8  2013-11-24
 
