@@ -25,7 +25,7 @@ class MultiPlotWidget(GraphicsView):
             m = getattr(self.mPlotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise NameError(attr)
+        raise AttributeError(attr)
 
     def widgetGroupInterface(self):
         return (None, MultiPlotWidget.saveState, MultiPlotWidget.restoreState)
