@@ -597,6 +597,8 @@ class ViewBox(GraphicsWidget):
         yMax        Maximum allowed y-axis range
         =========== ============================================================
         """
+        update = False
+        
         for kwd in ['xRange', 'yRange', 'minRange', 'maxRange']:
             if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
                 self.state['limits'][kwd] = kwds[kwd]
@@ -1409,16 +1411,24 @@ class ViewBox(GraphicsWidget):
                 
         # check for any requested limits
         rng = (self.state['limits']['xRange'], self.state['limits']['yRange'])
-        minRng = self.state['limits']['minRange']
-        maxRng = self.state['limits']['maxRange']
+        minRng = self.state['limits']['minRange'][:]
+        maxRng = self.state['limits']['maxRange'][:]
         
         for axis in [0, 1]:
+            if rng[axis][0] is None and rng[axis][1] is None and minRng[axis] is None and maxRng[axis] is None:
+                continue
+            
             # max range cannot be larger than bounds, if they are given
             if rng[axis][0] is not None and rng[axis][1] is not None:
-                maxRng[axis] = min(maxRng[axis], rng[axis][1]-rng[axis][0])
+                if maxRng[axis] is not None:
+                    maxRng[axis] = min(maxRng[axis], rng[axis][1]-rng[axis][0])
+                else:
+                    maxRng[axis] = rng[axis][1]-rng[axis][0]
+            
+            #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, rng[axis], minRng[axis], maxRng[axis])
+            #print "Starting range:", viewRange[axis]
             
             diff = viewRange[axis][1] - viewRange[axis][0]
-            print axis, diff, maxRng[axis]
             if maxRng[axis] is not None and diff > maxRng[axis]:
                 delta = maxRng[axis] - diff
                 changed[axis] = True
@@ -1428,9 +1438,10 @@ class ViewBox(GraphicsWidget):
             else:
                 delta = 0
             
-            viewRange[axis][0] -= diff/2.
-            viewRange[axis][1] += diff/2.
-            print viewRange
+            viewRange[axis][0] -= delta/2.
+            viewRange[axis][1] += delta/2.
+            
+            #print "after applying min/max:", viewRange[axis]
                
             mn, mx = rng[axis]
             if mn is not None and viewRange[axis][0] < mn:
@@ -1442,8 +1453,7 @@ class ViewBox(GraphicsWidget):
                 viewRange[axis][0] += delta
                 viewRange[axis][1] += delta
             
-                
-            
+            #print "after applying edge limits:", viewRange[axis]
             
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) and (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
