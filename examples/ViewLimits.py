@@ -5,7 +5,7 @@ import pyqtgraph as pg
 import numpy as np
 
 plt = pg.plot(np.random.normal(size=100), title="View limit example")
-plt.centralWidget.vb.setLimits(xRange=[-100, 100], minRange=[0.1, None], maxRange=[50, None])
+plt.centralWidget.vb.setLimits(xMin=-20, xMax=120, minXRange=5, maxXRange=100)
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

@@ -121,10 +121,10 @@ class ViewBox(GraphicsWidget):
             
             # Limits
             'limits': {
-                'xRange': [None, None],   # Maximum and minimum visible X values 
-                'yRange': [None, None],   # Maximum and minimum visible Y values  
-                'minRange': [None, None],  # Minimum allowed range for both axes
-                'maxRange': [None, None],  # Maximum allowed range for both axes
+                'xLimits': [None, None],   # Maximum and minimum visible X values 
+                'yLimits': [None, None],   # Maximum and minimum visible Y values  
+                'xRange': [None, None],   # Maximum and minimum X range
+                'yRange': [None, None],   # Maximum and minimum Y range 
                 }
             
         }
@@ -407,6 +407,13 @@ class ViewBox(GraphicsWidget):
             print("make qrectf failed:", self.state['targetRange'])
             raise
 
+    def _resetTarget(self):
+        # Reset target range to exactly match current view range.
+        # This is used during mouse interaction to prevent unpredictable
+        # behavior (because the user is unaware of targetRange).
+        if self.state['aspectLocked'] is False: # (interferes with aspect locking)
+            self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
+
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
@@ -585,27 +592,38 @@ class ViewBox(GraphicsWidget):
         """
         Set limits that constrain the possible view ranges.
         
+        **Panning limits**. The following arguments define the region within the 
+        viewbox coordinate system that may be accessed by panning the view.
         =========== ============================================================
-        Arguments
-        xRange      (min, max) limits for x-axis range
-        yRange      (min, max) limits for y-axis range
-        minRange    (x, y) minimum allowed span
-        maxRange    (x, y) maximum allowed span
-        xMin        Minimum allowed x-axis range
-        xMax        Maximum allowed x-axis range
-        yMin        Minimum allowed y-axis range
-        yMax        Maximum allowed y-axis range
+        xMin        Minimum allowed x-axis value
+        xMax        Maximum allowed x-axis value
+        yMin        Minimum allowed y-axis value
+        yMax        Maximum allowed y-axis value
+        =========== ============================================================        
+        
+        **Scaling limits**. These arguments prevent the view being zoomed in or
+        out too far.
         =========== ============================================================
+        minXRange   Minimum allowed left-to-right span across the view.
+        maxXRange   Maximum allowed left-to-right span across the view.
+        minYRange   Minimum allowed top-to-bottom span across the view.
+        maxYRange   Maximum allowed top-to-bottom span across the view.
+        =========== ============================================================        
         """
         update = False
         
-        for kwd in ['xRange', 'yRange', 'minRange', 'maxRange']:
-            if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
-                self.state['limits'][kwd] = kwds[kwd]
-                update = True
+        #for kwd in ['xLimits', 'yLimits', 'minRange', 'maxRange']:
+            #if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
+                #self.state['limits'][kwd] = kwds[kwd]
+                #update = True
         for axis in [0,1]:
             for mnmx in [0,1]:
                 kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
+                lname = ['xLimits', 'yLimits'][axis]
+                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
+                    self.state['limits'][lname][mnmx] = kwds[kwd]
+                    update = True
+                kwd = [['minXRange', 'maxXRange'], ['minYRange', 'maxYRange']][axis][mnmx]
                 lname = ['xRange', 'yRange'][axis]
                 if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
                     self.state['limits'][lname][mnmx] = kwds[kwd]
@@ -1101,6 +1119,7 @@ class ViewBox(GraphicsWidget):
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         #center = ev.pos()
         
+        self._resetTarget()
         self.scaleBy(s, center)
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         ev.accept()
@@ -1158,6 +1177,7 @@ class ViewBox(GraphicsWidget):
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
                 
+                self._resetTarget()
                 self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
@@ -1177,6 +1197,7 @@ class ViewBox(GraphicsWidget):
             y = s[1] if mouseEnabled[1] == 1 else None
             
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
+            self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
@@ -1372,9 +1393,9 @@ class ViewBox(GraphicsWidget):
         viewRange = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
         changed = [False, False]
         
-        # Make correction for aspect ratio constraint
+        #-------- Make correction for aspect ratio constraint ----------
         
-        ## aspect is (widget w/h) / (view range w/h)
+        # aspect is (widget w/h) / (view range w/h)
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
@@ -1409,25 +1430,27 @@ class ViewBox(GraphicsWidget):
                     changed[0] = True
                 viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
                 
-        # check for any requested limits
-        rng = (self.state['limits']['xRange'], self.state['limits']['yRange'])
-        minRng = self.state['limits']['minRange'][:]
-        maxRng = self.state['limits']['maxRange'][:]
+        # ----------- Make corrections for view limits -----------
+        
+        limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
+        minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
+        maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
         
         for axis in [0, 1]:
-            if rng[axis][0] is None and rng[axis][1] is None and minRng[axis] is None and maxRng[axis] is None:
+            if limits[axis][0] is None and limits[axis][1] is None and minRng[axis] is None and maxRng[axis] is None:
                 continue
             
             # max range cannot be larger than bounds, if they are given
-            if rng[axis][0] is not None and rng[axis][1] is not None:
+            if limits[axis][0] is not None and limits[axis][1] is not None:
                 if maxRng[axis] is not None:
-                    maxRng[axis] = min(maxRng[axis], rng[axis][1]-rng[axis][0])
+                    maxRng[axis] = min(maxRng[axis], limits[axis][1]-limits[axis][0])
                 else:
-                    maxRng[axis] = rng[axis][1]-rng[axis][0]
+                    maxRng[axis] = limits[axis][1]-limits[axis][0]
             
-            #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, rng[axis], minRng[axis], maxRng[axis])
+            #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, limits[axis], minRng[axis], maxRng[axis])
             #print "Starting range:", viewRange[axis]
             
+            # Apply xRange, yRange
             diff = viewRange[axis][1] - viewRange[axis][0]
             if maxRng[axis] is not None and diff > maxRng[axis]:
                 delta = maxRng[axis] - diff
@@ -1443,19 +1466,22 @@ class ViewBox(GraphicsWidget):
             
             #print "after applying min/max:", viewRange[axis]
                
-            mn, mx = rng[axis]
+            # Apply xLimits, yLimits
+            mn, mx = limits[axis]
             if mn is not None and viewRange[axis][0] < mn:
                 delta = mn - viewRange[axis][0]
                 viewRange[axis][0] += delta
                 viewRange[axis][1] += delta
+                changed[axis] = True
             elif mx is not None and viewRange[axis][1] > mx:
                 delta = mx - viewRange[axis][1]
                 viewRange[axis][0] += delta
                 viewRange[axis][1] += delta
+                changed[axis] = True
             
             #print "after applying edge limits:", viewRange[axis]
             
-        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) and (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
+        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
         
         # emit range change signals
