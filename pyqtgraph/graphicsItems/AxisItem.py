@@ -692,7 +692,7 @@ class AxisItem(GraphicsWidget):
         ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
         if dif == 0:
-            xscale = 1
+            xScale = 1
             offset = 0
         else:
             if axis == 0:
