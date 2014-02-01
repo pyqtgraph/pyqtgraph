@@ -112,6 +112,6 @@ class CurveArrow(CurvePoint):
         self.arrow = ArrowItem.ArrowItem(**opts)
         self.arrow.setParentItem(self)
         
-    def setStyle(**opts):
+    def setStyle(self, **opts):
         return self.arrow.setStyle(**opts)
         

@@ -2,7 +2,7 @@
 """
 Display an animated arrowhead following a curve.
 This example uses the CurveArrow class, which is a combination
-of ArrowItem and CurvePoint. 
+of ArrowItem and CurvePoint.
 
 To place a static arrow anywhere in a scene, use ArrowItem.
 To attach other types of item to a curve, use CurvePoint.
@@ -45,6 +45,7 @@ p.setRange(QtCore.QRectF(-20, -10, 60, 20))
 ## Animated arrow following curve
 c = p2.plot(x=np.sin(np.linspace(0, 2*np.pi, 1000)), y=np.cos(np.linspace(0, 6*np.pi, 1000)))
 a = pg.CurveArrow(c)
+a.setStyle(headLen=40)
 p2.addItem(a)
 anim = a.makeAnimation(loop=-1)
 anim.start()
