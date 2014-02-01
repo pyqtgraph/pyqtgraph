@@ -810,10 +810,10 @@ class AxisItem(GraphicsWidget):
                 ## measure all text, make sure there's enough room
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
-                    textSize2 = np.max([r.width() for r in textRects])
+                    textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
                 else:
                     textSize = np.sum([r.width() for r in textRects])
-                    textSize2 = np.max([r.height() for r in textRects])
+                    textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
 
                 ## If the strings are too crowded, stop drawing text now.
                 ## We use three different crowding limits based on the number
