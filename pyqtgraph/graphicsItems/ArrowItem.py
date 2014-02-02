@@ -70,13 +70,16 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         brush             The brush used to fill the arrow.
         ================= =================================================
         """
-        self.opts = opts
+        try:
+            self.opts.update(opts)
+        except AttributeError:
+            self.opts = opts
         
         opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
         self.path = fn.makeArrowPath(**opt)
         self.setPath(self.path)
         
-        if opts['pxMode']:
+        if self.opts['pxMode']:
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
