@@ -16,12 +16,14 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         Arrows can be initialized with any keyword arguments accepted by 
         the setStyle() method.
         """
+        self.opts = {}
         QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
+
         if 'size' in opts:
             opts['headLen'] = opts['size']
         if 'width' in opts:
             opts['headWidth'] = opts['width']
-        defOpts = {
+        defaultOpts = {
             'pxMode': True,
             'angle': -150,   ## If the angle is 0, the arrow points left
             'pos': (0,0),
@@ -33,12 +35,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             'pen': (200,200,200),
             'brush': (50,50,200),
         }
-        defOpts.update(opts)
+        defaultOpts.update(opts)
         
-        self.setStyle(**defOpts)
-        
-        self.setPen(fn.mkPen(defOpts['pen']))
-        self.setBrush(fn.mkBrush(defOpts['brush']))
+        self.setStyle(**defaultOpts)
         
         self.rotate(self.opts['angle'])
         self.moveBy(*self.opts['pos'])
@@ -60,9 +59,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
                           specified, ot overrides headWidth. default=25
         baseAngle         Angle of the base of the arrow head. Default is
                           0, which means that the base of the arrow head
-                          is perpendicular to the arrow shaft.
+                          is perpendicular to the arrow tail.
         tailLen           Length of the arrow tail, measured from the base
-                          of the arrow head to the tip of the tail. If
+                          of the arrow head to the end of the tail. If
                           this value is None, no tail will be drawn.
                           default=None
         tailWidth         Width of the tail. default=3
@@ -70,14 +69,14 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         brush             The brush used to fill the arrow.
         ================= =================================================
         """
-        try:
-            self.opts.update(opts)
-        except AttributeError:
-            self.opts = opts
+        self.opts.update(opts)
         
         opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
         self.path = fn.makeArrowPath(**opt)
         self.setPath(self.path)
+        
+        self.setPen(fn.mkPen(self.opts['pen']))
+        self.setBrush(fn.mkBrush(self.opts['brush']))
         
         if self.opts['pxMode']:
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
