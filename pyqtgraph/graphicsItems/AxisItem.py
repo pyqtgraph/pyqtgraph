@@ -688,7 +688,7 @@ class AxisItem(GraphicsWidget):
         ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
         if dif == 0:
-            xscale = 1
+            xScale = 1
             offset = 0
         else:
             if axis == 0:
@@ -806,10 +806,10 @@ class AxisItem(GraphicsWidget):
                 ## measure all text, make sure there's enough room
                 if axis == 0:
                     textSize = np.sum([r.height() for r in textRects])
-                    textSize2 = np.max([r.width() for r in textRects])
+                    textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
                 else:
                     textSize = np.sum([r.width() for r in textRects])
-                    textSize2 = np.max([r.height() for r in textRects])
+                    textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
 
                 ## If the strings are too crowded, stop drawing text now.
                 ## We use three different crowding limits based on the number

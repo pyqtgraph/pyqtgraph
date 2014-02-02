@@ -11,6 +11,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Speed improvements in functions.makeARGB
     - ImageItem is faster by avoiding makeQImage(transpose=True)
     - ComboBox will raise error when adding multiple items of the same name
+    - ArrowItem.setStyle now updates style options rather than replacing them 
 
   New Features:
     - New HDF5 example for working with very large datasets
