@@ -19,7 +19,7 @@ class IsocurveItem(GraphicsObject):
         Create a new isocurve item. 
         
         ============= ===============================================================
-        **Arguments**
+        **Arguments:**
         data          A 2-dimensional ndarray. Can be initialized as None, and set 
                       later using :func:`setData <pyqtgraph.IsocurveItem.setData>`
         level         The cutoff value at which to draw the isocurve.
@@ -46,7 +46,7 @@ class IsocurveItem(GraphicsObject):
         Set the data/image to draw isocurves for.
         
         ============= ========================================================================
-        **Arguments**
+        **Arguments:**
         data          A 2-dimensional ndarray.
         level         The cutoff value at which to draw the curve. If level is not specified,
                       the previously set level is used.

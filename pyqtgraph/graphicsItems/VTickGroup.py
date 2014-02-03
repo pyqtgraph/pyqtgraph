@@ -20,7 +20,7 @@ class VTickGroup(UIGraphicsItem):
     def __init__(self, xvals=None, yrange=None, pen=None):
         """
         ============= ===================================================================
-        **Arguments**
+        **Arguments:**
         xvals         A list of x values (in data coordinates) at which to draw ticks.
         yrange        A list of [low, high] limits for the tick. 0 is the bottom of 
                       the view, 1 is the top. [0.8, 1] would draw ticks in the top 
@@ -57,7 +57,7 @@ class VTickGroup(UIGraphicsItem):
         """Set the x values for the ticks. 
         
         ============= =====================================================================
-        **Arguments** 
+        **Arguments:**
         vals          A list of x values (in data/plot coordinates) at which to draw ticks.
         ============= =====================================================================
         """

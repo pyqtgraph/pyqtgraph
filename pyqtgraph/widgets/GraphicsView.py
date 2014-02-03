@@ -51,7 +51,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def __init__(self, parent=None, useOpenGL=None, background='default'):
         """
         ============  ============================================================
-        Arguments:
+        **Arguments:**
         parent        Optional parent widget
         useOpenGL     If True, the GraphicsView will use OpenGL to do all of its
                       rendering. This can improve performance on some systems,

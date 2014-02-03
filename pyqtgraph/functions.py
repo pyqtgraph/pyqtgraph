@@ -388,7 +388,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
     ==============  ====================================================================================================
-    Arguments:
+    **Arguments:**
     *data*          (ndarray) the original dataset
     *shape*         the shape of the slice to take (Note the return value may have more dimensions than len(shape))
     *origin*        the location in the original dataset that will become the origin of the sliced data.
@@ -752,7 +752,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     Both stages are optional.
     
     ============ ==================================================================================
-    Arguments:
+    **Arguments:**
     data         numpy array of int/float types. If 
     levels       List [min, max]; optionally rescale data before converting through the
                  lookup table. The data is rescaled such that min->0 and max->*scale*::
@@ -888,7 +888,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     freeing that memory while the image is in use.
     
     =========== ===================================================================
-    Arguments:
+    **Arguments:**
     imgData     Array of data to convert. Must have shape (width, height, 3 or 4) 
                 and dtype=ubyte. The order of values in the 3rd axis must be 
                 (b, g, r, a).
@@ -1241,7 +1241,7 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
     Generate isocurve from 2D data using marching squares algorithm.
     
     ============= =========================================================
-    Arguments
+    **Arguments:**
     data          2D numpy array of scalar values
     level         The level at which to generate an isosurface
     connected     If False, return a single long list of point pairs

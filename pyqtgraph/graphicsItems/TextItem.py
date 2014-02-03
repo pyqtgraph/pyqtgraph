@@ -10,7 +10,7 @@ class TextItem(UIGraphicsItem):
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
         """
         ===========  =================================================================================
-        Arguments:
+        **Arguments:**
         *text*       The text to display 
         *color*      The color of the text (any format accepted by pg.mkColor)
         *html*       If specified, this overrides both *text* and *color*

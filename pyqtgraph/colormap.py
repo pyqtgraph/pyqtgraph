@@ -53,7 +53,7 @@ class ColorMap(object):
     def __init__(self, pos, color, mode=None):
         """
         ========= ==============================================================
-        Arguments
+        **Arguments:**
         pos       Array of positions where each color is defined
         color     Array of RGBA colors.
                   Integer data types are interpreted as 0-255; float data types
@@ -194,7 +194,7 @@ class ColorMap(object):
         Return an RGB(A) lookup table (ndarray). 
         
         ============= ============================================================================
-        **Arguments**
+        **Arguments:**
         start         The starting value in the lookup table (default=0.0) 
         stop          The final value in the lookup table (default=1.0)
         nPts          The number of points in the returned lookup table.

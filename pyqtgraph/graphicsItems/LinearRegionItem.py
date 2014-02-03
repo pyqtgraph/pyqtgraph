@@ -31,7 +31,7 @@ class LinearRegionItem(UIGraphicsItem):
         """Create a new LinearRegionItem.
         
         ============= =====================================================================
-        **Arguments**
+        **Arguments:**
         values        A list of the positions of the lines in the region. These are not 
                       limits; limits can be set by specifying bounds.
         orientation   Options are LinearRegionItem.Vertical or LinearRegionItem.Horizontal.
@@ -90,7 +90,7 @@ class LinearRegionItem(UIGraphicsItem):
         """Set the values for the edges of the region.
         
         ============= ==============================================
-        **Arguments** 
+        **Arguments:**
         rgn           A list or tuple of the lower and upper values.
         ============= ==============================================
         """

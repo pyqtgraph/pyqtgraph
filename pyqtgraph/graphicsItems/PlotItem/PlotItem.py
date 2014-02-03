@@ -102,7 +102,7 @@ class PlotItem(GraphicsWidget):
         Any extra keyword arguments are passed to PlotItem.plot().
         
         ==============  ==========================================================================================
-        **Arguments**
+        **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
                    
@@ -1113,7 +1113,7 @@ class PlotItem(GraphicsWidget):
         Set the label for an axis. Basic HTML formatting is allowed.
         
         ============= =================================================================
-        **Arguments**
+        **Arguments:**
         axis          must be one of 'left', 'bottom', 'right', or 'top'
         text          text to display along the axis. HTML allowed.
         units         units to display after the title. If units are given, 

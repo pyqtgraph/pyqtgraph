@@ -108,7 +108,7 @@ class Parameter(QtCore.QObject):
         by most Parameter subclasses.
         
         ================= =========================================================
-        Keyword Arguments
+        **Keyword Arguments:**
         name              The name to give this Parameter. This is the name that 
                           will appear in the left-most column of a ParameterTree
                           for this Parameter.
@@ -676,7 +676,7 @@ class Parameter(QtCore.QObject):
         Called when the state of any sub-parameter has changed. 
         
         ==========  ================================================================
-        Arguments:
+        **Arguments:**
         param       The immediate child whose tree state has changed.
                     note that the change may have originated from a grandchild.
         changes     List of tuples describing all changes that have been made
