@@ -1790,7 +1790,7 @@ def isosurface(data, level):
             [1, 1, 0, 2],
             [0, 1, 0, 2],
             #[9, 9, 9, 9]  ## fake
-        ], dtype=np.ubyte)
+        ], dtype=np.uint16) # don't use ubyte here! This value gets added to cell index later; will need the extra precision.
         nTableFaces = np.array([len(f)/3 for f in triTable], dtype=np.ubyte)
         faceShiftTables = [None]
         for i in range(1,6):
@@ -1889,7 +1889,6 @@ def isosurface(data, level):
         #profiler()
         if cells.shape[0] == 0:
             continue
-        #cellInds = index[(cells*ins[np.newaxis,:]).sum(axis=1)]
         cellInds = index[cells[:,0], cells[:,1], cells[:,2]]   ## index values of cells to process for this round
         #profiler()
         
@@ -1901,9 +1900,7 @@ def isosurface(data, level):
         #profiler()
         
         ### expensive:
-        #print verts.shape
         verts = (verts * cs[np.newaxis, np.newaxis, :]).sum(axis=2)
-        #vertInds = cutEdges[verts[...,0], verts[...,1], verts[...,2], verts[...,3]]  ## and these are the vertex indexes we want.
         vertInds = cutEdges[verts]
         #profiler()
         nv = vertInds.shape[0]

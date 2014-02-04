@@ -266,7 +266,11 @@ class MeshData(object):
             vertFaces = self.vertexFaces()
             self._vertexNormals = np.empty(self._vertexes.shape, dtype=float)
             for vindex in xrange(self._vertexes.shape[0]):
-                norms = faceNorms[vertFaces[vindex]]  ## get all face normals
+                faces = vertFaces[vindex]
+                if len(faces) == 0:
+                    self._vertexNormals[vindex] = (0,0,0)
+                    continue
+                norms = faceNorms[faces]  ## get all face normals
                 norm = norms.sum(axis=0)       ## sum normals
                 norm /= (norm**2).sum()**0.5  ## and re-normalize
                 self._vertexNormals[vindex] = norm
@@ -403,12 +407,10 @@ class MeshData(object):
         Return list mapping each vertex index to a list of face indexes that use the vertex.
         """
         if self._vertexFaces is None:
-            self._vertexFaces = [None] * len(self.vertexes())
+            self._vertexFaces = [[] for i in xrange(len(self.vertexes()))]
             for i in xrange(self._faces.shape[0]):
                 face = self._faces[i]
                 for ind in face:
-                    if self._vertexFaces[ind] is None:
-                        self._vertexFaces[ind] = []  ## need a unique/empty list to fill
                     self._vertexFaces[ind].append(i)
         return self._vertexFaces
         
