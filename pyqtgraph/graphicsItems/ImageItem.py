@@ -322,6 +322,8 @@ class ImageItem(GraphicsObject):
                 mx = stepData.max()
                 step = np.ceil((mx-mn) / 500.)
                 bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
+                if len(bins) == 0:
+                    bins = [mn, mx]
             else:
                 bins = 500
 

@@ -180,7 +180,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     i.paint()
                 except:
                     from .. import debug
-                    pyqtgraph.debug.printExc()
+                    debug.printExc()
                     msg = "Error while drawing item %s." % str(item)
                     ver = glGetString(GL_VERSION)
                     if ver is not None:

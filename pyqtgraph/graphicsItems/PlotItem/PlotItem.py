@@ -69,6 +69,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
     :func:`setAutoVisible <pyqtgraph.ViewBox.setAutoVisible>`,
+    :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
     :func:`viewRect <pyqtgraph.ViewBox.viewRect>`,
     :func:`viewRange <pyqtgraph.ViewBox.viewRange>`,
     :func:`setMouseEnabled <pyqtgraph.ViewBox.setMouseEnabled>`,
@@ -195,7 +196,7 @@ class PlotItem(GraphicsWidget):
         ## Wrap a few methods from viewBox
         for m in [
             'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
-            'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled',
+            'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled', 'setLimits',
             'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
             'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
             setattr(self, m, getattr(self.vb, m))

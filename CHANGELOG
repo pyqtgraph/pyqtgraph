@@ -14,6 +14,7 @@ pyqtgraph-0.9.9  [unreleased]
     - ArrowItem.setStyle now updates style options rather than replacing them 
 
   New Features:
+    - Added ViewBox.setLimits() method
     - New HDF5 example for working with very large datasets
     - Added Qt.loadUiType function for PySide
     - Simplified Profilers; can be activated with environmental variables
@@ -48,6 +49,11 @@ pyqtgraph-0.9.9  [unreleased]
     - PlotCurveItem ignores clip-to-view when auto range is enabled
     - FillBetweenItem now forces PlotCurveItem to generate path
     - Fixed import errors and py3 issues in MultiPlotWidget
+    - Isosurface works for arrays with shapes > 255
+    - Fixed ImageItem exception building histogram when image has only one value
+    - Fixed MeshData exception caused when vertexes have no matching faces
+    - Fixed GLViewWidget exception handler
+
 
 pyqtgraph-0.9.8  2013-11-24
 
