@@ -37,7 +37,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """Adds a dock to this area.
         
         =========== =================================================================
-        Arguments:
+        **Arguments:**
         dock        The new Dock object to add. If None, then a new Dock will be 
                     created.
         position    'bottom', 'top', 'left', 'right', 'above', or 'below'

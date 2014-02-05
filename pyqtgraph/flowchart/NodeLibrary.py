@@ -26,7 +26,7 @@ class NodeLibrary:
         Register a new node type. If the type's name is already in use,
         an exception will be raised (unless override=True).
         
-        Arguments:
+        **Arguments:**
         
             nodeClass - a subclass of Node (must have typ.nodeName)
             paths - list of tuples specifying the location(s) this 

@@ -300,7 +300,7 @@ class RemoteEventHandler(object):
         as it describes the internal protocol used to communicate between processes)
         
         ==========  ====================================================================
-        Arguments:  
+        **Arguments:**
         request     String describing the type of request being sent (see below)
         reqId       Integer uniquely linking a result back to the request that generated
                     it. (most requests leave this blank)

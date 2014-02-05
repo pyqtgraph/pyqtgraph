@@ -828,7 +828,7 @@ def typeStr(obj):
     
 def searchRefs(obj, *args):
     """Pseudo-interactive function for tracing references backward.
-    Arguments:
+    **Arguments:**
         obj:   The initial object from which to start searching
         args:  A set of string or int arguments.
                each integer selects one of obj's referrers to be the new 'obj'

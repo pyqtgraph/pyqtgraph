@@ -29,7 +29,7 @@ class InfiniteLine(GraphicsObject):
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None):
         """
         ============= ==================================================================
-        **Arguments**
+        **Arguments:**
         pos           Position of the line. This can be a QPointF or a single value for
                       vertical/horizontal lines.
         angle         Angle of line in degrees. 0 is horizontal, 90 is vertical.

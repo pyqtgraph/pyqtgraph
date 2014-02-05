@@ -107,33 +107,33 @@ class Parameter(QtCore.QObject):
         Parameter instance, the options available to this method are also allowed
         by most Parameter subclasses.
         
-        ================= =========================================================
-        Keyword Arguments
-        name              The name to give this Parameter. This is the name that 
-                          will appear in the left-most column of a ParameterTree
-                          for this Parameter.
-        value             The value to initially assign to this Parameter.
-        default           The default value for this Parameter (most Parameters
-                          provide an option to 'reset to default').
-        children          A list of children for this Parameter. Children
-                          may be given either as a Parameter instance or as a
-                          dictionary to pass to Parameter.create(). In this way,
-                          it is possible to specify complex hierarchies of
-                          Parameters from a single nested data structure.
-        readonly          If True, the user will not be allowed to edit this 
-                          Parameter. (default=False)
-        enabled           If False, any widget(s) for this parameter will appear
-                          disabled. (default=True)
-        visible           If False, the Parameter will not appear when displayed
-                          in a ParameterTree. (default=True)
-        renamable         If True, the user may rename this Parameter.
-                          (default=False)
-        removable         If True, the user may remove this Parameter.
-                          (default=False)
-        expanded          If True, the Parameter will appear expanded when 
-                          displayed in a ParameterTree (its children will be 
-                          visible). (default=True)
-        ================= =========================================================
+        =======================      =========================================================
+        **Keyword Arguments:**
+        name                         The name to give this Parameter. This is the name that
+                                     will appear in the left-most column of a ParameterTree
+                                     for this Parameter.
+        value                        The value to initially assign to this Parameter.
+        default                      The default value for this Parameter (most Parameters
+                                     provide an option to 'reset to default').
+        children                     A list of children for this Parameter. Children
+                                     may be given either as a Parameter instance or as a
+                                     dictionary to pass to Parameter.create(). In this way,
+                                     it is possible to specify complex hierarchies of
+                                     Parameters from a single nested data structure.
+        readonly                     If True, the user will not be allowed to edit this
+                                     Parameter. (default=False)
+        enabled                      If False, any widget(s) for this parameter will appear
+                                     disabled. (default=True)
+        visible                      If False, the Parameter will not appear when displayed
+                                     in a ParameterTree. (default=True)
+        renamable                    If True, the user may rename this Parameter.
+                                     (default=False)
+        removable                    If True, the user may remove this Parameter.
+                                     (default=False)
+        expanded                     If True, the Parameter will appear expanded when
+                                     displayed in a ParameterTree (its children will be
+                                     visible). (default=True)
+        =======================      =========================================================
         """
         
         

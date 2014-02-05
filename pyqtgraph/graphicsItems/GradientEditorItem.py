@@ -36,7 +36,7 @@ class TickSliderItem(GraphicsWidget):
     def __init__(self, orientation='bottom', allowAdd=True, **kargs):
         """
         ============= =================================================================================
-        **Arguments**
+        **Arguments:**
         orientation   Set the orientation of the gradient. Options are: 'left', 'right'
                       'top', and 'bottom'.
         allowAdd      Specifies whether ticks can be added to the item by the user.
@@ -104,7 +104,7 @@ class TickSliderItem(GraphicsWidget):
         """Set the orientation of the TickSliderItem.
         
         ============= ===================================================================
-        **Arguments**
+        **Arguments:**
         orientation   Options are: 'left', 'right', 'top', 'bottom'
                       The orientation option specifies which side of the slider the
                       ticks are on, as well as whether the slider is vertical ('right'
@@ -137,7 +137,7 @@ class TickSliderItem(GraphicsWidget):
         Add a tick to the item.
         
         ============= ==================================================================
-        **Arguments**
+        **Arguments:**
         x             Position where tick should be added.
         color         Color of added tick. If color is not specified, the color will be
                       white.
@@ -266,7 +266,7 @@ class TickSliderItem(GraphicsWidget):
         """Set the color of the specified tick.
         
         ============= ==================================================================
-        **Arguments** 
+        **Arguments:**
         tick          Can be either an integer corresponding to the index of the tick 
                       or a Tick object. Ex: if you had a slider with 3 ticks and you 
                       wanted to change the middle tick, the index would be 1.
@@ -285,7 +285,7 @@ class TickSliderItem(GraphicsWidget):
         Set the position (along the slider) of the tick.
         
         ============= ==================================================================
-        **Arguments** 
+        **Arguments:**
         tick          Can be either an integer corresponding to the index of the tick 
                       or a Tick object. Ex: if you had a slider with 3 ticks and you 
                       wanted to change the middle tick, the index would be 1.
@@ -306,7 +306,7 @@ class TickSliderItem(GraphicsWidget):
         """Return the value (from 0.0 to 1.0) of the specified tick.
         
         ============= ==================================================================
-        **Arguments** 
+        **Arguments:**
         tick          Can be either an integer corresponding to the index of the tick 
                       or a Tick object. Ex: if you had a slider with 3 ticks and you 
                       wanted the value of the middle tick, the index would be 1.
@@ -320,7 +320,7 @@ class TickSliderItem(GraphicsWidget):
         """Return the Tick object at the specified index.
         
         ============= ==================================================================
-        **Arguments**       
+        **Arguments:**
         tick          An integer corresponding to the index of the desired tick. If the 
                       argument is not an integer it will be returned unchanged.  
         ============= ==================================================================
@@ -367,7 +367,7 @@ class GradientEditorItem(TickSliderItem):
         All arguments are passed to :func:`TickSliderItem.__init__ <pyqtgraph.TickSliderItem.__init__>`
         
         ============= =================================================================================
-        **Arguments**
+        **Arguments:**
         orientation   Set the orientation of the gradient. Options are: 'left', 'right'
                       'top', and 'bottom'.
         allowAdd      Default is True. Specifies whether ticks can be added to the item.
@@ -446,7 +446,7 @@ class GradientEditorItem(TickSliderItem):
         Set the orientation of the GradientEditorItem. 
         
         ============= ===================================================================
-        **Arguments**
+        **Arguments:**
         orientation   Options are: 'left', 'right', 'top', 'bottom'
                       The orientation option specifies which side of the gradient the
                       ticks are on, as well as whether the gradient is vertical ('right'
@@ -589,7 +589,7 @@ class GradientEditorItem(TickSliderItem):
         Return a color for a given value.
         
         ============= ==================================================================
-        **Arguments** 
+        **Arguments:**
         x             Value (position on gradient) of requested color.
         toQColor      If true, returns a QColor object, else returns a (r,g,b,a) tuple.
         ============= ==================================================================
@@ -649,7 +649,7 @@ class GradientEditorItem(TickSliderItem):
         Return an RGB(A) lookup table (ndarray). 
         
         ============= ============================================================================
-        **Arguments**
+        **Arguments:**
         nPts           The number of points in the returned lookup table.
         alpha          True, False, or None - Specifies whether or not alpha values are included 
                        in the table.If alpha is None, alpha will be automatically determined.
@@ -703,7 +703,7 @@ class GradientEditorItem(TickSliderItem):
         Add a tick to the gradient. Return the tick.
         
         ============= ==================================================================
-        **Arguments**
+        **Arguments:**
         x             Position where tick should be added.
         color         Color of added tick. If color is not specified, the color will be
                       the color of the gradient at the specified position.
@@ -749,7 +749,7 @@ class GradientEditorItem(TickSliderItem):
         Restore the gradient specified in state.
         
         ============= ====================================================================
-        **Arguments**
+        **Arguments:**
         state         A dictionary with same structure as those returned by 
                       :func:`saveState <pyqtgraph.GradientEditorItem.saveState>`
                       

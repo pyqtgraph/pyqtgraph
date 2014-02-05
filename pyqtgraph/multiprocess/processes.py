@@ -39,7 +39,7 @@ class Process(RemoteEventHandler):
     def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
         """
         ============  =============================================================
-        Arguments:
+        **Arguments:**
         name          Optional name for this process used when printing messages
                       from the remote process.
         target        Optional function to call after starting remote process. 

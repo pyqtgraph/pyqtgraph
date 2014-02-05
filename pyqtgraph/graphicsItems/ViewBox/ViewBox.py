@@ -72,7 +72,7 @@ class ViewBox(GraphicsWidget):
     def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None):
         """
         =============  =============================================================
-        **Arguments**
+        **Arguments:**
         *parent*       (QGraphicsWidget) Optional parent widget
         *border*       (QPen) Do draw a border around the view, give any 
                        single argument accepted by :func:`mkPen <pyqtgraph.mkPen>`
@@ -420,7 +420,7 @@ class ViewBox(GraphicsWidget):
         Must specify at least one of *rect*, *xRange*, or *yRange*. 
         
         ================== =====================================================================
-        **Arguments**
+        **Arguments:**
         *rect*             (QRectF) The full range that should be visible in the view box.
         *xRange*           (min,max) The range that should be visible along the x-axis.
         *yRange*           (min,max) The range that should be visible along the y-axis.

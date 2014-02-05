@@ -56,10 +56,11 @@ class PlotDataItem(GraphicsObject):
             ===========================   =========================================
         
         **Line style keyword arguments:**
+
             ==========   ================================================
-            connect      Specifies how / whether vertexes should be connected. 
-                         See :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
-            pen          Pen to use for drawing line between points. 
+            connect      Specifies how / whether vertexes should be connected. See
+                         :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
+            pen          Pen to use for drawing line between points.
                          Default is solid grey, 1px width. Use None to disable line drawing.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
