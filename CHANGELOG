@@ -14,6 +14,7 @@ pyqtgraph-0.9.9  [unreleased]
     - ArrowItem.setStyle now updates style options rather than replacing them 
 
   New Features:
+    - Added ViewBox.setLimits() method
     - New HDF5 example for working with very large datasets
     - Added Qt.loadUiType function for PySide
     - Simplified Profilers; can be activated with environmental variables

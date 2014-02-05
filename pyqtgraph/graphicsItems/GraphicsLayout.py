@@ -31,6 +31,15 @@ class GraphicsLayout(GraphicsWidget):
         #ret = GraphicsWidget.resizeEvent(self, ev)
         #print self.pos(), self.mapToDevice(self.rect().topLeft())
         #return ret
+
+    def setBorder(self, *args, **kwds):
+        """
+        Set the pen used to draw border between cells.
+        
+        See :func:`mkPen <pyqtgraph.mkPen>` for arguments.        
+        """
+        self.border = fn.mkPen(*args, **kwds)
+        self.update()
     
     def nextRow(self):
         """Advance to next row for automatic item placement"""
