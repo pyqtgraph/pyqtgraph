@@ -28,18 +28,18 @@ class InfiniteLine(GraphicsObject):
     
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None):
         """
-        ============= ==================================================================
+        ==============  ==================================================================
         **Arguments:**
-        pos           Position of the line. This can be a QPointF or a single value for
-                      vertical/horizontal lines.
-        angle         Angle of line in degrees. 0 is horizontal, 90 is vertical.
-        pen           Pen to use when drawing line. Can be any arguments that are valid 
-                      for :func:`mkPen <pyqtgraph.mkPen>`. Default pen is transparent 
-                      yellow.
-        movable       If True, the line can be dragged to a new position by the user.
-        bounds        Optional [min, max] bounding values. Bounds are only valid if the
-                      line is vertical or horizontal.
-        ============= ==================================================================
+        pos             Position of the line. This can be a QPointF or a single value for
+                        vertical/horizontal lines.
+        angle           Angle of line in degrees. 0 is horizontal, 90 is vertical.
+        pen             Pen to use when drawing line. Can be any arguments that are valid
+                        for :func:`mkPen <pyqtgraph.mkPen>`. Default pen is transparent
+                        yellow.
+        movable         If True, the line can be dragged to a new position by the user.
+        bounds          Optional [min, max] bounding values. Bounds are only valid if the
+                        line is vertical or horizontal.
+        =============   ==================================================================
         """
         
         GraphicsObject.__init__(self)

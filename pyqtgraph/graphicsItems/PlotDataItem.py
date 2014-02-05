@@ -291,18 +291,18 @@ class PlotDataItem(GraphicsObject):
         Set the downsampling mode of this item. Downsampling reduces the number
         of samples drawn to increase performance. 
         
-        ===========  =================================================================
-        Arguments
-        ds           (int) Reduce visible plot samples by this factor. To disable,
-                     set ds=1.
-        auto         (bool) If True, automatically pick *ds* based on visible range
-        mode         'subsample': Downsample by taking the first of N samples. 
-                         This method is fastest and least accurate.
-                     'mean': Downsample by taking the mean of N samples.
-                     'peak': Downsample by drawing a saw wave that follows the min 
-                         and max of the original data. This method produces the best 
-                         visual representation of the data but is slower.
-        ===========  =================================================================
+        ==============  =================================================================
+        **Arguments:**
+        ds              (int) Reduce visible plot samples by this factor. To disable,
+                        set ds=1.
+        auto            (bool) If True, automatically pick *ds* based on visible range
+        mode            'subsample': Downsample by taking the first of N samples.
+                            This method is fastest and least accurate.
+                        'mean': Downsample by taking the mean of N samples.
+                        'peak': Downsample by drawing a saw wave that follows the min
+                            and max of the original data. This method produces the best
+                            visual representation of the data but is slower.
+        ==============  =================================================================
         """
         changed = False
         if ds is not None:

@@ -38,25 +38,25 @@ class Process(RemoteEventHandler):
     
     def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
         """
-        ============  =============================================================
+        ==============  =============================================================
         **Arguments:**
-        name          Optional name for this process used when printing messages
-                      from the remote process.
-        target        Optional function to call after starting remote process. 
-                      By default, this is startEventLoop(), which causes the remote
-                      process to process requests from the parent process until it
-                      is asked to quit. If you wish to specify a different target,
-                      it must be picklable (bound methods are not).
-        copySysPath   If True, copy the contents of sys.path to the remote process
-        debug         If True, print detailed information about communication
-                      with the child process.
-        wrapStdout    If True (default on windows) then stdout and stderr from the
-                      child process will be caught by the parent process and
-                      forwarded to its stdout/stderr. This provides a workaround
-                      for a python bug: http://bugs.python.org/issue3905
-                      but has the side effect that child output is significantly
-                      delayed relative to the parent output.
-        ============  =============================================================
+        name            Optional name for this process used when printing messages
+                        from the remote process.
+        target          Optional function to call after starting remote process.
+                        By default, this is startEventLoop(), which causes the remote
+                        process to process requests from the parent process until it
+                        is asked to quit. If you wish to specify a different target,
+                        it must be picklable (bound methods are not).
+        copySysPath     If True, copy the contents of sys.path to the remote process
+        debug           If True, print detailed information about communication
+                        with the child process.
+        wrapStdout      If True (default on windows) then stdout and stderr from the
+                        child process will be caught by the parent process and
+                        forwarded to its stdout/stderr. This provides a workaround
+                        for a python bug: http://bugs.python.org/issue3905
+                        but has the side effect that child output is significantly
+                        delayed relative to the parent output.
+        ==============  =============================================================
         """
         if target is None:
             target = startEventLoop

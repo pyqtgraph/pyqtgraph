@@ -36,14 +36,14 @@ class GLSurfacePlotItem(GLMeshItem):
         """
         Update the data in this surface plot. 
         
-        ========== =====================================================================
-        Arguments
-        x,y        1D arrays of values specifying the x,y positions of vertexes in the 
-                   grid. If these are omitted, then the values will be assumed to be
-                   integers.
-        z          2D array of height values for each grid vertex.
-        colors     (width, height, 4) array of vertex colors.
-        ========== =====================================================================
+        ==============  =====================================================================
+        **Arguments:**
+        x,y             1D arrays of values specifying the x,y positions of vertexes in the
+                        grid. If these are omitted, then the values will be assumed to be
+                        integers.
+        z               2D array of height values for each grid vertex.
+        colors          (width, height, 4) array of vertex colors.
+        ==============  =====================================================================
         
         All arguments are optional.
         
