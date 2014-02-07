@@ -12,7 +12,9 @@ from ..graphicsItems.PlotItem import *
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
     
-    #sigRangeChanged = QtCore.Signal(object, object)  ## already defined in GraphicsView
+    # signals wrapped from PlotItem / ViewBox
+    sigRangeChanged = QtCore.Signal(object, object)
+    sigTransformChanged = QtCore.Signal(object)
     
     """
     :class:`GraphicsView <pyqtgraph.GraphicsView>` widget with a single 

@@ -516,7 +516,7 @@ class Parameter(QtCore.QObject):
         self.sigChildRemoved.emit(self, child)
         try:
             child.sigTreeStateChanged.disconnect(self.treeStateChanged)
-        except TypeError:  ## already disconnected
+        except (TypeError, RuntimeError):  ## already disconnected
             pass
 
     def clearChildren(self):

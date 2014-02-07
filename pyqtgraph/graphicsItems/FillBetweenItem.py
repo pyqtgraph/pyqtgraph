@@ -28,7 +28,7 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
             for c in self.curves:
                 try:
                     c.sigPlotChanged.disconnect(self.curveChanged)
-                except TypeError:
+                except (TypeError, RuntimeError):
                     pass
         
         curves = [curve1, curve2]

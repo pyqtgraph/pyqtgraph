@@ -479,24 +479,29 @@ class GraphicsItem(object):
 
         ## disconnect from previous view
         if oldView is not None:
-            #print "disconnect:", self, oldView
-            try:
-                oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
-            except TypeError:
-                pass
-            
-            try:
-                oldView.sigTransformChanged.disconnect(self.viewTransformChanged)
-            except TypeError:
-                pass
+            for signal, slot in [('sigRangeChanged', self.viewRangeChanged),
+                                 ('sigDeviceRangeChanged', self.viewRangeChanged), 
+                                 ('sigTransformChanged', self.viewTransformChanged), 
+                                 ('sigDeviceTransformChanged', self.viewTransformChanged)]:
+                try:
+                    getattr(oldView, signal).disconnect(slot)
+                except (TypeError, AttributeError, RuntimeError):
+                    # TypeError and RuntimeError are from pyqt and pyside, respectively
+                    pass
             
             self._connectedView = None
 
         ## connect to new view
         if view is not None:
             #print "connect:", self, view
-            view.sigRangeChanged.connect(self.viewRangeChanged)
-            view.sigTransformChanged.connect(self.viewTransformChanged)
+            if hasattr(view, 'sigDeviceRangeChanged'):
+                # connect signals from GraphicsView
+                view.sigDeviceRangeChanged.connect(self.viewRangeChanged)
+                view.sigDeviceTransformChanged.connect(self.viewTransformChanged)
+            else:
+                # connect signals from ViewBox
+                view.sigRangeChanged.connect(self.viewRangeChanged)
+                view.sigTransformChanged.connect(self.viewTransformChanged)
             self._connectedView = weakref.ref(view)
             self.viewRangeChanged()
             self.viewTransformChanged()
