@@ -881,7 +881,7 @@ class ViewBox(GraphicsWidget):
             try:
                 getattr(oldLink, signal).disconnect(slot)
                 oldLink.sigResized.disconnect(slot)
-            except TypeError:
+            except (TypeError, RuntimeError):
                 ## This can occur if the view has been deleted already
                 pass
             

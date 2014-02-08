@@ -19,11 +19,14 @@ def mkQApp():
 
 
 class GraphicsWindow(GraphicsLayoutWidget):
+    """
+    Convenience subclass of :class:`GraphicsLayoutWidget 
+    <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from 
+    the interactive python prompt.
+    """
     def __init__(self, title=None, size=(800,600), **kargs):
         mkQApp()
-        #self.win = QtGui.QMainWindow()
         GraphicsLayoutWidget.__init__(self, **kargs)
-        #self.win.setCentralWidget(self)
         self.resize(*size)
         if title is not None:
             self.setWindowTitle(title)

@@ -12,6 +12,9 @@ pyqtgraph-0.9.9  [unreleased]
     - ImageItem is faster by avoiding makeQImage(transpose=True)
     - ComboBox will raise error when adding multiple items of the same name
     - ArrowItem.setStyle now updates style options rather than replacing them 
+    - Renamed GraphicsView signals to avoid collision with ViewBox signals that
+      are wrapped in PlotWidget: sigRangeChanged => sigDeviceRangeChanged and
+      sigTransformChanged => sigDeviceTransformChanged.
 
   New Features:
     - Added ViewBox.setLimits() method
