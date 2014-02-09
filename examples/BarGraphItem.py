@@ -28,7 +28,7 @@ win.addItem(bg3)
 # Final example shows how to handle mouse clicks:
 class BarGraph(pg.BarGraphItem):
     def mouseClickEvent(self, event):
-        print "clicked"
+        print("clicked")
 
 
 bg = BarGraph(x=x, y=y1*0.3+2, height=0.4+y1*0.2, width=0.8)

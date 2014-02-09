@@ -92,15 +92,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         self.clickEvents = []
         self.dragButtons = []
-        self.prepItems = weakref.WeakKeyDictionary()  ## set of items with prepareForPaintMethods
         self.mouseGrabber = None
         self.dragItem = None
         self.lastDrag = None
         self.hoverItems = weakref.WeakKeyDictionary()
         self.lastHoverEvent = None
-        #self.searchRect = QtGui.QGraphicsRectItem()
-        #self.searchRect.setPen(fn.mkPen(200,0,0))
-        #self.addItem(self.searchRect)
         
         self.contextMenu = [QtGui.QAction("Export...", self)]
         self.contextMenu[0].triggered.connect(self.showExportDialog)
@@ -437,10 +433,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in items:
             if hoverable and not hasattr(item, 'hoverEvent'):
                 continue
-            shape = item.shape()
+            shape = item.shape() # Note: default shape() returns boundingRect()
             if shape is None:
                 continue
-            if item.mapToScene(shape).contains(point):
+            if shape.contains(item.mapFromScene(point)):
                 items2.append(item)
         
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
