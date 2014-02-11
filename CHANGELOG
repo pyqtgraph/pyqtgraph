@@ -15,6 +15,8 @@ pyqtgraph-0.9.9  [unreleased]
     - Renamed GraphicsView signals to avoid collision with ViewBox signals that
       are wrapped in PlotWidget: sigRangeChanged => sigDeviceRangeChanged and
       sigTransformChanged => sigDeviceTransformChanged.
+    - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
+      event position.
 
   New Features:
     - Added ViewBox.setLimits() method
