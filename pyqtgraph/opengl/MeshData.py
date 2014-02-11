@@ -242,7 +242,6 @@ class MeshData(object):
             v = self.vertexes(indexed='faces')
             self._faceNormals = np.cross(v[:,1]-v[:,0], v[:,2]-v[:,0])
         
-        
         if indexed is None:
             return self._faceNormals
         elif indexed == 'faces':
@@ -519,20 +518,17 @@ class MeshData(object):
         return MeshData(vertexes=verts, faces=faces)
         
     @staticmethod
-    def cylinder(rows, cols, radius=[1.0, 1.0], length=1.0, offset=False, ends=False):
+    def cylinder(rows, cols, radius=[1.0, 1.0], length=1.0, offset=False):
         """
         Return a MeshData instance with vertexes and faces computed
         for a cylindrical surface.
         The cylinder may be tapered with different radii at each end (truncated cone)
-        ends are open if ends = False
-        No closed ends implemented yet...
-        The easiest way may be to add a vertex at the top and bottom in the center of the face?
         """
         verts = np.empty((rows+1, cols, 3), dtype=float)
         if isinstance(radius, int):
             radius = [radius, radius] # convert to list
         ## compute vertexes
-        th = ((np.arange(cols) * 2 * np.pi / cols).reshape(1, cols)) # angle around
+        th = np.linspace(2 * np.pi, 0, cols).reshape(1, cols)
         r = (np.linspace(radius[0],radius[1],num=rows+1, endpoint=True)).reshape(rows+1, 1) # radius as a function of z
         verts[...,2] = np.linspace(-length/2.0, length/2.0, num=rows+1, endpoint=True).reshape(rows+1, 1) # z
         if offset:
