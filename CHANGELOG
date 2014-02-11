@@ -34,6 +34,7 @@ pyqtgraph-0.9.9  [unreleased]
     - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
       when plots do not fit inside the widget.
     - Added BarGraphItem.shape() to allow better mouse interaction
+    - Added MeshData.cylinder
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px

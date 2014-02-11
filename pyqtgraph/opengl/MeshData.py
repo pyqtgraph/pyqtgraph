@@ -1,5 +1,5 @@
-from ..Qt import QtGui
-from .. import functions as fn
+from pyqtgraph.Qt import QtGui
+import pyqtgraph.functions as fn
 import numpy as np
 
 class MeshData(object):
@@ -518,4 +518,36 @@ class MeshData(object):
         
         return MeshData(vertexes=verts, faces=faces)
         
+    @staticmethod
+    def cylinder(rows, cols, radius=[1.0, 1.0], length=1.0, offset=False, ends=False):
+        """
+        Return a MeshData instance with vertexes and faces computed
+        for a cylindrical surface.
+        The cylinder may be tapered with different radii at each end (truncated cone)
+        ends are open if ends = False
+        No closed ends implemented yet...
+        The easiest way may be to add a vertex at the top and bottom in the center of the face?
+        """
+        verts = np.empty((rows+1, cols, 3), dtype=float)
+        if isinstance(radius, int):
+            radius = [radius, radius] # convert to list
+        ## compute vertexes
+        th = ((np.arange(cols) * 2 * np.pi / cols).reshape(1, cols)) # angle around
+        r = (np.linspace(radius[0],radius[1],num=rows+1, endpoint=True)).reshape(rows+1, 1) # radius as a function of z
+        verts[...,2] = np.linspace(-length/2.0, length/2.0, num=rows+1, endpoint=True).reshape(rows+1, 1) # z
+        if offset:
+            th = th + ((np.pi / cols) * np.arange(rows+1).reshape(rows+1,1))  ## rotate each row by 1/2 column
+        verts[...,0] = r * np.cos(th) # x = r cos(th)
+        verts[...,1] = r * np.sin(th) # y = r sin(th)
+        verts = verts.reshape((rows+1)*cols, 3) # just reshape: no redundant vertices...
+        ## compute faces
+        faces = np.empty((rows*cols*2, 3), dtype=np.uint)
+        rowtemplate1 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 0]])) % cols) + np.array([[0, 0, cols]])
+        rowtemplate2 = ((np.arange(cols).reshape(cols, 1) + np.array([[0, 1, 1]])) % cols) + np.array([[cols, 0, cols]])
+        for row in range(rows):
+            start = row * cols * 2 
+            faces[start:start+cols] = rowtemplate1 + row * cols
+            faces[start+cols:start+(cols*2)] = rowtemplate2 + row * cols
+        
+        return MeshData(vertexes=verts, faces=faces)
         
