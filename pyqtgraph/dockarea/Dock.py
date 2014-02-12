@@ -167,7 +167,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.resizeOverlay(self.size())
 
     def name(self):
-        return str(self.label.text())
+        return self.label.text()
 
     def container(self):
         return self._container
