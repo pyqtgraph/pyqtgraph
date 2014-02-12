@@ -15,7 +15,7 @@ class InfiniteLine(GraphicsObject):
     This line may be dragged to indicate a position in data coordinates.
     
     =============================== ===================================================
-    **Signals**
+    **Signals:**
     sigDragged(self)
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
@@ -28,7 +28,7 @@ class InfiniteLine(GraphicsObject):
     
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None):
         """
-        ==============  ==================================================================
+        =============== ==================================================================
         **Arguments:**
         pos             Position of the line. This can be a QPointF or a single value for
                         vertical/horizontal lines.
@@ -39,7 +39,7 @@ class InfiniteLine(GraphicsObject):
         movable         If True, the line can be dragged to a new position by the user.
         bounds          Optional [min, max] bounding values. Bounds are only valid if the
                         line is vertical or horizontal.
-        =============   ==================================================================
+        =============== ==================================================================
         """
         
         GraphicsObject.__init__(self)

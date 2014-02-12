@@ -349,7 +349,7 @@ class GradientEditorItem(TickSliderItem):
     with a GradientEditorItem that can be added to a GUI. 
     
     ================================ ===========================================================
-    **Signals**
+    **Signals:**
     sigGradientChanged(self)         Signal is emitted anytime the gradient changes. The signal 
                                      is emitted in real time while ticks are being dragged or 
                                      colors are being changed.
