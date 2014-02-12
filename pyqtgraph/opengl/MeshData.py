@@ -529,8 +529,8 @@ class MeshData(object):
             radius = [radius, radius] # convert to list
         ## compute vertexes
         th = np.linspace(2 * np.pi, 0, cols).reshape(1, cols)
-        r = (np.linspace(radius[0],radius[1],num=rows+1, endpoint=True)).reshape(rows+1, 1) # radius as a function of z
-        verts[...,2] = np.linspace(-length/2.0, length/2.0, num=rows+1, endpoint=True).reshape(rows+1, 1) # z
+        r = np.linspace(radius[0],radius[1],num=rows+1, endpoint=True).reshape(rows+1, 1) # radius as a function of z
+        verts[...,2] = np.linspace(0, length, num=rows+1, endpoint=True).reshape(rows+1, 1) # z
         if offset:
             th = th + ((np.pi / cols) * np.arange(rows+1).reshape(rows+1,1))  ## rotate each row by 1/2 column
         verts[...,0] = r * np.cos(th) # x = r cos(th)
