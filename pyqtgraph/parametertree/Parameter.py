@@ -108,7 +108,7 @@ class Parameter(QtCore.QObject):
         by most Parameter subclasses.
         
         =======================      =========================================================
-        **Keyword**
+        **Keyword Arguments:**
         name                         The name to give this Parameter. This is the name that
                                      will appear in the left-most column of a ParameterTree
                                      for this Parameter.

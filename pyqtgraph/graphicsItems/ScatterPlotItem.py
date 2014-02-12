@@ -253,13 +253,13 @@ class ScatterPlotItem(GraphicsObject):
         
     def setData(self, *args, **kargs):
         """
-        **Ordered**
+        **Ordered Arguments:**
         
         * If there is only one unnamed argument, it will be interpreted like the 'spots' argument.
         * If there are two unnamed arguments, they will be interpreted as sequences of x and y values.
         
         ====================== ===============================================================================================
-        **Keyword**
+        **Keyword Arguments:**
         *spots*                Optional list of dicts. Each dict specifies parameters for a single spot:
                                {'pos': (x,y), 'size', 'pen', 'brush', 'symbol'}. This is just an alternate method
                                of passing in data for the corresponding arguments.

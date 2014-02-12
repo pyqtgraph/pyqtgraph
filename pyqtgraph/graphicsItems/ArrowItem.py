@@ -48,7 +48,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         All arguments are optional:
         
         ======================  =================================================
-        **Keyword**
+        **Keyword Arguments**
         angle                   Orientation of the arrow in degrees. Default is
                                 0; arrow pointing to the left.
         headLen                 Length of the arrow head, from tip to base.

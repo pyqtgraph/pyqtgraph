@@ -38,7 +38,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         a CSS style string:
 
         ==================== ==============================
-        **Style**
+        **Style Arguments:**
         color                (str) example: 'CCFF00'
         size                 (str) example: '8pt'
         bold                 (bool)
