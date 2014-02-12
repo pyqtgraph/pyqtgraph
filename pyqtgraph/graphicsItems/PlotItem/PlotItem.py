@@ -931,7 +931,7 @@ class PlotItem(GraphicsWidget):
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.
         
-        ==============  =================================================================
+        =============== =================================================================
         **Arguments:**
         ds              (int) Reduce visible plot samples by this factor, or
                         (bool) To enable/disable downsampling without changing the value.
@@ -942,7 +942,7 @@ class PlotItem(GraphicsWidget):
                         'peak': Downsample by drawing a saw wave that follows the min
                             and max of the original data. This method produces the best
                             visual representation of the data but is slower.
-        =============   =================================================================
+        =============== =================================================================
         """
         if ds is not None:
             if ds is False:
