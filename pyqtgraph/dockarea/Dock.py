@@ -2,6 +2,7 @@ from ..Qt import QtCore, QtGui
 
 from .DockDrop import *
 from ..widgets.VerticalLabel import VerticalLabel
+from ..python2_3 import asUnicode
 
 class Dock(QtGui.QWidget, DockDrop):
     
@@ -167,7 +168,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.resizeOverlay(self.size())
 
     def name(self):
-        return str(self.label.text())
+        return asUnicode(self.label.text())
 
     def container(self):
         return self._container
