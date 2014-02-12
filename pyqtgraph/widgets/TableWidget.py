@@ -103,19 +103,19 @@ class TableWidget(QtGui.QTableWidget):
         if isinstance(data, list) or isinstance(data, tuple):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
-            return lambda d: iter(d.values()), list(map(str, data.keys()))
+            return lambda d: iter(d.values()), list(map(asUnicode, data.keys()))
         elif HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
             if data.axisHasColumns(0):
-                header = [str(data.columnName(0, i)) for i in range(data.shape[0])]
+                header = [asUnicode(data.columnName(0, i)) for i in range(data.shape[0])]
             elif data.axisHasValues(0):
-                header = list(map(str, data.xvals(0)))
+                header = list(map(asUnicode, data.xvals(0)))
             else:
                 header = None
             return self.iterFirstAxis, header
         elif isinstance(data, np.ndarray):
             return self.iterFirstAxis, None
         elif isinstance(data, np.void):
-            return self.iterate, list(map(str, data.dtype.names))
+            return self.iterate, list(map(asUnicode, data.dtype.names))
         elif data is None:
             return (None,None)
         else:
@@ -239,7 +239,7 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
         if isinstance(val, float) or isinstance(val, np.floating):
             s = "%0.3g" % val
         else:
-            s = str(val)
+            s = asUnicode(val)
         QtGui.QTableWidgetItem.__init__(self, s)
         self.value = val
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
