@@ -33,6 +33,11 @@ from .. import debug as debug
 
 from ..SignalProxy import SignalProxy
 
+try:
+    from bottleneck import nanmin, nanmax
+except ImportError:
+    from numpy import nanmin, nanmax
+
 #try:
     #from .. import metaarray as metaarray
     #HAVE_METAARRAY = True
@@ -526,7 +531,7 @@ class ImageView(QtGui.QWidget):
             sl = [slice(None)] * data.ndim
             sl[ax] = slice(None, None, 2)
             data = data[sl]
-        return data.min(), data.max()
+        return nanmin(data), nanmax(data)
 
     def normalize(self, image):
         """
