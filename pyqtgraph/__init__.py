@@ -243,6 +243,7 @@ from .widgets.GraphicsView import *
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
+from .widgets.BarWidget import *
 
 from .imageview import *
 from .WidgetGroup import *
