@@ -121,10 +121,18 @@ elif USE_QT_PY == PYQT5:
         self.setRotation(self.rotation() + angle)
     QtWidgets.QGraphicsItem.rotate = rotate
 
+    def translate(self, dx, dy):
+        self.setTransform(QtGui.QTransform.fromTranslate(dx, dy), True)
+    QtWidgets.QGraphicsItem.translate = translate
 
     def setMargin(self, i):
-        self.setContentsMargins( i, i, i, i)
+        self.setContentsMargins(i, i, i, i)
     QtWidgets.QGridLayout.setMargin = setMargin
+
+    def setResizeMode(self, mode):
+        self.setSectionResizeMode(mode)
+    QtWidgets.QHeaderView.setResizeMode = setResizeMode
+
     
     QtGui.QApplication = QtWidgets.QApplication
     QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
