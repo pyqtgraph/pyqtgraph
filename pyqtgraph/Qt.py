@@ -111,11 +111,26 @@ elif USE_QT_PY == PYQT5:
         from PyQt5 import QtOpenGL
     except ImportError:
         pass
+
+    # Re-implement deprecated APIs
+    def scale(self, sx, sy):
+        self.setTransform(QtGui.QTransform.fromScale(sx, sy), True)
+    QtWidgets.QGraphicsItem.scale = scale
+
+    def rotate(self, angle):
+        self.setRotation(self.rotation() + angle)
+    QtWidgets.QGraphicsItem.rotate = rotate
+
+
+    def setMargin(self, i):
+        self.setContentsMargins( i, i, i, i)
+    QtWidgets.QGridLayout.setMargin = setMargin
     
     QtGui.QApplication = QtWidgets.QApplication
     QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
     QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
-    QtGui.QGraphicsWidget = QGraphicsWidget5
+    QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
+
     QtGui.QApplication.setGraphicsSystem = None
     QtCore.Signal = Qt.pyqtSignal
     
