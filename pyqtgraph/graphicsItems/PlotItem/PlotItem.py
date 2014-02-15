@@ -83,7 +83,7 @@ class PlotItem(GraphicsWidget):
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     
     ==================== =======================================================================
-    **Signals**
+    **Signals:**
     sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
@@ -103,7 +103,7 @@ class PlotItem(GraphicsWidget):
         Any extra keyword arguments are passed to PlotItem.plot().
         
         ==============  ==========================================================================================
-        **Arguments**
+        **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
                    
@@ -931,18 +931,18 @@ class PlotItem(GraphicsWidget):
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.
         
-        ===========  =================================================================
-        Arguments
-        ds           (int) Reduce visible plot samples by this factor, or
-                     (bool) To enable/disable downsampling without changing the value.
-        auto         (bool) If True, automatically pick *ds* based on visible range
-        mode         'subsample': Downsample by taking the first of N samples. 
-                         This method is fastest and least accurate.
-                     'mean': Downsample by taking the mean of N samples.
-                     'peak': Downsample by drawing a saw wave that follows the min 
-                         and max of the original data. This method produces the best 
-                         visual representation of the data but is slower.
-        ===========  =================================================================
+        =============== =================================================================
+        **Arguments:**
+        ds              (int) Reduce visible plot samples by this factor, or
+                        (bool) To enable/disable downsampling without changing the value.
+        auto            (bool) If True, automatically pick *ds* based on visible range
+        mode            'subsample': Downsample by taking the first of N samples.
+                            This method is fastest and least accurate.
+                        'mean': Downsample by taking the mean of N samples.
+                        'peak': Downsample by drawing a saw wave that follows the min
+                            and max of the original data. This method produces the best
+                            visual representation of the data but is slower.
+        =============== =================================================================
         """
         if ds is not None:
             if ds is False:
@@ -1113,15 +1113,15 @@ class PlotItem(GraphicsWidget):
         """
         Set the label for an axis. Basic HTML formatting is allowed.
         
-        ============= =================================================================
-        **Arguments**
-        axis          must be one of 'left', 'bottom', 'right', or 'top'
-        text          text to display along the axis. HTML allowed.
-        units         units to display after the title. If units are given, 
-                      then an SI prefix will be automatically appended
-                      and the axis values will be scaled accordingly.
-                      (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ============= =================================================================
+        ==============  =================================================================
+        **Arguments:**
+        axis            must be one of 'left', 'bottom', 'right', or 'top'
+        text            text to display along the axis. HTML allowed.
+        units           units to display after the title. If units are given,
+                        then an SI prefix will be automatically appended
+                        and the axis values will be scaled accordingly.
+                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
+        ==============  =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
         self.showAxis(axis)

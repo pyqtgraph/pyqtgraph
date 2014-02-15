@@ -37,7 +37,7 @@ class Node(QtCore.QObject):
     def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         """
         ==============  ============================================================
-        Arguments
+        **Arguments:**
         name            The name of this specific node instance. It can be any 
                         string, but must be unique within a flowchart. Usually,
                         we simply let the flowchart decide on a name when calling

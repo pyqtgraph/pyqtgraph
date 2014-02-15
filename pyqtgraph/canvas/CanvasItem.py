@@ -431,7 +431,7 @@ class CanvasItem(QtCore.QObject):
     def selectionChanged(self, sel, multi):
         """
         Inform the item that its selection state has changed. 
-        Arguments:
+        **Arguments:**
             sel: bool, whether the item is currently selected
             multi: bool, whether there are multiple items currently selected
         """

@@ -38,9 +38,9 @@ def rectStr(r):
 class ROI(GraphicsObject):
     """Generic region-of-interest widget. 
     Can be used for implementing many types of selection box with rotate/translate/scale handles.
-    
-    Signals
-    ----------------------- ----------------------------------------------------
+
+    ======================= ====================================================
+    **Signals:**
     sigRegionChangeFinished Emitted when the user stops dragging the ROI (or
                             one of its handles) or if the ROI is changed
                             programatically.
@@ -58,7 +58,7 @@ class ROI(GraphicsObject):
                             details.
     sigRemoveRequested      Emitted when the user selects 'remove' from the 
                             ROI's context menu (if available).
-    ----------------------- ----------------------------------------------------
+    ======================= ====================================================
     """
     
     sigRegionChangeFinished = QtCore.Signal(object)

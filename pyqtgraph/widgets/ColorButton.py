@@ -11,7 +11,7 @@ class ColorButton(QtGui.QPushButton):
     Button displaying a color and allowing the user to select a new color.
     
     ====================== ============================================================
-    **Signals**:
+    **Signals:**
     sigColorChanging(self) emitted whenever a new color is picked in the color dialog
     sigColorChanged(self)  emitted when the selected color is accepted (user clicks OK)
     ====================== ============================================================

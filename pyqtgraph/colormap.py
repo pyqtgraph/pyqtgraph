@@ -52,17 +52,17 @@ class ColorMap(object):
     
     def __init__(self, pos, color, mode=None):
         """
-        ========= ==============================================================
-        Arguments
-        pos       Array of positions where each color is defined
-        color     Array of RGBA colors.
-                  Integer data types are interpreted as 0-255; float data types
-                  are interpreted as 0.0-1.0
-        mode      Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG) 
-                  indicating the color space that should be used when 
-                  interpolating between stops. Note that the last mode value is
-                  ignored. By default, the mode is entirely RGB.
-        ========= ==============================================================
+        ===============     ==============================================================
+        **Arguments:**
+        pos                 Array of positions where each color is defined
+        color               Array of RGBA colors.
+                            Integer data types are interpreted as 0-255; float data types
+                            are interpreted as 0.0-1.0
+        mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
+                            indicating the color space that should be used when
+                            interpolating between stops. Note that the last mode value is
+                            ignored. By default, the mode is entirely RGB.
+        ===============     ==============================================================
         """
         self.pos = pos
         self.color = color
@@ -193,16 +193,16 @@ class ColorMap(object):
         """
         Return an RGB(A) lookup table (ndarray). 
         
-        ============= ============================================================================
-        **Arguments**
-        start         The starting value in the lookup table (default=0.0) 
-        stop          The final value in the lookup table (default=1.0)
-        nPts          The number of points in the returned lookup table.
-        alpha         True, False, or None - Specifies whether or not alpha values are included 
-                      in the table. If alpha is None, it will be automatically determined.
-        mode          Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
-                      See :func:`map() <pyqtgraph.ColorMap.map>`.
-        ============= ============================================================================
+        ===============   =============================================================================
+        **Arguments:**
+        start             The starting value in the lookup table (default=0.0)
+        stop              The final value in the lookup table (default=1.0)
+        nPts              The number of points in the returned lookup table.
+        alpha             True, False, or None - Specifies whether or not alpha values are included
+                          in the table. If alpha is None, it will be automatically determined.
+        mode              Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
+                          See :func:`map() <pyqtgraph.ColorMap.map>`.
+        ===============   =============================================================================
         """
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]

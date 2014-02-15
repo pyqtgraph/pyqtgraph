@@ -5,3 +5,5 @@ build
 MANIFEST
 deb_build
 dist
+.idea
+rtr.cvs

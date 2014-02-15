@@ -299,23 +299,23 @@ class RemoteEventHandler(object):
         (The docstring has information that is nevertheless useful to the programmer
         as it describes the internal protocol used to communicate between processes)
         
-        ==========  ====================================================================
-        Arguments:  
-        request     String describing the type of request being sent (see below)
-        reqId       Integer uniquely linking a result back to the request that generated
-                    it. (most requests leave this blank)
-        callSync    'sync':  return the actual result of the request
-                    'async': return a Request object which can be used to look up the 
-                             result later
-                    'off':   return no result
-        timeout     Time in seconds to wait for a response when callSync=='sync'
-        opts        Extra arguments sent to the remote process that determine the way
-                    the request will be handled (see below)
-        returnType  'proxy', 'value', or 'auto'
-        byteData    If specified, this is a list of objects to be sent as byte messages
-                    to the remote process.
-                    This is used to send large arrays without the cost of pickling.
-        ==========  ====================================================================
+        ==============  ====================================================================
+        **Arguments:**
+        request         String describing the type of request being sent (see below)
+        reqId           Integer uniquely linking a result back to the request that generated
+                        it. (most requests leave this blank)
+        callSync        'sync':  return the actual result of the request
+                        'async': return a Request object which can be used to look up the
+                                result later
+                        'off':   return no result
+        timeout         Time in seconds to wait for a response when callSync=='sync'
+        opts            Extra arguments sent to the remote process that determine the way
+                        the request will be handled (see below)
+        returnType      'proxy', 'value', or 'auto'
+        byteData        If specified, this is a list of objects to be sent as byte messages
+                        to the remote process.
+                        This is used to send large arrays without the cost of pickling.
+        ==============  ====================================================================
         
         Description of request strings and options allowed for each:
         

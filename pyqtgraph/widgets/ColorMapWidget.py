@@ -86,14 +86,14 @@ class ColorMapParameter(ptree.types.GroupParameter):
         """
         Return an array of colors corresponding to *data*. 
         
-        ========= =================================================================
-        Arguments
-        data      A numpy record array where the fields in data.dtype match those
-                  defined by a prior call to setFields().
-        mode      Either 'byte' or 'float'. For 'byte', the method returns an array
-                  of dtype ubyte with values scaled 0-255. For 'float', colors are
-                  returned as 0.0-1.0 float values.
-        ========= =================================================================
+        ==============  =================================================================
+        **Arguments:**
+        data            A numpy record array where the fields in data.dtype match those
+                        defined by a prior call to setFields().
+        mode            Either 'byte' or 'float'. For 'byte', the method returns an array
+                        of dtype ubyte with values scaled 0-255. For 'float', colors are
+                        returned as 0.0-1.0 float values.
+        ==============  =================================================================
         """
         colors = np.zeros((len(data),4))
         for item in self.children():

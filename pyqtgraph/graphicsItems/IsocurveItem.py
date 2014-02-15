@@ -18,14 +18,14 @@ class IsocurveItem(GraphicsObject):
         """
         Create a new isocurve item. 
         
-        ============= ===============================================================
-        **Arguments**
-        data          A 2-dimensional ndarray. Can be initialized as None, and set 
-                      later using :func:`setData <pyqtgraph.IsocurveItem.setData>`
-        level         The cutoff value at which to draw the isocurve.
-        pen           The color of the curve item. Can be anything valid for 
-                      :func:`mkPen <pyqtgraph.mkPen>`
-        ============= ===============================================================
+        ==============  ===============================================================
+        **Arguments:**
+        data            A 2-dimensional ndarray. Can be initialized as None, and set
+                        later using :func:`setData <pyqtgraph.IsocurveItem.setData>`
+        level           The cutoff value at which to draw the isocurve.
+        pen             The color of the curve item. Can be anything valid for
+                        :func:`mkPen <pyqtgraph.mkPen>`
+        ==============  ===============================================================
         """
         GraphicsObject.__init__(self)
 
@@ -45,12 +45,12 @@ class IsocurveItem(GraphicsObject):
         """
         Set the data/image to draw isocurves for.
         
-        ============= ========================================================================
-        **Arguments**
-        data          A 2-dimensional ndarray.
-        level         The cutoff value at which to draw the curve. If level is not specified,
-                      the previously set level is used.
-        ============= ========================================================================
+        ==============  ========================================================================
+        **Arguments:**
+        data            A 2-dimensional ndarray.
+        level           The cutoff value at which to draw the curve. If level is not specified,
+                        the previously set level is used.
+        ==============  ========================================================================
         """
         if level is None:
             level = self.level

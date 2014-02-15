@@ -20,6 +20,8 @@ view.show()
 view.setWindowTitle('pyqtgraph example: GraphicsLayout')
 view.resize(800,600)
 
+
+
 ## Title at top
 text = """
 This example demonstrates the use of GraphicsLayout to arrange items in a grid.<br>

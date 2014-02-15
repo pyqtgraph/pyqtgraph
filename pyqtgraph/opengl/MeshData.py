@@ -23,18 +23,18 @@ class MeshData(object):
 
     def __init__(self, vertexes=None, faces=None, edges=None, vertexColors=None, faceColors=None):
         """
-        ============= =====================================================
-        Arguments
-        vertexes      (Nv, 3) array of vertex coordinates. 
-                      If faces is not specified, then this will instead be
-                      interpreted as (Nf, 3, 3) array of coordinates.
-        faces         (Nf, 3) array of indexes into the vertex array.
-        edges         [not available yet]
-        vertexColors  (Nv, 4) array of vertex colors. 
-                      If faces is not specified, then this will instead be
-                      interpreted as (Nf, 3, 4) array of colors.
-        faceColors    (Nf, 4) array of face colors.
-        ============= =====================================================
+        ==============  =====================================================
+        **Arguments:**
+        vertexes        (Nv, 3) array of vertex coordinates.
+                        If faces is not specified, then this will instead be
+                        interpreted as (Nf, 3, 3) array of coordinates.
+        faces           (Nf, 3) array of indexes into the vertex array.
+        edges           [not available yet]
+        vertexColors    (Nv, 4) array of vertex colors.
+                        If faces is not specified, then this will instead be
+                        interpreted as (Nf, 3, 4) array of colors.
+        faceColors      (Nf, 4) array of face colors.
+        ==============  =====================================================
         
         All arguments are optional.
         """
