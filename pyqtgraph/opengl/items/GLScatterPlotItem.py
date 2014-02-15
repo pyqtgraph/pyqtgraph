@@ -29,7 +29,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         
         ====================  ==================================================
         **Arguments:**
-        ------------------------------------------------------------------------
         pos                   (N,3) array of floats specifying point locations.
         color                 (N,4) array of floats (0.0-1.0) specifying
                               spot colors OR a tuple of floats specifying
