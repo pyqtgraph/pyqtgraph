@@ -993,6 +993,10 @@ def imageToArray(img, copy=False, transpose=True):
     else:
         ptr.setsize(img.byteCount())
         arr = np.asarray(ptr)
+        if img.byteCount() != arr.size * arr.itemsize:
+            # Required for Python 2.6, PyQt 4.10
+            # If this works on all platforms, then there is no need to use np.asarray..
+            arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
     
     if fmt == img.Format_RGB32:
         arr = arr.reshape(img.height(), img.width(), 3)
