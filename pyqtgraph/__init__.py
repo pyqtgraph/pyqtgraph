@@ -393,6 +393,7 @@ def dbg(*args, **kwds):
         consoles.append(c)
     except NameError:
         consoles = [c]
+    return c
     
     
 def mkQApp():
