@@ -6,6 +6,7 @@ import collections
 from .. import functions as fn
 from .. import debug as debug
 from .GraphicsObject import GraphicsObject
+from ..Point import Point
 
 __all__ = ['ImageItem']
 class ImageItem(GraphicsObject):
@@ -34,20 +35,16 @@ class ImageItem(GraphicsObject):
         See :func:`setImage <pyqtgraph.ImageItem.setImage>` for all allowed initialization arguments.
         """
         GraphicsObject.__init__(self)
-        #self.pixmapItem = QtGui.QGraphicsPixmapItem(self)
-        #self.qimage = QtGui.QImage()
-        #self._pixmap = None
         self.menu = None
         self.image = None   ## original image data
         self.qimage = None  ## rendered image for display
-        #self.clipMask = None
         
         self.paintMode = None
         
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
+        self.autoDownsample = False
         
-        #self.clipLevel = None
         self.drawKernel = None
         self.border = None
         self.removable = False
@@ -142,7 +139,13 @@ class ImageItem(GraphicsObject):
         if update:
             self.updateImage()
 
+    def setAutoDownsample(self, ads):
+        self.autoDownsample = ads
+        self.qimage = None
+        self.update()
+
     def setOpts(self, update=True, **kargs):
+        
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
@@ -158,6 +161,10 @@ class ImageItem(GraphicsObject):
         if 'removable' in kargs:
             self.removable = kargs['removable']
             self.menu = None
+        if 'autoDownsample' in kargs:
+            self.setAutoDownsample(kargs['autoDownsample'])
+        if update:
+            self.update()
 
     def setRect(self, rect):
         """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
@@ -188,6 +195,9 @@ class ImageItem(GraphicsObject):
         opacity            (float 0.0-1.0)
         compositionMode    see :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
         border             Sets the pen used when drawing the image border. Default is None.
+        autoDownsample     (bool) If True, the image is automatically downsampled to match the
+                           screen resolution. This improves performance for large images and 
+                           reduces aliasing.
         =================  =========================================================================
         """
         profile = debug.Profiler()
@@ -200,6 +210,9 @@ class ImageItem(GraphicsObject):
             gotNewData = True
             shapeChanged = (self.image is None or image.shape != self.image.shape)
             self.image = image.view(np.ndarray)
+            if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
+                if 'autoDownsample' not in kargs:
+                    kargs['autoDownsample'] = True
             if shapeChanged:
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
@@ -246,11 +259,10 @@ class ImageItem(GraphicsObject):
         }
         defaults.update(kargs)
         return self.setImage(*args, **defaults)
-        
-        
-
 
     def render(self):
+        # Convert data to QImage for display.
+        
         profile = debug.Profiler()
         if self.image is None or self.image.size == 0:
             return
@@ -258,10 +270,22 @@ class ImageItem(GraphicsObject):
             lut = self.lut(self.image)
         else:
             lut = self.lut
-        #print lut.shape
-        #print self.lut
-            
-        argb, alpha = fn.makeARGB(self.image.transpose((1, 0, 2)[:self.image.ndim]), lut=lut, levels=self.levels)
+
+        if self.autoDownsample:
+            # reduce dimensions of image based on screen resolution
+            o = self.mapToDevice(QtCore.QPointF(0,0))
+            x = self.mapToDevice(QtCore.QPointF(1,0))
+            y = self.mapToDevice(QtCore.QPointF(0,1))
+            w = Point(x-o).length()
+            h = Point(y-o).length()
+            xds = max(1, int(1/w))
+            yds = max(1, int(1/h))
+            image = fn.downsample(self.image, xds, axis=0)
+            image = fn.downsample(image, yds, axis=1)
+        else:
+            image = self.image
+        
+        argb, alpha = fn.makeARGB(image.transpose((1, 0, 2)[:image.ndim]), lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
@@ -277,7 +301,7 @@ class ImageItem(GraphicsObject):
             p.setCompositionMode(self.paintMode)
             profile('set comp mode')
 
-        p.drawImage(QtCore.QPointF(0,0), self.qimage)
+        p.drawImage(QtCore.QRectF(0,0,self.image.shape[0],self.image.shape[1]), self.qimage)
         profile('p.drawImage')
         if self.border is not None:
             p.setPen(self.border)
@@ -357,6 +381,11 @@ class ImageItem(GraphicsObject):
         if self.image is None:
             return 1,1
         return br.width()/self.width(), br.height()/self.height()
+    
+    def viewTransformChanged(self):
+        if self.autoDownsample:
+            self.qimage = None
+            self.update()
 
     #def mousePressEvent(self, ev):
         #if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:

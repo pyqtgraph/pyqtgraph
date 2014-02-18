@@ -20,6 +20,7 @@ pyqtgraph-0.9.9  [unreleased]
 
   New Features:
     - Added ViewBox.setLimits() method
+    - Adde ImageItem downsampling
     - New HDF5 example for working with very large datasets
     - Added Qt.loadUiType function for PySide
     - Simplified Profilers; can be activated with environmental variables
