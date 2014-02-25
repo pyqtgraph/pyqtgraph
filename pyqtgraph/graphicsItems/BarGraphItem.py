@@ -52,6 +52,7 @@ class BarGraphItem(GraphicsObject):
         self.setOpts(**opts)
         
     def setOpts(self, **opts):
+        self.setData(**opts)
         self.opts.update(opts)
         self.picture = None
         self._shape = None
@@ -68,92 +69,94 @@ class BarGraphItem(GraphicsObject):
         self.setOpts(brush = fn.mkBrush(*args, **kargs))
 
 
-    def drawPicture(self):
-        self.picture = QtGui.QPicture()
-        self._shape = QtGui.QPainterPath()
-        p = QtGui.QPainter(self.picture)
-        
-        pen = self.opts['pen']
-        pens = self.opts['pens']
-        
-        if pen is None and pens is None:
-            pen = getConfigOption('foreground')
-        
-        brush = self.opts['brush']
-        brushes = self.opts['brushes']
-        if brush is None and brushes is None:
-            brush = (128, 128, 128)
+    def setData(self, **kargs):
         
         def asarray(x):
             if x is None or np.isscalar(x) or isinstance(x, np.ndarray):
                 return x
             return np.array(x)
 
+        x = asarray(kargs.pop('x', None))
+        self.x0 = asarray(kargs.pop('x0', None))
+        x1 = asarray(kargs.pop('x1', None))
+        self.width = asarray(kargs.pop('width', None))
         
-        x = asarray(self.opts.get('x'))
-        x0 = asarray(self.opts.get('x0'))
-        x1 = asarray(self.opts.get('x1'))
-        width = asarray(self.opts.get('width'))
-        
-        if x0 is None:
-            if width is None:
+        if self.x0 is None:
+            if self.width is None:
                 raise Exception('must specify either x0 or width')
             if x1 is not None:
-                x0 = x1 - width
+                self.x0 = x1 - self.width
             elif x is not None:
-                x0 = x - width/2.
+                self.x0 = x - self.width/2.
             else:
                 raise Exception('must specify at least one of x, x0, or x1')
-        if width is None:
+        if self.width is None:
             if x1 is None:
                 raise Exception('must specify either x1 or width')
-            width = x1 - x0
+            self.width = x1 - self.x0
             
-        y = asarray(self.opts.get('y'))
-        y0 = asarray(self.opts.get('y0'))
-        y1 = asarray(self.opts.get('y1'))
-        height = asarray(self.opts.get('height'))
+        y = asarray(kargs.pop('y', None))
+        self.y0 = asarray(kargs.pop('y0', None))
+        y1 = asarray(kargs.pop('y1', None))
+        self.height = asarray(kargs.pop('height', None))
 
-        if y0 is None:
-            if height is None:
-                y0 = 0
+        if self.y0 is None:
+            if self.height is None:
+                self.y0 = 0
             elif y1 is not None:
-                y0 = y1 - height
+                self.y0 = y1 - self.height
             elif y is not None:
-                y0 = y - height/2.
+                self.y0 = y - self.height/2.
             else:
-                y0 = 0
-        if height is None:
+                self.y0 = 0
+        if self.height is None:
             if y1 is None:
                 raise Exception('must specify either y1 or height')
-            height = y1 - y0
+            self.height = y1 - self.y0
+
+
+    def drawPicture(self):
+        self.picture = QtGui.QPicture()
+        self._shape = QtGui.QPainterPath()
+        p = QtGui.QPainter(self.picture)
+
+        pen = self.opts['pen']
+        pens = self.opts['pens']
+
+        if pen is None and pens is None:
+            pen = getConfigOption('foreground')
+
+        brush = self.opts['brush']
+        brushes = self.opts['brushes']
+        if brush is None and brushes is None:
+            brush = (128, 128, 128)
         
         p.setPen(fn.mkPen(pen))
         p.setBrush(fn.mkBrush(brush))
-        for i in range(len(x0)):
+        for i in range(len(self.x0)):
             if pens is not None:
                 p.setPen(fn.mkPen(pens[i]))
             if brushes is not None:
                 p.setBrush(fn.mkBrush(brushes[i]))
                 
-            if np.isscalar(x0):
-                x = x0
+            if np.isscalar(self.x0):
+                x = self.x0
             else:
-                x = x0[i]
-            if np.isscalar(y0):
-                y = y0
+                x = self.x0[i]
+            if np.isscalar(self.y0):
+                y = self.y0
             else:
-                y = y0[i]
-            if np.isscalar(width):
-                w = width
+                y = self.y0[i]
+            if np.isscalar(self.width):
+                w = self.width
             else:
-                w = width[i]
-            if np.isscalar(height):
-                h = height
+                w = self.width[i]
+            if np.isscalar(self.height):
+                h = self.height
             else:
-                h = height[i]
-                
-                
+                h = self.height[i]
+
+
             rect = QtCore.QRectF(x, y, w, h)
             p.drawRect(rect)
             self._shape.addRect(rect)
