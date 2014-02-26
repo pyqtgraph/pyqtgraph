@@ -49,10 +49,11 @@ class BarGraphItem(GraphicsObject):
         )
         self._shape = None
         self.picture = None
+        self.bounds = [None, None]  ## caches data bounds
+        self.setData(**opts)
         self.setOpts(**opts)
         
     def setOpts(self, **opts):
-        self.setData(**opts)
         self.opts.update(opts)
         self.picture = None
         self._shape = None
@@ -175,7 +176,54 @@ class BarGraphItem(GraphicsObject):
             self.drawPicture()
         return QtCore.QRectF(self.picture.boundingRect())
     
+
     def shape(self):
         if self.picture is None:
             self.drawPicture()
         return self._shape
+
+
+    def dataBounds(self, ax, frac=1.0, orthoRange=None):
+        if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
+            return self.bounds[ax]
+
+        if self.x0 is None or self.y0 is None:
+            return (None, None)
+
+        if ax == 0:
+            x0 = self.x0
+            if orthoRange is not None:
+                y0 = self.y0
+                y1 = y0 + self.height
+                mask = (y0 >= orthoRange[0]) * (y0 <= orthoRange[1]) * (y1 >= orthoRange[0]) * (y1 <= orthoRange[1])
+                x0 = x0[mask]
+            if frac >= 1.0:
+                self.bounds[ax] = (np.nanmin(x0), np.nanmax(x0))
+                return self.bounds[ax]
+            elif frac <= 0.0:
+                raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
+            else:
+                mask = np.isfinite(x0)
+                x0 = x0[mask]
+                return np.percentile(x0, [50 * (1 - frac), 50 * (1 + frac)])
+        elif ax == 1:
+            y0 = self.y0
+            y1 = y0 + self.height
+            if orthoRange is not None:
+                mask = (self.x0 >= orthoRange[0]) * (self.x0 <= orthoRange[1])
+                y0 = y0[mask]
+                y1 = y1[mask]
+            if frac >= 1.0:
+                self.bounds[ax] = (
+                    min(np.nanmin(y0), np.nanmin(y1)),
+                    max(np.nanmax(y0), np.nanmax(y1))
+                    )
+                return self.bounds[ax]
+            elif frac <= 0.0:
+                raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
+            else:
+                d = np.hstack(y0, y1)
+                mask = np.isfinite(d)
+                d = d[mask]
+                return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+
