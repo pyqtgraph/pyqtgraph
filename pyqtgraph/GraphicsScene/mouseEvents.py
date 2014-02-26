@@ -221,9 +221,12 @@ class MouseClickEvent(object):
         return self._modifiers
 
     def __repr__(self):
-        p = self.pos()
-        return "<MouseClickEvent (%g,%g) button=%d>" % (p.x(), p.y(), int(self.button()))
-        
+        try:
+            p = self.pos()
+            return "<MouseClickEvent (%g,%g) button=%d>" % (p.x(), p.y(), int(self.button()))
+        except:
+            return "<MouseClickEvent button=%d>" % (int(self.button()))
+
     def time(self):
         return self._time
 
