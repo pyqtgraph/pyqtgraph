@@ -285,6 +285,15 @@ class ViewBox(GraphicsWidget):
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
+    def setBackgroundColor(self, color):
+        """
+        Set the background color of the ViewBox.
+        
+        If color is None, then no background will be drawn.
+        """
+        self.background.setVisible(color is not None)
+        self.state['background'] = color
+        self.updateBackground()
 
     def setMouseMode(self, mode):
         """
