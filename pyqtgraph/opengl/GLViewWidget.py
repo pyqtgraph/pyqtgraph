@@ -36,6 +36,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                                       ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
         }
+        self.setBackgroundColor('k')
         self.items = []
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
@@ -64,8 +65,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         
     def initializeGL(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
         self.resizeGL(self.width(), self.height())
+        
+    def setBackgroundColor(self, *args, **kwds):
+        """
+        Set the background color of the widget. Accepts the same arguments as
+        pg.mkColor().
+        """
+        self.opts['bgcolor'] = fn.mkColor(*args, **kwds)
+        self.update()
         
     def getViewport(self):
         vp = self.opts['viewport']
@@ -164,6 +172,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             glViewport(*viewport)
         self.setProjection(region=region)
         self.setModelview()
+        bgcolor = self.opts['bgcolor']
+        glClearColor(bgcolor.red(), bgcolor.green(), bgcolor.blue(), 1.0)
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
