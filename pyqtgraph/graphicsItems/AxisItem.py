@@ -271,16 +271,16 @@ class AxisItem(GraphicsWidget):
             return fn.mkPen(getConfigOption('foreground'))
         return fn.mkPen(self._pen)
         
-    def setPen(self, pen):
+    def setPen(self, *args, **kwargs):
         """
         Set the pen used for drawing text, axes, ticks, and grid lines.
         if pen == None, the default will be used (see :func:`setConfigOption 
         <pyqtgraph.setConfigOption>`)
         """
         self.picture = None
-        if pen is None:
+        if not (args or kwargs):
             pen = getConfigOption('foreground')
-        self._pen = fn.mkPen(pen)
+        self._pen = fn.mkPen(*args, **kwargs)
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
         self.setLabel()
         self.update()

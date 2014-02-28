@@ -67,8 +67,8 @@ class GraphItem(GraphicsObject):
         self.scatter.setData(**kwds)
         self.informViewBoundsChanged()
 
-    def setPen(self, pen):
-        self.pen = pen
+    def setPen(self, *args, **kwargs):
+        self.pen = fn.mkPen(*args, **kwargs)
         self.picture = None
 
     def generatePicture(self):
