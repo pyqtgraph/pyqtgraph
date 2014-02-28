@@ -73,10 +73,10 @@ class InfiniteLine(GraphicsObject):
         self.maxRange = bounds
         self.setValue(self.value())
         
-    def setPen(self, pen):
+    def setPen(self, *args, **kwargs):
         """Set the pen for drawing the line. Allowable arguments are any that are valid 
         for :func:`mkPen <pyqtgraph.mkPen>`."""
-        self.pen = fn.mkPen(pen)
+        self.pen = fn.mkPen(*args, **kwargs)
         self.currentPen = self.pen
         self.update()
         

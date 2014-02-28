@@ -137,8 +137,8 @@ class ROI(GraphicsObject):
     def parentBounds(self):
         return self.mapToParent(self.boundingRect()).boundingRect()
 
-    def setPen(self, pen):
-        self.pen = fn.mkPen(pen)
+    def setPen(self, *args, **kwargs):
+        self.pen = fn.mkPen(*args, **kwargs)
         self.currentPen = self.pen
         self.update()
         
