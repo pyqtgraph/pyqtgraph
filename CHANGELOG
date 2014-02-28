@@ -36,7 +36,7 @@ pyqtgraph-0.9.9  [unreleased]
       when plots do not fit inside the widget.
     - Added BarGraphItem.shape() to allow better mouse interaction
     - Added MeshData.cylinder
-    - Added ViewBox.setBackgroundColor()
+    - Added ViewBox.setBackgroundColor() and GLViewWidget.setBackgroundColor()
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
