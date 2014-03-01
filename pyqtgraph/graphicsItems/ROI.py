@@ -194,11 +194,12 @@ class ROI(GraphicsObject):
         """
         return self.mapToParent(self.boundingRect()).boundingRect()
 
-    def setPen(self, pen):
+    def setPen(self, *args, **kwargs):
         """
-        Set the pen to use when drawing the ROI shape.        
+        Set the pen to use when drawing the ROI shape.
+        For arguments, see :func:`mkPen <pyqtgraph.mkPen>`.
         """
-        self.pen = fn.mkPen(pen)
+        self.pen = fn.mkPen(*args, **kwargs)
         self.currentPen = self.pen
         self.update()
         

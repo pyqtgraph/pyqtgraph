@@ -501,8 +501,8 @@ class NodeGraphicsItem(GraphicsObject):
         bounds = self.boundingRect()
         self.nameItem.setPos(bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
 
-    def setPen(self, pen):
-        self.pen = pen
+    def setPen(self, *args, **kwargs):
+        self.pen = fn.mkPen(*args, **kwargs)
         self.update()
         
     def setBrush(self, brush):

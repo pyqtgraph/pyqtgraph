@@ -28,7 +28,7 @@ class GraphItem(GraphicsObject):
         """
         Change the data displayed by the graph. 
         
-        ==============  =========================================================
+        ==============  =======================================================================
         **Arguments:**
         pos             (N,2) array of the positions of each node in the graph.
         adj             (M,2) array of connection data. Each row contains indexes
@@ -50,7 +50,7 @@ class GraphItem(GraphicsObject):
                         :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>`
                         to affect the appearance of nodes (symbol, size, brush,
                         etc.)
-        ==============  =========================================================
+        ==============  =======================================================================
         """
         if 'adj' in kwds:
             self.adjacency = kwds.pop('adj')
@@ -67,8 +67,21 @@ class GraphItem(GraphicsObject):
         self.scatter.setData(**kwds)
         self.informViewBoundsChanged()
 
-    def setPen(self, pen):
-        self.pen = pen
+    def setPen(self, *args, **kwargs):
+        """
+        Set the pen used to draw graph lines.
+        May be: 
+        
+        * None to disable line drawing
+        * Record array with fields (red, green, blue, alpha, width)
+        * Any set of arguments and keyword arguments accepted by 
+          :func:`mkPen <pyqtgraph.mkPen>`.
+        * 'default' to use the default foreground color.
+        """
+        if len(args) == 1 and len(kwargs) == 0:
+            self.pen = args[0]
+        else:
+            self.pen = fn.mkPen(*args, **kwargs)
         self.picture = None
 
     def generatePicture(self):

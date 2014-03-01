@@ -17,6 +17,7 @@ pyqtgraph-0.9.9  [unreleased]
       sigTransformChanged => sigDeviceTransformChanged.
     - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
       event position.
+    - Made setPen() methods consistent throughout the package
 
   New Features:
     - Added ViewBox.setLimits() method

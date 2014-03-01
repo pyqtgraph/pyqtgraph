@@ -10,7 +10,7 @@ Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill
 Maintainer
 ----------
 
-  * Luke Campagnola   ('luke.campagnola@%s.com' % 'gmail')
+  * Luke Campagnola   <luke.campagnola@gmail.com>
 
 Contributors
 ------------
@@ -26,6 +26,7 @@ Contributors
   * Antony Lee
   * Mattias Põldaru
   * Thomas S.
+  * Mikhail Terekhov
 
 Requirements
 ------------

@@ -74,7 +74,10 @@ class AxisItem(GraphicsWidget):
         
         self.setRange(0, 1)
         
-        self.setPen(pen)
+        if pen is None:
+            self.setPen()
+        else:
+            self.setPen(pen)
         
         self._linkedView = None
         if linkView is not None:
@@ -271,16 +274,17 @@ class AxisItem(GraphicsWidget):
             return fn.mkPen(getConfigOption('foreground'))
         return fn.mkPen(self._pen)
         
-    def setPen(self, pen):
+    def setPen(self, *args, **kwargs):
         """
         Set the pen used for drawing text, axes, ticks, and grid lines.
-        if pen == None, the default will be used (see :func:`setConfigOption 
-        <pyqtgraph.setConfigOption>`)
+        If no arguments are given, the default foreground color will be used 
+        (see :func:`setConfigOption <pyqtgraph.setConfigOption>`).
         """
         self.picture = None
-        if pen is None:
-            pen = getConfigOption('foreground')
-        self._pen = fn.mkPen(pen)
+        if args or kwargs:
+            self._pen = fn.mkPen(*args, **kwargs)
+        else:
+            self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
         self.setLabel()
         self.update()
