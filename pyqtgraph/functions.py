@@ -388,7 +388,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
     ==============  ====================================================================================================
-    Arguments:
+    **Arguments:**
     *data*          (ndarray) the original dataset
     *shape*         the shape of the slice to take (Note the return value may have more dimensions than len(shape))
     *origin*        the location in the original dataset that will become the origin of the sliced data.
@@ -751,36 +751,36 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
    
     Both stages are optional.
     
-    ============ ==================================================================================
-    Arguments:
-    data         numpy array of int/float types. If 
-    levels       List [min, max]; optionally rescale data before converting through the
-                 lookup table. The data is rescaled such that min->0 and max->*scale*::
-                 
-                    rescaled = (clip(data, min, max) - min) * (*scale* / (max - min))
-                 
-                 It is also possible to use a 2D (N,2) array of values for levels. In this case,
-                 it is assumed that each pair of min,max values in the levels array should be 
-                 applied to a different subset of the input data (for example, the input data may 
-                 already have RGB values and the levels are used to independently scale each 
-                 channel). The use of this feature requires that levels.shape[0] == data.shape[-1].
-    scale        The maximum value to which data will be rescaled before being passed through the 
-                 lookup table (or returned if there is no lookup table). By default this will
-                 be set to the length of the lookup table, or 256 is no lookup table is provided.
-                 For OpenGL color specifications (as in GLColor4f) use scale=1.0
-    lut          Optional lookup table (array with dtype=ubyte).
-                 Values in data will be converted to color by indexing directly from lut.
-                 The output data shape will be input.shape + lut.shape[1:].
-                 
-                 Note: the output of makeARGB will have the same dtype as the lookup table, so
-                 for conversion to QImage, the dtype must be ubyte.
-                 
-                 Lookup tables can be built using GradientWidget.
-    useRGBA      If True, the data is returned in RGBA order (useful for building OpenGL textures). 
-                 The default is False, which returns in ARGB order for use with QImage 
-                 (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
-                 is BGRA).
-    ============ ==================================================================================
+    ============== ==================================================================================
+    **Arguments:**
+    data           numpy array of int/float types. If 
+    levels         List [min, max]; optionally rescale data before converting through the
+                   lookup table. The data is rescaled such that min->0 and max->*scale*::
+                   
+                      rescaled = (clip(data, min, max) - min) * (*scale* / (max - min))
+                   
+                   It is also possible to use a 2D (N,2) array of values for levels. In this case,
+                   it is assumed that each pair of min,max values in the levels array should be 
+                   applied to a different subset of the input data (for example, the input data may 
+                   already have RGB values and the levels are used to independently scale each 
+                   channel). The use of this feature requires that levels.shape[0] == data.shape[-1].
+    scale          The maximum value to which data will be rescaled before being passed through the 
+                   lookup table (or returned if there is no lookup table). By default this will
+                   be set to the length of the lookup table, or 256 is no lookup table is provided.
+                   For OpenGL color specifications (as in GLColor4f) use scale=1.0
+    lut            Optional lookup table (array with dtype=ubyte).
+                   Values in data will be converted to color by indexing directly from lut.
+                   The output data shape will be input.shape + lut.shape[1:].
+                   
+                   Note: the output of makeARGB will have the same dtype as the lookup table, so
+                   for conversion to QImage, the dtype must be ubyte.
+                   
+                   Lookup tables can be built using GradientWidget.
+    useRGBA        If True, the data is returned in RGBA order (useful for building OpenGL textures). 
+                   The default is False, which returns in ARGB order for use with QImage 
+                   (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
+                   is BGRA).
+    ============== ==================================================================================
     """
     profile = debug.Profiler()
     
@@ -887,23 +887,23 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     pointing to the array which shares its data to prevent python
     freeing that memory while the image is in use.
     
-    =========== ===================================================================
-    Arguments:
-    imgData     Array of data to convert. Must have shape (width, height, 3 or 4) 
-                and dtype=ubyte. The order of values in the 3rd axis must be 
-                (b, g, r, a).
-    alpha       If True, the QImage returned will have format ARGB32. If False,
-                the format will be RGB32. By default, _alpha_ is True if
-                array.shape[2] == 4.
-    copy        If True, the data is copied before converting to QImage.
-                If False, the new QImage points directly to the data in the array.
-                Note that the array must be contiguous for this to work
-                (see numpy.ascontiguousarray).
-    transpose   If True (the default), the array x/y axes are transposed before 
-                creating the image. Note that Qt expects the axes to be in 
-                (height, width) order whereas pyqtgraph usually prefers the 
-                opposite.
-    =========== ===================================================================    
+    ============== ===================================================================
+    **Arguments:**
+    imgData        Array of data to convert. Must have shape (width, height, 3 or 4) 
+                   and dtype=ubyte. The order of values in the 3rd axis must be 
+                   (b, g, r, a).
+    alpha          If True, the QImage returned will have format ARGB32. If False,
+                   the format will be RGB32. By default, _alpha_ is True if
+                   array.shape[2] == 4.
+    copy           If True, the data is copied before converting to QImage.
+                   If False, the new QImage points directly to the data in the array.
+                   Note that the array must be contiguous for this to work
+                   (see numpy.ascontiguousarray).
+    transpose      If True (the default), the array x/y axes are transposed before 
+                   creating the image. Note that Qt expects the axes to be in 
+                   (height, width) order whereas pyqtgraph usually prefers the 
+                   opposite.
+    ============== ===================================================================    
     """
     ## create QImage from buffer
     profile = debug.Profiler()
@@ -1286,19 +1286,19 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
     """
     Generate isocurve from 2D data using marching squares algorithm.
     
-    ============= =========================================================
-    Arguments
-    data          2D numpy array of scalar values
-    level         The level at which to generate an isosurface
-    connected     If False, return a single long list of point pairs
-                  If True, return multiple long lists of connected point 
-                  locations. (This is slower but better for drawing 
-                  continuous lines)
-    extendToEdge  If True, extend the curves to reach the exact edges of 
-                  the data. 
-    path          if True, return a QPainterPath rather than a list of 
-                  vertex coordinates. This forces connected=True.
-    ============= =========================================================
+    ============== =========================================================
+    **Arguments:**
+    data           2D numpy array of scalar values
+    level          The level at which to generate an isosurface
+    connected      If False, return a single long list of point pairs
+                   If True, return multiple long lists of connected point 
+                   locations. (This is slower but better for drawing 
+                   continuous lines)
+    extendToEdge   If True, extend the curves to reach the exact edges of 
+                   the data. 
+    path           if True, return a QPainterPath rather than a list of 
+                   vertex coordinates. This forces connected=True.
+    ============== =========================================================
     
     This function is SLOW; plenty of room for optimization here.
     """    

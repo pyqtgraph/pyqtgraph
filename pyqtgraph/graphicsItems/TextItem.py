@@ -9,18 +9,18 @@ class TextItem(UIGraphicsItem):
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
         """
-        ===========  =================================================================================
-        Arguments:
-        *text*       The text to display 
-        *color*      The color of the text (any format accepted by pg.mkColor)
-        *html*       If specified, this overrides both *text* and *color*
-        *anchor*     A QPointF or (x,y) sequence indicating what region of the text box will 
-                     be anchored to the item's position. A value of (0,0) sets the upper-left corner
-                     of the text box to be at the position specified by setPos(), while a value of (1,1)
-                     sets the lower-right corner.
-        *border*     A pen to use when drawing the border
-        *fill*       A brush to use when filling within the border
-        ===========  =================================================================================
+        ==============  =================================================================================
+        **Arguments:**
+        *text*          The text to display
+        *color*         The color of the text (any format accepted by pg.mkColor)
+        *html*          If specified, this overrides both *text* and *color*
+        *anchor*        A QPointF or (x,y) sequence indicating what region of the text box will
+                        be anchored to the item's position. A value of (0,0) sets the upper-left corner
+                        of the text box to be at the position specified by setPos(), while a value of (1,1)
+                        sets the lower-right corner.
+        *border*        A pen to use when drawing the border
+        *fill*          A brush to use when filling within the border
+        ==============  =================================================================================
         """
         
         ## not working yet

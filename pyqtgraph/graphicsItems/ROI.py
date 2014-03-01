@@ -43,29 +43,8 @@ class ROI(GraphicsObject):
     rotate/translate/scale handles.
     ROIs can be customized to have a variety of shapes (by subclassing or using
     any of the built-in subclasses) and any combination of draggable handles
-    that allow the user to manibulate the ROI.
+    that allow the user to manipulate the ROI.
     
-    
-    ======================= ====================================================
-    **Signals**
-    sigRegionChangeFinished Emitted when the user stops dragging the ROI (or
-                            one of its handles) or if the ROI is changed
-                            programatically.
-    sigRegionChangeStarted  Emitted when the user starts dragging the ROI (or
-                            one of its handles).
-    sigRegionChanged        Emitted any time the position of the ROI changes,
-                            including while it is being dragged by the user.
-    sigHoverEvent           Emitted when the mouse hovers over the ROI.
-    sigClicked              Emitted when the user clicks on the ROI.
-                            Note that clicking is disabled by default to prevent
-                            stealing clicks from objects behind the ROI. To 
-                            enable clicking, call 
-                            roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton). 
-                            See QtGui.QGraphicsItem documentation for more 
-                            details.
-    sigRemoveRequested      Emitted when the user selects 'remove' from the 
-                            ROI's context menu (if available).
-    ======================= ====================================================
     
     
     ================ ===========================================================
@@ -102,6 +81,29 @@ class ROI(GraphicsObject):
                      sigRemoveRequested when this menu action is selected.
                      Default is False.
     ================ ===========================================================
+    
+    
+    
+    ======================= ====================================================
+    **Signals**
+    sigRegionChangeFinished Emitted when the user stops dragging the ROI (or
+                            one of its handles) or if the ROI is changed
+                            programatically.
+    sigRegionChangeStarted  Emitted when the user starts dragging the ROI (or
+                            one of its handles).
+    sigRegionChanged        Emitted any time the position of the ROI changes,
+                            including while it is being dragged by the user.
+    sigHoverEvent           Emitted when the mouse hovers over the ROI.
+    sigClicked              Emitted when the user clicks on the ROI.
+                            Note that clicking is disabled by default to prevent
+                            stealing clicks from objects behind the ROI. To 
+                            enable clicking, call 
+                            roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton). 
+                            See QtGui.QGraphicsItem documentation for more 
+                            details.
+    sigRemoveRequested      Emitted when the user selects 'remove' from the 
+                            ROI's context menu (if available).
+    ======================= ====================================================
     """
     
     sigRegionChangeFinished = QtCore.Signal(object)

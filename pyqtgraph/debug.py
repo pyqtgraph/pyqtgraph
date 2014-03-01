@@ -828,7 +828,8 @@ def typeStr(obj):
     
 def searchRefs(obj, *args):
     """Pseudo-interactive function for tracing references backward.
-    Arguments:
+    **Arguments:**
+    
         obj:   The initial object from which to start searching
         args:  A set of string or int arguments.
                each integer selects one of obj's referrers to be the new 'obj'
@@ -840,7 +841,8 @@ def searchRefs(obj, *args):
                   ro: return obj
                   rr: return list of obj's referrers
     
-    Examples:
+    Examples::
+    
        searchRefs(obj, 't')                    ## Print types of all objects referring to obj
        searchRefs(obj, 't', 0, 't')            ##   ..then select the first referrer and print the types of its referrers
        searchRefs(obj, 't', 0, 't', 'l')       ##   ..also print lengths of the last set of referrers

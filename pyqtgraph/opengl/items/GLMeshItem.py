@@ -19,7 +19,7 @@ class GLMeshItem(GLGraphicsItem):
     def __init__(self, **kwds):
         """
         ============== =====================================================
-        Arguments
+        **Arguments:**
         meshdata       MeshData object from which to determine geometry for 
                        this item.
         color          Default face color used if no vertex or face colors 

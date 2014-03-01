@@ -50,21 +50,21 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def __init__(self, parent=None, useOpenGL=None, background='default'):
         """
-        ============  ============================================================
-        Arguments:
-        parent        Optional parent widget
-        useOpenGL     If True, the GraphicsView will use OpenGL to do all of its
-                      rendering. This can improve performance on some systems,
-                      but may also introduce bugs (the combination of 
-                      QGraphicsView and QGLWidget is still an 'experimental' 
-                      feature of Qt)
-        background    Set the background color of the GraphicsView. Accepts any
-                      single argument accepted by 
-                      :func:`mkColor <pyqtgraph.mkColor>`. By 
-                      default, the background color is determined using the
-                      'backgroundColor' configuration option (see 
-                      :func:`setConfigOption <pyqtgraph.setConfigOption>`.
-        ============  ============================================================
+        ==============  ============================================================
+        **Arguments:**
+        parent          Optional parent widget
+        useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
+                        rendering. This can improve performance on some systems,
+                        but may also introduce bugs (the combination of 
+                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        feature of Qt)
+        background      Set the background color of the GraphicsView. Accepts any
+                        single argument accepted by 
+                        :func:`mkColor <pyqtgraph.mkColor>`. By 
+                        default, the background color is determined using the
+                        'backgroundColor' configuration option (see 
+                        :func:`setConfigOption <pyqtgraph.setConfigOption>`.
+        ==============  ============================================================
         """
         
         self.closed = False

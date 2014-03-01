@@ -19,15 +19,15 @@ class VTickGroup(UIGraphicsItem):
     """
     def __init__(self, xvals=None, yrange=None, pen=None):
         """
-        ============= ===================================================================
-        **Arguments**
-        xvals         A list of x values (in data coordinates) at which to draw ticks.
-        yrange        A list of [low, high] limits for the tick. 0 is the bottom of 
-                      the view, 1 is the top. [0.8, 1] would draw ticks in the top 
-                      fifth of the view.
-        pen           The pen to use for drawing ticks. Default is grey. Can be specified
-                      as any argument valid for :func:`mkPen<pyqtgraph.mkPen>`
-        ============= ===================================================================
+        ==============  ===================================================================
+        **Arguments:**
+        xvals           A list of x values (in data coordinates) at which to draw ticks.
+        yrange          A list of [low, high] limits for the tick. 0 is the bottom of
+                        the view, 1 is the top. [0.8, 1] would draw ticks in the top
+                        fifth of the view.
+        pen             The pen to use for drawing ticks. Default is grey. Can be specified
+                        as any argument valid for :func:`mkPen<pyqtgraph.mkPen>`
+        ==============  ===================================================================
         """
         if yrange is None:
             yrange = [0, 1]
@@ -56,10 +56,10 @@ class VTickGroup(UIGraphicsItem):
     def setXVals(self, vals):
         """Set the x values for the ticks. 
         
-        ============= =====================================================================
-        **Arguments** 
-        vals          A list of x values (in data/plot coordinates) at which to draw ticks.
-        ============= =====================================================================
+        ==============   =====================================================================
+        **Arguments:**
+        vals             A list of x values (in data/plot coordinates) at which to draw ticks.
+        ==============   =====================================================================
         """
         self.xvals = vals
         self.rebuildTicks()

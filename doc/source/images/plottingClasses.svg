@@ -13,7 +13,7 @@
    height="268.51233"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="plottingClasses.svg"
    inkscape:export-filename="/home/luke/work/manis_lab/code/pyqtgraph/documentation/source/images/plottingClasses.png"
    inkscape:export-xdpi="124.99"
@@ -50,12 +50,12 @@
      inkscape:cx="383.64946"
      inkscape:cy="21.059243"
      inkscape:document-units="px"
-     inkscape:current-layer="g3978"
+     inkscape:current-layer="g3891"
      showgrid="false"
-     inkscape:window-width="1400"
+     inkscape:window-width="1918"
      inkscape:window-height="1030"
-     inkscape:window-x="-3"
-     inkscape:window-y="-3"
+     inkscape:window-x="1"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -69,7 +69,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -345,7 +345,7 @@
              id="tspan3897"
              x="124.24876"
              y="376.57013"
-             style="font-size:18px">GraphicsLayoutItem(GraphicsItem)</tspan></text>
+             style="font-size:18px">GraphicsLayout(GraphicsItem)</tspan></text>
       </g>
       <g
          transform="translate(17.172593,259.49748)"
