@@ -13,7 +13,7 @@ Simple Data Display Functions
 Color, Pen, and Brush Functions
 -------------------------------
 
-Qt uses the classes QColor, QPen, and QBrush to determine how to draw lines and fill shapes. These classes are highly capable but somewhat awkward to use. Pyqtgraph offers the functions :func:`~pyqtgraph.mkColor`, :func:`~pyqtgraph.mkPen`, and :func:`~pyqtgraph.mkBrush` to simplify the process of creating these classes. In most cases, however, it will be unnecessary to call these functions directly--any function or method that accepts *pen* or *brush* arguments will make use of these functions for you. For example, the following three lines all have the same effect::
+Qt uses the classes QColor, QPen, and QBrush to determine how to draw lines and fill shapes. These classes are highly capable but somewhat awkward to use. PyQtGraph offers the functions :func:`~pyqtgraph.mkColor`, :func:`~pyqtgraph.mkPen`, and :func:`~pyqtgraph.mkBrush` to simplify the process of creating these classes. In most cases, however, it will be unnecessary to call these functions directly--any function or method that accepts *pen* or *brush* arguments will make use of these functions for you. For example, the following three lines all have the same effect::
     
     pg.plot(xdata, ydata, pen='r')
     pg.plot(xdata, ydata, pen=pg.mkPen('r'))

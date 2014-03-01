@@ -28,7 +28,7 @@ All of the above functions also return handles to the objects that are created, 
 Organization of Plotting Classes
 --------------------------------
 
-There are several classes invloved in displaying plot data. Most of these classes are instantiated automatically, but it is useful to understand how they are organized and relate to each other. Pyqtgraph is based heavily on Qt's GraphicsView framework--if you are not already familiar with this, it's worth reading about (but not essential). Most importantly: 1) Qt GUIs are composed of QWidgets, 2) A special widget called QGraphicsView is used for displaying complex graphics, and 3) QGraphicsItems define the objects that are displayed within a QGraphicsView.
+There are several classes invloved in displaying plot data. Most of these classes are instantiated automatically, but it is useful to understand how they are organized and relate to each other. PyQtGraph is based heavily on Qt's GraphicsView framework--if you are not already familiar with this, it's worth reading about (but not essential). Most importantly: 1) Qt GUIs are composed of QWidgets, 2) A special widget called QGraphicsView is used for displaying complex graphics, and 3) QGraphicsItems define the objects that are displayed within a QGraphicsView.
 
 * Data Classes (all subclasses of QGraphicsItem)
     * :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>`  - Displays a plot line given x,y data

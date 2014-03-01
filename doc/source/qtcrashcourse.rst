@@ -1,7 +1,7 @@
 Qt Crash Course
 ===============
 
-Pyqtgraph makes extensive use of Qt for generating nearly all of its visual output and interfaces. Qt's documentation is very well written and we encourage all pyqtgraph developers to familiarize themselves with it. The purpose of this section is to provide an introduction to programming with Qt (using either PyQt or PySide) for the pyqtgraph developer.
+PyQtGraph makes extensive use of Qt for generating nearly all of its visual output and interfaces. Qt's documentation is very well written and we encourage all pyqtgraph developers to familiarize themselves with it. The purpose of this section is to provide an introduction to programming with Qt (using either PyQt or PySide) for the pyqtgraph developer.
 
 QWidgets and Layouts
 --------------------
@@ -12,7 +12,7 @@ A Qt GUI is almost always composed of a few basic components:
 * Multiple QWidget instances such as QPushButton, QLabel, QComboBox, etc. 
 * QLayout instances (optional, but strongly encouraged) which automatically manage the positioning of widgets to allow the GUI to resize in a usable way.
 
-Pyqtgraph fits into this scheme by providing its own QWidget subclasses to be inserted into your GUI.
+PyQtGraph fits into this scheme by providing its own QWidget subclasses to be inserted into your GUI.
 
 
 Example::

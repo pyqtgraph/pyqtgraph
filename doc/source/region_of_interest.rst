@@ -1,7 +1,7 @@
 Interactive Data Selection Controls
 ===================================
 
-Pyqtgraph includes graphics items which allow the user to select and mark regions of data.
+PyQtGraph includes graphics items which allow the user to select and mark regions of data.
 
 Linear Selection and Marking
 ----------------------------

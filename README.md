@@ -25,6 +25,7 @@ Contributors
   * Guillaume Poulin
   * Antony Lee
   * Mattias Põldaru
+  * Thomas S.
 
 Requirements
 ------------
