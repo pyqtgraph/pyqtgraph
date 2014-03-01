@@ -56,7 +56,7 @@ class PlotDataItem(GraphicsObject):
             ===========================   =========================================
         
         **Line style keyword arguments:**
-            ==========   ================================================
+            ==========   ==============================================================================
             connect      Specifies how / whether vertexes should be connected. 
                          See :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
             pen          Pen to use for drawing line between points. 
@@ -67,21 +67,25 @@ class PlotDataItem(GraphicsObject):
             fillLevel    Fill the area between the curve and fillLevel
             fillBrush    Fill to use when fillLevel is specified. 
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            ==========   ================================================
+            ==========   ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
         
-            ============   ================================================
-            symbol         Symbol to use for drawing points OR list of symbols, one per point. Default is no symbol.
+            ============   =====================================================
+            symbol         Symbol to use for drawing points OR list of symbols, 
+                           one per point. Default is no symbol.
                            Options are o, s, t, d, +, or any QPainterPath
-            symbolPen      Outline pen for drawing points OR list of pens, one per point.
-                           May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
-            symbolBrush    Brush for filling points OR list of brushes, one per point.
-                           May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
+            symbolPen      Outline pen for drawing points OR list of pens, one 
+                           per point. May be any single argument accepted by 
+                           :func:`mkPen() <pyqtgraph.mkPen>`
+            symbolBrush    Brush for filling points OR list of brushes, one per 
+                           point. May be any single argument accepted by 
+                           :func:`mkBrush() <pyqtgraph.mkBrush>`
             symbolSize     Diameter of symbols OR list of diameters.
-            pxMode         (bool) If True, then symbolSize is specified in pixels. If False, then symbolSize is 
+            pxMode         (bool) If True, then symbolSize is specified in 
+                           pixels. If False, then symbolSize is 
                            specified in data coordinates.
-            ============   ================================================
+            ============   =====================================================
         
         **Optimization keyword arguments:**
         
@@ -92,11 +96,11 @@ class PlotDataItem(GraphicsObject):
             decimate         deprecated.
             downsample       (int) Reduce the number of samples displayed by this value
             downsampleMethod 'subsample': Downsample by taking the first of N samples. 
-                                This method is fastest and least accurate.
+                             This method is fastest and least accurate.
                              'mean': Downsample by taking the mean of N samples.
                              'peak': Downsample by drawing a saw wave that follows the min 
-                                and max of the original data. This method produces the best 
-                                visual representation of the data but is slower.
+                             and max of the original data. This method produces the best 
+                             visual representation of the data but is slower.
             autoDownsample   (bool) If True, resample the data before plotting to avoid plotting
                              multiple line segments per pixel. This can improve performance when
                              viewing very high-density data, but increases the initial overhead 
@@ -294,13 +298,13 @@ class PlotDataItem(GraphicsObject):
         Arguments
         ds           (int) Reduce visible plot samples by this factor. To disable,
                      set ds=1.
-        auto         (bool) If True, automatically pick *ds* based on visible range
+        auto         (bool) If True, automatically pick *ds* based on visible range.
         mode         'subsample': Downsample by taking the first of N samples. 
-                         This method is fastest and least accurate.
+                     This method is fastest and least accurate.
                      'mean': Downsample by taking the mean of N samples.
                      'peak': Downsample by drawing a saw wave that follows the min 
-                         and max of the original data. This method produces the best 
-                         visual representation of the data but is slower.
+                     and max of the original data. This method produces the best 
+                     visual representation of the data but is slower.
         ===========  =================================================================
         """
         changed = False

@@ -164,7 +164,7 @@ class AxisItem(GraphicsWidget):
                       without any scaling prefix (eg, 'V' instead of 'mV'). The
                       scaling prefix will be automatically prepended based on the
                       range of data displayed.
-        **args        All extra keyword arguments become CSS style options for 
+        \**args       All extra keyword arguments become CSS style options for 
                       the <span> tag which will surround the axis label and units.
         ============= =============================================================
         

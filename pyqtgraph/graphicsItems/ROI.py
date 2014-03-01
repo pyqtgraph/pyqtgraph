@@ -46,8 +46,8 @@ class ROI(GraphicsObject):
     that allow the user to manibulate the ROI.
     
     
-    Signals
-    ----------------------- ----------------------------------------------------
+    ======================= ====================================================
+    **Signals**
     sigRegionChangeFinished Emitted when the user stops dragging the ROI (or
                             one of its handles) or if the ROI is changed
                             programatically.
@@ -65,11 +65,11 @@ class ROI(GraphicsObject):
                             details.
     sigRemoveRequested      Emitted when the user selects 'remove' from the 
                             ROI's context menu (if available).
-    ----------------------- ----------------------------------------------------
+    ======================= ====================================================
     
     
-    Arguments
-    ---------------- -----------------------------------------------------------
+    ================ ===========================================================
+    **Arguments**
     pos              (length-2 sequence) Indicates the position of the ROI's 
                      origin. For most ROIs, this is the lower-left corner of
                      its bounding rectangle.
@@ -101,7 +101,7 @@ class ROI(GraphicsObject):
                      an option to remove the ROI. The ROI emits
                      sigRemoveRequested when this menu action is selected.
                      Default is False.
-    ---------------- -----------------------------------------------------------
+    ================ ===========================================================
     """
     
     sigRegionChangeFinished = QtCore.Signal(object)
@@ -276,11 +276,14 @@ class ROI(GraphicsObject):
         If the ROI is bounded and the move would exceed boundaries, then the ROI
         is moved to the nearest acceptable position instead.
         
-        snap can be:
-           None (default): use self.translateSnap and self.snapSize to determine whether/how to snap
-           False:          do not snap
-           Point(w,h)      snap to rectangular grid with spacing (w,h)
-           True:           snap using self.snapSize (and ignoring self.translateSnap)
+        *snap* can be:
+        
+        =============== ==========================================================================
+        None (default)  use self.translateSnap and self.snapSize to determine whether/how to snap
+        False           do not snap
+        Point(w,h)      snap to rectangular grid with spacing (w,h)
+        True            snap using self.snapSize (and ignoring self.translateSnap)
+        =============== ==========================================================================
            
         Also accepts *update* and *finish* arguments (see setPos() for a description of these).
         """
@@ -346,8 +349,8 @@ class ROI(GraphicsObject):
         ROI. However, for larger ROIs it may be desirable to disable this and
         instead provide one or more translation handles.
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -357,7 +360,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         pos = Point(pos)
         return self.addHandle({'name': name, 'type': 't', 'pos': pos, 'item': item}, index=index)
@@ -367,8 +370,8 @@ class ROI(GraphicsObject):
         Add a new free handle to the ROI. Dragging free handles has no effect
         on the position or shape of the ROI. 
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -378,7 +381,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         if pos is not None:
             pos = Point(pos)
@@ -389,8 +392,8 @@ class ROI(GraphicsObject):
         Add a new scale handle to the ROI. Dragging a scale handle allows the
         user to change the height and/or width of the ROI.
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -404,7 +407,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         pos = Point(pos)
         center = Point(center)
@@ -420,8 +423,8 @@ class ROI(GraphicsObject):
         Add a new rotation handle to the ROI. Dragging a rotation handle allows 
         the user to change the angle of the ROI.
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -433,7 +436,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         pos = Point(pos)
         center = Point(center)
@@ -446,8 +449,8 @@ class ROI(GraphicsObject):
         arbitrary center point as well as scale the ROI by dragging the handle
         toward or away from the center point.
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -459,7 +462,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         pos = Point(pos)
         center = Point(center)
@@ -474,8 +477,8 @@ class ROI(GraphicsObject):
         arbitrary center point, while moving toward or away from the center 
         point has no effect on the shape of the ROI.
         
-        Arguments:
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
+        **Arguments**
         pos                 (length-2 sequence) The position of the handle 
                             relative to the shape of the ROI. A value of (0,0)
                             indicates the origin, whereas (1, 1) indicates the
@@ -487,7 +490,7 @@ class ROI(GraphicsObject):
         name                The name of this handle (optional). Handles are 
                             identified by name when calling 
                             getLocalHandlePositions and getSceneHandlePositions.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         """
         pos = Point(pos)
         center = Point(center)
@@ -1030,8 +1033,8 @@ class ROI(GraphicsObject):
         """Use the position and orientation of this ROI relative to an imageItem 
         to pull a slice from an array.
         
+        =================== ====================================================
         **Arguments**
-        ------------------- ----------------------------------------------------
         data                The array to slice from. Note that this array does
                             *not* have to be the same data that is represented
                             in *img*.
@@ -1043,9 +1046,9 @@ class ROI(GraphicsObject):
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
                             used to extract data from the original array.
-        **kwds              All keyword arguments are passed to 
+        \**kwds             All keyword arguments are passed to 
                             :func:`affineSlice <pyqtgraph.affineSlice>`.
-        ------------------- ----------------------------------------------------
+        =================== ====================================================
         
         This method uses :func:`affineSlice <pyqtgraph.affineSlice>` to generate
         the slice from *data* and uses :func:`getAffineSliceParams <pyqtgraph.ROI.getAffineSliceParams>` to determine the parameters to 
@@ -1548,8 +1551,8 @@ class RectROI(ROI):
     """
     Rectangular ROI subclass with a single scale handle at the top-right corner.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     pos            (length-2 sequence) The position of the ROI origin.
                    See ROI().
     size           (length-2 sequence) The size of the ROI. See ROI().
@@ -1557,8 +1560,8 @@ class RectROI(ROI):
                    center, rather than its origin.
     sideScalers    (bool) If True, extra scale handles are added at the top and 
                    right edges.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     
     """
     def __init__(self, pos, size, centered=False, sideScalers=False, **args):
@@ -1581,15 +1584,15 @@ class LineROI(ROI):
     allows the ROI to be positioned as if moving the ends of a line segment.
     A third handle controls the width of the ROI orthogonal to its "line" axis.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     pos1           (length-2 sequence) The position of the center of the ROI's
                    left edge.
     pos2           (length-2 sequence) The position of the center of the ROI's
                    right edge.
     width          (float) The width of the ROI.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     
     """
     def __init__(self, pos1, pos2, width, **args):
@@ -1617,12 +1620,12 @@ class MultiRectROI(QtGui.QGraphicsObject):
     an image similarly to PolyLineROI. It differs in that each segment
     of the chain is rectangular instead of linear and thus has width.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     points         (list of length-2 sequences) The list of points in the path.
     width          (float) The width of the ROIs orthogonal to the path.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     """
     sigRegionChangeFinished = QtCore.Signal(object)
     sigRegionChangeStarted = QtCore.Signal(object)
@@ -1751,12 +1754,12 @@ class EllipseROI(ROI):
     Elliptical ROI subclass with one scale handle and one rotation handle.
     
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     pos            (length-2 sequence) The position of the ROI's origin.
     size           (length-2 sequence) The size of the ROI's bounding rectangle.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     
     """
     def __init__(self, pos, size, **args):
@@ -1801,12 +1804,12 @@ class CircleROI(EllipseROI):
     Circular ROI subclass. Behaves exactly as EllipseROI, but may only be scaled
     proportionally to maintain its aspect ratio.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     pos            (length-2 sequence) The position of the ROI's origin.
     size           (length-2 sequence) The size of the ROI's bounding rectangle.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     
     """
     def __init__(self, pos, size, **args):
@@ -1874,8 +1877,8 @@ class PolyLineROI(ROI):
     
     This class allows the user to draw paths of multiple line segments.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     positions      (list of length-2 sequences) The list of points in the path.
                    Note that, unlike the handle positions specified in other
                    ROIs, these positions must be expressed in the normal
@@ -1883,8 +1886,8 @@ class PolyLineROI(ROI):
                    to the size of the ROI.
     closed         (bool) if True, an extra LineSegmentROI is added connecting 
                    the beginning and end points.
-    **args         All extra keyword arguments are passed to ROI()
-    -------------- -------------------------------------------------------------
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     
     """
     def __init__(self, positions, closed=False, pos=None, **args):
@@ -2032,13 +2035,15 @@ class LineSegmentROI(ROI):
     """
     ROI subclass with two freely-moving handles defining a line.
     
+    ============== =============================================================
     **Arguments**
-    -------------- -------------------------------------------------------------
     positions      (list of two length-2 sequences) The endpoints of the line 
                    segment. Note that, unlike the handle positions specified in 
                    other ROIs, these positions must be expressed in the normal
                    coordinate system of the ROI, rather than (0 to 1) relative
                    to the size of the ROI.
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
     """
     
     def __init__(self, positions=(None, None), pos=None, handles=(None,None), **args):
