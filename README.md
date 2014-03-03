@@ -27,6 +27,7 @@ Contributors
   * Mattias Põldaru
   * Thomas S.
   * Mikhail Terekhov
+  * fabioz
 
 Requirements
 ------------

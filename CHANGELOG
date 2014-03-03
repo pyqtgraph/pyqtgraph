@@ -64,6 +64,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed MeshData exception caused when vertexes have no matching faces
     - Fixed GLViewWidget exception handler
     - Fixed unicode support in Dock
+    - Fixed PySide crash caused by emitting signal from GraphicsObject.itemChange
 
 
 pyqtgraph-0.9.8  2013-11-24

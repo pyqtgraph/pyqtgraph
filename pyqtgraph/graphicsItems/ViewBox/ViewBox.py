@@ -37,25 +37,13 @@ class ChildGroup(ItemGroup):
     
     def __init__(self, parent):
         ItemGroup.__init__(self, parent)
-        # Changed from the signal to a listener-weak-list because it was Crashing with PySide 1.2.1
-        #
-        # Seems to be related to the fact that sigItemsChanged is there but in the hierarchy it
-        # starts with 'object' and not 'QObject', as it's a
-        # pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem.
-        #
-        # Crash (gotten with faulthandler):
-        # Current thread 0x00001adc:
-        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBox.py", line 35 in itemChange
-        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 197 in acceptsType
-        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 187 in autoAdd
-        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 194 in autoAdd
-        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 132 in __init__
-        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBoxMenu.py", line 41 in __init__
-        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBox.py", line 185 in __init__
-        #
-        # Could not reproduce crash after changing to weak list (and note that crash didn't always
-        # happen even with signals, but when it did happen, it was always in the same place).
-
+        
+        # Used as callback to inform ViewBox when items are added/removed from 
+        # the group. 
+        # Note 1: We would prefer to override itemChange directly on the 
+        #         ViewBox, but this causes crashes on PySide.
+        # Note 2: We might also like to use a signal rather than this callback
+        #         mechanism, but this causes a different PySide crash.        
         self.itemsChangedListeners = WeakList()
  
         # excempt from telling view when transform changes
