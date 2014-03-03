@@ -13,20 +13,66 @@ from ... import getConfigOption
 
 __all__ = ['ViewBox']
 
+class WeakList(object):
+
+    def __init__(self):
+        self._items = []
+
+    def append(self, obj):
+        #Add backwards to iterate backwards (to make iterating more efficient on removal).
+        self._items.insert(0, weakref.ref(obj))
+
+    def __iter__(self):
+        i = len(self._items)-1
+        while i >= 0:
+            ref = self._items[i]
+            d = ref()
+            if d is None:
+                del self._items[i]
+            else:
+                yield d
+            i -= 1
 
 class ChildGroup(ItemGroup):
     
-    sigItemsChanged = QtCore.Signal()
     def __init__(self, parent):
         ItemGroup.__init__(self, parent)
+        # Changed from the signal to a listener-weak-list because it was Crashing with PySide 1.2.1
+        #
+        # Seems to be related to the fact that sigItemsChanged is there but in the hierarchy it
+        # starts with 'object' and not 'QObject', as it's a
+        # pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem.
+        #
+        # Crash (gotten with faulthandler):
+        # Current thread 0x00001adc:
+        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBox.py", line 35 in itemChange
+        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 197 in acceptsType
+        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 187 in autoAdd
+        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 194 in autoAdd
+        #   File "X:\pyqtgraph\pyqtgraph\WidgetGroup.py", line 132 in __init__
+        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBoxMenu.py", line 41 in __init__
+        #   File "X:\pyqtgraph\pyqtgraph\graphicsItems\ViewBox\ViewBox.py", line 185 in __init__
+        #
+        # Could not reproduce crash after changing to weak list (and note that crash didn't always
+        # happen even with signals, but when it did happen, it was always in the same place).
+
+        self.itemsChangedListeners = WeakList()
+ 
         # excempt from telling view when transform changes
         self._GraphicsObject__inform_view_on_change = False
     
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
         if change == self.ItemChildAddedChange or change == self.ItemChildRemovedChange:
-            self.sigItemsChanged.emit()
-        
+            try:
+                itemsChangedListeners = self.itemsChangedListeners
+            except AttributeError:
+                # It's possible that the attribute was already collected when the itemChange happened
+                # (if it was triggered during the gc of the object).
+                pass
+            else:
+                for listener in itemsChangedListeners:
+                    listener.itemsChanged()
         return ret
 
 
@@ -140,7 +186,7 @@ class ViewBox(GraphicsWidget):
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
-        self.childGroup.sigItemsChanged.connect(self.itemsChanged)
+        self.childGroup.itemsChangedListeners.append(self)
         
         self.background = QtGui.QGraphicsRectItem(self.rect())
         self.background.setParentItem(self)
@@ -1187,7 +1233,8 @@ class ViewBox(GraphicsWidget):
                 y = tr.y() if mask[1] == 1 else None
                 
                 self._resetTarget()
-                self.translateBy(x=x, y=y)
+                if x is not None or y is not None:
+                    self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
