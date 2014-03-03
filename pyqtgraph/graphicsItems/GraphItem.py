@@ -45,7 +45,8 @@ class GraphItem(GraphicsObject):
                         * None (to disable connection drawing)
                         * 'default' to use the default foreground color.
                      
-        symbolPen       The pen used for drawing nodes.
+        symbolPen       The pen(s) used for drawing nodes.
+        symbolBrush     The brush(es) used for drawing nodes.
         ``**opts``      All other keyword arguments are given to
                         :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>`
                         to affect the appearance of nodes (symbol, size, brush,
@@ -54,18 +55,27 @@ class GraphItem(GraphicsObject):
         """
         if 'adj' in kwds:
             self.adjacency = kwds.pop('adj')
-            assert self.adjacency.dtype.kind in 'iu'
-            self.picture = None
+            if self.adjacency.dtype.kind not in 'iu':
+                raise Exception("adjacency array must have int or unsigned type.")
+            self._update()
         if 'pos' in kwds:
             self.pos = kwds['pos']
-            self.picture = None
+            self._update()
         if 'pen' in kwds:
             self.setPen(kwds.pop('pen'))
-            self.picture = None
+            self._update()
+            
         if 'symbolPen' in kwds:    
             kwds['pen'] = kwds.pop('symbolPen')
+        if 'symbolBrush' in kwds:    
+            kwds['brush'] = kwds.pop('symbolBrush')
         self.scatter.setData(**kwds)
         self.informViewBoundsChanged()
+
+    def _update(self):
+        self.picture = None
+        self.prepareGeometryChange()
+        self.update()
 
     def setPen(self, *args, **kwargs):
         """
@@ -83,6 +93,7 @@ class GraphItem(GraphicsObject):
         else:
             self.pen = fn.mkPen(*args, **kwargs)
         self.picture = None
+        self.update()
 
     def generatePicture(self):
         self.picture = QtGui.QPicture()
