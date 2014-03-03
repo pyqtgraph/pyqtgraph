@@ -64,8 +64,15 @@ class ChildGroup(ItemGroup):
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
         if change == self.ItemChildAddedChange or change == self.ItemChildRemovedChange:
-            for listener in self.itemsChangedListeners:
-                listener.itemsChanged()
+            try:
+                itemsChangedListeners = self.itemsChangedListeners
+            except AttributeError:
+                # It's possible that the attribute was already collected when the itemChange happened
+                # (if it was triggered during the gc of the object).
+                pass
+            else:
+                for listener in itemsChangedListeners:
+                    listener.itemsChanged()
 
         return ret
 
