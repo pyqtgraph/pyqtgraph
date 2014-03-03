@@ -13,20 +13,54 @@ from ... import getConfigOption
 
 __all__ = ['ViewBox']
 
+class WeakList(object):
+
+    def __init__(self):
+        self._items = []
+
+    def append(self, obj):
+        #Add backwards to iterate backwards (to make iterating more efficient on removal).
+        self._items.insert(0, weakref.ref(obj))
+
+    def __iter__(self):
+        i = len(self._items)-1
+        while i >= 0:
+            ref = self._items[i]
+            d = ref()
+            if d is None:
+                del self._items[i]
+            else:
+                yield d
+            i -= 1
 
 class ChildGroup(ItemGroup):
     
-    sigItemsChanged = QtCore.Signal()
     def __init__(self, parent):
         ItemGroup.__init__(self, parent)
+        
+        # Used as callback to inform ViewBox when items are added/removed from 
+        # the group. 
+        # Note 1: We would prefer to override itemChange directly on the 
+        #         ViewBox, but this causes crashes on PySide.
+        # Note 2: We might also like to use a signal rather than this callback
+        #         mechanism, but this causes a different PySide crash.        
+        self.itemsChangedListeners = WeakList()
+ 
         # excempt from telling view when transform changes
         self._GraphicsObject__inform_view_on_change = False
     
     def itemChange(self, change, value):
         ret = ItemGroup.itemChange(self, change, value)
         if change == self.ItemChildAddedChange or change == self.ItemChildRemovedChange:
-            self.sigItemsChanged.emit()
-        
+            try:
+                itemsChangedListeners = self.itemsChangedListeners
+            except AttributeError:
+                # It's possible that the attribute was already collected when the itemChange happened
+                # (if it was triggered during the gc of the object).
+                pass
+            else:
+                for listener in itemsChangedListeners:
+                    listener.itemsChanged()
         return ret
 
 
@@ -140,7 +174,7 @@ class ViewBox(GraphicsWidget):
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
-        self.childGroup.sigItemsChanged.connect(self.itemsChanged)
+        self.childGroup.itemsChangedListeners.append(self)
         
         self.background = QtGui.QGraphicsRectItem(self.rect())
         self.background.setParentItem(self)
@@ -1187,7 +1221,8 @@ class ViewBox(GraphicsWidget):
                 y = tr.y() if mask[1] == 1 else None
                 
                 self._resetTarget()
-                self.translateBy(x=x, y=y)
+                if x is not None or y is not None:
+                    self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
