@@ -31,7 +31,7 @@ class BarGraph(pg.BarGraphItem):
         print("clicked")
 
 
-bg = BarGraph(x=x, y=y1*0.3+2, height=0.4+y1*0.2, width=0.8)
+bg = BarGraph(x=x, y=y1*0.3+2, height=0.4+y1*0.2, width=0.8, brush='w')
 win.addItem(bg)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
