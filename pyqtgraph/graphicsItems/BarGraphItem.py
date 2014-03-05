@@ -49,106 +49,78 @@ class BarGraphItem(GraphicsObject):
         )
         self._shape = None
         self.picture = None
-        self.setOpts(**opts)
+        if opts:
+            self.setOpts(**opts)
         
     def setOpts(self, **opts):
         self.opts.update(opts)
+        self.checkOpts()
         self.picture = None
         self._shape = None
         self.update()
         self.informViewBoundsChanged()
         
+    def checkOpts(self):
+        def get_styles(scalar, multiple, default, func):
+            mult = self.opts[multiple]
+            if mult is None:
+                sclr = self.opts.get(scalar, default)
+                mult = [sclr, ] * len(self.x0)
+            return [func(m) for m in mult]
+        
+        def array_from_opts(label, label0, label1, dimension):
+        
+            def asarray(x):
+                if x is None or np.isscalar(x) or isinstance(x, np.ndarray):
+                    return x
+                return np.array(x)
+
+            l = asarray(self.opts.get(label))
+            l0 = asarray(self.opts.get(label0))
+            l1 = asarray(self.opts.get(label1))
+            dim = asarray(self.opts.get(dimension))
+        
+            if l0 is None:
+                if dim is None:
+                    raise TypeError('must specify either'
+                                    ' %s or %s' % (label0, dimension))
+                if l1 is not None:
+                    l0 = l1 - dim
+                elif l is not None:
+                    l0 = l - dim/2.
+                else:
+                    l0 = 0
+            if dim is None:
+                if l1 is None:
+                    raise TypeError('must specify either '
+                                    '%s or %s' % (label1, dimension))
+                dim = l1 - l0
+            if np.isscalar(l0) and np.isscalar(dim):
+                raise TypeError('At listone parameter must be iterable')
+            return (np.array([l0, ] * len(dim)) if np.isscalar(l0) else l0,
+                    np.array([dim, ] * len(l0)) if np.isscalar(dim) else dim)
+
+        # check and save the values
+        self.x0, self.widths = array_from_opts('x', 'x0', 'x1', 'width')
+        self.y0, self.heights = array_from_opts('y', 'y0', 'y1', 'height')
+        self.pens = get_styles('pen', 'pens',
+                               getConfigOption('foreground'), fn.mkPen)
+        self.brushes = get_styles('brush', 'brushes',
+                                  (128, 128, 128), fn.mkBrush)
+
     def drawPicture(self):
         self.picture = QtGui.QPicture()
         self._shape = QtGui.QPainterPath()
-        p = QtGui.QPainter(self.picture)
-        
-        pen = self.opts['pen']
-        pens = self.opts['pens']
-        
-        if pen is None and pens is None:
-            pen = getConfigOption('foreground')
-        
-        brush = self.opts['brush']
-        brushes = self.opts['brushes']
-        if brush is None and brushes is None:
-            brush = (128, 128, 128)
-        
-        def asarray(x):
-            if x is None or np.isscalar(x) or isinstance(x, np.ndarray):
-                return x
-            return np.array(x)
-
-        
-        x = asarray(self.opts.get('x'))
-        x0 = asarray(self.opts.get('x0'))
-        x1 = asarray(self.opts.get('x1'))
-        width = asarray(self.opts.get('width'))
-        
-        if x0 is None:
-            if width is None:
-                raise Exception('must specify either x0 or width')
-            if x1 is not None:
-                x0 = x1 - width
-            elif x is not None:
-                x0 = x - width/2.
-            else:
-                raise Exception('must specify at least one of x, x0, or x1')
-        if width is None:
-            if x1 is None:
-                raise Exception('must specify either x1 or width')
-            width = x1 - x0
-            
-        y = asarray(self.opts.get('y'))
-        y0 = asarray(self.opts.get('y0'))
-        y1 = asarray(self.opts.get('y1'))
-        height = asarray(self.opts.get('height'))
-
-        if y0 is None:
-            if height is None:
-                y0 = 0
-            elif y1 is not None:
-                y0 = y1 - height
-            elif y is not None:
-                y0 = y - height/2.
-            else:
-                y0 = 0
-        if height is None:
-            if y1 is None:
-                raise Exception('must specify either y1 or height')
-            height = y1 - y0
-        
-        p.setPen(fn.mkPen(pen))
-        p.setBrush(fn.mkBrush(brush))
-        for i in range(len(x0)):
-            if pens is not None:
-                p.setPen(fn.mkPen(pens[i]))
-            if brushes is not None:
-                p.setBrush(fn.mkBrush(brushes[i]))
-                
-            if np.isscalar(x0):
-                x = x0
-            else:
-                x = x0[i]
-            if np.isscalar(y0):
-                y = y0
-            else:
-                y = y0[i]
-            if np.isscalar(width):
-                w = width
-            else:
-                w = width[i]
-            if np.isscalar(height):
-                h = height
-            else:
-                h = height[i]
-                
-                
-            rect = QtCore.QRectF(x, y, w, h)
-            p.drawRect(rect)
+        pict = QtGui.QPainter(self.picture)
+        for x, y, width, height, pen, brush in zip(self.x0, self.y0,
+                                                   self.widths, self.heights,
+                                                   self.pens, self.brushes):
+            pict.setPen(pen)
+            pict.setBrush(brush)
+            rect = QtCore.QRectF(x, y, width, height)
+            pict.drawRect(rect)
             self._shape.addRect(rect)
-            
-        p.end()
+        pict.end()
         self.prepareGeometryChange()
         
         
