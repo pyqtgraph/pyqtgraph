@@ -3,29 +3,9 @@ from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from .. import functions as fn
 import weakref
-from ..pgcollections import OrderedDict
-import operator, sys
+import operator
+from ..util.lru_cache import LRUCache
 
-class FiniteCache(OrderedDict):
-    """Caches a finite number of objects, removing
-    least-frequently used items."""
-    def __init__(self, length):
-        self._length = length
-        OrderedDict.__init__(self)
-        
-    def __setitem__(self, item, val):
-        self.pop(item, None) # make sure item is added to end
-        OrderedDict.__setitem__(self, item, val) 
-        while len(self) > self._length:
-            del self[list(self.keys())[0]]
-        
-    def __getitem__(self, item):
-        val = OrderedDict.__getitem__(self, item)
-        del self[item]
-        self[item] = val  ## promote this key        
-        return val
-        
-        
 
 class GraphicsItem(object):
     """
@@ -38,7 +18,7 @@ class GraphicsItem(object):
 
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
-    _pixelVectorGlobalCache = FiniteCache(100)
+    _pixelVectorGlobalCache = LRUCache(100, 70)
     
     def __init__(self, register=True):
         if not hasattr(self, '_qtBaseClass'):

@@ -26,8 +26,8 @@ Contributors
   * Antony Lee
   * Mattias Põldaru
   * Thomas S.
-  * Mikhail Terekhov
   * fabioz
+  * Mikhail Terekhov
 
 Requirements
 ------------

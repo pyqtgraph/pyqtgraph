@@ -22,17 +22,25 @@ p.setWindowTitle('pyqtgraph example: MultiPlotSpeedTest')
 #p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
 p.setLabel('bottom', 'Index', units='B')
 
-nPlots = 10
+nPlots = 100
+nSamples = 500
 #curves = [p.plot(pen=(i,nPlots*1.3)) for i in range(nPlots)]
-curves = [pg.PlotCurveItem(pen=(i,nPlots*1.3)) for i in range(nPlots)]
-for c in curves:
+curves = []
+for i in range(nPlots):
+    c = pg.PlotCurveItem(pen=(i,nPlots*1.3))
     p.addItem(c)
+    c.setPos(0,i*6)
+    curves.append(c)
 
-rgn = pg.LinearRegionItem([1,100])
+p.setYRange(0, nPlots*6)
+p.setXRange(0, nSamples)
+p.resize(600,900)
+
+rgn = pg.LinearRegionItem([nSamples/5.,nSamples/3.])
 p.addItem(rgn)
 
 
-data = np.random.normal(size=(53,5000/nPlots))
+data = np.random.normal(size=(nPlots*23,nSamples))
 ptr = 0
 lastTime = time()
 fps = None
@@ -42,7 +50,8 @@ def update():
     count += 1
     #print "---------", count
     for i in range(nPlots):
-        curves[i].setData(i+data[(ptr+i)%data.shape[0]])
+        curves[i].setData(data[(ptr+i)%data.shape[0]])
+        
     #print "   setData done."
     ptr += nPlots
     now = time()

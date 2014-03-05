@@ -8,6 +8,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+import pyqtgraph as pg
 
 if USE_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form
@@ -53,6 +54,7 @@ examples = OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
         ('Line Plot update', 'PlotSpeedTest.py'),
         ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
+        ('Multiple plots', 'MultiPlotSpeedTest.py'),
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
@@ -283,6 +285,9 @@ except:
 
 if __name__ == '__main__':
     if '--test' in sys.argv[1:]:
+        # get rid of orphaned cache files first
+        pg.renamePyc(path)
+
         files = buildFileList(examples)
         if '--pyside' in sys.argv[1:]:
             lib = 'PySide'
