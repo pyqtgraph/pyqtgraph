@@ -53,6 +53,7 @@ examples = OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
         ('Line Plot update', 'PlotSpeedTest.py'),
         ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
+        ('Multiple plots', 'MultiPlotSpeedTest.py'),
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),

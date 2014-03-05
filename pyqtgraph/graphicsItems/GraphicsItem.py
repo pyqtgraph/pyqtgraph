@@ -4,7 +4,7 @@ from ..Point import Point
 from .. import functions as fn
 import weakref
 import operator
-from pyqtgraph.lru_cache import LRUCache
+from ..util.lru_cache import LRUCache
 
 
 class GraphicsItem(object):
