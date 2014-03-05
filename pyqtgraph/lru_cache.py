@@ -10,33 +10,35 @@ class LRUCache(object):
     This LRU cache should be reasonable for short collections (until around 100 items), as it does a
     sort on the items if the collection would become too big (so, it is very fast for getting and
     setting but when its size would become higher than the max size it does one sort based on the
-    internal time to decide which items should be removed -- which should be Ok if the resize_to
-    isn't too close to the max_size so that it becomes an operation that doesn't happen all the
+    internal time to decide which items should be removed -- which should be Ok if the resizeTo
+    isn't too close to the maxSize so that it becomes an operation that doesn't happen all the
     time).
     '''
 
-    def __init__(self, max_size=100, resize_to=70):
+    def __init__(self, maxSize=100, resizeTo=70):
         '''
-        :param int max_size:
-            This is the maximum size of the cache. When some item is added and the cache would become
-            bigger than this, it's resized to the value passed on resize_to.
-            
-        :param int resize_to:
-            When a resize operation happens, this is the size of the final cache.
+        ============== =========================================================
+        **Arguments:**
+        maxSize        (int) This is the maximum size of the cache. When some 
+                       item is added and the cache would become bigger than 
+                       this, it's resized to the value passed on resizeTo.
+        resizeTo       (int) When a resize operation happens, this is the size 
+                       of the final cache.
+        ============== =========================================================
         '''
-        assert resize_to < max_size
-        self.max_size = max_size
-        self.resize_to = resize_to
+        assert resizeTo < maxSize
+        self.maxSize = maxSize
+        self.resizeTo = resizeTo
         self._counter = 0
         self._dict = {}
         if _IS_PY3:
-            self._next_time = itertools.count(0).__next__
+            self._nextTime = itertools.count(0).__next__
         else:
-            self._next_time = itertools.count(0).next
+            self._nextTime = itertools.count(0).next
 
     def __getitem__(self, key):
         item = self._dict[key]
-        item[2] = self._next_time()
+        item[2] = self._nextTime()
         return item[1]
 
     def __len__(self):
@@ -45,14 +47,14 @@ class LRUCache(object):
     def __setitem__(self, key, value):
         item = self._dict.get(key)
         if item is None:
-            if len(self._dict) + 1 > self.max_size:
-                self._resize_to()
+            if len(self._dict) + 1 > self.maxSize:
+                self._resizeTo()
             
-            item = [key, value, self._next_time()]
+            item = [key, value, self._nextTime()]
             self._dict[key] = item
         else:
             item[1] = value
-            item[2] = self._next_time()
+            item[2] = self._nextTime()
             
     def __delitem__(self, key):
         del self._dict[key]
@@ -73,17 +75,17 @@ class LRUCache(object):
         def keys(self):
             return [x[0] for x in self._dict.values()]
         
-        def _resize_to(self):
-            ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resize_to]
+        def _resizeTo(self):
+            ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resizeTo]
             for i in ordered:
                 del self._dict[i[0]]
                 
-        def iteritems(self, access_time=False):
+        def iteritems(self, accessTime=False):
             '''
-            :param bool access_time:
+            :param bool accessTime:
                 If True sorts the returned items by the internal access time.
             '''
-            if access_time:
+            if accessTime:
                 for x in sorted(self._dict.values(), key=operator.itemgetter(2)):
                     yield x[0], x[1]
             else:
@@ -98,17 +100,20 @@ class LRUCache(object):
             return [x[0] for x in self._dict.itervalues()]
             
         
-        def _resize_to(self):
-            ordered = sorted(self._dict.itervalues(), key=operator.itemgetter(2))[:self.resize_to]
+        def _resizeTo(self):
+            ordered = sorted(self._dict.itervalues(), key=operator.itemgetter(2))[:self.resizeTo]
             for i in ordered:
                 del self._dict[i[0]]
                 
-        def iteritems(self, access_time=False):
+        def iteritems(self, accessTime=False):
             '''
-            :param bool access_time:
-                If True sorts the returned items by the internal access time.
+            ============= ======================================================
+            **Arguments**
+            accessTime    (bool) If True sorts the returned items by the 
+                          internal access time.
+            ============= ======================================================
             '''
-            if access_time:
+            if accessTime:
                 for x in sorted(self._dict.itervalues(), key=operator.itemgetter(2)):
                     yield x[0], x[1]
             else:
