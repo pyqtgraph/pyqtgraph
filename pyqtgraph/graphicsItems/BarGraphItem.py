@@ -58,6 +58,16 @@ class BarGraphItem(GraphicsObject):
         self.update()
         self.informViewBoundsChanged()
         
+    def setPen(self, *args, **kargs):
+        """Set the pen used to draw the curve."""
+        self.setOpts(pen = fn.mkPen(*args, **kargs))
+
+
+    def setBrush(self, *args, **kargs):
+        """Set the brush used when filling the area under the curve"""
+        self.setOpts(brush = fn.mkBrush(*args, **kargs))
+
+
     def drawPicture(self):
         self.picture = QtGui.QPicture()
         self._shape = QtGui.QPainterPath()
