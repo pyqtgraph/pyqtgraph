@@ -1,7 +1,7 @@
 How to use pyqtgraph
 ====================
 
-There are a few suggested ways to use pyqtgraph:
+There are a few ways to use pyqtgraph:
     
 * From the interactive shell (python -i, ipython, etc)
 * Displaying pop-up windows from an application
@@ -31,7 +31,7 @@ Further examples::
 
     pg.show(imageData)  # imageData must be a numpy array with 2 to 4 dimensions
     
-We're only scratching the surface here--these functions accept many different data formats and options for customizing the appearance of your data.
+We're only scratching the surface here, these functions accept many different data formats and options for customizing the appearance of your data.
 
 
 Displaying windows from within an application

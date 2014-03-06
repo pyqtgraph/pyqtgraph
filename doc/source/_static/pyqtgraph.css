@@ -1,0 +1,119 @@
+/* ------------------------------------------------------- 
+Custom stuff for heade
+------------------------------------------------------- */
+#xxx-header{
+    background-color: black !important;
+}
+.xxx-header-title{
+    margin: 0;
+    padding: 10px 0 10px 10px;
+    font-family: 'Flamenco', cursive;
+    
+    font-weight: bold;
+    font-size: 36pt;
+}
+.xxx-header-title a{
+    color: #777777;
+    text-decoration: none;
+}
+
+.xxx-toplinks {
+    float: right;
+    margin-right: 150px !important;
+}
+.xxx-toplinks li {
+    display: inline;
+    list-style-type: none;
+    margin: 2px;
+    width: 50px;
+}
+.xxx-toplinks a {
+    text-decoration: none;
+    background-color: #222222;
+    color: #888888;
+    border-radius: 5px;
+    padding: 5px;
+    
+    font-family: Verdana;
+    font-size: 10pt;
+    font-weight: normal;
+    }
+.xxx-toplinks a:hover {
+    color: black;
+    background-color: #999999;
+}
+.xxx-toplinks a.xlsel{
+    background-color: white;
+    color: black;
+}
+
+
+
+/* ------------------------------------------------------- 
+Shpinx tweaks 
+------------------------------------------------------- */
+
+/* note */
+.note {
+    background-color: #F9F38D !important;
+    border-radius: 10px !important;
+}
+/* todo */
+.admonition-todo{
+    background-color: #FFDEF1 !important;
+}
+
+
+iframe{
+    border: 1px solid #aaaaaa;
+    height: 400px;
+    width: 70%;
+    box-shadow: 10px 10px 5px #888888;
+}
+
+div.body h1{
+    border-radius: 10px !important;
+}
+
+div.body h2{
+    border-radius: 8px !important;
+}
+div.body h3{
+    border-radius: 8px !important;
+}
+
+
+.sphinxsidebar h3, .sphinxsidebar h4{
+    border-top-right-radius: 7px !important;
+    border-bottom-right-radius: 7px !important;
+}
+.sphinxsidebar ul li{
+    border-top: 1px solid #dddddd !important;
+    padding: 2px !important;
+}
+.sphinxsidebar ul li a{
+    font-weight: bold;
+    font-size: 9pt;
+ 
+}
+.sphinxsidebar ul ul{
+    width: 190px;
+}
+.sphinxsidebar ul ul li{
+    border-top: none !important;
+    sspadding: 2px !important;
+}
+.sphinxsidebar ul ul li a{
+    font-weight: normal;
+    font-size: 9pt;
+}
+
+.related ul{
+    margin-right: 150px !important;    
+}
+.related a{
+    font-size: 11pt !important;
+    font-family: 'Michroma', sans-serif;
+    color: white;
+    text-shadow: none;
+}
