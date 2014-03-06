@@ -42,6 +42,10 @@ For example, the following three lines all have the same effect::
 Data Slicing
 ------------
 
+.. seealso::
+
+        :ref:`exDataSlicing` example
+        
 .. autofunction:: pyqtgraph.affineSlice
 
 
