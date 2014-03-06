@@ -82,7 +82,9 @@ intersphinx_mapping = {
 
 extlinks = {
     "issue": ("https://github.com/pyqtgraph/pyqtgraph/issues/%s", "issue" ),
-    "qt": ("http://qt-project.org/doc/qt-4.8/%s.html", "" )
+    "qt": ("http://qt-project.org/doc/qt-4.8/%s.html", "" ),
+    "qtenum": ("http://qt-project.org/doc/qt-4.8/qt.html#%s-enum", "Qt::" ),
+    "qtmeth": ("http://qt-project.org/doc/qt-4.8/qt.html#%s-enum", "Qt::" ),
 }
 
 todo_include_todos = True

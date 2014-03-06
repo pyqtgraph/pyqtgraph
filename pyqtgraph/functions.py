@@ -154,7 +154,7 @@ class Color(QtGui.QColor):
     
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
+    Convenience function for creating a :qt:`QColor` from a variety of argument types. Accepted arguments are:
     
     ================ ================================================
      'c'             one of: r, g, b, c, m, y, k, w                      
@@ -167,7 +167,7 @@ def mkColor(*args):
      "RGBA"          
      "RRGGBB"       
      "RRGGBBAA"     
-     QColor          QColor instance; makes a copy.
+     :qt:`QColor`    QColor instance; makes a copy.
     ================ ================================================
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
@@ -235,10 +235,10 @@ def mkColor(*args):
 
 
 def mkBrush(*args, **kwds):
-    """
-    | Convenience function for constructing Brush.
-    | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
-    | Calling mkBrush(None) returns an invisible brush.
+    """Convenience function for constructing :qt:`QBrush`. This function always constructs a solid brush and accepts the same arguments as :func:`~pyqtgraph.mkColor`.
+    
+    :param args: `None` returns an invisible brush.
+    :rtype: :qt:`QBrush`
     """
     if 'color' in kwds:
         color = kwds['color']
@@ -255,18 +255,28 @@ def mkBrush(*args, **kwds):
     return QtGui.QBrush(mkColor(color))
 
 def mkPen(*args, **kargs):
-    """
-    Convenience function for constructing QPen. 
-    
-    Examples::
+    """A convenience function for constructing :qt:`QPen`.
+
+    :param color: Any arguments accepted by :func:`~pyqtgraph.mkColor`
+    :param width: The width in px
+    :type width: float
+    :param style: The pen style
+    :type style: :qtenum:`PenStyle`
+    :param dash: The dash style
+    :type dash: :qtenum:`PenStyle`
+    :param cosmetic: 
+    :type cosmetic: bool
+    :param hsv: 
+   
+    .. rubric:: Examples
+    .. code-block:: python
     
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
-        mkPen({'color': "FF0", width: 2})
+        mkPen({'color': "FF0", 'width': 2})
         mkPen(None)   # (no pen)
-    
-    In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
+    """
     
     color = kargs.get('color', None)
     width = kargs.get('width', 1)
@@ -304,18 +314,37 @@ def mkPen(*args, **kargs):
     return pen
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
-    """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
+    """Generate a :qt:`QColor` from HSVa values. 
+    
+    :param hue: 0.0 - 1.0
+    :type hue: float
+    :param sat: Saturation
+    :type sat: float
+    :param val: 
+    :type val: float
+    :param alpha: Transparency 0.0 for invlsible, 1.0 for full
+    :type alpha: float
+    :rtype: A :qt:`QColor`
+    """
     c = QtGui.QColor()
     c.setHsvF(hue, sat, val, alpha)
     return c
 
     
 def colorTuple(c):
-    """Return a tuple (R,G,B,A) from a QColor"""
+    """Return a the colors values in a tuple from a :qt:`QColor`
+    
+    :param c: A :qt:`QColor`
+    :rtype: Tuple with floats - (R,G,B,A)
+    """
     return (c.red(), c.green(), c.blue(), c.alpha())
 
 def colorStr(c):
-    """Generate a hex string code from a QColor"""
+    """Generate a hex string code from a :qt:`QColor`
+    
+    :param c: A :qt:`QColor`
+    :rtype: :py:func:`str` of hex encoded color
+    """
     return ('%02x'*4) % colorTuple(c)
 
 def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
