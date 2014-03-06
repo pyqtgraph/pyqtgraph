@@ -14,7 +14,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     """
     **Bases:** QtGui.QAbstractSpinBox
     
-    QSpinBox widget on steroids. Allows selection of numerical value, with extra features:
+    :qt:`QSpinBox` widget on steroids. Allows selection of numerical value, with extra features:
     
     - SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
     - Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
@@ -45,32 +45,39 @@ class SpinBox(QtGui.QAbstractSpinBox):
     
     def __init__(self, parent=None, value=0.0, **kwargs):
         """
-        ============== ========================================================================
-        **Arguments:**
-        parent         Sets the parent widget for this SpinBox (optional)
-        value          (float/int) initial value
-        bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
+        :param parent:  Sets the parent widget for this SpinBox (optional)
+        :type parent: widget or None
+        :param value:   Initial value
+        :type value: int or float
+        :param bounds: Minimum and maximum values allowed in the SpinBox. 
                        Either may be None to leave the value unbounded.
-        suffix         (str) suffix (units) to display after the numerical value
-        siPrefix       (bool) If True, then an SI prefix is automatically prepended
+        :type bounds: tuple(min,max)
+        :param suffix:         (str) suffix (units) to display after the numerical value
+        :type suffix: str
+        :param siPrefix: If True, then an SI prefix is automatically prepended
                        to the units and the value is scaled accordingly. For example,
                        if value=0.003 and suffix='V', then the SpinBox will display
                        "300 mV" (but a call to SpinBox.value will still return 0.003).
-        step           (float) The size of a single step. This is used when clicking the up/
+        :type siPrefix: bool
+        :param step:   The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
                        the interpretation of this value is different when specifying
                        the 'dec' argument.
-        dec            (bool) If True, then the step value will be adjusted to match 
+        :type step: float
+        :param dec:    If True, then the step value will be adjusted to match 
                        the current size of the variable (for example, a value of 15
                        might step in increments of 1 whereas a value of 1500 would
                        step in increments of 100). In this case, the 'step' argument
                        is interpreted *relative* to the current value. The most common
                        'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0.
-        minStep        (float) When dec=True, this specifies the minimum allowable step size.
-        int            (bool) if True, the value is forced to integer type
-        decimals       (int) Number of decimal values to display
-        ============== ========================================================================
+        :type dec: bool
+        :param minStep:  When dec=True, this specifies the minimum allowable step size.
+        :type minStep: float
+        :param int:  If True, the value is forced to integer type
+        :type int: bool
+        :param decimals: Number of decimal values to display
+        :type decimals: int
         """
         QtGui.QAbstractSpinBox.__init__(self, parent)
         self.lastValEmitted = None
