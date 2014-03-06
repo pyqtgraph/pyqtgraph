@@ -10,7 +10,6 @@ from .. import getConfigOption
 
 class PlotDataItem(GraphicsObject):
     """
-    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     
     GraphicsItem for displaying plot curves, scatter plots, or both. 
     While it is possible to use :class:`PlotCurveItem <pyqtgraph.PlotCurveItem>` or
