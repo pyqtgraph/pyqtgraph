@@ -84,6 +84,7 @@ intersphinx_mapping = {
     'matplotlib': ('http://matplotlib.sourceforge.net/', None)
 }
 
+## Link to githib issues
 extlinks = {
     "issue": ("https://github.com/pyqtgraph/pyqtgraph/issues/%s", "issue" ),
     "qt": ("http://qt-project.org/doc/qt-4.8/%s.html", "" ),

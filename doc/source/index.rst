@@ -7,26 +7,23 @@
 Welcome to PyQtGraph
 ==========================================
 
+PyQtGraph is a pure :term:`Python` graphics and GUI library built on :term:`Qt`, :term:`PyQt` / :term:`PySide`, :term:`numpy` and :term:`scipy`. It is intended for use in mathematics / scientific / engineering applications. Despite being written entirely in :term:`Python`, the library is very fast due to its heavy leverage of :py:mod:`numpy` for number crunching and Qt's :qt:`QGraphicsView` framework for fast display. 
+
+    .. image:: http://pyqtgraph.org/images/plotting.png
+       :height: 500
+       
+PyQtGraph is distributed under the MIT open-source license. 
+
+
+
 Contents:
 
 .. toctree::
     :maxdepth: 2
 
-    introduction
-    mouse_interaction
-    how_to_use
+    about
     installation
-    qtcrashcourse
-    plotting
-    images
-    3dgraphics
-    style
-    region_of_interest
-    exporting
-    prototyping
-    parametertree/index
-    flowchart/index
-    internals
+    guide/index
     apireference
     examples/index
     glossary
