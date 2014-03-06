@@ -1,4 +1,4 @@
-PyQtGraph's 3D Graphics System
+3D Graphics System
 ==============================
 
 The 3D graphics system in pyqtgraph is composed of a :class:`view widget <pyqtgraph.opengl.GLViewWidget>` and 

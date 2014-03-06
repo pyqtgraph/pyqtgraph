@@ -12,6 +12,11 @@ Custom stuff for heade
     font-weight: bold;
     font-size: 36pt;
 }
+
+.xxx-header-title small{
+    font-weight: normal;
+    font-size: 14pt;
+}
 .xxx-header-title a{
     color: #777777;
     text-decoration: none;

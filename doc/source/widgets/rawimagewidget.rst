@@ -1,8 +1,7 @@
 RawImageWidget
 ==============
 
-.. autoclass:: pyqtgraph.RawImageWidget
+.. autoclass:: pyqtgraph.widgets.RawImageWidget.RawImageWidget
     :members:
 
-    .. automethod:: pyqtgraph.RawImageWidget.__init__
-
+    .. automethod:: pyqtgraph.widgets.RawImageWidget.RawImageWidget.__init__

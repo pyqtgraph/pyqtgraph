@@ -1,6 +1,6 @@
 .. _api_widgets:
 
-PyQtGraph's Widgets
+Widgets
 ===================
 
 PyQtGraph provides several QWidget subclasses which are useful for building user interfaces. These widgets can generally be used in any Qt application and provide functionality that is frequently useful in science and engineering applications.
@@ -40,3 +40,5 @@ Contents:
     pathbutton
     valuelabel
     busycursor
+    rawimagewidget
+    

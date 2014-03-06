@@ -1,4 +1,4 @@
-PyQtGraph's Helper Functions
+Helper Functions
 ============================
 
 Simple Data Display Functions

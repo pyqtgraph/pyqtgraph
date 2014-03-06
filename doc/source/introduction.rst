@@ -15,7 +15,7 @@ Primary goals are
 
 PyQtGraph makes heavy use of the Qt platform for its high-performance graphics, via PyQt or PySide python bindings, and using numpy/scipy for heavy number crunching. In particular, pyqtgraph uses Qt's GraphicsView framework which is a highly capable graphics system on its own. PyQtGraph bring optimized and simplified primitives to this framework to allow data visualization with minimal effort. 
 
-It is known to run on Linux, Windows, and OSX (:ref:`installation`)
+It is known to run on Linux, Windows, and OSX (:ref:`install`)
 
 
 What can it do?

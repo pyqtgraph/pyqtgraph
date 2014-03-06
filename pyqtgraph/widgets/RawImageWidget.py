@@ -11,13 +11,18 @@ import numpy as np
 
 class RawImageWidget(QtGui.QWidget):
     """
-    Widget optimized for very fast video display. 
-    Generally using an ImageItem inside GraphicsView is fast enough.
-    On some systems this may provide faster video. See the VideoSpeedTest example for benchmarking.
+    A widget optimized for very fast video display. 
+    Generally using an ImageItem inside :class:`~pyqtgraph.GraphicsView` is fast enough.
+    On some systems this may provide faster video. 
+    
+    .. seealso:: 
+    
+        The VideoSpeedTest example for benchmarking.
     """
     def __init__(self, parent=None, scaled=False):
         """
-        Setting scaled=True will cause the entire image to be displayed within the boundaries of the widget. This also greatly reduces the speed at which it will draw frames.
+        :param scaled: `True` will cause the entire image to be displayed within the boundaries of the widget. This also greatly reduces the speed at which it will draw frames.
+        :type scaled: bool
         """
         QtGui.QWidget.__init__(self, parent=None)
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding))
