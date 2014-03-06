@@ -28,6 +28,7 @@ Contributors
   * Thomas S.
   * Fabio Zadrozny
   * Mikhail Terekhov
+  * Pietro Zambelli
 
 Requirements
 ------------
