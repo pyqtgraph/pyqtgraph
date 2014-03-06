@@ -1,7 +1,7 @@
-How to use pyqtgraph
+How to use PyQtGraph
 ====================
 
-There are a few ways to use pyqtgraph:
+There are a few ways to use PyQtGraph:
     
 * From the interactive shell (python -i, ipython, etc)
 * Displaying pop-up windows from an application
@@ -17,7 +17,10 @@ PyQtGraph makes it very easy to visualize data from the command line. Observe::
     import pyqtgraph as pg
     pg.plot(data)   # data can be a list of values or a numpy array
 
-The example above would open a window displaying a line plot of the data given. The call to :func:`pg.plot <pyqtgraph.plot>` returns a handle to the :class:`plot widget <pyqtgraph.PlotWidget>` that is created, allowing more data to be added to the same window. **Note:** interactive plotting from the python prompt is only available with PyQt; PySide does not run the Qt event loop while the interactive prompt is running. If you wish to use pyqtgraph interactively with PySide, see the 'console' :ref:`example <examples>`.
+The example above would open a window displaying a line plot of the data given. The call to :func:`~pyqtgraph.plot` returns a handle to the :class:`~pyqtgraph.PlotWidget` that is created, allowing more data to be added to the same window. 
+
+.. warning::
+    Interactive plotting from the python prompt is only available with :term:`PyQt`; :term:`PySide` does not run the :term:`Qt` event loop while the interactive prompt is running. If you wish to use PyQtGraph interactively with :term:`PySide`, see the :ref:`exConsoleWidget` example.
 
 Further examples::
     
@@ -58,19 +61,21 @@ PyQt and PySide
 ---------------
 
 PyQtGraph supports two popular python wrappers for the :term:`Qt` library: :term:`PyQt` and :term:`PySide`. Both packages provide nearly identical 
-APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. When
-pyqtgraph is first imported, it automatically determines which library to use by making the fillowing checks:
+APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. 
+
+When PyQtGraph is first imported, it automatically determines which library to use by making the fillowing checks:
     
 #. If PyQt4 is already imported, use that
 #. Else, if PySide is already imported, use that
 #. Else, attempt to import PyQt4
 #. If that import fails, attempt to import PySide. 
 
-If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
-make sure it is imported before pyqtgraph::
+.. note:: 
+    If you have both libraries installed on your system and you wish to force PyQtGraph to use one or the other, simply
+    make sure it is imported before pyqtgraph::
     
-    import PySide  ## this will force pyqtgraph to use PySide instead of PyQt4
-    import pyqtgraph as pg
+        import PySide  ## this will force pyqtgraph to use PySide instead of PyQt4
+        import pyqtgraph as pg
 
 
 Embedding PyQtGraph as a sub-package of a larger project

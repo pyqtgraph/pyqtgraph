@@ -1,2 +1,9 @@
 sphinx
-sphinxcontrib.fulltoc
+sphinxcontrib-fulltoc
+sphinxcontrib-blockdiag
+
+.. apt-get
+
+python-qt4
+
+

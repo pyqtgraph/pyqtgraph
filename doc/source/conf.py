@@ -46,7 +46,8 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
-    'sphinxcontrib.fulltoc'
+    'sphinxcontrib.fulltoc',
+    'sphinxcontrib.blockdiag'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -103,6 +104,8 @@ def skip_special_methods(app, what, name, obj, skip, options):
     if name == "__init__":
         return False
     if name == "__module__":
+        return True
+    if name == "__getattr__":
         return True
     #print "skip_special_methods", app, what, name, skip, options
 

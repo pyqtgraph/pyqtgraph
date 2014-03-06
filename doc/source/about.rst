@@ -9,7 +9,42 @@ Primary goals are
 
 PyQtGraph makes heavy use of the :term:`Qt` platform for its high-performance graphics, via :term:`PyQt` or :term:`PySide` :term:`Python` bindings, and using :term:`numpy`/:term:`scipy` for heavy number crunching. In particular, PyQtGraph uses Qt's GraphicsView framework which is a highly capable graphics system on its own. PyQtGraph bring optimized and simplified primitives to this framework to allow data visualization with minimal effort. 
 
-It is known to run on Linux, Windows, and OSX (:ref:`install`)
+.. blockdiag::
+
+    blockdiag {
+        orientation = portrait
+        
+        me [label="My Script", shape=actor]
+        script [label="My Script", shape=cloud]
+        // standard node shapes
+        
+        os [label="OS", shape = box, shape = flowchart.database];
+        qt [label="Qt Runtime", shape =roundedbox]; 
+        
+        python [shape = roundedbox];
+        pyqt [shape = roundedbox];
+        pyside [shape = roundedbox];
+        
+        numpy  [shape = roundedbox];
+        scipy  [shape = roundedbox];
+
+        group {
+            label = "Python Libs";
+            python; numpy; scipy;
+        }
+        group {
+            label = "Python Bindings";
+            pyside; pyqt;
+        }
+        
+        pyqtgraph [ shape = flowchart.loopout ]
+        screen [label="Graph", shape=flowchart.terminator, color = "#000000", textcolor="#FFFF00"]
+        
+        me -> script -> pyqtgraph -> python -> pyqt, pyside -> qt -> os -> screen
+        
+    }
+    
+
 
 
 Features
