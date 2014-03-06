@@ -24,25 +24,13 @@ Amongst the core features of PyQtGraph are:
 
 * Basic data visualization primitives: Images, line and scatter plots
 * Fast enough for realtime update of video/plot data
-* Interactive scaling/panning, averaging, FFTs, SVG/PNG export
-* Widgets for marking/selecting plot regions
-* Widgets for marking/selecting image region-of-interest and automatically slicing multi-dimensional image data
+* Interactive scaling and panning, averaging, FFTs, SVG/PNG export
+* Widgets for marking and selecting plot regions
+* Widgets for marking and selecting image region-of-interest and automatically slicing multi-dimensional image data
 * Framework for building customized image region-of-interest widgets
-* Docking system that replaces/complements Qt's dock system to allow more complex (and more predictable) docking arrangements
+* Docking system that replaces or complements Qt's dock system to allow more complex (and more predictable) docking arrangements
 * ParameterTree widget for rapid prototyping of dynamic interfaces (Similar to the property trees in Qt Designer and many other applications)
-
-
-.. _examples:
-
-Examples
---------
-
-PyQtGraph includes an extensive set of examples that can be accessed by running::
-    
-    import pyqtgraph.examples
-    pyqtgraph.examples.run()
-
-This will start a launcher with a list of available examples. Select an item from the list to view its source code and double-click an item to run the example.
+* See :ref:`examples` for a demo
 
 
 How does it compare to...

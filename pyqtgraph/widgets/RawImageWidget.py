@@ -64,11 +64,11 @@ class RawImageWidget(QtGui.QWidget):
         #p.drawPixmap(self.rect(), self.pixmap)
         p.end()
 
-if HAVE_OPENGL:
+if HAVE_OPENGL or os.getenv( "__GEN_DOCS__" ):
     class RawImageGLWidget(QtOpenGL.QGLWidget):
-        """
-        Similar to RawImageWidget, but uses a GL widget to do all drawing.
-        Perfomance varies between platforms; see examples/VideoSpeedTest for benchmarking.
+        """Similar to :class:`~pyqtgraph.widgets.RawImageWidget.RawImageWidget`, but uses a GL widget to do all drawing.
+        
+        Perfomance varies between platforms; see :ref:`exVideoSpeedTest` example for benchmarking.
         """
         def __init__(self, parent=None, scaled=False):
             QtOpenGL.QGLWidget.__init__(self, parent=None)
