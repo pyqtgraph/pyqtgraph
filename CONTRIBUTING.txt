@@ -2,8 +2,9 @@ Contributions to pyqtgraph are welcome!
 
 Please use the following guidelines when preparing changes:
 
-* The preferred method for submitting changes is by github pull request. If
-  this is inconvenient, don't hesitate to submit by other means.
+* The preferred method for submitting changes is by github pull request
+  against the "develop" branch. If this is inconvenient, don't hesitate to 
+  submit by other means.
 
 * Pull requests should include only a focused and related set of changes. 
   Mixed features and unrelated changes (such as .gitignore) will usually be
