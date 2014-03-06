@@ -28,6 +28,7 @@ Contents:
     flowchart/index
     internals
     apireference
+    examples/index
     glossary
     
 

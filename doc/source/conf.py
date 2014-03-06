@@ -97,6 +97,8 @@ autodoc_default_flags = ["members", "special-members", "undoc-members"]
 def skip_special_methods(app, what, name, obj, skip, options):
     if name == "__init__":
         return False
+    #print "skip_special_methods", app, what, name, skip, options
+
     return skip
 
 def setup(app):

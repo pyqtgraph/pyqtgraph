@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Display an animated arrowhead following a curve.
-This example uses the CurveArrow class, which is a combination
-of ArrowItem and CurvePoint.
+This example uses the :class:`~pyqtgraph.CurveArrow` class, which is a combination
+of :class:`~pyqtgraph.ArrowItem` and :class:`~pyqtgraph.CurvePoint`.
 
-To place a static arrow anywhere in a scene, use ArrowItem.
+To place a static arrow anywhere in a scene, use :class:`~pyqtgraph.ArrowItem`.
 To attach other types of item to a curve, use CurvePoint.
 """
 
