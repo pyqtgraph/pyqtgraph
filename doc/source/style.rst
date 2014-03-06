@@ -11,27 +11,27 @@ For most of these function arguments, the following values may be used:
 * single-character string representing color (b, g, r, c, m, y, k, w)
 * (r, g, b) or (r, g, b, a) tuple
 * single greyscale value (0.0 - 1.0)
-* (index, maximum) tuple for automatically iterating through colors (see :func:`intColor <pyqtgraph.intColor>`)
-* QColor
-* QPen / QBrush where appropriate
+* (index, maximum) tuple for automatically iterating through colors (see :func:`~pyqtgraph.intColor`)
+* :qt:`QColor`
+* :qt:`QPen` / :qt:`QBrush` where appropriate
 
 Notably, more complex pens and brushes can be easily built using the 
-:func:`mkPen() <pyqtgraph.mkPen>` / :func:`mkBrush() <pyqtgraph.mkBrush>` functions or with Qt's QPen and QBrush classes::
+:func:`~pyqtgraph.mkPen` and :func:`~pyqtgraph.mkBrush` functions or with :term:`Qt`'s :qt:`QPen` and :qt:`QBrush` classes::
 
-    mkPen('y', width=3, style=QtCore.Qt.DashLine)          ## Make a dashed yellow line 2px wide
-    mkPen(0.5)                                             ## solid grey line 1px wide
-    mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine)  ## Dotted pale-blue line
+    mkPen('y', width=3, style=QtCore.Qt.DashLine)          # A dashed yellow line 2px wide
+    mkPen(0.5)                                             # Solid grey line 1px wide
+    mkPen(color=(200, 200, 255), style=QtCore.Qt.DotLine)  # Dotted pale-blue line
     
-See the Qt documentation for 'QPen' and 'PenStyle' for more line-style options and 'QBrush' for more fill options.
-Colors can also be built using :func:`mkColor() <pyqtgraph.mkColor>`, 
-:func:`intColor() <pyqtgraph.intColor>`, :func:`hsvColor() <pyqtgraph.hsvColor>`, or Qt's QColor class.
+See the Qt documentation for :qt:`QPen` and 'PenStyle' for more line-style options and :qt:`QBrush` for more fill options.
+Colors can also be built using :func:`~pyqtgraph.mkColor`, 
+:func:`~pyqtgraph.intColor`, :func:`~pyqtgraph.hsvColor`, or Qt's :qt:`QColor` class.
 
 
 Default Background and Foreground Colors
 ----------------------------------------
 
-By default, pyqtgraph uses a black background for its plots and grey for axes, text, and plot lines.
-These defaults can be changed using pyqtgraph.setConfigOption()::
+By default, PyQtGraph uses a black background for its plots and grey for axes, text, and plot lines.
+These defaults can be changed using :func:`~pyqtgraph.setConfigOption`::
     
     import pyqtgraph as pg
 
@@ -41,7 +41,8 @@ These defaults can be changed using pyqtgraph.setConfigOption()::
 
     ## The following plot has inverted colors
     pg.plot([1,4,2,3,5])
-    
-(Note that this must be set *before* creating any widgets)
+  
+.. warning::
+    This must be set *before* creating any widgets
 
 

@@ -32,8 +32,8 @@ class RawImageWidget(QtGui.QWidget):
     
     def setImage(self, img, *args, **kargs):
         """
-        img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
-        Extra arguments are sent to functions.makeARGB
+        :param img: must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
+        :param args: Extra arguments are sent to :func:`~pyqtgraph.makeARGB`
         """
         self.opts = (img, args, kargs)
         self.image = None

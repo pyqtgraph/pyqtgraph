@@ -14,6 +14,7 @@ from .. import getConfigOption
 from .. import debug
 
 __all__ = ['PlotCurveItem']
+
 class PlotCurveItem(GraphicsObject):
     
     

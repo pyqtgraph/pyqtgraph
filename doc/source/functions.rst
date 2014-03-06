@@ -91,6 +91,14 @@ Mesh Generation Functions
 Miscellaneous Functions
 -----------------------
 
+.. autofunction:: pyqtgraph.setConfigOption
+
+.. autofunction:: pyqtgraph.setConfigOptions
+
+.. autofunction:: pyqtgraph.getConfigOption
+
+
+
 .. autofunction:: pyqtgraph.arrayToQPath
 
 .. autofunction:: pyqtgraph.pseudoScatter
@@ -99,4 +107,5 @@ Miscellaneous Functions
 
 .. autofunction:: pyqtgraph.exit
 
+.. autodata:: pyqtgraph.CONFIG_OPTIONS
 

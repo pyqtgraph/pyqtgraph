@@ -57,15 +57,21 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
 } 
-
+"""Global Configuration"""
 
 def setConfigOption(opt, value):
+    """See :data:`~pyqtgraph.CONFIG_OPTIONS`"""
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
     CONFIG_OPTIONS.update(opts)
 
 def getConfigOption(opt):
+    """
+    :param opt: The option name
+    :type opt: str
+    :return: Config value
+    See :data:`~pyqtgraph.CONFIG_OPTIONS`"""
     return CONFIG_OPTIONS[opt]
 
 

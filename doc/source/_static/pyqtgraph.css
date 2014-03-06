@@ -8,7 +8,6 @@ Custom stuff for heade
     margin: 0;
     padding: 10px 0 10px 10px;
     font-family: 'Flamenco', cursive;
-    
     font-weight: bold;
     font-size: 36pt;
 }
@@ -16,6 +15,8 @@ Custom stuff for heade
 .xxx-header-title small{
     font-weight: normal;
     font-size: 14pt;
+    color: #777777;
+    vertical-align: super;
 }
 .xxx-header-title a{
     color: #777777;
