@@ -6,14 +6,13 @@ Introduction
 What is PyQtGraph?
 ------------------
 
-PyQtGraph is a graphics and user interface library for Python that provides functionality commonly required in engineering and science applications. Its primary goals are 1) to provide fast, interactive graphics for displaying data (plots, video, etc.) and 2) to provide tools to aid in rapid application development (for example, property trees such as used in Qt Designer).
-
+PyQtGraph is a graphics and user interface library for :term:`Python` that provides functionality commonly required in engineering and science applications.
 Primary goals are 
 
-#. provide fast, interactive graphics for displaying data such as plots, video, etc 
-#. provide tools to aid in rapid application development, for example, property trees such as used in Qt Designer
+#. Provide fast, interactive graphics for displaying data such as plots, video, etc 
+#. Provide tools to aid in rapid application development, for example, property trees such as used in Qt Designer
 
-PyQtGraph makes heavy use of the Qt platform for its high-performance graphics, via PyQt or PySide python bindings, and using numpy/scipy for heavy number crunching. In particular, pyqtgraph uses Qt's GraphicsView framework which is a highly capable graphics system on its own. PyQtGraph bring optimized and simplified primitives to this framework to allow data visualization with minimal effort. 
+PyQtGraph makes heavy use of the :term:`Qt` platform for its high-performance graphics, via :term:`PyQt` or :term:`PySide` :term:`Python` bindings, and using :term:`numpy`/:term:`scipy` for heavy number crunching. In particular, PyQtGraph uses Qt's GraphicsView framework which is a highly capable graphics system on its own. PyQtGraph bring optimized and simplified primitives to this framework to allow data visualization with minimal effort. 
 
 It is known to run on Linux, Windows, and OSX (:ref:`install`)
 

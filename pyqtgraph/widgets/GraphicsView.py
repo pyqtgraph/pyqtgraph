@@ -25,7 +25,7 @@ from .. import getConfigOption
 __all__ = ['GraphicsView']
 
 class GraphicsView(QtGui.QGraphicsView):
-    """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
+    """Re-implementation of :qt:`QGraphicsView` that removes scrollbars and allows unambiguous control of the 
     viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
     that is automatically scaled to the full view geometry.
     
