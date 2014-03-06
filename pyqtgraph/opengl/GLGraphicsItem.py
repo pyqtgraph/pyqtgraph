@@ -113,17 +113,18 @@ class GLGraphicsItem(QtCore.QObject):
         return self.__view
         
     def setDepthValue(self, value):
-        """
-        Sets the depth value of this item. Default is 0.
-        This controls the order in which items are drawn--those with a greater depth value will be drawn later.
-        Items with negative depth values are drawn before their parent.
-        (This is analogous to QGraphicsItem.zValue)
-        The depthValue does NOT affect the position of the item or the values it imparts to the GL depth buffer.
+        """Sets the depth value of this item. Default is 0.
+        
+        This controls the order in which items are drawn
+            - Items with a greater depth value will be drawn later.
+            - Items with negative depth values are drawn before their parent.
+            - (This is analogous to QGraphicsItem.zValue)
+            - The depthValue does NOT affect the position of the item or the values it imparts to the GL depth buffer.
         """
         self.__depthValue = value
         
     def depthValue(self):
-        """Return the depth value of this item. See setDepthValue for more information."""
+        """Return the depth value of this item. See :py:meth:`~pyqtgraph.opengl.GLGraphicsItem.GLGraphicsItem.setDepthValue` for more information."""
         return self.__depthValue
         
     def setTransform(self, tr):
@@ -216,9 +217,14 @@ class GLGraphicsItem(QtCore.QObject):
         self.update()
         
     def visible(self):
-        """Return True if the item is currently set to be visible.
-        Note that this does not guarantee that the item actually appears in the
-        view, as it may be obscured or outside of the current view area."""
+        """
+        :return: True if the item is currently set to be visible.
+        :rtype: `bool` 
+        
+        .. note::
+            Note that this does not guarantee that the item actually appears in the
+            view, as it may be obscured or outside of the current view area.
+        """
         return self.__visible
     
     

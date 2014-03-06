@@ -92,11 +92,13 @@ todo_include_todos = True
 autoclass_content = "class"
 #autoclass_content = "both"
 autodoc_member_order = "alphabetical"
-autodoc_default_flags = ["members", "special-members", "undoc-members"]
+autodoc_default_flags = ["members", "special-members", "undoc-members", "show-inheritance"]
 
 def skip_special_methods(app, what, name, obj, skip, options):
     if name == "__init__":
         return False
+    if name == "__module__":
+        return True
     #print "skip_special_methods", app, what, name, skip, options
 
     return skip

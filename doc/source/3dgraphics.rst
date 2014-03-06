@@ -1,7 +1,11 @@
+.. _3D_graphics_guide:
+
 3D Graphics
-===========
+=============
 
 PyQtGraph uses OpenGL to provide a 3D scenegraph system. This system is functional but still early in development. 
+
+
 Current capabilities include:
     
 * 3D view widget with zoom/rotate controls (mouse drag and wheel)
@@ -11,10 +15,9 @@ Current capabilities include:
 * Volumetric rendering item
 * Grid/axis items
 
-See the :doc:`API Reference </3dgraphics/index>` and the Volumetric (GLVolumeItem.py) and Isosurface (GLMeshItem.py) examples for more information.
+.. rubric:: Basic usage example
+.. code-block:: python
 
-Basic usage example::
-    
     ## build a QApplication before building other widgets
     import pyqtgraph as pg
     pg.mkQApp()
@@ -41,7 +44,12 @@ Basic usage example::
     ygrid.scale(0.2, 0.1, 0.1)
     zgrid.scale(0.1, 0.2, 0.1)
 
+.. seealso::
 
+    * The :doc:`3D API Reference </3dgraphics/index>` 
+    * Volumetric (:ref:`exGLVolumeItem`) example
+    * Isosurface (:ref:`exGLMeshItem`) example
+    
 
 
 
