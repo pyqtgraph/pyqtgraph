@@ -14,7 +14,7 @@ displaying and analyzing 2D and 3D data. ImageView provides:
 import initExample
 
 import numpy as np
-import scipy
+import scipy.ndimage
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
