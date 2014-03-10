@@ -63,8 +63,8 @@ class ColorMap(object):
                             ignored. By default, the mode is entirely RGB.
         ===============     ==============================================================
         """
-        self.pos = pos
-        self.color = color
+        self.pos = np.array(pos)
+        self.color = np.array(color)
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode
@@ -83,11 +83,6 @@ class ColorMap(object):
         qcolor      Values are returned as an array of QColor objects.
         =========== ===============================================================
         """
-        try:
-            import scipy.interpolate
-        except:
-            raise Exception("Colormap.map() requires the package scipy.interpolate, but it could not be imported.")
-        
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
             
@@ -96,15 +91,24 @@ class ColorMap(object):
         else:
             pos, color = self.getStops(mode)
             
-        data = np.clip(data, pos.min(), pos.max())
+        # don't need this--np.interp takes care of it.
+        #data = np.clip(data, pos.min(), pos.max())
             
-        if not isinstance(data, np.ndarray):
-            interp = scipy.interpolate.griddata(pos, color, np.array([data]))[0]
+        # Interpolate
+        # TODO: is griddata faster?
+        #          interp = scipy.interpolate.griddata(pos, color, data)
+        if np.isscalar(data):
+            interp = np.empty((color.shape[1],), dtype=color.dtype)
         else:
-            interp = scipy.interpolate.griddata(pos, color, data)
-        
-        if mode == self.QCOLOR:
             if not isinstance(data, np.ndarray):
+                data = np.array(data)
+            interp = np.empty(data.shape + (color.shape[1],), dtype=color.dtype)
+        for i in range(color.shape[1]):
+            interp[...,i] = np.interp(data, pos, color[:,i])
+
+        # Convert to QColor if requested
+        if mode == self.QCOLOR:
+            if np.isscalar(data):
                 return QtGui.QColor(*interp)
             else:
                 return [QtGui.QColor(*x) for x in interp]
