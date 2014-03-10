@@ -122,7 +122,8 @@ class SRTTransform3D(Transform3D):
             self.setRow(i, m.row(i))
         m = self.matrix().reshape(4,4)
         ## translation is 4th column
-        self._state['pos'] = m[:3,3] 
+        self._state['pos'] = m[:3,3]
+        
         ## scale is vector-length of first three columns
         scale = (m[:3,:3]**2).sum(axis=0)**0.5
         ## see whether there is an inversion
@@ -132,7 +133,7 @@ class SRTTransform3D(Transform3D):
         self._state['scale'] = scale
         
         ## rotation axis is the eigenvector with eigenvalue=1
-        r = m[:3, :3] / scale[:, np.newaxis]
+        r = m[:3, :3] / scale[np.newaxis, :]
         try:
             evals, evecs = numpy.linalg.eig(r)
         except:
