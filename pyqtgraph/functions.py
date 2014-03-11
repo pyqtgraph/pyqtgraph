@@ -568,16 +568,25 @@ def transformCoordinates(tr, coords, transpose=False):
 def solve3DTransform(points1, points2):
     """
     Find a 3D transformation matrix that maps points1 onto points2.
-    Points must be specified as a list of 4 Vectors.
+    Points must be specified as either lists of 4 Vectors or 
+    (4, 3) arrays.
     """
     import numpy.linalg
-    A = np.array([[points1[i].x(), points1[i].y(), points1[i].z(), 1] for i in range(4)])
-    B = np.array([[points2[i].x(), points2[i].y(), points2[i].z(), 1] for i in range(4)])
+    pts = []
+    for inp in (points1, points2):
+        if isinstance(inp, np.ndarray):
+            A = np.empty((4,4), dtype=float)
+            A[:,:3] = inp[:,:3]
+            A[:,3] = 1.0
+        else:
+            A = np.array([[inp[i].x(), inp[i].y(), inp[i].z(), 1] for i in range(4)])
+        pts.append(A)
     
     ## solve 3 sets of linear equations to determine transformation matrix elements
     matrix = np.zeros((4,4))
     for i in range(3):
-        matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+        ## solve Ax = B; x is one row of the desired transformation matrix
+        matrix[i] = numpy.linalg.solve(pts[0], pts[1][:,i])  
     
     return matrix
     
