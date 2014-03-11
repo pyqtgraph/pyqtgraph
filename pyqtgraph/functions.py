@@ -372,7 +372,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     """
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates (see the scipy documentation for more information about this).
+    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates if it is available (see the scipy documentation for more information about this). If scipy is not available, then a slower implementation of map_coordinates is used.
     
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
@@ -413,8 +413,9 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     """
     try:
         import scipy.ndimage
+        have_scipy = True
     except ImportError:
-        raise Exception("This function requires the scipy library, but it does not appear to be importable.")
+        have_scipy = False
 
     # sanity check
     if len(shape) != len(vectors):
@@ -436,7 +437,6 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     #print "tr1:", tr1
     ## dims are now [(slice axes), (other axes)]
     
-
     ## make sure vectors are arrays
     if not isinstance(vectors, np.ndarray):
         vectors = np.array(vectors)
@@ -456,8 +456,10 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
     for inds in np.ndindex(*extraShape):
         ind = (Ellipsis,) + inds
-        #print data[ind].shape, x.shape, output[ind].shape, output.shape
-        output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
+        if have_scipy:
+            output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
+        else:
+            output[ind] = mapCoordinates(data[ind], x.T)
     
     tr = list(range(output.ndim))
     trb = []
@@ -473,6 +475,54 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         return (output, x)
     else:
         return output
+
+def mapCoordinates(data, x, default=0.0):
+    """
+    Pure-python alternative to scipy.ndimage.map_coordinates
+    
+    *data* is an array of any shape.
+    *x* is an array with shape[-1] == data.ndim
+    
+    Returns array of shape (x.shape[:-1] + data.shape)
+    """
+    result = np.empty(x.shape[:-1] + data.shape, dtype=data.dtype)
+    nd = data.ndim
+
+    # First we generate arrays of indexes that are needed to 
+    # extract the data surrounding each point
+    fields = np.mgrid[(slice(0,2),) * nd]
+    xmin = np.floor(x).astype(int)
+    xmax = xmin + 1
+    indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
+    fieldInds = []
+    totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
+    for ax in range(nd):
+        mask = (xmin[...,ax] >= 0) & (xmax[...,ax] < data.shape[ax])
+        totalMask &= mask
+        axisIndex = indexes[...,ax][fields[ax]]
+        axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
+        axisIndex *= axisMask
+        fieldInds.append(axisIndex)
+    
+    # Get data values surrounding each requested point
+    # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
+    fieldData = data[tuple(fieldInds)]
+
+    ## Interpolate
+    s = np.empty((nd,) + fieldData.shape, dtype=float)
+    dx = x - xmin
+    # reshape fields for arithmetic against dx
+    for ax in range(nd):
+        f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
+        s[ax] = f1 * dx[:,ax] + (1-f1) * (1-dx[:,ax])
+    s = np.product(s, axis=0)
+    result = fieldData * s
+    for i in range(nd):
+        result = result.sum(axis=0)
+
+    result[~totalMask] = default
+    return result
+
 
 def transformToArray(tr):
     """
