@@ -67,6 +67,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed PySide crash caused by emitting signal from GraphicsObject.itemChange
     - Fixed possible infinite loop from FiniteCache
     - Allow images with NaN in ImageView
+    - MeshData can generate edges from face-indexed vertexes
 
 pyqtgraph-0.9.8  2013-11-24
 

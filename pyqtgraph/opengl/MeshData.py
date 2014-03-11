@@ -84,64 +84,11 @@ class MeshData(object):
                 if faceColors is not None:
                     self.setFaceColors(faceColors)
             
-            #self.setFaces(vertexes=vertexes, faces=faces, vertexColors=vertexColors, faceColors=faceColors)
-            
-        
-    #def setFaces(self, vertexes=None, faces=None, vertexColors=None, faceColors=None):
-        #"""
-        #Set the faces in this data set.
-        #Data may be provided either as an Nx3x3 array of floats (9 float coordinate values per face)::
-        
-            #faces = [ [(x, y, z), (x, y, z), (x, y, z)], ... ] 
-            
-        #or as an Nx3 array of ints (vertex integers) AND an Mx3 array of floats (3 float coordinate values per vertex)::
-        
-            #faces = [ (p1, p2, p3), ... ]
-            #vertexes = [ (x, y, z), ... ]
-            
-        #"""
-        #if not isinstance(vertexes, np.ndarray):
-            #vertexes = np.array(vertexes)
-        #if vertexes.dtype != np.float:
-            #vertexes = vertexes.astype(float)
-        #if faces is None:
-            #self._setIndexedFaces(vertexes, vertexColors, faceColors)
-        #else:
-            #self._setUnindexedFaces(faces, vertexes, vertexColors, faceColors)
-        ##print self.vertexes().shape
-        ##print self.faces().shape
-        
-    
-    #def setMeshColor(self, color):
-        #"""Set the color of the entire mesh. This removes any per-face or per-vertex colors."""
-        #color = fn.Color(color)
-        #self._meshColor = color.glColor()
-        #self._vertexColors = None
-        #self._faceColors = None
-    
-        
-    #def __iter__(self):
-        #"""Iterate over all faces, yielding a list of three tuples [(position, normal, color), ...] for each face."""
-        #vnorms = self.vertexNormals()
-        #vcolors = self.vertexColors()
-        #for i in range(self._faces.shape[0]):
-            #face = []
-            #for j in [0,1,2]:
-                #vind = self._faces[i,j]
-                #pos = self._vertexes[vind]
-                #norm = vnorms[vind]
-                #if vcolors is None:
-                    #color = self._meshColor
-                #else:
-                    #color = vcolors[vind]
-                #face.append((pos, norm, color))
-            #yield face
-    
-    #def __len__(self):
-        #return len(self._faces)
-    
     def faces(self):
-        """Return an array (Nf, 3) of vertex indexes, three per triangular face in the mesh."""
+        """Return an array (Nf, 3) of vertex indexes, three per triangular face in the mesh.
+        
+        If faces have not been computed for this mesh, the function returns None.
+        """
         return self._faces
     
     def edges(self):
@@ -161,8 +108,6 @@ class MeshData(object):
         self.resetNormals()
         self._vertexColorsIndexedByFaces = None
         self._faceColorsIndexedByFaces = None
-        
-        
     
     def vertexes(self, indexed=None):
         """Return an array (N,3) of the positions of vertexes in the mesh. 
@@ -207,7 +152,6 @@ class MeshData(object):
         self._vertexNormalsIndexedByFaces = None
         self._faceNormals = None
         self._faceNormalsIndexedByFaces = None
-            
         
     def hasFaceIndexedData(self):
         """Return True if this object already has vertex positions indexed by face"""
@@ -229,7 +173,6 @@ class MeshData(object):
             if v is not None:
                 return True
         return False
-        
     
     def faceNormals(self, indexed=None):
         """
@@ -366,7 +309,6 @@ class MeshData(object):
         ## This is done by collapsing into a list of 'unique' vertexes (difference < 1e-14) 
         
         ## I think generally this should be discouraged..
-        
         faces = self._vertexesIndexedByFaces
         verts = {}  ## used to remember the index of each vertex position
         self._faces = np.empty(faces.shape[:2], dtype=np.uint)
@@ -427,22 +369,35 @@ class MeshData(object):
         #pass
         
     def _computeEdges(self):
-        ## generate self._edges from self._faces
-        #print self._faces
-        nf = len(self._faces)
-        edges = np.empty(nf*3, dtype=[('i', np.uint, 2)])
-        edges['i'][0:nf] = self._faces[:,:2]
-        edges['i'][nf:2*nf] = self._faces[:,1:3]
-        edges['i'][-nf:,0] = self._faces[:,2]
-        edges['i'][-nf:,1] = self._faces[:,0]
-        
-        # sort per-edge
-        mask = edges['i'][:,0] > edges['i'][:,1]
-        edges['i'][mask] = edges['i'][mask][:,::-1]
-        
-        # remove duplicate entries
-        self._edges = np.unique(edges)['i']
-        #print self._edges
+        if not self.hasFaceIndexedData:
+            ## generate self._edges from self._faces
+            nf = len(self._faces)
+            edges = np.empty(nf*3, dtype=[('i', np.uint, 2)])
+            edges['i'][0:nf] = self._faces[:,:2]
+            edges['i'][nf:2*nf] = self._faces[:,1:3]
+            edges['i'][-nf:,0] = self._faces[:,2]
+            edges['i'][-nf:,1] = self._faces[:,0]
+            
+            # sort per-edge
+            mask = edges['i'][:,0] > edges['i'][:,1]
+            edges['i'][mask] = edges['i'][mask][:,::-1]
+            
+            # remove duplicate entries
+            self._edges = np.unique(edges)['i']
+            #print self._edges
+        elif self._vertexesIndexedByFaces is not None:
+            verts = self._vertexesIndexedByFaces
+            edges = np.empty((verts.shape[0], 3, 2), dtype=np.uint)
+            nf = verts.shape[0]
+            edges[:,0,0] = np.arange(nf) * 3
+            edges[:,0,1] = edges[:,0,0] + 1
+            edges[:,1,0] = edges[:,0,1]
+            edges[:,1,1] = edges[:,1,0] + 1
+            edges[:,2,0] = edges[:,1,1]
+            edges[:,2,1] = edges[:,0,0]
+            self._edges = edges
+        else:
+            raise Exception("MeshData cannot generate edges--no faces in this data.")
         
         
     def save(self):
