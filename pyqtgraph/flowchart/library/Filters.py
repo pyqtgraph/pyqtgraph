@@ -2,6 +2,7 @@
 from ...Qt import QtCore, QtGui
 from ..Node import Node
 from . import functions
+from ... import functions as pgfn
 from .common import *
 import numpy as np
 
@@ -161,7 +162,7 @@ class Gaussian(CtrlNode):
             import scipy.ndimage
         except ImportError:
             raise Exception("GaussianFilter node requires the package scipy.ndimage.")
-        return scipy.ndimage.gaussian_filter(data, self.ctrls['sigma'].value())
+        return pgfn.gaussianFilter(data, self.ctrls['sigma'].value())
 
 
 class Derivative(CtrlNode):

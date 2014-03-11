@@ -12,7 +12,6 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
-import scipy.ndimage as ndi
 
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
@@ -22,8 +21,8 @@ w.setWindowTitle('pyqtgraph example: GLImageItem')
 
 ## create volume data set to slice three images from
 shape = (100,100,70)
-data = ndi.gaussian_filter(np.random.normal(size=shape), (4,4,4))
-data += ndi.gaussian_filter(np.random.normal(size=shape), (15,15,15))*15
+data = pg.gaussianFilter(np.random.normal(size=shape), (4,4,4))
+data += pg.gaussianFilter(np.random.normal(size=shape), (15,15,15))*15
 
 ## slice out three planes, convert to RGBA for OpenGL texture
 levels = (-0.08, 0.08)

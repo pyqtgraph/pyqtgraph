@@ -7,7 +7,6 @@ the mouse.
 
 import initExample ## Add path to library (just for examples; you do not need this)
 import numpy as np
-import scipy.ndimage as ndi
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
@@ -33,8 +32,8 @@ p1.setAutoVisible(y=True)
 
 #create numpy arrays
 #make the numbers large to show that the xrange shows data from 10000 to all the way 0
-data1 = 10000 + 15000 * ndi.gaussian_filter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
-data2 = 15000 + 15000 * ndi.gaussian_filter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
+data1 = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
+data2 = 15000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
 
 p1.plot(data1, pen="r")
 p1.plot(data2, pen="g")

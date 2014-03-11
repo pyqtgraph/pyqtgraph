@@ -12,7 +12,6 @@ from pyqtgraph.flowchart.library.common import CtrlNode
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
-import scipy.ndimage
 
 app = QtGui.QApplication([])
 
@@ -44,7 +43,7 @@ win.show()
 
 ## generate random input data
 data = np.random.normal(size=(100,100))
-data = 25 * scipy.ndimage.gaussian_filter(data, (5,5))
+data = 25 * pg.gaussianFilter(data, (5,5))
 data += np.random.normal(size=(100,100))
 data[40:60, 40:60] += 15.0
 data[30:50, 30:50] += 15.0
@@ -90,7 +89,7 @@ class ImageViewNode(Node):
 ## CtrlNode is just a convenience class that automatically creates its
 ## control widget based on a simple data structure.
 class UnsharpMaskNode(CtrlNode):
-    """Return the input data passed through scipy.ndimage.gaussian_filter."""
+    """Return the input data passed through pg.gaussianFilter."""
     nodeName = "UnsharpMask"
     uiTemplate = [
         ('sigma',  'spin', {'value': 1.0, 'step': 1.0, 'range': [0.0, None]}),
@@ -110,7 +109,7 @@ class UnsharpMaskNode(CtrlNode):
         # CtrlNode has created self.ctrls, which is a dict containing {ctrlName: widget}
         sigma = self.ctrls['sigma'].value()
         strength = self.ctrls['strength'].value()
-        output = dataIn - (strength * scipy.ndimage.gaussian_filter(dataIn, (sigma,sigma)))
+        output = dataIn - (strength * pg.gaussianFilter(dataIn, (sigma,sigma)))
         return {'dataOut': output}
 
 

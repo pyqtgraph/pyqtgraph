@@ -1120,6 +1120,45 @@ def colorToAlpha(data, color):
     
     #raise Exception()
     return np.clip(output, 0, 255).astype(np.ubyte)
+
+def gaussianFilter(data, sigma):
+    """
+    Drop-in replacement for scipy.ndimage.gaussian_filter.
+    
+    (note: results are only approximately equal to the output of
+     gaussian_filter)
+    """
+    if np.isscalar(sigma):
+        sigma = (sigma,) * data.ndim
+        
+    baseline = data.mean()
+    filtered = data - baseline
+    for ax in range(data.ndim):
+        s = sigma[ax]
+        if s == 0:
+            continue
+        
+        # generate 1D gaussian kernel
+        ksize = int(s * 6)
+        x = np.arange(-ksize, ksize)
+        kernel = np.exp(-x**2 / (2*s**2))
+        kshape = [1,] * data.ndim
+        kshape[ax] = len(kernel)
+        kernel = kernel.reshape(kshape)
+        
+        # convolve as product of FFTs
+        shape = data.shape[ax] + ksize
+        scale = 1.0 / (abs(s) * (2*np.pi)**0.5)
+        filtered = scale * np.fft.irfft(np.fft.rfft(filtered, shape, axis=ax) * 
+                                        np.fft.rfft(kernel, shape, axis=ax), 
+                                        axis=ax)
+        
+        # clip off extra data
+        sl = [slice(None)] * data.ndim
+        sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
+        filtered = filtered[sl]
+    return filtered + baseline
+    
     
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
@@ -1556,7 +1595,7 @@ def traceImage(image, values, smooth=0.5):
     paths = []
     for i in range(diff.shape[-1]):    
         d = (labels==i).astype(float)
-        d = ndi.gaussian_filter(d, (smooth, smooth))
+        d = gaussianFilter(d, (smooth, smooth))
         lines = isocurve(d, 0.5, connected=True, extendToEdge=True)
         path = QtGui.QPainterPath()
         for line in lines:
