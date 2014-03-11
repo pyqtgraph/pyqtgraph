@@ -651,13 +651,12 @@ class PlotDataItem(GraphicsObject):
             
     def _fourierTransform(self, x, y):
         ## Perform fourier transform. If x values are not sampled uniformly,
-        ## then use interpolate.griddata to resample before taking fft.
+        ## then use np.interp to resample before taking fft.
         dx = np.diff(x)
         uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
         if not uniform:
-            import scipy.interpolate as interp
             x2 = np.linspace(x[0], x[-1], len(x))
-            y = interp.griddata(x, y, x2, method='linear')
+            y = np.interp(x2, x, y)
             x = x2
         f = np.fft.fft(y) / len(y)
         y = abs(f[1:len(f)/2])

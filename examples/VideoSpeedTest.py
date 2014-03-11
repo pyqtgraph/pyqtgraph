@@ -13,7 +13,6 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
-import scipy.ndimage as ndi
 import pyqtgraph.ptime as ptime
 
 if USE_PYSIDE:
@@ -95,10 +94,11 @@ def mkData():
             
             if ui.rgbCheck.isChecked():
                 data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
-                data = ndi.gaussian_filter(data, (0, 6, 6, 0))
+                data = pg.gaussianFilter(data, (0, 6, 6, 0))
             else:
                 data = np.random.normal(size=(frames,width,height), loc=loc, scale=scale)
-                data = ndi.gaussian_filter(data, (0, 6, 6))
+                data = pg.gaussianFilter(data, (0, 6, 6))
+                pg.image(data)
             if dtype[0] != 'float':
                 data = np.clip(data, 0, mx)
             data = data.astype(dt)

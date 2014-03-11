@@ -13,11 +13,8 @@ of how to build an ROI at the bottom of the file.
 """
 
 from ..Qt import QtCore, QtGui
-#if not hasattr(QtCore, 'Signal'):
-    #QtCore.Signal = QtCore.pyqtSignal
 import numpy as np
-from numpy.linalg import norm
-import scipy.ndimage as ndimage
+#from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
 from math import cos, sin
@@ -1085,105 +1082,6 @@ class ROI(GraphicsObject):
             #mapped += translate.reshape((2,1,1))
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
-            
-            
-        ### transpose data so x and y are the first 2 axes
-        #trAx = range(0, data.ndim)
-        #trAx.remove(axes[0])
-        #trAx.remove(axes[1])
-        #tr1 = tuple(axes) + tuple(trAx)
-        #arr = data.transpose(tr1)
-        
-        ### Determine the minimal area of the data we will need
-        #(dataBounds, roiDataTransform) = self.getArraySlice(data, img, returnSlice=False, axes=axes)
-
-        ### Pad data boundaries by 1px if possible
-        #dataBounds = (
-            #(max(dataBounds[0][0]-1, 0), min(dataBounds[0][1]+1, arr.shape[0])),
-            #(max(dataBounds[1][0]-1, 0), min(dataBounds[1][1]+1, arr.shape[1]))
-        #)
-
-        ### Extract minimal data from array
-        #arr1 = arr[dataBounds[0][0]:dataBounds[0][1], dataBounds[1][0]:dataBounds[1][1]]
-        
-        ### Update roiDataTransform to reflect this extraction
-        #roiDataTransform *= QtGui.QTransform().translate(-dataBounds[0][0], -dataBounds[1][0]) 
-        #### (roiDataTransform now maps from ROI coords to extracted data coords)
-        
-        
-        ### Rotate array
-        #if abs(self.state['angle']) > 1e-5:
-            #arr2 = ndimage.rotate(arr1, self.state['angle'] * 180 / np.pi, order=1)
-            
-            ### update data transforms to reflect this rotation
-            #rot = QtGui.QTransform().rotate(self.state['angle'] * 180 / np.pi)
-            #roiDataTransform *= rot
-            
-            ### The rotation also causes a shift which must be accounted for:
-            #dataBound = QtCore.QRectF(0, 0, arr1.shape[0], arr1.shape[1])
-            #rotBound = rot.mapRect(dataBound)
-            #roiDataTransform *= QtGui.QTransform().translate(-rotBound.left(), -rotBound.top())
-            
-        #else:
-            #arr2 = arr1
-        
-        
-        
-        #### Shift off partial pixels
-        ## 1. map ROI into current data space
-        #roiBounds = roiDataTransform.mapRect(self.boundingRect())
-        
-        ## 2. Determine amount to shift data
-        #shift = (int(roiBounds.left()) - roiBounds.left(), int(roiBounds.bottom()) - roiBounds.bottom())
-        #if abs(shift[0]) > 1e-6 or abs(shift[1]) > 1e-6:
-            ## 3. pad array with 0s before shifting
-            #arr2a = np.zeros((arr2.shape[0]+2, arr2.shape[1]+2) + arr2.shape[2:], dtype=arr2.dtype)
-            #arr2a[1:-1, 1:-1] = arr2
-            
-            ## 4. shift array and udpate transforms
-            #arr3 = ndimage.shift(arr2a, shift + (0,)*(arr2.ndim-2), order=1)
-            #roiDataTransform *= QtGui.QTransform().translate(1+shift[0], 1+shift[1]) 
-        #else:
-            #arr3 = arr2
-        
-        
-        #### Extract needed region from rotated/shifted array
-        ## 1. map ROI into current data space (round these values off--they should be exact integer values at this point)
-        #roiBounds = roiDataTransform.mapRect(self.boundingRect())
-        ##print self, roiBounds.height()
-        ##import traceback
-        ##traceback.print_stack()
-        
-        #roiBounds = QtCore.QRect(round(roiBounds.left()), round(roiBounds.top()), round(roiBounds.width()), round(roiBounds.height()))
-        
-        ##2. intersect ROI with data bounds
-        #dataBounds = roiBounds.intersect(QtCore.QRect(0, 0, arr3.shape[0], arr3.shape[1]))
-        
-        ##3. Extract data from array
-        #db = dataBounds
-        #bounds = (
-            #(db.left(), db.right()+1),
-            #(db.top(), db.bottom()+1)
-        #)
-        #arr4 = arr3[bounds[0][0]:bounds[0][1], bounds[1][0]:bounds[1][1]]
-
-        #### Create zero array in size of ROI
-        #arr5 = np.zeros((roiBounds.width(), roiBounds.height()) + arr4.shape[2:], dtype=arr4.dtype)
-        
-        ### Fill array with ROI data
-        #orig = Point(dataBounds.topLeft() - roiBounds.topLeft())
-        #subArr = arr5[orig[0]:orig[0]+arr4.shape[0], orig[1]:orig[1]+arr4.shape[1]]
-        #subArr[:] = arr4[:subArr.shape[0], :subArr.shape[1]]
-        
-        
-        ### figure out the reverse transpose order
-        #tr2 = np.array(tr1)
-        #for i in range(0, len(tr2)):
-            #tr2[tr1[i]] = i
-        #tr2 = tuple(tr2)
-        
-        ### Untranspose array before returning
-        #return arr5.transpose(tr2)
 
     def getAffineSliceParams(self, data, img, axes=(0,1)):
         """

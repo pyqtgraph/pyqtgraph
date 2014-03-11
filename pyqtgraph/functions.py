@@ -34,17 +34,6 @@ import decimal, re
 import ctypes
 import sys, struct
 
-try:
-    import scipy.ndimage
-    HAVE_SCIPY = True
-    if getConfigOption('useWeave'):
-        try:
-            import scipy.weave
-        except ImportError:
-            setConfigOptions(useWeave=False)
-except ImportError:
-    HAVE_SCIPY = False
-
 from . import debug
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
@@ -383,7 +372,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     """
     Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates (see the scipy documentation for more information about this).
+    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates if it is available (see the scipy documentation for more information about this). If scipy is not available, then a slower implementation of map_coordinates is used.
     
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
@@ -422,8 +411,12 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         affineSlice(data, shape=(20,20), origin=(40,0,0), vectors=((-1, 1, 0), (-1, 0, 1)), axes=(1,2,3))
     
     """
-    if not HAVE_SCIPY:
-        raise Exception("This function requires the scipy library, but it does not appear to be importable.")
+    try:
+        import scipy.ndimage
+        have_scipy = True
+    except ImportError:
+        have_scipy = False
+    have_scipy = False
 
     # sanity check
     if len(shape) != len(vectors):
@@ -445,7 +438,6 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     #print "tr1:", tr1
     ## dims are now [(slice axes), (other axes)]
     
-
     ## make sure vectors are arrays
     if not isinstance(vectors, np.ndarray):
         vectors = np.array(vectors)
@@ -461,12 +453,18 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     #print "X values:"
     #print x
     ## iterate manually over unused axes since map_coordinates won't do it for us
-    extraShape = data.shape[len(axes):]
-    output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
-    for inds in np.ndindex(*extraShape):
-        ind = (Ellipsis,) + inds
-        #print data[ind].shape, x.shape, output[ind].shape, output.shape
-        output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
+    if have_scipy:
+        extraShape = data.shape[len(axes):]
+        output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
+        for inds in np.ndindex(*extraShape):
+            ind = (Ellipsis,) + inds
+            output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
+    else:
+        # map_coordinates expects the indexes as the first axis, whereas
+        # interpolateArray expects indexes at the last axis. 
+        tr = tuple(range(1,x.ndim)) + (0,)
+        output = interpolateArray(data, x.transpose(tr))
+        
     
     tr = list(range(output.ndim))
     trb = []
@@ -482,6 +480,117 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         return (output, x)
     else:
         return output
+
+def interpolateArray(data, x, default=0.0):
+    """
+    N-dimensional interpolation similar scipy.ndimage.map_coordinates.
+    
+    This function returns linearly-interpolated values sampled from a regular
+    grid of data. 
+    
+    *data* is an array of any shape containing the values to be interpolated.
+    *x* is an array with (shape[-1] <= data.ndim) containing the locations
+        within *data* to interpolate. 
+    
+    Returns array of shape (x.shape[:-1] + data.shape)
+    
+    For example, assume we have the following 2D image data::
+    
+        >>> data = np.array([[1,   2,   4  ],
+                             [10,  20,  40 ],
+                             [100, 200, 400]])
+        
+    To compute a single interpolated point from this data::
+        
+        >>> x = np.array([(0.5, 0.5)])
+        >>> interpolateArray(data, x)
+        array([ 8.25])
+        
+    To compute a 1D list of interpolated locations:: 
+        
+        >>> x = np.array([(0.5, 0.5),
+                          (1.0, 1.0),
+                          (1.0, 2.0),
+                          (1.5, 0.0)])
+        >>> interpolateArray(data, x)
+        array([  8.25,  20.  ,  40.  ,  55.  ])
+        
+    To compute a 2D array of interpolated locations::
+    
+        >>> x = np.array([[(0.5, 0.5), (1.0, 2.0)],
+                          [(1.0, 1.0), (1.5, 0.0)]])
+        >>> interpolateArray(data, x)
+        array([[  8.25,  40.  ],
+               [ 20.  ,  55.  ]])
+               
+    ..and so on. The *x* argument may have any shape as long as 
+    ```x.shape[-1] <= data.ndim```. In the case that 
+    ```x.shape[-1] < data.ndim```, then the remaining axes are simply 
+    broadcasted as usual. For example, we can interpolate one location
+    from an entire row of the data::
+    
+        >>> x = np.array([[0.5]])
+        >>> interpolateArray(data, x)
+        array([[  5.5,  11. ,  22. ]])
+
+    This is useful for interpolating from arrays of colors, vertexes, etc.
+    """
+    
+    prof = debug.Profiler()
+    
+    result = np.empty(x.shape[:-1] + data.shape, dtype=data.dtype)
+    nd = data.ndim
+    md = x.shape[-1]
+
+    # First we generate arrays of indexes that are needed to 
+    # extract the data surrounding each point
+    fields = np.mgrid[(slice(0,2),) * md]
+    xmin = np.floor(x).astype(int)
+    xmax = xmin + 1
+    indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
+    fieldInds = []
+    totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
+    for ax in range(md):
+        mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+        # keep track of points that need to be set to default
+        totalMask &= mask  
+        
+        # ..and keep track of indexes that are out of bounds 
+        # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
+        #  of bounds, but the interpolation will work anyway)
+        mask &= (xmax[...,ax] < data.shape[ax])
+        axisIndex = indexes[...,ax][fields[ax]]
+        #axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
+        axisIndex[axisIndex < 0] = 0
+        axisIndex[axisIndex >= data.shape[ax]] = 0
+        fieldInds.append(axisIndex)
+    prof()
+    
+    # Get data values surrounding each requested point
+    # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
+    fieldData = data[tuple(fieldInds)]
+    prof()
+    
+    ## Interpolate
+    s = np.empty((md,) + fieldData.shape, dtype=float)
+    dx = x - xmin
+    # reshape fields for arithmetic against dx
+    for ax in range(md):
+        f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
+        sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
+        sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
+        s[ax] = sax
+    s = np.product(s, axis=0)
+    result = fieldData * s
+    for i in range(md):
+        result = result.sum(axis=0)
+
+    prof()
+    totalMask.shape = totalMask.shape + (1,) * (nd - md)
+    result[~totalMask] = default
+    prof()
+    return result
+
 
 def transformToArray(tr):
     """
@@ -577,17 +686,25 @@ def transformCoordinates(tr, coords, transpose=False):
 def solve3DTransform(points1, points2):
     """
     Find a 3D transformation matrix that maps points1 onto points2.
-    Points must be specified as a list of 4 Vectors.
+    Points must be specified as either lists of 4 Vectors or 
+    (4, 3) arrays.
     """
-    if not HAVE_SCIPY:
-        raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
-    A = np.array([[points1[i].x(), points1[i].y(), points1[i].z(), 1] for i in range(4)])
-    B = np.array([[points2[i].x(), points2[i].y(), points2[i].z(), 1] for i in range(4)])
+    import numpy.linalg
+    pts = []
+    for inp in (points1, points2):
+        if isinstance(inp, np.ndarray):
+            A = np.empty((4,4), dtype=float)
+            A[:,:3] = inp[:,:3]
+            A[:,3] = 1.0
+        else:
+            A = np.array([[inp[i].x(), inp[i].y(), inp[i].z(), 1] for i in range(4)])
+        pts.append(A)
     
     ## solve 3 sets of linear equations to determine transformation matrix elements
     matrix = np.zeros((4,4))
     for i in range(3):
-        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+        ## solve Ax = B; x is one row of the desired transformation matrix
+        matrix[i] = numpy.linalg.solve(pts[0], pts[1][:,i])  
     
     return matrix
     
@@ -600,8 +717,7 @@ def solveBilinearTransform(points1, points2):
     
         mapped = np.dot(matrix, [x*y, x, y, 1])
     """
-    if not HAVE_SCIPY:
-        raise Exception("This function depends on the scipy library, but it does not appear to be importable.")
+    import numpy.linalg
     ## A is 4 rows (points) x 4 columns (xy, x, y, 1)
     ## B is 4 rows (points) x 2 columns (x, y)
     A = np.array([[points1[i].x()*points1[i].y(), points1[i].x(), points1[i].y(), 1] for i in range(4)])
@@ -610,7 +726,7 @@ def solveBilinearTransform(points1, points2):
     ## solve 2 sets of linear equations to determine transformation matrix elements
     matrix = np.zeros((2,4))
     for i in range(2):
-        matrix[i] = scipy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
+        matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
     
@@ -629,6 +745,10 @@ def rescaleData(data, scale, offset, dtype=None):
     try:
         if not getConfigOption('useWeave'):
             raise Exception('Weave is disabled; falling back to slower version.')
+        try:
+            import scipy.weave
+        except ImportError:
+            raise Exception('scipy.weave is not importable; falling back to slower version.')
         
         ## require native dtype when using weave
         if not data.dtype.isnative:
@@ -671,68 +791,13 @@ def applyLookupTable(data, lut):
     Uses values in *data* as indexes to select values from *lut*.
     The returned data has shape data.shape + lut.shape[1:]
     
-    Uses scipy.weave to improve performance if it is available.
     Note: color gradient lookup tables can be generated using GradientWidget.
     """
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
     
-    ## using np.take appears to be faster than even the scipy.weave method and takes care of clipping as well.
     return np.take(lut, data, axis=0, mode='clip')  
     
-    ### old methods: 
-    #data = np.clip(data, 0, lut.shape[0]-1)
-    
-    #try:
-        #if not USE_WEAVE:
-            #raise Exception('Weave is disabled; falling back to slower version.')
-        
-        ### number of values to copy for each LUT lookup
-        #if lut.ndim == 1:
-            #ncol = 1
-        #else:
-            #ncol = sum(lut.shape[1:])
-        
-        ### output array
-        #newData = np.empty((data.size, ncol), dtype=lut.dtype)
-        
-        ### flattened input arrays
-        #flatData = data.flatten()
-        #flatLut = lut.reshape((lut.shape[0], ncol))
-        
-        #dataSize = data.size
-        
-        ### strides for accessing each item 
-        #newStride = newData.strides[0] / newData.dtype.itemsize
-        #lutStride = flatLut.strides[0] / flatLut.dtype.itemsize
-        #dataStride = flatData.strides[0] / flatData.dtype.itemsize
-        
-        ### strides for accessing individual values within a single LUT lookup
-        #newColStride = newData.strides[1] / newData.dtype.itemsize
-        #lutColStride = flatLut.strides[1] / flatLut.dtype.itemsize
-        
-        #code = """
-        
-        #for( int i=0; i<dataSize; i++ ) {
-            #for( int j=0; j<ncol; j++ ) {
-                #newData[i*newStride + j*newColStride] = flatLut[flatData[i*dataStride]*lutStride + j*lutColStride];
-            #}
-        #}
-        #"""
-        #scipy.weave.inline(code, ['flatData', 'flatLut', 'newData', 'dataSize', 'ncol', 'newStride', 'lutStride', 'dataStride', 'newColStride', 'lutColStride'])
-        #newData = newData.reshape(data.shape + lut.shape[1:])
-        ##if np.any(newData != lut[data]):
-            ##print "mismatch!"
-            
-        #data = newData
-    #except:
-        #if USE_WEAVE:
-            #debug.printExc("Error; disabling weave.")
-            #USE_WEAVE = False
-        #data = lut[data]
-        
-    #return data
-
 
 def makeRGBA(*args, **kwds):
     """Equivalent to makeARGB(..., useRGBA=True)"""
@@ -1055,6 +1120,45 @@ def colorToAlpha(data, color):
     
     #raise Exception()
     return np.clip(output, 0, 255).astype(np.ubyte)
+
+def gaussianFilter(data, sigma):
+    """
+    Drop-in replacement for scipy.ndimage.gaussian_filter.
+    
+    (note: results are only approximately equal to the output of
+     gaussian_filter)
+    """
+    if np.isscalar(sigma):
+        sigma = (sigma,) * data.ndim
+        
+    baseline = data.mean()
+    filtered = data - baseline
+    for ax in range(data.ndim):
+        s = sigma[ax]
+        if s == 0:
+            continue
+        
+        # generate 1D gaussian kernel
+        ksize = int(s * 6)
+        x = np.arange(-ksize, ksize)
+        kernel = np.exp(-x**2 / (2*s**2))
+        kshape = [1,] * data.ndim
+        kshape[ax] = len(kernel)
+        kernel = kernel.reshape(kshape)
+        
+        # convolve as product of FFTs
+        shape = data.shape[ax] + ksize
+        scale = 1.0 / (abs(s) * (2*np.pi)**0.5)
+        filtered = scale * np.fft.irfft(np.fft.rfft(filtered, shape, axis=ax) * 
+                                        np.fft.rfft(kernel, shape, axis=ax), 
+                                        axis=ax)
+        
+        # clip off extra data
+        sl = [slice(None)] * data.ndim
+        sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
+        filtered = filtered[sl]
+    return filtered + baseline
+    
     
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
@@ -1473,7 +1577,11 @@ def traceImage(image, values, smooth=0.5):
     If image is RGB or RGBA, then the shape of values should be (nvals, 3/4)
     The parameter *smooth* is expressed in pixels.
     """
-    import scipy.ndimage as ndi
+    try:
+        import scipy.ndimage as ndi
+    except ImportError:
+        raise Exception("traceImage() requires the package scipy.ndimage, but it is not importable.")
+    
     if values.ndim == 2:
         values = values.T
     values = values[np.newaxis, np.newaxis, ...].astype(float)
@@ -1487,7 +1595,7 @@ def traceImage(image, values, smooth=0.5):
     paths = []
     for i in range(diff.shape[-1]):    
         d = (labels==i).astype(float)
-        d = ndi.gaussian_filter(d, (smooth, smooth))
+        d = gaussianFilter(d, (smooth, smooth))
         lines = isocurve(d, 0.5, connected=True, extendToEdge=True)
         path = QtGui.QPainterPath()
         for line in lines:
@@ -1967,14 +2075,16 @@ def invertQTransform(tr):
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
-    if not HAVE_SCIPY:
+    try:
+        import numpy.linalg
+        arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+        inv = numpy.linalg.inv(arr)
+        return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
+    except ImportError:
         inv = tr.inverted()
         if inv[1] is False:
             raise Exception("Transform is not invertible.")
         return inv[0]
-    arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-    inv = scipy.linalg.inv(arr)
-    return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     
     
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):

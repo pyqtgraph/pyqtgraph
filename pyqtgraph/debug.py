@@ -399,7 +399,9 @@ class Profiler(object):
     only the initial "pyqtgraph." prefix from the module.
     """
 
-    _profilers = os.environ.get("PYQTGRAPHPROFILE", "")
+    _profilers = os.environ.get("PYQTGRAPHPROFILE", None)
+    _profilers = _profilers.split(",") if _profilers is not None else []
+    
     _depth = 0
     _msgs = []
     
@@ -415,38 +417,36 @@ class Profiler(object):
     _disabledProfiler = DisabledProfiler()
     
 
-    if _profilers:
-        _profilers = _profilers.split(",")
-        def __new__(cls, msg=None, disabled='env', delayed=True):
-            """Optionally create a new profiler based on caller's qualname.
-            """
-            if disabled is True:
-                return cls._disabledProfiler
-                            
-            # determine the qualified name of the caller function
-            caller_frame = sys._getframe(1)
-            try:
-                caller_object_type = type(caller_frame.f_locals["self"])
-            except KeyError: # we are in a regular function
-                qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
-            else: # we are in a method
-                qualifier = caller_object_type.__name__
-            func_qualname = qualifier + "." + caller_frame.f_code.co_name
-            if func_qualname not in cls._profilers: # don't do anything
-                return cls._disabledProfiler
-            # create an actual profiling object
-            cls._depth += 1
-            obj = super(Profiler, cls).__new__(cls)
-            obj._name = msg or func_qualname
-            obj._delayed = delayed
-            obj._markCount = 0
-            obj._finished = False
-            obj._firstTime = obj._lastTime = ptime.time()
-            obj._newMsg("> Entering " + obj._name)
-            return obj
-    else:
-        def __new__(cls, delayed=True):
-            return lambda msg=None: None
+    def __new__(cls, msg=None, disabled='env', delayed=True):
+        """Optionally create a new profiler based on caller's qualname.
+        """
+        if disabled is True or (disabled=='env' and len(cls._profilers) == 0):
+            return cls._disabledProfiler
+                        
+        # determine the qualified name of the caller function
+        caller_frame = sys._getframe(1)
+        try:
+            caller_object_type = type(caller_frame.f_locals["self"])
+        except KeyError: # we are in a regular function
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+        else: # we are in a method
+            qualifier = caller_object_type.__name__
+        func_qualname = qualifier + "." + caller_frame.f_code.co_name
+        if disabled=='env' and func_qualname not in cls._profilers: # don't do anything
+            return cls._disabledProfiler
+        # create an actual profiling object
+        cls._depth += 1
+        obj = super(Profiler, cls).__new__(cls)
+        obj._name = msg or func_qualname
+        obj._delayed = delayed
+        obj._markCount = 0
+        obj._finished = False
+        obj._firstTime = obj._lastTime = ptime.time()
+        obj._newMsg("> Entering " + obj._name)
+        return obj
+    #else:
+        #def __new__(cls, delayed=True):
+            #return lambda msg=None: None
 
     def __call__(self, msg=None):
         """Register or print a new message with timing information.
