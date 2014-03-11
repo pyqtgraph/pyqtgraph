@@ -416,6 +416,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         have_scipy = True
     except ImportError:
         have_scipy = False
+    have_scipy = False
 
     # sanity check
     if len(shape) != len(vectors):
@@ -452,14 +453,18 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     #print "X values:"
     #print x
     ## iterate manually over unused axes since map_coordinates won't do it for us
-    extraShape = data.shape[len(axes):]
-    output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
-    for inds in np.ndindex(*extraShape):
-        ind = (Ellipsis,) + inds
-        if have_scipy:
+    if have_scipy:
+        extraShape = data.shape[len(axes):]
+        output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
+        for inds in np.ndindex(*extraShape):
+            ind = (Ellipsis,) + inds
             output[ind] = scipy.ndimage.map_coordinates(data[ind], x, order=order, **kargs)
-        else:
-            output[ind] = mapCoordinates(data[ind], x.T)
+    else:
+        # map_coordinates expects the indexes as the first axis, whereas
+        # interpolateArray expects indexes at the last axis. 
+        tr = tuple(range(1,x.ndim)) + (0,)
+        output = interpolateArray(data, x.transpose(tr))
+        
     
     tr = list(range(output.ndim))
     trb = []
@@ -476,51 +481,114 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     else:
         return output
 
-def mapCoordinates(data, x, default=0.0):
+def interpolateArray(data, x, default=0.0):
     """
-    Pure-python alternative to scipy.ndimage.map_coordinates
+    N-dimensional interpolation similar scipy.ndimage.map_coordinates.
     
-    *data* is an array of any shape.
-    *x* is an array with shape[-1] == data.ndim
+    This function returns linearly-interpolated values sampled from a regular
+    grid of data. 
+    
+    *data* is an array of any shape containing the values to be interpolated.
+    *x* is an array with (shape[-1] <= data.ndim) containing the locations
+        within *data* to interpolate. 
     
     Returns array of shape (x.shape[:-1] + data.shape)
+    
+    For example, assume we have the following 2D image data::
+    
+        >>> data = np.array([[1,   2,   4  ],
+                             [10,  20,  40 ],
+                             [100, 200, 400]])
+        
+    To compute a single interpolated point from this data::
+        
+        >>> x = np.array([(0.5, 0.5)])
+        >>> interpolateArray(data, x)
+        array([ 8.25])
+        
+    To compute a 1D list of interpolated locations:: 
+        
+        >>> x = np.array([(0.5, 0.5),
+                          (1.0, 1.0),
+                          (1.0, 2.0),
+                          (1.5, 0.0)])
+        >>> interpolateArray(data, x)
+        array([  8.25,  20.  ,  40.  ,  55.  ])
+        
+    To compute a 2D array of interpolated locations::
+    
+        >>> x = np.array([[(0.5, 0.5), (1.0, 2.0)],
+                          [(1.0, 1.0), (1.5, 0.0)]])
+        >>> interpolateArray(data, x)
+        array([[  8.25,  40.  ],
+               [ 20.  ,  55.  ]])
+               
+    ..and so on. The *x* argument may have any shape as long as 
+    ```x.shape[-1] <= data.ndim```. In the case that 
+    ```x.shape[-1] < data.ndim```, then the remaining axes are simply 
+    broadcasted as usual. For example, we can interpolate one location
+    from an entire row of the data::
+    
+        >>> x = np.array([[0.5]])
+        >>> interpolateArray(data, x)
+        array([[  5.5,  11. ,  22. ]])
+
+    This is useful for interpolating from arrays of colors, vertexes, etc.
     """
+    
+    prof = debug.Profiler()
+    
     result = np.empty(x.shape[:-1] + data.shape, dtype=data.dtype)
     nd = data.ndim
+    md = x.shape[-1]
 
     # First we generate arrays of indexes that are needed to 
     # extract the data surrounding each point
-    fields = np.mgrid[(slice(0,2),) * nd]
+    fields = np.mgrid[(slice(0,2),) * md]
     xmin = np.floor(x).astype(int)
     xmax = xmin + 1
     indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
     fieldInds = []
     totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
-    for ax in range(nd):
-        mask = (xmin[...,ax] >= 0) & (xmax[...,ax] < data.shape[ax])
-        totalMask &= mask
+    for ax in range(md):
+        mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+        # keep track of points that need to be set to default
+        totalMask &= mask  
+        
+        # ..and keep track of indexes that are out of bounds 
+        # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
+        #  of bounds, but the interpolation will work anyway)
+        mask &= (xmax[...,ax] < data.shape[ax])
         axisIndex = indexes[...,ax][fields[ax]]
-        axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
-        axisIndex *= axisMask
+        #axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
+        axisIndex[axisIndex < 0] = 0
+        axisIndex[axisIndex >= data.shape[ax]] = 0
         fieldInds.append(axisIndex)
+    prof()
     
     # Get data values surrounding each requested point
     # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
     fieldData = data[tuple(fieldInds)]
-
+    prof()
+    
     ## Interpolate
-    s = np.empty((nd,) + fieldData.shape, dtype=float)
+    s = np.empty((md,) + fieldData.shape, dtype=float)
     dx = x - xmin
     # reshape fields for arithmetic against dx
-    for ax in range(nd):
+    for ax in range(md):
         f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
-        s[ax] = f1 * dx[:,ax] + (1-f1) * (1-dx[:,ax])
+        sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
+        sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
+        s[ax] = sax
     s = np.product(s, axis=0)
     result = fieldData * s
-    for i in range(nd):
+    for i in range(md):
         result = result.sum(axis=0)
 
+    prof()
+    totalMask.shape = totalMask.shape + (1,) * (nd - md)
     result[~totalMask] = default
+    prof()
     return result
 
 
