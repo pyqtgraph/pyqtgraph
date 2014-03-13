@@ -5,6 +5,10 @@ from .. import functions as fn
 import weakref
 import operator
 from ..util.lru_cache import LRUCache
+from pyqtgraph.Qt import USE_PYSIDE
+
+if USE_PYSIDE:
+    from PySide import shiboken
 
 
 class GraphicsItem(object):
@@ -53,7 +57,13 @@ class GraphicsItem(object):
             if len(views) < 1:
                 return None
             self._viewWidget = weakref.ref(self.scene().views()[0])
-        return self._viewWidget()
+            
+        v = self._viewWidget()
+        if USE_PYSIDE:
+            if not shiboken.isValid(v):
+                return None
+            
+        return v
     
     def forgetViewWidget(self):
         self._viewWidget = None
