@@ -32,6 +32,9 @@ else:
 if USE_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
     import PySide
+    from PySide import shiboken
+    isQObjectAlive = shiboken.isValid
+    
     VERSION_INFO = 'PySide ' + PySide.__version__
     
     # Make a loadUiType function like PyQt has
@@ -78,6 +81,8 @@ else:
         pass
 
 
+    import sip
+    isQObjectAlive = sip.isdeleted
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
