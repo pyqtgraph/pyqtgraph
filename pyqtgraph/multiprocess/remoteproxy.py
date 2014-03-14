@@ -83,7 +83,7 @@ class RemoteEventHandler(object):
     def debugMsg(self, msg):
         if not self.debug:
             return
-        cprint.cout(self.debug, "%d [%d] %s\n" % (self.debug, os.getpid(), str(msg)), -1) 
+        cprint.cout(self.debug, "[%d] %s\n" % (os.getpid(), str(msg)), -1) 
     
     def getProxyOption(self, opt):
         return self.proxyOptions[opt]
