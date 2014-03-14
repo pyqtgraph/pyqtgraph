@@ -11,7 +11,7 @@ import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, thre
 from . import ptime
 from numpy import ndarray
 from .Qt import QtCore, QtGui
-from .util.Mutex import Mutex
+from .util.mutex import Mutex
 from .util import cprint
 
 __ftraceDepth = 0
