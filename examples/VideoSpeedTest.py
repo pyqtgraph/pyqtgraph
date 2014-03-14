@@ -98,7 +98,6 @@ def mkData():
             else:
                 data = np.random.normal(size=(frames,width,height), loc=loc, scale=scale)
                 data = pg.gaussianFilter(data, (0, 6, 6))
-                pg.image(data)
             if dtype[0] != 'float':
                 data = np.clip(data, 0, mx)
             data = data.astype(dt)
