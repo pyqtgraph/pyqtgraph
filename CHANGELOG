@@ -39,6 +39,12 @@ pyqtgraph-0.9.9  [unreleased]
     - Added BarGraphItem.shape() to allow better mouse interaction
     - Added MeshData.cylinder
     - Added ViewBox.setBackgroundColor() and GLViewWidget.setBackgroundColor()
+    - Utilities / debugging tools
+        - Mutex used for tracing deadlocks
+        - Color output on terminal
+        - Multiprocess debugging colors messages by process
+        - Stdout filter that colors text by thread
+        - PeriodicTrace used to report deadlocks
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
@@ -69,6 +75,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed possible infinite loop from FiniteCache
     - Allow images with NaN in ImageView
     - MeshData can generate edges from face-indexed vertexes
+    - Fixed multiprocess deadlocks on windows
 
 pyqtgraph-0.9.8  2013-11-24
 

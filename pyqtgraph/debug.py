@@ -7,10 +7,12 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 from __future__ import print_function
 
-import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile
+import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
 from . import ptime
 from numpy import ndarray
 from .Qt import QtCore, QtGui
+from .util.mutex import Mutex
+from .util import cprint
 
 __ftraceDepth = 0
 def ftrace(func):
@@ -991,3 +993,75 @@ class PrintDetector(object):
         
     def flush(self):
         self.stdout.flush()
+
+
+class PeriodicTrace(object):
+    """ 
+    Used to debug freezing by starting a new thread that reports on the 
+    location of the main thread periodically.
+    """
+    class ReportThread(QtCore.QThread):
+        def __init__(self):
+            self.frame = None
+            self.ind = 0
+            self.lastInd = None
+            self.lock = Mutex()
+            QtCore.QThread.__init__(self)
+
+        def notify(self, frame):
+            with self.lock:
+                self.frame = frame
+                self.ind += 1
+
+        def run(self):
+            while True:
+                time.sleep(1)
+                with self.lock:
+                    if self.lastInd != self.ind:
+                        print("== Trace %d: ==" % self.ind)
+                        traceback.print_stack(self.frame)
+                        self.lastInd = self.ind
+
+    def __init__(self):
+        self.mainThread = threading.current_thread()
+        self.thread = PeriodicTrace.ReportThread()
+        self.thread.start()
+        sys.settrace(self.trace)
+
+    def trace(self, frame, event, arg):
+        if threading.current_thread() is self.mainThread: # and 'threading' not in frame.f_code.co_filename:
+            self.thread.notify(frame)
+            # print("== Trace ==", event, arg)
+            # traceback.print_stack(frame)
+        return self.trace
+
+
+
+class ThreadColor(object):
+    """
+    Wrapper on stdout/stderr that colors text by the current thread ID.
+
+    *stream* must be 'stdout' or 'stderr'.
+    """
+    colors = {}
+    lock = Mutex()
+
+    def __init__(self, stream):
+        self.stream = getattr(sys, stream)
+        self.err = stream == 'stderr'
+        setattr(sys, stream, self)
+
+    def write(self, msg):
+        with self.lock:
+            cprint.cprint(self.stream, self.color(), msg, -1, stderr=self.err)
+
+    def flush(self):
+        with self.lock:
+            self.stream.flush()
+
+    def color(self):
+        tid = threading.current_thread()
+        if tid not in self.colors:
+            c = (len(self.colors) % 15) + 1
+            self.colors[tid] = c
+        return self.colors[tid]

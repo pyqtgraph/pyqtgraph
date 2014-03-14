@@ -7,6 +7,9 @@ except ImportError:
     import builtins
     import pickle
 
+# color printing for debugging
+from ..util import cprint
+
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
     or discovers that the connection has been closed."""
@@ -80,7 +83,7 @@ class RemoteEventHandler(object):
     def debugMsg(self, msg):
         if not self.debug:
             return
-        print("[%d] %s" % (os.getpid(), str(msg)))
+        cprint.cout(self.debug, "[%d] %s\n" % (os.getpid(), str(msg)), -1) 
     
     def getProxyOption(self, opt):
         return self.proxyOptions[opt]
