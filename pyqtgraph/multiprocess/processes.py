@@ -75,16 +75,8 @@ class Process(RemoteEventHandler):
 
         #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
-        port = 10000
-        while True:
-            try:
-                l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
-                break
-            except socket.error as ex:
-                if ex.errno != 98 and ex.errno != 10048: # unix=98, win=10048
-                    raise
-                port += 1
-
+        l = multiprocessing.connection.Listener(('localhost', 0), authkey=authkey)
+        port = l.address[1]
 
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
