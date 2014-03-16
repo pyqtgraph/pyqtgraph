@@ -242,10 +242,12 @@ class AxisItem(GraphicsWidget):
         """Set the height of this axis reserved for ticks and tick labels.
         The height of the axis label is automatically added."""
         if h is None:
-            if self.style['autoExpandTextSpace'] is True:
-                h = self.textHeight
-            else:
-                h = self.style['tickTextHeight']
+            h = 0
+            if self.showValues:
+                if self.style['autoExpandTextSpace'] is True:
+                    h = self.textHeight
+                else:
+                    h = self.style['tickTextHeight']
             h += max(0, self.tickLength) + self.style['tickTextOffset'][1]
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
@@ -258,10 +260,12 @@ class AxisItem(GraphicsWidget):
         """Set the width of this axis reserved for ticks and tick labels.
         The width of the axis label is automatically added."""
         if w is None:
-            if self.style['autoExpandTextSpace'] is True:
-                w = self.textWidth
-            else:
-                w = self.style['tickTextWidth']
+            w = 0
+            if self.showValues:
+                if self.style['autoExpandTextSpace'] is True:
+                    w = self.textWidth
+                else:
+                    w = self.style['tickTextWidth']
             w += max(0, self.tickLength) + self.style['tickTextOffset'][0]
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
@@ -859,8 +863,8 @@ class AxisItem(GraphicsWidget):
                     textSpecs.append((rect, textFlags, vstr))
             profiler('compute text')
             
-            ## update max text size if needed.
-            self._updateMaxTextSize(textSize2)
+        ## update max text size if needed.
+        self._updateMaxTextSize(textSize2)
         
         return (axisSpec, tickSpecs, textSpecs)
     
