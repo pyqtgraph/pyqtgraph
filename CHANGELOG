@@ -76,6 +76,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Allow images with NaN in ImageView
     - MeshData can generate edges from face-indexed vertexes
     - Fixed multiprocess deadlocks on windows
+    - Fixed GLGridItem.setSize
 
 pyqtgraph-0.9.8  2013-11-24
 
