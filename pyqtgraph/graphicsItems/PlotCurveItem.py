@@ -194,8 +194,10 @@ class PlotCurveItem(GraphicsObject):
     def boundingRect(self):
         if self._boundingRect is None:
             (xmn, xmx) = self.dataBounds(ax=0)
+            if xmn is None or xmx is None:
+                return QtCore.QRectF()
             (ymn, ymx) = self.dataBounds(ax=1)
-            if xmn is None or ymn is None:
+            if ymn is None or ymx is None:
                 return QtCore.QRectF()
 
             px = py = 0.0
