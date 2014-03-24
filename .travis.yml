@@ -18,7 +18,7 @@ env:
     # Pyglet and GLFW to make sure we deal with those correctly
     #- PYTHON=2.6 QT=pyqt TEST=standard
     - PYTHON=2.7 QT=pyqt TEST=standard
-    - PYTHON=2.7 QT=pyside TEST=standard
+    #- PYTHON=2.7 QT=pyside TEST=standard
     #- PYTHON=3.3 QT=pyqt TEST=standard
     #- PYTHON=3.3 QT=pyside TEST=extra
 
@@ -36,7 +36,8 @@ before_install:
 
 
 install:
-    - travis_retry sudo apt-get -qq -y install python-numpy python-pytest;
+    - travis_retry sudo apt-get -qq -y install python-numpy;
+    - pip install pytest
     
     - if [ "${PYTHON}" != "2.7" ]; then
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
