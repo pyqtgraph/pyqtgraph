@@ -6,7 +6,8 @@ language: python
 # interface for running different versions of Python. We could also use
 # it for 2.7, but the Ubuntu system has installable 2.7 Qt4-GL, which
 # allows for more complete testing.
-
+notifications:
+  email: false
 
 virtualenv:
     system_site_packages: true
@@ -42,13 +43,13 @@ install:
     - if [ "${PYTHON}" != "2.7" ]; then
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
         source activate testenv &&
-        if[ ${QT} == 'pyqt' ]; then
+        if [ ${QT} == 'pyqt' ]; then
           conda install --yes --quiet pyside;
         else
           conda install --yes --quiet pyside;
         fi;
       else
-        if[ ${QT} == 'pyqt' ]; then
+        if [ ${QT} == 'pyqt' ]; then
           travis_retry sudo apt-get -qq -y install python-qt4 python-qt4-gl;
         else
           travis_retry sudo apt-get -qq -y install python-pyside python-pyside.qtopengl;
