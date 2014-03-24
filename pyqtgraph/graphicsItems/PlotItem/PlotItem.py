@@ -18,6 +18,7 @@ This class is very heavily featured:
 """
 from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
 from ... import pixmaps
+import sys
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
@@ -193,14 +194,6 @@ class PlotItem(GraphicsWidget):
         self.layout.setColumnStretchFactor(1, 100)
         
 
-        ## Wrap a few methods from viewBox
-        for m in [
-            'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
-            'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled', 'setLimits',
-            'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
-            'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
-            setattr(self, m, getattr(self.vb, m))
-            
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -298,7 +291,24 @@ class PlotItem(GraphicsWidget):
         """Return the :class:`ViewBox <pyqtgraph.ViewBox>` contained within."""
         return self.vb
     
+    ## Wrap a few methods from viewBox. 
     
+    #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
+    #because we had a reference to an instance method (creating wrapper methods at runtime instead).
+    for m in [
+        'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
+        'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled', 'setLimits',
+        'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
+        'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
+        def _create_method(name):
+            def method(self, *args, **kwargs):
+                return getattr(self.vb, name)(*args, **kwargs)
+            method.__name__ = name
+            return method
+        
+        locals()[m] = _create_method(m)
+        
+    del _create_method
     
     def setLogMode(self, x=None, y=None):
         """
@@ -356,10 +366,8 @@ class PlotItem(GraphicsWidget):
         self.ctrlMenu.setParent(None)
         self.ctrlMenu = None
         
-        #self.ctrlBtn.setParent(None)
-        #self.ctrlBtn = None
-        #self.autoBtn.setParent(None)
-        #self.autoBtn = None
+        self.autoBtn.setParent(None)
+        self.autoBtn = None
         
         for k in self.axes:
             i = self.axes[k]['item']

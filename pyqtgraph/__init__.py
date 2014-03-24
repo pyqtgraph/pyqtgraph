@@ -56,6 +56,7 @@ CONFIG_OPTIONS = {
     'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
+    'crashWarning': False,  # If True, print warnings about situations that may result in a crash
 } 
 
 
@@ -256,6 +257,7 @@ from .graphicsWindows import *
 from .SignalProxy import *
 from .colormap import *
 from .ptime import time
+from pyqtgraph.Qt import isQObjectAlive
 
 
 ##############################################################
@@ -284,7 +286,12 @@ def cleanup():
     s = QtGui.QGraphicsScene()
     for o in gc.get_objects():
         try:
-            if isinstance(o, QtGui.QGraphicsItem) and o.scene() is None:
+            if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
+                if getConfigOption('crashWarning'):
+                    sys.stderr.write('Error: graphics item without scene. '
+                        'Make sure ViewBox.close() and GraphicsView.close() '
+                        'are properly called before app shutdown (%s)\n' % (o,))
+                
                 s.addItem(o)
         except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
             continue

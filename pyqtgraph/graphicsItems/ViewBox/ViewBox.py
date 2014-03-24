@@ -5,11 +5,12 @@ from ...Point import Point
 from ... import functions as fn
 from .. ItemGroup import ItemGroup
 from .. GraphicsWidget import GraphicsWidget
-from ...GraphicsScene import GraphicsScene
 import weakref
 from copy import deepcopy
 from ... import debug as debug
 from ... import getConfigOption
+import sys
+from pyqtgraph.Qt import isQObjectAlive
 
 __all__ = ['ViewBox']
 
@@ -240,6 +241,7 @@ class ViewBox(GraphicsWidget):
             del ViewBox.NamedViews[self.name]
 
     def close(self):
+        self.clear()
         self.unregister()
 
     def implements(self, interface):
@@ -1653,6 +1655,9 @@ class ViewBox(GraphicsWidget):
         ## called when the application is about to exit.
         ## this disables all callbacks, which might otherwise generate errors if invoked during exit.
         for k in ViewBox.AllViews:
+            if isQObjectAlive(k) and getConfigOption('crashWarning'):
+                sys.stderr.write('Warning: ViewBox should be closed before application exit.\n')
+                
             try:
                 k.destroyed.disconnect()
             except RuntimeError:  ## signal is already disconnected.
