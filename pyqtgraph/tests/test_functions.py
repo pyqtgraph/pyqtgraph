@@ -34,8 +34,9 @@ def test_interpolateArray():
     
     result = pg.interpolateArray(data, x)
     
-    import scipy.ndimage
-    spresult = scipy.ndimage.map_coordinates(data, x.T, order=1)
+    #import scipy.ndimage
+    #spresult = scipy.ndimage.map_coordinates(data, x.T, order=1)
+    spresult = np.array([  5.92,  20.  ,  11.  ,   0.  ,   0.  ])  # generated with the above line
     
     assert_array_almost_equal(result, spresult)
     
@@ -54,7 +55,10 @@ def test_interpolateArray():
                   [[1.5, 0.5], [1.5, 1.0], [1.5, 1.5]]])
     
     r1 = pg.interpolateArray(data, x)
-    r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=1)
+    #r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=1)
+    r2 = np.array([[   8.25,   11.  ,   16.5 ],  # generated with the above line
+                   [  82.5 ,  110.  ,  165.  ]])
+
     assert_array_almost_equal(r1, r2)
     
     
