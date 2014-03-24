@@ -1655,8 +1655,8 @@ class ViewBox(GraphicsWidget):
         ## called when the application is about to exit.
         ## this disables all callbacks, which might otherwise generate errors if invoked during exit.
         for k in ViewBox.AllViews:
-            if isQObjectAlive(k):
-                sys.stderr.write('ViewBox should be closed before application exit!')
+            if isQObjectAlive(k) and getConfigOption('crashWarning'):
+                sys.stderr.write('Warning: ViewBox should be closed before application exit.\n')
                 
             try:
                 k.destroyed.disconnect()

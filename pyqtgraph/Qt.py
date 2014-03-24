@@ -32,8 +32,22 @@ else:
 if USE_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
     import PySide
-    from PySide import shiboken
-    isQObjectAlive = shiboken.isValid
+    try:
+        from PySide import shiboken
+        isQObjectAlive = shiboken.isValid
+    except ImportError:
+        def isQObjectAlive(obj):
+            try:
+                if hasattr(obj, 'parent'):
+                    obj.parent()
+                elif hasattr(obj, 'parentItem'):
+                    obj.parentItem()
+                else:
+                    raise Exception("Cannot determine whether Qt object %s is still alive." % obj)
+            except RuntimeError:
+                return False
+            else:
+                return True
     
     VERSION_INFO = 'PySide ' + PySide.__version__
     
@@ -82,7 +96,8 @@ else:
 
 
     import sip
-    isQObjectAlive = sip.isdeleted
+    def isQObjectAlive(obj):
+        return not sip.isdeleted(obj)
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal

@@ -295,22 +295,20 @@ class PlotItem(GraphicsWidget):
     
     #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
     #because we had a reference to an instance method (creating wrapper methods at runtime instead).
-    frame = sys._getframe()
     for m in [
         'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
         'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled', 'setLimits',
         'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
         'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
-        def _create_method(name):  # @NoSelf
+        def _create_method(name):
             def method(self, *args, **kwargs):
                 return getattr(self.vb, name)(*args, **kwargs)
             method.__name__ = name
             return method
         
-        frame.f_locals[m] = _create_method(m)
+        locals()[m] = _create_method(m)
         
     del _create_method
-    del frame
     
     def setLogMode(self, x=None, y=None):
         """
