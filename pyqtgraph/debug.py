@@ -430,7 +430,7 @@ class Profiler(object):
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
         except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
         else: # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
@@ -469,6 +469,7 @@ class Profiler(object):
         if self._delayed:
             self._msgs.append((msg, args))
         else:
+            self.flush()
             print(msg % args)
 
     def __del__(self):
@@ -485,10 +486,13 @@ class Profiler(object):
         self._newMsg("< Exiting %s, total time: %0.4f ms", 
                      self._name, (ptime.time() - self._firstTime) * 1000)
         type(self)._depth -= 1
-        if self._depth < 1 and self._msgs:
+        if self._depth < 1:
+            self.flush()
+        
+    def flush(self):
+        if self._msgs:
             print("\n".join([m[0]%m[1] for m in self._msgs]))
             type(self)._msgs = []
-        
 
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
