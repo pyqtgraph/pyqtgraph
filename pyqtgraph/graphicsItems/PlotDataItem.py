@@ -532,7 +532,8 @@ class PlotDataItem(GraphicsObject):
                     x0 = (range.left()-x[0]) / dx
                     x1 = (range.right()-x[0]) / dx
                     width = self.getViewBox().width()
-                    ds = int(max(1, int(0.2 * (x1-x0) / width)))
+                    if width != 0.0:
+                        ds = int(max(1, int(0.2 * (x1-x0) / width)))
                     ## downsampling is expensive; delay until after clipping.
             
             if self.opts['clipToView']:
