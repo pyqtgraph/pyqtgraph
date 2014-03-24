@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore  
+from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from .. import functions as fn
@@ -42,8 +42,11 @@ class GraphicsItem(object):
                     
     def getViewWidget(self):
         """
-        Return the view widget for this item. If the scene has multiple views, only the first view is returned.
-        The return value is cached; clear the cached value with forgetViewWidget()
+        Return the view widget for this item. 
+        
+        If the scene has multiple views, only the first view is returned.
+        The return value is cached; clear the cached value with forgetViewWidget().
+        If the view has been deleted by Qt, return None.
         """
         if self._viewWidget is None:
             scene = self.scene()
@@ -53,7 +56,12 @@ class GraphicsItem(object):
             if len(views) < 1:
                 return None
             self._viewWidget = weakref.ref(self.scene().views()[0])
-        return self._viewWidget()
+            
+        v = self._viewWidget()
+        if v is not None and not isQObjectAlive(v):
+            return None
+            
+        return v
     
     def forgetViewWidget(self):
         self._viewWidget = None
