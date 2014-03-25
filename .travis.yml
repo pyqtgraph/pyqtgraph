@@ -81,17 +81,21 @@ install:
     - python${PYTHON} --version
     - apt-cache search python3-pyqt
     - apt-cache search python3-pyside
-
+    
 
 before_script:
     # We need to create a (fake) display on Travis, let's use a funny resolution
     - export DISPLAY=:99.0
     - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
+    
+    # Make sure everyone uses the correct python
+    - mkdir ~/bin && ln -s `which python${PYTHON}` ~/bin
+    - export PATH=~/bin:$PATH
 
 
 script:
     # Run unit tests
-    - python${PYTHON} setup.py test
+    - python setup.py test
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
@@ -104,7 +108,13 @@ script:
 
     # Check for style issues
     - if [ "${TEST}" == "extra" ]; then
-        python${PYTHON} setup.py style;
+        python setup.py style;
       fi;
     
+    # Check install works
+    - CWD=`pwd`
+    - python setup.py install && cd .. && echo "import pyqtgraph.examples" | python
+    
+    # Check double-install fails
+    - cd pyqtgraph && python setup.py install && if [ $? == 0 ]; then false; fi;
 

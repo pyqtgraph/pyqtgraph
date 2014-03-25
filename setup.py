@@ -93,11 +93,25 @@ class Build(distutils.command.build.build):
             sys.excepthook(*sys.exc_info())
         return ret
         
+import distutils.command.install
 
+class Install(distutils.command.install.install):
+    """
+    * Check for previously-installed version before installing
+    """
+    def run(self):
+        name = self.config_vars['dist_name']
+        if name in os.listdir(self.install_libbase):
+            raise Exception("It appears another version of %s is already "
+                            "installed at %s; remove this before installing." 
+                            % (name, self.install_libbase))
+        print("Installing to %s" % self.install_libbase)
+        return distutils.command.install.install.run(self)
         
 setup(
     version=version,
     cmdclass={'build': Build, 
+              'install': Install,
               'deb': helpers.DebCommand, 
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
