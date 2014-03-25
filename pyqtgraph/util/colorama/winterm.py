@@ -115,6 +115,6 @@ class WinTerm(object):
         # fill the entire screen with blanks
         win32.FillConsoleOutputCharacter(handle, ' ', dw_con_size, coord_screen)
         # now set the buffer's attributes accordingly
-        win32.FillConsoleOutputAttribute(handle, self.get_attrs(), dw_con_size, coord_screen );
+        win32.FillConsoleOutputAttribute(handle, self.get_attrs(), dw_con_size, coord_screen )
         # put the cursor at (0, 0)
         win32.SetConsoleCursorPosition(handle, (coord_screen.X, coord_screen.Y))

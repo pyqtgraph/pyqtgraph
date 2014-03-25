@@ -9,8 +9,36 @@ except ImportError:
         output = proc.stdout.read()
         proc.wait()
         if proc.returncode != 0:
-            raise Exception("Process had nonzero return value", proc.returncode)
+            ex = Exception("Process had nonzero return value %d" % proc.returncode)
+            ex.returncode = proc.returncode
+            ex.output = output
+            raise ex
         return output
+
+FLAKE_TESTS = ("E101,E111,E112,E113,E122,E125,E133,E223,E224,"
+               "E242,E273,E274,E304,E502,E703,E901,E902,"
+               "W191,W601,W602,W603,W604")
+
+def checkStyle():
+    try:
+        out = check_output(['flake8', '--select=%s' % FLAKE_TESTS, '--statistics', 'pyqtgraph/'])
+        ret = 0
+        print("All style checks OK.")
+    except Exception as e:
+        out = e.output
+        ret = e.returncode
+        print(out)
+    return ret
+
+def unitTests():
+    try:
+        out = check_output('PYTHONPATH=. py.test', shell=True)
+        ret = 0
+    except Exception as e:
+        out = e.output
+        ret = e.returncode
+    print(out)
+    return ret
 
 def listAllPackages(pkgroot):
     path = os.getcwd()
@@ -190,8 +218,8 @@ class DebCommand(Command):
             raise Exception("Error during debuild.")
 
 
-class TestCommand(Command):
-    """Just for learning about distutils; not for running package tests."""
+class DebugCommand(Command):
+    """Just for learning about distutils."""
     description = ""
     user_options = []
     def initialize_options(self):
@@ -203,3 +231,33 @@ class TestCommand(Command):
         cmd = self
         print(self.distribution.name)
         print(self.distribution.version)
+
+
+class TestCommand(Command):
+    description = "Run all package tests and exit immediately with informative return code."
+    user_options = []
+    
+    def run(self):
+        sys.exit(unitTests())
+        
+        
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+    
+
+class StyleCommand(Command):
+    description = "Check all code for style, exit immediately with informative return code."
+    user_options = []
+    
+    def run(self):
+        sys.exit(checkStyle())
+        
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+    

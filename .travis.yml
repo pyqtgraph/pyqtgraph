@@ -20,39 +20,44 @@ env:
     #- PYTHON=2.6 QT=pyqt TEST=standard
     - PYTHON=2.7 QT=pyqt TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
-    #- PYTHON=3.3 QT=pyqt TEST=standard
-    #- PYTHON=3.3 QT=pyside TEST=standard
+    - PYTHON=3.3 QT=pyqt TEST=standard
+    - PYTHON=3.3 QT=pyside TEST=standard
 
 
 before_install:
     - travis_retry sudo apt-get -qq update;
-    - if [ "${PYTHON}" != "2.7" ]; then
-        wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh &&
-        chmod +x miniconda.sh &&
-        ./miniconda.sh -b &&
-        export PATH=/home/$USER/anaconda/bin:$PATH &&
-        conda update --yes conda &&
-        travis_retry sudo apt-get -qq -y install libgl1-mesa-dri;
-      fi;
+#     - if [ "${PYTHON}" != "2.7" ]; then
+#         wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh &&
+#         chmod +x miniconda.sh &&
+#         ./miniconda.sh -b &&
+#         export PATH=/home/$USER/anaconda/bin:$PATH &&
+#         conda update --yes conda &&
+#         travis_retry sudo apt-get -qq -y install libgl1-mesa-dri;
+#       fi;
 
 
 install:
-    - travis_retry sudo apt-get -qq -y install python-numpy;
-    - pip install pytest
-    
-    - if [ "${PYTHON}" != "2.7" ]; then
+    - if [ "${PYTHON}" == "2.7" ]; then
+        travis_retry sudo apt-get -qq -y install python-numpy python-pytest python-flake8;
+        if [ ${QT} == 'pyqt' ]; then
+          travis_retry sudo apt-get -qq -y install python-qt4 python-qt4-gl;
+        else
+          travis_retry sudo apt-get -qq -y install python-pyside.qtcore python-pyside.qtgui python-pyside.qtsvg python-pyside.qtopengl;
+        fi;
+      elif [ "${PYTHON}" == "3.3" ]; then
+        travis_retry sudo apt-get -qq -y install python3-numpy python3-pytest python3-flake8;
+        if [ ${QT} == 'pyqt' ]; then
+          travis_retry sudo apt-get -qq -y install python3-qt4 python3-qt4-gl;
+        else
+          travis_retry sudo apt-get -qq -y install python3-pyside.qtcore python3-pyside.qtgui python3-pyside.qtsvg python3-pyside.qtopengl;
+        fi;
+      else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
         source activate testenv &&
         if [ ${QT} == 'pyqt' ]; then
           conda install --yes --quiet pyside;
         else
           conda install --yes --quiet pyside;
-        fi;
-      else
-        if [ ${QT} == 'pyqt' ]; then
-          travis_retry sudo apt-get -qq -y install python-qt4 python-qt4-gl;
-        else
-          travis_retry sudo apt-get -qq -y install python-pyside.qtcore python-pyside.qtgui python-pyside.qtsvg python-pyside.qtopengl;
         fi;
       fi;
 
@@ -75,7 +80,8 @@ before_script:
 
 
 script:
-    - PYTHONPATH=. py.test
+    # Run unit tests
+    - python setup.py test
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
@@ -85,5 +91,10 @@ script:
             else true;
         fi;
       fi;
-      
+
+    # Check for style issues
+    - if [ "${TEST}" == "extra" ]; then
+        python setup.py style
+      fi;
+    
 

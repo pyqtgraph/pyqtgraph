@@ -45,7 +45,7 @@ class GLAxisItem(GLGraphicsItem):
         
         if self.antialias:
             glEnable(GL_LINE_SMOOTH)
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
             
         glBegin( GL_LINES )
         

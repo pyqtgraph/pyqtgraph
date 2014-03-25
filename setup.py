@@ -97,7 +97,11 @@ class Build(distutils.command.build.build):
         
 setup(
     version=version,
-    cmdclass={'build': Build, 'deb': helpers.DebCommand, 'test': helpers.TestCommand},
+    cmdclass={'build': Build, 
+              'deb': helpers.DebCommand, 
+              'test': helpers.TestCommand,
+              'debug': helpers.DebugCommand,
+              'style': helpers.StyleCommand},
     packages=allPackages,
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},

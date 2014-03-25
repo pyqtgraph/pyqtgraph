@@ -96,7 +96,7 @@ class GLLinePlotItem(GLGraphicsItem):
                 glEnable(GL_LINE_SMOOTH)
                 glEnable(GL_BLEND)
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
                 
             if self.mode == 'line_strip':
                 glDrawArrays(GL_LINE_STRIP, 0, int(self.pos.size / self.pos.shape[-1]))
