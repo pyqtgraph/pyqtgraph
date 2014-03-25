@@ -27,7 +27,7 @@ def checkStyle():
     except Exception as e:
         out = e.output
         ret = e.returncode
-        print(out)
+        print(out.decode('utf-8'))
     return ret
 
 def unitTests():
@@ -37,7 +37,7 @@ def unitTests():
     except Exception as e:
         out = e.output
         ret = e.returncode
-    print(out)
+    print(out.decode('utf-8'))
     return ret
 
 def listAllPackages(pkgroot):

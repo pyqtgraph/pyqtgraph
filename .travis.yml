@@ -50,9 +50,9 @@ install:
       elif [ "${PYTHON}" == "3.3" ]; then
         travis_retry sudo apt-get -qq -y install python3-numpy;
         if [ ${QT} == 'pyqt' ]; then
-          travis_retry sudo apt-get -qq -y install python3-pyqt4.qtcore python3-pyqt4.qtgui python3-pyqt4.qtsvg python3-pyqt4.qtopengl;
+          travis_retry sudo apt-get -qq -y install python3-pyqt4;
         else
-          travis_retry sudo apt-get -qq -y install python3-pyside.qtcore python3-pyside.qtgui python3-pyside.qtsvg python3-pyside.qtopengl;
+          travis_retry sudo apt-get -qq -y install python3-pyside;
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
@@ -80,6 +80,7 @@ install:
     - cat /etc/issue
     - python${PYTHON} --version
     - apt-cache search python3-pyqt
+    - apt-cache search python3-pyside
 
 
 before_script:
