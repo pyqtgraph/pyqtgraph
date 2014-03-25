@@ -107,7 +107,6 @@ setup(
     #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},
     install_requires = [
         'numpy',
-        'scipy',
         ],
     **setupOpts
 )

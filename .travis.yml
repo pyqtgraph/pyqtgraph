@@ -25,7 +25,7 @@ env:
 
 
 before_install:
-    - travis_retry sudo apt-get -qq update;
+    - travis_retry sudo apt-get update;
 #     - if [ "${PYTHON}" != "2.7" ]; then
 #         wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh &&
 #         chmod +x miniconda.sh &&
@@ -84,7 +84,7 @@ before_script:
 
 script:
     # Run unit tests
-    - python setup.py test
+    - python${PYTHON} setup.py test
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
@@ -97,7 +97,7 @@ script:
 
     # Check for style issues
     - if [ "${TEST}" == "extra" ]; then
-        python setup.py style;
+        python${PYTHON} setup.py style;
       fi;
     
 
