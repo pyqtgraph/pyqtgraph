@@ -37,17 +37,20 @@ before_install:
 
 
 install:
+    - pip install pytest
+    - pip install flake8
+    
     - if [ "${PYTHON}" == "2.7" ]; then
-        travis_retry sudo apt-get -qq -y install python-numpy python-pytest python-flake8;
+        travis_retry sudo apt-get -qq -y install python-numpy;
         if [ ${QT} == 'pyqt' ]; then
           travis_retry sudo apt-get -qq -y install python-qt4 python-qt4-gl;
         else
           travis_retry sudo apt-get -qq -y install python-pyside.qtcore python-pyside.qtgui python-pyside.qtsvg python-pyside.qtopengl;
         fi;
       elif [ "${PYTHON}" == "3.3" ]; then
-        travis_retry sudo apt-get -qq -y install python3-numpy python3-pytest python3-flake8;
+        travis_retry sudo apt-get -qq -y install python3-numpy;
         if [ ${QT} == 'pyqt' ]; then
-          travis_retry sudo apt-get -qq -y install python3-qt4 python3-qt4-gl;
+          travis_retry sudo apt-get -qq -y install python3-pyqt4.qtcore python3-pyqt4.qtgui python3-pyqt4.qtsvg python3-pyqt4.qtopengl;
         else
           travis_retry sudo apt-get -qq -y install python3-pyside.qtcore python3-pyside.qtgui python3-pyside.qtsvg python3-pyside.qtopengl;
         fi;
@@ -94,7 +97,7 @@ script:
 
     # Check for style issues
     - if [ "${TEST}" == "extra" ]; then
-        python setup.py style
+        python setup.py style;
       fi;
     
 
