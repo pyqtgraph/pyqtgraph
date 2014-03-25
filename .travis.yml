@@ -38,8 +38,13 @@ before_install:
 
 
 install:
-    - pip install pytest
-    - pip install flake8
+    - if [ "${PYTHON}" == "2.7" ]; then
+        pip install pytest &&
+        pip install flake8;
+      else
+        pip3 install pytest &&
+        pip3 install flake8;
+      fi;
     
     - if [ "${PYTHON}" == "2.7" ]; then
         travis_retry sudo apt-get -qq -y install python-numpy;
@@ -55,8 +60,8 @@ install:
         elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
         else
-          sudo echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy main restricted' >> /etc/apt/sources.list &&
-          sudo echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy universe' >> /etc/apt/sources.list &&
+          sudo bash -c "echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy main restricted' >> /etc/apt/sources.list" &&
+          sudo bash -c "echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy universe' >> /etc/apt/sources.list" &&
           sudo apt-get update &&
           sudo apt-get install python3-pyqt5;
         fi;
@@ -120,9 +125,9 @@ script:
       fi;
     
     # Check install works
-    - python setup.py --quiet install
+    - sudo python setup.py --quiet install
     - cd ..; echo "import pyqtgraph.examples" | python
     
     # Check double-install fails
-    - cd pyqtgraph && python setup.py --quiet install; if [ $? == 0 ]; then false; else true; fi;
+    - cd pyqtgraph && sudo python setup.py --quiet install; if [ $? == 0 ]; then false; else true; fi;
 
