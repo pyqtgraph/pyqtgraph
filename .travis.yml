@@ -55,7 +55,7 @@ install:
         elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
         else
-          travis_retry sudo apt-get -qq -y install python3-pyqt5;        
+          pip install PyQt5
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
@@ -93,8 +93,8 @@ before_script:
     - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
     
     # Make sure everyone uses the correct python
-    - mkdir ~/bin && ln -s `which python${PYTHON}` ~/bin
-    - export PATH=~/bin:$PATH
+    - mkdir ~/bin && ln -s `which python${PYTHON}` ~/bin/python
+    - export PATH=/home/travis/bin:$PATH
     - which python
     - python --version
 
