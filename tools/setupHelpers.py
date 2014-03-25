@@ -34,8 +34,10 @@ def unitTests():
     try:
         print("version:", sys.version[0])
         if sys.version[0] == 3:
+            print("PY3 test")
             out = check_output('PYTHONPATH=. py.test-3', shell=True)
         else:
+            print("PY2 test")
             out = check_output('PYTHONPATH=. py.test', shell=True)
         ret = 0
     except Exception as e:

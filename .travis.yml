@@ -55,7 +55,10 @@ install:
         elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
         else
-          pip install PyQt5;
+          echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy main restricted' >> /etc/apt/sources.list &&
+          echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy universe' >> /etc/apt/sources.list &&
+          sudo apt-get update &&
+          sudo apt-get install python3-pyqt5;
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
