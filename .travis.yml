@@ -55,7 +55,7 @@ install:
         elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
         else
-          pip install PyQt5
+          pip install PyQt5;
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
