@@ -22,6 +22,7 @@ env:
     - PYTHON=2.7 QT=pyside TEST=standard
     - PYTHON=3.3 QT=pyqt TEST=standard
     - PYTHON=3.3 QT=pyside TEST=standard
+    - PYTHON=3.3 QT=pyqt5 TEST=standard
 
 
 before_install:
@@ -51,8 +52,10 @@ install:
         travis_retry sudo apt-get -qq -y install python3-numpy;
         if [ ${QT} == 'pyqt' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyqt4;
-        else
+        elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
+        else
+          travis_retry sudo apt-get -qq -y install python3-pyqt5;        
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
@@ -81,6 +84,7 @@ install:
     - python${PYTHON} --version
     - apt-cache search python3-pyqt
     - apt-cache search python3-pyside
+    - apt-cache search pytest
     
 
 before_script:
@@ -113,9 +117,9 @@ script:
       fi;
     
     # Check install works
-    - python setup.py install
+    - python setup.py --quiet install
     - cd ..; echo "import pyqtgraph.examples" | python
     
     # Check double-install fails
-    - cd pyqtgraph && python setup.py install && if [ $? == 0 ]; then false; else true; fi;
+    - cd pyqtgraph && python setup.py --quiet install; if [ $? == 0 ]; then false; else true; fi;
 
