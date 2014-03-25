@@ -92,8 +92,11 @@ install:
     # Debugging helpers
     - uname -a
     - cat /etc/issue
-    - python --version
-    - python3 --version
+    - if [ "${PYTHON}" == "2.7" ]; then
+        python --version;
+      else
+        python3 --version;
+      fi;
     - apt-cache search python3-pyqt
     - apt-cache search python3-pyside
     - apt-cache search pytest
