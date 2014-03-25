@@ -91,7 +91,8 @@ before_script:
     # Make sure everyone uses the correct python
     - mkdir ~/bin && ln -s `which python${PYTHON}` ~/bin
     - export PATH=~/bin:$PATH
-
+    - which python
+    - python --version
 
 script:
     # Run unit tests
@@ -112,9 +113,9 @@ script:
       fi;
     
     # Check install works
-    - CWD=`pwd`
-    - python setup.py install && cd .. && echo "import pyqtgraph.examples" | python
+    - python setup.py install
+    - cd ..; echo "import pyqtgraph.examples" | python
     
     # Check double-install fails
-    - cd pyqtgraph && python setup.py install && if [ $? == 0 ]; then false; fi;
+    - cd pyqtgraph && python setup.py install && if [ $? == 0 ]; then false; else true; fi;
 

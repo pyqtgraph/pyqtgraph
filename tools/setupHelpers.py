@@ -32,7 +32,10 @@ def checkStyle():
 
 def unitTests():
     try:
-        out = check_output('PYTHONPATH=. py.test', shell=True)
+        if sys.version[0] == 3:
+            out = check_output('PYTHONPATH=. py.test-3', shell=True)
+        else:
+            out = check_output('PYTHONPATH=. py.test', shell=True)
         ret = 0
     except Exception as e:
         out = e.output
