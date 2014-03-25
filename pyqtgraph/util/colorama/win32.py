@@ -12,7 +12,7 @@ except ImportError:
     SetConsoleTextAttribute = lambda *_: None
 else:
     from ctypes import (
-        byref, Structure, c_char, c_short, c_uint32, c_ushort, POINTER
+        byref, Structure, c_char, c_short, c_int, c_uint32, c_ushort, c_void_p, POINTER
     )
 
     class CONSOLE_SCREEN_BUFFER_INFO(Structure):
@@ -42,7 +42,8 @@ else:
     _GetConsoleScreenBufferInfo = windll.kernel32.GetConsoleScreenBufferInfo
     _GetConsoleScreenBufferInfo.argtypes = [
         wintypes.HANDLE,
-        POINTER(CONSOLE_SCREEN_BUFFER_INFO),
+        c_void_p,
+        #POINTER(CONSOLE_SCREEN_BUFFER_INFO),
     ]
     _GetConsoleScreenBufferInfo.restype = wintypes.BOOL
 
@@ -56,7 +57,8 @@ else:
     _SetConsoleCursorPosition = windll.kernel32.SetConsoleCursorPosition
     _SetConsoleCursorPosition.argtypes = [
         wintypes.HANDLE,
-        wintypes._COORD,
+        c_int,
+        #wintypes._COORD,
     ]
     _SetConsoleCursorPosition.restype = wintypes.BOOL
 
@@ -75,7 +77,8 @@ else:
         wintypes.HANDLE,
         wintypes.WORD,
         wintypes.DWORD,
-        wintypes._COORD,
+        c_int,
+        #wintypes._COORD,
         POINTER(wintypes.DWORD),
     ]
     _FillConsoleOutputAttribute.restype = wintypes.BOOL
