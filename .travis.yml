@@ -47,8 +47,13 @@ install:
         travis_retry sudo apt-get -qq -y install python3-numpy &&
         curl http://python-distribute.org/distribute_setup.py | sudo python3 &&
         curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python3 &&
-        sudo pip-3.3 install pytest &&
-        sudo pip-3.3 install flake8;
+        which pip;
+        which pip3;
+        which pip-3;
+        which pip3.2;
+        which pip-3.2;
+        sudo pip-3.2 install pytest &&
+        sudo pip-3.2 install flake8;
       fi;
     
     # Qt
@@ -85,7 +90,7 @@ install:
           travis_retry sudo apt-get -qq -y install python-opengl;
       else
           echo "Using OpenGL stable version (pip)";
-          pip-3.3 install -q PyOpenGL;
+          pip-3.2 install -q PyOpenGL;
       fi;
       
 
