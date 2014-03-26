@@ -130,7 +130,7 @@ script:
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
-        ! find ./ -name "*.py" | xargs file | grep CRLF;
+        ! find ./ -name "*.py" | xargs file | grep CRLF &&
         ! find ./ -name "*.rst" | xargs file | grep CRLF;
       fi;
 
@@ -143,7 +143,8 @@ script:
     - sudo python setup.py --quiet install
     
     # Check double-install fails
-    - ! sudo python setup.py --quiet install
+    # Note the bash -c is because travis strips off the ! otherwise.
+    - bash -c "! sudo python setup.py --quiet install"
     
     # Check we can import pg
     - cd /; echo "import pyqtgraph.examples" | python
