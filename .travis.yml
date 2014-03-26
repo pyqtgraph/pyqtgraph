@@ -43,12 +43,18 @@ install:
         travis_retry sudo apt-get -qq -y install python-numpy &&
         sudo pip install pytest &&
         sudo pip install flake8;
+        export PYTEST=py.test
       else
         travis_retry sudo apt-get -qq -y install python3-numpy &&
         curl http://python-distribute.org/distribute_setup.py | sudo python3 &&
         curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python3 &&
         sudo pip3.2 install pytest &&
         sudo pip3.2 install flake8;
+        which py.test;
+        which py.test3;
+        which py.test-3;
+        which py.test3.2;
+        which py.test-3.2;
       fi;
     
     # Qt
@@ -117,16 +123,15 @@ before_script:
     - python --version
 
 script:
+    - PGDIR=`pwd`
+    
     # Run unit tests
-    - python setup.py test
+    - PYTHONPATH=. ${PYTEST} pyqtgraph/
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
-        find ./ -name "*.py" | xargs file | grep CRLF; out=$?; 
-        if [ ${out} == 0 ]; 
-            then false;
-            else true;
-        fi;
+        ! find ./ -name "*.py" | xargs file | grep CRLF;
+        ! find ./ -name "*.rst" | xargs file | grep CRLF;
       fi;
 
     # Check for style issues
@@ -136,8 +141,11 @@ script:
     
     # Check install works
     - sudo python setup.py --quiet install
-    - cd ..; echo "import pyqtgraph.examples" | python
     
     # Check double-install fails
-    - cd pyqtgraph && sudo python setup.py --quiet install; if [ $? == 0 ]; then false; else true; fi;
+    - ! sudo python setup.py --quiet install
+    
+    # Check we can import pg
+    - cd /; echo "import pyqtgraph.examples" | python
+    
 
