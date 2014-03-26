@@ -50,11 +50,7 @@ install:
         curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python3 &&
         sudo pip3.2 install pytest &&
         sudo pip3.2 install flake8;
-        which py.test;
-        which py.test3;
-        which py.test-3;
-        which py.test3.2;
-        which py.test-3.2;
+        export PYTEST=py.test-3.2;
       fi;
     
     # Qt
