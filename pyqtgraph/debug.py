@@ -240,7 +240,8 @@ def refPathString(chain):
     
 def objectSize(obj, ignore=None, verbose=False, depth=0, recursive=False):
     """Guess how much memory an object is using"""
-    ignoreTypes = [types.MethodType, types.UnboundMethodType, types.BuiltinMethodType, types.FunctionType, types.BuiltinFunctionType]
+    ignoreTypes = ['MethodType', 'UnboundMethodType', 'BuiltinMethodType', 'FunctionType', 'BuiltinFunctionType']
+    ignoreTypes = [getattr(types, key) for key in ignoreTypes if hasattr(types, key)]
     ignoreRegex = re.compile('(method-wrapper|Flag|ItemChange|Option|Mode)')
     
     
@@ -624,12 +625,12 @@ class ObjTracker(object):
         
         ## Which refs have disappeared since call to start()  (these are only displayed once, then forgotten.)
         delRefs = {}
-        for i in self.startRefs.keys():
+        for i in list(self.startRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.startRefs[i]
                 del self.startRefs[i]
                 self.forgetRef(delRefs[i])
-        for i in self.newRefs.keys():
+        for i in list(self.newRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.newRefs[i]
                 del self.newRefs[i]
@@ -667,7 +668,8 @@ class ObjTracker(object):
         for k in self.startCount:
             c1[k] = c1.get(k, 0) - self.startCount[k]
         typs = list(c1.keys())
-        typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        #typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        typs.sort(key=lambda a: c1[a])
         for t in typs:
             if c1[t] == 0:
                 continue
@@ -767,7 +769,8 @@ class ObjTracker(object):
             c = count.get(typ, [0,0])
             count[typ] =  [c[0]+1, c[1]+objectSize(obj)]
         typs = list(count.keys())
-        typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        #typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        typs.sort(key=lambda a: count[a][1])
         
         for t in typs:
             line = "  %d\t%d\t%s" % (count[t][0], count[t][1], t)
@@ -827,7 +830,7 @@ def describeObj(obj, depth=4, path=None, ignore=None):
 def typeStr(obj):
     """Create a more useful type string by making <instance> types report their class."""
     typ = type(obj)
-    if typ == types.InstanceType:
+    if typ == getattr(types, 'InstanceType', None):
         return "<instance of %s>" % obj.__class__.__name__
     else:
         return str(typ)
