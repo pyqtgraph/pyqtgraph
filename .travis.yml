@@ -41,15 +41,17 @@ install:
     # Dependencies
     - if [ "${PYTHON}" == "2.7" ]; then
         travis_retry sudo apt-get -qq -y install python-numpy &&
-        sudo pip install pytest &&
-        sudo pip install flake8;
+        export PIP=pip;
+        sudo ${PIP} install pytest &&
+        sudo ${PIP} install flake8;
         export PYTEST=py.test;
       else
         travis_retry sudo apt-get -qq -y install python3-numpy &&
         curl http://python-distribute.org/distribute_setup.py | sudo python3 &&
         curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python3 &&
-        sudo pip3.2 install pytest &&
-        sudo pip3.2 install flake8;
+        export PIP=pip3.2
+        sudo ${PIP} install pytest &&
+        sudo ${PIP} install flake8;
         export PYTEST=py.test-3.2;
       fi;
     
@@ -66,10 +68,9 @@ install:
         elif [ ${QT} == 'pyside' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyside;
         else
-          sudo bash -c "echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy main restricted' >> /etc/apt/sources.list" &&
-          sudo bash -c "echo 'deb http://us.archive.ubuntu.com/ubuntu/ saucy universe' >> /etc/apt/sources.list" &&
-          sudo apt-get update &&
-          sudo apt-get install python3-pyqt5;
+          ${PIP} search PyQt5;
+          ${PIP} install PyQt5;
+          cat /home/travis/.pip/pip.log;
         fi;
       else
         conda create -n testenv --yes --quiet pip python=$PYTHON &&
@@ -87,7 +88,7 @@ install:
           travis_retry sudo apt-get -qq -y install python-opengl;
       else
           echo "Using OpenGL stable version (pip)";
-          pip3.2 install -q PyOpenGL;
+          ${PIP} install -q PyOpenGL;
           cat /home/travis/.pip/pip.log;
       fi;
       
@@ -143,6 +144,7 @@ script:
     - bash -c "! sudo python setup.py --quiet install"
     
     # Check we can import pg
+    - echo "import sys; print(sys.path)" | python
     - cd /; echo "import pyqtgraph.examples" | python
     
 
