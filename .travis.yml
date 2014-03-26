@@ -20,9 +20,9 @@ env:
     #- PYTHON=2.6 QT=pyqt TEST=standard
     - PYTHON=2.7 QT=pyqt TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
-    - PYTHON=3.3 QT=pyqt TEST=standard
-    - PYTHON=3.3 QT=pyside TEST=standard
-    - PYTHON=3.3 QT=pyqt5 TEST=standard
+    - PYTHON=3.2 QT=pyqt TEST=standard
+    - PYTHON=3.2 QT=pyside TEST=standard
+    - PYTHON=3.2 QT=pyqt5 TEST=standard
 
 
 before_install:
@@ -62,7 +62,7 @@ install:
         else
           travis_retry sudo apt-get -qq -y install python-pyside.qtcore python-pyside.qtgui python-pyside.qtsvg python-pyside.qtopengl;
         fi;
-      elif [ "${PYTHON}" == "3.3" ]; then
+      elif [ "${PYTHON}" == "3.2" ]; then
         if [ ${QT} == 'pyqt' ]; then
           travis_retry sudo apt-get -qq -y install python3-pyqt4;
         elif [ ${QT} == 'pyside' ]; then
@@ -137,11 +137,11 @@ script:
       fi;
     
     # Check install works
-    - sudo python setup.py --quiet install
+    - sudo python${PYTHON} setup.py --quiet install
     
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
-    - bash -c "! sudo python setup.py --quiet install"
+    - bash -c "! sudo python${PYTHON} setup.py --quiet install"
     
     # Check we can import pg
     - echo "import sys; print(sys.path)" | python
