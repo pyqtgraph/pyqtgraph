@@ -43,7 +43,7 @@ install:
         travis_retry sudo apt-get -qq -y install python-numpy &&
         sudo pip install pytest &&
         sudo pip install flake8;
-        export PYTEST=py.test
+        export PYTEST=py.test;
       else
         travis_retry sudo apt-get -qq -y install python3-numpy &&
         curl http://python-distribute.org/distribute_setup.py | sudo python3 &&
