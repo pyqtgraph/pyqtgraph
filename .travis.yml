@@ -83,7 +83,6 @@ install:
     - if [ "${PYTHON}" == "2.7" ]; then
           echo "Using OpenGL stable version (apt)";
           travis_retry sudo apt-get -qq -y install python-opengl;
-      fi;
       else
           echo "Using OpenGL stable version (pip)";
           pip3.2 install -q PyOpenGL;
