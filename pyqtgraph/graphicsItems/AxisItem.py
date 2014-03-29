@@ -242,10 +242,12 @@ class AxisItem(GraphicsWidget):
         """Set the height of this axis reserved for ticks and tick labels.
         The height of the axis label is automatically added."""
         if h is None:
-            if self.style['autoExpandTextSpace'] is True:
-                h = self.textHeight
-            else:
-                h = self.style['tickTextHeight']
+            h = 0
+            if self.showValues:
+                if self.style['autoExpandTextSpace'] is True:
+                    h = self.textHeight
+                else:
+                    h = self.style['tickTextHeight']
             h += max(0, self.tickLength) + self.style['tickTextOffset'][1]
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
@@ -258,10 +260,12 @@ class AxisItem(GraphicsWidget):
         """Set the width of this axis reserved for ticks and tick labels.
         The width of the axis label is automatically added."""
         if w is None:
-            if self.style['autoExpandTextSpace'] is True:
-                w = self.textWidth
-            else:
-                w = self.style['tickTextWidth']
+            w = 0
+            if self.showValues:
+                if self.style['autoExpandTextSpace'] is True:
+                    w = self.textWidth
+                else:
+                    w = self.style['tickTextWidth']
             w += max(0, self.tickLength) + self.style['tickTextOffset'][0]
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
@@ -775,90 +779,90 @@ class AxisItem(GraphicsWidget):
         textSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
-        textSize2 = 0
-        for i in range(len(tickLevels)):
-            ## Get the list of strings to display for this level
-            if tickStrings is None:
-                spacing, values = tickLevels[i]
-                strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
-            else:
-                strings = tickStrings[i]
-                
-            if len(strings) == 0:
-                continue
-            
-            ## ignore strings belonging to ticks that were previously ignored
-            for j in range(len(strings)):
-                if tickPositions[i][j] is None:
-                    strings[j] = None
-
-            ## Measure density of text; decide whether to draw this level
-            rects = []
-            for s in strings:
-                if s is None:
-                    rects.append(None)
+        if self.showValues:
+            for i in range(len(tickLevels)):
+                ## Get the list of strings to display for this level
+                if tickStrings is None:
+                    spacing, values = tickLevels[i]
+                    strings = self.tickStrings(values, self.autoSIPrefixScale * self.scale, spacing)
                 else:
-                    br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, asUnicode(s))
-                    ## boundingRect is usually just a bit too large
-                    ## (but this probably depends on per-font metrics?)
-                    br.setHeight(br.height() * 0.8)
+                    strings = tickStrings[i]
                     
-                    rects.append(br)
-                    textRects.append(rects[-1])
-            
-            if i > 0:  ## always draw top level
-                ## measure all text, make sure there's enough room
-                if axis == 0:
-                    textSize = np.sum([r.height() for r in textRects])
-                    textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
-                else:
-                    textSize = np.sum([r.width() for r in textRects])
-                    textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
-
-                ## If the strings are too crowded, stop drawing text now.
-                ## We use three different crowding limits based on the number
-                ## of texts drawn so far.
-                textFillRatio = float(textSize) / lengthInPixels
-                finished = False
-                for nTexts, limit in self.style['textFillLimits']:
-                    if len(textSpecs) >= nTexts and textFillRatio >= limit:
-                        finished = True
-                        break
-                if finished:
-                    break
-            
-            #spacing, values = tickLevels[best]
-            #strings = self.tickStrings(values, self.scale, spacing)
-            for j in range(len(strings)):
-                vstr = strings[j]
-                if vstr is None: ## this tick was ignored because it is out of bounds
+                if len(strings) == 0:
                     continue
-                vstr = asUnicode(vstr)
-                x = tickPositions[i][j]
-                #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
-                textRect = rects[j]
-                height = textRect.height()
-                width = textRect.width()
-                #self.textHeight = height
-                offset = max(0,self.tickLength) + textOffset
-                if self.orientation == 'left':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
-                    rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
-                elif self.orientation == 'right':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
-                    rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
-                elif self.orientation == 'top':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
-                    rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
-                elif self.orientation == 'bottom':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
-                    rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
-
-                #p.setPen(self.pen())
-                #p.drawText(rect, textFlags, vstr)
-                textSpecs.append((rect, textFlags, vstr))
-        profiler('compute text')
-        
+                
+                ## ignore strings belonging to ticks that were previously ignored
+                for j in range(len(strings)):
+                    if tickPositions[i][j] is None:
+                        strings[j] = None
+    
+                ## Measure density of text; decide whether to draw this level
+                rects = []
+                for s in strings:
+                    if s is None:
+                        rects.append(None)
+                    else:
+                        br = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, asUnicode(s))
+                        ## boundingRect is usually just a bit too large
+                        ## (but this probably depends on per-font metrics?)
+                        br.setHeight(br.height() * 0.8)
+                        
+                        rects.append(br)
+                        textRects.append(rects[-1])
+                
+                if i > 0:  ## always draw top level
+                    ## measure all text, make sure there's enough room
+                    if axis == 0:
+                        textSize = np.sum([r.height() for r in textRects])
+                        textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
+                    else:
+                        textSize = np.sum([r.width() for r in textRects])
+                        textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
+    
+                    ## If the strings are too crowded, stop drawing text now.
+                    ## We use three different crowding limits based on the number
+                    ## of texts drawn so far.
+                    textFillRatio = float(textSize) / lengthInPixels
+                    finished = False
+                    for nTexts, limit in self.style['textFillLimits']:
+                        if len(textSpecs) >= nTexts and textFillRatio >= limit:
+                            finished = True
+                            break
+                    if finished:
+                        break
+                
+                #spacing, values = tickLevels[best]
+                #strings = self.tickStrings(values, self.scale, spacing)
+                for j in range(len(strings)):
+                    vstr = strings[j]
+                    if vstr is None: ## this tick was ignored because it is out of bounds
+                        continue
+                    vstr = asUnicode(vstr)
+                    x = tickPositions[i][j]
+                    #textRect = p.boundingRect(QtCore.QRectF(0, 0, 100, 100), QtCore.Qt.AlignCenter, vstr)
+                    textRect = rects[j]
+                    height = textRect.height()
+                    width = textRect.width()
+                    #self.textHeight = height
+                    offset = max(0,self.tickLength) + textOffset
+                    if self.orientation == 'left':
+                        textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                        rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
+                    elif self.orientation == 'right':
+                        textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                        rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
+                    elif self.orientation == 'top':
+                        textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
+                        rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
+                    elif self.orientation == 'bottom':
+                        textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
+                        rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
+    
+                    #p.setPen(self.pen())
+                    #p.drawText(rect, textFlags, vstr)
+                    textSpecs.append((rect, textFlags, vstr))
+            profiler('compute text')
+            
         ## update max text size if needed.
         self._updateMaxTextSize(textSize2)
         
