@@ -33,7 +33,6 @@ class AxisItem(GraphicsWidget):
         
         GraphicsWidget.__init__(self, parent)
         self.label = QtGui.QGraphicsTextItem(self)
-        self.showValues = showValues
         self.picture = None
         self.orientation = orientation
         if orientation not in ['left', 'right', 'top', 'bottom']:
@@ -53,7 +52,8 @@ class AxisItem(GraphicsWidget):
                 (2, 0.6),    ## If we already have 2 ticks with text, fill no more than 60% of the axis
                 (4, 0.4),    ## If we already have 4 ticks with text, fill no more than 40% of the axis
                 (6, 0.2),    ## If we already have 6 ticks with text, fill no more than 20% of the axis
-                ]
+                ],
+            'showValues': showValues,
         }
         
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text 
@@ -242,27 +242,31 @@ class AxisItem(GraphicsWidget):
         """Set the height of this axis reserved for ticks and tick labels.
         The height of the axis label is automatically added."""
         if h is None:
-            if self.style['autoExpandTextSpace'] is True:
+            if not self.style['showValues']:
+                h = 0
+            elif self.style['autoExpandTextSpace'] is True:
                 h = self.textHeight
             else:
                 h = self.style['tickTextHeight']
-            h += max(0, self.tickLength) + self.style['tickTextOffset'][1]
+            textOffset = self.style['tickTextOffset'][1] if self.style['showValues'] else 0
+            h += max(0, self.tickLength) + textOffset
             if self.label.isVisible():
                 h += self.label.boundingRect().height() * 0.8
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
         self.picture = None
         
-        
     def setWidth(self, w=None):
         """Set the width of this axis reserved for ticks and tick labels.
         The width of the axis label is automatically added."""
         if w is None:
-            if self.style['autoExpandTextSpace'] is True:
+            if not self.style['showValues']:
+                w = 0
+            elif self.style['autoExpandTextSpace'] is True:
                 w = self.textWidth
             else:
                 w = self.style['tickTextWidth']
-            w += max(0, self.tickLength) + self.style['tickTextOffset'][0]
+            textOffset = self.style['tickTextOffset'][0] if self.style['showValues'] else 0
             if self.label.isVisible():
                 w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
         self.setMaximumWidth(w)
@@ -775,7 +779,11 @@ class AxisItem(GraphicsWidget):
         textSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
-        textSize2 = 0
+        
+        # If values are hidden, return early
+        if not self.style['showValues']:
+            return (axisSpec, tickSpecs, textSpecs)
+            
         for i in range(len(tickLevels)):
             ## Get the list of strings to display for this level
             if tickStrings is None:
@@ -858,7 +866,7 @@ class AxisItem(GraphicsWidget):
                 #p.drawText(rect, textFlags, vstr)
                 textSpecs.append((rect, textFlags, vstr))
         profiler('compute text')
-        
+            
         ## update max text size if needed.
         self._updateMaxTextSize(textSize2)
         
