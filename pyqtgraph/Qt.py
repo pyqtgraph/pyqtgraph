@@ -11,40 +11,37 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import sys, re
 
-PYSIDE = 0
-PYQT4 = 1
-PYQT5 = 2
+PYSIDE = 'PySide'
+PYQT4 = 'PyQt4'
+PYQT5 = 'PyQt5'
 
-USE_QT_PY = None
+QT_LIB = None
 
 ## Automatically determine whether to use PyQt or PySide. 
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
-if 'PyQt4' in sys.modules:
-    USE_QT_PY = PYQT4
-if 'PyQt5' in sys.modules:
-    USE_QT_PY = PYQT5
-elif 'PySide' in sys.modules:
-    USE_QT_PY = PYSIDE
-else:
-    try:
-        import PyQt4
-        USE_QT_PY = PYQT4
-    except ImportError:
-        try:
-            import PyQt5
-            USE_QT_PY = PYQT5
-        except ImportError:
-            try:
-                import PySide
-                USE_QT_PY = PYSIDE
-            except:
-                pass
+libOrder = [PYQT4, PYSIDE, PYQT5]
 
-if USE_QT_PY == None:
+for lib in libOrder:
+    if lib in sys.modules:
+        QT_LIB = lib
+        break
+
+if QT_LIB is None:
+    for lib in libOrder:
+        try:
+            __import__(lib)
+            QT_LIB = lib
+            break
+        except ImportError:
+            pass
+
+print(QT_LIB)
+    
+if QT_LIB == None:
     raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
 
-if USE_QT_PY == PYSIDE:
+if QT_LIB == PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
     import PySide
     try:
@@ -97,7 +94,7 @@ if USE_QT_PY == PYSIDE:
 
         return form_class, base_class
 
-elif USE_QT_PY == PYQT4:
+elif QT_LIB == PYQT4:
 
     from PyQt4 import QtGui, QtCore, uic
     try:
@@ -109,16 +106,9 @@ elif USE_QT_PY == PYQT4:
     except ImportError:
         pass
 
-
-    import sip
-    def isQObjectAlive(obj):
-        return not sip.isdeleted(obj)
-    loadUiType = uic.loadUiType
-
-    QtCore.Signal = QtCore.pyqtSignal
     VERSION_INFO = 'PyQt4 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
-elif USE_QT_PY == PYQT5:
+elif QT_LIB == PYQT5:
     
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
@@ -160,17 +150,29 @@ elif USE_QT_PY == PYQT5:
     QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
 
     QtGui.QApplication.setGraphicsSystem = None
-    QtCore.Signal = Qt.pyqtSignal
     
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
         if o.startswith('Q'):
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
+    VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
+
+# Common to PyQt4 and 5
+if QT_LIB.startswith('PyQt'):
+    import sip
+    def isQObjectAlive(obj):
+        return not sip.isdeleted(obj)
+    loadUiType = uic.loadUiType
+
+    QtCore.Signal = QtCore.pyqtSignal
+    
+
+    
 ## Make sure we have Qt >= 4.7
 versionReq = [4, 7]
-USE_PYSIDE = USE_QT_PY == PYSIDE # still needed internally elsewhere
-QtVersion = PySide.QtCore.__version__ if USE_QT_PY ==  PYSIDE else QtCore.QT_VERSION_STR
+USE_PYSIDE = QT_LIB == PYSIDE # for backward compatibility
+QtVersion = PySide.QtCore.__version__ if QT_LIB ==  PYSIDE else QtCore.QT_VERSION_STR
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))

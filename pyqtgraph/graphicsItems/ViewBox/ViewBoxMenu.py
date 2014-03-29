@@ -1,12 +1,14 @@
-from ...Qt import QtCore, QtGui, USE_PYSIDE
+from ...Qt import QtCore, QtGui, QT_LIB
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
-if USE_PYSIDE:
-    from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
-else:
+if QT_LIB == 'PyQt4':
     from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
-
+elif QT_LIB == 'PySide':
+    from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
+elif QT_LIB == 'PyQt5':
+    from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
+    
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):
