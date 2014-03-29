@@ -115,9 +115,9 @@ For projects that already use git for code control, it is also possible to inclu
     
     my_project$ git remote add pyqtgraph-core https://github.com/pyqtgraph/pyqtgraph-core.git
     my_project$ git fetch pyqtgraph-core
-    my_project$ git merge -s ours --no-commit pyqtgraph-core/develop
+    my_project$ git merge -s ours --no-commit pyqtgraph-core/core
     my_project$ mkdir pyqtgraph
-    my_project$ git read-tree -u --prefix=pyqtgraph/ pyqtgraph-core/develop
+    my_project$ git read-tree -u --prefix=pyqtgraph/ pyqtgraph-core/core
     my_project$ git commit -m "Added pyqtgraph to project repository"
     
 See the ``git subtree`` documentation for more information.
