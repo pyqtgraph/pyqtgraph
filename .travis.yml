@@ -22,7 +22,7 @@ env:
     - PYTHON=2.7 QT=pyside TEST=standard
     - PYTHON=3.2 QT=pyqt TEST=standard
     - PYTHON=3.2 QT=pyside TEST=standard
-    - PYTHON=3.2 QT=pyqt5 TEST=standard
+    #- PYTHON=3.2 QT=pyqt5 TEST=standard
 
 
 before_install:
@@ -118,33 +118,66 @@ before_script:
     - export PATH=/home/travis/bin:$PATH
     - which python
     - python --version
+    # Help color output from each test
+    - RESET='\033[0m';
+      RED='\033[00;31m';
+      GREEN='\033[00;32m';
+      YELLOW='\033[00;33m';
+      BLUE='\033[00;34m';
+      PURPLE='\033[00;35m';
+      CYAN='\033[00;36m';
+      WHITE='\033[00;37m';
+      start_test() {
+        echo -e "${BLUE}======== Starting $1 ========${RESET}";
+      };
+      check_output() {
+        ret=$?;
+        if [ $ret == 0 ]; then
+            echo -e "${GREEN}>>>>>>    $1 passed    <<<<<<${RESET}";
+        else
+            echo -e "${RED}>>>>>>    $1 FAILED    <<<<<<${RESET}";
+        fi;
+        return $ret;
+      };
 
 script:
-    - PGDIR=`pwd`
     
     # Run unit tests
-    - PYTHONPATH=. ${PYTEST} pyqtgraph/
+    - start_test "unit tests";
+      PYTHONPATH=. ${PYTEST} pyqtgraph/
+      check_output "unit tests";
+    
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
+        start_test "line ending check";
         ! find ./ -name "*.py" | xargs file | grep CRLF &&
         ! find ./ -name "*.rst" | xargs file | grep CRLF;
+        check_output "line ending check";
       fi;
 
     # Check for style issues
     - if [ "${TEST}" == "extra" ]; then
+        start_test "style check";
         python setup.py style;
+        check_output "style check";
       fi;
     
     # Check install works
-    - sudo python${PYTHON} setup.py --quiet install
+    - start_test "install test";
+      sudo python${PYTHON} setup.py --quiet install;
+      check_output "install test";
     
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
-    - bash -c "! sudo python${PYTHON} setup.py --quiet install"
-    
+    - start_test "double install test";
+      bash -c "! sudo python${PYTHON} setup.py --quiet install"
+      check_output "double install test";
+      
     # Check we can import pg
-    - echo "import sys; print(sys.path)" | python
-    - cd /; echo "import pyqtgraph.examples" | python
+    - start_test "import test";
+      echo "import sys; print(sys.path)" | python;
+      cd /; echo "import pyqtgraph.examples" | python;
+      check_output "import test";
     
 
