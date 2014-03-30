@@ -169,7 +169,7 @@ before_script:
           SIZE_DIFF=`expr \( ${MERGE_SIZE} - ${TARGET_SIZE} \)`;
         else
           SIZE_DIFF=0;
-        fi &&
+        fi;
       fi;
       
     - cd $TRAVIS_DIR
