@@ -26,6 +26,7 @@ env:
 
 
 before_install:
+    - TRAVIS_DIR=`pwd`
     - travis_retry sudo apt-get update;
 #     - if [ "${PYTHON}" != "2.7" ]; then
 #         wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh &&
@@ -35,7 +36,19 @@ before_install:
 #         conda update --yes conda &&
 #         travis_retry sudo apt-get -qq -y install libgl1-mesa-dri;
 #       fi;
+    - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+          GIT_TARGET_EXTRA="+refs/heads/${TRAVIS_BRANCH}";
+          GIT_SOURCE_EXTRA="+refs/pull/${TRAVIS_PULL_REQUEST}/merge";
+      else
+          GIT_TARGET_EXTRA="";
+          GIT_SOURCE_EXTRA="";
+      fi;
 
+    # to aid in debugging
+    - echo ${TRAVIS_BRANCH}
+    - echo ${TRAVIS_REPO_SLUG}
+    - echo ${GIT_TARGET_EXTRA}
+    - echo ${GIT_SOURCE_EXTRA}
 
 install:
     # Dependencies
@@ -140,6 +153,28 @@ before_script:
         return $ret;
       };
 
+    - if [ "${TEST}" == "extra" ]; then
+        start_test "repo size check";
+        mkdir ~/repo-clone && cd ~/repo-clone &&
+        git init && git remote add -t ${TRAVIS_BRANCH} origin git://github.com/${TRAVIS_REPO_SLUG}.git &&
+        git fetch origin ${GIT_TARGET_EXTRA} && 
+        git checkout -qf FETCH_HEAD && 
+        git tag travis-merge-target &&
+        git gc --aggressive &&
+        TARGET_SIZE=`du -s . | sed -e "s/\t.*//"` &&
+        git pull origin ${GIT_SOURCE_EXTRA} && 
+        git gc --aggressive &&
+        MERGE_SIZE=`du -s . | sed -e "s/\t.*//"` &&
+        if [ "${MERGE_SIZE}" != "${TARGET_SIZE}" ]; then
+          SIZE_DIFF=`expr \( ${MERGE_SIZE} - ${TARGET_SIZE} \)`;
+        else
+          SIZE_DIFF=0;
+        fi &&
+      fi;
+      
+    - cd $TRAVIS_DIR
+
+
 script:
     
     # Run unit tests
@@ -156,12 +191,24 @@ script:
         check_output "line ending check";
       fi;
 
+    # Check repo size does not expand too much
+    - if [ "${TEST}" == "extra" ]; then
+        start_test "repo size check";
+        echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
+        test ${SIZE_DIFF} -lt 100;
+        check_output "repo size check";
+      fi;
+
     # Check for style issues
     - if [ "${TEST}" == "extra" ]; then
         start_test "style check";
-        python setup.py style;
+        cd ~/repo-clone &&
+        git reset -q travis-merge-target &&
+        python setup.py style &&
         check_output "style check";
       fi;
+
+    - cd $TRAVIS_DIR
     
     # Check install works
     - start_test "install test";
