@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os, sys, re
 try:
     from subprocess import check_output
@@ -9,8 +10,210 @@ except ImportError:
         output = proc.stdout.read()
         proc.wait()
         if proc.returncode != 0:
-            raise Exception("Process had nonzero return value", proc.returncode)
+            ex = Exception("Process had nonzero return value %d" % proc.returncode)
+            ex.returncode = proc.returncode
+            ex.output = output
+            raise ex
         return output
+
+# Paths that are checked for style by flake and flake_diff
+FLAKE_CHECK_PATHS = ['pyqtgraph', 'examples', 'tools']
+
+# Flake style checks -- mandatory, recommended, optional
+# See: http://pep8.readthedocs.org/en/1.4.6/intro.html
+# and  https://flake8.readthedocs.org/en/2.0/warnings.html
+FLAKE_MANDATORY = set([
+    'E101',  #  indentation contains mixed spaces and tabs
+    'E112',  #  expected an indented block
+    'E122',  #  continuation line missing indentation or outdented
+    'E125',  #  continuation line does not distinguish itself from next line
+    'E133',  #  closing bracket is missing indentation
+
+    'E223',  #  tab before operator
+    'E224',  #  tab after operator
+    'E242',  #  tab after ‘,’
+    'E273',  #  tab after keyword
+    'E274',  #  tab before keyword
+
+    'E901',  #  SyntaxError or IndentationError
+    'E902',  #  IOError
+        
+    'W191',  #  indentation contains tabs
+        
+    'W601',  #  .has_key() is deprecated, use ‘in’
+    'W602',  #  deprecated form of raising exception
+    'W603',  #  ‘<>’ is deprecated, use ‘!=’
+    'W604',  #  backticks are deprecated, use ‘repr()’    
+    ])
+
+FLAKE_RECOMMENDED = set([
+    'E124',  #  closing bracket does not match visual indentation
+    'E231',  #  missing whitespace after ‘,’
+    
+    'E211',  #  whitespace before ‘(‘
+    'E261',  #  at least two spaces before inline comment
+    'E271',  #  multiple spaces after keyword
+    'E272',  #  multiple spaces before keyword
+    'E304',  #  blank lines found after function decorator
+
+    'F401',  #  module imported but unused
+    'F402',  #  import module from line N shadowed by loop variable
+    'F403',  #  ‘from module import *’ used; unable to detect undefined names
+    'F404',  #  future import(s) name after other statements
+        
+    'E501',  #  line too long (82 > 79 characters)
+    'E502',  #  the backslash is redundant between brackets
+    
+    'E702',  #  multiple statements on one line (semicolon)
+    'E703',  #  statement ends with a semicolon
+    'E711',  #  comparison to None should be ‘if cond is None:’
+    'E712',  #  comparison to True should be ‘if cond is True:’ or ‘if cond:’
+    'E721',  #  do not compare types, use ‘isinstance()’
+
+    'F811',  #  redefinition of unused name from line N
+    'F812',  #  list comprehension redefines name from line N
+    'F821',  #  undefined name name
+    'F822',  #  undefined name name in __all__
+    'F823',  #  local variable name ... referenced before assignment
+    'F831',  #  duplicate argument name in function definition
+    'F841',  #  local variable name is assigned to but never used
+    
+    'W292',  #  no newline at end of file
+
+    ])
+
+FLAKE_OPTIONAL = set([
+    'E121',  #  continuation line indentation is not a multiple of four
+    'E123',  #  closing bracket does not match indentation of opening bracket
+    'E126',  #  continuation line over-indented for hanging indent
+    'E127',  #  continuation line over-indented for visual indent
+    'E128',  #  continuation line under-indented for visual indent
+        
+    'E201',  #  whitespace after ‘(‘
+    'E202',  #  whitespace before ‘)’
+    'E203',  #  whitespace before ‘:’
+    'E221',  #  multiple spaces before operator
+    'E222',  #  multiple spaces after operator
+    'E225',  #  missing whitespace around operator
+    'E227',  #  missing whitespace around bitwise or shift operator
+    'E226',  #  missing whitespace around arithmetic operator
+    'E228',  #  missing whitespace around modulo operator
+    'E241',  #  multiple spaces after ‘,’
+    'E251',  #  unexpected spaces around keyword / parameter equals
+    'E262',  #  inline comment should start with ‘# ‘     
+        
+    'E301',  #  expected 1 blank line, found 0
+    'E302',  #  expected 2 blank lines, found 0
+    'E303',  #  too many blank lines (3)
+        
+    'E401',  #  multiple imports on one line
+
+    'E701',  #  multiple statements on one line (colon)
+        
+    'W291',  #  trailing whitespace
+    'W293',  #  blank line contains whitespace
+        
+    'W391',  #  blank line at end of file
+    ])
+
+FLAKE_IGNORE = set([
+    # 111 and 113 are ignored because they appear to be broken.
+    'E111',  #  indentation is not a multiple of four
+    'E113',  #  unexpected indentation
+    ])
+
+
+#def checkStyle():
+    #try:
+        #out = check_output(['flake8', '--select=%s' % FLAKE_TESTS, '--statistics', 'pyqtgraph/'])
+        #ret = 0
+        #print("All style checks OK.")
+    #except Exception as e:
+        #out = e.output
+        #ret = e.returncode
+        #print(out.decode('utf-8'))
+    #return ret
+
+
+def checkStyle():
+    """ Run flake8, checking only lines that are modified since the last
+    git commit. """
+    test = [ 1,2,3 ]
+    
+    # First check _all_ code against mandatory error codes
+    print('flake8: check all code against mandatory error set...')
+    errors = ','.join(FLAKE_MANDATORY)
+    cmd = ['flake8', '--select=' + errors] + FLAKE_CHECK_PATHS
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    #ret = proc.wait()
+    output = proc.stdout.read().decode('utf-8')
+    ret = proc.wait()
+    printFlakeOutput(output)
+    
+    # Next check new code with optional error codes
+    print('flake8: check new code against recommended error set...')
+    diff = subprocess.check_output(['git', 'diff'])
+    proc = subprocess.Popen(['flake8', '--diff', #'--show-source',
+                                '--ignore=' + errors],
+                            stdin=subprocess.PIPE, 
+                            stdout=subprocess.PIPE)
+    proc.stdin.write(diff)
+    proc.stdin.close()
+    output = proc.stdout.read().decode('utf-8')
+    ret |= printFlakeOutput(output)
+    
+    if ret == 0:
+        print('flake8 test passed.')
+    else:
+        print('flake8 test failed: %d' % ret)
+        sys.exit(ret)
+
+
+def printFlakeOutput(text):
+    """ Print flake output, colored by error category.
+    Return 2 if there were any mandatory errors,
+    1 if only recommended / optional errors, and
+    0 if only optional errors.
+    """
+    ret = 0
+    gotError = False
+    for line in text.split('\n'):
+        m = re.match(r'[^\:]+\:\d+\:\d+\: (\w+) .*', line)
+        if m is None:
+            print(line)
+        else:
+            gotError = True
+            error = m.group(1)
+            if error in FLAKE_MANDATORY:
+                print("\033[0;31m" + line + "\033[0m")
+                ret |= 2
+            elif error in FLAKE_RECOMMENDED:
+                print("\033[0;33m" + line + "\033[0m")
+                #ret |= 1
+            elif error in FLAKE_OPTIONAL:
+                print("\033[0;32m" + line + "\033[0m")
+            elif error in FLAKE_IGNORE:
+                continue
+            else:
+                print("\033[0;36m" + line + "\033[0m")
+    if not gotError:
+        print("    [ no errors ]\n")
+    return ret
+
+
+
+def unitTests():
+    try:
+        if sys.version[0] == '3':
+            out = check_output('PYTHONPATH=. py.test-3', shell=True)
+        else:
+            out = check_output('PYTHONPATH=. py.test', shell=True)
+        ret = 0
+    except Exception as e:
+        out = e.output
+        ret = e.returncode
+    print(out.decode('utf-8'))
+    return ret
 
 def listAllPackages(pkgroot):
     path = os.getcwd()
@@ -190,8 +393,8 @@ class DebCommand(Command):
             raise Exception("Error during debuild.")
 
 
-class TestCommand(Command):
-    """Just for learning about distutils; not for running package tests."""
+class DebugCommand(Command):
+    """Just for learning about distutils."""
     description = ""
     user_options = []
     def initialize_options(self):
@@ -203,3 +406,33 @@ class TestCommand(Command):
         cmd = self
         print(self.distribution.name)
         print(self.distribution.version)
+
+
+class TestCommand(Command):
+    description = "Run all package tests and exit immediately with informative return code."
+    user_options = []
+    
+    def run(self):
+        sys.exit(unitTests())
+        
+        
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+    
+
+class StyleCommand(Command):
+    description = "Check all code for style, exit immediately with informative return code."
+    user_options = []
+    
+    def run(self):
+        sys.exit(checkStyle())
+        
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+    

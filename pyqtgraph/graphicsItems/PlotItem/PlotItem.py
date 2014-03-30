@@ -290,16 +290,17 @@ class PlotItem(GraphicsWidget):
     def getViewBox(self):
         """Return the :class:`ViewBox <pyqtgraph.ViewBox>` contained within."""
         return self.vb
+
     
     ## Wrap a few methods from viewBox. 
-    
     #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
     #because we had a reference to an instance method (creating wrapper methods at runtime instead).
-    for m in [
-        'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
-        'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled', 'setLimits',
-        'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
-        'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
+    
+    for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
+              'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
+              'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
+              'setAspectLocked', 'invertY', 'register', 'unregister']:                # as well.
+                
         def _create_method(name):
             def method(self, *args, **kwargs):
                 return getattr(self.vb, name)(*args, **kwargs)
@@ -309,6 +310,7 @@ class PlotItem(GraphicsWidget):
         locals()[m] = _create_method(m)
         
     del _create_method
+    
     
     def setLogMode(self, x=None, y=None):
         """

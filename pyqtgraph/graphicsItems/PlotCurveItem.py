@@ -486,7 +486,7 @@ class PlotCurveItem(GraphicsObject):
             gl.glStencilOp(gl.GL_REPLACE, gl.GL_KEEP, gl.GL_KEEP)  
             
             ## draw stencil pattern
-            gl.glStencilMask(0xFF);
+            gl.glStencilMask(0xFF)
             gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
             gl.glBegin(gl.GL_TRIANGLES)
             gl.glVertex2f(rect.x(), rect.y())
@@ -520,7 +520,7 @@ class PlotCurveItem(GraphicsObject):
                 gl.glEnable(gl.GL_LINE_SMOOTH)
                 gl.glEnable(gl.GL_BLEND)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST);
+                gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
                 gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)

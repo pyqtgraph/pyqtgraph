@@ -579,7 +579,7 @@ class Request(object):
             return self._result
             
         if timeout is None:
-           timeout = self.timeout 
+            timeout = self.timeout 
         
         if block:
             start = time.time()
