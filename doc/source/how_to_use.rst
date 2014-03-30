@@ -94,7 +94,7 @@ The basic approach is to clone the repository into the appropriate location in y
 
 To embed a specific version of pyqtgraph, we would clone the pyqtgraph-core repository inside the project::
     
-    my_project$ git clone github.com/pyqtgraph/pyqtgraph-core.git
+    my_project$ git clone https://github.com/pyqtgraph/pyqtgraph-core.git
 
 Then adjust the import statements accordingly::
 
