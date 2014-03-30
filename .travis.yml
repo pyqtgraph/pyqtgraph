@@ -144,7 +144,7 @@ script:
     
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. ${PYTEST} pyqtgraph/
+      PYTHONPATH=. ${PYTEST} pyqtgraph/;
       check_output "unit tests";
     
     
@@ -171,12 +171,12 @@ script:
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
     - start_test "double install test";
-      bash -c "! sudo python${PYTHON} setup.py --quiet install"
+      bash -c "! sudo python${PYTHON} setup.py --quiet install";
       check_output "double install test";
       
     # Check we can import pg
     - start_test "import test";
-      echo "import sys; print(sys.path)" | python;
+      echo "import sys; print(sys.path)" | python &&
       cd /; echo "import pyqtgraph.examples" | python;
       check_output "import test";
     
