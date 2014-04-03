@@ -244,16 +244,21 @@ def unitTests():
     return ret
 
 
-def checkMergeSize(sourceBranch=None, targetBranch='develop', sourceRepo=None, targetRepo=None):
+def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, targetRepo=None):
     """
     Check that a git merge would not increase the repository size by MERGE_SIZE_LIMIT.
     """
     if sourceBranch is None:
         sourceBranch = getGitBranch()
-    if sourceRepo is None:
         sourceRepo = '..'
-    if targetRepo is None:
-        targetRepo = '..'
+        
+    if targetBranch is None:
+        if sourceBranch == 'develop':
+            targetBranch = 'develop'
+            targetRepo = 'https://github.com/pyqtgraph/pyqtgraph.git'
+        else:
+            targetBranch = 'develop'
+            targetRepo = '..'
     
     workingDir = '__merge-test-clone'
     env = dict(TARGET_BRANCH=targetBranch, 
