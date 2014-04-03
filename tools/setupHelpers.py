@@ -150,6 +150,26 @@ def checkStyle():
     ret = proc.wait()
     printFlakeOutput(output)
     
+    # Check for DOS newlines
+    print('check line endings in all files...')
+    count = 0
+    allowedEndings = set([None, '\n'])
+    for path, dirs, files in os.walk('.'):
+        for f in files:
+            if os.path.splitext(f)[1] not in ('.py', '.rst'):
+                continue
+            filename = os.path.join(path, f)
+            fh = open(filename, 'U')
+            x = fh.readlines()
+            endings = set(fh.newlines if isinstance(fh.newlines, tuple) else (fh.newlines,))
+            endings -= allowedEndings
+            if len(endings) > 0:
+                print("\033[0;31m" + "File has invalid line endings: %s" % filename + "\033[0m")
+                ret = ret | 2
+            count += 1
+    print('checked line endings in %d files' % count)
+            
+    
     # Next check new code with optional error codes
     print('flake8: check new code against recommended error set...')
     diff = subprocess.check_output(['git', 'diff'])
@@ -163,9 +183,9 @@ def checkStyle():
     ret |= printFlakeOutput(output)
     
     if ret == 0:
-        print('flake8 test passed.')
+        print('style test passed.')
     else:
-        print('flake8 test failed: %d' % ret)
+        print('style test failed: %d' % ret)
         sys.exit(ret)
 
 
