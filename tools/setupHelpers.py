@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os, sys, re
 try:
-    from subprocess import check_output
+    from subprocess import check_output, check_call
 except ImportError:
     import subprocess as sp
     def check_output(*args, **kwds):
@@ -15,6 +15,11 @@ except ImportError:
             ex.output = output
             raise ex
         return output
+
+# Maximum allowed repository size difference (in kB) following merge.
+# This is used to prevent large files from being inappropriately added to 
+# the repository history.
+MERGE_SIZE_LIMIT = 100
 
 # Paths that are checked for style by flake and flake_diff
 FLAKE_CHECK_PATHS = ['pyqtgraph', 'examples', 'tools']
@@ -186,8 +191,7 @@ def checkStyle():
         print('style test passed.')
     else:
         print('style test failed: %d' % ret)
-        sys.exit(ret)
-
+    return ret
 
 def printFlakeOutput(text):
     """ Print flake output, colored by error category.
@@ -223,6 +227,10 @@ def printFlakeOutput(text):
 
 
 def unitTests():
+    """
+    Run all unit tests (using py.test)
+    Return the exit code.
+    """
     try:
         if sys.version[0] == '3':
             out = check_output('PYTHONPATH=. py.test-3', shell=True)
@@ -234,6 +242,82 @@ def unitTests():
         ret = e.returncode
     print(out.decode('utf-8'))
     return ret
+
+
+def checkMergeSize(sourceBranch=None, targetBranch='develop', sourceRepo=None, targetRepo=None):
+    """
+    Check that a git merge would not increase the repository size by MERGE_SIZE_LIMIT.
+    """
+    if sourceBranch is None:
+        sourceBranch = getGitBranch()
+    if sourceRepo is None:
+        sourceRepo = '..'
+    if targetRepo is None:
+        targetRepo = '..'
+    
+    workingDir = '__merge-test-clone'
+    env = dict(TARGET_BRANCH=targetBranch, 
+               SOURCE_BRANCH=sourceBranch, 
+               TARGET_REPO=targetRepo, 
+               SOURCE_REPO=sourceRepo,
+               WORKING_DIR=workingDir,
+               )
+    
+    print("Testing merge size difference:\n"
+          "  SOURCE: {SOURCE_REPO} {SOURCE_BRANCH}\n"
+          "  TARGET: {TARGET_BRANCH} {TARGET_REPO}".format(**env))
+    
+    setup = """
+        mkdir {WORKING_DIR} && cd {WORKING_DIR} &&
+        git init && git remote add -t {TARGET_BRANCH} target {TARGET_REPO} &&
+        git fetch target {TARGET_BRANCH} && 
+        git checkout -qf target/{TARGET_BRANCH} && 
+        git gc -q --aggressive
+        """.format(**env)
+        
+    checkSize = """
+        cd {WORKING_DIR} && 
+        du -s . | sed -e "s/\t.*//"
+        """.format(**env)
+    
+    merge = """
+        cd {WORKING_DIR} &&
+        git pull -q {SOURCE_REPO} {SOURCE_BRANCH} && 
+        git gc -q --aggressive
+        """.format(**env)
+    
+    try:
+        print("Check out target branch:\n" + setup)
+        check_call(setup, shell=True)
+        targetSize = int(check_output(checkSize, shell=True))
+        print("TARGET SIZE: %d kB" % targetSize)
+        print("Merge source branch:\n" + merge)
+        check_call(merge, shell=True)
+        mergeSize = int(check_output(checkSize, shell=True))
+        print("MERGE SIZE: %d kB" % mergeSize)
+        
+        diff = mergeSize - targetSize
+        if diff <= MERGE_SIZE_LIMIT:
+            print("DIFFERENCE: %d kB  [OK]" % diff)
+            return 0
+        else:
+            print("\033[0;31m" + "DIFFERENCE: %d kB  [exceeds %d kB]" % (diff, MERGE_SIZE_LIMIT) + "\033[0m")
+            return 2
+    finally:
+        if os.path.isdir(workingDir):
+            shutil.rmtree(workingDir)
+
+
+def mergeTests():
+    ret = checkMergeSize()
+    ret |= unitTests()
+    ret |= checkStyle()
+    if ret == 0:
+        print("\033[0;32m" + "\nAll merge tests passed." + "\033[0m")
+    else:
+        print("\033[0;31m" + "\nMerge tests failed." + "\033[0m")
+    return ret
+
 
 def listAllPackages(pkgroot):
     path = os.getcwd()
@@ -435,7 +519,6 @@ class TestCommand(Command):
     def run(self):
         sys.exit(unitTests())
         
-        
     def initialize_options(self):
         pass
     
@@ -455,4 +538,20 @@ class StyleCommand(Command):
     
     def finalize_options(self):
         pass
+
+    
+class MergeTestCommand(Command):
+    description = "Run all tests needed to determine whether the current code is suitable for merge."
+    user_options = []
+    
+    def run(self):
+        sys.exit(mergeTests())
+        
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+
+    
     
