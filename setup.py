@@ -115,6 +115,7 @@ setup(
               'deb': helpers.DebCommand, 
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
+              'mergetest': helpers.MergeTestCommand,
               'style': helpers.StyleCommand},
     packages=allPackages,
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
