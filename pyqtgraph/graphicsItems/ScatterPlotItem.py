@@ -664,8 +664,14 @@ class ScatterPlotItem(GraphicsObject):
         if pxPad > 0:
             # determine length of pixel in local x, y directions    
             px, py = self.pixelVectors()
-            px = 0 if px is None else px.length() 
-            py = 0 if py is None else py.length()
+            try:
+                px = 0 if px is None else px.length()
+            except OverflowError:
+                px = 0
+            try:
+                py = 0 if py is None else py.length()
+            except OverflowError:
+                py = 0
             
             # return bounds expanded by pixel size
             px *= pxPad

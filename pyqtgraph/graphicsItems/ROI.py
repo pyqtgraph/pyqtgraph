@@ -822,7 +822,10 @@ class ROI(GraphicsObject):
             if not self.rotateAllowed:
                 return
             ## If the handle is directly over its center point, we can't compute an angle.
-            if lp1.length() == 0 or lp0.length() == 0:
+            try:
+                if lp1.length() == 0 or lp0.length() == 0:
+                    return
+            except OverflowError:
                 return
             
             ## determine new rotation angle, constrained if necessary
@@ -862,7 +865,10 @@ class ROI(GraphicsObject):
             else:
                 scaleAxis = 0
             
-            if lp1.length() == 0 or lp0.length() == 0:
+            try:
+                if lp1.length() == 0 or lp0.length() == 0:
+                    return
+            except OverflowError:
                 return
             
             ang = newState['angle'] - lp0.angle(lp1)
