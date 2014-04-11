@@ -326,6 +326,8 @@ class ViewBox(GraphicsWidget):
         Set the background color of the ViewBox.
         
         If color is None, then no background will be drawn.
+        
+        Added in version 0.9.9
         """
         self.background.setVisible(color is not None)
         self.state['background'] = color
@@ -639,6 +641,7 @@ class ViewBox(GraphicsWidget):
         
         **Panning limits**. The following arguments define the region within the 
         viewbox coordinate system that may be accessed by panning the view.
+        
         =========== ============================================================
         xMin        Minimum allowed x-axis value
         xMax        Maximum allowed x-axis value
@@ -648,12 +651,15 @@ class ViewBox(GraphicsWidget):
         
         **Scaling limits**. These arguments prevent the view being zoomed in or
         out too far.
+        
         =========== ============================================================
         minXRange   Minimum allowed left-to-right span across the view.
         maxXRange   Maximum allowed left-to-right span across the view.
         minYRange   Minimum allowed top-to-bottom span across the view.
         maxYRange   Maximum allowed top-to-bottom span across the view.
-        =========== ============================================================        
+        =========== ============================================================
+        
+        Added in version 0.9.9
         """
         update = False
         

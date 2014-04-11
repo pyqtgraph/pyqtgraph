@@ -123,9 +123,11 @@ class AxisItem(GraphicsWidget):
                                  (6, 0.2)] # If we already have 6 ticks with text, 
                                            # fill no more than 20% of the axis
                                 
-        showValues         (bool) indicates whether text is displayed adjacent
+        showValues          (bool) indicates whether text is displayed adjacent
                             to ticks.
         =================== =======================================================
+        
+        Added in version 0.9.9
         """
         for kwd,value in kwds.items():
             if kwd not in self.style:

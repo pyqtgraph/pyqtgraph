@@ -36,6 +36,8 @@ class MultiPlotWidget(GraphicsView):
         If the total height of all plots is greater than the height of the 
         widget, then a scroll bar will appear to provide access to the entire
         set of plots.
+        
+        Added in version 0.9.9
         """
         self.minPlotHeight = min
         self.resizeEvent(None)

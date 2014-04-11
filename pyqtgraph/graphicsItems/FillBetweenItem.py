@@ -22,7 +22,10 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
     def setCurves(self, curve1, curve2):
         """Set the curves to fill between.
         
-        Arguments must be instances of PlotDataItem or PlotCurveItem."""
+        Arguments must be instances of PlotDataItem or PlotCurveItem.
+        
+        Added in version 0.9.9
+        """
         
         if self.curves is not None:
             for c in self.curves:

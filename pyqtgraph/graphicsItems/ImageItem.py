@@ -140,6 +140,11 @@ class ImageItem(GraphicsObject):
             self.updateImage()
 
     def setAutoDownsample(self, ads):
+        """
+        Set the automatic downsampling mode for this ImageItem.
+        
+        Added in version 0.9.9
+        """
         self.autoDownsample = ads
         self.qimage = None
         self.update()
