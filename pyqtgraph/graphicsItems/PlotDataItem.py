@@ -70,7 +70,8 @@ class PlotDataItem(GraphicsObject):
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             stepMode     If True, two orthogonal lines are drawn for each sample
                          as steps. This is commonly used when drawing histograms.
-                         Note that in this case, len(x) == len(y) + 1
+                         Note that in this case, `len(x) == len(y) + 1`
+                         (added in version 0.9.9)
             ==========   ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
