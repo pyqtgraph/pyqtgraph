@@ -15,6 +15,7 @@ win.resize(800,350)
 win.setWindowTitle('pyqtgraph example: Histogram')
 plt1 = win.addPlot()
 plt2 = win.addPlot()
+plt3 = win.addPlot()
 
 ## make interesting distribution of values
 vals = np.hstack([np.random.normal(size=500), np.random.normal(size=260, loc=4)])
@@ -27,11 +28,12 @@ y,x = np.histogram(vals, bins=np.linspace(-3, 8, 40))
 curve = pg.PlotCurveItem(x, y, stepMode=True, fillLevel=0, brush=(0, 0, 255, 80))
 plt1.addItem(curve)
 
+plt2.plot(x, y, stepMode=True, fillLevel=0, brush=(0,0,255,150))
 
 ## Now draw all points as a nicely-spaced scatter plot
 y = pg.pseudoScatter(vals, spacing=0.15)
-#plt2.plot(vals, y, pen=None, symbol='o', symbolSize=5)
-plt2.plot(vals, y, pen=None, symbol='o', symbolSize=5, symbolPen=(255,255,255,200), symbolBrush=(0,0,255,150))
+#plt3.plot(vals, y, pen=None, symbol='o', symbolSize=5)
+plt3.plot(vals, y, pen=None, symbol='o', symbolSize=5, symbolPen=(255,255,255,200), symbolBrush=(0,0,255,150))
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
