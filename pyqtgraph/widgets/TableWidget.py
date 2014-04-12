@@ -9,7 +9,30 @@ try:
 except ImportError:
     HAVE_METAARRAY = False
 
+
 __all__ = ['TableWidget']
+
+
+def _defersort(fn):
+    def defersort(self, *args, **kwds):
+        # may be called recursively; only the first call needs to block sorting
+        setSorting = False
+        if self._sorting is None:
+            self._sorting = self.isSortingEnabled()
+            setSorting = True
+            self.setSortingEnabled(False)
+        try:
+            return fn(self, *args, **kwds)
+        finally:
+            if setSorting:
+                self.setSortingEnabled(self._sorting)
+                self._sorting = None
+                
+            
+    defersort.func_name = fn.func_name + '_defersort'
+    return defersort
+
+
 class TableWidget(QtGui.QTableWidget):
     """Extends QTableWidget with some useful functions for automatic data handling
     and copy / export context menu. Can automatically format and display a variety
@@ -18,14 +41,42 @@ class TableWidget(QtGui.QTableWidget):
     """
     
     def __init__(self, *args, **kwds):
+        """
+        All positional arguments are passed to QTableWidget.__init__().
+        
+        ===================== =================================================
+        **Keyword Arguments**
+        editable              (bool) If True, cells in the table can be edited
+                              by the user. Default is False.
+        sortable              (bool) If True, the table may be soted by
+                              clicking on column headers. Note that this also
+                              causes rows to appear initially shuffled until
+                              a sort column is selected. Default is True.
+                              *(added in version 0.9.9)*
+        ===================== =================================================
+        """
+        
         QtGui.QTableWidget.__init__(self, *args)
+        
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
         self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-        self.setSortingEnabled(True)
         self.clear()
-        editable = kwds.get('editable', False)
-        self.setEditable(editable)
+        
+        if 'sortable' not in kwds:
+            kwds['sortable'] = True
+        for kwd, val in kwds.items():
+            if kwd == 'editable':
+                self.setEditable(val)
+            elif kwd == 'sortable':
+                self.setSortingEnabled(val)
+            else:
+                raise TypeError("Invalid keyword argument '%s'" % kwd)
+        
+        self._sorting = None
+        
+        self.itemChanged.connect(self.handleItemChanged)
+        
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
         self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
@@ -40,6 +91,7 @@ class TableWidget(QtGui.QTableWidget):
         self.items = []
         self.setRowCount(0)
         self.setColumnCount(0)
+        self.sortModes = {}
         
     def setData(self, data):
         """Set the data displayed in the table.
@@ -56,12 +108,16 @@ class TableWidget(QtGui.QTableWidget):
         self.appendData(data)
         self.resizeColumnsToContents()
         
+    @_defersort
     def appendData(self, data):
-        """Types allowed:
-        1 or 2D numpy array or metaArray
-        1D numpy record array
-        list-of-lists, list-of-dicts or dict-of-lists
         """
+        Add new rows to the table.
+        
+        See :func:`setData() <pyqtgraph.TableWidget.setData>` for accepted
+        data types.
+        """
+        startRow = self.rowCount()
+        
         fn0, header0 = self.iteratorFn(data)
         if fn0 is None:
             self.clear()
@@ -80,18 +136,22 @@ class TableWidget(QtGui.QTableWidget):
         self.setColumnCount(len(firstVals))
         
         if not self.verticalHeadersSet and header0 is not None:
-            self.setRowCount(len(header0))
-            self.setVerticalHeaderLabels(header0)
+            labels = [self.verticalHeaderItem(i).text() for i in range(self.rowCount())]
+            self.setRowCount(startRow + len(header0))
+            self.setVerticalHeaderLabels(labels + header0)
             self.verticalHeadersSet = True
         if not self.horizontalHeadersSet and header1 is not None:
             self.setHorizontalHeaderLabels(header1)
             self.horizontalHeadersSet = True
         
-        self.setRow(0, firstVals)
-        i = 1
+        i = startRow
+        self.setRow(i, firstVals)
         for row in it0:
-            self.setRow(i, [x for x in fn1(row)])
             i += 1
+            self.setRow(i, [x for x in fn1(row)])
+            
+        if self._sorting and self.horizontalHeader().sortIndicatorSection() >= self.columnCount():
+            self.sortByColumn(0, QtCore.Qt.AscendingOrder)
     
     def setEditable(self, editable=True):
         self.editable = editable
@@ -135,21 +195,46 @@ class TableWidget(QtGui.QTableWidget):
     def appendRow(self, data):
         self.appendData([data])
         
+    @_defersort
     def addRow(self, vals):
         row = self.rowCount()
         self.setRowCount(row + 1)
         self.setRow(row, vals)
         
+    @_defersort
     def setRow(self, row, vals):
         if row > self.rowCount() - 1:
             self.setRowCount(row + 1)
         for col in range(len(vals)):
             val = vals[col]
-            item = TableWidgetItem(val)
+            item = TableWidgetItem(val, row)
             item.setEditable(self.editable)
+            sortMode = self.sortModes.get(col, None)
+            if sortMode is not None:
+                item.setSortMode(sortMode)
             self.items.append(item)
             self.setItem(row, col, item)
 
+    def setSortMode(self, column, mode):
+        """
+        Set the mode used to sort *column*.
+        
+        ============== ========================================================
+        **Sort Modes**
+        value          Compares item.value if available; falls back to text
+                       comparison.
+        text           Compares item.text()
+        index          Compares by the order in which items were inserted.
+        ============== ========================================================
+        
+        Added in version 0.9.9
+        """
+        for r in range(self.rowCount()):
+            item = self.item(r, column)
+            if hasattr(item, 'setSortMode'):
+                item.setSortMode(mode)
+        self.sortModes[column] = mode
+        
     def sizeHint(self):
         # based on http://stackoverflow.com/a/7195443/54056
         width = sum(self.columnWidth(i) for i in range(self.columnCount()))
@@ -234,25 +319,56 @@ class TableWidget(QtGui.QTableWidget):
         else:
             ev.ignore()
 
+    def handleItemChanged(self, item):
+        try:
+            item.value = type(item.value)(item.text())
+        except ValueError:
+            item.value = str(item.text())
+
+
 class TableWidgetItem(QtGui.QTableWidgetItem):
-    def __init__(self, val):
+    def __init__(self, val, index):
         if isinstance(val, float) or isinstance(val, np.floating):
             s = "%0.3g" % val
         else:
             s = asUnicode(val)
         QtGui.QTableWidgetItem.__init__(self, s)
+        self.sortMode = 'value'
         self.value = val
+        self.index = index
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         self.setFlags(flags)
         
     def setEditable(self, editable):
+        """
+        Set whether this item is user-editable.
+        """
         if editable:
             self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
         else:
             self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+            
+    def setSortMode(self, mode):
+        """
+        Set the mode used to sort this item against others in its column.
+        
+        ============== ========================================================
+        **Sort Modes**
+        value          Compares item.value if available; falls back to text
+                       comparison.
+        text           Compares item.text()
+        index          Compares by the order in which items were inserted.
+        ============== ========================================================
+        """
+        modes = ('value', 'text', 'index', None)
+        if mode not in modes:
+            raise ValueError('Sort mode must be one of %s' % str(modes))
+        self.sortMode = mode
 
     def __lt__(self, other):
-        if hasattr(other, 'value'):
+        if self.sortMode == 'index' and hasattr(other, 'index'):
+            return self.index < other.index
+        if self.sortMode == 'value' and hasattr(other, 'value'):
             return self.value < other.value
         else:
             return self.text() < other.text()
