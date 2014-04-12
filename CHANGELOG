@@ -47,6 +47,7 @@ pyqtgraph-0.9.9  [unreleased]
         - PeriodicTrace used to report deadlocks
     - Added AxisItem.setStyle()
     - Added configurable formatting for TableWidget
+    - Added 'stepMode' argument to PlotDataItem()
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px

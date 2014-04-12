@@ -68,6 +68,10 @@ class PlotDataItem(GraphicsObject):
             fillLevel    Fill the area between the curve and fillLevel
             fillBrush    Fill to use when fillLevel is specified. 
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
+            stepMode     If True, two orthogonal lines are drawn for each sample
+                         as steps. This is commonly used when drawing histograms.
+                         Note that in this case, `len(x) == len(y) + 1`
+                         (added in version 0.9.9)
             ==========   ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
@@ -150,6 +154,7 @@ class PlotDataItem(GraphicsObject):
             'shadowPen': None,
             'fillLevel': None,
             'fillBrush': None,
+            'stepMode': None, 
             
             'symbol': None,
             'symbolSize': 10,
@@ -456,7 +461,7 @@ class PlotDataItem(GraphicsObject):
     def updateItems(self):
         
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect')]:
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
