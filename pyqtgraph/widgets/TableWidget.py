@@ -28,8 +28,6 @@ def _defersort(fn):
                 self.setSortingEnabled(self._sorting)
                 self._sorting = None
                 
-            
-    defersort.func_name = fn.func_name + '_defersort'
     return defersort
 
 
@@ -63,15 +61,13 @@ class TableWidget(QtGui.QTableWidget):
         self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         self.clear()
         
-        if 'sortable' not in kwds:
-            kwds['sortable'] = True
-        for kwd, val in kwds.items():
-            if kwd == 'editable':
-                self.setEditable(val)
-            elif kwd == 'sortable':
-                self.setSortingEnabled(val)
-            else:
-                raise TypeError("Invalid keyword argument '%s'" % kwd)
+        kwds.setdefault('sortable', True)
+        kwds.setdefault('editable', False)
+        self.setEditable(kwds.pop('editable'))
+        self.setSortingEnabled(kwds.pop('sortable'))
+        
+        if len(kwds) > 0:
+            raise TypeError("Invalid keyword arguments '%s'" % kwds.keys())
         
         self._sorting = None
         
