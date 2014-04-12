@@ -82,6 +82,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed parametertree.Parameter.sigValueChanging
     - Fixed AxisItem.__init__(showValues=False)
     - Fixed TableWidget append / sort issues
+    - Fixed AxisItem not resizing text area when setTicks() is used
 
 pyqtgraph-0.9.8  2013-11-24
 

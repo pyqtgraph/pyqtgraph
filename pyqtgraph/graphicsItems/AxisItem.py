@@ -690,7 +690,7 @@ class AxisItem(GraphicsWidget):
         
     def generateDrawSpecs(self, p):
         """
-        Calls tickValues() and tickStrings to determine where and how ticks should
+        Calls tickValues() and tickStrings() to determine where and how ticks should
         be drawn, then generates from this a set of drawing commands to be 
         interpreted by drawPicture().
         """
@@ -739,6 +739,7 @@ class AxisItem(GraphicsWidget):
         if lengthInPixels == 0:
             return
 
+        # Determine major / minor / subminor axis ticks
         if self._tickLevels is None:
             tickLevels = self.tickValues(self.range[0], self.range[1], lengthInPixels)
             tickStrings = None
@@ -778,8 +779,7 @@ class AxisItem(GraphicsWidget):
             
         tickPositions = [] # remembers positions of previously drawn ticks
         
-        ## draw ticks
-        ## (to improve performance, we do not interleave line and text drawing, since this causes unnecessary pipeline switching)
+        ## compute coordinates to draw ticks
         ## draw three different intervals, long ticks first
         tickSpecs = []
         for i in range(len(tickLevels)):
@@ -814,7 +814,6 @@ class AxisItem(GraphicsWidget):
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
 
-        ## This is where the long axis line should be drawn
         
         if self.style['stopAxisAtTick'][0] is True:
             stop = max(span[0].y(), min(map(min, tickPositions)))
@@ -830,7 +829,6 @@ class AxisItem(GraphicsWidget):
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
 
-        
         
         textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
         #if self.style['autoExpandTextSpace'] is True:
@@ -878,15 +876,15 @@ class AxisItem(GraphicsWidget):
                     rects.append(br)
                     textRects.append(rects[-1])
             
-            if i > 0:  ## always draw top level
-                ## measure all text, make sure there's enough room
-                if axis == 0:
-                    textSize = np.sum([r.height() for r in textRects])
-                    textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
-                else:
-                    textSize = np.sum([r.width() for r in textRects])
-                    textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
+            ## measure all text, make sure there's enough room
+            if axis == 0:
+                textSize = np.sum([r.height() for r in textRects])
+                textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
+            else:
+                textSize = np.sum([r.width() for r in textRects])
+                textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
 
+            if i > 0:  ## always draw top level
                 ## If the strings are too crowded, stop drawing text now.
                 ## We use three different crowding limits based on the number
                 ## of texts drawn so far.
@@ -901,6 +899,7 @@ class AxisItem(GraphicsWidget):
             
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
+            # Determine exactly where tick text should be drawn
             for j in range(len(strings)):
                 vstr = strings[j]
                 if vstr is None: ## this tick was ignored because it is out of bounds
