@@ -56,6 +56,8 @@ class TableWidget(QtGui.QTableWidget):
         
         QtGui.QTableWidget.__init__(self, *args)
         
+        self.itemClass = TableWidgetItem
+        
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
         self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
@@ -69,7 +71,10 @@ class TableWidget(QtGui.QTableWidget):
         if len(kwds) > 0:
             raise TypeError("Invalid keyword arguments '%s'" % kwds.keys())
         
-        self._sorting = None
+        self._sorting = None  # used when temporarily disabling sorting
+        
+        self._formats = {None: None} # stores per-column formats and entire table format
+        self.sortModes = {} # stores per-column sort mode
         
         self.itemChanged.connect(self.handleItemChanged)
         
@@ -153,7 +158,49 @@ class TableWidget(QtGui.QTableWidget):
         self.editable = editable
         for item in self.items:
             item.setEditable(editable)
-            
+    
+    def setFormat(self, format, column=None):
+        """
+        Specify the default text formatting for the entire table, or for a
+        single column if *column* is specified.
+        
+        If a string is specified, it is used as a format string for converting
+        float values (and all other types are converted using str). If a 
+        function is specified, it will be called with the item as its only
+        argument and must return a string. Setting format = None causes the 
+        default formatter to be used instead.
+        
+        Added in version 0.9.9.
+        
+        """
+        if format is not None and not isinstance(format, basestring) and not callable(format):
+            raise ValueError("Format argument must string, callable, or None. (got %s)" % format)
+        
+        self._formats[column] = format
+        
+        
+        if column is None:
+            # update format of all items that do not have a column format 
+            # specified
+            for c in range(self.columnCount()):
+                if self._formats.get(c, None) is None:
+                    for r in range(self.rowCount()):
+                        item = self.item(r, c)
+                        if item is None:
+                            continue
+                        item.setFormat(format)
+        else:
+            # set all items in the column to use this format, or the default 
+            # table format if None was specified.
+            if format is None:
+                format = self._formats[None]
+            for r in range(self.rowCount()):
+                item = self.item(r, column)
+                if item is None:
+                    continue
+                item.setFormat(format)
+        
+    
     def iteratorFn(self, data):
         ## Return 1) a function that will provide an iterator for data and 2) a list of header strings
         if isinstance(data, list) or isinstance(data, tuple):
@@ -203,13 +250,17 @@ class TableWidget(QtGui.QTableWidget):
             self.setRowCount(row + 1)
         for col in range(len(vals)):
             val = vals[col]
-            item = TableWidgetItem(val, row)
+            item = self.itemClass(val, row)
             item.setEditable(self.editable)
             sortMode = self.sortModes.get(col, None)
             if sortMode is not None:
                 item.setSortMode(sortMode)
+            format = self._formats.get(col, self._formats[None])
+            item.setFormat(format)
             self.items.append(item)
             self.setItem(row, col, item)
+            item.setValue(val)  # Required--the text-change callback is invoked
+                                # when we call setItem.
 
     def setSortMode(self, column, mode):
         """
@@ -253,7 +304,6 @@ class TableWidget(QtGui.QTableWidget):
         else:
             rows = list(range(self.rowCount()))
             columns = list(range(self.columnCount()))
-
 
         data = []
         if self.horizontalHeadersSet:
@@ -303,7 +353,6 @@ class TableWidget(QtGui.QTableWidget):
         if fileName == '':
             return
         open(fileName, 'w').write(data)
-        
 
     def contextMenuEvent(self, ev):
         self.contextMenu.popup(ev.globalPos())
@@ -316,24 +365,21 @@ class TableWidget(QtGui.QTableWidget):
             ev.ignore()
 
     def handleItemChanged(self, item):
-        try:
-            item.value = type(item.value)(item.text())
-        except ValueError:
-            item.value = str(item.text())
+        item.textChanged()
 
 
 class TableWidgetItem(QtGui.QTableWidgetItem):
-    def __init__(self, val, index):
-        if isinstance(val, float) or isinstance(val, np.floating):
-            s = "%0.3g" % val
-        else:
-            s = asUnicode(val)
-        QtGui.QTableWidgetItem.__init__(self, s)
+    def __init__(self, val, index, format=None):
+        QtGui.QTableWidgetItem.__init__(self, '')
+        self._blockValueChange = False
+        self._format = None
+        self._defaultFormat = '%0.3g'
         self.sortMode = 'value'
-        self.value = val
         self.index = index
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         self.setFlags(flags)
+        self.setValue(val)
+        self.setFormat(format)
         
     def setEditable(self, editable):
         """
@@ -360,6 +406,55 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
         if mode not in modes:
             raise ValueError('Sort mode must be one of %s' % str(modes))
         self.sortMode = mode
+        
+    def setFormat(self, fmt):
+        """Define the conversion from item value to displayed text. 
+        
+        If a string is specified, it is used as a format string for converting
+        float values (and all other types are converted using str). If a 
+        function is specified, it will be called with the item as its only
+        argument and must return a string.
+        
+        Added in version 0.9.9.
+        """
+        if fmt is not None and not isinstance(fmt, basestring) and not callable(fmt):
+            raise ValueError("Format argument must string, callable, or None. (got %s)" % fmt)
+        self._format = fmt
+        self._updateText()
+        
+    def _updateText(self):
+        self._blockValueChange = True
+        try:
+            self.setText(self.format())
+        finally:
+            self._blockValueChange = False
+
+    def setValue(self, value):
+        self.value = value
+        self._updateText()
+
+    def textChanged(self):
+        """Called when this item's text has changed for any reason."""
+        if self._blockValueChange:
+            # text change was result of value or format change; do not
+            # propagate.
+            return
+        
+        try:
+            self.value = type(self.value)(self.text())
+        except ValueError:
+            self.value = str(self.text())
+
+    def format(self):
+        if callable(self._format):
+            return self._format(self)
+        if isinstance(self.value, (float, np.floating)):
+            if self._format is None:
+                return self._defaultFormat % self.value
+            else:
+                return self._format % self.value
+        else:
+            return asUnicode(self.value)
 
     def __lt__(self, other):
         if self.sortMode == 'index' and hasattr(other, 'index'):
