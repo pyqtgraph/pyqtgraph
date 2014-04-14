@@ -2,6 +2,7 @@
 from .Qt import QtCore
 from .ptime import time
 from . import ThreadsafeTimer
+import weakref
 
 __all__ = ['SignalProxy']
 
@@ -34,7 +35,7 @@ class SignalProxy(QtCore.QObject):
         self.timer = ThreadsafeTimer.ThreadsafeTimer()
         self.timer.timeout.connect(self.flush)
         self.block = False
-        self.slot = slot
+        self.slot = weakref.ref(slot)
         self.lastFlushTime = None
         if slot is not None:
             self.sigDelayed.connect(slot)
@@ -80,7 +81,7 @@ class SignalProxy(QtCore.QObject):
         except:
             pass
         try:
-            self.sigDelayed.disconnect(self.slot)
+            self.sigDelayed.disconnect(self.slot())
         except:
             pass
    

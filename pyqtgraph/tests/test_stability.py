@@ -41,11 +41,11 @@ def test_stability():
     try:
         gc.disable()
         actions = [
-                createWidget, 
-                #setParent, 
-                forgetWidget, 
-                showWidget, 
-                processEvents, 
+                createWidget,
+                #setParent,
+                forgetWidget,
+                showWidget,
+                #processEvents,
                 #raiseException,
                 #addReference,
                 ]

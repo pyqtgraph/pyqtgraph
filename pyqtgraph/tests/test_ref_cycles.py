@@ -45,7 +45,7 @@ def test_PlotWidget():
         iv = pg.PlotWidget(*args, **kwds)
         return weakref.ref(iv)
     
-    for i in range(100):
+    for i in range(5):
         assert mkref()() is None
     
 def test_ImageView():
@@ -53,7 +53,7 @@ def test_ImageView():
         iv = pg.ImageView(*args, **kwds)
         return weakref.ref(iv)
     
-    for i in range(100):
+    for i in range(5):
         assert mkref()() is None
     
 if __name__ == '__main__':
