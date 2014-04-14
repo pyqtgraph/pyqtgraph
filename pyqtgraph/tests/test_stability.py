@@ -6,34 +6,146 @@ the tear them down repeatedly.
 
 The purpose of this is to attempt to generate segmentation faults.
 """
+from PyQt4.QtTest import QTest
 import pyqtgraph as pg
-import random
+from random import seed, randint
+import sys, gc, weakref
 
-random.seed(12345)
+app = pg.mkQApp()
 
-widgetTypes = [pg.PlotWidget, pg.ImageView, pg.GraphicsView, pg.QtGui.QWidget,
-               pg.QtGui.QTreeWidget, pg.QtGui.QPushButton]
+seed(12345)
 
-itemTypes = [pg.PlotCurveItem, pg.ImageItem, pg.PlotDataItem, pg.ViewBox,
-             pg.QtGui.QGraphicsRectItem]
+widgetTypes = [
+    pg.PlotWidget, 
+    pg.ImageView, 
+    pg.GraphicsView, 
+    pg.QtGui.QWidget,
+    pg.QtGui.QTreeWidget, 
+    pg.QtGui.QPushButton,
+    ]
 
-while True:
-    action = random.randint(0,5)
-    if action == 0:
-        # create a widget
-        pass
-    elif action == 1:
-        # set parent (widget or None), possibly create a reference in either direction
-        pass
-    elif action == 2:
-        # 
-        pass
-    elif action == 3:
-        pass
+itemTypes = [
+    pg.PlotCurveItem, 
+    pg.ImageItem, 
+    pg.PlotDataItem, 
+    pg.ViewBox,
+    pg.QtGui.QGraphicsRectItem
+    ]
+
+widgets = []
+items = []
+allWidgets = weakref.WeakSet()
+
+def test_stability():
+    global allWidgets
+    try:
+        gc.disable()
+        actions = [
+                createWidget, 
+                #setParent, 
+                forgetWidget, 
+                showWidget, 
+                processEvents, 
+                #raiseException,
+                #addReference,
+                ]
+
+        thread = WorkThread()
+        #thread.start()
+
+        while True:
+            try:
+                action = randItem(actions)
+                action()
+                print('[%d widgets alive]' % len(allWidgets))
+            except KeyboardInterrupt:
+                thread.kill()
+                break
+            except:
+                sys.excepthook(*sys.exc_info())
+    finally:
+        gc.enable()
+
+
+
+class WorkThread(pg.QtCore.QThread):
+    '''Intended to give the gc an opportunity to run from a non-gui thread.'''
+    def run(self):
+        i = 0
+        while True:
+            i += 1
+            if (i % 1000000) == 0:
+                print('--worker--')
+            
+
+def randItem(items):
+    return items[randint(0, len(items)-1)]
+
+def p(msg):
+    print(msg)
+    sys.stdout.flush()
+
+def createWidget():
+    p('create widget')
+    global widgets, allWidgets
+    widget = randItem(widgetTypes)()
+    widgets.append(widget)
+    allWidgets.add(widget)
+    p("    %s" % widget)
+    return widget
+
+def setParent():
+    p('set parent')
+    global widgets
+    if len(widgets) < 2:
+        return
+    child = parent = None
+    while child is parent:
+        child = randItem(widgets)
+        parent = randItem(widgets)
+    p("    %s parent of %s" % (parent, child))
+    child.setParent(parent)
+
+def forgetWidget():
+    p('forget widget')
+    global widgets
+    if len(widgets) < 1:
+        return
+    widget = randItem(widgets)
+    p('    %s' % widget)
+    widgets.remove(widget)
+
+def showWidget():
+    p('show widget')
+    global widgets
+    if len(widgets) < 1:
+        return
+    widget = randItem(widgets)
+    p('    %s' % widget)
+    widget.show()
+
+def processEvents():
+    p('process events')
+    QTest.qWait(25)
+
+class TestException(Exception):
+    pass
+
+def raiseException():
+    p('raise exception')
+    raise TestException("A test exception")
+
+def addReference():
+    p('add reference')
+    global widgets
+    if len(widgets) < 1:
+        return
+    obj1 = randItem(widgets)
+    obj2 = randItem(widgets)
+    p('    %s -> %s' % (obj1, obj2))    
+    obj1._testref = obj2
+    
+
         
-
-
-
-
-
-
+if __name__ == '__main__':
+    test_stability()
