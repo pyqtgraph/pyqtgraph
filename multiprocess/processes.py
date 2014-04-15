@@ -1,12 +1,14 @@
-from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 import subprocess, atexit, os, sys, time, random, socket, signal
 import multiprocessing.connection
-from ..Qt import USE_PYSIDE
-
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
+from ..Qt import USE_PYSIDE
+from ..util import cprint  # color printing for debugging
+
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
@@ -35,28 +37,29 @@ class Process(RemoteEventHandler):
     return objects either by proxy or by value (if they are picklable). See
     ProxyObject for more information.
     """
-    
+    _process_count = 1  # just used for assigning colors to each process for debugging
+
     def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
         """
-        ============  =============================================================
-        Arguments:
-        name          Optional name for this process used when printing messages
-                      from the remote process.
-        target        Optional function to call after starting remote process. 
-                      By default, this is startEventLoop(), which causes the remote
-                      process to process requests from the parent process until it
-                      is asked to quit. If you wish to specify a different target,
-                      it must be picklable (bound methods are not).
-        copySysPath   If True, copy the contents of sys.path to the remote process
-        debug         If True, print detailed information about communication
-                      with the child process.
-        wrapStdout    If True (default on windows) then stdout and stderr from the
-                      child process will be caught by the parent process and
-                      forwarded to its stdout/stderr. This provides a workaround
-                      for a python bug: http://bugs.python.org/issue3905
-                      but has the side effect that child output is significantly
-                      delayed relative to the parent output.
-        ============  =============================================================
+        ==============  =============================================================
+        **Arguments:**
+        name            Optional name for this process used when printing messages
+                        from the remote process.
+        target          Optional function to call after starting remote process.
+                        By default, this is startEventLoop(), which causes the remote
+                        process to process requests from the parent process until it
+                        is asked to quit. If you wish to specify a different target,
+                        it must be picklable (bound methods are not).
+        copySysPath     If True, copy the contents of sys.path to the remote process
+        debug           If True, print detailed information about communication
+                        with the child process.
+        wrapStdout      If True (default on windows) then stdout and stderr from the
+                        child process will be caught by the parent process and
+                        forwarded to its stdout/stderr. This provides a workaround
+                        for a python bug: http://bugs.python.org/issue3905
+                        but has the side effect that child output is significantly
+                        delayed relative to the parent output.
+        ==============  =============================================================
         """
         if target is None:
             target = startEventLoop
@@ -64,7 +67,7 @@ class Process(RemoteEventHandler):
             name = str(self)
         if executable is None:
             executable = sys.executable
-        self.debug = debug
+        self.debug = 7 if debug is True else False  # 7 causes printing in white
         
         ## random authentication key
         authkey = os.urandom(20)
@@ -75,21 +78,20 @@ class Process(RemoteEventHandler):
 
         #print "key:", ' '.join([str(ord(x)) for x in authkey])
         ## Listen for connection from remote process (and find free port number)
-        port = 10000
-        while True:
-            try:
-                l = multiprocessing.connection.Listener(('localhost', int(port)), authkey=authkey)
-                break
-            except socket.error as ex:
-                if ex.errno != 98 and ex.errno != 10048: # unix=98, win=10048
-                    raise
-                port += 1
-
+        l = multiprocessing.connection.Listener(('localhost', 0), authkey=authkey)
+        port = l.address[1]
 
         ## start remote process, instruct it to run target function
         sysPath = sys.path if copySysPath else None
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
+
+        # Decide on printing color for this process
+        if debug:
+            procDebug = (Process._process_count%6) + 1  # pick a color for this process to print in
+            Process._process_count += 1
+        else:
+            procDebug = False
         
         if wrapStdout is None:
             wrapStdout = sys.platform.startswith('win')
@@ -102,8 +104,8 @@ class Process(RemoteEventHandler):
             self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
             ## to circumvent the bug and still make the output visible, we use 
             ## background threads to pass data from pipes to stdout/stderr
-            self._stdoutForwarder = FileForwarder(self.proc.stdout, "stdout")
-            self._stderrForwarder = FileForwarder(self.proc.stderr, "stderr")
+            self._stdoutForwarder = FileForwarder(self.proc.stdout, "stdout", procDebug)
+            self._stderrForwarder = FileForwarder(self.proc.stderr, "stderr", procDebug)
         else:
             self.proc = subprocess.Popen((executable, bootstrap), stdin=subprocess.PIPE)
 
@@ -120,7 +122,7 @@ class Process(RemoteEventHandler):
             targetStr=targetStr, 
             path=sysPath, 
             pyside=USE_PYSIDE,
-            debug=debug
+            debug=procDebug
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
@@ -136,8 +138,8 @@ class Process(RemoteEventHandler):
                     continue
                 else:
                     raise
-                
-        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid, debug=debug)
+
+        RemoteEventHandler.__init__(self, conn, name+'_parent', pid=self.proc.pid, debug=self.debug)
         self.debugMsg('Connected to child process.')
         
         atexit.register(self.join)
@@ -167,10 +169,11 @@ class Process(RemoteEventHandler):
 def startEventLoop(name, port, authkey, ppid, debug=False):
     if debug:
         import os
-        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
+        cprint.cout(debug, '[%d] connecting to server at port localhost:%d, authkey=%s..\n' 
+                    % (os.getpid(), port, repr(authkey)), -1)
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
-        print('[%d] connected; starting remote proxy.' % os.getpid())
+        cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
     global HANDLER
     #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
     HANDLER = RemoteEventHandler(conn, name, ppid, debug=debug)
@@ -380,17 +383,17 @@ class QtProcess(Process):
     def __init__(self, **kwds):
         if 'target' not in kwds:
             kwds['target'] = startQtEventLoop
+        from ..Qt import QtGui  ## avoid module-level import to keep bootstrap snappy.
         self._processRequests = kwds.pop('processRequests', True)
+        if self._processRequests and QtGui.QApplication.instance() is None:
+            raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
         Process.__init__(self, **kwds)
         self.startEventTimer()
         
     def startEventTimer(self):
-        from ..Qt import QtGui, QtCore  ## avoid module-level import to keep bootstrap snappy.
+        from ..Qt import QtCore  ## avoid module-level import to keep bootstrap snappy.
         self.timer = QtCore.QTimer()
         if self._processRequests:
-            app = QtGui.QApplication.instance()
-            if app is None:
-                raise Exception("Must create QApplication before starting QtProcess, or use QtProcess(processRequests=False)")
             self.startRequestProcessing()
     
     def startRequestProcessing(self, interval=0.01):
@@ -412,10 +415,10 @@ class QtProcess(Process):
 def startQtEventLoop(name, port, authkey, ppid, debug=False):
     if debug:
         import os
-        print('[%d] connecting to server at port localhost:%d, authkey=%s..' % (os.getpid(), port, repr(authkey)))
+        cprint.cout(debug, '[%d] connecting to server at port localhost:%d, authkey=%s..\n' % (os.getpid(), port, repr(authkey)), -1)
     conn = multiprocessing.connection.Client(('localhost', int(port)), authkey=authkey)
     if debug:
-        print('[%d] connected; starting remote proxy.' % os.getpid())
+        cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
     from ..Qt import QtGui, QtCore
     #from PyQt4 import QtGui, QtCore
     app = QtGui.QApplication.instance()
@@ -445,11 +448,13 @@ class FileForwarder(threading.Thread):
     which ensures that the correct behavior is achieved even if 
     sys.stdout/stderr are replaced at runtime.
     """
-    def __init__(self, input, output):
+    def __init__(self, input, output, color):
         threading.Thread.__init__(self)
         self.input = input
         self.output = output
         self.lock = threading.Lock()
+        self.daemon = True
+        self.color = color
         self.start()
 
     def run(self):
@@ -457,12 +462,12 @@ class FileForwarder(threading.Thread):
             while True:
                 line = self.input.readline()
                 with self.lock:
-                    sys.stdout.write(line)
+                    cprint.cout(self.color, line, -1)
         elif self.output == 'stderr':
             while True:
                 line = self.input.readline()
                 with self.lock:
-                    sys.stderr.write(line)
+                    cprint.cerr(self.color, line, -1)
         else:
             while True:
                 line = self.input.readline()

@@ -33,6 +33,11 @@ from .. import debug as debug
 
 from ..SignalProxy import SignalProxy
 
+try:
+    from bottleneck import nanmin, nanmax
+except ImportError:
+    from numpy import nanmin, nanmax
+
 #try:
     #from .. import metaarray as metaarray
     #HAVE_METAARRAY = True
@@ -196,7 +201,12 @@ class ImageView(QtGui.QWidget):
             img = img.asarray()
         
         if not isinstance(img, np.ndarray):
-            raise Exception("Image must be specified as ndarray.")
+            required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
+            if not all([hasattr(img, attr) for attr in required]):
+                raise TypeError("Image must be NumPy array or any object "
+                                "that provides compatible attributes/methods:\n"
+                                "  %s" % str(required))
+        
         self.image = img
         self.imageDisp = None
         
@@ -319,10 +329,9 @@ class ImageView(QtGui.QWidget):
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
-            self.levelMin, self.levelMax = list(map(float, ImageView.quickMinMax(self.imageDisp)))
+            self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
             
         return self.imageDisp
-        
         
     def close(self):
         """Closes the widget nicely, making sure to clear the graphics scene and release memory."""
@@ -375,7 +384,6 @@ class ImageView(QtGui.QWidget):
         else:
             QtGui.QWidget.keyReleaseEvent(self, ev)
         
-        
     def evalKeyState(self):
         if len(self.keysPressed) == 1:
             key = list(self.keysPressed.keys())[0]
@@ -399,16 +407,13 @@ class ImageView(QtGui.QWidget):
         else:
             self.play(0)
         
-        
     def timeout(self):
         now = ptime.time()
         dt = now - self.lastPlayTime
         if dt < 0:
             return
         n = int(self.playRate * dt)
-        #print n, dt
         if n != 0:
-            #print n, dt, self.lastPlayTime
             self.lastPlayTime += (float(n)/self.playRate)
             if self.currentIndex+n > self.image.shape[0]:
                 self.play(0)
@@ -433,17 +438,14 @@ class ImageView(QtGui.QWidget):
         self.autoLevels()
         self.roiChanged()
         self.sigProcessingChanged.emit(self)
-        
     
     def updateNorm(self):
         if self.ui.normTimeRangeCheck.isChecked():
-            #print "show!"
             self.normRgn.show()
         else:
             self.normRgn.hide()
         
         if self.ui.normROICheck.isChecked():
-            #print "show!"
             self.normRoi.show()
         else:
             self.normRoi.hide()
@@ -519,21 +521,25 @@ class ImageView(QtGui.QWidget):
                 coords = coords - coords[:,0,np.newaxis]
                 xvals = (coords**2).sum(axis=0) ** 0.5
                 self.roiCurve.setData(y=data, x=xvals)
-                
-            #self.ui.roiPlot.replot()
 
-
-    @staticmethod
-    def quickMinMax(data):
+    def quickMinMax(self, data):
+        """
+        Estimate the min/max values of *data* by subsampling.
+        """
         while data.size > 1e6:
             ax = np.argmax(data.shape)
             sl = [slice(None)] * data.ndim
             sl[ax] = slice(None, None, 2)
             data = data[sl]
-        return data.min(), data.max()
+        return nanmin(data), nanmax(data)
 
     def normalize(self, image):
+        """
+        Process *image* using the normalization options configured in the
+        control panel.
         
+        This can be repurposed to process any data through the same filter.
+        """
         if self.ui.normOffRadio.isChecked():
             return image
             

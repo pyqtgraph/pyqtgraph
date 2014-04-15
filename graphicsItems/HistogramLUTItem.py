@@ -58,7 +58,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.region = LinearRegionItem([0, 1], LinearRegionItem.Horizontal)
         self.region.setZValue(1000)
         self.vb.addItem(self.region)
-        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, showValues=False)
+        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10)
         self.layout.addItem(self.axis, 0, 0)
         self.layout.addItem(self.vb, 0, 1)
         self.layout.addItem(self.gradient, 0, 2)

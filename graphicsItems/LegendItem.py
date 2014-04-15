@@ -21,17 +21,17 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     def __init__(self, size=None, offset=None):
         """
-        ==========  ===============================================================
-        Arguments
-        size        Specifies the fixed size (width, height) of the legend. If 
-                    this argument is omitted, the legend will autimatically resize
-                    to fit its contents.
-        offset      Specifies the offset position relative to the legend's parent.
-                    Positive values offset from the left or top; negative values
-                    offset from the right or bottom. If offset is None, the 
-                    legend must be anchored manually by calling anchor() or
-                    positioned by calling setPos(). 
-        ==========  ===============================================================
+        ==============  ===============================================================
+        **Arguments:**
+        size            Specifies the fixed size (width, height) of the legend. If
+                        this argument is omitted, the legend will autimatically resize
+                        to fit its contents.
+        offset          Specifies the offset position relative to the legend's parent.
+                        Positive values offset from the left or top; negative values
+                        offset from the right or bottom. If offset is None, the
+                        legend must be anchored manually by calling anchor() or
+                        positioned by calling setPos().
+        ==============  ===============================================================
         
         """
         
@@ -61,14 +61,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         Add a new entry to the legend. 
 
-        =========== ========================================================
-        Arguments
-        item        A PlotDataItem from which the line and point style
-                    of the item will be determined or an instance of 
-                    ItemSample (or a subclass), allowing the item display
-                    to be customized.
-        title       The title to display for this item. Simple HTML allowed.
-        =========== ========================================================
+        ==============  ========================================================
+        **Arguments:**
+        item            A PlotDataItem from which the line and point style
+                        of the item will be determined or an instance of
+                        ItemSample (or a subclass), allowing the item display
+                        to be customized.
+        title           The title to display for this item. Simple HTML allowed.
+        ==============  ========================================================
         """
         label = LabelItem(name)
         if isinstance(item, ItemSample):
@@ -85,10 +85,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         Removes one item from the legend. 
 
-        =========== ========================================================
-        Arguments
-        title       The title displayed for this item.
-        =========== ========================================================
+        ==============  ========================================================
+        **Arguments:**
+        title           The title displayed for this item.
+        ==============  ========================================================
         """
         # Thanks, Ulrich!
         # cycle for a match

@@ -3,6 +3,7 @@ if not USE_PYSIDE:
     import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
+from .. import CONFIG_OPTIONS
 import numpy as np
 import mmap, tempfile, ctypes, atexit, sys, random
 
@@ -35,7 +36,7 @@ class RemoteGraphicsView(QtGui.QWidget):
 
         self._proc = mp.QtProcess(**kwds)
         self.pg = self._proc._import('pyqtgraph')
-        self.pg.setConfigOptions(**self.pg.CONFIG_OPTIONS)
+        self.pg.setConfigOptions(**CONFIG_OPTIONS)
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **remoteKwds)
         self._view._setProxyOptions(deferGetattr=True)

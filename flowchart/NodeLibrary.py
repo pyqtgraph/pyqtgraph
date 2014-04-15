@@ -26,12 +26,14 @@ class NodeLibrary:
         Register a new node type. If the type's name is already in use,
         an exception will be raised (unless override=True).
         
-        Arguments:
+        ============== =========================================================
+        **Arguments:**
         
-            nodeClass - a subclass of Node (must have typ.nodeName)
-            paths - list of tuples specifying the location(s) this 
-                    type will appear in the library tree.
-            override - if True, overwrite any class having the same name
+        nodeClass      a subclass of Node (must have typ.nodeName)
+        paths          list of tuples specifying the location(s) this 
+                       type will appear in the library tree.
+        override       if True, overwrite any class having the same name
+        ============== =========================================================
         """
         if not isNodeClass(nodeClass):
             raise Exception("Object %s is not a Node subclass" % str(nodeClass))

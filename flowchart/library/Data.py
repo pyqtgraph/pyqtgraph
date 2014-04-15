@@ -328,7 +328,7 @@ class ColumnJoinNode(Node):
 
         ## Node.restoreState should have created all of the terminals we need
         ## However: to maintain support for some older flowchart files, we need
-	## to manually add any terminals that were not taken care of.
+        ## to manually add any terminals that were not taken care of.
         for name in [n for n in state['order'] if n not in inputs]:
             Node.addInput(self, name, renamable=True, removable=True, multiable=True)
         inputs = self.inputs()

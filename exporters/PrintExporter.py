@@ -36,7 +36,7 @@ class PrintExporter(Exporter):
         dialog = QtGui.QPrintDialog(printer)
         dialog.setWindowTitle("Print Document")
         if dialog.exec_() != QtGui.QDialog.Accepted:
-            return;
+            return
             
         #dpi = QtGui.QDesktopWidget().physicalDpiX()
         

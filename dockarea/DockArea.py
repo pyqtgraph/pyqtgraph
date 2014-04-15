@@ -36,16 +36,16 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
     def addDock(self, dock=None, position='bottom', relativeTo=None, **kwds):
         """Adds a dock to this area.
         
-        =========== =================================================================
-        Arguments:
-        dock        The new Dock object to add. If None, then a new Dock will be 
-                    created.
-        position    'bottom', 'top', 'left', 'right', 'above', or 'below'
-        relativeTo  If relativeTo is None, then the new Dock is added to fill an 
-                    entire edge of the window. If relativeTo is another Dock, then 
-                    the new Dock is placed adjacent to it (or in a tabbed 
-                    configuration for 'above' and 'below'). 
-        =========== =================================================================
+        ============== =================================================================
+        **Arguments:**
+        dock           The new Dock object to add. If None, then a new Dock will be 
+                       created.
+        position       'bottom', 'top', 'left', 'right', 'above', or 'below'
+        relativeTo     If relativeTo is None, then the new Dock is added to fill an 
+                       entire edge of the window. If relativeTo is another Dock, then 
+                       the new Dock is placed adjacent to it (or in a tabbed 
+                       configuration for 'above' and 'below'). 
+        ============== =================================================================
         
         All extra keyword arguments are passed to Dock.__init__() if *dock* is
         None.        

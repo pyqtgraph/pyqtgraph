@@ -12,7 +12,9 @@ from ..graphicsItems.PlotItem import *
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
     
-    #sigRangeChanged = QtCore.Signal(object, object)  ## already defined in GraphicsView
+    # signals wrapped from PlotItem / ViewBox
+    sigRangeChanged = QtCore.Signal(object, object)
+    sigTransformChanged = QtCore.Signal(object)
     
     """
     :class:`GraphicsView <pyqtgraph.GraphicsView>` widget with a single 
@@ -33,6 +35,7 @@ class PlotWidget(GraphicsView):
     :func:`enableAutoRange <pyqtgraph.ViewBox.enableAutoRange>`,
     :func:`disableAutoRange <pyqtgraph.ViewBox.disableAutoRange>`,
     :func:`setAspectLocked <pyqtgraph.ViewBox.setAspectLocked>`,
+    :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
     :func:`register <pyqtgraph.ViewBox.register>`,
     :func:`unregister <pyqtgraph.ViewBox.unregister>`
     
@@ -52,7 +55,10 @@ class PlotWidget(GraphicsView):
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
         ## NOTE: If you change this list, update the documentation above as well.
-        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 'setYRange', 'setRange', 'setAspectLocked', 'setMouseEnabled', 'setXLink', 'setYLink', 'enableAutoRange', 'disableAutoRange', 'register', 'unregister', 'viewRect']:
+        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 
+                  'setYRange', 'setRange', 'setAspectLocked', 'setMouseEnabled', 
+                  'setXLink', 'setYLink', 'enableAutoRange', 'disableAutoRange', 
+                  'setLimits', 'register', 'unregister', 'viewRect']:
             setattr(self, m, getattr(self.plotItem, m))
         #QtCore.QObject.connect(self.plotItem, QtCore.SIGNAL('viewChanged'), self.viewChanged)
         self.plotItem.sigRangeChanged.connect(self.viewRangeChanged)

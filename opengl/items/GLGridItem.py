@@ -1,3 +1,5 @@
+import numpy as np
+
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui
@@ -16,8 +18,9 @@ class GLGridItem(GLGraphicsItem):
         self.setGLOptions(glOptions)
         self.antialias = antialias
         if size is None:
-            size = QtGui.QVector3D(1,1,1)
+            size = QtGui.QVector3D(20,20,1)
         self.setSize(size=size)
+        self.setSpacing(1, 1, 1)
     
     def setSize(self, x=None, y=None, z=None, size=None):
         """
@@ -33,8 +36,22 @@ class GLGridItem(GLGraphicsItem):
         
     def size(self):
         return self.__size[:]
-    
-    
+
+    def setSpacing(self, x=None, y=None, z=None, spacing=None):
+        """
+        Set the spacing between grid lines.
+        Arguments can be x,y,z or spacing=QVector3D().
+        """
+        if spacing is not None:
+            x = spacing.x()
+            y = spacing.y()
+            z = spacing.z()
+        self.__spacing = [x,y,z]
+        self.update() 
+        
+    def spacing(self):
+        return self.__spacing[:]
+        
     def paint(self):
         self.setupGLState()
         
@@ -42,17 +59,20 @@ class GLGridItem(GLGraphicsItem):
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
             
         glBegin( GL_LINES )
         
         x,y,z = self.size()
+        xs,ys,zs = self.spacing()
+        xvals = np.arange(-x/2., x/2. + xs*0.001, xs) 
+        yvals = np.arange(-y/2., y/2. + ys*0.001, ys) 
         glColor4f(1, 1, 1, .3)
-        for x in range(-10, 11):
-            glVertex3f(x, -10, 0)
-            glVertex3f(x,  10, 0)
-        for y in range(-10, 11):
-            glVertex3f(-10, y, 0)
-            glVertex3f( 10, y, 0)
+        for x in xvals:
+            glVertex3f(x, yvals[0], 0)
+            glVertex3f(x,  yvals[-1], 0)
+        for y in yvals:
+            glVertex3f(xvals[0], y, 0)
+            glVertex3f(xvals[-1], y, 0)
         
         glEnd()

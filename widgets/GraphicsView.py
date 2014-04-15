@@ -40,8 +40,8 @@ class GraphicsView(QtGui.QGraphicsView):
     The view can be panned using the middle mouse button and scaled using the right mouse button if
     enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
     
-    sigRangeChanged = QtCore.Signal(object, object)
-    sigTransformChanged = QtCore.Signal(object)
+    sigDeviceRangeChanged = QtCore.Signal(object, object)
+    sigDeviceTransformChanged = QtCore.Signal(object)
     sigMouseReleased = QtCore.Signal(object)
     sigSceneMouseMoved = QtCore.Signal(object)
     #sigRegionChanged = QtCore.Signal(object)
@@ -50,21 +50,21 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def __init__(self, parent=None, useOpenGL=None, background='default'):
         """
-        ============  ============================================================
-        Arguments:
-        parent        Optional parent widget
-        useOpenGL     If True, the GraphicsView will use OpenGL to do all of its
-                      rendering. This can improve performance on some systems,
-                      but may also introduce bugs (the combination of 
-                      QGraphicsView and QGLWidget is still an 'experimental' 
-                      feature of Qt)
-        background    Set the background color of the GraphicsView. Accepts any
-                      single argument accepted by 
-                      :func:`mkColor <pyqtgraph.mkColor>`. By 
-                      default, the background color is determined using the
-                      'backgroundColor' configuration option (see 
-                      :func:`setConfigOption <pyqtgraph.setConfigOption>`.
-        ============  ============================================================
+        ==============  ============================================================
+        **Arguments:**
+        parent          Optional parent widget
+        useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
+                        rendering. This can improve performance on some systems,
+                        but may also introduce bugs (the combination of 
+                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        feature of Qt)
+        background      Set the background color of the GraphicsView. Accepts any
+                        single argument accepted by 
+                        :func:`mkColor <pyqtgraph.mkColor>`. By 
+                        default, the background color is determined using the
+                        'backgroundColor' configuration option (see 
+                        :func:`setConfigOption <pyqtgraph.setConfigOption>`.
+        ==============  ============================================================
         """
         
         self.closed = False
@@ -219,8 +219,8 @@ class GraphicsView(QtGui.QGraphicsView):
             else:
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
-        self.sigRangeChanged.emit(self, self.range)
-        self.sigTransformChanged.emit(self)
+        self.sigDeviceRangeChanged.emit(self, self.range)
+        self.sigDeviceTransformChanged.emit(self)
         
         if propagate:
             for v in self.lockedViewports:
@@ -287,7 +287,7 @@ class GraphicsView(QtGui.QGraphicsView):
         image.setPxMode(True)
         try:
             self.sigScaleChanged.disconnect(image.setScaledMode)
-        except TypeError:
+        except (TypeError, RuntimeError):
             pass
         tl = image.sceneBoundingRect().topLeft()
         w = self.size().width() * pxSize[0]
@@ -368,14 +368,14 @@ class GraphicsView(QtGui.QGraphicsView):
             delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
-            self.sigRangeChanged.emit(self, self.range)
+            self.sigDeviceRangeChanged.emit(self, self.range)
 
         elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             
             self.translate(tr[0], tr[1])
-            self.sigRangeChanged.emit(self, self.range)
+            self.sigDeviceRangeChanged.emit(self, self.range)
         
     def pixelSize(self):
         """Return vector with the length and width of one view pixel in scene coordinates"""

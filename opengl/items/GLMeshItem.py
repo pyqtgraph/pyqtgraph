@@ -19,7 +19,7 @@ class GLMeshItem(GLGraphicsItem):
     def __init__(self, **kwds):
         """
         ============== =====================================================
-        Arguments
+        **Arguments:**
         meshdata       MeshData object from which to determine geometry for 
                        this item.
         color          Default face color used if no vertex or face colors 
@@ -153,8 +153,12 @@ class GLMeshItem(GLGraphicsItem):
                     self.colors = md.faceColors(indexed='faces')
                     
             if self.opts['drawEdges']:
-                self.edges = md.edges()
-                self.edgeVerts = md.vertexes()
+                if not md.hasFaceIndexedData():
+                    self.edges = md.edges()
+                    self.edgeVerts = md.vertexes()
+                else:
+                    self.edges = md.edges()
+                    self.edgeVerts = md.vertexes(indexed='faces')
             return
     
     def paint(self):

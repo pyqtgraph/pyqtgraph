@@ -4,7 +4,6 @@ from .Vector import Vector
 from .Transform3D import Transform3D
 from .Vector import Vector
 import numpy as np
-import scipy.linalg
 
 class SRTTransform3D(Transform3D):
     """4x4 Transform matrix that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -118,11 +117,13 @@ class SRTTransform3D(Transform3D):
         The input matrix must be affine AND have no shear,
         otherwise the conversion will most likely fail.
         """
+        import numpy.linalg
         for i in range(4):
             self.setRow(i, m.row(i))
         m = self.matrix().reshape(4,4)
         ## translation is 4th column
-        self._state['pos'] = m[:3,3] 
+        self._state['pos'] = m[:3,3]
+        
         ## scale is vector-length of first three columns
         scale = (m[:3,:3]**2).sum(axis=0)**0.5
         ## see whether there is an inversion
@@ -132,9 +133,9 @@ class SRTTransform3D(Transform3D):
         self._state['scale'] = scale
         
         ## rotation axis is the eigenvector with eigenvalue=1
-        r = m[:3, :3] / scale[:, np.newaxis]
+        r = m[:3, :3] / scale[np.newaxis, :]
         try:
-            evals, evecs = scipy.linalg.eig(r)
+            evals, evecs = numpy.linalg.eig(r)
         except:
             print("Rotation matrix: %s" % str(r))
             print("Scale: %s" % str(scale))

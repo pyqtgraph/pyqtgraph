@@ -7,6 +7,9 @@ except ImportError:
     import builtins
     import pickle
 
+# color printing for debugging
+from ..util import cprint
+
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
     or discovers that the connection has been closed."""
@@ -80,7 +83,7 @@ class RemoteEventHandler(object):
     def debugMsg(self, msg):
         if not self.debug:
             return
-        print("[%d] %s" % (os.getpid(), str(msg)))
+        cprint.cout(self.debug, "[%d] %s\n" % (os.getpid(), str(msg)), -1) 
     
     def getProxyOption(self, opt):
         return self.proxyOptions[opt]
@@ -299,23 +302,23 @@ class RemoteEventHandler(object):
         (The docstring has information that is nevertheless useful to the programmer
         as it describes the internal protocol used to communicate between processes)
         
-        ==========  ====================================================================
-        Arguments:  
-        request     String describing the type of request being sent (see below)
-        reqId       Integer uniquely linking a result back to the request that generated
-                    it. (most requests leave this blank)
-        callSync    'sync':  return the actual result of the request
-                    'async': return a Request object which can be used to look up the 
-                             result later
-                    'off':   return no result
-        timeout     Time in seconds to wait for a response when callSync=='sync'
-        opts        Extra arguments sent to the remote process that determine the way
-                    the request will be handled (see below)
-        returnType  'proxy', 'value', or 'auto'
-        byteData    If specified, this is a list of objects to be sent as byte messages
-                    to the remote process.
-                    This is used to send large arrays without the cost of pickling.
-        ==========  ====================================================================
+        ==============  ====================================================================
+        **Arguments:**
+        request         String describing the type of request being sent (see below)
+        reqId           Integer uniquely linking a result back to the request that generated
+                        it. (most requests leave this blank)
+        callSync        'sync':  return the actual result of the request
+                        'async': return a Request object which can be used to look up the
+                                result later
+                        'off':   return no result
+        timeout         Time in seconds to wait for a response when callSync=='sync'
+        opts            Extra arguments sent to the remote process that determine the way
+                        the request will be handled (see below)
+        returnType      'proxy', 'value', or 'auto'
+        byteData        If specified, this is a list of objects to be sent as byte messages
+                        to the remote process.
+                        This is used to send large arrays without the cost of pickling.
+        ==============  ====================================================================
         
         Description of request strings and options allowed for each:
         
@@ -576,7 +579,7 @@ class Request(object):
             return self._result
             
         if timeout is None:
-           timeout = self.timeout 
+            timeout = self.timeout 
         
         if block:
             start = time.time()

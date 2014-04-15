@@ -31,16 +31,16 @@ class ConsoleWidget(QtGui.QWidget):
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
-        ============  ============================================================================
-        Arguments:
-        namespace     dictionary containing the initial variables present in the default namespace
-        historyFile   optional file for storing command history
-        text          initial text to display in the console window
-        editor        optional string for invoking code editor (called when stack trace entries are 
-                      double-clicked). May contain {fileName} and {lineNum} format keys. Example:: 
+        ==============  ============================================================================
+        **Arguments:**
+        namespace       dictionary containing the initial variables present in the default namespace
+        historyFile     optional file for storing command history
+        text            initial text to display in the console window
+        editor          optional string for invoking code editor (called when stack trace entries are 
+                        double-clicked). May contain {fileName} and {lineNum} format keys. Example:: 
                       
-                        editorCommand --loadfile {fileName} --gotoline {lineNum}
-        ============  =============================================================================
+                            editorCommand --loadfile {fileName} --gotoline {lineNum}
+        ==============  =============================================================================
         """
         QtGui.QWidget.__init__(self, parent)
         if namespace is None:

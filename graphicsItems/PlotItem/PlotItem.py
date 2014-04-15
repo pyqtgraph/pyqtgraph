@@ -18,6 +18,7 @@ This class is very heavily featured:
 """
 from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
 from ... import pixmaps
+import sys
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
@@ -69,6 +70,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
     :func:`setAutoVisible <pyqtgraph.ViewBox.setAutoVisible>`,
+    :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
     :func:`viewRect <pyqtgraph.ViewBox.viewRect>`,
     :func:`viewRange <pyqtgraph.ViewBox.viewRange>`,
     :func:`setMouseEnabled <pyqtgraph.ViewBox.setMouseEnabled>`,
@@ -82,7 +84,7 @@ class PlotItem(GraphicsWidget):
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     
     ==================== =======================================================================
-    **Signals**
+    **Signals:**
     sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
@@ -102,7 +104,7 @@ class PlotItem(GraphicsWidget):
         Any extra keyword arguments are passed to PlotItem.plot().
         
         ==============  ==========================================================================================
-        **Arguments**
+        **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
                    
@@ -192,14 +194,6 @@ class PlotItem(GraphicsWidget):
         self.layout.setColumnStretchFactor(1, 100)
         
 
-        ## Wrap a few methods from viewBox
-        for m in [
-            'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
-            'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled',
-            'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
-            'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
-            setattr(self, m, getattr(self.vb, m))
-            
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -296,7 +290,26 @@ class PlotItem(GraphicsWidget):
     def getViewBox(self):
         """Return the :class:`ViewBox <pyqtgraph.ViewBox>` contained within."""
         return self.vb
+
     
+    ## Wrap a few methods from viewBox. 
+    #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
+    #because we had a reference to an instance method (creating wrapper methods at runtime instead).
+    
+    for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
+              'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
+              'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
+              'setAspectLocked', 'invertY', 'register', 'unregister']:                # as well.
+                
+        def _create_method(name):
+            def method(self, *args, **kwargs):
+                return getattr(self.vb, name)(*args, **kwargs)
+            method.__name__ = name
+            return method
+        
+        locals()[m] = _create_method(m)
+        
+    del _create_method
     
     
     def setLogMode(self, x=None, y=None):
@@ -355,10 +368,8 @@ class PlotItem(GraphicsWidget):
         self.ctrlMenu.setParent(None)
         self.ctrlMenu = None
         
-        #self.ctrlBtn.setParent(None)
-        #self.ctrlBtn = None
-        #self.autoBtn.setParent(None)
-        #self.autoBtn = None
+        self.autoBtn.setParent(None)
+        self.autoBtn = None
         
         for k in self.axes:
             i = self.axes[k]['item']
@@ -930,18 +941,18 @@ class PlotItem(GraphicsWidget):
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.
         
-        ===========  =================================================================
-        Arguments
-        ds           (int) Reduce visible plot samples by this factor, or
-                     (bool) To enable/disable downsampling without changing the value.
-        auto         (bool) If True, automatically pick *ds* based on visible range
-        mode         'subsample': Downsample by taking the first of N samples. 
-                         This method is fastest and least accurate.
-                     'mean': Downsample by taking the mean of N samples.
-                     'peak': Downsample by drawing a saw wave that follows the min 
-                         and max of the original data. This method produces the best 
-                         visual representation of the data but is slower.
-        ===========  =================================================================
+        =============== =================================================================
+        **Arguments:**
+        ds              (int) Reduce visible plot samples by this factor, or
+                        (bool) To enable/disable downsampling without changing the value.
+        auto            (bool) If True, automatically pick *ds* based on visible range
+        mode            'subsample': Downsample by taking the first of N samples.
+                        This method is fastest and least accurate.
+                        'mean': Downsample by taking the mean of N samples.
+                        'peak': Downsample by drawing a saw wave that follows the min
+                        and max of the original data. This method produces the best
+                        visual representation of the data but is slower.
+        =============== =================================================================
         """
         if ds is not None:
             if ds is False:
@@ -1112,15 +1123,15 @@ class PlotItem(GraphicsWidget):
         """
         Set the label for an axis. Basic HTML formatting is allowed.
         
-        ============= =================================================================
-        **Arguments**
-        axis          must be one of 'left', 'bottom', 'right', or 'top'
-        text          text to display along the axis. HTML allowed.
-        units         units to display after the title. If units are given, 
-                      then an SI prefix will be automatically appended
-                      and the axis values will be scaled accordingly.
-                      (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ============= =================================================================
+        ==============  =================================================================
+        **Arguments:**
+        axis            must be one of 'left', 'bottom', 'right', or 'top'
+        text            text to display along the axis. HTML allowed.
+        units           units to display after the title. If units are given,
+                        then an SI prefix will be automatically appended
+                        and the axis values will be scaled accordingly.
+                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
+        ==============  =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
         self.showAxis(axis)

@@ -131,8 +131,12 @@ class MouseDragEvent(object):
         return self.finish
 
     def __repr__(self):
-        lp = self.lastPos()
-        p = self.pos()
+        if self.currentItem is None:
+            lp = self._lastScenePos
+            p = self._scenePos
+        else:
+            lp = self.lastPos()
+            p = self.pos()
         return "<MouseDragEvent (%g,%g)->(%g,%g) buttons=%d start=%s finish=%s>" % (lp.x(), lp.y(), p.x(), p.y(), int(self.buttons()), str(self.isStart()), str(self.isFinish()))
         
     def modifiers(self):
@@ -221,9 +225,15 @@ class MouseClickEvent(object):
         return self._modifiers
 
     def __repr__(self):
-        p = self.pos()
-        return "<MouseClickEvent (%g,%g) button=%d>" % (p.x(), p.y(), int(self.button()))
-        
+        try:
+            if self.currentItem is None:
+                p = self._scenePos
+            else:
+                p = self.pos()
+            return "<MouseClickEvent (%g,%g) button=%d>" % (p.x(), p.y(), int(self.button()))
+        except:
+            return "<MouseClickEvent button=%d>" % (int(self.button()))
+
     def time(self):
         return self._time
 
@@ -345,8 +355,12 @@ class HoverEvent(object):
         return Point(self.currentItem.mapFromScene(self._lastScenePos))
 
     def __repr__(self):
-        lp = self.lastPos()
-        p = self.pos()
+        if self.currentItem is None:
+            lp = self._lastScenePos
+            p = self._scenePos
+        else:
+            lp = self.lastPos()
+            p = self.pos()
         return "<HoverEvent (%g,%g)->(%g,%g) buttons=%d enter=%s exit=%s>" % (lp.x(), lp.y(), p.x(), p.y(), int(self.buttons()), str(self.isEnter()), str(self.isExit()))
         
     def modifiers(self):

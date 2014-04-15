@@ -30,19 +30,19 @@ class LinearRegionItem(UIGraphicsItem):
     def __init__(self, values=[0,1], orientation=None, brush=None, movable=True, bounds=None):
         """Create a new LinearRegionItem.
         
-        ============= =====================================================================
-        **Arguments**
-        values        A list of the positions of the lines in the region. These are not 
-                      limits; limits can be set by specifying bounds.
-        orientation   Options are LinearRegionItem.Vertical or LinearRegionItem.Horizontal.
-                      If not specified it will be vertical.
-        brush         Defines the brush that fills the region. Can be any arguments that 
-                      are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is 
-                      transparent blue.
-        movable       If True, the region and individual lines are movable by the user; if 
-                      False, they are static.
-        bounds        Optional [min, max] bounding values for the region
-        ============= =====================================================================
+        ==============  =====================================================================
+        **Arguments:**
+        values          A list of the positions of the lines in the region. These are not
+                        limits; limits can be set by specifying bounds.
+        orientation     Options are LinearRegionItem.Vertical or LinearRegionItem.Horizontal.
+                        If not specified it will be vertical.
+        brush           Defines the brush that fills the region. Can be any arguments that
+                        are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is
+                        transparent blue.
+        movable         If True, the region and individual lines are movable by the user; if
+                        False, they are static.
+        bounds          Optional [min, max] bounding values for the region
+        ==============  =====================================================================
         """
         
         UIGraphicsItem.__init__(self)
@@ -89,10 +89,10 @@ class LinearRegionItem(UIGraphicsItem):
     def setRegion(self, rgn):
         """Set the values for the edges of the region.
         
-        ============= ==============================================
-        **Arguments** 
-        rgn           A list or tuple of the lower and upper values.
-        ============= ==============================================
+        ==============   ==============================================
+        **Arguments:**
+        rgn              A list or tuple of the lower and upper values.
+        ==============   ==============================================
         """
         if self.lines[0].value() == rgn[0] and self.lines[1].value() == rgn[1]:
             return

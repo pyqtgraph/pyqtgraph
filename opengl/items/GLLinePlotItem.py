@@ -16,6 +16,7 @@ class GLLinePlotItem(GLGraphicsItem):
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
         self.pos = None
+        self.mode = 'line_strip'
         self.width = 1.
         self.color = (1.0,1.0,1.0,1.0)
         self.setData(**kwds)
@@ -27,7 +28,7 @@ class GLLinePlotItem(GLGraphicsItem):
         colors unchanged, etc.
         
         ====================  ==================================================
-        Arguments:
+        **Arguments:**
         ------------------------------------------------------------------------
         pos                   (N,3) array of floats specifying point locations.
         color                 (N,4) array of floats (0.0-1.0) or
@@ -35,9 +36,13 @@ class GLLinePlotItem(GLGraphicsItem):
                               a single color for the entire item.
         width                 float specifying line width
         antialias             enables smooth line drawing
+        mode                  'lines': Each pair of vertexes draws a single line
+                                       segment.
+                              'line_strip': All vertexes are drawn as a
+                                            continuous set of line segments.
         ====================  ==================================================
         """
-        args = ['pos', 'color', 'width', 'connected', 'antialias']
+        args = ['pos', 'color', 'width', 'mode', 'antialias']
         for k in kwds.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
@@ -91,9 +96,15 @@ class GLLinePlotItem(GLGraphicsItem):
                 glEnable(GL_LINE_SMOOTH)
                 glEnable(GL_BLEND)
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+                glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
                 
-            glDrawArrays(GL_LINE_STRIP, 0, int(self.pos.size / self.pos.shape[-1]))
+            if self.mode == 'line_strip':
+                glDrawArrays(GL_LINE_STRIP, 0, int(self.pos.size / self.pos.shape[-1]))
+            elif self.mode == 'lines':
+                glDrawArrays(GL_LINES, 0, int(self.pos.size / self.pos.shape[-1]))
+            else:
+                raise Exception("Unknown line mode '%s'. (must be 'lines' or 'line_strip')" % self.mode)
+                
         finally:
             glDisableClientState(GL_COLOR_ARRAY)
             glDisableClientState(GL_VERTEX_ARRAY)

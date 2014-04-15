@@ -7,10 +7,12 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 from __future__ import print_function
 
-import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile
+import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
 from . import ptime
 from numpy import ndarray
 from .Qt import QtCore, QtGui
+from .util.mutex import Mutex
+from .util import cprint
 
 __ftraceDepth = 0
 def ftrace(func):
@@ -238,7 +240,8 @@ def refPathString(chain):
     
 def objectSize(obj, ignore=None, verbose=False, depth=0, recursive=False):
     """Guess how much memory an object is using"""
-    ignoreTypes = [types.MethodType, types.UnboundMethodType, types.BuiltinMethodType, types.FunctionType, types.BuiltinFunctionType]
+    ignoreTypes = ['MethodType', 'UnboundMethodType', 'BuiltinMethodType', 'FunctionType', 'BuiltinFunctionType']
+    ignoreTypes = [getattr(types, key) for key in ignoreTypes if hasattr(types, key)]
     ignoreRegex = re.compile('(method-wrapper|Flag|ItemChange|Option|Mode)')
     
     
@@ -399,7 +402,9 @@ class Profiler(object):
     only the initial "pyqtgraph." prefix from the module.
     """
 
-    _profilers = os.environ.get("PYQTGRAPHPROFILE", "")
+    _profilers = os.environ.get("PYQTGRAPHPROFILE", None)
+    _profilers = _profilers.split(",") if _profilers is not None else []
+    
     _depth = 0
     _msgs = []
     
@@ -415,38 +420,36 @@ class Profiler(object):
     _disabledProfiler = DisabledProfiler()
     
 
-    if _profilers:
-        _profilers = _profilers.split(",")
-        def __new__(cls, msg=None, disabled='env', delayed=True):
-            """Optionally create a new profiler based on caller's qualname.
-            """
-            if disabled is True:
-                return cls._disabledProfiler
-                            
-            # determine the qualified name of the caller function
-            caller_frame = sys._getframe(1)
-            try:
-                caller_object_type = type(caller_frame.f_locals["self"])
-            except KeyError: # we are in a regular function
-                qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
-            else: # we are in a method
-                qualifier = caller_object_type.__name__
-            func_qualname = qualifier + "." + caller_frame.f_code.co_name
-            if func_qualname not in cls._profilers: # don't do anything
-                return cls._disabledProfiler
-            # create an actual profiling object
-            cls._depth += 1
-            obj = super(Profiler, cls).__new__(cls)
-            obj._name = msg or func_qualname
-            obj._delayed = delayed
-            obj._markCount = 0
-            obj._finished = False
-            obj._firstTime = obj._lastTime = ptime.time()
-            obj._newMsg("> Entering " + obj._name)
-            return obj
-    else:
-        def __new__(cls, delayed=True):
-            return lambda msg=None: None
+    def __new__(cls, msg=None, disabled='env', delayed=True):
+        """Optionally create a new profiler based on caller's qualname.
+        """
+        if disabled is True or (disabled=='env' and len(cls._profilers) == 0):
+            return cls._disabledProfiler
+                        
+        # determine the qualified name of the caller function
+        caller_frame = sys._getframe(1)
+        try:
+            caller_object_type = type(caller_frame.f_locals["self"])
+        except KeyError: # we are in a regular function
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
+        else: # we are in a method
+            qualifier = caller_object_type.__name__
+        func_qualname = qualifier + "." + caller_frame.f_code.co_name
+        if disabled=='env' and func_qualname not in cls._profilers: # don't do anything
+            return cls._disabledProfiler
+        # create an actual profiling object
+        cls._depth += 1
+        obj = super(Profiler, cls).__new__(cls)
+        obj._name = msg or func_qualname
+        obj._delayed = delayed
+        obj._markCount = 0
+        obj._finished = False
+        obj._firstTime = obj._lastTime = ptime.time()
+        obj._newMsg("> Entering " + obj._name)
+        return obj
+    #else:
+        #def __new__(cls, delayed=True):
+            #return lambda msg=None: None
 
     def __call__(self, msg=None):
         """Register or print a new message with timing information.
@@ -467,6 +470,7 @@ class Profiler(object):
         if self._delayed:
             self._msgs.append((msg, args))
         else:
+            self.flush()
             print(msg % args)
 
     def __del__(self):
@@ -483,10 +487,13 @@ class Profiler(object):
         self._newMsg("< Exiting %s, total time: %0.4f ms", 
                      self._name, (ptime.time() - self._firstTime) * 1000)
         type(self)._depth -= 1
-        if self._depth < 1 and self._msgs:
+        if self._depth < 1:
+            self.flush()
+        
+    def flush(self):
+        if self._msgs:
             print("\n".join([m[0]%m[1] for m in self._msgs]))
             type(self)._msgs = []
-        
 
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
@@ -618,12 +625,12 @@ class ObjTracker(object):
         
         ## Which refs have disappeared since call to start()  (these are only displayed once, then forgotten.)
         delRefs = {}
-        for i in self.startRefs.keys():
+        for i in list(self.startRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.startRefs[i]
                 del self.startRefs[i]
                 self.forgetRef(delRefs[i])
-        for i in self.newRefs.keys():
+        for i in list(self.newRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.newRefs[i]
                 del self.newRefs[i]
@@ -661,7 +668,8 @@ class ObjTracker(object):
         for k in self.startCount:
             c1[k] = c1.get(k, 0) - self.startCount[k]
         typs = list(c1.keys())
-        typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        #typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        typs.sort(key=lambda a: c1[a])
         for t in typs:
             if c1[t] == 0:
                 continue
@@ -761,7 +769,8 @@ class ObjTracker(object):
             c = count.get(typ, [0,0])
             count[typ] =  [c[0]+1, c[1]+objectSize(obj)]
         typs = list(count.keys())
-        typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        #typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        typs.sort(key=lambda a: count[a][1])
         
         for t in typs:
             line = "  %d\t%d\t%s" % (count[t][0], count[t][1], t)
@@ -821,14 +830,15 @@ def describeObj(obj, depth=4, path=None, ignore=None):
 def typeStr(obj):
     """Create a more useful type string by making <instance> types report their class."""
     typ = type(obj)
-    if typ == types.InstanceType:
+    if typ == getattr(types, 'InstanceType', None):
         return "<instance of %s>" % obj.__class__.__name__
     else:
         return str(typ)
     
 def searchRefs(obj, *args):
     """Pseudo-interactive function for tracing references backward.
-    Arguments:
+    **Arguments:**
+    
         obj:   The initial object from which to start searching
         args:  A set of string or int arguments.
                each integer selects one of obj's referrers to be the new 'obj'
@@ -840,7 +850,8 @@ def searchRefs(obj, *args):
                   ro: return obj
                   rr: return list of obj's referrers
     
-    Examples:
+    Examples::
+    
        searchRefs(obj, 't')                    ## Print types of all objects referring to obj
        searchRefs(obj, 't', 0, 't')            ##   ..then select the first referrer and print the types of its referrers
        searchRefs(obj, 't', 0, 't', 'l')       ##   ..also print lengths of the last set of referrers
@@ -989,3 +1000,75 @@ class PrintDetector(object):
         
     def flush(self):
         self.stdout.flush()
+
+
+class PeriodicTrace(object):
+    """ 
+    Used to debug freezing by starting a new thread that reports on the 
+    location of the main thread periodically.
+    """
+    class ReportThread(QtCore.QThread):
+        def __init__(self):
+            self.frame = None
+            self.ind = 0
+            self.lastInd = None
+            self.lock = Mutex()
+            QtCore.QThread.__init__(self)
+
+        def notify(self, frame):
+            with self.lock:
+                self.frame = frame
+                self.ind += 1
+
+        def run(self):
+            while True:
+                time.sleep(1)
+                with self.lock:
+                    if self.lastInd != self.ind:
+                        print("== Trace %d: ==" % self.ind)
+                        traceback.print_stack(self.frame)
+                        self.lastInd = self.ind
+
+    def __init__(self):
+        self.mainThread = threading.current_thread()
+        self.thread = PeriodicTrace.ReportThread()
+        self.thread.start()
+        sys.settrace(self.trace)
+
+    def trace(self, frame, event, arg):
+        if threading.current_thread() is self.mainThread: # and 'threading' not in frame.f_code.co_filename:
+            self.thread.notify(frame)
+            # print("== Trace ==", event, arg)
+            # traceback.print_stack(frame)
+        return self.trace
+
+
+
+class ThreadColor(object):
+    """
+    Wrapper on stdout/stderr that colors text by the current thread ID.
+
+    *stream* must be 'stdout' or 'stderr'.
+    """
+    colors = {}
+    lock = Mutex()
+
+    def __init__(self, stream):
+        self.stream = getattr(sys, stream)
+        self.err = stream == 'stderr'
+        setattr(sys, stream, self)
+
+    def write(self, msg):
+        with self.lock:
+            cprint.cprint(self.stream, self.color(), msg, -1, stderr=self.err)
+
+    def flush(self):
+        with self.lock:
+            self.stream.flush()
+
+    def color(self):
+        tid = threading.current_thread()
+        if tid not in self.colors:
+            c = (len(self.colors) % 15) + 1
+            self.colors[tid] = c
+        return self.colors[tid]
