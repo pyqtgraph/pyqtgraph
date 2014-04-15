@@ -45,22 +45,27 @@ def test_stability():
                 #setParent,
                 forgetWidget,
                 showWidget,
-                #processEvents,
+                processEvents,
                 #raiseException,
                 #addReference,
                 ]
 
         thread = WorkThread()
-        #thread.start()
+        thread.start()
 
         while True:
             try:
                 action = randItem(actions)
                 action()
-                print('[%d widgets alive]' % len(allWidgets))
+                print('[%d widgets alive, %d zombie]' % (len(allWidgets), len(allWidgets) - len(widgets)))
             except KeyboardInterrupt:
-                thread.kill()
-                break
+                print("Caught interrupt; send another to exit.")
+                try:
+                    for i in range(100):
+                        QTest.qWait(100)
+                except KeyboardInterrupt:
+                    thread.terminate()
+                    break
             except:
                 sys.excepthook(*sys.exc_info())
     finally:
@@ -88,7 +93,10 @@ def p(msg):
 def createWidget():
     p('create widget')
     global widgets, allWidgets
+    if len(widgets) > 50:
+        return
     widget = randItem(widgetTypes)()
+    widget.setWindowTitle(widget.__class__.__name__)
     widgets.append(widget)
     allWidgets.add(widget)
     p("    %s" % widget)
