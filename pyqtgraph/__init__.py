@@ -257,7 +257,7 @@ from .graphicsWindows import *
 from .SignalProxy import *
 from .colormap import *
 from .ptime import time
-from pyqtgraph.Qt import isQObjectAlive
+from .Qt import isQObjectAlive
 
 
 ##############################################################

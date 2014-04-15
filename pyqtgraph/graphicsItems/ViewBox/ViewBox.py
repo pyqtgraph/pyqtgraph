@@ -10,7 +10,7 @@ from copy import deepcopy
 from ... import debug as debug
 from ... import getConfigOption
 import sys
-from pyqtgraph.Qt import isQObjectAlive
+from ...Qt import isQObjectAlive
 
 __all__ = ['ViewBox']
 
