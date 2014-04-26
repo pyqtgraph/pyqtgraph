@@ -1454,9 +1454,10 @@ class ViewBox(GraphicsWidget):
         if aspect is not False and aspect != 0 and tr.height() != 0 and bounds.height() != 0:
             
             ## This is the view range aspect ratio we have requested
-            targetRatio = tr.width() / tr.height()
+            targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1
             ## This is the view range aspect ratio we need to obey aspect constraint
-            viewRatio = (bounds.width() / bounds.height()) / aspect
+            viewRatio = (bounds.width() / bounds.height() if bounds.height() != 0 else 1) / aspect
+            viewRatio = 1 if viewRatio == 0 else viewRatio
             
             # Decide which range to keep unchanged
             #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
