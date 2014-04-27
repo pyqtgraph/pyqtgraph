@@ -36,7 +36,8 @@ widgets = []
 items = []
 allWidgets = weakref.WeakSet()
 
-def test_stability():
+
+def crashtest():
     global allWidgets
     try:
         gc.disable()
@@ -136,12 +137,12 @@ def processEvents():
     p('process events')
     QTest.qWait(25)
 
-class TestException(Exception):
+class TstException(Exception):
     pass
 
 def raiseException():
     p('raise exception')
-    raise TestException("A test exception")
+    raise TstException("A test exception")
 
 def addReference():
     p('add reference')
