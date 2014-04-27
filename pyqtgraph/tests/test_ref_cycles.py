@@ -11,8 +11,27 @@ def assert_alldead(refs):
     for ref in refs:
         assert ref() is None
 
+def qObjectTree(root):
+    """Return root and its entire tree of qobject children"""
+    childs = [root]
+    for ch in pg.QtCore.QObject.children(root):
+        childs += qObjectTree(ch)
+    return childs
+
 def mkrefs(*objs):
-    return map(weakref.ref, objs)
+    """Return a list of weakrefs to each object in *objs.
+    QObject instances are expanded to include all child objects.
+    """
+    allObjs = {}
+    for obj in objs:
+        if isinstance(obj, pg.QtCore.QObject):
+            obj = qObjectTree(obj)
+        else:
+            obj = [obj]
+        for o in obj:
+            allObjs[id(o)] = o
+            
+    return map(weakref.ref, allObjs.values())
 
 def test_PlotWidget():
     def mkobjs(*args, **kwds):
