@@ -161,7 +161,11 @@ class AxisItem(GraphicsWidget):
         self.scene().removeItem(self)
         
     def setGrid(self, grid):
-        """Set the alpha value for the grid, or False to disable."""
+        """Set the alpha value (0-255) for the grid, or False to disable.
+        
+        When grid lines are enabled, the axis tick lines are extended to cover
+        the extent of the linked ViewBox, if any.
+        """
         self.grid = grid
         self.picture = None
         self.prepareGeometryChange()
