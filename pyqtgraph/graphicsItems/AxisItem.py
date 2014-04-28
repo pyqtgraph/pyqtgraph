@@ -454,7 +454,10 @@ class AxisItem(GraphicsWidget):
         else:
             if newRange is None:
                 newRange = view.viewRange()[0]
-            self.setRange(*newRange)
+            if view.xInverted():
+                self.setRange(*newRange[::-1])
+            else:
+                self.setRange(*newRange)
         
     def boundingRect(self):
         linkedView = self.linkedView()

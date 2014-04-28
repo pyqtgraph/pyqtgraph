@@ -104,7 +104,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
         """
         ==============  =============================================================
         **Arguments:**
@@ -115,6 +115,7 @@ class ViewBox(GraphicsWidget):
                         coorinates to. (or False to allow the ratio to change)
         *enableMouse*   (bool) Whether mouse can be used to scale/pan the view
         *invertY*       (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
+        *invertX*       (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
         ==============  =============================================================
         """
         
@@ -139,6 +140,7 @@ class ViewBox(GraphicsWidget):
             'viewRange': [[0,1], [0,1]],     ## actual range viewed
         
             'yInverted': invertY,
+            'xInverted': invertX,
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled, 
                                           ## otherwise float gives the fraction of data that is visible
@@ -996,7 +998,10 @@ class ViewBox(GraphicsWidget):
                     x2 = vr.right()
                 else:  ## views overlap; line them up
                     upp = float(vr.width()) / vg.width()
-                    x1 = vr.left() + (sg.x()-vg.x()) * upp
+                    if self.xInverted():
+                        x1 = vr.left()   + (sg.right()-vg.right()) * upp
+                    else:
+                        x1 = vr.left()   + (sg.x()-vg.x()) * upp
                     x2 = x1 + sg.width() * upp
                 self.enableAutoRange(ViewBox.XAxis, False)
                 self.setXRange(x1, x2, padding=0)
@@ -1054,9 +1059,26 @@ class ViewBox(GraphicsWidget):
         #self.updateMatrix(changed=(False, True))
         self.updateViewRange()
         self.sigStateChanged.emit(self)
+        self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
 
     def yInverted(self):
         return self.state['yInverted']
+        
+    def invertX(self, b=True):
+        """
+        By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
+        """
+        if self.state['xInverted'] == b:
+            return
+        
+        self.state['xInverted'] = b
+        #self.updateMatrix(changed=(False, True))
+        self.updateViewRange()
+        self.sigStateChanged.emit(self)
+        self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+
+    def xInverted(self):
+        return self.state['xInverted']
         
     def setAspectLocked(self, lock=True, ratio=1):
         """
@@ -1555,6 +1577,7 @@ class ViewBox(GraphicsWidget):
             if link is not None:
                 link.linkedViewChanged(self, ax)
         
+        self.update()
         self._matrixNeedsUpdate = True
 
     def updateMatrix(self, changed=None):
@@ -1567,6 +1590,8 @@ class ViewBox(GraphicsWidget):
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
+        if self.state['xInverted']:
+            scale = scale * Point(-1, 1)
         m = QtGui.QTransform()
         
         ## First center the viewport at 0

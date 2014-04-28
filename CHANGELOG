@@ -48,6 +48,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Added AxisItem.setStyle()
     - Added configurable formatting for TableWidget
     - Added 'stepMode' argument to PlotDataItem()
+    - Added ViewBox.invertX()
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
