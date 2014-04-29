@@ -74,12 +74,11 @@ class ViewBox(GraphicsWidget):
     
     Features:
     
-        - Scaling contents by mouse or auto-scale when contents change
-        - View linking--multiple views display the same data ranges
-        - Configurable by context menu
-        - Item coordinate mapping methods
+    * Scaling contents by mouse or auto-scale when contents change
+    * View linking--multiple views display the same data ranges
+    * Configurable by context menu
+    * Item coordinate mapping methods
     
-    Not really compatible with GraphicsView having the same functionality.
     """
     
     sigYRangeChanged = QtCore.Signal(object, object)
@@ -116,10 +115,14 @@ class ViewBox(GraphicsWidget):
         *enableMouse*   (bool) Whether mouse can be used to scale/pan the view
         *invertY*       (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
         *invertX*       (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
+        *enableMenu*    (bool) Whether to display a context menu when 
+                        right-clicking on the ViewBox background.
+        *name*          (str) Used to register this ViewBox so that it appears
+                        in the "Link axis" dropdown inside other ViewBox
+                        context menus. This allows the user to manually link
+                        the axes of any other view to this one. 
         ==============  =============================================================
         """
-        
-        
         
         GraphicsWidget.__init__(self, parent)
         self.name = None
@@ -220,7 +223,11 @@ class ViewBox(GraphicsWidget):
     def register(self, name):
         """
         Add this ViewBox to the registered list of views. 
-        *name* will appear in the drop-down lists for axis linking in all other views.
+        
+        This allows users to manually link the axes of any other ViewBox to
+        this one. The specified *name* will appear in the drop-down lists for 
+        axis linking in the context menus of all other views.
+        
         The same can be accomplished by initializing the ViewBox with the *name* attribute.
         """
         ViewBox.AllViews[self] = None
