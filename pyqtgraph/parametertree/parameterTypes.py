@@ -636,6 +636,7 @@ class TextParameterItem(WidgetParameterItem):
     def makeWidget(self):
         self.textBox = QtGui.QTextEdit()
         self.textBox.setMaximumHeight(100)
+        self.textBox.setReadOnly(self.param.opts.get('readonly', False))
         self.textBox.value = lambda: str(self.textBox.toPlainText())
         self.textBox.setValue = self.textBox.setPlainText
         self.textBox.sigChanged = self.textBox.textChanged
