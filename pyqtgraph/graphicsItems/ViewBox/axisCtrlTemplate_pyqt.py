@@ -29,7 +29,7 @@ class Ui_Form(object):
         Form.resize(186, 154)
         Form.setMaximumSize(QtCore.QSize(200, 16777215))
         self.gridLayout = QtGui.QGridLayout(Form)
-        self.gridLayout.setMargin(0)
+        self.gridLayout.setMargin(0) #deprecated!!?  See http://goo.gl/umrE8d
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.label = QtGui.QLabel(Form)
