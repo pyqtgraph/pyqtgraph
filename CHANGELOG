@@ -86,6 +86,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed TableWidget append / sort issues
     - Fixed AxisItem not resizing text area when setTicks() is used
     - Removed a few cyclic references
+    - Fixed Parameter 'readonly' option for bool, color, and text parameter types
 
 pyqtgraph-0.9.8  2013-11-24
 
