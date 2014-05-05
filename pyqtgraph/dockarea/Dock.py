@@ -244,6 +244,7 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     
     def __init__(self, text, dock):
+        self.startedDrag = False
         self.dim = False
         self.fixedWidth = False
         VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
