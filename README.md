@@ -29,6 +29,7 @@ Contributors
   * Fabio Zadrozny
   * Mikhail Terekhov
   * Pietro Zambelli
+  * Stefan Holzmann
 
 Requirements
 ------------
