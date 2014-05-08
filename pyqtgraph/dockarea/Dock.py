@@ -8,12 +8,12 @@ class Dock(QtGui.QWidget, DockDrop):
     
     sigStretchChanged = QtCore.Signal()
     
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closeable = False):
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
         self.area = area
-        self.label = DockLabel(name, self, closeable)
-        if closeable:
+        self.label = DockLabel(name, self, closable)
+        if closable:
             self.label.sigCloseClicked.connect(self.close)
         self.labelHidden = False
         self.moveLabel = True  ## If false, the dock is no longer allowed to move the label.
@@ -241,6 +241,7 @@ class Dock(QtGui.QWidget, DockDrop):
     def dropEvent(self, *args):
         DockDrop.dropEvent(self, *args)
 
+
 class DockLabel(VerticalLabel):
     
     sigClicked = QtCore.Signal(object, object)
@@ -259,12 +260,8 @@ class DockLabel(VerticalLabel):
         self.closeButton = None
         if showCloseButton:
             self.closeButton = QtGui.QToolButton(self)
-            self.closeButton.pressed.connect(self.sigCloseClicked)
+            self.closeButton.clicked.connect(self.sigCloseClicked)
             self.closeButton.setIcon(QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
-
-    #def minimumSizeHint(self):
-        ##sh = QtGui.QWidget.minimumSizeHint(self)
-        #return QtCore.QSize(20, 20)
 
     def updateStyle(self):
         r = '3px'
@@ -325,11 +322,9 @@ class DockLabel(VerticalLabel):
         if not self.startedDrag and (ev.pos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance():
             self.dock.startDrag()
         ev.accept()
-        #print ev.pos()
             
     def mouseReleaseEvent(self, ev):
         if not self.startedDrag:
-            #self.emit(QtCore.SIGNAL('clicked'), self, ev)
             self.sigClicked.emit(self, ev)
         ev.accept()
         
@@ -337,19 +332,14 @@ class DockLabel(VerticalLabel):
         if ev.button() == QtCore.Qt.LeftButton:
             self.dock.float()
             
-    #def paintEvent(self, ev):
-        #p = QtGui.QPainter(self)
-        ##p.setBrush(QtGui.QBrush(QtGui.QColor(100, 100, 200)))
-        #p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 100)))
-        #p.drawRect(self.rect().adjusted(0, 0, -1, -1))
-        
-        #VerticalLabel.paintEvent(self, ev)
-            
     def resizeEvent (self, ev):
         if self.closeButton:
             if self.orientation == 'vertical':
-                closeButtonSize =  ev.size().width()
+                size = ev.size().width()
+                pos = QtCore.QPoint(0, 0)
             else:
-                closeButtonSize = ev.size().height()
-            self.closeButton.setFixedSize(QtCore.QSize(closeButtonSize,closeButtonSize))
+                size = ev.size().height()
+                pos = QtCore.QPoint(ev.size().width() - size, 0)
+            self.closeButton.setFixedSize(QtCore.QSize(size, size))
+            self.closeButton.move(pos)
         super(DockLabel,self).resizeEvent(ev)
