@@ -53,9 +53,13 @@ class CSVExporter(Exporter):
         for i in range(numRows):
             for d in data:
                 if i < len(d[0]):
-                    fd.write(numFormat % d[0][i] + sep + numFormat % d[1][i] + sep)
+                    fd.write(numFormat % d[0][i] + sep)
                 else:
-                    fd.write(' %s %s' % (sep, sep))
+                    fd.write(' %s' % sep)
+                if i < len(d[1]):
+                    fd.write(numFormat % d[1][i] + sep)
+                else:
+                    fd.write(' %s' % sep)
             fd.write('\n')
         fd.close()
 
