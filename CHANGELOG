@@ -18,6 +18,8 @@ pyqtgraph-0.9.9  [unreleased]
     - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
       event position.
     - Made setPen() methods consistent throughout the package
+    - Fix in GLScatterPlotItem requires that points will appear slightly more opaque 
+      (so you may need to adjust to lower alpha to achieve the same results)
 
   New Features:
     - Added ViewBox.setLimits() method
@@ -88,6 +90,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed AxisItem not resizing text area when setTicks() is used
     - Removed a few cyclic references
     - Fixed Parameter 'readonly' option for bool, color, and text parameter types
+    - Fixed alpha on GLScatterPlotItem spots (formerly maxed out at alpha=200)
 
 pyqtgraph-0.9.8  2013-11-24
 
