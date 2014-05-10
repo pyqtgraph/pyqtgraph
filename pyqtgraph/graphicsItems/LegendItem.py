@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None):
+    def __init__(self, size=None, offset=None, horSpacing = 25, verSpacing=0, box=True):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -31,22 +31,35 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         offset from the right or bottom. If offset is None, the
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
+        horSpacing      Specifies the spacing between the line symbol and the label.
+        verSpacing      Specifies the spacing between individual entries of the legend
+                        vertically. (Can also be negative to have them really close)
+        box             Specifies if the Legend should will be drawn with a rectangle
+                        around it.
         ==============  ===============================================================
-        
+
         """
-        
-        
+
+
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
         self.layout = QtGui.QGraphicsGridLayout()
+        self.layout.setVerticalSpacing(verSpacing)
+        self.layout.setHorizontalSpacing(horSpacing)
         self.setLayout(self.layout)
-        self.items = []
+        self.legendItems = []
+        self.plotItems = []
         self.size = size
         self.offset = offset
+        self.box = box
+        #A numItems variable needs to be introduced, because chaining removeItem and addItem function in random order,
+        # will otherwise lead to writing in the same layout row. Idea here is to always insert LabelItems on larger
+        # and larger layout row numbers. The GraphicsGridlayout item will not care about empty rows.
+        self.numItems = 0
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
-        
+
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
         if self.offset is not None:
@@ -56,10 +69,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
-        
+
     def addItem(self, item, name):
         """
-        Add a new entry to the legend. 
+        Add a new entry to the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -74,101 +87,107 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = ItemSample(item)        
-        row = len(self.items)
-        self.items.append((sample, label))
-        self.layout.addItem(sample, row, 0)
-        self.layout.addItem(label, row, 1)
+            sample = ItemSample(item)
+
+        self.legendItems.append((sample, label))
+        self.plotItems.append(item)
+        self.layout.addItem(sample, self.numItems, 0)
+        self.layout.addItem(label, self.numItems, 1)
+        self.numItems += 1
         self.updateSize()
-    
+
     def removeItem(self, name):
         """
-        Removes one item from the legend. 
+        Removes one item from the legend.
 
         ==============  ========================================================
         **Arguments:**
-        title           The title displayed for this item.
+        name            Either the name displayed for this item or the originally
+                        added item object.
         ==============  ========================================================
         """
         # Thanks, Ulrich!
         # cycle for a match
-        for sample, label in self.items:
+        for sample, label in self.legendItems:
             if label.text == name:  # hit
-                self.items.remove( (sample, label) )    # remove from itemlist
+                self.legendItems.remove( (sample, label) )    # remove from itemlist
                 self.layout.removeItem(sample)          # remove from layout
                 sample.close()                          # remove from drawing
                 self.layout.removeItem(label)
                 label.close()
                 self.updateSize()                       # redraq box
+                return
+
+        for ind, item in enumerate(self.plotItems):
+            if item == name:
+                sample, label = self.legendItems[ind]
+                self.plotItems.remove(item)
+                self.layout.removeItem(sample)
+                sample.close()
+                self.layout.removeItem(label)
+                label.close()
+                self.legendItems.remove((sample, label))
+                self.updateSize()
 
     def updateSize(self):
         if self.size is not None:
             return
-            
-        height = 0
-        width = 0
-        #print("-------")
-        for sample, label in self.items:
-            height += max(sample.height(), label.height()) + 3
-            width = max(width, sample.width()+label.width())
-            #print(width, height)
-        #print width, height
-        self.setGeometry(0, 0, width+25, height)
-    
+        #we only need to set geometry to 0, as now the horizontal and vertical spacing is set in
+        # __init__.
+        self.setGeometry(0, 0, 0, 0)
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.width(), self.height())
-    
+
     def paint(self, p, *args):
-        p.setPen(fn.mkPen(255,255,255,100))
-        p.setBrush(fn.mkBrush(100,100,100,50))
-        p.drawRect(self.boundingRect())
+        if self.box:
+            p.setPen(fn.mkPen(255,255,255,100))
+            p.setBrush(fn.mkBrush(100,100,100,50))
+            p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev):
         ev.acceptDrags(QtCore.Qt.LeftButton)
-        
+
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
-        
+
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
-    
+
     This may be subclassed to draw custom graphics in a Legend.
     """
     ## Todo: make this more generic; let each item decide how it should be represented.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
-    
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
-        
+
     def paint(self, p, *args):
         #p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
         opts = self.item.opts
-        
+
         if opts.get('fillLevel',None) is not None and opts.get('fillBrush',None) is not None:
             p.setBrush(fn.mkBrush(opts['fillBrush']))
             p.setPen(fn.mkPen(None))
             p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
-        
+
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(2, 18, 18, 2)
-        
+
         symbol = opts.get('symbol', None)
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
-                
+
             pen = fn.mkPen(opts['pen'])
             brush = fn.mkBrush(opts['brush'])
             size = opts['size']
-            
+
             p.translate(10,10)
             path = drawSymbol(p, symbol, size, pen, brush)
-        
-        
-        
         
