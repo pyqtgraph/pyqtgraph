@@ -59,7 +59,9 @@ class InfiniteLine(GraphicsObject):
 
         if pen is None:
             pen = (200, 200, 100)
+        
         self.setPen(pen)
+        self.setHoverPen(color=(255,0,0), width=self.pen.width())
         self.currentPen = self.pen
         #self.setFlag(self.ItemSendsScenePositionChanges)
       
@@ -77,8 +79,22 @@ class InfiniteLine(GraphicsObject):
         """Set the pen for drawing the line. Allowable arguments are any that are valid 
         for :func:`mkPen <pyqtgraph.mkPen>`."""
         self.pen = fn.mkPen(*args, **kwargs)
-        self.currentPen = self.pen
-        self.update()
+        if not self.mouseHovering:
+            self.currentPen = self.pen
+            self.update()
+        
+    def setHoverPen(self, *args, **kwargs):
+        """Set the pen for drawing the line while the mouse hovers over it. 
+        Allowable arguments are any that are valid 
+        for :func:`mkPen <pyqtgraph.mkPen>`.
+        
+        If the line is not movable, then hovering is also disabled.
+        
+        Added in version 0.9.9."""
+        self.hoverPen = fn.mkPen(*args, **kwargs)
+        if self.mouseHovering:
+            self.currentPen = self.hoverPen
+            self.update()
         
     def setAngle(self, angle):
         """
@@ -168,8 +184,9 @@ class InfiniteLine(GraphicsObject):
         px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
         if px is None:
             px = 0
-        br.setBottom(-px*4)
-        br.setTop(px*4)
+        w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+        br.setBottom(-w)
+        br.setTop(w)
         return br.normalized()
     
     def paint(self, p, *args):
@@ -183,25 +200,6 @@ class InfiniteLine(GraphicsObject):
             return None   ## x axis should never be auto-scaled
         else:
             return (0,0)
-        
-    #def mousePressEvent(self, ev):
-        #if self.movable and ev.button() == QtCore.Qt.LeftButton:
-            #ev.accept()
-            #self.pressDelta = self.mapToParent(ev.pos()) - QtCore.QPointF(*self.p)
-        #else:
-            #ev.ignore()
-            
-    #def mouseMoveEvent(self, ev):
-        #self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
-        ##self.emit(QtCore.SIGNAL('dragged'), self)
-        #self.sigDragged.emit(self)
-        #self.hasMoved = True
-
-    #def mouseReleaseEvent(self, ev):
-        #if self.hasMoved and ev.button() == QtCore.Qt.LeftButton:
-            #self.hasMoved = False
-            ##self.emit(QtCore.SIGNAL('positionChangeFinished'), self)
-            #self.sigPositionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
         if self.movable and ev.button() == QtCore.Qt.LeftButton:
@@ -239,12 +237,12 @@ class InfiniteLine(GraphicsObject):
             self.setMouseHover(False)
 
     def setMouseHover(self, hover):
-        ## Inform the item that the mouse is(not) hovering over it
+        ## Inform the item that the mouse is (not) hovering over it
         if self.mouseHovering == hover:
             return
         self.mouseHovering = hover
         if hover:
-            self.currentPen = fn.mkPen(255, 0,0)
+            self.currentPen = self.hoverPen
         else:
             self.currentPen = self.pen
         self.update()
