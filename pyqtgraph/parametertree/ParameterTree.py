@@ -7,9 +7,16 @@ from .ParameterItem import ParameterItem
             
 
 class ParameterTree(TreeWidget):
-    """Widget used to display or control data from a ParameterSet"""
+    """Widget used to display or control data from a hierarchy of Parameters"""
     
     def __init__(self, parent=None, showHeader=True):
+        """
+        ============== ========================================================
+        **Arguments:**
+        parent         (QWidget) An optional parent widget
+        showHeader     (bool) If True, then the QTreeView header is displayed.
+        ============== ========================================================
+        """
         TreeWidget.__init__(self, parent)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setHorizontalScrollMode(self.ScrollPerPixel)
@@ -25,10 +32,35 @@ class ParameterTree(TreeWidget):
         self.setRootIsDecorated(False)
         
     def setParameters(self, param, showTop=True):
+        """
+        Set the top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`
+        to be displayed in this ParameterTree.
+
+        If *showTop* is False, then the top-level parameter is hidden and only 
+        its children will be visible. This is a convenience method equivalent 
+        to::
+        
+            tree.clear()
+            tree.addParameters(param, showTop)
+        """
         self.clear()
         self.addParameters(param, showTop=showTop)
         
     def addParameters(self, param, root=None, depth=0, showTop=True):
+        """
+        Adds one top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`
+        to the view. 
+        
+        ============== ==========================================================
+        **Arguments:** 
+        param          The :class:`Parameter <pyqtgraph.parametertree.Parameter>` 
+                       to add.
+        root           The item within the tree to which *param* should be added.
+                       By default, *param* is added as a top-level item.
+        showTop        If False, then *param* will be hidden, and only its 
+                       children will be visible in the tree.
+        ============== ==========================================================
+        """
         item = param.makeTreeItem(depth=depth)
         if root is None:
             root = self.invisibleRootItem()
@@ -45,11 +77,14 @@ class ParameterTree(TreeWidget):
             self.addParameters(ch, root=item, depth=depth+1)
 
     def clear(self):
-        self.invisibleRootItem().takeChildren()
-        
+        """
+        Remove all parameters from the tree.        
+        """
+        self.invisibleRootItem().takeChildren()        
             
     def focusNext(self, item, forward=True):
-        ## Give input focus to the next (or previous) item after 'item'
+        """Give input focus to the next (or previous) item after *item*
+        """
         while True:
             parent = item.parent()
             if parent is None:
