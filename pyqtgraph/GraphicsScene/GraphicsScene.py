@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QT_EMULATING
 from ..python2_3 import sortList
 import weakref
 from ..Point import Point
@@ -81,7 +81,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
         (otherwise, mouse interaction with those objects will likely fail)
         """
         if HAVE_SIP and isinstance(obj, sip.wrapper):
-            cls._addressCache[sip.unwrapinstance(sip.cast(obj, QtGui.QGraphicsItem))] = obj
+            if QT_EMULATING:
+                cast_target = QtGui.QGraphicsItem._qt_root_class
+            else:
+                cast_target = QtGui.QGraphicsItem
+            cls._addressCache[sip.unwrapinstance(sip.cast(obj, cast_target))] = obj
             
             
     def __init__(self, clickRadius=2, moveDistance=5):
@@ -548,7 +552,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def translateGraphicsItem(item):
         ## for fixing pyqt bugs where the wrong item is returned
         if HAVE_SIP and isinstance(item, sip.wrapper):
-            addr = sip.unwrapinstance(sip.cast(item, QtGui.QGraphicsItem))
+            if QT_EMULATING:
+                cast_target = QtGui.QGraphicsItem._qt_root_class
+            else:
+                cast_target = QtGui.QGraphicsItem
+            addr = sip.unwrapinstance(sip.cast(item, cast_target))
             item = GraphicsScene._addressCache.get(addr, item)
         return item
 

@@ -21,11 +21,11 @@ from ... import pixmaps
 import sys
 
 if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
+    from .plotConfigTemplate_pyqt import Ui_Form
 elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
+    from .plotConfigTemplate_pyside import Ui_Form
 elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
+    from .plotConfigTemplate_pyqt5 import Ui_Form
 
 from ... import functions as fn
 from ...widgets.FileDialog import FileDialog
