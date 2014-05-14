@@ -16,15 +16,16 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from ...Qt import QtGui, QtCore, QtSvg, QT_LIB
+from ... import Qt
+from ...Qt import QtGui, QtCore, QtSvg
 from ... import pixmaps
 import sys
 
-if QT_LIB == 'PyQt4':
+if Qt.QT_LIB == Qt.LIB_PYQT4:
     from .plotConfigTemplate_pyqt import Ui_Form
-elif QT_LIB == 'PySide':
+elif Qt.QT_LIB == Qt.LIB_PYSIDE:
     from .plotConfigTemplate_pyside import Ui_Form
-elif QT_LIB == 'PyQt5':
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
     from .plotConfigTemplate_pyqt5 import Ui_Form
 
 from ... import functions as fn

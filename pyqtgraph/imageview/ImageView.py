@@ -16,8 +16,7 @@ import sys
 import numpy as np
 
 from .. import Qt
-QtCore = Qt.QtCore
-QtGui = Qt.QtGui
+from ..Qt import QtCore, QtGui
 
 if Qt.QT_LIB == Qt.LIB_PYQT5:
     from .ImageViewTemplate_pyqt5 import Ui_Form

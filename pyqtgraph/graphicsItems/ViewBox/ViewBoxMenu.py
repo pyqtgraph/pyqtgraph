@@ -1,12 +1,13 @@
-from ...Qt import QtCore, QtGui, QT_LIB
+from ... import Qt
+from ...Qt import QtCore, QtGui
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
-if QT_LIB == 'PyQt4':
+if Qt.QT_LIB == Qt.LIB_PYQT4:
     from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PySide':
+elif Qt.QT_LIB == Qt.LIB_PYSIDE:
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PyQt5':
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
     from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
     
 import weakref 

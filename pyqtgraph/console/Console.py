@@ -1,7 +1,6 @@
 
 from .. import Qt
-QtCore = Qt.QtCore
-QtGui = Qt.QtGui
+from ..Qt import QtCore, QtGui
 
 import sys, re, os, time, traceback, subprocess
 

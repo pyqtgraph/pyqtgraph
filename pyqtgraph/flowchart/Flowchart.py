@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from .. import Qt
-QtCore = Qt.QtCore
-QtGui = Qt.QtGui
+from ..Qt import QtCore, QtGui
 from .Node import *
 from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *

@@ -7,11 +7,9 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     __package__ = "examples"
 
 from . import initExample
-import pyqtgraph as pg
 from pyqtgraph import Qt
-
-QtCore = Qt.QtCore
-QtGui = Qt.QtGui
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph as pg
 
 if Qt.QT_LIB == Qt.LIB_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form

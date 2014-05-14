@@ -17,8 +17,7 @@ class ButtonItem(GraphicsObject):
             
         if width is not None:
             s = float(width) / self.pixmap.width()
-            #self.scale(s, s)
-            self.setScale(s)
+            self.scale(s, s)
         if parentItem is not None:
             self.setParentItem(parentItem)
         self.setOpacity(0.7)
