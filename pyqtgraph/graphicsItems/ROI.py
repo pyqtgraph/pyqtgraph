@@ -466,8 +466,6 @@ class ROI(GraphicsObject):
         """
         pos = Point(pos)
         center = Point(center)
-        if pos[0] != center[0] and pos[1] != center[1]:
-            raise Exception("Scale/rotate handles must have either the same x or y coordinate as their center point.")
         return self.addHandle({'name': name, 'type': 'sr', 'center': center, 'pos': pos, 'item': item}, index=index)
     
     def addRotateFreeHandle(self, pos, center, axes=None, item=None, name=None, index=None):
@@ -860,11 +858,6 @@ class ROI(GraphicsObject):
                 h['item'].setPos(self.mapFromScene(p1))  ## changes ROI coordinates of handle
                 
         elif h['type'] == 'sr':
-            if h['center'][0] == h['pos'][0]:
-                scaleAxis = 1
-            else:
-                scaleAxis = 0
-            
             try:
                 if lp1.length() == 0 or lp0.length() == 0:
                     return
@@ -878,14 +871,13 @@ class ROI(GraphicsObject):
                 #ang = round(ang / (np.pi/12.)) * (np.pi/12.)
                 ang = round(ang / 15.) * 15.
             
-            hs = abs(h['pos'][scaleAxis] - c[scaleAxis])
-            newState['size'][scaleAxis] = lp1.length() / hs
+            newState['size'][0] = self.state['size'][0] * lp1.length() / lp0.length()
+            newState['size'][1] = self.state['size'][1] * lp1.length() / lp0.length()
             #if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
             if self.scaleSnap:  ## use CTRL only for angular snap here.
-                newState['size'][scaleAxis] = round(newState['size'][scaleAxis] / self.snapSize) * self.snapSize
-            if newState['size'][scaleAxis] == 0:
-                newState['size'][scaleAxis] = 1
-                
+                newState['size'][0] = round(newState['size'][0] / self.snapSize) * self.snapSize
+                newState['size'][1] = round(newState['size'][1] / self.snapSize) * self.snapSize
+
             c1 = c * newState['size']
             tr = QtGui.QTransform()
             tr.rotate(ang)
