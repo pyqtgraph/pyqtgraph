@@ -18,6 +18,13 @@ class TableParameterItem(pTypes.WidgetParameterItem):
                       to define the size and structure of the table.
     others            any other arguments are passed to *Parameter*
     ================= ==================================================================
+    
+    How to use:
+    
+    Add the following to the *params* list:
+    
+        TableParameter(name=<a string>, value=<a recArray>),
+
     """
     def __init__(self, param, depth):
         pTypes.WidgetParameterItem.__init__(self, param, depth)
