@@ -188,7 +188,7 @@ def _GetQtVersionStr():
     if QT_API == API_PYQT4:
         return QtCore.QT_VERSION_STR
     elif QT_API == API_PYSIDE:
-        QtVersion = PySide.QtCore.__version__
+        return PySide.QtCore.__version__
 
 
 def _GetVERSION_INFO():
