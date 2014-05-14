@@ -7,3 +7,6 @@ deb_build
 dist
 .idea
 rtr.cvs
+
+# Distribution / packaging
+*.egg-info/

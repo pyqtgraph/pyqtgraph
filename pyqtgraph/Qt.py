@@ -1,15 +1,16 @@
 """
 This module exists to smooth out some of the differences between PySide and
-PyQt4, as well as the more significant changes made with Qt5/PyQt5:
+PyQt4, as well enable PyQt5 use via the qt_backport module.
 
 * Automatically import either PyQt4 or PySide depending on availability
 * Allow to import QtCore/QtGui pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
 * Declare QtCore.Signal, .Slot in PyQt4  
 * Declare loadUiType function for Pyside
-* Fake out the new Qt5/PyQt5 object locations so that they mirror the old Qt4
-   locations.  A lot of things moved around (eg: all widgets moved from QtGui
-   to QtWidgets!)
+* Make use of PyQt5 through qt_backport, when available.
+* Provide visibility to the rest of pyqtgraph on what specific wrapper lib, api,
+  or emulation is in use through various QT_ exports (for context-dependent
+  implementations).
 
 """
 
@@ -57,7 +58,7 @@ if not QT_API:
 if QT_API is None:
     #no usable api available!
     msg = ("PyQtGraph requires one of %r, but none of these could be "
-           "imported." % QT_APIS)
+           "imported." % (QT_APIS, ))
     #Let's be helpful and see if they have PyQt5 but forgot the wrapper...
     try:
         import PyQt5
