@@ -1,10 +1,15 @@
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from .. import Qt
+from ..Qt import QtCore, QtGui
+
 import sys, re, os, time, traceback, subprocess
-if USE_PYSIDE:
+
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
     from . import template_pyside as template
-else:
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
     from . import template_pyqt as template
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    from . import template_pyqt5 as template
     
 from .. import exceptionHandling as exceptionHandling
 import pickle

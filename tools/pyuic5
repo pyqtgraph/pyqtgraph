@@ -1,0 +1,2 @@
+#!/usr/bin/python3
+import PyQt5.uic.pyuic

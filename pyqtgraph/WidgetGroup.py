@@ -8,7 +8,7 @@ This class addresses the problem of having to save and restore the state
 of a large group of widgets. 
 """
 
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, QT_EMULATING
 import weakref, inspect
 from .python2_3 import asUnicode
 
@@ -128,7 +128,13 @@ class WidgetGroup(QtCore.QObject):
         self.scales = weakref.WeakKeyDictionary()
         self.cache = {}  ## name:value pairs
         self.uncachedWidgets = weakref.WeakKeyDictionary()
-        if isinstance(widgetList, QtCore.QObject):
+        
+        if not QT_EMULATING:
+            qobj_cls = QtCore.QObject
+        else:
+            qobj_cls = QtCore.QObject._qt_root_class
+        
+        if isinstance(widgetList, qobj_cls):
             self.autoAdd(widgetList)
         elif isinstance(widgetList, list):
             for w in widgetList:
@@ -219,7 +225,8 @@ class WidgetGroup(QtCore.QObject):
         v2 = self.readWidget(w)
         if v1 != v2:
             #print "widget", n, " = ", v2
-            self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
+            #why two emissions below?  Old style not supported.  Likely cruft.
+            #self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
             self.sigChanged.emit(self.widgetList[w], v2)
         
     def state(self):
