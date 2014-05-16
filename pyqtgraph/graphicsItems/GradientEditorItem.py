@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, USE_PYSIDE
 from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
@@ -781,9 +781,22 @@ class GradientEditorItem(TickSliderItem):
         self.updateGradient()
         self.sigGradientChangeFinished.emit(self)
 
-        
-class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsObject instead results in 
-                                    ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
+
+
+if USE_PYSIDE:
+    #PySide has a bug that is activated by subclassing Tick from a pyqtgraph
+    #GraphicsObject.  We need to use a basic Qt QGraphicsObject here.
+    #  - the bug: https://bugreports.qt-project.org/browse/PYSIDE-86
+    _TickBaseClass = QtGui.QGraphicsObject
+else:
+    #PyQt4 (and PyQt5) do not have the PySide bug, so we can subclass from
+    #our preferred GraphicsWidget class. With PyQt4/5 this is essential since
+    #the Tick needs the QWidget item registration required to make
+    #QGraphicsScene.translateGraphicsItem() fix the PyQt4/5 bug in items()
+    #detection.
+    _TickBaseClass = GraphicsWidget
+    
+class Tick(_TickBaseClass):
     ## private class
     
     sigMoving = QtCore.Signal(object)
