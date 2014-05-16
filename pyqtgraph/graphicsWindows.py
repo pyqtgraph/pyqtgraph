@@ -24,13 +24,17 @@ class GraphicsWindow(GraphicsLayoutWidget):
     <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from 
     the interactive python prompt.
     """
-    def __init__(self, title=None, size=(800,600), **kargs):
+    def __init__(self, title=None, size=(800,600), show_now=True, **kargs):
         mkQApp()
         GraphicsLayoutWidget.__init__(self, **kargs)
         self.resize(*size)
         if title is not None:
             self.setWindowTitle(title)
-        self.show()
+        #There is a Qt bug that causes problems if you show() before layout
+        #is finished.  show_now provides a workaround for this.
+        #  - see https://bugreports.qt-project.org/browse/QTBUG-39019
+        if show_now:
+            self.show()
         
 
 class TabWindow(QtGui.QMainWindow):
@@ -52,7 +56,7 @@ class TabWindow(QtGui.QMainWindow):
     
 
 class PlotWindow(PlotWidget):
-    def __init__(self, title=None, **kargs):
+    def __init__(self, title=None, show_now=True, **kargs):
         mkQApp()
         self.win = QtGui.QMainWindow()
         PlotWidget.__init__(self, **kargs)
@@ -61,7 +65,11 @@ class PlotWindow(PlotWidget):
             setattr(self, m, getattr(self.win, m))
         if title is not None:
             self.win.setWindowTitle(title)
-        self.win.show()
+        if show_now:
+            #There is a Qt bug that causes problems if you show() before layout
+            #is finished.  show_now provides a workaround for this.
+            #  - see https://bugreports.qt-project.org/browse/QTBUG-39019
+            self.win.show()
 
 
 class ImageWindow(ImageView):

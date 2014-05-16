@@ -19,7 +19,6 @@ app = QtGui.QApplication([])
 
 w = QtGui.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
-w.show()
 w.resize(400,600)
 w.setCentralWidget(cw)
 w.setWindowTitle('pyqtgraph example: Arrow')
@@ -49,6 +48,10 @@ a.setStyle(headLen=40)
 p2.addItem(a)
 anim = a.makeAnimation(loop=-1)
 anim.start()
+
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+w.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

@@ -16,7 +16,6 @@ app = QtGui.QApplication([])
 view = pg.GraphicsView()
 l = pg.GraphicsLayout(border=(100,100,100))
 view.setCentralItem(l)
-view.show()
 view.setWindowTitle('pyqtgraph example: GraphicsLayout')
 view.resize(800,600)
 
@@ -78,7 +77,9 @@ p2.plot([1,3,2,4,3,5])
 p4.plot([1,3,2,4,3,5])
 p5.plot([1,3,2,4,3,5])
 
-
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+view.show()
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 
-win = pg.GraphicsWindow(title="Basic plotting examples")
+win = pg.GraphicsWindow(title="Basic plotting examples", show_now=False)
 win.resize(1000,600)
 win.setWindowTitle('pyqtgraph example: LogPlotTest')
 
@@ -29,6 +29,9 @@ p5.setLabel('left', "Y Axis", units='A')
 p5.setLabel('bottom', "Y Axis", units='s')
 p5.setLogMode(x=True, y=False)
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

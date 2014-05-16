@@ -12,7 +12,6 @@ import numpy as np
 app = QtGui.QApplication([])
 
 w = pg.TableWidget()
-w.show()
 w.resize(500,500)
 w.setWindowTitle('pyqtgraph example: TableWidget')
 
@@ -26,6 +25,9 @@ data = np.array([
     
 w.setData(data)
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+w.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

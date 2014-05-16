@@ -23,10 +23,12 @@ d = {
 }
 
 tree = pg.DataTreeWidget(data=d)
-tree.show()
 tree.setWindowTitle('pyqtgraph example: DataTreeWidget')
 tree.resize(600,600)
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+tree.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

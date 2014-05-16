@@ -16,7 +16,7 @@ x = np.arange(1000, dtype=float)
 y = np.random.normal(size=1000)
 y += 5 * np.sin(x/100) 
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsWindow(show_now=False)
 win.setWindowTitle('pyqtgraph example: ____')
 win.resize(1000, 800)
 win.ci.setBorder((50, 50, 100))
@@ -81,7 +81,9 @@ v6.setAutoVisible(x=False, y=True)
 l6 = pg.PlotDataItem(y)
 v6.addItem(l6)
 
-
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

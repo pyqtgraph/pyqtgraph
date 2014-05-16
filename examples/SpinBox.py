@@ -34,7 +34,7 @@ cw = QtGui.QWidget()
 layout = QtGui.QGridLayout()
 cw.setLayout(layout)
 win.setCentralWidget(cw)
-win.show()
+
 #win.resize(300, 600)
 changingLabel = QtGui.QLabel()  ## updated immediately
 changedLabel = QtGui.QLabel()   ## updated only when editing is finished or mouse wheel has stopped for 0.3sec
@@ -108,6 +108,9 @@ layout.addWidget(changedLabel, 2, 1)
             #s.valueChanged.disconnect()
             #s.editingFinished.disconnect()
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

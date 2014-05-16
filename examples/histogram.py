@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsWindow(show_now = False)
 win.resize(800,350)
 win.setWindowTitle('pyqtgraph example: Histogram')
 plt1 = win.addPlot()
@@ -28,6 +28,10 @@ plt1.plot(x, y, stepMode=True, fillLevel=0, brush=(0,0,255,150))
 y = pg.pseudoScatter(vals, spacing=0.15)
 #plt2.plot(vals, y, pen=None, symbol='o', symbolSize=5)
 plt2.plot(vals, y, pen=None, symbol='o', symbolSize=5, symbolPen=(255,255,255,200), symbolBrush=(0,0,255,150))
+
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

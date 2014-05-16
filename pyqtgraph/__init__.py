@@ -358,7 +358,7 @@ def plot(*args, **kargs):
     #if len(args)+len(kargs) > 0:
         #w.plot(*args, **kargs)
         
-    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
+    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background', 'show_now']
     pwArgs = {}
     dataArgs = {}
     for k in kargs:
@@ -371,7 +371,11 @@ def plot(*args, **kargs):
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
-    w.show()
+    if kargs.get("show_now", True):
+        #There is a Qt bug that causes problems if you show() before layout
+        #is finished.  show_now provides a workaround for this.
+        #  - see https://bugreports.qt-project.org/browse/QTBUG-39019
+        w.win.show()
     return w
     
 def image(*args, **kargs):
