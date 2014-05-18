@@ -33,6 +33,10 @@ else:
 
 if USE_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
+    try:
+        from PySide import QtTest
+    except ImportError:
+        pass
     import PySide
     try:
         from PySide import shiboken
@@ -104,6 +108,10 @@ else:
         pass
     try:
         from PyQt4 import QtOpenGL
+    except ImportError:
+        pass
+    try:
+        from PyQt4 import QtTest
     except ImportError:
         pass
 

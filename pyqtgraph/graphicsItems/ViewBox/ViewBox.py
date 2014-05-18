@@ -671,7 +671,10 @@ class ViewBox(GraphicsWidget):
         Added in version 0.9.9
         """
         update = False
-        
+        allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
+        for kwd in kwds:
+            if kwd not in allowed:
+                raise ValueError("Invalid keyword argument '%s'." % kwd)
         #for kwd in ['xLimits', 'yLimits', 'minRange', 'maxRange']:
             #if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
                 #self.state['limits'][kwd] = kwds[kwd]
@@ -1511,7 +1514,8 @@ class ViewBox(GraphicsWidget):
                 if dx != 0:
                     changed[0] = True
                 viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
-                
+
+            
         # ----------- Make corrections for view limits -----------
         
         limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -1562,7 +1566,7 @@ class ViewBox(GraphicsWidget):
                 changed[axis] = True
             
             #print "after applying edge limits:", viewRange[axis]
-            
+
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
         
