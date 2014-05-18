@@ -1312,6 +1312,8 @@ class ViewBox(GraphicsWidget):
             ev.ignore()
 
     def scaleHistory(self, d):
+        if len(self.axHistory) == 0:
+            return
         ptr = max(0, min(len(self.axHistory)-1, self.axHistoryPointer+d))
         if ptr != self.axHistoryPointer:
             self.axHistoryPointer = ptr
