@@ -18,14 +18,10 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import h5py
-
 import sys, os
-if len(sys.argv) > 1:
-    fileName = sys.argv[1]
-else:
-    fileName = 'test.hdf5'
-    if not os.path.isfile(fileName):
-        raise Exception("No suitable HDF5 file found. Use createFile() to generate an example file.")
+
+pg.mkQApp()
+
 
 plt = pg.plot()
 plt.setWindowTitle('pyqtgraph example: HDF5 big data')
@@ -101,10 +97,6 @@ class HDF5Plot(pg.PlotCurveItem):
         self.scale(scale, 1)  # scale to match downsampling
 
         
-f = h5py.File(fileName, 'r')
-curve = HDF5Plot()
-curve.setHDF5(f['data'])
-plt.addItem(curve)
 
 
 def createFile(finalSize=2000000000):
@@ -118,17 +110,42 @@ def createFile(finalSize=2000000000):
     f.create_dataset('data', data=chunk, chunks=True, maxshape=(None,))
     data = f['data']
 
-    for i in range(finalSize // (chunk.size * chunk.itemsize)):
-        newshape = [data.shape[0] + chunk.shape[0]]
-        data.resize(newshape)
-        data[-chunk.shape[0]:] = chunk
-        
+    nChunks = finalSize // (chunk.size * chunk.itemsize)
+    with pg.ProgressDialog("Generating test.hdf5...", 0, nChunks) as dlg:
+        for i in range(nChunks):
+            newshape = [data.shape[0] + chunk.shape[0]]
+            data.resize(newshape)
+            data[-chunk.shape[0]:] = chunk
+            dlg += 1
+            if dlg.wasCanceled():
+                f.close()
+                os.remove('test.hdf5')
+                sys.exit()
+        dlg += 1
     f.close()
     
+if len(sys.argv) > 1:
+    fileName = sys.argv[1]
+else:
+    fileName = 'test.hdf5'
+    if not os.path.isfile(fileName):
+        size, ok = QtGui.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
+        if not ok:
+            sys.exit(0)
+        else:
+            createFile(int(size*1e9))
+        #raise Exception("No suitable HDF5 file found. Use createFile() to generate an example file.")
+
+f = h5py.File(fileName, 'r')
+curve = HDF5Plot()
+curve.setHDF5(f['data'])
+plt.addItem(curve)
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
+    
+    
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
