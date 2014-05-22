@@ -539,8 +539,8 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
         
         Parameter.setLimits(self, limits)
-        #print self.name(), self.value(), limits
-        if len(self.reverse) > 0 and self.value() not in self.reverse[0]:
+        #print self.name(), self.value(), limits, self.reverse
+        if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
             self.setValue(self.reverse[0][0])
             
     #def addItem(self, name, value=None):
