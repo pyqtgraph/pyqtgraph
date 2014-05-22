@@ -1,1 +1,1 @@
-from chain import ChainSim
+from .chain import ChainSim

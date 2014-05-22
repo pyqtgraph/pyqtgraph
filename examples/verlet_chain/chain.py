@@ -1,7 +1,7 @@
 import pyqtgraph as pg
 import numpy as np
 import time
-from relax import relax
+from .relax import relax
 
 
 class ChainSim(pg.QtCore.QObject):

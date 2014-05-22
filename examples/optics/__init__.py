@@ -1,1 +1,1 @@
-from pyoptic import *
+from .pyoptic import *

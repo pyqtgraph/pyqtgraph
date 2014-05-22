@@ -14,7 +14,7 @@ class GlassDB:
     def __init__(self, fileName='schott_glasses.csv'):
         path = os.path.dirname(__file__)
         fh = gzip.open(os.path.join(path, 'schott_glasses.csv.gz'), 'rb')
-        r = csv.reader(fh.readlines())
+        r = csv.reader(map(str, fh.readlines()))
         lines = [x for x in r]
         self.data = {}
         header = lines[0]
@@ -47,8 +47,8 @@ class GlassDB:
         info = self.data[glass]
         cache = info['ior_cache']
         if wl not in cache:
-            B = map(float, [info['B1'], info['B2'], info['B3']])
-            C = map(float, [info['C1'], info['C2'], info['C3']])
+            B = list(map(float, [info['B1'], info['B2'], info['B3']]))
+            C = list(map(float, [info['C1'], info['C2'], info['C3']]))
             w2 = (wl/1000.)**2
             n = np.sqrt(1.0 + (B[0]*w2 / (w2-C[0])) + (B[1]*w2 / (w2-C[1])) + (B[2]*w2 / (w2-C[2])))
             cache[wl] = n
