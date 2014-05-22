@@ -32,6 +32,11 @@ examples = OrderedDict([
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('HDF5 big data', 'hdf5.py'),
+    ('Demos', OrderedDict([
+        ('Optics', 'optics_demos.py'),
+        ('Special relativity', 'relativity_demo.py'),
+        ('Verlet chain', 'verlet_chain_demo.py'),
+    ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
