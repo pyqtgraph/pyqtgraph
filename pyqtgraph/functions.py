@@ -538,7 +538,6 @@ def interpolateArray(data, x, default=0.0):
     
     prof = debug.Profiler()
     
-    result = np.empty(x.shape[:-1] + data.shape, dtype=data.dtype)
     nd = data.ndim
     md = x.shape[-1]
 
