@@ -546,7 +546,7 @@ class PlotDataItem(GraphicsObject):
                 if view is None or not view.autoRangeEnabled()[0]:
                     # this option presumes that x-values have uniform spacing
                     range = self.viewRect()
-                    if range is not None:
+                    if range is not None and len(x) > 1:
                         dx = float(x[-1]-x[0]) / (len(x)-1)
                         # clip to visible region extended by downsampling value
                         x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)

@@ -31,6 +31,7 @@ examples = OrderedDict([
     ('Histograms', 'histogram.py'),
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
+    ('Scrolling plots', 'scrollingPlots.py'),
     ('HDF5 big data', 'hdf5.py'),
     ('Demos', OrderedDict([
         ('Optics', 'optics_demos.py'),
