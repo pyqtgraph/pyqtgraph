@@ -347,8 +347,8 @@ class ROI(GraphicsObject):
     def handleMoveStarted(self):
         self.preMoveState = self.getState()
 
-    def addTranslateHandle(
-        self, pos, axes=None, item=None, name=None, index=None):
+    def addTranslateHandle(self,
+                           pos, axes=None, item=None, name=None, index=None):
         """
         Add a new translation handle to the ROI. Dragging the handle will move
         the entire ROI without changing its angle or shape.
@@ -374,8 +374,8 @@ class ROI(GraphicsObject):
         return self.addHandle(
             {'name': name, 'type': 't', 'pos': pos, 'item': item}, index=index)
 
-    def addFreeHandle(
-        self, pos=None, axes=None, item=None, name=None, index=None):
+    def addFreeHandle(self,
+                      pos=None, axes=None, item=None, name=None, index=None):
         """
         Add a new free handle to the ROI. Dragging free handles has no effect
         on the position or shape of the ROI.
@@ -453,12 +453,15 @@ class ROI(GraphicsObject):
         """
         pos = Point(pos)
         center = Point(center)
-        return self.addHandle(
-            {'name': name, 'type': 'r', 'center': center, 'pos': pos, 'item': item},
-            index=index)
+        return self.addHandle({'name': name,
+                               'type': 'r',
+                               'center': center,
+                               'pos': pos,
+                               'item': item},
+                              index=index)
 
-    def addScaleRotateHandle(
-        self, pos, center, item=None, name=None, index=None):
+    def addScaleRotateHandle(self,
+                             pos, center, item=None, name=None, index=None):
         """
         Add a new scale+rotation handle to the ROI. When dragging a handle of
         this type, the user can simultaneously rotate the ROI around an
@@ -483,11 +486,17 @@ class ROI(GraphicsObject):
         pos = Point(pos)
         center = Point(center)
         if pos[0] != center[0] and pos[1] != center[1]:
-            raise Exception("Scale/rotate handles must have either the same x or y coordinate as their center point.")
-        return self.addHandle({'name': name, 'type': 'sr', 'center': center, 'pos': pos, 'item': item}, index=index)
+            raise Exception("Scale/rotate handles must have either the same x "
+                            "or y coordinate as their center point.")
+        return self.addHandle({'name': name,
+                               'type': 'sr',
+                               'center': center,
+                               'pos': pos,
+                               'item': item},
+                              index=index)
 
-    def addRotateFreeHandle(
-        self, pos, center, axes=None, item=None, name=None, index=None):
+    def addRotateFreeHandle(self, pos, center,
+                            axes=None, item=None, name=None, index=None):
         """
         Add a new rotation+free handle to the ROI. When dragging a handle of
         this type, the user can rotate the ROI around an
@@ -1381,8 +1390,8 @@ class Handle(UIGraphicsItem):
             pos = ev.scenePos() + self.cursorOffset
             self.movePoint(pos, ev.modifiers(), finish=False)
 
-    def movePoint(
-        self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
+    def movePoint(self,
+                  pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return
@@ -1961,8 +1970,8 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(
-        self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img,
+                       axes=(0, 1), returnMappedCoords=False, **kwds):
         """
         Return the result of ROI.getArrayRegion(), masked by the shape of the
         ROI. Values outside the ROI shape are set to 0.
@@ -1997,7 +2006,7 @@ class LineSegmentROI(ROI):
     """
     ROI subclass with two freely-moving handles defining a line.
 
-    ============== =============================================================
+    ============== ============================================================
     **Arguments**
     positions      (list of two length-2 sequences) The endpoints of the line
                    segment. Note that, unlike the handle positions specified in
@@ -2005,16 +2014,16 @@ class LineSegmentROI(ROI):
                    coordinate system of the ROI, rather than (0 to 1) relative
                    to the size of the ROI.
     \**args        All extra keyword arguments are passed to ROI()
-    ============== =============================================================
+    ============== ============================================================
     """
 
-    def __init__(
-        self, positions=(None, None), pos=None, handles=(None,None), **args):
+    def __init__(self, positions=(None, None), pos=None, handles=(None, None),
+                 **args):
         if pos is None:
-            pos = [0,0]
+            pos = [0, 0]
 
-        ROI.__init__(self, pos, [1,1], **args)
-        #ROI.__init__(self, positions[0])
+        ROI.__init__(self, pos, [1, 1], **args)
+        # ROI.__init__(self, positions[0])
         if len(positions) > 2:
             raise Exception("LineSegmentROI must be defined by exactly 2 "
                             "positions. For more points, use PolyLineROI.")
