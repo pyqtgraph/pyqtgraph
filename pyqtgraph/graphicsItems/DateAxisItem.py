@@ -5,6 +5,7 @@ from .AxisItem import AxisItem
 
 __all__ = ['DateAxisItem', 'ZoomLevel']
 
+MS_SPACING = 1/1000.0
 SECOND_SPACING = 1
 MINUTE_SPACING = 60
 HOUR_SPACING = 3600
@@ -13,54 +14,79 @@ WEEK_SPACING = 7 * DAY_SPACING
 MONTH_SPACING = 30 * DAY_SPACING
 YEAR_SPACING = 365 * DAY_SPACING
 
-def makeSStepper(n):
-    def stepper(val):
-        return (val // n + 1) * n
+def makeMSStepper(stepSize):
+    def stepper(val, n):
+        val *= 1000
+        f = stepSize * 1000
+        return (val // (n*f) + 1) * (n*f) / 1000.0
     return stepper
 
-def makeMStepper(n):
-    def stepper(val):
+def makeSStepper(stepSize):
+    def stepper(val, n):
+        return (val // (n*stepSize) + 1) * (n*stepSize)
+    return stepper
+
+def makeMStepper(stepSize):
+    def stepper(val, n):
         d = datetime.utcfromtimestamp(val)
-        base0m = (d.month + n - 1)
+        base0m = (d.month + n*stepSize - 1)
         d = datetime(d.year + base0m / 12, base0m % 12 + 1, 1)
         return (d - datetime(1970, 1, 1)).total_seconds()
     return stepper
 
-def makeYStepper(n):
-    def stepper(val):
+def makeYStepper(stepSize):
+    def stepper(val, n):
         d = datetime.utcfromtimestamp(val)
-        new_date = datetime(d.year + n, 1, 1)
-        return (new_date - datetime(1970, 1, 1)).total_seconds()
+        next_date = datetime((d.year // (n*stepSize) + 1) * (n*stepSize), 1, 1)
+        return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
 
 
 class TickSpec:
-    """ Specifies the properties for a set of date ticks and provides and
-    computes ticks within a given utc timestamp range """
-    def __init__(self, spacing, stepper, format):
+    """ Specifies the properties for a set of date ticks and computes ticks
+    within a given utc timestamp range """
+    def __init__(self, spacing, stepper, format, autoSkip=None):
         """
         ============= ==========================================================
         Arguments
         spacing       approximate (average) tick spacing
-        stepper       a stepper function that takes a utc time stamp and returns
-                      the start of the next unit, as created by the
-                      make_X_stepper functions
+        stepper       a stepper function that takes a utc time stamp and a step
+                      steps number n to compute the start of the next unit. You
+                      can use the make_X_stepper functions to create common
+                      steppers.
         format        a strftime compatible format string which will be used to
                       convert tick locations to date/time strings
+        autoSkip      list of step size multipliers to be applied when the tick
+                      density becomes too high. The tick spec automatically
+                      applies additional powers of 10 (10, 100, ...) to the list
+                      if necessary. Set to None to switch autoSkip off
         ============= ==========================================================
 
         """
         self.spacing = spacing
         self.step = stepper
         self.format = format
+        self.autoSkip = autoSkip
 
-    def makeTicks(self, minVal, maxVal):
+    def makeTicks(self, minVal, maxVal, minSpc):
         ticks = []
-        x = self.step(minVal)
+        n = self.skipFactor(minSpc)
+        x = self.step(minVal, n)
         while x <= maxVal:
             ticks.append(x)
-            x = self.step(x)
-        return np.array(ticks)
+            x = self.step(x, n)
+        return (np.array(ticks), n)
+
+    def skipFactor(self, minSpc):
+        if self.autoSkip is None or minSpc < self.spacing:
+            return 1
+        factors = np.array(self.autoSkip)
+        while True:
+            for f in factors:
+                spc = self.spacing * f
+                if spc > minSpc:
+                    return f
+            factors *= 10
 
 
 class ZoomLevel:
@@ -68,7 +94,7 @@ class ZoomLevel:
     def __init__(self, tickSpecs):
         """
         ============= ==========================================================
-        tickSpecs     a list of one or more TickSpec objects to with decreasing
+        tickSpecs     a list of one or more TickSpec objects with decreasing
                       coarseness
         ============= ==========================================================
 
@@ -76,9 +102,12 @@ class ZoomLevel:
         self.tickSpecs = tickSpecs
         self.utcOffset = 0
 
-    def tickValues(self, minVal, maxVal):
+    def tickValues(self, minVal, maxVal, minSpc):
         # return tick values for this format in the range minVal, maxVal
         # the return value is a list of tuples (<avg spacing>, [tick positions])
+        # minSpc indicates the minimum spacing (in seconds) between two ticks
+        # to fullfill the maxTicksPerPt constraint of the DateAxisItem at the
+        # current zoom level. This is used for auto skipping ticks.
         allTicks = []
         valueSpecs = []
         # back-project (minVal maxVal) to UTC, compute ticks then offset to
@@ -86,39 +115,45 @@ class ZoomLevel:
         utcMin = minVal - self.utcOffset
         utcMax = maxVal - self.utcOffset
         for spec in self.tickSpecs:
-            ticks = spec.makeTicks(utcMin, utcMax)
+            ticks, skipFactor = spec.makeTicks(utcMin, utcMax, minSpc)
             # reposition tick labels to local time coordinates
             ticks += self.utcOffset
             # remove any ticks that were present in higher levels
             tick_list = [x for x in ticks.tolist() if x not in allTicks]
             allTicks.extend(tick_list)
             valueSpecs.append((spec.spacing, tick_list))
+            # if we're skipping ticks on the current level there's no point in
+            # producing lower level ticks
+            if skipFactor > 1:
+                break
         return valueSpecs
 
 
 YEAR_MONTH_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(YEAR_SPACING, makeYStepper(1), '%Y'),
+    TickSpec(YEAR_SPACING, makeYStepper(1), '%Y', autoSkip=[1, 5, 10, 25]),
     TickSpec(MONTH_SPACING, makeMStepper(1), '%b')
 ])
 MONTH_DAY_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(MONTH_SPACING, makeMStepper(1), '%b %d'),
-    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d')
-])
-DAY_6HOUR_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
-    TickSpec(6*HOUR_SPACING, makeSStepper(6*HOUR_SPACING), '%H:%M')
+    TickSpec(MONTH_SPACING, makeMStepper(1), '%b'),
+    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d', autoSkip=[1, 5])
 ])
 DAY_HOUR_ZOOM_LEVEL = ZoomLevel([
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
-    TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), '%H:%M')
-])
-HOUR_15MIN_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), '%H:%M'),
-    TickSpec(15*MINUTE_SPACING, makeSStepper(15*MINUTE_SPACING), '%H:%M')
+    TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), '%H:%M', autoSkip=[1, 6])
 ])
 HOUR_MINUTE_ZOOM_LEVEL = ZoomLevel([
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
-    TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M')
+    TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M',
+             autoSkip=[1, 5, 15])
+])
+HMS_ZOOM_LEVEL = ZoomLevel([
+    TickSpec(SECOND_SPACING, makeSStepper(SECOND_SPACING), '%H:%M:%S',
+             autoSkip=[1, 5, 15, 30])
+])
+MS_ZOOM_LEVEL = ZoomLevel([
+    TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M:%S'),
+    TickSpec(MS_SPACING, makeMSStepper(MS_SPACING), '%S.%f',
+             autoSkip=[1, 5, 10, 25])
 ])
 
 
@@ -136,18 +171,18 @@ class DateAxisItem(AxisItem):
 
     def __init__(self, orientation, **kvargs):
         super(DateAxisItem, self).__init__(orientation, **kvargs)
-         # Set the zoom level to use depending on the time density on the axis
+        # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
-        # 50 pt is a reasonable spacing for short labels
-        pt = 50.0
+        # we need about 60pt for our largest label
+        self.maxTicksPerPt = 1/60.0
         self.zoomLevels = {
-            60/pt:          HOUR_MINUTE_ZOOM_LEVEL,
-            15*60/pt:       HOUR_15MIN_ZOOM_LEVEL,
-            3600/pt:        DAY_HOUR_ZOOM_LEVEL,
-            6*3600/pt:      DAY_6HOUR_ZOOM_LEVEL,
-            3600*24/pt:     MONTH_DAY_ZOOM_LEVEL,
-            3600*24*30/pt:  YEAR_MONTH_ZOOM_LEVEL
+            self.maxTicksPerPt:               MS_ZOOM_LEVEL,
+            30 * self.maxTicksPerPt:          HMS_ZOOM_LEVEL,
+            15 * 60 * self.maxTicksPerPt:     HOUR_MINUTE_ZOOM_LEVEL,
+            6 * 3600 * self.maxTicksPerPt:    DAY_HOUR_ZOOM_LEVEL,
+            5 * 3600*24 * self.maxTicksPerPt: MONTH_DAY_ZOOM_LEVEL,
+            3600*24*30 * self.maxTicksPerPt:  YEAR_MONTH_ZOOM_LEVEL
         }
 
     def tickStrings(self, values, scale, spacing):
@@ -157,7 +192,11 @@ class DateAxisItem(AxisItem):
         formatStrings = []
         for x in dates:
             try:
-                formatStrings.append(x.strftime(tickSpec.format))
+                if '%f' in tickSpec.format:
+                    # we only support ms precision
+                    formatStrings.append(x.strftime(tickSpec.format)[:-3])
+                else:
+                    formatStrings.append(x.strftime(tickSpec.format))
             except ValueError:  # Windows can't handle dates before 1970
                 formatStrings.append('')
         return formatStrings
@@ -165,7 +204,8 @@ class DateAxisItem(AxisItem):
     def tickValues(self, minVal, maxVal, size):
         density = (maxVal - minVal) / size
         self.setZoomLevelForDensity(density)
-        values = self.zoomLevel.tickValues(minVal, maxVal)
+        minSpacing = density / self.maxTicksPerPt
+        values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=minSpacing)
         return values
 
     def setZoomLevelForDensity(self, density):
