@@ -15,7 +15,7 @@ YEAR_SPACING = 365 * DAY_SPACING
 
 def makeSStepper(n):
     def stepper(val):
-        return int(val / n + 1) * n
+        return (val // n + 1) * n
     return stepper
 
 def makeMStepper(n):
