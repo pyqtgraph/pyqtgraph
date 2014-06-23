@@ -54,6 +54,7 @@ pyqtgraph-0.9.9  [unreleased]
     - Docks now have optional close button
     - Added InfiniteLine.setHoverPen
     - Added GLVolumeItem.setData
+    - Added PolyLineROI.setPoints, clearPoints, saveState, setState
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px

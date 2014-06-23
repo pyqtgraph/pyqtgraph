@@ -1804,13 +1804,56 @@ class PolyLineROI(ROI):
         self.segments = []
         ROI.__init__(self, pos, size=[1,1], **args)
         
-        for p in positions:
-            self.addFreeHandle(p)
+        self.setPoints(positions)
+        #for p in positions:
+            #self.addFreeHandle(p)
          
+        #start = -1 if self.closed else 0
+        #for i in range(start, len(self.handles)-1):
+            #self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
+
+    def setPoints(self, points, closed=None):
+        """
+        Set the complete sequence of points displayed by this ROI.
+        
+        ============= =========================================================
+        **Arguments**
+        points        List of (x,y) tuples specifying handle locations to set.
+        closed        If bool, then this will set whether the ROI is closed 
+                      (the last point is connected to the first point). If
+                      None, then the closed mode is left unchanged.
+        ============= =========================================================
+        
+        """
+        if closed is not None:
+            self.closed = closed
+        
+        for p in points:
+            self.addFreeHandle(p)
+        
         start = -1 if self.closed else 0
         for i in range(start, len(self.handles)-1):
             self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
+        
+        
+    def clearPoints(self):
+        """
+        Remove all handles and segments.
+        """
+        while len(self.handles) > 0:
+            self.removeHandle(self.handles[0]['item'])
 
+    def saveState(self):
+        state = ROI.saveState(self)
+        state['closed'] = self.closed
+        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
+        return state
+
+    def setState(self, state):
+        ROI.setState(self, state)
+        self.clearPoints()
+        self.setPoints(state['points'], closed=state['closed'])
+        
     def addSegment(self, h1, h2, index=None):
         seg = LineSegmentROI(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
         if index is None:
@@ -1935,6 +1978,8 @@ class PolyLineROI(ROI):
         ROI.setPen(self, *args, **kwds)
         for seg in self.segments:
             seg.setPen(*args, **kwds)
+
+
 
 class LineSegmentROI(ROI):
     """
