@@ -318,6 +318,8 @@ class GraphicsItem(object):
         vt = self.deviceTransform()
         if vt is None:
             return None
+        if isinstance(obj, QtCore.QPoint):
+            obj = QtCore.QPointF(obj)
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 

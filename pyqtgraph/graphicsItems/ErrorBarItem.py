@@ -8,15 +8,7 @@ __all__ = ['ErrorBarItem']
 class ErrorBarItem(GraphicsObject):
     def __init__(self, **opts):
         """
-        Valid keyword options are:
-        x, y, height, width, top, bottom, left, right, beam, pen
-        
-        x and y must be numpy arrays specifying the coordinates of data points.
-        height, width, top, bottom, left, right, and beam may be numpy arrays,
-        single values, or None to disable. All values should be positive.
-        
-        If height is specified, it overrides top and bottom.
-        If width is specified, it overrides left and right.
+        All keyword arguments are passed to setData().
         """
         GraphicsObject.__init__(self)
         self.opts = dict(
@@ -31,13 +23,34 @@ class ErrorBarItem(GraphicsObject):
             beam=None,
             pen=None
         )
-        self.setOpts(**opts)
+        self.setData(**opts)
+
+    def setData(self, **opts):
+        """
+        Update the data in the item. All arguments are optional.
         
-    def setOpts(self, **opts):
+        Valid keyword options are:
+        x, y, height, width, top, bottom, left, right, beam, pen
+        
+        * x and y must be numpy arrays specifying the coordinates of data points.
+        * height, width, top, bottom, left, right, and beam may be numpy arrays,
+          single values, or None to disable. All values should be positive.
+        * top, bottom, left, and right specify the lengths of bars extending
+          in each direction.
+        * If height is specified, it overrides top and bottom.
+        * If width is specified, it overrides left and right.
+        * beam specifies the width of the beam at the end of each bar.
+        * pen may be any single argument accepted by pg.mkPen().
+        """
         self.opts.update(opts)
         self.path = None
         self.update()
+        self.prepareGeometryChange()
         self.informViewBoundsChanged()
+        
+    def setOpts(self, **opts):
+        # for backward compatibility
+        self.setData(**opts)
         
     def drawPath(self):
         p = QtGui.QPainterPath()
