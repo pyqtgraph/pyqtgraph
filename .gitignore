@@ -7,3 +7,4 @@ deb_build
 dist
 .idea
 rtr.cvs
+*.egg
