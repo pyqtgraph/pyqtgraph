@@ -45,8 +45,9 @@ class TextItem(UIGraphicsItem):
         self.rotate(angle)
         self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
-    def setText(self, text):
-        color = fn.mkColor(self.text_color)
+    def setText(self, text, color=None):
+        if color == None:
+            color = fn.mkColor(self.text_color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
         self.updateText()

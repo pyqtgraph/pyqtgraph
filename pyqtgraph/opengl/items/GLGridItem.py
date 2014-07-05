@@ -3,6 +3,7 @@ import numpy as np
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui
+import pyqtgraph as pg
 
 __all__ = ['GLGridItem']
 
@@ -32,7 +33,7 @@ class GLGridItem(GLGraphicsItem):
         if color == None:
             self.color = (1, 1, 1, .3)
         else:
-            self.color = QtGui.QColor(color).getRgbF()
+            self.color = pg.mkColor(color).getRgbF()
 
 
     def setSize(self, x=None, y=None, z=None, size=None):
