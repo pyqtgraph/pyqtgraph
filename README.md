@@ -53,7 +53,7 @@ Installation Methods
       used as a git subtree by cloning the git-core repository from github.
   * To install system-wide from source distribution:
         `$ python setup.py install`
-  * For instalation packages, see the website (pyqtgraph.org)
+  * For installation packages, see the website (pyqtgraph.org)
   * On debian-like systems, pyqtgraph requires the following packages:
         python-numpy, python-qt4 | python-pyside
         For 3D support: python-opengl, python-qt4-gl | python-pyside.qtopengl
