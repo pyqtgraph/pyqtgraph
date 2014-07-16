@@ -216,6 +216,7 @@ from .graphicsItems.ErrorBarItem import *
 from .graphicsItems.IsocurveItem import * 
 from .graphicsItems.LinearRegionItem import * 
 from .graphicsItems.LinearRegionItemItem import * 
+from .graphicsItems.CrosshairLabel import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
