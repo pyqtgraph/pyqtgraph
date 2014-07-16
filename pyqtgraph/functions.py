@@ -2156,3 +2156,29 @@ def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
         yvals[i] = y
     
     return yvals[np.argsort(inds)]  ## un-shuffle values before returning
+    
+def remapSlider(value, sourceMin, sourceMax, targetMin=0.0, targetMax=1.0):
+	"""
+	Standard remap function used to map the value of a slider from a source
+     scale to a target scale. This function is specifically used in the files:
+         * pyqtgraph/graphicsItems/InfiniteLine
+         * pyqtgraph/graphicsItems/LinearRegionItem
+     
+     =============== =======================================================
+     **Arguments:**
+     value            float, the value to map from the source slider to the
+                      value in the target scale.
+     sourceMin        int (or float) the minimum value of the source slider     
+     sourceMax        int (or float) the maximum value of the source slider   	
+     targetMin        float (or int) the minimum value of the target slider
+     targetMax        float (or int) the maximum value of the target slider
+                      
+     =============== =======================================================
+	"""
+	scale = (value-sourceMin)/(sourceMax-sourceMin) 
+	newRange = scale*(targetMax-targetMin)
+	if targetMin < targetMax: 
+		return targetMin+newRange
+	else: 
+		return targetMin-newRange    
+    
