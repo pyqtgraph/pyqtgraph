@@ -195,6 +195,7 @@ from .graphicsItems.GraphicsObject import *
 from .graphicsItems.PlotItem import * 
 from .graphicsItems.ROI import * 
 from .graphicsItems.InfiniteLine import * 
+from .graphicsItems.InfiniteLineLabel import * 
 from .graphicsItems.HistogramLUTItem import * 
 from .graphicsItems.GridItem import * 
 from .graphicsItems.GradientLegend import * 
