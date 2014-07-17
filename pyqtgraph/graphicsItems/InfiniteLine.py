@@ -82,9 +82,7 @@ class InfiniteLine(GraphicsObject):
         nDigits          int, number of digits used to format the label
         onlyLine         boolean, defines if the line acts as a single Infinite
                          Line or as a part of a more complex object (with a 
-                         label, etc.). If the value is set to True, the item
-                         must be manually added to the PlotItem or PlotWidget
-                         with the addItem method
+                         label, etc.). 
         visibleMenu      boolean, defines if the context menu is active or not
         =============== =======================================================
         """
@@ -117,8 +115,6 @@ class InfiniteLine(GraphicsObject):
         self.lowerBound, self.upperBound = self.maxRange
         if bounds is None:
             self.useBounds = False
-        # attributes related to the TextItem that indicated the position of
-        # the InfiniteLine. Useful when a InfiniteLineLabel widget is used
         self.location = location
         self.shift = shift
         self.activateLocation = activateLocation
@@ -126,7 +122,6 @@ class InfiniteLine(GraphicsObject):
         self.onlyLine = onlyLine
         self.nDigits = nDigits
         self.visibleMenu = visibleMenu
-        
         self.menu = InfiniteLineMenu(self)
       
     def setMovable(self, m):
