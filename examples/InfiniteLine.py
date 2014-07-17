@@ -23,14 +23,12 @@ class InfiniteLineLabelExample(QtGui.QWidget):
         self.setLayout(grid)
         self.setWindowTitle('PyQtGraph InfiniteLineLabel example')      
         # it is still possible to use the InfiniteLine in the same way as before.
-        # However, it is important to notice that the argument onlyLine=True
-        # MUST be provided. Otherwise, some problems may occur. Compared to the 
+        # Compared to the 
         # previous item, a context menu with the possibility to manually change
         # the bounds is provided (and can be desactivated by adding the argument
         # visibleMenu=False)
         self.infiniteLineVertical = pg.InfiniteLine(pos=1.5,angle=90,
-                                                    movable=True, bounds=[0.,3.],
-                                                    onlyLine=True)
+                                                    movable=True, bounds=[0.,3.])
         self.plot.addItem(self.infiniteLineVertical)
         # it is also possible to add the InfiniteLine using the new InfiniteLineLabel
         # graphicsItem which adds some extra functionnality. Compared to the 
