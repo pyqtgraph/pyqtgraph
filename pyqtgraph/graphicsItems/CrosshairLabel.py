@@ -3,7 +3,8 @@
 Class used to add (or remove) a Crosshair Item with a pg.TextItem 
 indicating the value of the location on a PlotItem
 
-Based on the crosshair/mouse interaction example 
+This item is based on crosshair/mouse interaction example and
+adds some extra functionalities
 
 @author : Vincent Le Saux (vincent.le_saux@ensta-bretagne.fr)
 """
@@ -21,7 +22,8 @@ class CrosshairLabel(object):
         =============== =======================================================
         **Arguments:**
         item            a PlotItem object
-        pos             location of the crosshair item
+        posX            float, X location of the crosshair item
+        posY            float, Y location of the crosshair item
         pen             Pen to use when drawing line. Can be any arguments that
                         are valid for :func:`mkPen <pyqtgraph.mkPen>`. Default 
                         pen is transparent blue (when set to None).
@@ -31,15 +33,16 @@ class CrosshairLabel(object):
                         line
         hbounds         Optional [min, max] bounding values for the horizontal 
                         line
-        ndigits         int, number of term after the dot
+        ndigits         int, number of digits used to format the label
         removable       If True, the object can be remove via a contextMenu 
                         activated by right-clicking on the object
-        visibleLabels   make the two labels associated to the InfiniteLine visible
+        visibleLabel    make the label associated to the crosshair item visible
         fill            color of the TextItem background        
         textColor       color used for the textItem
         shift           float (must be in the [0,1] interval) used to switch 
                         the TextItems from one side of the axis to the other 
                         in order to increase its visibility
+        visibleMenu     boolean. Defines is the contextMenu is enabled or not
         =============== ======================================================= 
         """
         self.cilHor = InfiniteLine(pos=posX, angle=0, movable=movable,
