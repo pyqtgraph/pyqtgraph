@@ -13,6 +13,8 @@ from .InfiniteLine import InfiniteLine
 from .TextItem import TextItem
 from ..Point import Point
 
+__all__ = ["CrosshairLabel"]
+
 class CrosshairLabel(object):
 
     def __init__(self,item, posX=None,posY=None,pen=None,movable=False,vbounds=None,
