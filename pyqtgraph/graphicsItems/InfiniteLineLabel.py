@@ -18,16 +18,16 @@ class InfiniteLineLabel(object):
     def __init__(self,item, pos=None, angle=90, pen=None, movable=False,
                  bounds=None, nDigits=3, removable=True, visibleLabel=True,
                  fill=None, textColor=None, location=0.05, shift=0.5, 
-                 activateLocation=True, activateShift=True, onlyLine=True,
+                 activateLocation=True, activateShift=True, onlyLine=False,
                  visibleMenu=True):
         """
         =============== =======================================================
         **Arguments:**
         
         item             a PlotItem object
-        values           the location by defult of the two InfiniteLines that
-                         delimitates the LinearRegionItem
+        pos              the location by default of the InfiniteLine
         angle            angle of line in degrees. 0 is horizontal, 90 is vertical.
+        pen              the pen used to draw the line
         movable          set to True if the LinearRegionItem is draggable
         bounds           defines some limits to the InfiniteLine displacement
                          such as the item can not go beyond these values
@@ -37,7 +37,7 @@ class InfiniteLineLabel(object):
         visibleLabel     make the label associated to the InfiniteLine visible
         fill             color of the TextItem background       
         textColor        color used for the textItem 
-        nDigits          int, number of term after the dot        
+        nDigits          int, number digits used to format the label     
         location         float (must be in the [0,1] interval) used to specify
                          the location of the TextItems
                          value = 0 -> located at the lower axis
@@ -50,6 +50,8 @@ class InfiniteLineLabel(object):
         activateShift    boolean used to activate or not the possibility to
                          modify the shift parameters from the context menu
         visibleMenu      boolean. Defines if the context menu is visible
+        onlyLine         boolean. Defines if only the line is visible, not its
+                         label (
         =============== =======================================================
         """
         self.cil = InfiniteLine(pos=pos, angle=angle, movable=movable,
