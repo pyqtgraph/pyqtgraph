@@ -35,9 +35,9 @@ class InfiniteLine(GraphicsObject):
     =============================== ===================================================
     """
 
-    sigDragged = QtCore.Signal(object)
-    sigPositionChangeFinished = QtCore.Signal(object)
-    sigPositionChanged = QtCore.Signal(object)
+    sigDragged(self) = QtCore.Signal(object)
+    sigPositionChangeFinished(self) = QtCore.Signal(object)
+    sigPositionChanged(self) = QtCore.Signal(object)
     sigRemoveRequested = QtCore.Signal(object)
     sigBoundsActivated = QtCore.Signal(object)
     sigBoundsChanged = QtCore.Signal(object)
