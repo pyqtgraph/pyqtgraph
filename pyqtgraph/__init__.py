@@ -215,7 +215,7 @@ from .graphicsItems.MultiPlotItem import *
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
 from .graphicsItems.LinearRegionItem import * 
-from .graphicsItems.LinearRegionItemItem import * 
+from .graphicsItems.LinearRegionItemLabel import * 
 from .graphicsItems.CrosshairLabel import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
