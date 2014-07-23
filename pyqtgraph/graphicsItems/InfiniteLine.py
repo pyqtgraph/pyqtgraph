@@ -102,7 +102,7 @@ class InfiniteLine(GraphicsObject):
         self.setPos(pos)
 
         if pen is None:
-            pen = (0, 0, 255)#(200, 200, 100)
+            pen = (200, 200, 100)
         
         self.setPen(pen)
         self.setHoverPen(color=(0, 0, 255), width=2.*self.pen.width())
