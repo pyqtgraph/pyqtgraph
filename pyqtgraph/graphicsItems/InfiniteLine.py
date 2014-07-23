@@ -16,28 +16,28 @@ class InfiniteLine(GraphicsObject):
 
     =============================== ===================================================
     **Signals:**
-    sigDragged
-    sigPositionChangeFinished
-    sigPositionChanged
-    sigRemoveRequested          Emitted when the user selects 'remove' from the
-                                CustomInfiniteLine's context menu (if available)
-    sigBoundsActivated          boolean, emitted when the bounds are activated
-                                via the context menu
-    sigBoundsChanged            list, emitted when the bounds are modified via
-                                the context menu
-    sigVisibilityChanged        boolean, emitted when the visiblity of the
-                                textItem has changed
-    sigLocationChanged          float, emitted when the location of the TextItem
-                                has changed
-    sigShiftChanged             float, emitted when the shift value has changed
-    sigDigitsChanged            int, emitted when the number of digits of the
-                                label has changed    
+    sigDragged(self)
+    sigPositionChangeFinished(self)
+    sigPositionChanged(self)
+    sigRemoveRequested              Emitted when the user selects 'remove' from the
+                                    CustomInfiniteLine's context menu (if available)
+    sigBoundsActivated              boolean, emitted when the bounds are activated
+                                    via the context menu
+    sigBoundsChanged                list, emitted when the bounds are modified via
+                                    the context menu
+    sigVisibilityChanged            boolean, emitted when the visiblity of the
+                                    textItem has changed
+    sigLocationChanged              float, emitted when the location of the TextItem
+                                    has changed
+    sigShiftChanged                 float, emitted when the shift value has changed
+    sigDigitsChanged                int, emitted when the number of digits of the
+                                    label has changed    
     =============================== ===================================================
     """
 
-    sigDragged(self) = QtCore.Signal(object)
-    sigPositionChangeFinished(self) = QtCore.Signal(object)
-    sigPositionChanged(self) = QtCore.Signal(object)
+    sigDragged = QtCore.Signal(object)
+    sigPositionChangeFinished = QtCore.Signal(object)
+    sigPositionChanged = QtCore.Signal(object)
     sigRemoveRequested = QtCore.Signal(object)
     sigBoundsActivated = QtCore.Signal(object)
     sigBoundsChanged = QtCore.Signal(object)
