@@ -55,6 +55,8 @@ class AxisItem(GraphicsWidget):
                 ],
             'showValues': showValues,
             'tickLength': maxTickLength,
+            'maxTickLevel': 2,
+            'maxTextLevel': 2,
         }
         
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text 
@@ -68,6 +70,7 @@ class AxisItem(GraphicsWidget):
         self.tickFont = None
         
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
+        self._tickSpacing = None  # used to override default tickSpacing method
         self.scale = 1.0
         self.autoSIPrefix = True
         self.autoSIPrefixScale = 1.0
@@ -517,6 +520,37 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         self.update()
     
+    def setTickSpacing(self, major=None, minor=None, levels=None):
+        """
+        Explicitly determine the spacing of major and minor ticks. This 
+        overrides the default behavior of the tickSpacing method, and disables
+        the effect of setTicks(). Arguments may be either *major* and *minor*, 
+        or *levels* which is a list of (spacing, offset) tuples for each 
+        tick level desired.
+        
+        If no arguments are given, then the default behavior of tickSpacing
+        is enabled.
+        
+        Examples::
+        
+            # two levels, all offsets = 0
+            axis.setTickSpacing(5, 1)
+            # three levels, all offsets = 0
+            axis.setTickSpacing([(3, 0), (1, 0), (0.25, 0)])
+            # reset to default
+            axis.setTickSpacing()
+        """
+        
+        if levels is None:
+            if major is None:
+                levels = None
+            else:
+                levels = [(major, 0), (minor, 0)]
+        self._tickSpacing = levels
+        self.picture = None
+        self.update()
+        
+
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
         
@@ -532,6 +566,10 @@ class AxisItem(GraphicsWidget):
                 ...
             ]
         """
+        # First check for override tick spacing
+        if self._tickSpacing is not None:
+            return self._tickSpacing
+        
         dif = abs(maxVal - minVal)
         if dif == 0:
             return []
@@ -557,12 +595,13 @@ class AxisItem(GraphicsWidget):
             #(intervals[minorIndex], 0)    ## Pretty, but eats up CPU
         ]
         
-        ## decide whether to include the last level of ticks
-        minSpacing = min(size / 20., 30.)
-        maxTickCount = size / minSpacing
-        if dif / intervals[minorIndex] <= maxTickCount:
-            levels.append((intervals[minorIndex], 0))
-        return levels
+        if self.style['maxTickLevel'] >= 2:
+            ## decide whether to include the last level of ticks
+            minSpacing = min(size / 20., 30.)
+            maxTickCount = size / minSpacing
+            if dif / intervals[minorIndex] <= maxTickCount:
+                levels.append((intervals[minorIndex], 0))
+            return levels
         
         
         
@@ -588,8 +627,6 @@ class AxisItem(GraphicsWidget):
             #(intervals[intIndexes[0]], 0)
         #]
         
-        
-
     def tickValues(self, minVal, maxVal, size):
         """
         Return the values and spacing of ticks to draw::
@@ -763,8 +800,6 @@ class AxisItem(GraphicsWidget):
                     values.append(val)
                     strings.append(strn)
         
-        textLevel = 1  ## draw text at this scale level
-        
         ## determine mapping between tick values and local coordinates
         dif = self.range[1] - self.range[0]
         if dif == 0:
@@ -853,7 +888,7 @@ class AxisItem(GraphicsWidget):
         if not self.style['showValues']:
             return (axisSpec, tickSpecs, textSpecs)
             
-        for i in range(len(tickLevels)):
+        for i in range(min(len(tickLevels), self.style['maxTextLevel']+1)):
             ## Get the list of strings to display for this level
             if tickStrings is None:
                 spacing, values = tickLevels[i]
