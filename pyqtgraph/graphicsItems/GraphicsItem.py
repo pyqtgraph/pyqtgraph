@@ -102,7 +102,7 @@ class GraphicsItem(object):
         Extends deviceTransform to automatically determine the viewportTransform.
         """
         if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
-            return self._exportOpts['painter'].deviceTransform()
+            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
             
         if viewportTransform is None:
             view = self.getViewWidget()
