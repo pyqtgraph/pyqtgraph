@@ -1,7 +1,7 @@
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph as pg
+from ..Qt import QtCore, QtGui
+from ..Point import Point
 from .UIGraphicsItem import *
-import pyqtgraph.functions as fn
+from .. import functions as fn
 
 class TextItem(UIGraphicsItem):
     """
@@ -9,42 +9,45 @@ class TextItem(UIGraphicsItem):
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
         """
-        ===========  =================================================================================
-        Arguments:
-        *text*       The text to display 
-        *color*      The color of the text (any format accepted by pg.mkColor)
-        *html*       If specified, this overrides both *text* and *color*
-        *anchor*     A QPointF or (x,y) sequence indicating what region of the text box will 
-                     be anchored to the item's position. A value of (0,0) sets the upper-left corner
-                     of the text box to be at the position specified by setPos(), while a value of (1,1)
-                     sets the lower-right corner.
-        *border*     A pen to use when drawing the border
-        *fill*       A brush to use when filling within the border
-        ===========  =================================================================================
+        ==============  =================================================================================
+        **Arguments:**
+        *text*          The text to display
+        *color*         The color of the text (any format accepted by pg.mkColor)
+        *html*          If specified, this overrides both *text* and *color*
+        *anchor*        A QPointF or (x,y) sequence indicating what region of the text box will
+                        be anchored to the item's position. A value of (0,0) sets the upper-left corner
+                        of the text box to be at the position specified by setPos(), while a value of (1,1)
+                        sets the lower-right corner.
+        *border*        A pen to use when drawing the border
+        *fill*          A brush to use when filling within the border
+        ==============  =================================================================================
         """
         
         ## not working yet
         #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
                      #transformation will be ignored)
                      
-        self.anchor = pg.Point(anchor)
+
+        self.anchor = Point(anchor)
         #self.angle = 0
         UIGraphicsItem.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self.lastTransform = None
         self._bounds = QtCore.QRectF()
+        self.text_color = color
         if html is None:
-            self.setText(text, color)
+            self.setText(text)
         else:
             self.setHtml(html)
-        self.fill = pg.mkBrush(fill)
-        self.border = pg.mkPen(border)
+        self.fill = fn.mkBrush(fill)
+        self.border = fn.mkPen(border)
         self.rotate(angle)
         self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
-    def setText(self, text, color=(200,200,200)):
-        color = pg.mkColor(color)
+    def setText(self, text, color=None):
+        if color == None:
+            color = fn.mkColor(self.text_color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
         self.updateText()
@@ -89,7 +92,7 @@ class TextItem(UIGraphicsItem):
         #br = self.textItem.mapRectToParent(self.textItem.boundingRect())
         self.textItem.setPos(0,0)
         br = self.textItem.boundingRect()
-        apos = self.textItem.mapToParent(pg.Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
+        apos = self.textItem.mapToParent(Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
         #print br, apos
         self.textItem.setPos(-apos.x(), -apos.y())
         
@@ -120,5 +123,3 @@ class TextItem(UIGraphicsItem):
             p.setBrush(self.fill)
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
-        
-        
