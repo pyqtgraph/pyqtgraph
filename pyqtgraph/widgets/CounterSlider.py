@@ -10,9 +10,6 @@ See the CounterSlider example in the examples folder for one example of use.
 @author : Vincent Le Saux (vincent.le_saux@ensta-bretagne.fr) 
 
 TODO : make sure the labels of the slider axis item are never trimmed
-TODO : add properly the QPushButton icons (they are in the pixmaps directory
-       but I do not know how to add them from this directory. Any help is 
-       welcomed!
 """
 
 from ..Qt import QtGui, QtCore
