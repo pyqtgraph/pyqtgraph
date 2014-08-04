@@ -1,0 +1,388 @@
+pyqtgraph-0.9.9  [unreleased]
+
+  API / behavior changes:
+    - Dynamic import system abandoned; pg now uses static imports throughout.
+        - Flowcharts and exporters have new pluggin systems
+    - Version strings:
+        - __init__.py in git repo now contains latest release version string
+          (previously, only packaged releases had version strings).
+        - installing from git checkout that does not correspond to a release 
+          commit will result in a more descriptive version string.
+    - Speed improvements in functions.makeARGB
+    - ImageItem is faster by avoiding makeQImage(transpose=True)
+    - ComboBox will raise error when adding multiple items of the same name
+    - ArrowItem.setStyle now updates style options rather than replacing them 
+    - Renamed GraphicsView signals to avoid collision with ViewBox signals that
+      are wrapped in PlotWidget: sigRangeChanged => sigDeviceRangeChanged and
+      sigTransformChanged => sigDeviceTransformChanged.
+    - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
+      event position.
+    - Made setPen() methods consistent throughout the package
+    - Fix in GLScatterPlotItem requires that points will appear slightly more opaque 
+      (so you may need to adjust to lower alpha to achieve the same results)
+
+  New Features:
+    - Added ViewBox.setLimits() method
+    - Adde ImageItem downsampling
+    - New HDF5 example for working with very large datasets
+    - Removed all dependency on scipy
+    - Added Qt.loadUiType function for PySide
+    - Simplified Profilers; can be activated with environmental variables
+    - Added Dock.raiseDock() method
+    - ComboBox updates:
+        - Essentially a graphical interface to dict; all items have text and value
+        - Assigns previously-selected text after list is cleared and repopulated
+        - Get, set current value
+    - Added Flowchart.sigChartChanged
+    - ImageItem.getHistogram is more clever about constructing histograms
+    - Added FillBetweenItem.setCurves()
+    - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
+      when plots do not fit inside the widget.
+    - Added BarGraphItem.shape() to allow better mouse interaction
+    - Added MeshData.cylinder
+    - Added ViewBox.setBackgroundColor() and GLViewWidget.setBackgroundColor()
+    - Utilities / debugging tools
+        - Mutex used for tracing deadlocks
+        - Color output on terminal
+        - Multiprocess debugging colors messages by process
+        - Stdout filter that colors text by thread
+        - PeriodicTrace used to report deadlocks
+    - Added AxisItem.setStyle()
+    - Added configurable formatting for TableWidget
+    - Added 'stepMode' argument to PlotDataItem()
+    - Added ViewBox.invertX()
+    - Docks now have optional close button
+    - Added InfiniteLine.setHoverPen
+    - Added GLVolumeItem.setData
+    - Added PolyLineROI.setPoints, clearPoints, saveState, setState
+    - Added ErrorBarItem.setData
+
+  Bugfixes:
+    - PlotCurveItem now has correct clicking behavior--clicks within a few px
+      of the line will trigger a signal.
+    - Fixes related to CSV exporter:
+        - CSV headers include data names, if available
+        - Exporter correctly handles items with no data
+        - pg.plot() avoids creating empty data item
+        - removed call to reduce() from exporter; not available in python 3
+        - Gave .name() methods to PlotDataItem, PlotCurveItem, and ScatterPlotItem
+    - fixed ImageItem handling of rgb images
+    - fixed makeARGB re-ordering of color channels
+    - fixed unicode usage in AxisItem tick strings
+    - fixed PlotCurveItem generating exceptions when data has length=0
+    - fixed ImageView.setImage only working once
+    - PolyLineROI.setPen() now changes the pen of its segments as well
+    - Prevent divide-by-zero in AxisItem
+    - Major speedup when using ScatterPlotItem in pxMode
+    - PlotCurveItem ignores clip-to-view when auto range is enabled
+    - FillBetweenItem now forces PlotCurveItem to generate path
+    - Fixed import errors and py3 issues in MultiPlotWidget
+    - Isosurface works for arrays with shapes > 255
+    - Fixed ImageItem exception building histogram when image has only one value
+    - Fixed MeshData exception caused when vertexes have no matching faces
+    - Fixed GLViewWidget exception handler
+    - Fixed unicode support in Dock
+    - Fixed PySide crash caused by emitting signal from GraphicsObject.itemChange
+    - Fixed possible infinite loop from FiniteCache
+    - Allow images with NaN in ImageView
+    - MeshData can generate edges from face-indexed vertexes
+    - Fixed multiprocess deadlocks on windows
+    - Fixed GLGridItem.setSize
+    - Fixed parametertree.Parameter.sigValueChanging
+    - Fixed AxisItem.__init__(showValues=False)
+    - Fixed TableWidget append / sort issues
+    - Fixed AxisItem not resizing text area when setTicks() is used
+    - Removed a few cyclic references
+    - Fixed Parameter 'readonly' option for bool, color, and text parameter types
+    - Fixed alpha on GLScatterPlotItem spots (formerly maxed out at alpha=200)
+
+pyqtgraph-0.9.8  2013-11-24
+
+  API / behavior changes:
+    - ViewBox will auto-range when ImageItem changes shape
+    - AxisItem: 
+        - Smarter about deciding which ticks get text
+        - AxisItem.setScale(float) has the usual behavior, but .setScale(None) 
+          is deprecated. Instead use:
+          AxisItem.enableAutoSIPrefix(bool) to enable/disable SI prefix scaling
+    - Removed inf/nan checking from PlotDataItem and PlotCurveItem; improved 
+      performance
+
+  New Features:
+    - Support for dynamic downsampling and view clipping in PlotDataItem and 
+      PlotItem
+    - Added 'connect' option to PlotDataItem and PlotCurveItem to affect which 
+      line segments are drawn
+    - Support for FFT with non-uniform time sampling
+    - Added BarGraphItem
+    - OpenGL:
+        - Added export methods to GLViewWidget
+        - Wireframe meshes
+        - GLLinePLotItem gets antialiasing, accepts array of colors
+        - GLMeshItem accepts ShaderProgram or name of predefined program
+        - Added GLBarGraphItem
+    - LegendItem:
+        - User-draggable
+        - Allow custom ItemSamples
+        - Symbol support
+        - Support for removing items
+    - ScatterPlotWidget, ColorMapWidget, and DataFilterWidget are stable
+    - TableWidget:
+        - Made numerically sortable
+        - Added setEditable method
+    - AxisItem ability to truncate axis lines at the last tick
+    - arrayToQPath() added 'finite' connection mode which omits non-finite 
+      values from connections
+    - pg.plot() and pg.PlotWidget() now accept background argument
+    - Allow QtProcess without local QApplication
+    - Support for dashing in mkPen()
+    - Added Dock.close()
+    - Added style options to flowchart connection lines
+    - Added parentChanged and viewChanged hooks to GraphicsItem 
+    - Bidirectional pseudoScatter for beeswarm plots
+    - Added exit() function for working around PyQt exit crashes
+    - Added PolylineROI.getArrayRegion()
+
+  Bugfixes:
+    - Many Python 3 compatibility fixes
+    - AxisItem:
+        - Correctly handles scaling with values that are not power of 10
+        - Did not update grid line length when plot stretches
+        - Fixed unicode handling in AxisItem label
+    - ViewBox:
+        - Overhauled to fix issues with aspect locking
+        - ViewBox context menu elements are no longer deleted when using 
+          flowchart with pyside
+        - Fixed view linking with inverted y axis
+        - Prevent auto-range disabling when dragging with one mouse axis diabled
+        - Ignore inf and nan when auto-ranging
+    - ParameterTree:
+        - fixed TextParameter editor disappearing after focus lost
+        - ListParameter: allow unhashable types as parameter values.
+    - Exporting:
+        - ImageExporter correctly handles QBrush with style=NoBrush
+        - SVGExporter text, gradients working correctly
+        - SVGExporter correctly handles coordinate corrections for groups with 
+          mixed elements
+    - ImageView:
+        - Fixed auto-levelling when normalization options change
+        - Added autoHistogramRange argument to setImage
+    - ScatterPlotItem:
+        - Fixed crashes caused by ScatterPlotItem
+        - Fixed antialiasing
+    - arrayToQPath performance improved for python 3
+    - Fixed makeQImage on many platforms (notably, on newer PyQt APIs)
+    - Removed unnecessary scipy imports for faster import
+    - GraphItem reports pixel margins to improve auto-range
+    - Add backport ordereddict to repository; old OrderedDict class is removed
+    - Corrected behavior of GraphicsView.setBackground
+    - Fixed PySide bug listing image formats
+    - Fixed QString -> str conversions in flowchart
+    - Unicode file name support when exporting
+    - Fixed MatplotlibWidget + PySide
+    - Fixed 3D view updating after every scene change
+    - Fixed handling of non-native dtypes when optimizing with weave
+    - RemoteGraphicsView fixed for PyQt 4.10, Python 3
+    - Fixed GLLinePlotItem line width option
+    - HistogramLUTWidget obeys default background color
+    - ScaleBar complete rewrite
+    - GraphItem obeys antialiasing flag
+    - Workaround for PySide/QByteArray memory leak
+    - Fixed example --test on windows, python3
+    - Luke finished dissertation
+
+
+pyqtgraph-0.9.7  2013-02-25
+
+   Bugfixes:
+     - ArrowItem auto range now works correctly
+     - Dock drag/drop fixed on PySide
+     - Made padding behavior consistent across ViewBox methods
+     - Fixed MeshData / python2.6 incompatibility
+     - Fixed ScatterPlotItem.setSize and .setPointData
+     - Workaround for PySide bug; GradientEditor fixed
+     - Prefer initially selecting PlotItem rather then ViewBox when exporting
+     - Fixed python3 import error with flowcharts
+   
+   Cleaned up examples, made code editable from example loader
+   Minor documentation updates
+   Features:
+     - Added GraphItem class for displaying networks/trees
+     - Added ColorMap class for mapping linear gradients and generating lookup
+     tables
+       (Provides gradient editor functionality without the GUI)
+     - Added ColorMapWidget for complex user-defined color mapping
+     - Added ScatterPlotWidget for exploring relationships in multi-column
+     tables
+     - Added ErrorBarItem
+     - SVG and image exporters can now copy to clipboard
+     - PlotItem gets new methods: addLine, setLabels, and listDataItems
+     - AxisItem gets setTickFont method
+     - Added functions.arrayToQPath, shared between GraphItem and PlotCurveItem
+     - Added gradient editors to parametertree
+     - Expanded documentation, added beginning of Qt crash course
+   
+   Bugfixes:
+     - Fixed auto-ranging bugs: ViewBox now properly handles pixel-padding
+     around data items
+     - ViewBox ignores bounds of zoom-rect when auto ranging
+     - Fixed AxisItem artifacts
+     - Fixed GraphicsItem.pixelVector caching bugs and simplified workaround for
+     fp-precision errors
+     - LinearRegionItem.hoverEvent obeys 'movable' flag                         
+                                                                                
+                                        
+     - Fixed PlotDataItem nan masking bugs                                      
+                                                                                
+                                        
+     - Workaround for segmentation fault in QPainter.drawPixmapFragments        
+                                                                                
+                                        
+     - multiprocess and RemoteGraphicsView work correctly in Windows.           
+                                                                                
+                                        
+     - Expanded python 3 support                                                
+                                                                                
+                                        
+     - Silenced weave errors by default                                         
+                                                                                
+                                        
+     - Fixed " 'win' in sys.platform " occurrences matching 'darwin' (duh)
+     - Workaround for change in QImage API (PyQt 4.9.6)
+     - Fixed axis ordering bug in GLScatterPlotItem
+
+pyqtgraph-0.9.6  2013-02-14
+
+   Features:
+     - Added GraphItem class for displaying networks/trees
+     - Added ColorMap class for mapping linear gradients and generating lookup
+     tables
+       (Provides gradient editor functionality without the GUI)
+     - Added ColorMapWidget for complex user-defined color mapping
+     - Added ScatterPlotWidget for exploring relationships in multi-column
+     tables
+     - Added ErrorBarItem
+     - SVG and image exporters can now copy to clipboard
+     - PlotItem gets new methods: addLine, setLabels, and listDataItems
+     - AxisItem gets setTickFont method
+     - Added functions.arrayToQPath, shared between GraphItem and PlotCurveItem
+     - Added gradient editors to parametertree
+     - Expanded documentation, added beginning of Qt crash course
+   
+   Bugfixes:
+     - Fixed auto-ranging bugs: ViewBox now properly handles pixel-padding
+     around data items
+     - ViewBox ignores bounds of zoom-rect when auto ranging
+     - Fixed AxisItem artifacts
+     - Fixed GraphicsItem.pixelVector caching bugs and simplified workaround for
+     fp-precision errors
+     - LinearRegionItem.hoverEvent obeys 'movable' flag                         
+                                                                                
+                                        
+     - Fixed PlotDataItem nan masking bugs                                      
+                                                                                
+                                        
+     - Workaround for segmentation fault in QPainter.drawPixmapFragments        
+                                                                                
+                                        
+     - multiprocess and RemoteGraphicsView work correctly in Windows.           
+                                                                                
+                                        
+     - Expanded python 3 support                                                
+                                                                                
+                                        
+     - Silenced weave errors by default                                         
+                                                                                
+                                        
+     - Fixed " 'win' in sys.platform " occurrences matching 'darwin' (duh)
+     - Workaround for change in QImage API (PyQt 4.9.6)
+     - Fixed axis ordering bug in GLScatterPlotItem
+   Plotting performance improvements:
+     - AxisItem shows fewer tick levels in some cases.
+     - Lots of boundingRect and dataBounds caching
+       (improves ViewBox auto-range performance, especially with multiple plots)
+     - GraphicsScene avoids testing for hover intersections with non-hoverable
+     items
+       (much less slowdown when moving mouse over plots)
+   
+   Improved performance for remote plotting:
+     - reduced cost of transferring arrays between processes (pickle is too
+     slow)
+     - avoid unnecessary synchronous calls
+   
+   Added RemoteSpeedTest example
+
+
+pyqtgraph-0.9.5  2013-01-11
+
+   Plotting performance improvements:
+     - AxisItem shows fewer tick levels in some cases.
+     - Lots of boundingRect and dataBounds caching
+       (improves ViewBox auto-range performance, especially with multiple plots)
+     - GraphicsScene avoids testing for hover intersections with non-hoverable
+     items
+       (much less slowdown when moving mouse over plots)
+   
+   Improved performance for remote plotting:
+     - reduced cost of transferring arrays between processes (pickle is too
+     slow)
+     - avoid unnecessary synchronous calls
+   
+   Added RemoteSpeedTest example
+   Documentation:
+   - Added documentation on export system
+   - Added flowchart documentation and custom node example
+   
+   Bugfixes: 
+   - prevent PlotCurveItem drawing shadow when unnecessary
+   - deprecated flowchart.Node.__getattr__ -- causes too many problems.
+
+pyqtgraph-0.9.4  2013-01-07
+
+   Documentation:
+   - Added documentation on export system
+   - Added flowchart documentation and custom node example
+   
+   Bugfixes: 
+   - prevent PlotCurveItem drawing shadow when unnecessary
+   - deprecated flowchart.Node.__getattr__ -- causes too many problems.
+   Bugfix: prevent adding invalid entry to sys.path when running examples
+
+pyqtgraph-0.9.3  2012-12-29
+
+   Bugfix: prevent adding invalid entry to sys.path when running examples
+   Bugfixes:
+   - SVG export text elements use generic font-family as backup, corrected item
+   transformation issues
+   - Fixed RuntimeError caused when clearing item hierarchies from ViewBox
+   - Fixed example execution bug
+   
+   Packaging maintenance:
+   - Added missing files to MANIFEST.in, fixed setup.py package detection
+   - Added debian control files for building source packages
+   - Fixed version numbering in doc, __init__.py
+
+pyqtgraph-0.9.2  2012-12-29
+
+   Bugfixes:
+   - SVG export text elements use generic font-family as backup, corrected item
+   transformation issues
+   - Fixed RuntimeError caused when clearing item hierarchies from ViewBox
+   - Fixed example execution bug
+   
+   Packaging maintenance:
+   - Added missing files to MANIFEST.in, fixed setup.py package detection
+   - Added debian control files for building source packages
+   - Fixed version numbering in doc, __init__.py
+
+pyqtgraph-0.9.1  2012-12-27
+
+   Removed incorrect version numbers
+   Correction to setup.py - use install_requires to inform pip of dependencies.
+   Fixed doc version (again)
+   Added debian control files
+   bugfixes for new package structure
+
+pyqtgraph-0.9.0  2012-12-27
+
+  * Initial release.
