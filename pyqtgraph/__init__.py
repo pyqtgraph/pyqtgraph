@@ -195,6 +195,7 @@ from .graphicsItems.GraphicsObject import *
 from .graphicsItems.PlotItem import * 
 from .graphicsItems.ROI import * 
 from .graphicsItems.InfiniteLine import * 
+from .graphicsItems.InfiniteLineLabel import * 
 from .graphicsItems.HistogramLUTItem import * 
 from .graphicsItems.GridItem import * 
 from .graphicsItems.GradientLegend import * 
@@ -214,6 +215,8 @@ from .graphicsItems.MultiPlotItem import *
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
 from .graphicsItems.LinearRegionItem import * 
+from .graphicsItems.LinearRegionItemLabel import * 
+from .graphicsItems.CrosshairLabel import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
@@ -244,6 +247,7 @@ from .widgets.GraphicsView import *
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
+from .widgets.CounterSlider import *
 
 from .imageview import *
 from .WidgetGroup import *
