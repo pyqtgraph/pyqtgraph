@@ -19,6 +19,7 @@ from ..Qt import QtGui, QtCore
 from .GraphicsView import GraphicsView
 from ..graphicsItems.GraphicsWidget import GraphicsWidget
 from ..graphicsItems.AxisItem import AxisItem
+from .. import pixmaps
 
 
 class CounterSlider(QtGui.QWidget):
@@ -88,7 +89,8 @@ class CounterSlider(QtGui.QWidget):
         for n in range(self.nButtons):
             n = self.nButtons-n
             button = QtGui.QPushButton()
-            icon = QtGui.QIcon("down"+str(n)+".svg")
+            icon = QtGui.QIcon() 
+            icon.addPixmap(pixmaps.getPixmap('down'+str(n)))            
             button.setIcon(icon)
             button.setIconSize(QtCore.QSize(20, 24))
             button.setFixedWidth(20)
@@ -109,7 +111,8 @@ class CounterSlider(QtGui.QWidget):
 
         for n in range(self.nButtons):
             button = QtGui.QPushButton()
-            icon = QtGui.QIcon("up"+str(n)+".svg")
+            icon = QtGui.QIcon() 
+            icon.addPixmap(pixmaps.getPixmap('up'+str(n+1)))
             button.setIcon(icon)
             button.setIconSize(QtCore.QSize(20, 24))
             button.setFixedWidth(20)
