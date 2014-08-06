@@ -11,6 +11,8 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 import sys, re
 
+from .python2_3 import asUnicode
+
 ## Automatically determine whether to use PyQt or PySide. 
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
@@ -31,6 +33,10 @@ else:
 
 if USE_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
+    try:
+        from PySide import QtTest
+    except ImportError:
+        pass
     import PySide
     try:
         from PySide import shiboken
@@ -56,18 +62,29 @@ if USE_PYSIDE:
     # Credit: 
     # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
+    class StringIO(object):
+        """Alternative to built-in StringIO needed to circumvent unicode/ascii issues"""
+        def __init__(self):
+            self.data = []
+        
+        def write(self, data):
+            self.data.append(data)
+            
+        def getvalue(self):
+            return ''.join(map(asUnicode, self.data)).encode('utf8')
+        
     def loadUiType(uiFile):
         """
         Pyside "loadUiType" command like PyQt4 has one, so we have to convert the ui file to py code in-memory first    and then execute it in a special frame to retrieve the form_class.
         """
         import pysideuic
         import xml.etree.ElementTree as xml
-        from io import StringIO
+        #from io import StringIO
         
         parsed = xml.parse(uiFile)
         widget_class = parsed.find('widget').get('class')
         form_class = parsed.find('class').text
-
+        
         with open(uiFile, 'r') as f:
             o = StringIO()
             frame = {}
@@ -91,6 +108,10 @@ else:
         pass
     try:
         from PyQt4 import QtOpenGL
+    except ImportError:
+        pass
+    try:
+        from PyQt4 import QtTest
     except ImportError:
         pass
 

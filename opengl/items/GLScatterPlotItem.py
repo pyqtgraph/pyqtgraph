@@ -59,7 +59,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         w = 64
         def fn(x,y):
             r = ((x-w/2.)**2 + (y-w/2.)**2) ** 0.5
-            return 200 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
+            return 255 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
         pData = np.empty((w, w, 4))
         pData[:] = 255
         pData[:,:,3] = np.fromfunction(fn, pData.shape[:2])

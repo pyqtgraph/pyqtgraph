@@ -2,6 +2,7 @@ from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from ...Qt import QtGui
 import numpy as np
+from ... import debug
 
 __all__ = ['GLVolumeItem']
 
@@ -25,13 +26,22 @@ class GLVolumeItem(GLGraphicsItem):
         
         self.sliceDensity = sliceDensity
         self.smooth = smooth
-        self.data = data
+        self.data = None
+        self._needUpload = False
+        self.texture = None
         GLGraphicsItem.__init__(self)
         self.setGLOptions(glOptions)
+        self.setData(data)
         
-    def initializeGL(self):
+    def setData(self, data):
+        self.data = data
+        self._needUpload = True
+        self.update()
+        
+    def _uploadData(self):
         glEnable(GL_TEXTURE_3D)
-        self.texture = glGenTextures(1)
+        if self.texture is None:
+            self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_3D, self.texture)
         if self.smooth:
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -60,9 +70,16 @@ class GLVolumeItem(GLGraphicsItem):
                 glNewList(l, GL_COMPILE)
                 self.drawVolume(ax, d)
                 glEndList()
-
-                
+        
+        self._needUpload = False
+        
     def paint(self):
+        if self.data is None:
+            return
+        
+        if self._needUpload:
+            self._uploadData()
+        
         self.setupGLState()
         
         glEnable(GL_TEXTURE_3D)

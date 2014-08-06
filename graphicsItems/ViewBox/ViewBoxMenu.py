@@ -56,7 +56,7 @@ class ViewBoxMenu(QtGui.QMenu):
             for sig, fn in connects:
                 sig.connect(getattr(self, axis.lower()+fn))
 
-        self.ctrl[0].invertCheck.hide()  ## no invert for x-axis
+        self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
         ## exporting is handled by GraphicsScene now
         #self.export = QtGui.QMenu("Export")
@@ -139,8 +139,9 @@ class ViewBoxMenu(QtGui.QMenu):
             
             self.ctrl[i].autoPanCheck.setChecked(state['autoPan'][i])
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
-
-        self.ctrl[1].invertCheck.setChecked(state['yInverted'])
+            xy = ['x', 'y'][i]
+            self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
+        
         self.valid = True
         
     def popup(self, *args):
@@ -217,18 +218,18 @@ class ViewBoxMenu(QtGui.QMenu):
     def yInvertToggled(self, b):
         self.view().invertY(b)
 
+    def xInvertToggled(self, b):
+        self.view().invertX(b)
 
     def exportMethod(self):
         act = self.sender()
         self.exportMethods[str(act.text())]()
-
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')
         
     def set1ButtonMode(self):
         self.view().setLeftButtonAction('rect')
-        
         
     def setViewList(self, views):
         names = ['']

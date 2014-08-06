@@ -78,6 +78,7 @@ class PlotItem(GraphicsWidget):
     :func:`disableAutoRange <pyqtgraph.ViewBox.disableAutoRange>`,
     :func:`setAspectLocked <pyqtgraph.ViewBox.setAspectLocked>`,
     :func:`invertY <pyqtgraph.ViewBox.invertY>`,
+    :func:`invertX <pyqtgraph.ViewBox.invertX>`,
     :func:`register <pyqtgraph.ViewBox.register>`,
     :func:`unregister <pyqtgraph.ViewBox.unregister>`
     
@@ -299,7 +300,7 @@ class PlotItem(GraphicsWidget):
     for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
               'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
               'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
-              'setAspectLocked', 'invertY', 'register', 'unregister']:                # as well.
+              'setAspectLocked', 'invertY', 'invertX', 'register', 'unregister']:                # as well.
                 
         def _create_method(name):
             def method(self, *args, **kwargs):

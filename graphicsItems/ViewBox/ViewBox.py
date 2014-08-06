@@ -10,7 +10,7 @@ from copy import deepcopy
 from ... import debug as debug
 from ... import getConfigOption
 import sys
-from pyqtgraph.Qt import isQObjectAlive
+from ...Qt import isQObjectAlive
 
 __all__ = ['ViewBox']
 
@@ -74,12 +74,11 @@ class ViewBox(GraphicsWidget):
     
     Features:
     
-        - Scaling contents by mouse or auto-scale when contents change
-        - View linking--multiple views display the same data ranges
-        - Configurable by context menu
-        - Item coordinate mapping methods
+    * Scaling contents by mouse or auto-scale when contents change
+    * View linking--multiple views display the same data ranges
+    * Configurable by context menu
+    * Item coordinate mapping methods
     
-    Not really compatible with GraphicsView having the same functionality.
     """
     
     sigYRangeChanged = QtCore.Signal(object, object)
@@ -104,7 +103,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
         """
         ==============  =============================================================
         **Arguments:**
@@ -115,10 +114,15 @@ class ViewBox(GraphicsWidget):
                         coorinates to. (or False to allow the ratio to change)
         *enableMouse*   (bool) Whether mouse can be used to scale/pan the view
         *invertY*       (bool) See :func:`invertY <pyqtgraph.ViewBox.invertY>`
+        *invertX*       (bool) See :func:`invertX <pyqtgraph.ViewBox.invertX>`
+        *enableMenu*    (bool) Whether to display a context menu when 
+                        right-clicking on the ViewBox background.
+        *name*          (str) Used to register this ViewBox so that it appears
+                        in the "Link axis" dropdown inside other ViewBox
+                        context menus. This allows the user to manually link
+                        the axes of any other view to this one. 
         ==============  =============================================================
         """
-        
-        
         
         GraphicsWidget.__init__(self, parent)
         self.name = None
@@ -139,6 +143,7 @@ class ViewBox(GraphicsWidget):
             'viewRange': [[0,1], [0,1]],     ## actual range viewed
         
             'yInverted': invertY,
+            'xInverted': invertX,
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled, 
                                           ## otherwise float gives the fraction of data that is visible
@@ -218,7 +223,11 @@ class ViewBox(GraphicsWidget):
     def register(self, name):
         """
         Add this ViewBox to the registered list of views. 
-        *name* will appear in the drop-down lists for axis linking in all other views.
+        
+        This allows users to manually link the axes of any other ViewBox to
+        this one. The specified *name* will appear in the drop-down lists for 
+        axis linking in the context menus of all other views.
+        
         The same can be accomplished by initializing the ViewBox with the *name* attribute.
         """
         ViewBox.AllViews[self] = None
@@ -662,7 +671,10 @@ class ViewBox(GraphicsWidget):
         Added in version 0.9.9
         """
         update = False
-        
+        allowed = ['xMin', 'xMax', 'yMin', 'yMax', 'minXRange', 'maxXRange', 'minYRange', 'maxYRange']
+        for kwd in kwds:
+            if kwd not in allowed:
+                raise ValueError("Invalid keyword argument '%s'." % kwd)
         #for kwd in ['xLimits', 'yLimits', 'minRange', 'maxRange']:
             #if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
                 #self.state['limits'][kwd] = kwds[kwd]
@@ -996,7 +1008,10 @@ class ViewBox(GraphicsWidget):
                     x2 = vr.right()
                 else:  ## views overlap; line them up
                     upp = float(vr.width()) / vg.width()
-                    x1 = vr.left() + (sg.x()-vg.x()) * upp
+                    if self.xInverted():
+                        x1 = vr.left()   + (sg.right()-vg.right()) * upp
+                    else:
+                        x1 = vr.left()   + (sg.x()-vg.x()) * upp
                     x2 = x1 + sg.width() * upp
                 self.enableAutoRange(ViewBox.XAxis, False)
                 self.setXRange(x1, x2, padding=0)
@@ -1054,9 +1069,26 @@ class ViewBox(GraphicsWidget):
         #self.updateMatrix(changed=(False, True))
         self.updateViewRange()
         self.sigStateChanged.emit(self)
+        self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
 
     def yInverted(self):
         return self.state['yInverted']
+        
+    def invertX(self, b=True):
+        """
+        By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
+        """
+        if self.state['xInverted'] == b:
+            return
+        
+        self.state['xInverted'] = b
+        #self.updateMatrix(changed=(False, True))
+        self.updateViewRange()
+        self.sigStateChanged.emit(self)
+        self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+
+    def xInverted(self):
+        return self.state['xInverted']
         
     def setAspectLocked(self, lock=True, ratio=1):
         """
@@ -1280,6 +1312,8 @@ class ViewBox(GraphicsWidget):
             ev.ignore()
 
     def scaleHistory(self, d):
+        if len(self.axHistory) == 0:
+            return
         ptr = max(0, min(len(self.axHistory)-1, self.axHistoryPointer+d))
         if ptr != self.axHistoryPointer:
             self.axHistoryPointer = ptr
@@ -1454,9 +1488,10 @@ class ViewBox(GraphicsWidget):
         if aspect is not False and aspect != 0 and tr.height() != 0 and bounds.height() != 0:
             
             ## This is the view range aspect ratio we have requested
-            targetRatio = tr.width() / tr.height()
+            targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1
             ## This is the view range aspect ratio we need to obey aspect constraint
-            viewRatio = (bounds.width() / bounds.height()) / aspect
+            viewRatio = (bounds.width() / bounds.height() if bounds.height() != 0 else 1) / aspect
+            viewRatio = 1 if viewRatio == 0 else viewRatio
             
             # Decide which range to keep unchanged
             #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
@@ -1481,7 +1516,8 @@ class ViewBox(GraphicsWidget):
                 if dx != 0:
                     changed[0] = True
                 viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
-                
+
+            
         # ----------- Make corrections for view limits -----------
         
         limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
@@ -1532,7 +1568,7 @@ class ViewBox(GraphicsWidget):
                 changed[axis] = True
             
             #print "after applying edge limits:", viewRange[axis]
-            
+
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
         
@@ -1554,6 +1590,7 @@ class ViewBox(GraphicsWidget):
             if link is not None:
                 link.linkedViewChanged(self, ax)
         
+        self.update()
         self._matrixNeedsUpdate = True
 
     def updateMatrix(self, changed=None):
@@ -1566,6 +1603,8 @@ class ViewBox(GraphicsWidget):
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
         if not self.state['yInverted']:
             scale = scale * Point(1, -1)
+        if self.state['xInverted']:
+            scale = scale * Point(-1, 1)
         m = QtGui.QTransform()
         
         ## First center the viewport at 0

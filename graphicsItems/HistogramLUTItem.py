@@ -17,6 +17,7 @@ from .. import functions as fn
 import numpy as np
 from .. import debug as debug
 
+import weakref
 
 __all__ = ['HistogramLUTItem']
 
@@ -42,7 +43,7 @@ class HistogramLUTItem(GraphicsWidget):
         """
         GraphicsWidget.__init__(self)
         self.lut = None
-        self.imageItem = None
+        self.imageItem = lambda: None  # fake a dead weakref
         
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
@@ -138,7 +139,7 @@ class HistogramLUTItem(GraphicsWidget):
         #self.region.setBounds([vr.top(), vr.bottom()])
 
     def setImageItem(self, img):
-        self.imageItem = img
+        self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
         img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
         #self.gradientChanged()
@@ -150,11 +151,11 @@ class HistogramLUTItem(GraphicsWidget):
         self.update()
     
     def gradientChanged(self):
-        if self.imageItem is not None:
+        if self.imageItem() is not None:
             if self.gradient.isLookupTrivial():
-                self.imageItem.setLookupTable(None) #lambda x: x.astype(np.uint8))
+                self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
             else:
-                self.imageItem.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+                self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
             
         self.lut = None
         #if self.imageItem is not None:
@@ -178,14 +179,14 @@ class HistogramLUTItem(GraphicsWidget):
         #self.update()
 
     def regionChanging(self):
-        if self.imageItem is not None:
-            self.imageItem.setLevels(self.region.getRegion())
+        if self.imageItem() is not None:
+            self.imageItem().setLevels(self.region.getRegion())
         self.sigLevelsChanged.emit(self)
         self.update()
 
     def imageChanged(self, autoLevel=False, autoRange=False):
         profiler = debug.Profiler()
-        h = self.imageItem.getHistogram()
+        h = self.imageItem().getHistogram()
         profiler('get histogram')
         if h[0] is None:
             return

@@ -22,6 +22,9 @@ class Container(object):
         return None
 
     def insert(self, new, pos=None, neighbor=None):
+        # remove from existing parent first
+        new.setParent(None)
+        
         if not isinstance(new, list):
             new = [new]
         if neighbor is None:
