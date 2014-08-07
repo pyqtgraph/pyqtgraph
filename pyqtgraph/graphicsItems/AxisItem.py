@@ -918,13 +918,17 @@ class AxisItem(GraphicsWidget):
                     rects.append(br)
                     textRects.append(rects[-1])
             
-            ## measure all text, make sure there's enough room
-            if axis == 0:
-                textSize = np.sum([r.height() for r in textRects])
-                textSize2 = np.max([r.width() for r in textRects]) if textRects else 0
+            if len(textRects) > 0:
+                ## measure all text, make sure there's enough room
+                if axis == 0:
+                    textSize = np.sum([r.height() for r in textRects])
+                    textSize2 = np.max([r.width() for r in textRects])
+                else:
+                    textSize = np.sum([r.width() for r in textRects])
+                    textSize2 = np.max([r.height() for r in textRects])
             else:
-                textSize = np.sum([r.width() for r in textRects])
-                textSize2 = np.max([r.height() for r in textRects]) if textRects else 0
+                textSize = 0
+                textSize2 = 0
 
             if i > 0:  ## always draw top level
                 ## If the strings are too crowded, stop drawing text now.

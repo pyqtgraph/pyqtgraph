@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/imageview/ImageViewTemplate.ui'
+# Form implementation generated from reading ui file 'ImageViewTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:52 2013
-#      by: PyQt4 UI code generator 4.10
+# Created: Thu May  1 15:20:40 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -55,15 +55,14 @@ class Ui_Form(object):
         self.roiBtn.setCheckable(True)
         self.roiBtn.setObjectName(_fromUtf8("roiBtn"))
         self.gridLayout.addWidget(self.roiBtn, 1, 1, 1, 1)
-        self.normBtn = QtGui.QPushButton(self.layoutWidget)
+        self.menuBtn = QtGui.QPushButton(self.layoutWidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.normBtn.sizePolicy().hasHeightForWidth())
-        self.normBtn.setSizePolicy(sizePolicy)
-        self.normBtn.setCheckable(True)
-        self.normBtn.setObjectName(_fromUtf8("normBtn"))
-        self.gridLayout.addWidget(self.normBtn, 1, 2, 1, 1)
+        sizePolicy.setHeightForWidth(self.menuBtn.sizePolicy().hasHeightForWidth())
+        self.menuBtn.setSizePolicy(sizePolicy)
+        self.menuBtn.setObjectName(_fromUtf8("menuBtn"))
+        self.gridLayout.addWidget(self.menuBtn, 1, 2, 1, 1)
         self.roiPlot = PlotWidget(self.splitter)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -149,7 +148,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
         self.roiBtn.setText(_translate("Form", "ROI", None))
-        self.normBtn.setText(_translate("Form", "Norm", None))
+        self.menuBtn.setText(_translate("Form", "Menu", None))
         self.normGroup.setTitle(_translate("Form", "Normalization", None))
         self.normSubtractRadio.setText(_translate("Form", "Subtract", None))
         self.normDivideRadio.setText(_translate("Form", "Divide", None))

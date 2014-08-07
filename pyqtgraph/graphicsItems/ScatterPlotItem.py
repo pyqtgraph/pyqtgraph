@@ -68,10 +68,12 @@ def renderSymbol(symbol, size, pen, brush, device=None):
         device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
         device.fill(0)
     p = QtGui.QPainter(device)
-    p.setRenderHint(p.Antialiasing)
-    p.translate(device.width()*0.5, device.height()*0.5)
-    drawSymbol(p, symbol, size, pen, brush)
-    p.end()
+    try:
+        p.setRenderHint(p.Antialiasing)
+        p.translate(device.width()*0.5, device.height()*0.5)
+        drawSymbol(p, symbol, size, pen, brush)
+    finally:
+        p.end()
     return device
 
 def makeSymbolPixmap(size, pen, brush, symbol):

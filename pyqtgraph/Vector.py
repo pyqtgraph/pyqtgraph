@@ -81,5 +81,7 @@ class Vector(QtGui.QVector3D):
 #            ang *= -1.
         return ang * 180. / np.pi
 
+    def __abs__(self):
+        return Vector(abs(self.x()), abs(self.y()), abs(self.z()))
         
         

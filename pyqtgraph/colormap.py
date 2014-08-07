@@ -244,4 +244,7 @@ class ColorMap(object):
         else:
             return np.all(self.color == np.array([[0,0,0,255], [255,255,255,255]]))
 
-
+    def __repr__(self):
+        pos = repr(self.pos).replace('\n', '')
+        color = repr(self.color).replace('\n', '')
+        return "ColorMap(%s, %s)" % (pos, color)

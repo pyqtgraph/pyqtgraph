@@ -57,7 +57,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             }
             
         if isinstance(data, dict):
-            for k in data:
+            for k in data.keys():
                 self.buildTree(data[k], node, str(k))
         elif isinstance(data, list) or isinstance(data, tuple):
             for i in range(len(data)):

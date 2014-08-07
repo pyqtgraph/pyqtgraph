@@ -182,8 +182,8 @@ class EvalNode(Node):
     def __init__(self, name):
         Node.__init__(self, name, 
             terminals = {
-                'input': {'io': 'in', 'renamable': True},
-                'output': {'io': 'out', 'renamable': True},
+                'input': {'io': 'in', 'renamable': True, 'multiable': True},
+                'output': {'io': 'out', 'renamable': True, 'multiable': True},
             },
             allowAddInput=True, allowAddOutput=True)
         
