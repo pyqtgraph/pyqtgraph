@@ -14,6 +14,10 @@ from .pgcollections import OrderedDict
 GLOBAL_PATH = None # so not thread safe.
 from . import units
 from .python2_3 import asUnicode
+from .Qt import QtCore
+from .Point import Point
+from .colormap import ColorMap
+import numpy
 
 class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):
@@ -46,7 +50,7 @@ def readConfigFile(fname):
         fname2 = os.path.join(GLOBAL_PATH, fname)
         if os.path.exists(fname2):
             fname = fname2
-            
+
     GLOBAL_PATH = os.path.dirname(os.path.abspath(fname))
         
     try:
@@ -135,6 +139,17 @@ def parseString(lines, start=0):
             local = units.allUnits.copy()
             local['OrderedDict'] = OrderedDict
             local['readConfigFile'] = readConfigFile
+            local['Point'] = Point
+            local['QtCore'] = QtCore
+            local['ColorMap'] = ColorMap
+            # Needed for reconstructing numpy arrays
+            local['array'] = numpy.array
+            for dtype in ['int8', 'uint8', 
+                          'int16', 'uint16', 'float16',
+                          'int32', 'uint32', 'float32',
+                          'int64', 'uint64', 'float64']:
+                local[dtype] = getattr(numpy, dtype)
+                
             if len(k) < 1:
                 raise ParseError('Missing name preceding colon', ln+1, l)
             if k[0] == '(' and k[-1] == ')':  ## If the key looks like a tuple, try evaluating it.

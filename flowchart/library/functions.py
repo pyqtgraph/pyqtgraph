@@ -206,7 +206,7 @@ def adaptiveDetrend(data, x=None, threshold=3.0):
     #d3 = where(mask, 0, d2)
     #d4 = d2 - lowPass(d3, cutoffs[1], dt=dt)
     
-    lr = stats.linregress(x[mask], d[mask])
+    lr = scipy.stats.linregress(x[mask], d[mask])
     base = lr[1] + lr[0]*x
     d4 = d - base
     

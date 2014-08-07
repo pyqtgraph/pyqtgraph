@@ -177,6 +177,12 @@ class ImageItem(GraphicsObject):
         self.translate(rect.left(), rect.top())
         self.scale(rect.width() / self.width(), rect.height() / self.height())
 
+    def clear(self):
+        self.image = None
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
+        self.update()
+
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
         Update the image displayed by this item. For more information on how the image
@@ -512,6 +518,9 @@ class ImageItem(GraphicsObject):
     def removeClicked(self):
         ## Send remove event only after we have exited the menu event handler
         self.removeTimer = QtCore.QTimer()
-        self.removeTimer.timeout.connect(lambda: self.sigRemoveRequested.emit(self))
+        self.removeTimer.timeout.connect(self.emitRemoveRequested)
         self.removeTimer.start(0)
 
+    def emitRemoveRequested(self):
+        self.removeTimer.timeout.disconnect(self.emitRemoveRequested)
+        self.sigRemoveRequested.emit(self)

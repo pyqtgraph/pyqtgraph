@@ -78,6 +78,7 @@ class WidgetParameterItem(ParameterItem):
             ## no starting value was given; use whatever the widget has
             self.widgetValueChanged()
 
+        self.updateDefaultBtn()
 
     def makeWidget(self):
         """
@@ -191,6 +192,9 @@ class WidgetParameterItem(ParameterItem):
     def updateDefaultBtn(self):
         ## enable/disable default btn 
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
+        
+        # hide / show
+        self.defaultBtn.setVisible(not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -234,6 +238,8 @@ class WidgetParameterItem(ParameterItem):
         self.widget.show()
         self.displayLabel.hide()
         self.widget.setFocus(QtCore.Qt.OtherFocusReason)
+        if isinstance(self.widget, SpinBox):
+            self.widget.selectNumber()  # select the numerical portion of the text for quick editing
 
     def hideEditor(self):
         self.widget.hide()
@@ -277,7 +283,7 @@ class WidgetParameterItem(ParameterItem):
         if 'readonly' in opts:
             self.updateDefaultBtn()
             if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
-                w.setEnabled(not opts['readonly'])
+                self.widget.setEnabled(not opts['readonly'])
         
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
@@ -315,8 +321,8 @@ class SimpleParameter(Parameter):
     def colorValue(self):
         return fn.mkColor(Parameter.value(self))
     
-    def saveColorState(self):
-        state = Parameter.saveState(self)
+    def saveColorState(self, *args, **kwds):
+        state = Parameter.saveState(self, *args, **kwds)
         state['value'] = fn.colorTuple(self.value())
         return state
         
@@ -539,7 +545,6 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
         
         Parameter.setLimits(self, limits)
-        #print self.name(), self.value(), limits, self.reverse
         if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
             self.setValue(self.reverse[0][0])
             

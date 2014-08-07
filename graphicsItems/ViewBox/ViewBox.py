@@ -760,7 +760,8 @@ class ViewBox(GraphicsWidget):
                 x = vr.left()+x, vr.right()+x
             if y is not None:
                 y = vr.top()+y, vr.bottom()+y
-            self.setRange(xRange=x, yRange=y, padding=0)
+            if x is not None or y is not None:
+                self.setRange(xRange=x, yRange=y, padding=0)
             
         
         
@@ -902,6 +903,14 @@ class ViewBox(GraphicsWidget):
                 return
             args['padding'] = 0
             args['disableAutoRange'] = False
+            
+             # check for and ignore bad ranges
+            for k in ['xRange', 'yRange']:
+                if k in args:
+                    if not np.all(np.isfinite(args[k])):
+                        r = args.pop(k)
+                        print "Warning: %s is invalid: %s" % (k, str(r))
+                        
             self.setRange(**args)
         finally:
             self._autoRangeNeedsUpdate = False
@@ -1066,7 +1075,7 @@ class ViewBox(GraphicsWidget):
             return
         
         self.state['yInverted'] = b
-        #self.updateMatrix(changed=(False, True))
+        self._matrixNeedsUpdate = True # updateViewRange won't detect this for us
         self.updateViewRange()
         self.sigStateChanged.emit(self)
         self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
@@ -1485,7 +1494,7 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        if aspect is not False and aspect != 0 and tr.height() != 0 and bounds.height() != 0:
+        if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
             
             ## This is the view range aspect ratio we have requested
             targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1
@@ -1581,18 +1590,16 @@ class ViewBox(GraphicsWidget):
         if any(changed):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             self.update()
+            self._matrixNeedsUpdate = True
         
-        # Inform linked views that the range has changed
-        for ax in [0, 1]:
-            if not changed[ax]:
-                continue
-            link = self.linkedView(ax)
-            if link is not None:
-                link.linkedViewChanged(self, ax)
+            # Inform linked views that the range has changed
+            for ax in [0, 1]:
+                if not changed[ax]:
+                    continue
+                link = self.linkedView(ax)
+                if link is not None:
+                    link.linkedViewChanged(self, ax)
         
-        self.update()
-        self._matrixNeedsUpdate = True
-
     def updateMatrix(self, changed=None):
         ## Make the childGroup's transform match the requested viewRange.
         bounds = self.rect()

@@ -47,29 +47,29 @@ class SpinBox(QtGui.QAbstractSpinBox):
         """
         ============== ========================================================================
         **Arguments:**
-        parent         Sets the parent widget for this SpinBox (optional)
-        value          (float/int) initial value
+        parent         Sets the parent widget for this SpinBox (optional). Default is None.
+        value          (float/int) initial value. Default is 0.0.
         bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
-                       Either may be None to leave the value unbounded.
-        suffix         (str) suffix (units) to display after the numerical value
+                       Either may be None to leave the value unbounded. By default, values are unbounded.
+        suffix         (str) suffix (units) to display after the numerical value. By default, suffix is an empty str.
         siPrefix       (bool) If True, then an SI prefix is automatically prepended
                        to the units and the value is scaled accordingly. For example,
                        if value=0.003 and suffix='V', then the SpinBox will display
-                       "300 mV" (but a call to SpinBox.value will still return 0.003).
+                       "300 mV" (but a call to SpinBox.value will still return 0.003). Default is False.
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
                        the interpretation of this value is different when specifying
-                       the 'dec' argument.
+                       the 'dec' argument. Default is 0.01.
         dec            (bool) If True, then the step value will be adjusted to match 
                        the current size of the variable (for example, a value of 15
                        might step in increments of 1 whereas a value of 1500 would
                        step in increments of 100). In this case, the 'step' argument
                        is interpreted *relative* to the current value. The most common
-                       'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0.
+                       'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0. Default is False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
-        int            (bool) if True, the value is forced to integer type
-        decimals       (int) Number of decimal values to display
+        int            (bool) if True, the value is forced to integer type. Default is False
+        decimals       (int) Number of decimal values to display. Default is 2. 
         ============== ========================================================================
         """
         QtGui.QAbstractSpinBox.__init__(self, parent)
@@ -233,6 +233,18 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
     def setDecimals(self, decimals):
         self.setOpts(decimals=decimals)
+        
+    def selectNumber(self):
+        """
+        Select the numerical portion of the text to allow quick editing by the user.
+        """
+        le = self.lineEdit()
+        text = le.text()
+        try:
+            index = text.index(' ')
+        except ValueError:
+            return
+        le.setSelection(0, index)
 
     def value(self):
         """

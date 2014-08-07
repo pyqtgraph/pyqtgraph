@@ -19,8 +19,8 @@ class ColorMapWidget(ptree.ParameterTree):
     """
     sigColorMapChanged = QtCore.Signal(object)
     
-    def __init__(self):
-        ptree.ParameterTree.__init__(self, showHeader=False)
+    def __init__(self, parent=None):
+        ptree.ParameterTree.__init__(self, parent=parent, showHeader=False)
         
         self.params = ColorMapParameter()
         self.setParameters(self.params)
@@ -32,6 +32,15 @@ class ColorMapWidget(ptree.ParameterTree):
 
     def mapChanged(self):
         self.sigColorMapChanged.emit(self)
+
+    def widgetGroupInterface(self):
+        return (self.sigColorMapChanged, self.saveState, self.restoreState)
+
+    def saveState(self):
+        return self.params.saveState()
+
+    def restoreState(self, state):
+        self.params.restoreState(state)
         
 
 class ColorMapParameter(ptree.types.GroupParameter):
@@ -48,9 +57,11 @@ class ColorMapParameter(ptree.types.GroupParameter):
     def addNew(self, name):
         mode = self.fields[name].get('mode', 'range')
         if mode == 'range':
-            self.addChild(RangeColorMapItem(name, self.fields[name]))
+            item = RangeColorMapItem(name, self.fields[name])
         elif mode == 'enum':
-            self.addChild(EnumColorMapItem(name, self.fields[name]))
+            item = EnumColorMapItem(name, self.fields[name])
+        self.addChild(item)
+        return item
         
     def fieldNames(self):
         return self.fields.keys()
@@ -95,6 +106,9 @@ class ColorMapParameter(ptree.types.GroupParameter):
                         returned as 0.0-1.0 float values.
         ==============  =================================================================
         """
+        if isinstance(data, dict):
+            data = np.array([tuple(data.values())], dtype=[(k, float) for k in data.keys()])
+
         colors = np.zeros((len(data),4))
         for item in self.children():
             if not item['Enabled']:
@@ -126,8 +140,26 @@ class ColorMapParameter(ptree.types.GroupParameter):
         
         return colors
             
+    def saveState(self):
+        items = OrderedDict()
+        for item in self:
+            itemState = item.saveState(filter='user')
+            itemState['field'] = item.fieldName
+            items[item.name()] = itemState
+        state = {'fields': self.fields, 'items': items}
+        return state
+
+    def restoreState(self, state):
+        if 'fields' in state:
+            self.setFields(state['fields'])
+        for itemState in state['items']:
+            item = self.addNew(itemState['field'])
+            item.restoreState(itemState)
+        
     
 class RangeColorMapItem(ptree.types.SimpleParameter):
+    mapType = 'range'
+    
     def __init__(self, name, opts):
         self.fieldName = name
         units = opts.get('units', '')
@@ -151,8 +183,6 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
     def map(self, data):
         data = data[self.fieldName]
         
-        
-        
         scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
         cmap = self.value()
         colors = cmap.map(scaled, mode='float')
@@ -162,10 +192,11 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
         nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
         colors[mask] = nanColor
         
-        return colors
-
+        return colors        
 
 class EnumColorMapItem(ptree.types.GroupParameter):
+    mapType = 'enum'
+    
     def __init__(self, name, opts):
         self.fieldName = name
         vals = opts.get('values', [])
