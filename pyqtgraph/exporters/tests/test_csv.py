@@ -29,7 +29,7 @@ def test_CSVExporter():
     r = csv.reader(open('test.csv', 'r'))
     lines = [line for line in r]
     header = lines.pop(0)
-    assert header == ['myPlot_x', 'myPlot_y', 'x', 'y', 'x', 'y']
+    assert header == ['myPlot_x', 'myPlot_y', 'x0001', 'y0001', 'x0002', 'y0002']
     
     i = 0
     for vals in lines:

@@ -427,10 +427,10 @@ class ViewBox(GraphicsWidget):
         self.linkedYChanged()
         self.updateAutoRange()
         self.updateViewRange()
+        self._matrixNeedsUpdate = True
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
         self.sigResized.emit(self)
-        
         
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -909,7 +909,7 @@ class ViewBox(GraphicsWidget):
                 if k in args:
                     if not np.all(np.isfinite(args[k])):
                         r = args.pop(k)
-                        print "Warning: %s is invalid: %s" % (k, str(r))
+                        #print("Warning: %s is invalid: %s" % (k, str(r))
                         
             self.setRange(**args)
         finally:
@@ -1135,6 +1135,8 @@ class ViewBox(GraphicsWidget):
         Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
         (This maps from inside the viewbox to outside)
         """ 
+        if self._matrixNeedsUpdate:
+            self.updateMatrix()
         m = self.childGroup.transform()
         #m1 = QtGui.QTransform()
         #m1.translate(self.childGroup.pos().x(), self.childGroup.pos().y())
