@@ -135,8 +135,13 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def mousePressEvent(self, ev):
         #print 'scenePress'
         QtGui.QGraphicsScene.mousePressEvent(self, ev)
-        #print "mouseGrabberItem: ", self.mouseGrabberItem()
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
+            if self.lastHoverEvent is not None:
+                # If the mouse has moved since the last hover event, send a new one.
+                # This can happen if a context menu is open while the mouse is moving.
+                if ev.scenePos() != self.lastHoverEvent.scenePos():
+                    self.sendHoverEvents(ev)
+            
             self.clickEvents.append(MouseClickEvent(ev))
             
             ## set focus on the topmost focusable item under this click
@@ -145,10 +150,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 if i.isEnabled() and i.isVisible() and int(i.flags() & i.ItemIsFocusable) > 0:
                     i.setFocus(QtCore.Qt.MouseFocusReason)
                     break
-        #else:
-            #addr = sip.unwrapinstance(sip.cast(self.mouseGrabberItem(), QtGui.QGraphicsItem))
-            #item = GraphicsScene._addressCache.get(addr, self.mouseGrabberItem())            
-            #print "click grabbed by:", item
         
     def mouseMoveEvent(self, ev):
         self.sigMouseMoved.emit(ev.scenePos())
@@ -189,7 +190,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def mouseReleaseEvent(self, ev):
         #print 'sceneRelease'
         if self.mouseGrabberItem() is None:
-            #print "sending click/drag event"
             if ev.button() in self.dragButtons:
                 if self.sendDragEvent(ev, final=True):
                     #print "sent drag event"
@@ -231,6 +231,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
             
         prevItems = list(self.hoverItems.keys())
             
+        #print "hover prev items:", prevItems
+        #print "hover test items:", items
         for item in items:
             if hasattr(item, 'hoverEvent'):
                 event.currentItem = item
@@ -248,6 +250,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     
         event.enter = False
         event.exit = True
+        #print "hover exit items:", prevItems
         for item in prevItems:
             event.currentItem = item
             try:
@@ -257,9 +260,13 @@ class GraphicsScene(QtGui.QGraphicsScene):
             finally:
                 del self.hoverItems[item]
         
-        if hasattr(ev, 'buttons') and int(ev.buttons()) == 0:
+        # Update last hover event unless:
+        #   - mouse is dragging (move+buttons); in this case we want the dragged
+        #     item to continue receiving events until the drag is over
+        #   - event is not a mouse event (QEvent.Leave sometimes appears here)
+        if (ev.type() == ev.GraphicsSceneMousePress or 
+            (ev.type() == ev.GraphicsSceneMouseMove and int(ev.buttons()) == 0)):
             self.lastHoverEvent = event  ## save this so we can ask about accepted events later.
-            
 
     def sendDragEvent(self, ev, init=False, final=False):
         ## Send a MouseDragEvent to the current dragItem or to 
@@ -323,7 +330,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 acceptedItem = self.lastHoverEvent.clickItems().get(ev.button(), None)
             else:
                 acceptedItem = None
-                
             if acceptedItem is not None:
                 ev.currentItem = acceptedItem
                 try:
@@ -345,21 +351,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             if int(item.flags() & item.ItemIsFocusable) > 0:
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
-                #if not ev.isAccepted() and ev.button() is QtCore.Qt.RightButton:
-                    #print "GraphicsScene emitting sigSceneContextMenu"
-                    #self.sigMouseClicked.emit(ev)
-                    #ev.accept()
         self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
-        
-    #def claimEvent(self, item, button, eventType):
-        #key = (button, eventType)
-        #if key in self.claimedEvents:
-            #return False
-        #self.claimedEvents[key] = item
-        #print "event", key, "claimed by", item
-        #return True
-        
         
     def items(self, *args):
         #print 'args:', args
