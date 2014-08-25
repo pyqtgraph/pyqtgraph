@@ -17,6 +17,7 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
         
         if brush is not None:
             self.setBrush(fn.mkBrush(brush))
+        self.setPen(fn.mkPen(None));
         self.updatePath()
 
     def setCurves(self, curve1, curve2):
