@@ -17,6 +17,7 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
         
         if brush is not None:
             self.setBrush(fn.mkBrush(brush))
+        self.setPen(fn.mkPen(None));
         self.updatePath()
 
     def setCurves(self, curve1, curve2):
@@ -61,13 +62,17 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
                 paths.append(c.curve.getPath())
             elif isinstance(c, PlotCurveItem):
                 paths.append(c.getPath())
-            
+
         path = QtGui.QPainterPath()
         p1 = paths[0].toSubpathPolygons()
-        p2 = paths[1].toReversed().toSubpathPolygons()
-        if len(p1) == 0 or len(p2) == 0:
-            self.setPath(QtGui.QPainterPath())
-            return
-            
-        path.addPolygon(p1[0] + p2[0])
+        p2 = paths[1].toSubpathPolygons()
+
+        for sp1, sp2 in zip(p1, p2):
+            if len(sp1) == 0 or len(sp2) == 0:
+                continue
+            points = [p for p in sp2]
+            points.reverse()
+            rsp2 = QtGui.QPolygonF(points)
+            path.addPolygon(sp1 + rsp2)
+
         self.setPath(path)
