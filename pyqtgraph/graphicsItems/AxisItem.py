@@ -62,6 +62,11 @@ class AxisItem(GraphicsWidget):
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text 
         self.textHeight = 18
         
+        # If the user specifies a width / height, remember that setting
+        # indefinitely.
+        self.fixedWidth = None
+        self.fixedHeight = None
+        
         self.labelText = ''
         self.labelUnits = ''
         self.labelUnitPrefix=''
@@ -219,9 +224,9 @@ class AxisItem(GraphicsWidget):
         #self.drawLabel = show
         self.label.setVisible(show)
         if self.orientation in ['left', 'right']:
-            self.setWidth()
+            self._updateWidth()
         else:
-            self.setHeight()
+            self._updateHeight()
         if self.autoSIPrefix:
             self.updateAutoSIPrefix()
         
@@ -291,54 +296,80 @@ class AxisItem(GraphicsWidget):
             if mx > self.textWidth or mx < self.textWidth-10:
                 self.textWidth = mx
                 if self.style['autoExpandTextSpace'] is True:
-                    self.setWidth()
+                    self._updateWidth()
                     #return True  ## size has changed
         else:
             mx = max(self.textHeight, x)
             if mx > self.textHeight or mx < self.textHeight-10:
                 self.textHeight = mx
                 if self.style['autoExpandTextSpace'] is True:
-                    self.setHeight()
+                    self._updateHeight()
                     #return True  ## size has changed
         
     def _adjustSize(self):
         if self.orientation in ['left', 'right']:
-            self.setWidth()
+            self._updateWidth()
         else:
-            self.setHeight()
+            self._updateHeight()
     
     def setHeight(self, h=None):
         """Set the height of this axis reserved for ticks and tick labels.
-        The height of the axis label is automatically added."""
-        if h is None:
-            if not self.style['showValues']:
-                h = 0
-            elif self.style['autoExpandTextSpace'] is True:
-                h = self.textHeight
+        The height of the axis label is automatically added.
+        
+        If *height* is None, then the value will be determined automatically
+        based on the size of the tick text."""
+        self.fixedHeight = h
+        self._updateHeight()
+        
+    def _updateHeight(self):
+        if not self.isVisible():
+            h = 0
+        else:
+            if self.fixedHeight is None:
+                if not self.style['showValues']:
+                    h = 0
+                elif self.style['autoExpandTextSpace'] is True:
+                    h = self.textHeight
+                else:
+                    h = self.style['tickTextHeight']
+                h += self.style['tickTextOffset'][1] if self.style['showValues'] else 0
+                h += max(0, self.style['tickLength'])
+                if self.label.isVisible():
+                    h += self.label.boundingRect().height() * 0.8
             else:
-                h = self.style['tickTextHeight']
-            h += self.style['tickTextOffset'][1] if self.style['showValues'] else 0
-            h += max(0, self.style['tickLength'])
-            if self.label.isVisible():
-                h += self.label.boundingRect().height() * 0.8
+                h = self.fixedHeight
+        
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
         self.picture = None
         
     def setWidth(self, w=None):
         """Set the width of this axis reserved for ticks and tick labels.
-        The width of the axis label is automatically added."""
-        if w is None:
-            if not self.style['showValues']:
-                w = 0
-            elif self.style['autoExpandTextSpace'] is True:
-                w = self.textWidth
+        The width of the axis label is automatically added.
+        
+        If *width* is None, then the value will be determined automatically
+        based on the size of the tick text."""
+        self.fixedWidth = w
+        self._updateWidth()
+        
+    def _updateWidth(self):
+        if not self.isVisible():
+            w = 0
+        else:
+            if self.fixedWidth is None:
+                if not self.style['showValues']:
+                    w = 0
+                elif self.style['autoExpandTextSpace'] is True:
+                    w = self.textWidth
+                else:
+                    w = self.style['tickTextWidth']
+                w += self.style['tickTextOffset'][0] if self.style['showValues'] else 0
+                w += max(0, self.style['tickLength'])
+                if self.label.isVisible():
+                    w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
             else:
-                w = self.style['tickTextWidth']
-            w += self.style['tickTextOffset'][0] if self.style['showValues'] else 0
-            w += max(0, self.style['tickLength'])
-            if self.label.isVisible():
-                w += self.label.boundingRect().height() * 0.8  ## bounding rect is usually an overestimate
+                w = self.fixedWidth
+        
         self.setMaximumWidth(w)
         self.setMinimumWidth(w)
         self.picture = None
@@ -1009,19 +1040,18 @@ class AxisItem(GraphicsWidget):
         profiler('draw text')
 
     def show(self):
-        
-        if self.orientation in ['left', 'right']:
-            self.setWidth()
-        else:
-            self.setHeight()
         GraphicsWidget.show(self)
+        if self.orientation in ['left', 'right']:
+            self._updateWidth()
+        else:
+            self._updateHeight()
         
     def hide(self):
-        if self.orientation in ['left', 'right']:
-            self.setWidth(0)
-        else:
-            self.setHeight(0)
         GraphicsWidget.hide(self)
+        if self.orientation in ['left', 'right']:
+            self._updateWidth()
+        else:
+            self._updateHeight()
 
     def wheelEvent(self, ev):
         if self.linkedView() is None: 
