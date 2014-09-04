@@ -5,6 +5,7 @@ Based on colorama (see pyqtgraph/util/colorama/README.txt)
 """
 import sys, re
 
+from ..python2_3 import string_types
 from .colorama.winterm import WinTerm, WinColor, WinStyle
 from .colorama.win32 import windll
 
@@ -61,7 +62,7 @@ def cprint(stream, *args, **kwds):
         cprint('stderr', 1, 'This is in red.', -1)
 
     """
-    if isinstance(stream, basestring):
+    if isinstance(stream, string_types):
         stream = kwds.get('stream', 'stdout')
         err = stream == 'stderr'
         stream = getattr(sys, stream)
@@ -72,7 +73,7 @@ def cprint(stream, *args, **kwds):
         if _WIN:
             # convert to win32 calls
             for arg in args:
-                if isinstance(arg, basestring):
+                if isinstance(arg, string_types):
                     stream.write(arg)
                 else:
                     kwds = WIN[arg]
@@ -80,14 +81,14 @@ def cprint(stream, *args, **kwds):
         else:
             # convert to ANSI
             for arg in args:
-                if isinstance(arg, basestring):
+                if isinstance(arg, string_types):
                     stream.write(arg)
                 else:
                     stream.write(ANSI[arg])
     else:
         # ignore colors
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 stream.write(arg)
 
 def cout(*args):

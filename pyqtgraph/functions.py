@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from __future__ import division
-from .python2_3 import asUnicode
+from .python2_3 import asUnicode, string_types
 from .Qt import QtGui, QtCore, USE_PYSIDE
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
@@ -161,7 +161,7 @@ def mkColor(*args):
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
     if len(args) == 1:
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], string_types):
             c = args[0]
             if c[0] == '#':
                 c = c[1:]
@@ -1417,9 +1417,9 @@ def arrayToQPath(x, y, connect='all'):
         #index = tetFields[0] + tetFields[1]*2 + tetFields[2]*4 + tetFields[3]*8
         
         ### add facets
-        #for i in xrange(index.shape[0]):                 # data x-axis
-            #for j in xrange(index.shape[1]):             # data y-axis
-                #for k in xrange(index.shape[2]):         # data z-axis
+        #for i in range(index.shape[0]):                 # data x-axis
+            #for j in range(index.shape[1]):             # data y-axis
+                #for k in range(index.shape[2]):         # data z-axis
                     #for f in indexFacets[index[i,j,k]]:  # faces to generate for this tet
                         #pts = []
                         #for l in [0,1,2]:      # points in this face

@@ -8,6 +8,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from pyqtgraph.python2_3 import string_types
 import pyqtgraph as pg
 
 if USE_PYSIDE:
@@ -143,7 +144,7 @@ class ExampleLoader(QtGui.QMainWindow):
             self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
                                         # so we need to make an explicit reference or else the .file
                                         # attribute will disappear.
-            if isinstance(val, basestring):
+            if isinstance(val, string_types):
                 item.file = val
             else:
                 self.populateTree(item, val)
@@ -218,7 +219,7 @@ def buildFileList(examples, files=None):
         files = []
     for key, val in examples.items():
         #item = QtGui.QTreeWidgetItem([key])
-        if isinstance(val, basestring):
+        if isinstance(val, string_types):
             #item.file = val
             files.append((key,val))
         else:

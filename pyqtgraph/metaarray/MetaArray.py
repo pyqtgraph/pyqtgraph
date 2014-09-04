@@ -26,6 +26,8 @@ except:
     USE_HDF5 = False
     HAVE_HDF5 = False
 
+from ..python2_3 import string_types
+
 
 def axis(name=None, cols=None, values=None, units=None):
     """Convenience function for generating axis descriptions when defining MetaArrays"""
@@ -113,7 +115,7 @@ class MetaArray(object):
     defaultCompression = None
     
     ## Types allowed as axis or column names
-    nameTypes = [basestring, tuple]
+    nameTypes = [string_types, tuple]
     @staticmethod
     def isNameType(var):
         return any([isinstance(var, t) for t in MetaArray.nameTypes])
@@ -441,7 +443,7 @@ class MetaArray(object):
         if type(axis) == int:
             ind = [slice(None)]*axis
             ind.append(order)
-        elif isinstance(axis, basestring):
+        elif isinstance(axis, string_types):
             ind = (slice(axis, order),)
         return self[tuple(ind)]
   
@@ -505,7 +507,7 @@ class MetaArray(object):
         return tuple(nInd)
       
     def _interpretAxis(self, axis):
-        if isinstance(axis, basestring) or isinstance(axis, tuple):
+        if isinstance(axis, (string_types, tuple)):
             return self._getAxis(axis)
         else:
             return axis
@@ -981,7 +983,7 @@ class MetaArray(object):
         ## Pull list of values from attributes and child objects
         for k in root.attrs:
             val = root.attrs[k]
-            if isinstance(val, basestring):  ## strings need to be re-evaluated to their original types
+            if isinstance(val, string_types):  ## strings need to be re-evaluated to their original types
                 try:
                     val = eval(val)
                 except:

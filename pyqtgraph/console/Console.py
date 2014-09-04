@@ -1,5 +1,6 @@
 
 from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..python2_3 import string_types
 import sys, re, os, time, traceback, subprocess
 if USE_PYSIDE:
     from . import template_pyside as template
@@ -345,7 +346,7 @@ class ConsoleWidget(QtGui.QWidget):
         if filterStr != '':
             if isinstance(exc, Exception):
                 msg = exc.message
-            elif isinstance(exc, basestring):
+            elif isinstance(exc, string_types):
                 msg = exc
             else:
                 msg = repr(exc)

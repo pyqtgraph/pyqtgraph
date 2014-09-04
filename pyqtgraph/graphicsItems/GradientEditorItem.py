@@ -1,5 +1,4 @@
 from ..Qt import QtGui, QtCore
-from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
@@ -337,9 +336,7 @@ class TickSliderItem(GraphicsWidget):
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
         ## public
-        ticks = list(self.ticks.items())
-        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  ## see pyqtgraph.python2_3.sortList
-        return ticks
+        return sorted(self.ticks.items(), key=lambda kv: kv[1])
 
 
 class GradientEditorItem(TickSliderItem):

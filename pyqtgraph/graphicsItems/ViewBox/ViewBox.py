@@ -1,5 +1,5 @@
 from ...Qt import QtGui, QtCore
-from ...python2_3 import sortList
+from ...python2_3 import string_types
 import numpy as np
 from ...Point import Point
 from ... import functions as fn
@@ -307,7 +307,7 @@ class ViewBox(GraphicsWidget):
         for v in state['linkedViews']:
             if isinstance(v, weakref.ref):
                 v = v()
-            if v is None or isinstance(v, basestring):
+            if v is None or isinstance(v, string_types):
                 views.append(v)
             else:
                 views.append(v.name)
@@ -930,7 +930,7 @@ class ViewBox(GraphicsWidget):
         Link X or Y axes of two views and unlink any previously connected axes. *axis* must be ViewBox.XAxis or ViewBox.YAxis.
         If view is None, the axis is left unlinked.
         """
-        if isinstance(view, basestring):
+        if isinstance(view, string_types):
             if view == '':
                 view = None
             else:
@@ -958,7 +958,7 @@ class ViewBox(GraphicsWidget):
                 pass
             
         
-        if view is None or isinstance(view, basestring):
+        if view is None or isinstance(view, string_types):
             self.state['linkedViews'][axis] = view
         else:
             self.state['linkedViews'][axis] = weakref.ref(view)
@@ -991,7 +991,7 @@ class ViewBox(GraphicsWidget):
         ## Return the linked view for axis *ax*.
         ## this method _always_ returns either a ViewBox or None.
         v = self.state['linkedViews'][ax]
-        if v is None or isinstance(v, basestring):
+        if v is None or isinstance(v, string_types):
             return None
         else:
             return v()  ## dereference weakref pointer. If the reference is dead, this returns None
@@ -1659,17 +1659,11 @@ class ViewBox(GraphicsWidget):
             self.window()
         except RuntimeError:  ## this view has already been deleted; it will probably be collected shortly.
             return
-            
-        def cmpViews(a, b):
-            wins = 100 * cmp(a.window() is self.window(), b.window() is self.window())
-            alpha = cmp(a.name, b.name)
-            return wins + alpha
-            
+
         ## make a sorted list of all named views
-        nv = list(ViewBox.NamedViews.values())
-        #print "new view list:", nv
-        sortList(nv, cmpViews) ## see pyqtgraph.python2_3.sortList
-        
+        nv = sorted(ViewBox.NamedViews.values(),
+                    key=lambda view: (view.window() is self.window(), view.name))
+
         if self in nv:
             nv.remove(self)
             
@@ -1677,7 +1671,7 @@ class ViewBox(GraphicsWidget):
         
         for ax in [0,1]:
             link = self.state['linkedViews'][ax]
-            if isinstance(link, basestring):     ## axis has not been linked yet; see if it's possible now
+            if isinstance(link, string_types):     ## axis has not been linked yet; see if it's possible now
                 for v in nv:
                     if link == v.name:
                         self.linkView(ax, v)

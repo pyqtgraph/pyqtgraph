@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, string_types
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
@@ -175,7 +175,7 @@ class Parameter(QtCore.QObject):
         if 'value' not in self.opts:
             self.opts['value'] = None
         
-        if 'name' not in self.opts or not isinstance(self.opts['name'], basestring):
+        if 'name' not in self.opts or not isinstance(self.opts['name'], string_types):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(opts['name'])
         
@@ -634,7 +634,7 @@ class Parameter(QtCore.QObject):
         
             param[('child', 'grandchild')] = value
         """
-        if isinstance(names, basestring):
+        if isinstance(names, string_types):
             names = (names,)
         return self.param(*names).setValue(value)
 

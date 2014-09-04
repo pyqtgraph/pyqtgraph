@@ -1,5 +1,4 @@
 from ..Qt import QtCore, QtGui
-from ..python2_3 import sortList
 import weakref
 from ..Point import Point
 from .. import functions as fn
@@ -434,14 +433,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
-        def absZValue(item):
-            if item is None:
-                return 0
-            return item.zValue() + absZValue(item.parentItem())
-        
-        sortList(items2, lambda a,b: cmp(absZValue(b), absZValue(a)))
-        
-        return items2
+        return sorted(items2,
+                      key=lambda item: item.zValue() + absZValue(item.parentItem())
+                                       if item is not None else 0,
+                      reverse=True)
         
         #for item in items:
             ##seen.add(item)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
+from ..python2_3 import string_types
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
@@ -64,7 +65,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
                 container = self.topContainer
                 neighbor = None
         else:
-            if isinstance(relativeTo, basestring):
+            if isinstance(relativeTo, string_types):
                 relativeTo = self.docks[relativeTo]
             container = self.getContainer(relativeTo)
             neighbor = relativeTo

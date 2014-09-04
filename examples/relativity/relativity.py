@@ -515,8 +515,7 @@ class Simulation:
         dt = self.dt
         tVals = np.linspace(0, dt*(nPts-1), nPts)
         for cl in self.clocks.itervalues():
-            for i in xrange(1,nPts):
-                nextT = tVals[i]
+            for i, nextT in enumerate(tVals[1:], 1):
                 while True:
                     tau1, tau2 = cl.accelLimits()
                     x = cl.x
@@ -561,10 +560,9 @@ class Simulation:
         ## These are the set of proper times (in the reference frame) that will be simulated
         ptVals = np.linspace(ref.pt, ref.pt + dt*(nPts-1), nPts)
         
-        for i in xrange(1,nPts):
-                
+        for i, nextPt in enumerate(ptVals[1:], 1):
             ## step reference clock ahead one time step in its proper time
-            nextPt = ptVals[i]  ## this is where (when) we want to end up
+            ## nextPt is where (when) we want to end up
             while True:
                 tau1, tau2 = ref.accelLimits()
                 dtau = min(nextPt-ref.pt, tau2-ref.pt)  ## do not step past the next command boundary

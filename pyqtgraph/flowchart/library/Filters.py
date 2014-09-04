@@ -321,7 +321,7 @@ class RemovePeriodic(CtrlNode):
         
         ## flatten spikes at f0 and harmonics
         f0 = self.ctrls['f0'].value()
-        for i in xrange(1, self.ctrls['harmonics'].value()+2):
+        for i in range(1, self.ctrls['harmonics'].value()+2):
             f = f0 * i # target frequency
             
             ## determine index range to check for this frequency
