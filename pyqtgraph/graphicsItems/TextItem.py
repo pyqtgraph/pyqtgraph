@@ -34,8 +34,9 @@ class TextItem(UIGraphicsItem):
         self.textItem.setParentItem(self)
         self.lastTransform = None
         self._bounds = QtCore.QRectF()
+        self.text_color = color
         if html is None:
-            self.setText(text, color)
+            self.setText(text)
         else:
             self.setHtml(html)
         self.fill = fn.mkBrush(fill)
@@ -43,8 +44,9 @@ class TextItem(UIGraphicsItem):
         self.rotate(angle)
         self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
-    def setText(self, text, color=(200,200,200)):
-        color = fn.mkColor(color)
+    def setText(self, text, color=None):
+        if color == None:
+            color = fn.mkColor(self.text_color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
         self.updateText()
