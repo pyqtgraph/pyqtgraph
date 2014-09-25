@@ -151,7 +151,8 @@ class TableWidget(QtGui.QTableWidget):
             i += 1
             self.setRow(i, [x for x in fn1(row)])
             
-        if self._sorting and self.horizontalHeader().sortIndicatorSection() >= self.columnCount():
+        if (self._sorting and self.horizontalHeadersSet and 
+            self.horizontalHeader().sortIndicatorSection() >= self.columnCount()):
             self.sortByColumn(0, QtCore.Qt.AscendingOrder)
     
     def setEditable(self, editable=True):

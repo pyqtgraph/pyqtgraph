@@ -31,20 +31,35 @@ class DataTreeWidget(QtGui.QTreeWidget):
         """data should be a dictionary."""
         self.clear()
         self.widgets = []
+        self.nodes = {}
         self.buildTree(data, self.invisibleRootItem(), hideRoot=hideRoot)
         self.expandToDepth(3)
         self.resizeColumnToContents(0)
         
-    def buildTree(self, data, parent, name='', hideRoot=False):
+    def buildTree(self, data, parent, name='', hideRoot=False, path=()):
         if hideRoot:
             node = parent
         else:
             node = QtGui.QTreeWidgetItem([name, "", ""])
             parent.addChild(node)
+        
+        # record the path to the node so it can be retrieved later
+        # (this is used by DiffTreeWidget)
+        self.nodes[path] = node
 
         typeStr, desc, childs, widget = self.parse(data)
         node.setText(1, typeStr)
         node.setText(2, desc)
+            
+        # Truncate description and add text box if needed
+        if len(desc) > 100:
+            desc = desc[:97] + '...'
+            if widget is None:
+                widget = QtGui.QPlainTextEdit(asUnicode(data))
+                widget.setMaximumHeight(200)
+                widget.setReadOnly(True)
+        
+        # Add widget to new subnode
         if widget is not None:
             self.widgets.append(widget)
             subnode = QtGui.QTreeWidgetItem(["", "", ""])
@@ -52,8 +67,9 @@ class DataTreeWidget(QtGui.QTreeWidget):
             self.setItemWidget(subnode, 0, widget)
             self.setFirstItemColumnSpanned(subnode, True)
             
-        for name, data in childs.items():
-            self.buildTree(data, node, asUnicode(name))
+        # recurse to children
+        for key, data in childs.items():
+            self.buildTree(data, node, asUnicode(key), path=path+(key,))
 
     def parse(self, data):
         """
@@ -103,11 +119,6 @@ class DataTreeWidget(QtGui.QTreeWidget):
             widget.setReadOnly(True)
         else:
             desc = asUnicode(data)
-            if len(desc) > 100:
-                desc = desc[:97] + '...'
-                widget = QtGui.QPlainTextEdit(asUnicode(data))
-                widget.setMaximumHeight(200)
-                widget.setReadOnly(True)
         
         return typeStr, desc, childs, widget
         
