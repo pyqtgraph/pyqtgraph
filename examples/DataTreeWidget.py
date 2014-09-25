@@ -19,7 +19,7 @@ d = {
         'y': 2,
         'z': 'three'
     },
-    'array1 (20x20)': np.ones((10,10))
+    'array1 (40x10)': np.random.randint(10, size=(40,10))
 }
 
 tree = pg.DataTreeWidget(data=d)

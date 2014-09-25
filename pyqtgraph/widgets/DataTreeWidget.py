@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..pgcollections import OrderedDict
+from .TableWidget import TableWidget
 import types, traceback
 import numpy as np
 
@@ -29,12 +30,8 @@ class DataTreeWidget(QtGui.QTreeWidget):
     def setData(self, data, hideRoot=False):
         """data should be a dictionary."""
         self.clear()
+        self.tables = []
         self.buildTree(data, self.invisibleRootItem(), hideRoot=hideRoot)
-        #node = self.mkNode('', data)
-        #while node.childCount() > 0:
-            #c = node.child(0)
-            #node.removeChild(c)
-            #self.invisibleRootItem().addChild(c)
         self.expandToDepth(3)
         self.resizeColumnToContents(0)
         
@@ -62,22 +59,15 @@ class DataTreeWidget(QtGui.QTreeWidget):
         elif isinstance(data, list) or isinstance(data, tuple):
             for i in range(len(data)):
                 self.buildTree(data[i], node, str(i))
+        elif isinstance(data, np.ndarray):
+            desc = "<%s shape=%s dtype=%s>" % (data.__class__.__name__, data.shape, data.dtype)
+            node.setText(2, desc)
+            subnode = QtGui.QTreeWidgetItem(["", "", ""])
+            node.addChild(subnode)
+            table = TableWidget()
+            table.setData(data)
+            table.setMaximumHeight(200)
+            self.setItemWidget(subnode, 2, table)
+            self.tables.append(table)
         else:
             node.setText(2, str(data))
-        
-        
-    #def mkNode(self, name, v):
-        #if type(v) is list and len(v) > 0 and isinstance(v[0], dict):
-            #inds = map(unicode, range(len(v)))
-            #v = OrderedDict(zip(inds, v))
-        #if isinstance(v, dict):
-            ##print "\nadd tree", k, v
-            #node = QtGui.QTreeWidgetItem([name])
-            #for k in v:
-                #newNode = self.mkNode(k, v[k])
-                #node.addChild(newNode)
-        #else:
-            ##print "\nadd value", k, str(v)
-            #node = QtGui.QTreeWidgetItem([unicode(name), unicode(v)])
-        #return node
-        
