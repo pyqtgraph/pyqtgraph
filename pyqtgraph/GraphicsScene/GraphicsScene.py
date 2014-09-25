@@ -430,14 +430,14 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 continue
             if shape.contains(item.mapFromScene(point)):
                 items2.append(item)
-        
+
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
-        return sorted(items2,
-                      key=lambda item: item.zValue() + absZValue(item.parentItem())
-                                       if item is not None else 0,
-                      reverse=True)
-        
+        def absZValue(item):
+            return (0 if item is None
+                    else item.zValue() + absZValue(item.parentItem()))
+        return sorted(items2, key=absZValue, reverse=True)
+
         #for item in items:
             ##seen.add(item)
 

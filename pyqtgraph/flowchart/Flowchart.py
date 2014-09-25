@@ -349,7 +349,8 @@ class Flowchart(Node):
             #tdeps[t] = lastNode
             if lastInd is not None:
                 dels.append((lastInd+1, t))
-        for i, t in sorted(dels, reverse=True):
+        dels.sort(key=lambda a: a[0], reverse=True)
+        for i, t in dels:
             ops.insert(i, ('d', t))
         return ops
         
