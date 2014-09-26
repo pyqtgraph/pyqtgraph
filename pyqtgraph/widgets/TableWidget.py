@@ -222,6 +222,8 @@ class TableWidget(QtGui.QTableWidget):
             return self.iterate, list(map(asUnicode, data.dtype.names))
         elif data is None:
             return (None,None)
+        elif np.isscalar(data):
+            return self.iterateScalar, None
         else:
             msg = "Don't know how to iterate over data type: {!s}".format(type(data))
             raise TypeError(msg)
@@ -235,6 +237,9 @@ class TableWidget(QtGui.QTableWidget):
         # has no __iter__ (??)
         for x in data:
             yield x
+        
+    def iterateScalar(self, data):
+        yield data
         
     def appendRow(self, data):
         self.appendData([data])

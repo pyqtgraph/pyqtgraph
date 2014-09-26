@@ -91,12 +91,13 @@ class DiffTreeWidget(QtGui.QWidget):
                 #for i in np.argwhere(~eq):
                     
             else:
-                for i,k in enumerate(info.dtype.fields.keys()):
-                    eq = self.compareArrays(a[k], b[k])
-                    if not np.all(eq):
-                        for n in tableNodes:
-                            n.setBackground(0, fn.mkBrush(bad))
-                    #for j in np.argwhere(~eq):
+                if a.dtype == b.dtype:
+                    for i,k in enumerate(a.dtype.fields.keys()):
+                        eq = self.compareArrays(a[k], b[k])
+                        if not np.all(eq):
+                            for n in tableNodes:
+                                n.setBackground(0, fn.mkBrush(bad))
+                        #for j in np.argwhere(~eq):
                     
         # dict: compare keys, then values where keys match
         # list: 
