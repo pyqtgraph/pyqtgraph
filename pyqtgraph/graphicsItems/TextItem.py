@@ -44,6 +44,11 @@ class TextItem(UIGraphicsItem):
         self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
+        """
+        Set the text and color of this item. 
+        
+        This method sets the plain text of the item; see also setHtml().
+        """
         color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
@@ -57,18 +62,41 @@ class TextItem(UIGraphicsItem):
         #self.translate(0, 20)
         
     def setPlainText(self, *args):
+        """
+        Set the plain text to be rendered by this item. 
+        
+        See QtGui.QGraphicsTextItem.setPlainText().
+        """
         self.textItem.setPlainText(*args)
         self.updateText()
         
     def setHtml(self, *args):
+        """
+        Set the HTML code to be rendered by this item. 
+        
+        See QtGui.QGraphicsTextItem.setHtml().
+        """
         self.textItem.setHtml(*args)
         self.updateText()
         
     def setTextWidth(self, *args):
+        """
+        Set the width of the text.
+        
+        If the text requires more space than the width limit, then it will be
+        wrapped into multiple lines.
+        
+        See QtGui.QGraphicsTextItem.setTextWidth().
+        """
         self.textItem.setTextWidth(*args)
         self.updateText()
         
     def setFont(self, *args):
+        """
+        Set the font for this text. 
+        
+        See QtGui.QGraphicsTextItem.setFont().
+        """
         self.textItem.setFont(*args)
         self.updateText()
         
