@@ -7,6 +7,8 @@ from .. import functions as fn
 
 ##Vector = QtGui.QVector3D
 
+ShareWidget = None
+
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
     Basic widget for displaying 3D data
@@ -16,14 +18,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
     """
     
-    ShareWidget = None
-    
     def __init__(self, parent=None):
-        if GLViewWidget.ShareWidget is None:
+        global ShareWidget
+
+        if ShareWidget is None:
             ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
-            GLViewWidget.ShareWidget = QtOpenGL.QGLWidget()
+            ShareWidget = QtOpenGL.QGLWidget()
             
-        QtOpenGL.QGLWidget.__init__(self, parent, GLViewWidget.ShareWidget)
+        QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
