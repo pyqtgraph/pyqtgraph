@@ -66,7 +66,8 @@ class GLScatterPlotItem(GLGraphicsItem):
         #print pData.shape, pData.min(), pData.max()
         pData = pData.astype(np.ubyte)
         
-        self.pointTexture = glGenTextures(1)
+        if getattr(self, "pointTexture", None) is None:
+            self.pointTexture = glGenTextures(1)
         glActiveTexture(GL_TEXTURE0)
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.pointTexture)
