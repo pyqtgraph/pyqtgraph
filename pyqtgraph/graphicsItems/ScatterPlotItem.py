@@ -241,8 +241,8 @@ class ScatterPlotItem(GraphicsObject):
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint. 
             'antialias': getConfigOption('antialias'),
             'name': None,
-        }   
-        
+        }
+
         self.setPen(fn.mkPen(getConfigOption('foreground')), update=False)
         self.setBrush(fn.mkBrush(100,100,150), update=False)
         self.setSymbol('o', update=False)
@@ -351,16 +351,12 @@ class ScatterPlotItem(GraphicsObject):
             
         newData = self.data[len(oldData):]
         newData['size'] = -1  ## indicates to use default size
-        
+
         if 'spots' in kargs:
             spots = kargs['spots']
             for i in range(len(spots)):
                 spot = spots[i]
                 for k in spot:
-                    #if k == 'pen':
-                        #newData[k] = fn.mkPen(spot[k])
-                    #elif k == 'brush':
-                        #newData[k] = fn.mkBrush(spot[k])
                     if k == 'pos':
                         pos = spot[k]
                         if isinstance(pos, QtCore.QPointF):
@@ -369,10 +365,12 @@ class ScatterPlotItem(GraphicsObject):
                             x,y = pos[0], pos[1]
                         newData[i]['x'] = x
                         newData[i]['y'] = y
-                    elif k in ['x', 'y', 'size', 'symbol', 'pen', 'brush', 'data']:
+                    elif k == 'pen':
+                        newData[i][k] = fn.mkPen(spot[k])
+                    elif k == 'brush':
+                        newData[i][k] = fn.mkBrush(spot[k])
+                    elif k in ['x', 'y', 'size', 'symbol', 'brush', 'data']:
                         newData[i][k] = spot[k]
-                    #elif k == 'data':
-                        #self.pointData[i] = spot[k]
                     else:
                         raise Exception("Unknown spot parameter: %s" % k)
         elif 'y' in kargs:
@@ -389,10 +387,10 @@ class ScatterPlotItem(GraphicsObject):
             if k in kargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
                 setMethod(kargs[k], update=False, dataSet=newData, mask=kargs.get('mask', None))
-        
+
         if 'data' in kargs:
             self.setPointData(kargs['data'], dataSet=newData)
-            
+
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
         self.bounds = [None, None]
@@ -428,7 +426,7 @@ class ScatterPlotItem(GraphicsObject):
         all spots which do not have a pen explicitly set."""
         update = kargs.pop('update', True)
         dataSet = kargs.pop('dataSet', self.data)
-        
+
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             pens = args[0]
             if 'mask' in kargs and kargs['mask'] is not None:
