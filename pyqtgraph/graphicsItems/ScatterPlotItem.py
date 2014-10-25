@@ -431,7 +431,7 @@ class ScatterPlotItem(GraphicsObject):
         
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             pens = args[0]
-            if kargs['mask'] is not None:
+            if 'mask' in kargs and kargs['mask'] is not None:
                 pens = pens[kargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
@@ -453,7 +453,7 @@ class ScatterPlotItem(GraphicsObject):
             
         if len(args) == 1 and (isinstance(args[0], np.ndarray) or isinstance(args[0], list)):
             brushes = args[0]
-            if kargs['mask'] is not None:
+            if 'mask' in kargs and kargs['mask'] is not None:
                 brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
