@@ -1718,6 +1718,8 @@ class ViewBox(GraphicsWidget):
                 pass
             except TypeError:  ## view has already been deleted (?)
                 pass
+            except AttributeError:  # PySide has deleted signal
+                pass
             
     def locate(self, item, timeout=3.0, children=False):
         """
