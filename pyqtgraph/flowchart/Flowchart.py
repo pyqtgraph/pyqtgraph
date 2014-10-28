@@ -836,7 +836,7 @@ class FlowchartWidget(dockarea.DockArea):
                     act.pos = pos
         self.nodeMenu = QtGui.QMenu()
         self.subMenus = []       
-        buildSubMenu(library.getNodeTree(), self.nodeMenu, self.subMenus, pos=pos)
+        buildSubMenu(self.chart.library.getNodeTree(), self.nodeMenu, self.subMenus, pos=pos)
         self.nodeMenu.triggered.connect(self.nodeMenuTriggered)
         return self.nodeMenu
     
