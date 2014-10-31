@@ -1585,11 +1585,14 @@ class MultiRectROI(QtGui.QGraphicsObject):
         for l in self.lines:
             pos.append(self.mapFromScene(l.getHandles()[1].scenePos()))
         return pos
-        
-    def getArrayRegion(self, arr, img=None, axes=(0,1)):
+
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+        if returnMappedCoords:
+            raise ValueError('returnMappedCoords=True not implemented for MultiRectROI')
+
         rgns = []
         for l in self.lines:
-            rgn = l.getArrayRegion(arr, img, axes=axes)
+            rgn = l.getArrayRegion(data, img, axes=axes, **kwds)
             if rgn is None:
                 continue
                 #return None
@@ -1688,13 +1691,16 @@ class EllipseROI(ROI):
         r = QtCore.QRectF(r.x()/r.width(), r.y()/r.height(), 1,1)
         
         p.drawEllipse(r)
-        
-    def getArrayRegion(self, arr, img=None):
+
+    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
         """
         Return the result of ROI.getArrayRegion() masked by the elliptical shape
         of the ROI. Regions outside the ellipse are set to 0.
         """
-        arr = ROI.getArrayRegion(self, arr, img)
+        if returnMappedCoords:
+            raise ValueError('returnMappedCoords=True not implemeneted for EllipseROI')
+
+        arr = ROI.getArrayRegion(self, data, img, axes, returnMappedCoords, **kwds)
         if arr is None or arr.shape[0] == 0 or arr.shape[1] == 0:
             return None
         w = arr.shape[0]
@@ -1960,7 +1966,10 @@ class PolyLineROI(ROI):
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
         """
-        sl = self.getArraySlice(data, img, axes=(0,1))
+        if returnMappedCoords:
+            raise ValueError('returnMappedCoords=True not implemented for PolyLineROI')
+
+        sl = self.getArraySlice(data, img, axes=axes, **kwds)
         if sl is None:
             return None
         sliced = data[sl[0]]
