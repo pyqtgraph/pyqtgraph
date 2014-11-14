@@ -240,11 +240,14 @@ class SpinBox(QtGui.QAbstractSpinBox):
         """
         le = self.lineEdit()
         text = asUnicode(le.text())
-        try:
-            index = text.index(' ')
-        except ValueError:
-            return
-        le.setSelection(0, index)
+        if self.opts['suffix'] == '':
+            le.setSelection(0, len(text))
+        else:
+            try:
+                index = text.index(' ')
+            except ValueError:
+                return
+            le.setSelection(0, index)
 
     def value(self):
         """
