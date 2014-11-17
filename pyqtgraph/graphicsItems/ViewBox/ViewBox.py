@@ -517,31 +517,28 @@ class ViewBox(GraphicsWidget):
             mn = min(range)
             mx = max(range)
             
-            # If we requested 0 range ...  
+            # If we requested 0 range, try to preserve previous scale. 
+            # Otherwise just pick an arbitrary scale.
             if mn == mx:   
-                _mn = self.state['viewRange'][ax][0]
-                _mx = self.state['viewRange'][ax][1]
-                #... try to preserve previous scale ...
-                if _mx-_mn != 0:
-                    mn=_mn
-                    mx=_mx
-                #... Otherwise just pick an arbitrary scale.
-                else:
-                    mn -= 0.5
-                    mx += 0.5
-            # Apply padding
-            else:
-                if padding is None:
-                    xpad = self.suggestPadding(ax)
-                else:
-                    xpad = padding
-                p = (mx-mn) * xpad
-                mn -= p
-                mx += p
+                dy = self.state['viewRange'][ax][1] - self.state['viewRange'][ax][0]
+                if dy == 0:
+                    dy = 1
+                mn -= dy*0.5
+                mx += dy*0.5
+                xpad = 0.0
                 
             # Make sure no nan/inf get through
             if not all(np.isfinite([mn, mx])):
                 raise Exception("Cannot set range [%s, %s]" % (str(mn), str(mx)))
+            
+            # Apply padding
+            if padding is None:
+                xpad = self.suggestPadding(ax)
+            else:
+                xpad = padding
+            p = (mx-mn) * xpad
+            mn -= p
+            mx += p
             
             # Set target range
             if self.state['targetRange'][ax] != [mn, mx]:
