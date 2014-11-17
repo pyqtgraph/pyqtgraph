@@ -28,6 +28,9 @@ Please use the following guidelines when preparing changes:
       * PyQtGraph prefers PEP8 for most style issues, but this is not enforced
         rigorously as long as the code is clean and readable.
 
+      * Use `python setup.py style` to see whether your code follows
+        the mandatory style guidelines checked by flake8.
+
       * Exception 1: All variable names should use camelCase rather than 
         underscore_separation. This is done for consistency with Qt
 

@@ -472,7 +472,8 @@ class PlotItem(GraphicsWidget):
         
         ### Average data together
         (x, y) = curve.getData()
-        if plot.yData is not None:
+        if plot.yData is not None and y.shape == plot.yData.shape:
+            # note that if shapes do not match, then the average resets.
             newData = plot.yData * (n-1) / float(n) + y * 1.0 / float(n)
             plot.setData(plot.xData, newData)
         else:
@@ -1210,10 +1211,13 @@ class PlotItem(GraphicsWidget):
         self.updateButtons()
         
     def updateButtons(self):
-        if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
-            self.autoBtn.show()
-        else:
-            self.autoBtn.hide()
+        try:
+            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+                self.autoBtn.show()
+            else:
+                self.autoBtn.hide()
+        except RuntimeError:
+            pass  # this can happen if the plot has been deleted.
             
     def _plotArray(self, arr, x=None, **kargs):
         if arr.ndim != 1:

@@ -538,7 +538,6 @@ def interpolateArray(data, x, default=0.0):
     
     prof = debug.Profiler()
     
-    result = np.empty(x.shape[:-1] + data.shape, dtype=data.dtype)
     nd = data.ndim
     md = x.shape[-1]
 
@@ -590,6 +589,50 @@ def interpolateArray(data, x, default=0.0):
     result[~totalMask] = default
     prof()
     return result
+
+
+def subArray(data, offset, shape, stride):
+    """
+    Unpack a sub-array from *data* using the specified offset, shape, and stride.
+    
+    Note that *stride* is specified in array elements, not bytes.
+    For example, we have a 2x3 array packed in a 1D array as follows::
+    
+        data = [_, _, 00, 01, 02, _, 10, 11, 12, _]
+        
+    Then we can unpack the sub-array with this call::
+    
+        subArray(data, offset=2, shape=(2, 3), stride=(4, 1))
+        
+    ..which returns::
+    
+        [[00, 01, 02],
+         [10, 11, 12]]
+         
+    This function operates only on the first axis of *data*. So changing 
+    the input in the example above to have shape (10, 7) would cause the
+    output to have shape (2, 3, 7).
+    """
+    #data = data.flatten()
+    data = data[offset:]
+    shape = tuple(shape)
+    stride = tuple(stride)
+    extraShape = data.shape[1:]
+    #print data.shape, offset, shape, stride
+    for i in range(len(shape)):
+        mask = (slice(None),) * i + (slice(None, shape[i] * stride[i]),)
+        newShape = shape[:i+1]
+        if i < len(shape)-1:
+            newShape += (stride[i],)
+        newShape += extraShape 
+        #print i, mask, newShape
+        #print "start:\n", data.shape, data
+        data = data[mask]
+        #print "mask:\n", data.shape, data
+        data = data.reshape(newShape)
+        #print "reshape:\n", data.shape, data
+    
+    return data
 
 
 def transformToArray(tr):
@@ -1179,6 +1222,8 @@ def downsample(data, n, axis=0, xvals='subsample'):
             data = downsample(data, n[i], axis[i])
         return data
     
+    if n <= 1:
+        return data
     nPts = int(data.shape[axis] / n)
     s = list(data.shape)
     s[axis] = nPts
@@ -2157,3 +2202,51 @@ def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
         yvals[i] = y
     
     return yvals[np.argsort(inds)]  ## un-shuffle values before returning
+
+
+
+def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
+    """Topological sort. Arguments are:
+      deps    dictionary describing dependencies where a:[b,c] means "a depends on b and c"
+      nodes   optional, specifies list of starting nodes (these should be the nodes 
+              which are not depended on by any other nodes). Other candidate starting
+              nodes will be ignored.
+              
+    Example::
+
+        # Sort the following graph:
+        # 
+        #   B ──┬─────> C <── D
+        #       │       │       
+        #   E <─┴─> A <─┘
+        #     
+        deps = {'a': ['b', 'c'], 'c': ['b', 'd'], 'e': ['b']}
+        toposort(deps)
+         => ['b', 'd', 'c', 'a', 'e']
+    """
+    # fill in empty dep lists
+    deps = deps.copy()
+    for k,v in list(deps.items()):
+        for k in v:
+            if k not in deps:
+                deps[k] = []
+    
+    if nodes is None:
+        ## run through deps to find nodes that are not depended upon
+        rem = set()
+        for dep in deps.values():
+            rem |= set(dep)
+        nodes = set(deps.keys()) - rem
+    if seen is None:
+        seen = set()
+        stack = []
+    sorted = []
+    for n in nodes:
+        if n in stack:
+            raise Exception("Cyclic dependency detected", stack + [n])
+        if n in seen:
+            continue
+        seen.add(n)
+        sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
+        sorted.append(n)
+    return sorted

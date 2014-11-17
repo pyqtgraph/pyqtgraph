@@ -346,6 +346,17 @@ class ConsoleWidget(QtGui.QWidget):
         filename = tb.tb_frame.f_code.co_filename
         function = tb.tb_frame.f_code.co_name
         
+        filterStr = str(self.ui.filterText.text())
+        if filterStr != '':
+            if isinstance(exc, Exception):
+                msg = exc.message
+            elif isinstance(exc, basestring):
+                msg = exc
+            else:
+                msg = repr(exc)
+            match = re.search(filterStr, "%s:%s:%s" % (filename, function, msg))
+            return match is not None
+
         ## Go through a list of common exception points we like to ignore:
         if excType is GeneratorExit or excType is StopIteration:
             return False

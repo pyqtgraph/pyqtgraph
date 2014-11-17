@@ -1,5 +1,6 @@
 import os, time, sys, traceback, weakref
 import numpy as np
+import threading
 try:
     import __builtin__ as builtins
     import cPickle as pickle
@@ -53,8 +54,10 @@ class RemoteEventHandler(object):
                           ## status is either 'result' or 'error'
                           ##   if 'error', then result will be (exception, formatted exceprion)
                           ##   where exception may be None if it could not be passed through the Connection.
+        self.resultLock = threading.RLock()
                           
         self.proxies = {} ## maps {weakref(proxy): proxyId}; used to inform the remote process when a proxy has been deleted.
+        self.proxyLock = threading.RLock()
         
         ## attributes that affect the behavior of the proxy. 
         ## See ObjectProxy._setProxyOptions for description
@@ -66,9 +69,14 @@ class RemoteEventHandler(object):
             'deferGetattr': False,   ## True, False
             'noProxyTypes': [ type(None), str, int, float, tuple, list, dict, LocalObjectProxy, ObjectProxy ],
         }
+        self.optsLock = threading.RLock()
         
         self.nextRequestId = 0
         self.exited = False
+        
+        # Mutexes to help prevent issues when multiple threads access the same RemoteEventHandler
+        self.processLock = threading.RLock()
+        self.sendLock = threading.RLock()
         
         RemoteEventHandler.handlers[pid] = self  ## register this handler as the one communicating with pid
     
@@ -86,46 +94,59 @@ class RemoteEventHandler(object):
         cprint.cout(self.debug, "[%d] %s\n" % (os.getpid(), str(msg)), -1) 
     
     def getProxyOption(self, opt):
-        return self.proxyOptions[opt]
+        with self.optsLock:
+            return self.proxyOptions[opt]
         
     def setProxyOptions(self, **kwds):
         """
         Set the default behavior options for object proxies.
         See ObjectProxy._setProxyOptions for more info.
         """
-        self.proxyOptions.update(kwds)
+        with self.optsLock:
+            self.proxyOptions.update(kwds)
     
     def processRequests(self):
         """Process all pending requests from the pipe, return
         after no more events are immediately available. (non-blocking)
         Returns the number of events processed.
         """
-        if self.exited:
-            self.debugMsg('  processRequests: exited already; raise ClosedError.')
-            raise ClosedError()
-        
-        numProcessed = 0
-        while self.conn.poll():
-            try:
-                self.handleRequest()
-                numProcessed += 1
-            except ClosedError:
-                self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
-                self.exited = True
-                raise
-            #except IOError as err:  ## let handleRequest take care of this.
-                #self.debugMsg('  got IOError from handleRequest; try again.')
-                #if err.errno == 4:  ## interrupted system call; try again
-                    #continue
-                #else:
-                    #raise
-            except:
-                print("Error in process %s" % self.name)
-                sys.excepthook(*sys.exc_info())
-                
-        if numProcessed > 0:
-            self.debugMsg('processRequests: finished %d requests' % numProcessed)
-        return numProcessed
+        with self.processLock:
+            
+            if self.exited:
+                self.debugMsg('  processRequests: exited already; raise ClosedError.')
+                raise ClosedError()
+            
+            numProcessed = 0
+            
+            while self.conn.poll():
+                #try:
+                    #poll = self.conn.poll()
+                    #if not poll:
+                        #break
+                #except IOError:  # this can happen if the remote process dies.
+                                ## might it also happen in other circumstances?
+                    #raise ClosedError()
+                        
+                try:
+                    self.handleRequest()
+                    numProcessed += 1
+                except ClosedError:
+                    self.debugMsg('processRequests: got ClosedError from handleRequest; setting exited=True.')
+                    self.exited = True
+                    raise
+                #except IOError as err:  ## let handleRequest take care of this.
+                    #self.debugMsg('  got IOError from handleRequest; try again.')
+                    #if err.errno == 4:  ## interrupted system call; try again
+                        #continue
+                    #else:
+                        #raise
+                except:
+                    print("Error in process %s" % self.name)
+                    sys.excepthook(*sys.exc_info())
+                    
+            if numProcessed > 0:
+                self.debugMsg('processRequests: finished %d requests' % numProcessed)
+            return numProcessed
     
     def handleRequest(self):
         """Handle a single request from the remote process. 
@@ -183,9 +204,11 @@ class RemoteEventHandler(object):
             returnType = opts.get('returnType', 'auto')
             
             if cmd == 'result':
-                self.results[resultId] = ('result', opts['result'])
+                with self.resultLock:
+                    self.results[resultId] = ('result', opts['result'])
             elif cmd == 'error':
-                self.results[resultId] = ('error', (opts['exception'], opts['excString']))
+                with self.resultLock:
+                    self.results[resultId] = ('error', (opts['exception'], opts['excString']))
             elif cmd == 'getObjAttr':
                 result = getattr(opts['obj'], opts['attr'])
             elif cmd == 'callObj':
@@ -259,7 +282,9 @@ class RemoteEventHandler(object):
                 self.debugMsg("    handleRequest: sending return value for %d: %s" % (reqId, str(result))) 
                 #print "returnValue:", returnValue, result
                 if returnType == 'auto':
-                    result = self.autoProxy(result, self.proxyOptions['noProxyTypes'])
+                    with self.optsLock:
+                        noProxyTypes = self.proxyOptions['noProxyTypes']
+                    result = self.autoProxy(result, noProxyTypes)
                 elif returnType == 'proxy':
                     result = LocalObjectProxy(result)
                 
@@ -378,54 +403,59 @@ class RemoteEventHandler(object):
                                       traceback
         =============  =====================================================================
         """
-        #if len(kwds) > 0:
-            #print "Warning: send() ignored args:", kwds
+        if self.exited:
+            self.debugMsg('  send: exited already; raise ClosedError.')
+            raise ClosedError()
+        
+        with self.sendLock:
+            #if len(kwds) > 0:
+                #print "Warning: send() ignored args:", kwds
+                
+            if opts is None:
+                opts = {}
             
-        if opts is None:
-            opts = {}
-        
-        assert callSync in ['off', 'sync', 'async'], 'callSync must be one of "off", "sync", or "async"'
-        if reqId is None:
-            if callSync != 'off': ## requested return value; use the next available request ID
-                reqId = self.nextRequestId
-                self.nextRequestId += 1
-        else:
-            ## If requestId is provided, this _must_ be a response to a previously received request.
-            assert request in ['result', 'error']
-        
-        if returnType is not None:
-            opts['returnType'] = returnType
+            assert callSync in ['off', 'sync', 'async'], 'callSync must be one of "off", "sync", or "async"'
+            if reqId is None:
+                if callSync != 'off': ## requested return value; use the next available request ID
+                    reqId = self.nextRequestId
+                    self.nextRequestId += 1
+            else:
+                ## If requestId is provided, this _must_ be a response to a previously received request.
+                assert request in ['result', 'error']
             
-        #print os.getpid(), "send request:", request, reqId, opts
-        
-        ## double-pickle args to ensure that at least status and request ID get through
-        try:
-            optStr = pickle.dumps(opts)
-        except:
-            print("====  Error pickling this object:  ====")
-            print(opts)
-            print("=======================================")
-            raise
-        
-        nByteMsgs = 0
-        if byteData is not None:
-            nByteMsgs = len(byteData)
+            if returnType is not None:
+                opts['returnType'] = returnType
+                
+            #print os.getpid(), "send request:", request, reqId, opts
             
-        ## Send primary request
-        request = (request, reqId, nByteMsgs, optStr)
-        self.debugMsg('send request: cmd=%s nByteMsgs=%d id=%s opts=%s' % (str(request[0]), nByteMsgs, str(reqId), str(opts)))
-        self.conn.send(request)
-        
-        ## follow up by sending byte messages
-        if byteData is not None:
-            for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
-                self.conn.send_bytes(obj)
-            self.debugMsg('  sent %d byte messages' % len(byteData))
-        
-        self.debugMsg('  call sync: %s' % callSync)
-        if callSync == 'off':
-            return
-        
+            ## double-pickle args to ensure that at least status and request ID get through
+            try:
+                optStr = pickle.dumps(opts)
+            except:
+                print("====  Error pickling this object:  ====")
+                print(opts)
+                print("=======================================")
+                raise
+            
+            nByteMsgs = 0
+            if byteData is not None:
+                nByteMsgs = len(byteData)
+                
+            ## Send primary request
+            request = (request, reqId, nByteMsgs, optStr)
+            self.debugMsg('send request: cmd=%s nByteMsgs=%d id=%s opts=%s' % (str(request[0]), nByteMsgs, str(reqId), str(opts)))
+            self.conn.send(request)
+            
+            ## follow up by sending byte messages
+            if byteData is not None:
+                for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
+                    self.conn.send_bytes(obj)
+                self.debugMsg('  sent %d byte messages' % len(byteData))
+            
+            self.debugMsg('  call sync: %s' % callSync)
+            if callSync == 'off':
+                return
+            
         req = Request(self, reqId, description=str(request), timeout=timeout)
         if callSync == 'async':
             return req
@@ -437,20 +467,30 @@ class RemoteEventHandler(object):
                 return req
         
     def close(self, callSync='off', noCleanup=False, **kwds):
-        self.send(request='close', opts=dict(noCleanup=noCleanup), callSync=callSync, **kwds)
+        try:
+            self.send(request='close', opts=dict(noCleanup=noCleanup), callSync=callSync, **kwds)
+            self.exited = True
+        except ClosedError:
+            pass
     
     def getResult(self, reqId):
         ## raises NoResultError if the result is not available yet
         #print self.results.keys(), os.getpid()
-        if reqId not in self.results:
+        with self.resultLock:
+            haveResult = reqId in self.results
+        
+        if not haveResult:
             try:
                 self.processRequests()
             except ClosedError:  ## even if remote connection has closed, we may have 
                                  ## received new data during this call to processRequests()
                 pass
-        if reqId not in self.results:
-            raise NoResultError()
-        status, result = self.results.pop(reqId)
+        
+        with self.resultLock:
+            if reqId not in self.results:
+                raise NoResultError()
+            status, result = self.results.pop(reqId)
+        
         if status == 'result': 
             return result
         elif status == 'error':
@@ -494,11 +534,13 @@ class RemoteEventHandler(object):
         args = list(args)
         
         ## Decide whether to send arguments by value or by proxy
-        noProxyTypes = opts.pop('noProxyTypes', None)
-        if noProxyTypes is None:
-            noProxyTypes = self.proxyOptions['noProxyTypes']
-            
-        autoProxy = opts.pop('autoProxy', self.proxyOptions['autoProxy'])
+        with self.optsLock:
+            noProxyTypes = opts.pop('noProxyTypes', None)
+            if noProxyTypes is None:
+                noProxyTypes = self.proxyOptions['noProxyTypes']
+                
+            autoProxy = opts.pop('autoProxy', self.proxyOptions['autoProxy'])
+        
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
             for k, v in kwds.iteritems():
@@ -520,11 +562,14 @@ class RemoteEventHandler(object):
         return self.send(request='callObj', opts=dict(obj=obj, args=args, kwds=kwds), byteData=byteMsgs, **opts)
 
     def registerProxy(self, proxy):
-        ref = weakref.ref(proxy, self.deleteProxy)
-        self.proxies[ref] = proxy._proxyId
+        with self.proxyLock:
+            ref = weakref.ref(proxy, self.deleteProxy)
+            self.proxies[ref] = proxy._proxyId
     
     def deleteProxy(self, ref):
-        proxyId = self.proxies.pop(ref)
+        with self.proxyLock:
+            proxyId = self.proxies.pop(ref)
+            
         try:
             self.send(request='del', opts=dict(proxyId=proxyId), callSync='off')
         except IOError:  ## if remote process has closed down, there is no need to send delete requests anymore

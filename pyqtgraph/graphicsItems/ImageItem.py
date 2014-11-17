@@ -9,6 +9,8 @@ from .GraphicsObject import GraphicsObject
 from ..Point import Point
 
 __all__ = ['ImageItem']
+
+
 class ImageItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
@@ -176,6 +178,12 @@ class ImageItem(GraphicsObject):
         self.resetTransform()
         self.translate(rect.left(), rect.top())
         self.scale(rect.width() / self.width(), rect.height() / self.height())
+
+    def clear(self):
+        self.image = None
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
+        self.update()
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
@@ -512,6 +520,9 @@ class ImageItem(GraphicsObject):
     def removeClicked(self):
         ## Send remove event only after we have exited the menu event handler
         self.removeTimer = QtCore.QTimer()
-        self.removeTimer.timeout.connect(lambda: self.sigRemoveRequested.emit(self))
+        self.removeTimer.timeout.connect(self.emitRemoveRequested)
         self.removeTimer.start(0)
 
+    def emitRemoveRequested(self):
+        self.removeTimer.timeout.disconnect(self.emitRemoveRequested)
+        self.sigRemoveRequested.emit(self)

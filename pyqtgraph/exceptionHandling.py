@@ -49,29 +49,45 @@ def setTracebackClearing(clear=True):
     
 class ExceptionHandler(object):
     def __call__(self, *args):
-        ## call original exception handler first (prints exception)
-        global original_excepthook, callbacks, clear_tracebacks
-        print("===== %s =====" % str(time.strftime("%Y.%m.%d %H:%m:%S", time.localtime(time.time()))))
-        ret = original_excepthook(*args)
+        ## Start by extending recursion depth just a bit. 
+        ## If the error we are catching is due to recursion, we don't want to generate another one here.
+        recursionLimit = sys.getrecursionlimit()
+        try:
+            sys.setrecursionlimit(recursionLimit+100)
         
-        for cb in callbacks:
+        
+            ## call original exception handler first (prints exception)
+            global original_excepthook, callbacks, clear_tracebacks
             try:
-                cb(*args)
-            except:
-                print("   --------------------------------------------------------------")
-                print("      Error occurred during exception callback %s" % str(cb))
-                print("   --------------------------------------------------------------")
-                traceback.print_exception(*sys.exc_info())
-            
-        
-        ## Clear long-term storage of last traceback to prevent memory-hogging.
-        ## (If an exception occurs while a lot of data is present on the stack, 
-        ## such as when loading large files, the data would ordinarily be kept
-        ## until the next exception occurs. We would rather release this memory 
-        ## as soon as possible.)
-        if clear_tracebacks is True:
-            sys.last_traceback = None           
+                print("===== %s =====" % str(time.strftime("%Y.%m.%d %H:%m:%S", time.localtime(time.time()))))
+            except Exception:
+                sys.stderr.write("Warning: stdout is broken! Falling back to stderr.\n")
+                sys.stdout = sys.stderr
 
+            ret = original_excepthook(*args)
+                
+            for cb in callbacks:
+                try:
+                    cb(*args)
+                except Exception:
+                    print("   --------------------------------------------------------------")
+                    print("      Error occurred during exception callback %s" % str(cb))
+                    print("   --------------------------------------------------------------")
+                    traceback.print_exception(*sys.exc_info())
+                
+            
+            ## Clear long-term storage of last traceback to prevent memory-hogging.
+            ## (If an exception occurs while a lot of data is present on the stack, 
+            ## such as when loading large files, the data would ordinarily be kept
+            ## until the next exception occurs. We would rather release this memory 
+            ## as soon as possible.)
+            if clear_tracebacks is True:
+                sys.last_traceback = None
+        
+        finally:
+            sys.setrecursionlimit(recursionLimit)            
+            
+            
     def implements(self, interface=None):
         ## this just makes it easy for us to detect whether an ExceptionHook is already installed.
         if interface is None:

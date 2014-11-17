@@ -168,6 +168,7 @@ class PlotDataItem(GraphicsObject):
             'downsample': 1,
             'autoDownsample': False,
             'downsampleMethod': 'peak',
+            'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
             'clipToView': False,
             
             'data': None,
@@ -380,14 +381,23 @@ class PlotDataItem(GraphicsObject):
             
         elif len(args) == 2:
             seq = ('listOfValues', 'MetaArray', 'empty')
-            if dataType(args[0]) not in seq or  dataType(args[1]) not in seq:
+            dtyp = dataType(args[0]), dataType(args[1])
+            if dtyp[0] not in seq or dtyp[1] not in seq:
                 raise Exception('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
             if not isinstance(args[0], np.ndarray):
-                x = np.array(args[0])
+                #x = np.array(args[0])
+                if dtyp[0] == 'MetaArray':
+                    x = args[0].asarray()
+                else:
+                    x = np.array(args[0])
             else:
                 x = args[0].view(np.ndarray)
             if not isinstance(args[1], np.ndarray):
-                y = np.array(args[1])
+                #y = np.array(args[1])
+                if dtyp[1] == 'MetaArray':
+                    y = args[1].asarray()
+                else:
+                    y = np.array(args[1])
             else:
                 y = args[1].view(np.ndarray)
             
@@ -538,7 +548,7 @@ class PlotDataItem(GraphicsObject):
                     x1 = (range.right()-x[0]) / dx
                     width = self.getViewBox().width()
                     if width != 0.0:
-                        ds = int(max(1, int(0.2 * (x1-x0) / width)))
+                        ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
                     ## downsampling is expensive; delay until after clipping.
             
             if self.opts['clipToView']:
@@ -546,7 +556,7 @@ class PlotDataItem(GraphicsObject):
                 if view is None or not view.autoRangeEnabled()[0]:
                     # this option presumes that x-values have uniform spacing
                     range = self.viewRect()
-                    if range is not None:
+                    if range is not None and len(x) > 1:
                         dx = float(x[-1]-x[0]) / (len(x)-1)
                         # clip to visible region extended by downsampling value
                         x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)

@@ -365,7 +365,7 @@ class TableWidget(QtGui.QTableWidget):
             ev.ignore()
 
     def handleItemChanged(self, item):
-        item.textChanged()
+        item.itemChanged()
 
 
 class TableWidgetItem(QtGui.QTableWidgetItem):
@@ -425,7 +425,8 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
     def _updateText(self):
         self._blockValueChange = True
         try:
-            self.setText(self.format())
+            self._text = self.format()
+            self.setText(self._text)
         finally:
             self._blockValueChange = False
 
@@ -433,14 +434,22 @@ class TableWidgetItem(QtGui.QTableWidgetItem):
         self.value = value
         self._updateText()
 
+    def itemChanged(self):
+        """Called when the data of this item has changed."""
+        if self.text() != self._text:
+            self.textChanged()
+
     def textChanged(self):
         """Called when this item's text has changed for any reason."""
+        self._text = self.text()
+
         if self._blockValueChange:
             # text change was result of value or format change; do not
             # propagate.
             return
         
         try:
+
             self.value = type(self.value)(self.text())
         except ValueError:
             self.value = str(self.text())

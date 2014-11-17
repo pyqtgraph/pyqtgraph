@@ -24,41 +24,12 @@ from ..debug import printExc
 from .. import configfile as configfile
 from .. import dockarea as dockarea
 from . import FlowchartGraphicsView
+from .. import functions as fn
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
 
 
-def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
-    """Topological sort. Arguments are:
-      deps    dictionary describing dependencies where a:[b,c] means "a depends on b and c"
-      nodes   optional, specifies list of starting nodes (these should be the nodes 
-              which are not depended on by any other nodes) 
-    """
-    
-    if nodes is None:
-        ## run through deps to find nodes that are not depended upon
-        rem = set()
-        for dep in deps.values():
-            rem |= set(dep)
-        nodes = set(deps.keys()) - rem
-    if seen is None:
-        seen = set()
-        stack = []
-    sorted = []
-    #print "  "*depth, "Starting from", nodes
-    for n in nodes:
-        if n in stack:
-            raise Exception("Cyclic dependency detected", stack + [n])
-        if n in seen:
-            continue
-        seen.add(n)
-        #print "  "*depth, "  descending into", n, deps[n]
-        sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
-        #print "  "*depth, "  Added", n
-        sorted.append(n)
-        #print "  "*depth, "  ", sorted
-    return sorted
         
 
 class Flowchart(Node):
@@ -282,9 +253,10 @@ class Flowchart(Node):
         
         ## Record inputs given to process()
         for n, t in self.inputNode.outputs().items():
-            if n not in args:
-                raise Exception("Parameter %s required to process this chart." % n)
-            data[t] = args[n]
+            # if n not in args:
+            #     raise Exception("Parameter %s required to process this chart." % n)
+            if n in args:
+                data[t] = args[n]
         
         ret = {}
             
@@ -309,7 +281,7 @@ class Flowchart(Node):
                     if len(inputs) == 0:
                         continue
                     if inp.isMultiValue():  ## multi-input terminals require a dict of all inputs
-                        args[inp.name()] = dict([(i, data[i]) for i in inputs])
+                        args[inp.name()] = dict([(i, data[i]) for i in inputs if i in data])
                     else:                   ## single-inputs terminals only need the single input value available
                         args[inp.name()] = data[inputs[0]]  
                         
@@ -329,9 +301,8 @@ class Flowchart(Node):
                         #print out.name()
                         try:
                             data[out] = result[out.name()]
-                        except:
-                            print(out, out.name())
-                            raise
+                        except KeyError:
+                            pass
             elif c == 'd':   ## delete a terminal result (no longer needed; may be holding a lot of memory)
                 #print "===> delete", arg
                 if arg in data:
@@ -356,7 +327,7 @@ class Flowchart(Node):
         #print "DEPS:", deps
         ## determine correct node-processing order
         #deps[self] = []
-        order = toposort(deps)
+        order = fn.toposort(deps)
         #print "ORDER1:", order
         
         ## construct list of operations
@@ -405,7 +376,7 @@ class Flowchart(Node):
                     deps[node].extend(t.dependentNodes())
             
             ## determine order of updates 
-            order = toposort(deps, nodes=[startNode])
+            order = fn.toposort(deps, nodes=[startNode])
             order.reverse()
             
             ## keep track of terminals that have been updated
@@ -546,7 +517,7 @@ class Flowchart(Node):
             return
             ## NOTE: was previously using a real widget for the file dialog's parent, but this caused weird mouse event bugs..
             #fileName = QtGui.QFileDialog.getOpenFileName(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = str(fileName)
+        fileName = unicode(fileName)
         state = configfile.readConfigFile(fileName)
         self.restoreState(state, clear=True)
         self.viewBox.autoRange()
@@ -567,7 +538,7 @@ class Flowchart(Node):
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
             #fileName = QtGui.QFileDialog.getSaveFileName(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = str(fileName)
+        fileName = unicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
@@ -689,7 +660,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(str(fileName))
+        self.setCurrentFile(unicode(fileName))
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -718,7 +689,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = str(fileName)
+        self.currentFileName = unicode(fileName)
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
@@ -856,16 +827,20 @@ class FlowchartWidget(dockarea.DockArea):
         self.buildMenu()
         
     def buildMenu(self, pos=None):
+        def buildSubMenu(node, rootMenu, subMenus, pos=None):
+            for section, node in node.items():
+                menu = QtGui.QMenu(section)
+                rootMenu.addMenu(menu)
+                if isinstance(node, OrderedDict): 
+                    buildSubMenu(node, menu, subMenus, pos=pos)
+                    subMenus.append(menu)
+                else:
+                    act = rootMenu.addAction(section)
+                    act.nodeType = section
+                    act.pos = pos
         self.nodeMenu = QtGui.QMenu()
-        self.subMenus = []
-        for section, nodes in self.chart.library.getNodeTree().items():
-            menu = QtGui.QMenu(section)
-            self.nodeMenu.addMenu(menu)
-            for name in nodes:
-                act = menu.addAction(name)
-                act.nodeType = name
-                act.pos = pos
-            self.subMenus.append(menu)
+        self.subMenus = []       
+        buildSubMenu(self.chart.library.getNodeTree(), self.nodeMenu, self.subMenus, pos=pos)
         self.nodeMenu.triggered.connect(self.nodeMenuTriggered)
         return self.nodeMenu
     

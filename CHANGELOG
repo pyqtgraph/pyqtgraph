@@ -18,6 +18,8 @@ pyqtgraph-0.9.9  [unreleased]
     - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
       event position.
     - Made setPen() methods consistent throughout the package
+    - Fix in GLScatterPlotItem requires that points will appear slightly more opaque 
+      (so you may need to adjust to lower alpha to achieve the same results)
 
   New Features:
     - Added ViewBox.setLimits() method
@@ -31,7 +33,9 @@ pyqtgraph-0.9.9  [unreleased]
         - Essentially a graphical interface to dict; all items have text and value
         - Assigns previously-selected text after list is cleared and repopulated
         - Get, set current value
-    - Added Flowchart.sigChartChanged
+    - Flowchart updates
+        - Added Flowchart.sigChartChanged
+        - Custom nodes may now be registered in sub-menu trees
     - ImageItem.getHistogram is more clever about constructing histograms
     - Added FillBetweenItem.setCurves()
     - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
@@ -49,6 +53,11 @@ pyqtgraph-0.9.9  [unreleased]
     - Added configurable formatting for TableWidget
     - Added 'stepMode' argument to PlotDataItem()
     - Added ViewBox.invertX()
+    - Docks now have optional close button
+    - Added InfiniteLine.setHoverPen
+    - Added GLVolumeItem.setData
+    - Added PolyLineROI.setPoints, clearPoints, saveState, setState
+    - Added ErrorBarItem.setData
 
   Bugfixes:
     - PlotCurveItem now has correct clicking behavior--clicks within a few px
@@ -86,6 +95,8 @@ pyqtgraph-0.9.9  [unreleased]
     - Fixed TableWidget append / sort issues
     - Fixed AxisItem not resizing text area when setTicks() is used
     - Removed a few cyclic references
+    - Fixed Parameter 'readonly' option for bool, color, and text parameter types
+    - Fixed alpha on GLScatterPlotItem spots (formerly maxed out at alpha=200)
 
 pyqtgraph-0.9.8  2013-11-24
 

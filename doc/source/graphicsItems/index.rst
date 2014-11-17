@@ -23,6 +23,7 @@ Contents:
     isocurveitem
     axisitem
     textitem
+    errorbaritem
     arrowitem
     fillbetweenitem
     curvepoint

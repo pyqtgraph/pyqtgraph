@@ -377,9 +377,9 @@ def getGitVersion(tagPrefix):
     
     # any uncommitted modifications?
     modified = False
-    status = check_output(['git', 'status', '-s'], universal_newlines=True).strip().split('\n')
+    status = check_output(['git', 'status', '--porcelain'], universal_newlines=True).strip().split('\n')
     for line in status:
-        if line[:2] != '??':
+        if line != '' and line[:2] != '??':
             modified = True
             break        
                 
@@ -558,5 +558,3 @@ class MergeTestCommand(Command):
     def finalize_options(self):
         pass
 
-    
-    

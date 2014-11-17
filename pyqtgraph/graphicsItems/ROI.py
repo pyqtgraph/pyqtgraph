@@ -25,7 +25,7 @@ from .UIGraphicsItem import UIGraphicsItem
 __all__ = [
     'ROI', 
     'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
-    'LineROI', 'MultiLineROI', 'MultiRectROI', 'LineSegmentROI', 'PolyLineROI', 'SpiralROI',
+    'LineROI', 'MultiLineROI', 'MultiRectROI', 'LineSegmentROI', 'PolyLineROI', 'SpiralROI', 'CrosshairROI',
 ]
 
 
@@ -862,8 +862,10 @@ class ROI(GraphicsObject):
         elif h['type'] == 'sr':
             if h['center'][0] == h['pos'][0]:
                 scaleAxis = 1
+                nonScaleAxis=0
             else:
                 scaleAxis = 0
+                nonScaleAxis=1
             
             try:
                 if lp1.length() == 0 or lp0.length() == 0:
@@ -885,6 +887,8 @@ class ROI(GraphicsObject):
                 newState['size'][scaleAxis] = round(newState['size'][scaleAxis] / self.snapSize) * self.snapSize
             if newState['size'][scaleAxis] == 0:
                 newState['size'][scaleAxis] = 1
+            if self.aspectLocked:
+                newState['size'][nonScaleAxis] = newState['size'][scaleAxis]
                 
             c1 = c * newState['size']
             tr = QtGui.QTransform()
@@ -972,14 +976,16 @@ class ROI(GraphicsObject):
         return QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
 
     def paint(self, p, opt, widget):
-        p.save()
-        r = self.boundingRect()
+        # p.save()
+        # Note: don't use self.boundingRect here, because subclasses may need to redefine it.
+        r = QtCore.QRectF(0, 0, self.state['size'][0], self.state['size'][1]).normalized()
+        
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         p.setPen(self.currentPen)
         p.translate(r.left(), r.top())
         p.scale(r.width(), r.height())
         p.drawRect(0, 0, 1, 1)
-        p.restore()
+        # p.restore()
 
     def getArraySlice(self, data, img, axes=(0,1), returnSlice=True):
         """Return a tuple of slice objects that can be used to slice the region from data covered by this ROI.
@@ -1804,13 +1810,56 @@ class PolyLineROI(ROI):
         self.segments = []
         ROI.__init__(self, pos, size=[1,1], **args)
         
-        for p in positions:
-            self.addFreeHandle(p)
+        self.setPoints(positions)
+        #for p in positions:
+            #self.addFreeHandle(p)
          
+        #start = -1 if self.closed else 0
+        #for i in range(start, len(self.handles)-1):
+            #self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
+
+    def setPoints(self, points, closed=None):
+        """
+        Set the complete sequence of points displayed by this ROI.
+        
+        ============= =========================================================
+        **Arguments**
+        points        List of (x,y) tuples specifying handle locations to set.
+        closed        If bool, then this will set whether the ROI is closed 
+                      (the last point is connected to the first point). If
+                      None, then the closed mode is left unchanged.
+        ============= =========================================================
+        
+        """
+        if closed is not None:
+            self.closed = closed
+        
+        for p in points:
+            self.addFreeHandle(p)
+        
         start = -1 if self.closed else 0
         for i in range(start, len(self.handles)-1):
             self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
+        
+        
+    def clearPoints(self):
+        """
+        Remove all handles and segments.
+        """
+        while len(self.handles) > 0:
+            self.removeHandle(self.handles[0]['item'])
 
+    def saveState(self):
+        state = ROI.saveState(self)
+        state['closed'] = self.closed
+        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
+        return state
+
+    def setState(self, state):
+        ROI.setState(self, state)
+        self.clearPoints()
+        self.setPoints(state['points'], closed=state['closed'])
+        
     def addSegment(self, h1, h2, index=None):
         seg = LineSegmentROI(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
         if index is None:
@@ -1935,6 +1984,8 @@ class PolyLineROI(ROI):
         ROI.setPen(self, *args, **kwds)
         for seg in self.segments:
             seg.setPen(*args, **kwds)
+
+
 
 class LineSegmentROI(ROI):
     """
@@ -2094,6 +2145,102 @@ class SpiralROI(ROI):
         p.drawRect(self.boundingRect())
         
     
+class CrosshairROI(ROI):
+    """A crosshair ROI whose position is at the center of the crosshairs. By default, it is scalable, rotatable and translatable."""
+    
+    def __init__(self, pos=None, size=None, **kargs):
+        if size == None:
+            #size = [100e-6,100e-6]
+            size=[1,1]
+        if pos == None:
+            pos = [0,0]
+        self._shape = None
+        ROI.__init__(self, pos, size, **kargs)
+        
+        self.sigRegionChanged.connect(self.invalidate)
+        self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
+        self.aspectLocked = True
 
+    def invalidate(self):
+        self._shape = None
+        self.prepareGeometryChange()
+        
+    def boundingRect(self):
+        #size = self.size()
+        #return QtCore.QRectF(-size[0]/2., -size[1]/2., size[0], size[1]).normalized()
+        return self.shape().boundingRect()
+    
+    #def getRect(self):
+        ### same as boundingRect -- for internal use so that boundingRect can be re-implemented in subclasses
+        #size = self.size()
+        #return QtCore.QRectF(-size[0]/2., -size[1]/2., size[0], size[1]).normalized()
+        
+    
+    def shape(self):
+        if self._shape is None:
+            radius = self.getState()['size'][1]
+            p = QtGui.QPainterPath()
+            p.moveTo(Point(0, -radius))
+            p.lineTo(Point(0, radius))
+            p.moveTo(Point(-radius, 0))
+            p.lineTo(Point(radius, 0))
+            p = self.mapToDevice(p)
+            stroker = QtGui.QPainterPathStroker()
+            stroker.setWidth(10)
+            outline = stroker.createStroke(p)
+            self._shape = self.mapFromDevice(outline)
             
-
+        
+            ##h1 = self.handles[0]['item'].pos()
+            ##h2 = self.handles[1]['item'].pos()
+            #w1 = Point(-0.5, 0)*self.size()
+            #w2 = Point(0.5, 0)*self.size()
+            #h1 = Point(0, -0.5)*self.size()
+            #h2 = Point(0, 0.5)*self.size()
+            
+            #dh = h2-h1
+            #dw = w2-w1
+            #if dh.length() == 0 or dw.length() == 0:
+                #return p
+            #pxv = self.pixelVectors(dh)[1]
+            #if pxv is None:
+                #return p
+                
+            #pxv *= 4
+            
+            #p.moveTo(h1+pxv)
+            #p.lineTo(h2+pxv)
+            #p.lineTo(h2-pxv)
+            #p.lineTo(h1-pxv)
+            #p.lineTo(h1+pxv)
+            
+            #pxv = self.pixelVectors(dw)[1]
+            #if pxv is None:
+                #return p
+                
+            #pxv *= 4
+            
+            #p.moveTo(w1+pxv)
+            #p.lineTo(w2+pxv)
+            #p.lineTo(w2-pxv)
+            #p.lineTo(w1-pxv)
+            #p.lineTo(w1+pxv)
+        
+        return self._shape
+    
+    def paint(self, p, *args):
+        #p.save()
+        #r = self.getRect()
+        radius = self.getState()['size'][1]
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.setPen(self.currentPen)
+        #p.translate(r.left(), r.top())
+        #p.scale(r.width()/10., r.height()/10.) ## need to scale up a little because drawLine has trouble dealing with 0.5
+        #p.drawLine(0,5, 10,5)
+        #p.drawLine(5,0, 5,10)
+        #p.restore()
+        
+        p.drawLine(Point(0, -radius), Point(0, radius))
+        p.drawLine(Point(-radius, 0), Point(radius, 0))
+        
+        

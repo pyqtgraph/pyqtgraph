@@ -91,6 +91,10 @@ USE_PYSIDE = (QT_API == API_PYSIDE)
 
 if QT_API == API_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
+    try:
+        from PySide import QtTest
+    except ImportError:
+        pass
     import PySide
     try:
         from PySide import shiboken
@@ -163,7 +167,11 @@ elif QT_API == API_PYQT4:
         from PyQt4 import QtOpenGL
     except ImportError:
         pass
-    
+    try:
+        from PyQt4 import QtTest
+    except ImportError:
+        pass
+
     import sip
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)

@@ -75,7 +75,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             sample = item
         else:
             sample = ItemSample(item)        
-        row = len(self.items)
+        row = self.layout.rowCount()
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
