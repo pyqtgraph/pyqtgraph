@@ -21,15 +21,15 @@ from .python2_3 import asUnicode  #for some pyside patching
 #Qt wrapper APIs, in order of preference...
 # - Note that Qt5 can be used with the PyQt4 api trhough the use of qt_wrapper
 QT_APIS = \
-    (API_PYQT4, API_PYSIDE) = \
-    ("PyQt4", "PySide")
+    (API_PYSIDE, API_PYQT4) = \
+    ("PySide", "PyQt4")
 
 QT_LIBS = \
     (LIB_PYQT4, LIB_PYSIDE, LIB_PYQT5) = \
     ("PyQt4", "PySide", "PyQt5")
 
 #values below will be worked out as we go...
-# - note that if QT_EMULATIGN, the resulting proxy objects can cause issues in
+# - note that if QT_EMULATING, the resulting proxy objects can cause issues in
 #    some cases.  If required, the root Qt object under the proxy can be accessed
 #    using the '_qt_root_class' class property.  This is particulary useful when
 #    looking for specific subclasses of Qt objects.
@@ -201,14 +201,23 @@ def _GetVERSION_INFO():
     """
     #Note that the strings returned between PyQt and Pyside do not follow the
     #same convention. This difference has been preserved for compatibility.
-    if QT_API == API_PYQT4:
-        wrapperVer = QtCore.PYQT_VERSION_STR
-        qtVer = QtCore.QT_VERSION_STR
-        return "PyQt%s %s Qt %s" % (wrapperVer[0], wrapperVer, qtVer)
-    elif QT_API == API_PYSIDE:
-        wrapperVer = PySide.__version__
-        #qtVer = ??
-        return "PySide %s" % wrapperVer
+    if QT_EMULATING == False:
+        if QT_API == API_PYQT4:
+            wrapperVer = QtCore.PYQT_VERSION_STR
+            qtVer = QtCore.QT_VERSION_STR
+            ver_str = "PyQt%s %s Qt %s" % (wrapperVer[0], wrapperVer, qtVer)
+        elif QT_API == API_PYSIDE:
+            wrapperVer = PySide.__version__
+            #qtVer = ??
+            return "PySide %s" % wrapperVer
+    else:
+        ver_str = ("{qt_lib} v{qt_lib_ver} accessed via "
+                   "qt_backport v{qtb_ver} using the "
+                   "{api} API.".format(qt_lib = QT_LIB,
+                                       qt_lib_ver = QtVersion,
+                                       qtb_ver = qt_backport.__version__,
+                                       api = QT_API))
+    return ver_str
 
 
 ## Make sure we have Qt >= 4.7
