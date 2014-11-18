@@ -1,6 +1,7 @@
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg
+from .. import Qt
 from .. import functions as fn
 import numpy as np
 
@@ -46,7 +47,7 @@ class ImageExporter(Exporter):
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
-            if USE_PYSIDE:
+            if Qt.QT_LIB == Qt.LIB_PYSIDE:
                 filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
             else:
                 filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]

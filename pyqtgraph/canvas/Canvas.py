@@ -4,16 +4,20 @@ if __name__ == '__main__':
     md = os.path.dirname(os.path.abspath(__file__))
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore
+from .. import Qt
 from ..graphicsItems.ROI import ROI
 from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.GridItem import GridItem
 
-if USE_PYSIDE:
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
     from .CanvasTemplate_pyside import *
-else:
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
     from .CanvasTemplate_pyqt import *
-    
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    from .CanvasTemplate_pyqt5 import *
+
+
 import numpy as np
 from .. import debug
 import weakref

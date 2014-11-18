@@ -24,6 +24,7 @@ QT_APIS = \
     (API_PYSIDE, API_PYQT4) = \
     ("PySide", "PyQt4")
 
+#QT_APIS = tuple(reversed(QT_APIS))
 QT_LIBS = \
     (LIB_PYQT4, LIB_PYSIDE, LIB_PYQT5) = \
     ("PyQt4", "PySide", "PyQt5")
@@ -85,9 +86,6 @@ else:
         QT_WRAPPER = qt_backport.CURRENT_WRAPPER
         QT_EMULATING = True
 
-#Set global PySide awareness...
-# - a lot of existing code uses this flag
-USE_PYSIDE = (QT_API == API_PYSIDE)
 
 if QT_API == API_PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg

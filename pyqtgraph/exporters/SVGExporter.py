@@ -1,13 +1,15 @@
 from .Exporter import Exporter
 from ..python2_3 import asUnicode
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg
+from .. import Qt
 from .. import debug
 from .. import functions as fn
 import re
 import xml.dom.minidom as xml
 import numpy as np
 
+USING_PYSIDE_LIB = (Qt.QT_LIB == Qt.LIB_PYSIDE)
 
 __all__ = ['SVGExporter']
 
@@ -221,9 +223,9 @@ def _generateItemSvg(item, nodes=None, root=None):
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
 
-        if USE_PYSIDE:
+        if USING_PYSIDE_LIB:
             xmlStr = str(arr)
-        else:
+        else: #PyQt in use
             xmlStr = bytes(arr).decode('utf-8')
         doc = xml.parseString(xmlStr)
         

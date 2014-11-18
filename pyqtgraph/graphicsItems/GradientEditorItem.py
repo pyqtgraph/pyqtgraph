@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore
+from .. import Qt
 from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
@@ -784,8 +785,7 @@ class GradientEditorItem(TickSliderItem):
         self.sigGradientChangeFinished.emit(self)
 
 
-
-if USE_PYSIDE:
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
     #PySide has a bug that is activated by subclassing Tick from a pyqtgraph
     #GraphicsObject.  We need to use a basic Qt QGraphicsObject here.
     #  - the bug: https://bugreports.qt-project.org/browse/PYSIDE-86

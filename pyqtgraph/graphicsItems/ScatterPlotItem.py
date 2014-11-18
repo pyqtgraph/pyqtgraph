@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore
+from .. import Qt
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsItem import GraphicsItem
@@ -14,6 +15,8 @@ from .. import getConfigOption
 from .. import debug as debug
 from ..pgcollections import OrderedDict
 from .. import debug
+
+USING_PYSIDE_API = (Qt.QT_API == Qt.API_PYSIDE)
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -758,9 +761,12 @@ class ScatterPlotItem(GraphicsObject):
                     self.data['targetRect'][updateMask] = list(imap(QtCore.QRectF, updatePts[0,:], updatePts[1,:], width, width))
                 
                 data = self.data[viewMask]
-                if USE_PYSIDE:
+                if USING_PYSIDE_API:
                     list(imap(p.drawPixmap, data['targetRect'], repeat(atlas), data['sourceRect']))
-                else:
+                else: #PyQt4 or PyQt5 is in use
+                    #Note: at the time of this writing, drawPixmapFragments is
+                    #not directly implemented in PyQt5, but qt_backport handles
+                    #this with a workaround similar to the PySide one above.
                     p.drawPixmapFragments(data['targetRect'].tolist(), data['sourceRect'].tolist(), atlas)
             else:
                 # render each symbol individually
