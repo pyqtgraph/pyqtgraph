@@ -33,7 +33,9 @@ pyqtgraph-0.9.9  [unreleased]
         - Essentially a graphical interface to dict; all items have text and value
         - Assigns previously-selected text after list is cleared and repopulated
         - Get, set current value
-    - Added Flowchart.sigChartChanged
+    - Flowchart updates
+        - Added Flowchart.sigChartChanged
+        - Custom nodes may now be registered in sub-menu trees
     - ImageItem.getHistogram is more clever about constructing histograms
     - Added FillBetweenItem.setCurves()
     - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
