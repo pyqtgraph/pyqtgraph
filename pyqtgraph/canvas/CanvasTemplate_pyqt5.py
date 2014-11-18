@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './pyqtgraph/canvas/CanvasTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created: Tue Nov 18 09:45:20 2014
+#      by: PyQt5 UI code generator 5.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -27,12 +27,6 @@ class Ui_Form(object):
         self.gridLayout_2 = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.storeSvgBtn = QtWidgets.QPushButton(self.layoutWidget)
-        self.storeSvgBtn.setObjectName("storeSvgBtn")
-        self.gridLayout_2.addWidget(self.storeSvgBtn, 1, 0, 1, 1)
-        self.storePngBtn = QtWidgets.QPushButton(self.layoutWidget)
-        self.storePngBtn.setObjectName("storePngBtn")
-        self.gridLayout_2.addWidget(self.storePngBtn, 1, 1, 1, 1)
         self.autoRangeBtn = QtWidgets.QPushButton(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -40,7 +34,7 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(self.autoRangeBtn.sizePolicy().hasHeightForWidth())
         self.autoRangeBtn.setSizePolicy(sizePolicy)
         self.autoRangeBtn.setObjectName("autoRangeBtn")
-        self.gridLayout_2.addWidget(self.autoRangeBtn, 3, 0, 1, 2)
+        self.gridLayout_2.addWidget(self.autoRangeBtn, 2, 0, 1, 2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setSpacing(0)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -50,7 +44,7 @@ class Ui_Form(object):
         self.redirectCombo = CanvasCombo(self.layoutWidget)
         self.redirectCombo.setObjectName("redirectCombo")
         self.horizontalLayout.addWidget(self.redirectCombo)
-        self.gridLayout_2.addLayout(self.horizontalLayout, 6, 0, 1, 2)
+        self.gridLayout_2.addLayout(self.horizontalLayout, 5, 0, 1, 2)
         self.itemList = TreeWidget(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -60,20 +54,20 @@ class Ui_Form(object):
         self.itemList.setHeaderHidden(True)
         self.itemList.setObjectName("itemList")
         self.itemList.headerItem().setText(0, "1")
-        self.gridLayout_2.addWidget(self.itemList, 7, 0, 1, 2)
+        self.gridLayout_2.addWidget(self.itemList, 6, 0, 1, 2)
         self.ctrlLayout = QtWidgets.QGridLayout()
         self.ctrlLayout.setSpacing(0)
         self.ctrlLayout.setObjectName("ctrlLayout")
-        self.gridLayout_2.addLayout(self.ctrlLayout, 11, 0, 1, 2)
+        self.gridLayout_2.addLayout(self.ctrlLayout, 10, 0, 1, 2)
         self.resetTransformsBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.resetTransformsBtn.setObjectName("resetTransformsBtn")
-        self.gridLayout_2.addWidget(self.resetTransformsBtn, 8, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.resetTransformsBtn, 7, 0, 1, 1)
         self.mirrorSelectionBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.mirrorSelectionBtn.setObjectName("mirrorSelectionBtn")
-        self.gridLayout_2.addWidget(self.mirrorSelectionBtn, 4, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.mirrorSelectionBtn, 3, 0, 1, 1)
         self.reflectSelectionBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.reflectSelectionBtn.setObjectName("reflectSelectionBtn")
-        self.gridLayout_2.addWidget(self.reflectSelectionBtn, 4, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.reflectSelectionBtn, 3, 1, 1, 1)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
@@ -82,8 +76,6 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.storeSvgBtn.setText(_translate("Form", "Store SVG"))
-        self.storePngBtn.setText(_translate("Form", "Store PNG"))
         self.autoRangeBtn.setText(_translate("Form", "Auto Range"))
         self.redirectCheck.setToolTip(_translate("Form", "Check to display all local items in a remote canvas."))
         self.redirectCheck.setText(_translate("Form", "Redirect"))
@@ -91,6 +83,6 @@ class Ui_Form(object):
         self.mirrorSelectionBtn.setText(_translate("Form", "Mirror Selection"))
         self.reflectSelectionBtn.setText(_translate("Form", "MirrorXY"))
 
-from ..widgets.GraphicsView import GraphicsView
 from ..widgets.TreeWidget import TreeWidget
 from CanvasManager import CanvasCombo
+from ..widgets.GraphicsView import GraphicsView

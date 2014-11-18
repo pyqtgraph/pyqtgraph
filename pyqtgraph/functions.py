@@ -7,7 +7,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 from __future__ import division
 from .python2_3 import asUnicode
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),
@@ -27,7 +27,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from . import Qt
 from . import getConfigOption, setConfigOptions
 import numpy as np
 import decimal, re
@@ -1051,7 +1051,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE:
+    if Qt.QT_LIB == Qt.LIB_PYSIDE:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
@@ -1096,7 +1096,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE:
+    if Qt.QT_LIB == Qt.LIB_PYSIDE:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())

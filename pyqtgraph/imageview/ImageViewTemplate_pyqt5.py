@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './pyqtgraph/imageview/ImageViewTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created: Tue Nov 18 09:45:20 2014
+#      by: PyQt5 UI code generator 5.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -41,15 +41,14 @@ class Ui_Form(object):
         self.roiBtn.setCheckable(True)
         self.roiBtn.setObjectName("roiBtn")
         self.gridLayout.addWidget(self.roiBtn, 1, 1, 1, 1)
-        self.normBtn = QtWidgets.QPushButton(self.layoutWidget)
+        self.menuBtn = QtWidgets.QPushButton(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.normBtn.sizePolicy().hasHeightForWidth())
-        self.normBtn.setSizePolicy(sizePolicy)
-        self.normBtn.setCheckable(True)
-        self.normBtn.setObjectName("normBtn")
-        self.gridLayout.addWidget(self.normBtn, 1, 2, 1, 1)
+        sizePolicy.setHeightForWidth(self.menuBtn.sizePolicy().hasHeightForWidth())
+        self.menuBtn.setSizePolicy(sizePolicy)
+        self.menuBtn.setObjectName("menuBtn")
+        self.gridLayout.addWidget(self.menuBtn, 1, 2, 1, 1)
         self.roiPlot = PlotWidget(self.splitter)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -136,7 +135,7 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.roiBtn.setText(_translate("Form", "ROI"))
-        self.normBtn.setText(_translate("Form", "Norm"))
+        self.menuBtn.setText(_translate("Form", "Menu"))
         self.normGroup.setTitle(_translate("Form", "Normalization"))
         self.normSubtractRadio.setText(_translate("Form", "Subtract"))
         self.normDivideRadio.setText(_translate("Form", "Divide"))
@@ -152,5 +151,5 @@ class Ui_Form(object):
         self.normFrameCheck.setText(_translate("Form", "Frame"))
 
 from ..widgets.HistogramLUTWidget import HistogramLUTWidget
-from ..widgets.PlotWidget import PlotWidget
 from ..widgets.GraphicsView import GraphicsView
+from ..widgets.PlotWidget import PlotWidget
