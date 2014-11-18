@@ -323,41 +323,91 @@ class SpinBox(QtGui.QAbstractSpinBox):
     #def fixup(self, *args):
         #print "fixup:", args
     
-    def stepBy(self, n):
-        n = D(int(n))   ## n must be integral number of steps.
-        s = [D(-1), D(1)][n >= 0]  ## determine sign of step
-        val = self.val
-        
-        for i in range(int(abs(n))):
-            
-            if self.opts['log']:
-                raise Exception("Log mode no longer supported.")
-            #    step = abs(val) * self.opts['step']
-            #    if 'minStep' in self.opts:
-            #        step = max(step, self.opts['minStep'])
-            #    val += step * s
-            if self.opts['dec']:
-                if val == 0:
-                    step = self.opts['minStep']
-                    exp = None
-                else:
-                    vs = [D(-1), D(1)][val >= 0]
-                    #exp = D(int(abs(val*(D('1.01')**(s*vs))).log10()))
-                    fudge = D('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
-                    exp = abs(val * fudge).log10().quantize(1, ROUND_FLOOR)
-                    step = self.opts['step'] * D(10)**exp
-                if 'minStep' in self.opts:
-                    step = max(step, self.opts['minStep'])
-                val += s * step
-                #print "Exp:", exp, "step", step, "val", val
-            else:
-                val += s*self.opts['step']
-                
-            if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
-                val = D(0)
-        self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
-        
+#    def stepBy(self, n):
+#        n = D(int(n))   ## n must be integral number of steps.
+#        s = [D(-1), D(1)][n >= 0]  ## determine sign of step
+#        val = self.val
+#        
+#        for i in range(int(abs(n))):
+#            
+#            if self.opts['log']:
+#                raise Exception("Log mode no longer supported.")
+#            #    step = abs(val) * self.opts['step']
+#            #    if 'minStep' in self.opts:
+#            #        step = max(step, self.opts['minStep'])
+#            #    val += step * s
+#            if self.opts['dec']:
+#                if val == 0:
+#                    step = self.opts['minStep']
+#                    exp = None
+#                else:
+#                    vs = [D(-1), D(1)][val >= 0]
+#                    #exp = D(int(abs(val*(D('1.01')**(s*vs))).log10()))
+#                    fudge = D('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
+#                    exp = abs(val * fudge).log10().quantize(1, ROUND_FLOOR)
+#                    step = self.opts['step'] * D(10)**exp
+#                if 'minStep' in self.opts:
+#                    step = max(step, self.opts['minStep'])
+#                val += s * step
+#                #print "Exp:", exp, "step", step, "val", val
+#            else:
+#                val += s*self.opts['step']
+#                
+#            if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
+#                val = D(0)
+#        self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
 
+    def stepBy(self, step):
+        """do a step up or down according to the position the cursor is found
+        TODO: zero pad!!!        
+        """
+        import math,decimal
+        val = self.val
+        self.setValue(val, delaySignal=True)
+        self.lineEdit().cursorPosition()
+        self.lineEdit().cursorPosition()        
+        sgn=math.copysign(1,step)
+        ss=self._get_stepsize()
+        step=sgn*10.**ss
+        cp=self.lineEdit().cursorPosition()
+        newval=val+decimal.Decimal(step)
+        self.setValue(newval, delaySignal=True) 
+        # change cursor position if a digit is added
+        if math.floor(math.log10(abs(newval)))>math.floor(math.log10(abs(val))):
+            cp+=1
+        if math.floor(math.log10(abs(newval)))<math.floor(math.log10(abs(val))):
+            cp-=1            
+        self.lineEdit().setCursorPosition(cp)
+        
+    def _get_stepsize(self):
+        """ get the exponent 10^exp from the cursor position,
+        * also take into accoutn scientific notation
+        * don't care about pre and postfixes """
+        import re,math
+        le=self.lineEdit()
+        cp=le.cursorPosition()
+        st=str(le.displayText())
+        loc=re.search('\d+\.?\d*', st).span()    
+        try:
+            dp=st.index('.')
+            _min,_max=-(loc[1]-dp)+1,-(loc[0]-dp)-1
+            exp=dp-cp+1
+            if exp>0:
+                exp-=1        
+        except:
+            dp=loc[1]
+            exp=dp-cp
+            _min=0
+            _max=loc[1]-loc[0]-1
+        exp=max(_min,min(_max,exp))
+        try:
+            exp+=int(re.search(r'e([+-]\d+)', st).group(1))
+        except:
+            pass        
+        #print st,loc,dp,cp,_min,_max,exp
+        return exp      
+        
+        
     def valueInRange(self, value):
         bounds = self.opts['bounds']
         if bounds[0] is not None and value < bounds[0]:
