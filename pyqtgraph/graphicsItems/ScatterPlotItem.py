@@ -19,7 +19,9 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 'd', '+', 'x']])
+name_list = ['o', 's', 't', 'd', '+', 'x',
+             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left']
+Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 coords = {
@@ -27,8 +29,12 @@ coords = {
     'd': [(0., -0.5), (-0.4, 0.), (0, 0.5), (0.4, 0)],
     '+': [
         (-0.5, -0.05), (-0.5, 0.05), (-0.05, 0.05), (-0.05, 0.5),
-        (0.05, 0.5), (0.05, 0.05), (0.5, 0.05), (0.5, -0.05), 
+        (0.05, 0.5), (0.05, 0.05), (0.5, 0.05), (0.5, -0.05),
         (0.05, -0.05), (0.05, -0.5), (-0.05, -0.5), (-0.05, -0.05)
+    ],
+    'arrow_up': [
+        (-0.125, 0.125), (0, 0), (0.125, 0.125),
+        (0.05, 0.125), (0.05, 0.5), (-0.05, 0.5), (-0.05, 0.125)
     ],
 }
 for k, c in coords.items():
@@ -39,8 +45,12 @@ for k, c in coords.items():
 tr = QtGui.QTransform()
 tr.rotate(45)
 Symbols['x'] = tr.map(Symbols['+'])
+tr.rotate(45)
+Symbols['arrow_right'] = tr.map(Symbols['arrow_up'])
+Symbols['arrow_down'] = tr.map(Symbols['arrow_right'])
+Symbols['arrow_left'] = tr.map(Symbols['arrow_down'])
 
-    
+
 def drawSymbol(painter, symbol, size, pen, brush):
     if symbol is None:
         return
