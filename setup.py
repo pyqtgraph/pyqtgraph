@@ -101,11 +101,12 @@ class Install(distutils.command.install.install):
     """
     def run(self):
         name = self.config_vars['dist_name']
-        if name in os.listdir(self.install_libbase):
+        path = self.install_libbase
+        if os.path.exists(path) and name in os.listdir(path):
             raise Exception("It appears another version of %s is already "
                             "installed at %s; remove this before installing." 
-                            % (name, self.install_libbase))
-        print("Installing to %s" % self.install_libbase)
+                            % (name, path))
+        print("Installing to %s" % path)
         return distutils.command.install.install.run(self)
         
 setup(
