@@ -1696,6 +1696,8 @@ class ViewBox(GraphicsWidget):
     def forgetView(vid, name):
         if ViewBox is None:     ## can happen as python is shutting down
             return
+        if QtGui.QApplication.instance() is None:
+            return
         ## Called with ID and name of view (the view itself is no longer available)
         for v in list(ViewBox.AllViews.keys()):
             if id(v) == vid:

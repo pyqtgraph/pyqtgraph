@@ -127,7 +127,10 @@ class UnsharpMaskNode(CtrlNode):
 ## NodeLibrary:
 library = fclib.LIBRARY.copy() # start with the default node set
 library.addNodeType(ImageViewNode, [('Display',)])
-library.addNodeType(UnsharpMaskNode, [('Image',)])
+# Add the unsharp mask node to two locations in the menu to demonstrate
+# that we can create arbitrary menu structures
+library.addNodeType(UnsharpMaskNode, [('Image',), 
+                                      ('Submenu_test','submenu2','submenu3')])
 fc.setLibrary(library)
 
 

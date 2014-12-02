@@ -239,12 +239,15 @@ class SpinBox(QtGui.QAbstractSpinBox):
         Select the numerical portion of the text to allow quick editing by the user.
         """
         le = self.lineEdit()
-        text = le.text()
-        try:
-            index = text.index(' ')
-        except ValueError:
-            return
-        le.setSelection(0, index)
+        text = asUnicode(le.text())
+        if self.opts['suffix'] == '':
+            le.setSelection(0, len(text))
+        else:
+            try:
+                index = text.index(' ')
+            except ValueError:
+                return
+            le.setSelection(0, index)
 
     def value(self):
         """

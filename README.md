@@ -32,6 +32,7 @@ Contributors
   * Stefan Holzmann
   * Nicholas TJ
   * John David Reaver
+  * David Kaplan
 
 Requirements
 ------------
