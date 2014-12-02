@@ -55,6 +55,9 @@ class CSVExporter(Exporter):
             sep = ','
         else:
             sep = '\t'
+
+        #Encode header to utf-8 before writing
+        header = [item.encode("utf-8") for item in header]
             
         fd.write(sep.join(header) + '\n')
         i = 0
