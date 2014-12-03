@@ -57,6 +57,7 @@ class AxisItem(GraphicsWidget):
             'tickLength': maxTickLength,
             'maxTickLevel': 2,
             'maxTextLevel': 2,
+            'tickAlpha': None,  ## If not none, use this alpha for all ticks.
         }
         
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text 
@@ -133,6 +134,10 @@ class AxisItem(GraphicsWidget):
                                 
         showValues          (bool) indicates whether text is displayed adjacent
                             to ticks.
+        tickAlpha           (float or None) If not None, all ticks will be drawn
+                            with the same alpha (this one), regardless of their
+                            level. tickAlpha can be in the range [0,1] or
+                            [0 .. 255].
         =================== =======================================================
         
         Added in version 0.9.9
@@ -862,10 +867,17 @@ class AxisItem(GraphicsWidget):
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
                 
-            lineAlpha = 255 / (i+1)
-            if self.grid is not False:
-                lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
-            
+            lineAlpha = self.style["tickAlpha"]
+            if lineAlpha is None:
+                lineAlpha = 255 / (i+1)
+                if self.grid is not False:
+                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+            else:
+                if lineAlpha < 1:
+                    lineAlpha *= 255
+                elif lineAlpha == 1:
+                    lineAlpha = lineAlpha if isinstance(lineAlpha, int) else 255
+
             for v in ticks:
                 ## determine actual position to draw this tick
                 x = (v * xScale) - offset
