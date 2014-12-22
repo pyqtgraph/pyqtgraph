@@ -48,7 +48,8 @@ sys.path.insert(0, os.path.join(path, 'tools'))
 import setupHelpers as helpers
 
 ## generate list of all sub-packages
-allPackages = helpers.listAllPackages(pkgroot='pyqtgraph') + ['pyqtgraph.examples']
+allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') + 
+               ['pyqtgraph.'+x for x in helpers.listAllPackages(pkgroot='examples')])
 
 ## Decide what version string to use in the build
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
