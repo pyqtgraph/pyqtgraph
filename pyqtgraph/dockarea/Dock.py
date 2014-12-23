@@ -247,9 +247,10 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
     
-    def __init__(self, text, dock, showCloseButton):
+    def __init__(self, text, dock, showCloseButton, fontSize="12px"):
         self.dim = False
         self.fixedWidth = False
+        self.fontSize = fontSize
         VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
         self.setAlignment(QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter)
         self.dock = dock
@@ -286,7 +287,8 @@ class DockLabel(VerticalLabel):
                 border-right: 2px solid %s;
                 padding-top: 3px;
                 padding-bottom: 3px;
-            }""" % (bg, fg, r, r, border)
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
             self.setStyleSheet(self.vStyle)
         else:
             self.hStyle = """DockLabel {
@@ -300,7 +302,8 @@ class DockLabel(VerticalLabel):
                 border-bottom: 2px solid %s;
                 padding-left: 3px;
                 padding-right: 3px;
-            }""" % (bg, fg, r, r, border)
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
             self.setStyleSheet(self.hStyle)
 
     def setDim(self, d):
