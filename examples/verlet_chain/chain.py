@@ -1,7 +1,7 @@
 import pyqtgraph as pg
 import numpy as np
 import time
-from .relax import relax
+from . import relax
 
 
 class ChainSim(pg.QtCore.QObject):
@@ -52,7 +52,7 @@ class ChainSim(pg.QtCore.QObject):
         self.mrel1[self.fixed[l2]] = 0
         self.mrel2 = 1.0 - self.mrel1
 
-        for i in range(100):
+        for i in range(10):
             self.relax(n=10)
         
         self.initialized = True
@@ -75,6 +75,10 @@ class ChainSim(pg.QtCore.QObject):
         else:
             dt = now - self.lasttime
         self.lasttime = now
+        
+        # limit amount of work to be done between frames
+        if not relax.COMPILED:
+            dt = self.maxTimeStep
 
         if self.lastpos is None:
             self.lastpos = self.pos
@@ -103,8 +107,9 @@ class ChainSim(pg.QtCore.QObject):
         
         
     def relax(self, n=50):
-        # speed up with C magic
-        relax(self.pos, self.links, self.mrel1, self.mrel2, self.lengths, self.push, self.pull, n)
+        # speed up with C magic if possible
+        relax.relax(self.pos, self.links, self.mrel1, self.mrel2, self.lengths, self.push, self.pull, n)
         self.relaxed.emit()
+        
         
 
