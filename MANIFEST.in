@@ -1,7 +1,6 @@
-recursive-include pyqtgraph *.py *.ui *.m README *.txt
-recursive-include tests *.py *.ui
+recursive-include pyqtgraph *.py *.ui *.m README.* *.txt
 recursive-include examples *.py *.ui *.gz *.cfg
-recursive-include doc *.rst *.py *.svg *.png *.jpg
+recursive-include doc *.rst *.py *.svg *.png
 recursive-include doc/build/html *
 recursive-include tools *
 include doc/Makefile doc/make.bat README.md LICENSE.txt CHANGELOG
