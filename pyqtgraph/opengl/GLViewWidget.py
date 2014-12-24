@@ -1,11 +1,13 @@
-from pyqtgraph.Qt import QtCore, QtGui, QtOpenGL
+from ..Qt import QtCore, QtGui, QtOpenGL
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
-from pyqtgraph import Vector
-import pyqtgraph.functions as fn
+from .. import Vector
+from .. import functions as fn
 
 ##Vector = QtGui.QVector3D
+
+ShareWidget = None
 
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
@@ -16,14 +18,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
     """
     
-    ShareWidget = None
-    
     def __init__(self, parent=None):
-        if GLViewWidget.ShareWidget is None:
+        global ShareWidget
+
+        if ShareWidget is None:
             ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
-            GLViewWidget.ShareWidget = QtOpenGL.QGLWidget()
+            ShareWidget = QtOpenGL.QGLWidget()
             
-        QtOpenGL.QGLWidget.__init__(self, parent, GLViewWidget.ShareWidget)
+        QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
@@ -36,6 +38,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                                       ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
         }
+        self.setBackgroundColor('k')
         self.items = []
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
@@ -64,8 +67,15 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         
     def initializeGL(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
         self.resizeGL(self.width(), self.height())
+        
+    def setBackgroundColor(self, *args, **kwds):
+        """
+        Set the background color of the widget. Accepts the same arguments as
+        pg.mkColor().
+        """
+        self.opts['bgcolor'] = fn.mkColor(*args, **kwds)
+        self.update()
         
     def getViewport(self):
         vp = self.opts['viewport']
@@ -129,6 +139,12 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         return tr
 
     def itemsAt(self, region=None):
+        """
+        Return a list of the items displayed in the region (x, y, w, h)
+        relative to the widget.        
+        """
+        region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
+        
         #buf = np.zeros(100000, dtype=np.uint)
         buf = glSelectBuffer(100000)
         try:
@@ -140,12 +156,11 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             
         finally:
             hits = glRenderMode(GL_RENDER)
-
+            
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
-        
         return [self._itemNames[i[1]] for i in items]
-        
+    
     def paintGL(self, region=None, viewport=None, useItemNames=False):
         """
         viewport specifies the arguments to glViewport. If None, then we use self.opts['viewport']
@@ -158,6 +173,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             glViewport(*viewport)
         self.setProjection(region=region)
         self.setModelview()
+        bgcolor = self.opts['bgcolor']
+        glClearColor(bgcolor.red(), bgcolor.green(), bgcolor.blue(), 1.0)
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
@@ -175,12 +192,12 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 try:
                     glPushAttrib(GL_ALL_ATTRIB_BITS)
                     if useItemNames:
-                        glLoadName(id(i))
-                        self._itemNames[id(i)] = i
+                        glLoadName(i._id)
+                        self._itemNames[i._id] = i
                     i.paint()
                 except:
-                    import pyqtgraph.debug
-                    pyqtgraph.debug.printExc()
+                    from .. import debug
+                    debug.printExc()
                     msg = "Error while drawing item %s." % str(item)
                     ver = glGetString(GL_VERSION)
                     if ver is not None:
@@ -294,6 +311,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
     def mouseReleaseEvent(self, ev):
         pass
+        # Example item selection code:
+        #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
+        #print(self.itemsAt(region))
+        
+        ## debugging code: draw the picking region
+        #glViewport(*self.getViewport())
+        #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
+        #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
+        #self.paintGL(region=region)
+        #self.swapBuffers()
+        
         
     def wheelEvent(self, ev):
         if (ev.modifiers() & QtCore.Qt.ControlModifier):
@@ -345,7 +373,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         ## Only to be called from within exception handler.
         ver = glGetString(GL_VERSION).split()[0]
         if int(ver.split('.')[0]) < 2:
-            import pyqtgraph.debug
+            from .. import debug
             pyqtgraph.debug.printExc()
             raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
         else:

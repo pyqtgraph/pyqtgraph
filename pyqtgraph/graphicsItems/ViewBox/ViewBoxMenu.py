@@ -1,6 +1,6 @@
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
-from pyqtgraph.python2_3 import asUnicode
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...Qt import QtCore, QtGui, USE_PYSIDE
+from ...python2_3 import asUnicode
+from ...WidgetGroup import WidgetGroup
 
 if USE_PYSIDE:
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
@@ -56,7 +56,7 @@ class ViewBoxMenu(QtGui.QMenu):
             for sig, fn in connects:
                 sig.connect(getattr(self, axis.lower()+fn))
 
-        self.ctrl[0].invertCheck.hide()  ## no invert for x-axis
+        self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
         ## exporting is handled by GraphicsScene now
         #self.export = QtGui.QMenu("Export")
@@ -87,22 +87,6 @@ class ViewBoxMenu(QtGui.QMenu):
         self.view().sigStateChanged.connect(self.viewStateChanged)
         
         self.updateState()
-
-    def copy(self):
-        m = QtGui.QMenu()
-        for sm in self.subMenus():
-            if isinstance(sm, QtGui.QMenu):
-                m.addMenu(sm)
-            else:
-                m.addAction(sm)
-        m.setTitle(self.title())
-        return m
-
-    def subMenus(self):
-        if not self.valid:
-            self.updateState()
-        return [self.viewAll] + self.axes + [self.leftMenu]
-
 
     def setExportMethods(self, methods):
         self.exportMethods = methods
@@ -155,10 +139,15 @@ class ViewBoxMenu(QtGui.QMenu):
             
             self.ctrl[i].autoPanCheck.setChecked(state['autoPan'][i])
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
-
-        self.ctrl[1].invertCheck.setChecked(state['yInverted'])
+            xy = ['x', 'y'][i]
+            self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
+        
         self.valid = True
         
+    def popup(self, *args):
+        if not self.valid:
+            self.updateState()
+        QtGui.QMenu.popup(self, *args)
         
     def autoRange(self):
         self.view().autoRange()  ## don't let signal call this directly--it'll add an unwanted argument
@@ -229,18 +218,18 @@ class ViewBoxMenu(QtGui.QMenu):
     def yInvertToggled(self, b):
         self.view().invertY(b)
 
+    def xInvertToggled(self, b):
+        self.view().invertX(b)
 
     def exportMethod(self):
         act = self.sender()
         self.exportMethods[str(act.text())]()
-
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')
         
     def set1ButtonMode(self):
         self.view().setLeftButtonAction('rect')
-        
         
     def setViewList(self, views):
         names = ['']

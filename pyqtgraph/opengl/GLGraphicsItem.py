@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph import Transform3D
+from ..Qt import QtGui, QtCore
+from .. import Transform3D
 from OpenGL.GL import *
 from OpenGL import GL
 
@@ -28,8 +28,13 @@ GLOptions = {
 
 
 class GLGraphicsItem(QtCore.QObject):
+    _nextId = 0
+    
     def __init__(self, parentItem=None):
         QtCore.QObject.__init__(self)
+        self._id = GLGraphicsItem._nextId
+        GLGraphicsItem._nextId += 1
+        
         self.__parent = None
         self.__view = None
         self.__children = set()

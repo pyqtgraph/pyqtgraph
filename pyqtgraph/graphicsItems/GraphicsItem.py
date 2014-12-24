@@ -1,31 +1,11 @@
-from pyqtgraph.Qt import QtGui, QtCore  
-from pyqtgraph.GraphicsScene import GraphicsScene
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore, isQObjectAlive
+from ..GraphicsScene import GraphicsScene
+from ..Point import Point
+from .. import functions as fn
 import weakref
-from pyqtgraph.pgcollections import OrderedDict
-import operator, sys
+import operator
+from ..util.lru_cache import LRUCache
 
-class FiniteCache(OrderedDict):
-    """Caches a finite number of objects, removing
-    least-frequently used items."""
-    def __init__(self, length):
-        self._length = length
-        OrderedDict.__init__(self)
-        
-    def __setitem__(self, item, val):
-        self.pop(item, None) # make sure item is added to end
-        OrderedDict.__setitem__(self, item, val) 
-        while len(self) > self._length:
-            del self[list(self.keys())[0]]
-        
-    def __getitem__(self, item):
-        val = OrderedDict.__getitem__(self, item)
-        del self[item]
-        self[item] = val  ## promote this key        
-        return val
-        
-        
 
 class GraphicsItem(object):
     """
@@ -38,7 +18,7 @@ class GraphicsItem(object):
 
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
-    _pixelVectorGlobalCache = FiniteCache(100)
+    _pixelVectorGlobalCache = LRUCache(100, 70)
     
     def __init__(self, register=True):
         if not hasattr(self, '_qtBaseClass'):
@@ -62,8 +42,11 @@ class GraphicsItem(object):
                     
     def getViewWidget(self):
         """
-        Return the view widget for this item. If the scene has multiple views, only the first view is returned.
-        The return value is cached; clear the cached value with forgetViewWidget()
+        Return the view widget for this item. 
+        
+        If the scene has multiple views, only the first view is returned.
+        The return value is cached; clear the cached value with forgetViewWidget().
+        If the view has been deleted by Qt, return None.
         """
         if self._viewWidget is None:
             scene = self.scene()
@@ -73,7 +56,12 @@ class GraphicsItem(object):
             if len(views) < 1:
                 return None
             self._viewWidget = weakref.ref(self.scene().views()[0])
-        return self._viewWidget()
+            
+        v = self._viewWidget()
+        if v is not None and not isQObjectAlive(v):
+            return None
+            
+        return v
     
     def forgetViewWidget(self):
         self._viewWidget = None
@@ -114,7 +102,7 @@ class GraphicsItem(object):
         Extends deviceTransform to automatically determine the viewportTransform.
         """
         if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
-            return self._exportOpts['painter'].deviceTransform()
+            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
             
         if viewportTransform is None:
             view = self.getViewWidget()
@@ -330,6 +318,8 @@ class GraphicsItem(object):
         vt = self.deviceTransform()
         if vt is None:
             return None
+        if isinstance(obj, QtCore.QPoint):
+            obj = QtCore.QPointF(obj)
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
@@ -479,24 +469,29 @@ class GraphicsItem(object):
 
         ## disconnect from previous view
         if oldView is not None:
-            #print "disconnect:", self, oldView
-            try:
-                oldView.sigRangeChanged.disconnect(self.viewRangeChanged)
-            except TypeError:
-                pass
-            
-            try:
-                oldView.sigTransformChanged.disconnect(self.viewTransformChanged)
-            except TypeError:
-                pass
+            for signal, slot in [('sigRangeChanged', self.viewRangeChanged),
+                                 ('sigDeviceRangeChanged', self.viewRangeChanged), 
+                                 ('sigTransformChanged', self.viewTransformChanged), 
+                                 ('sigDeviceTransformChanged', self.viewTransformChanged)]:
+                try:
+                    getattr(oldView, signal).disconnect(slot)
+                except (TypeError, AttributeError, RuntimeError):
+                    # TypeError and RuntimeError are from pyqt and pyside, respectively
+                    pass
             
             self._connectedView = None
 
         ## connect to new view
         if view is not None:
             #print "connect:", self, view
-            view.sigRangeChanged.connect(self.viewRangeChanged)
-            view.sigTransformChanged.connect(self.viewTransformChanged)
+            if hasattr(view, 'sigDeviceRangeChanged'):
+                # connect signals from GraphicsView
+                view.sigDeviceRangeChanged.connect(self.viewRangeChanged)
+                view.sigDeviceTransformChanged.connect(self.viewTransformChanged)
+            else:
+                # connect signals from ViewBox
+                view.sigRangeChanged.connect(self.viewRangeChanged)
+                view.sigTransformChanged.connect(self.viewTransformChanged)
             self._connectedView = weakref.ref(view)
             self.viewRangeChanged()
             self.viewTransformChanged()
@@ -585,3 +580,6 @@ class GraphicsItem(object):
     #def update(self):
         #self._qtBaseClass.update(self)
         #print "Update:", self
+
+    def getContextMenus(self, event):
+        return [self.getMenu()] if hasattr(self, "getMenu") else []

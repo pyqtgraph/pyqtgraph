@@ -1,23 +1,4 @@
-from distutils.core import setup
-import distutils.dir_util
-import os
-
-## generate list of all sub-packages
-path = os.path.abspath(os.path.dirname(__file__))
-n = len(path.split(os.path.sep))
-subdirs = [i[0].split(os.path.sep)[n:] for i in os.walk(os.path.join(path, 'pyqtgraph')) if '__init__.py' in i[2]]
-all_packages = ['.'.join(p) for p in subdirs] + ['pyqtgraph.examples']
-
-
-## Make sure build directory is clean before installing
-buildPath = os.path.join(path, 'build')
-if os.path.isdir(buildPath):
-    distutils.dir_util.remove_tree(buildPath)
-
-setup(name='pyqtgraph',
-    version='',
-    description='Scientific Graphics and GUI Library for Python',
-    long_description="""\
+DESCRIPTION = """\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
 numpy. 
 
@@ -25,14 +6,16 @@ It is intended for use in mathematics / scientific / engineering applications.
 Despite being written entirely in python, the library is very fast due to its
 heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 2D display, and OpenGL for 3D display.
-""",
+"""
+
+setupOpts = dict(
+    name='pyqtgraph',
+    description='Scientific Graphics and GUI Library for Python',
+    long_description=DESCRIPTION,
     license='MIT',
     url='http://www.pyqtgraph.org',
     author='Luke Campagnola',
     author_email='luke.campagnola@gmail.com',
-    packages=all_packages,
-    package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
-    #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},
     classifiers = [
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
@@ -48,9 +31,100 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Software Development :: User Interfaces",
         ],
+)
+
+
+from distutils.core import setup
+import distutils.dir_util
+import os, sys, re
+try:
+    # just avoids warning about install_requires
+    import setuptools
+except ImportError:
+    pass
+
+path = os.path.split(__file__)[0]
+sys.path.insert(0, os.path.join(path, 'tools'))
+import setupHelpers as helpers
+
+## generate list of all sub-packages
+allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') + 
+               ['pyqtgraph.'+x for x in helpers.listAllPackages(pkgroot='examples')])
+
+## Decide what version string to use in the build
+version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
+
+
+import distutils.command.build
+
+class Build(distutils.command.build.build):
+    """
+    * Clear build path before building
+    * Set version string in __init__ after building
+    """
+    def run(self):
+        global path, version, initVersion, forcedVersion
+        global buildVersion
+
+        ## Make sure build directory is clean
+        buildPath = os.path.join(path, self.build_lib)
+        if os.path.isdir(buildPath):
+            distutils.dir_util.remove_tree(buildPath)
+    
+        ret = distutils.command.build.build.run(self)
+        
+        # If the version in __init__ is different from the automatically-generated
+        # version string, then we will update __init__ in the build directory
+        if initVersion == version:
+            return ret
+        
+        try:
+            initfile = os.path.join(buildPath, 'pyqtgraph', '__init__.py')
+            data = open(initfile, 'r').read()
+            open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
+            buildVersion = version
+        except:
+            if forcedVersion:
+                raise
+            buildVersion = initVersion
+            sys.stderr.write("Warning: Error occurred while setting version string in build path. "
+                             "Installation will use the original version string "
+                             "%s instead.\n" % (initVersion)
+                             )
+            sys.excepthook(*sys.exc_info())
+        return ret
+        
+import distutils.command.install
+
+class Install(distutils.command.install.install):
+    """
+    * Check for previously-installed version before installing
+    """
+    def run(self):
+        name = self.config_vars['dist_name']
+        path = self.install_libbase
+        if os.path.exists(path) and name in os.listdir(path):
+            raise Exception("It appears another version of %s is already "
+                            "installed at %s; remove this before installing." 
+                            % (name, path))
+        print("Installing to %s" % path)
+        return distutils.command.install.install.run(self)
+        
+setup(
+    version=version,
+    cmdclass={'build': Build, 
+              'install': Install,
+              'deb': helpers.DebCommand, 
+              'test': helpers.TestCommand,
+              'debug': helpers.DebugCommand,
+              'mergetest': helpers.MergeTestCommand,
+              'style': helpers.StyleCommand},
+    packages=allPackages,
+    package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
+    package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg']},
     install_requires = [
         'numpy',
-        'scipy',
         ],
+    **setupOpts
 )
 

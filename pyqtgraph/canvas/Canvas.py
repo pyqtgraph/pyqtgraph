@@ -3,29 +3,21 @@ if __name__ == '__main__':
     import sys, os
     md = os.path.dirname(os.path.abspath(__file__))
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
-    #print md
 
-
-#from pyqtgraph.GraphicsView import GraphicsView
-#import pyqtgraph.graphicsItems as graphicsItems
-#from pyqtgraph.PlotWidget import PlotWidget
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
-from pyqtgraph.graphicsItems.ROI import ROI
-from pyqtgraph.graphicsItems.ViewBox import ViewBox
-from pyqtgraph.graphicsItems.GridItem import GridItem
+from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..graphicsItems.ROI import ROI
+from ..graphicsItems.ViewBox import ViewBox
+from ..graphicsItems.GridItem import GridItem
 
 if USE_PYSIDE:
     from .CanvasTemplate_pyside import *
 else:
     from .CanvasTemplate_pyqt import *
     
-#import DataManager
 import numpy as np
-from pyqtgraph import debug
-#import pyqtgraph as pg
+from .. import debug
 import weakref
 from .CanvasManager import CanvasManager
-#import items
 from .CanvasItem import CanvasItem, GroupCanvasItem
 
 class Canvas(QtGui.QWidget):
@@ -75,8 +67,8 @@ class Canvas(QtGui.QWidget):
         self.ui.itemList.sigItemMoved.connect(self.treeItemMoved)
         self.ui.itemList.itemSelectionChanged.connect(self.treeItemSelected)
         self.ui.autoRangeBtn.clicked.connect(self.autoRange)
-        self.ui.storeSvgBtn.clicked.connect(self.storeSvg)
-        self.ui.storePngBtn.clicked.connect(self.storePng)
+        #self.ui.storeSvgBtn.clicked.connect(self.storeSvg)
+        #self.ui.storePngBtn.clicked.connect(self.storePng)
         self.ui.redirectCheck.toggled.connect(self.updateRedirect)
         self.ui.redirectCombo.currentIndexChanged.connect(self.updateRedirect)
         self.multiSelectBox.sigRegionChanged.connect(self.multiSelectBoxChanged)
@@ -102,11 +94,13 @@ class Canvas(QtGui.QWidget):
         self.ui.itemList.contextMenuEvent = self.itemListContextMenuEvent
             
 
-    def storeSvg(self):
-        self.ui.view.writeSvg()
+    #def storeSvg(self):
+        #from pyqtgraph.GraphicsScene.exportDialog import ExportDialog
+        #ex = ExportDialog(self.ui.view)
+        #ex.show()
 
-    def storePng(self):
-        self.ui.view.writeImage()
+    #def storePng(self):
+        #self.ui.view.writeImage()
 
     def splitterMoved(self):
         self.resizeEvent()
@@ -579,7 +573,9 @@ class Canvas(QtGui.QWidget):
         self.menu.popup(ev.globalPos())
         
     def removeClicked(self):
-        self.removeItem(self.menuItem)
+        #self.removeItem(self.menuItem)
+        for item in self.selectedItems():
+            self.removeItem(item)
         self.menuItem = None
         import gc
         gc.collect()

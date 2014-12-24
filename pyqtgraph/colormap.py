@@ -1,6 +1,5 @@
 import numpy as np
-import scipy.interpolate
-from pyqtgraph.Qt import QtGui, QtCore
+from .Qt import QtGui, QtCore
 
 class ColorMap(object):
     """
@@ -52,20 +51,20 @@ class ColorMap(object):
     
     def __init__(self, pos, color, mode=None):
         """
-        ========= ==============================================================
-        Arguments
-        pos       Array of positions where each color is defined
-        color     Array of RGBA colors.
-                  Integer data types are interpreted as 0-255; float data types
-                  are interpreted as 0.0-1.0
-        mode      Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG) 
-                  indicating the color space that should be used when 
-                  interpolating between stops. Note that the last mode value is
-                  ignored. By default, the mode is entirely RGB.
-        ========= ==============================================================
+        ===============     ==============================================================
+        **Arguments:**
+        pos                 Array of positions where each color is defined
+        color               Array of RGBA colors.
+                            Integer data types are interpreted as 0-255; float data types
+                            are interpreted as 0.0-1.0
+        mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
+                            indicating the color space that should be used when
+                            interpolating between stops. Note that the last mode value is
+                            ignored. By default, the mode is entirely RGB.
+        ===============     ==============================================================
         """
-        self.pos = pos
-        self.color = color
+        self.pos = np.array(pos)
+        self.color = np.array(color)
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode
@@ -92,15 +91,24 @@ class ColorMap(object):
         else:
             pos, color = self.getStops(mode)
             
-        data = np.clip(data, pos.min(), pos.max())
+        # don't need this--np.interp takes care of it.
+        #data = np.clip(data, pos.min(), pos.max())
             
-        if not isinstance(data, np.ndarray):
-            interp = scipy.interpolate.griddata(pos, color, np.array([data]))[0]
+        # Interpolate
+        # TODO: is griddata faster?
+        #          interp = scipy.interpolate.griddata(pos, color, data)
+        if np.isscalar(data):
+            interp = np.empty((color.shape[1],), dtype=color.dtype)
         else:
-            interp = scipy.interpolate.griddata(pos, color, data)
-        
-        if mode == self.QCOLOR:
             if not isinstance(data, np.ndarray):
+                data = np.array(data)
+            interp = np.empty(data.shape + (color.shape[1],), dtype=color.dtype)
+        for i in range(color.shape[1]):
+            interp[...,i] = np.interp(data, pos, color[:,i])
+
+        # Convert to QColor if requested
+        if mode == self.QCOLOR:
+            if np.isscalar(data):
                 return QtGui.QColor(*interp)
             else:
                 return [QtGui.QColor(*x) for x in interp]
@@ -193,16 +201,16 @@ class ColorMap(object):
         """
         Return an RGB(A) lookup table (ndarray). 
         
-        ============= ============================================================================
-        **Arguments**
-        start         The starting value in the lookup table (default=0.0) 
-        stop          The final value in the lookup table (default=1.0)
-        nPts          The number of points in the returned lookup table.
-        alpha         True, False, or None - Specifies whether or not alpha values are included 
-                      in the table. If alpha is None, it will be automatically determined.
-        mode          Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
-                      See :func:`map() <pyqtgraph.ColorMap.map>`.
-        ============= ============================================================================
+        ===============   =============================================================================
+        **Arguments:**
+        start             The starting value in the lookup table (default=0.0)
+        stop              The final value in the lookup table (default=1.0)
+        nPts              The number of points in the returned lookup table.
+        alpha             True, False, or None - Specifies whether or not alpha values are included
+                          in the table. If alpha is None, it will be automatically determined.
+        mode              Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
+                          See :func:`map() <pyqtgraph.ColorMap.map>`.
+        ===============   =============================================================================
         """
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
@@ -236,4 +244,7 @@ class ColorMap(object):
         else:
             return np.all(self.color == np.array([[0,0,0,255], [255,255,255,255]]))
 
-
+    def __repr__(self):
+        pos = repr(self.pos).replace('\n', '')
+        color = repr(self.color).replace('\n', '')
+        return "ColorMap(%s, %s)" % (pos, color)

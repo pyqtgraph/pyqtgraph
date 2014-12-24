@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui
 
 class ThreadsafeTimer(QtCore.QObject):
     """

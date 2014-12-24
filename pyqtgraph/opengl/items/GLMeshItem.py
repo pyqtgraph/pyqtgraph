@@ -1,9 +1,9 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from .. MeshData import MeshData
-from pyqtgraph.Qt import QtGui
-import pyqtgraph as pg
+from ...Qt import QtGui
 from .. import shaders
+from ... import functions as fn
 import numpy as np
 
 
@@ -19,7 +19,7 @@ class GLMeshItem(GLGraphicsItem):
     def __init__(self, **kwds):
         """
         ============== =====================================================
-        Arguments
+        **Arguments:**
         meshdata       MeshData object from which to determine geometry for 
                        this item.
         color          Default face color used if no vertex or face colors 
@@ -153,8 +153,12 @@ class GLMeshItem(GLGraphicsItem):
                     self.colors = md.faceColors(indexed='faces')
                     
             if self.opts['drawEdges']:
-                self.edges = md.edges()
-                self.edgeVerts = md.vertexes()
+                if not md.hasFaceIndexedData():
+                    self.edges = md.edges()
+                    self.edgeVerts = md.vertexes()
+                else:
+                    self.edges = md.edges()
+                    self.edgeVerts = md.vertexes(indexed='faces')
             return
     
     def paint(self):
@@ -177,7 +181,7 @@ class GLMeshItem(GLGraphicsItem):
                     if self.colors is None:
                         color = self.opts['color']
                         if isinstance(color, QtGui.QColor):
-                            glColor4f(*pg.glColor(color))
+                            glColor4f(*fn.glColor(color))
                         else:
                             glColor4f(*color)
                     else:
@@ -209,7 +213,7 @@ class GLMeshItem(GLGraphicsItem):
                 if self.edgeColors is None:
                     color = self.opts['edgeColor']
                     if isinstance(color, QtGui.QColor):
-                        glColor4f(*pg.glColor(color))
+                        glColor4f(*fn.glColor(color))
                     else:
                         glColor4f(*color)
                 else:

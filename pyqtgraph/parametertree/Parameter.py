@@ -1,6 +1,7 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 import os, weakref, re
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
+from ..python2_3 import asUnicode
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
@@ -13,7 +14,9 @@ def registerParameterType(name, cls, override=False):
     PARAM_TYPES[name] = cls
     PARAM_NAMES[cls] = name
 
-
+def __reload__(old):
+    PARAM_TYPES.update(old.get('PARAM_TYPES', {}))
+    PARAM_NAMES.update(old.get('PARAM_NAMES', {}))
 
 class Parameter(QtCore.QObject):
     """
@@ -46,6 +49,7 @@ class Parameter(QtCore.QObject):
                                          including during editing.
     sigChildAdded(self, child, index)    Emitted when a child is added
     sigChildRemoved(self, child)         Emitted when a child is removed
+    sigRemoved(self)                     Emitted when this parameter is removed
     sigParentChanged(self, parent)       Emitted when this parameter's parent has changed
     sigLimitsChanged(self, limits)       Emitted when this parameter's limits have changed
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
@@ -61,6 +65,7 @@ class Parameter(QtCore.QObject):
     
     sigChildAdded = QtCore.Signal(object, object, object)  ## self, child, index
     sigChildRemoved = QtCore.Signal(object, object)  ## self, child
+    sigRemoved = QtCore.Signal(object) ## self
     sigParentChanged = QtCore.Signal(object, object)  ## self, parent
     sigLimitsChanged = QtCore.Signal(object, object)  ## self, limits
     sigDefaultChanged = QtCore.Signal(object, object)  ## self, default
@@ -107,33 +112,39 @@ class Parameter(QtCore.QObject):
         Parameter instance, the options available to this method are also allowed
         by most Parameter subclasses.
         
-        ================= =========================================================
-        Keyword Arguments
-        name              The name to give this Parameter. This is the name that 
-                          will appear in the left-most column of a ParameterTree
-                          for this Parameter.
-        value             The value to initially assign to this Parameter.
-        default           The default value for this Parameter (most Parameters
-                          provide an option to 'reset to default').
-        children          A list of children for this Parameter. Children
-                          may be given either as a Parameter instance or as a
-                          dictionary to pass to Parameter.create(). In this way,
-                          it is possible to specify complex hierarchies of
-                          Parameters from a single nested data structure.
-        readonly          If True, the user will not be allowed to edit this 
-                          Parameter. (default=False)
-        enabled           If False, any widget(s) for this parameter will appear
-                          disabled. (default=True)
-        visible           If False, the Parameter will not appear when displayed
-                          in a ParameterTree. (default=True)
-        renamable         If True, the user may rename this Parameter.
-                          (default=False)
-        removable         If True, the user may remove this Parameter.
-                          (default=False)
-        expanded          If True, the Parameter will appear expanded when 
-                          displayed in a ParameterTree (its children will be 
-                          visible). (default=True)
-        ================= =========================================================
+        =======================      =========================================================
+        **Keyword Arguments:**
+        name                         The name to give this Parameter. This is the name that
+                                     will appear in the left-most column of a ParameterTree
+                                     for this Parameter.
+        value                        The value to initially assign to this Parameter.
+        default                      The default value for this Parameter (most Parameters
+                                     provide an option to 'reset to default').
+        children                     A list of children for this Parameter. Children
+                                     may be given either as a Parameter instance or as a
+                                     dictionary to pass to Parameter.create(). In this way,
+                                     it is possible to specify complex hierarchies of
+                                     Parameters from a single nested data structure.
+        readonly                     If True, the user will not be allowed to edit this
+                                     Parameter. (default=False)
+        enabled                      If False, any widget(s) for this parameter will appear
+                                     disabled. (default=True)
+        visible                      If False, the Parameter will not appear when displayed
+                                     in a ParameterTree. (default=True)
+        renamable                    If True, the user may rename this Parameter.
+                                     (default=False)
+        removable                    If True, the user may remove this Parameter.
+                                     (default=False)
+        expanded                     If True, the Parameter will appear expanded when
+                                     displayed in a ParameterTree (its children will be
+                                     visible). (default=True)
+        title                        (str or None) If specified, then the parameter will be 
+                                     displayed to the user using this string as its name. 
+                                     However, the parameter will still be referred to 
+                                     internally using the *name* specified above. Note that
+                                     this option is not compatible with renamable=True.
+                                     (default=None; added in version 0.9.9)
+        =======================      =========================================================
         """
         
         
@@ -148,6 +159,7 @@ class Parameter(QtCore.QObject):
             'removable': False,
             'strictNaming': False,  # forces name to be usable as a python variable
             'expanded': True,
+            'title': None,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
         self.opts.update(opts)
@@ -266,16 +278,27 @@ class Parameter(QtCore.QObject):
             vals[ch.name()] = (ch.value(), ch.getValues())
         return vals
     
-    def saveState(self):
+    def saveState(self, filter=None):
         """
         Return a structure representing the entire state of the parameter tree.
-        The tree state may be restored from this structure using restoreState()
+        The tree state may be restored from this structure using restoreState().
+
+        If *filter* is set to 'user', then only user-settable data will be included in the
+        returned state.
         """
-        state = self.opts.copy()
-        state['children'] = OrderedDict([(ch.name(), ch.saveState()) for ch in self])
-        if state['type'] is None:
-            global PARAM_NAMES
-            state['type'] = PARAM_NAMES.get(type(self), None)
+        if filter is None:
+            state = self.opts.copy()
+            if state['type'] is None:
+                global PARAM_NAMES
+                state['type'] = PARAM_NAMES.get(type(self), None)
+        elif filter == 'user':
+            state = {'value': self.value()}
+        else:
+            raise ValueError("Unrecognized filter argument: '%s'" % filter)
+
+        ch = OrderedDict([(ch.name(), ch.saveState(filter=filter)) for ch in self])
+        if len(ch) > 0:
+            state['children'] = ch
         return state
 
     def restoreState(self, state, recursive=True, addChildren=True, removeChildren=True, blockSignals=True):
@@ -293,8 +316,11 @@ class Parameter(QtCore.QObject):
         
         ## list of children may be stored either as list or dict.
         if isinstance(childState, dict):
-            childState = childState.values()
-            
+            cs = []
+            for k,v in childState.items():
+                cs.append(v.copy())
+                cs[-1].setdefault('name', k)
+            childState = cs
         
         if blockSignals:
             self.blockTreeChangeSignal()
@@ -311,14 +337,14 @@ class Parameter(QtCore.QObject):
             
             for ch in childState:
                 name = ch['name']
-                typ = ch['type']
+                #typ = ch.get('type', None)
                 #print('child: %s, %s' % (self.name()+'.'+name, typ))
                 
-                ## First, see if there is already a child with this name and type
+                ## First, see if there is already a child with this name
                 gotChild = False
                 for i, ch2 in enumerate(self.childs[ptr:]):
                     #print "  ", ch2.name(), ch2.type()
-                    if ch2.name() != name or not ch2.isType(typ):
+                    if ch2.name() != name: # or not ch2.isType(typ):
                         continue
                     gotChild = True
                     #print "    found it"
@@ -393,15 +419,22 @@ class Parameter(QtCore.QObject):
         Note that the value of the parameter can *always* be changed by
         calling setValue().
         """
-        return not self.opts.get('readonly', False)
+        return not self.readonly()
 
     def setWritable(self, writable=True):
         """Set whether this Parameter should be editable by the user. (This is 
         exactly the opposite of setReadonly)."""
         self.setOpts(readonly=not writable)
         
+    def readonly(self):
+        """
+        Return True if this parameter is read-only. (this is the opposite of writable())
+        """
+        return self.opts.get('readonly', False)
+        
     def setReadonly(self, readonly=True):
-        """Set whether this Parameter's value may be edited by the user."""
+        """Set whether this Parameter's value may be edited by the user
+        (this is the opposite of setWritable())."""
         self.setOpts(readonly=readonly)
         
     def setOpts(self, **opts):
@@ -453,11 +486,20 @@ class Parameter(QtCore.QObject):
             return ParameterItem(self, depth=depth)
 
 
-    def addChild(self, child):
-        """Add another parameter to the end of this parameter's child list."""
-        return self.insertChild(len(self.childs), child)
+    def addChild(self, child, autoIncrementName=None):
+        """
+        Add another parameter to the end of this parameter's child list.
+        
+        See insertChild() for a description of the *autoIncrementName* 
+        argument.
+        """
+        return self.insertChild(len(self.childs), child, autoIncrementName=autoIncrementName)
 
     def addChildren(self, children):
+        """
+        Add a list or dict of children to this parameter. This method calls
+        addChild once for each value in *children*.
+        """
         ## If children was specified as dict, then assume keys are the names.
         if isinstance(children, dict):
             ch2 = []
@@ -473,19 +515,24 @@ class Parameter(QtCore.QObject):
             self.addChild(chOpts)
         
         
-    def insertChild(self, pos, child):
+    def insertChild(self, pos, child, autoIncrementName=None):
         """
         Insert a new child at pos.
         If pos is a Parameter, then insert at the position of that Parameter.
         If child is a dict, then a parameter is constructed using
         :func:`Parameter.create <pyqtgraph.parametertree.Parameter.create>`.
+        
+        By default, the child's 'autoIncrementName' option determines whether
+        the name will be adjusted to avoid prior name collisions. This 
+        behavior may be overridden by specifying the *autoIncrementName* 
+        argument. This argument was added in version 0.9.9.
         """
         if isinstance(child, dict):
             child = Parameter.create(**child)
         
         name = child.name()
         if name in self.names and child is not self.names[name]:
-            if child.opts.get('autoIncrementName', False):
+            if autoIncrementName is True or (autoIncrementName is None and child.opts.get('autoIncrementName', False)):
                 name = self.incrementName(name)
                 child.setName(name)
             else:
@@ -516,7 +563,7 @@ class Parameter(QtCore.QObject):
         self.sigChildRemoved.emit(self, child)
         try:
             child.sigTreeStateChanged.disconnect(self.treeStateChanged)
-        except TypeError:  ## already disconnected
+        except (TypeError, RuntimeError):  ## already disconnected
             pass
 
     def clearChildren(self):
@@ -550,6 +597,7 @@ class Parameter(QtCore.QObject):
         if parent is None:
             raise Exception("Cannot remove; no parent.")
         parent.removeChild(self)
+        self.sigRemoved.emit(self)
 
     def incrementName(self, name):
         ## return an unused name by adding a number to the name given
@@ -590,9 +638,12 @@ class Parameter(QtCore.QObject):
             names = (names,)
         return self.param(*names).setValue(value)
 
-    def param(self, *names):
+    def child(self, *names):
         """Return a child parameter. 
-        Accepts the name of the child or a tuple (path, to, child)"""
+        Accepts the name of the child or a tuple (path, to, child)
+
+        Added in version 0.9.9. Ealier versions used the 'param' method, which is still
+        implemented for backward compatibility."""
         try:
             param = self.names[names[0]]
         except KeyError:
@@ -603,8 +654,12 @@ class Parameter(QtCore.QObject):
         else:
             return param
         
+    def param(self, *names):
+        # for backward compatibility.
+        return self.child(*names)
+
     def __repr__(self):
-        return "<%s '%s' at 0x%x>" % (self.__class__.__name__, self.name(), id(self))
+        return asUnicode("<%s '%s' at 0x%x>") % (self.__class__.__name__, self.name(), id(self))
        
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..
@@ -675,13 +730,13 @@ class Parameter(QtCore.QObject):
         """
         Called when the state of any sub-parameter has changed. 
         
-        ==========  ================================================================
-        Arguments:
-        param       The immediate child whose tree state has changed.
-                    note that the change may have originated from a grandchild.
-        changes     List of tuples describing all changes that have been made
-                    in this event: (param, changeDescr, data)
-        ==========  ================================================================
+        ==============  ================================================================
+        **Arguments:**
+        param           The immediate child whose tree state has changed.
+                        note that the change may have originated from a grandchild.
+        changes         List of tuples describing all changes that have been made
+                        in this event: (param, changeDescr, data)
+        ==============  ================================================================
                      
         This function can be extended to react to tree state changes.
         """
@@ -692,7 +747,8 @@ class Parameter(QtCore.QObject):
         if self.blockTreeChangeEmit == 0:
             changes = self.treeStateChanges
             self.treeStateChanges = []
-            self.sigTreeStateChanged.emit(self, changes)
+            if len(changes) > 0:
+                self.sigTreeStateChanged.emit(self, changes)
 
 
 class SignalBlocker(object):

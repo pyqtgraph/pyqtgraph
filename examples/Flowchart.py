@@ -58,11 +58,15 @@ fc.setInput(dataIn=data)
 
 ## populate the flowchart with a basic set of processing nodes. 
 ## (usually we let the user do this)
+plotList = {'Top Plot': pw1, 'Bottom Plot': pw2}
+
 pw1Node = fc.createNode('PlotWidget', pos=(0, -150))
+pw1Node.setPlotList(plotList)
 pw1Node.setPlot(pw1)
 
 pw2Node = fc.createNode('PlotWidget', pos=(150, -150))
 pw2Node.setPlot(pw2)
+pw2Node.setPlotList(plotList)
 
 fNode = fc.createNode('GaussianFilter', pos=(0, 0))
 fNode.ctrls['sigma'].setValue(5)

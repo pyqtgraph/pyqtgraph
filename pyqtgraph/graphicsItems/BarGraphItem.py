@@ -1,7 +1,9 @@
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
+from .. import getConfigOption
+from .. import functions as fn
 import numpy as np
+
 
 __all__ = ['BarGraphItem']
 
@@ -45,23 +47,27 @@ class BarGraphItem(GraphicsObject):
             pens=None,
             brushes=None,
         )
+        self._shape = None
+        self.picture = None
         self.setOpts(**opts)
         
     def setOpts(self, **opts):
         self.opts.update(opts)
         self.picture = None
+        self._shape = None
         self.update()
         self.informViewBoundsChanged()
         
     def drawPicture(self):
         self.picture = QtGui.QPicture()
+        self._shape = QtGui.QPainterPath()
         p = QtGui.QPainter(self.picture)
         
         pen = self.opts['pen']
         pens = self.opts['pens']
         
         if pen is None and pens is None:
-            pen = pg.getConfigOption('foreground')
+            pen = getConfigOption('foreground')
         
         brush = self.opts['brush']
         brushes = self.opts['brushes']
@@ -112,14 +118,18 @@ class BarGraphItem(GraphicsObject):
                 raise Exception('must specify either y1 or height')
             height = y1 - y0
         
-        p.setPen(pg.mkPen(pen))
-        p.setBrush(pg.mkBrush(brush))
+        p.setPen(fn.mkPen(pen))
+        p.setBrush(fn.mkBrush(brush))
         for i in range(len(x0)):
             if pens is not None:
-                p.setPen(pg.mkPen(pens[i]))
+                p.setPen(fn.mkPen(pens[i]))
             if brushes is not None:
-                p.setBrush(pg.mkBrush(brushes[i]))
+                p.setBrush(fn.mkBrush(brushes[i]))
                 
+            if np.isscalar(x0):
+                x = x0
+            else:
+                x = x0[i]
             if np.isscalar(y0):
                 y = y0
             else:
@@ -128,9 +138,15 @@ class BarGraphItem(GraphicsObject):
                 w = width
             else:
                 w = width[i]
-            
-            p.drawRect(QtCore.QRectF(x0[i], y, w, height[i]))
-            
+            if np.isscalar(height):
+                h = height
+            else:
+                h = height[i]
+                
+                
+            rect = QtCore.QRectF(x, y, w, h)
+            p.drawRect(rect)
+            self._shape.addRect(rect)
             
         p.end()
         self.prepareGeometryChange()
@@ -146,4 +162,7 @@ class BarGraphItem(GraphicsObject):
             self.drawPicture()
         return QtCore.QRectF(self.picture.boundingRect())
     
-        
+    def shape(self):
+        if self.picture is None:
+            self.drawPicture()
+        return self._shape

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
-from pyqtgraph.graphicsItems.ROI import ROI
-import pyqtgraph as pg
+from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..graphicsItems.ROI import ROI
+from .. import SRTTransform, ItemGroup
 if USE_PYSIDE:
     from . import TransformGuiTemplate_pyside as TransformGuiTemplate
 else:
     from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
 
-from pyqtgraph import debug
+from .. import debug
 
 class SelectBox(ROI):
     def __init__(self, scalable=False, rotatable=True):
@@ -96,7 +96,7 @@ class CanvasItem(QtCore.QObject):
         if 'transform' in self.opts:
             self.baseTransform = self.opts['transform']
         else:
-            self.baseTransform = pg.SRTTransform()
+            self.baseTransform = SRTTransform()
             if 'pos' in self.opts and self.opts['pos'] is not None:
                 self.baseTransform.translate(self.opts['pos'])
             if 'angle' in self.opts and self.opts['angle'] is not None:
@@ -124,8 +124,8 @@ class CanvasItem(QtCore.QObject):
         self.itemScale = QtGui.QGraphicsScale()
         self._graphicsItem.setTransformations([self.itemRotation, self.itemScale])
         
-        self.tempTransform = pg.SRTTransform() ## holds the additional transform that happens during a move - gets added to the userTransform when move is done.
-        self.userTransform = pg.SRTTransform() ## stores the total transform of the object
+        self.tempTransform = SRTTransform() ## holds the additional transform that happens during a move - gets added to the userTransform when move is done.
+        self.userTransform = SRTTransform() ## stores the total transform of the object
         self.resetUserTransform() 
         
         ## now happens inside resetUserTransform -> selectBoxToItem
@@ -200,7 +200,7 @@ class CanvasItem(QtCore.QObject):
         #flip = self.transformGui.mirrorImageCheck.isChecked()
         #tr = self.userTransform.saveState()
         
-        inv = pg.SRTTransform()
+        inv = SRTTransform()
         inv.scale(-1, 1)
         self.userTransform = self.userTransform * inv
         self.updateTransform()
@@ -231,7 +231,7 @@ class CanvasItem(QtCore.QObject):
         if not self.isMovable():
             return
         self.rotate(180.)
-        # inv = pg.SRTTransform()
+        # inv = SRTTransform()
         # inv.scale(-1, -1)
         # self.userTransform = self.userTransform * inv #flip lr/ud
         # s=self.updateTransform()
@@ -316,7 +316,7 @@ class CanvasItem(QtCore.QObject):
 
 
     def resetTemporaryTransform(self):
-        self.tempTransform = pg.SRTTransform()  ## don't use Transform.reset()--this transform might be used elsewhere.
+        self.tempTransform = SRTTransform()  ## don't use Transform.reset()--this transform might be used elsewhere.
         self.updateTransform()
         
     def transform(self): 
@@ -368,7 +368,7 @@ class CanvasItem(QtCore.QObject):
         try:
             #self.userTranslate = pg.Point(tr['trans'])
             #self.userRotate = tr['rot']
-            self.userTransform = pg.SRTTransform(tr)
+            self.userTransform = SRTTransform(tr)
             self.updateTransform()
             
             self.selectBoxFromUser() ## move select box to match
@@ -377,7 +377,7 @@ class CanvasItem(QtCore.QObject):
         except:
             #self.userTranslate = pg.Point([0,0])
             #self.userRotate = 0
-            self.userTransform = pg.SRTTransform()
+            self.userTransform = SRTTransform()
             debug.printExc("Failed to load transform:")
         #print "set transform", self, self.userTranslate
         
@@ -431,9 +431,12 @@ class CanvasItem(QtCore.QObject):
     def selectionChanged(self, sel, multi):
         """
         Inform the item that its selection state has changed. 
-        Arguments:
-            sel: bool, whether the item is currently selected
-            multi: bool, whether there are multiple items currently selected
+        ============== =========================================================
+        **Arguments:**
+        sel            (bool) whether the item is currently selected
+        multi          (bool) whether there are multiple items currently 
+                       selected
+        ============== =========================================================
         """
         self.selectedAlone = sel and not multi
         self.showSelectBox()
@@ -504,6 +507,6 @@ class GroupCanvasItem(CanvasItem):
     def __init__(self, **opts):
         defOpts = {'movable': False, 'scalable': False}
         defOpts.update(opts)
-        item = pg.ItemGroup()
+        item = ItemGroup()
         CanvasItem.__init__(self, item, **defOpts)
     

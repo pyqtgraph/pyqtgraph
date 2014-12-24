@@ -1,9 +1,9 @@
 .. _api_widgets:
 
-Pyqtgraph's Widgets
+PyQtGraph's Widgets
 ===================
 
-Pyqtgraph provides several QWidget subclasses which are useful for building user interfaces. These widgets can generally be used in any Qt application and provide functionality that is frequently useful in science and engineering applications.
+PyQtGraph provides several QWidget subclasses which are useful for building user interfaces. These widgets can generally be used in any Qt application and provide functionality that is frequently useful in science and engineering applications.
 
 Contents:
 
@@ -17,10 +17,10 @@ Contents:
     gradientwidget
     histogramlutwidget
     parametertree
+    consolewidget
     colormapwidget
     scatterplotwidget
     graphicsview
-    rawimagewidget
     datatreewidget
     tablewidget
     treewidget

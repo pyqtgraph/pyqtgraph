@@ -5,10 +5,14 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile
+from __future__ import print_function
+
+import sys, traceback, time, gc, re, types, weakref, inspect, os, cProfile, threading
 from . import ptime
 from numpy import ndarray
 from .Qt import QtCore, QtGui
+from .util.mutex import Mutex
+from .util import cprint
 
 __ftraceDepth = 0
 def ftrace(func):
@@ -28,6 +32,57 @@ def ftrace(func):
         return rv
     return w
 
+
+class Tracer(object):
+    """
+    Prints every function enter/exit. Useful for debugging crashes / lockups.
+    """
+    def __init__(self):
+        self.count = 0
+        self.stack = []
+
+    def trace(self, frame, event, arg):
+        self.count += 1
+        # If it has been a long time since we saw the top of the stack, 
+        # print a reminder
+        if self.count % 1000 == 0:
+            print("----- current stack: -----")
+            for line in self.stack:
+                print(line)
+        if event == 'call':
+            line = "  " * len(self.stack) + ">> " + self.frameInfo(frame) 
+            print(line)
+            self.stack.append(line)
+        elif event == 'return':
+            self.stack.pop()
+            line = "  " * len(self.stack) + "<< " + self.frameInfo(frame) 
+            print(line)
+            if len(self.stack) == 0:
+                self.count = 0
+
+        return self.trace
+
+    def stop(self):
+        sys.settrace(None)
+
+    def start(self):
+        sys.settrace(self.trace)
+
+    def frameInfo(self, fr):
+        filename = fr.f_code.co_filename
+        funcname = fr.f_code.co_name
+        lineno = fr.f_lineno
+        callfr = sys._getframe(3)
+        callline = "%s %d" % (callfr.f_code.co_name, callfr.f_lineno)
+        args, _, _, value_dict = inspect.getargvalues(fr)
+        if len(args) and args[0] == 'self':
+            instance = value_dict.get('self', None)
+            if instance is not None:
+                cls = getattr(instance, '__class__', None)
+                if cls is not None:
+                    funcname = cls.__name__ + "." + funcname
+        return "%s: %s %s: %s" % (callline, filename, lineno, funcname)
+
 def warnOnException(func):
     """Decorator which catches/ignores exceptions and prints a stack trace."""
     def w(*args, **kwds):
@@ -37,17 +92,22 @@ def warnOnException(func):
             printExc('Ignored exception:')
     return w
 
-def getExc(indent=4, prefix='|  '):
-    tb = traceback.format_exc()
-    lines = []
-    for l in tb.split('\n'):        
-        lines.append(" "*indent + prefix + l)
-    return '\n'.join(lines)
+def getExc(indent=4, prefix='|  ', skip=1):
+    lines = (traceback.format_stack()[:-skip] 
+            + ["  ---- exception caught ---->\n"] 
+            + traceback.format_tb(sys.exc_info()[2])
+            + traceback.format_exception_only(*sys.exc_info()[:2]))
+    lines2 = []
+    for l in lines:
+        lines2.extend(l.strip('\n').split('\n'))
+    lines3 = [" "*indent + prefix + l for l in lines2]
+    return '\n'.join(lines3)
+
 
 def printExc(msg='', indent=4, prefix='|'):
     """Print an error message followed by an indented exception backtrace
     (This function is intended to be called within except: blocks)"""
-    exc = getExc(indent, prefix + '  ')
+    exc = getExc(indent, prefix + '  ', skip=2)
     print("[%s]  %s\n" % (time.strftime("%H:%M:%S"), msg))
     print(" "*indent + prefix + '='*30 + '>>')
     print(exc)
@@ -236,7 +296,8 @@ def refPathString(chain):
     
 def objectSize(obj, ignore=None, verbose=False, depth=0, recursive=False):
     """Guess how much memory an object is using"""
-    ignoreTypes = [types.MethodType, types.UnboundMethodType, types.BuiltinMethodType, types.FunctionType, types.BuiltinFunctionType]
+    ignoreTypes = ['MethodType', 'UnboundMethodType', 'BuiltinMethodType', 'FunctionType', 'BuiltinFunctionType']
+    ignoreTypes = [getattr(types, key) for key in ignoreTypes if hasattr(types, key)]
     ignoreRegex = re.compile('(method-wrapper|Flag|ItemChange|Option|Mode)')
     
     
@@ -365,84 +426,130 @@ class GarbageWatcher(object):
         return self.objs[item]
 
     
-class Profiler:
+
+
+class Profiler(object):
     """Simple profiler allowing measurement of multiple time intervals.
-    Arguments:
-        msg: message to print at start and finish of profiling
-        disabled: If true, profiler does nothing (so you can leave it in place)
-        delayed: If true, all messages are printed after call to finish()
-                 (this can result in more accurate time step measurements)
-        globalDelay: if True, all nested profilers delay printing until the top level finishes
-    
+
+    By default, profilers are disabled.  To enable profiling, set the
+    environment variable `PYQTGRAPHPROFILE` to a comma-separated list of
+    fully-qualified names of profiled functions.
+
+    Calling a profiler registers a message (defaulting to an increasing
+    counter) that contains the time elapsed since the last call.  When the
+    profiler is about to be garbage-collected, the messages are passed to the
+    outer profiler if one is running, or printed to stdout otherwise.
+
+    If `delayed` is set to False, messages are immediately printed instead.
+
     Example:
-        prof = Profiler('Function')
-          ... do stuff ...
-        prof.mark('did stuff')
-          ... do other stuff ...
-        prof.mark('did other stuff')
-        prof.finish()
+        def function(...):
+            profiler = Profiler()
+            ... do stuff ...
+            profiler('did stuff')
+            ... do other stuff ...
+            profiler('did other stuff')
+            # profiler is garbage-collected and flushed at function end
+
+    If this function is a method of class C, setting `PYQTGRAPHPROFILE` to
+    "C.function" (without the module name) will enable this profiler.
+
+    For regular functions, use the qualified name of the function, stripping
+    only the initial "pyqtgraph." prefix from the module.
     """
-    depth = 0
-    msgs = []
+
+    _profilers = os.environ.get("PYQTGRAPHPROFILE", None)
+    _profilers = _profilers.split(",") if _profilers is not None else []
     
-    def __init__(self, msg="Profiler", disabled=False, delayed=True, globalDelay=True):
-        self.disabled = disabled
-        if disabled: 
-            return
-        
-        self.markCount = 0
-        self.finished = False
-        self.depth = Profiler.depth 
-        Profiler.depth += 1
-        if not globalDelay:
-            self.msgs = []
-        self.delayed = delayed
-        self.msg = "  "*self.depth + msg
-        msg2 = self.msg + " >>> Started"
-        if self.delayed:
-            self.msgs.append(msg2)
-        else:
-            print(msg2)
-        self.t0 = ptime.time()
-        self.t1 = self.t0
+    _depth = 0
+    _msgs = []
+    disable = False  # set this flag to disable all or individual profilers at runtime
     
-    def mark(self, msg=None):
-        if self.disabled: 
-            return
+    class DisabledProfiler(object):
+        def __init__(self, *args, **kwds):
+            pass
+        def __call__(self, *args):
+            pass
+        def finish(self):
+            pass
+        def mark(self, msg=None):
+            pass
+    _disabledProfiler = DisabledProfiler()
         
+    def __new__(cls, msg=None, disabled='env', delayed=True):
+        """Optionally create a new profiler based on caller's qualname.
+        """
+        if disabled is True or (disabled == 'env' and len(cls._profilers) == 0):
+            return cls._disabledProfiler
+                        
+        # determine the qualified name of the caller function
+        caller_frame = sys._getframe(1)
+        try:
+            caller_object_type = type(caller_frame.f_locals["self"])
+        except KeyError: # we are in a regular function
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+        else: # we are in a method
+            qualifier = caller_object_type.__name__
+        func_qualname = qualifier + "." + caller_frame.f_code.co_name
+        if disabled == 'env' and func_qualname not in cls._profilers: # don't do anything
+            return cls._disabledProfiler
+        # create an actual profiling object
+        cls._depth += 1
+        obj = super(Profiler, cls).__new__(cls)
+        obj._name = msg or func_qualname
+        obj._delayed = delayed
+        obj._markCount = 0
+        obj._finished = False
+        obj._firstTime = obj._lastTime = ptime.time()
+        obj._newMsg("> Entering " + obj._name)
+        return obj
+
+    def __call__(self, msg=None):
+        """Register or print a new message with timing information.
+        """
+        if self.disable:
+            return
         if msg is None:
-            msg = str(self.markCount)
-        self.markCount += 1
+            msg = str(self._markCount)
+        self._markCount += 1
+        newTime = ptime.time()
+        self._newMsg("  %s: %0.4f ms", 
+                     msg, (newTime - self._lastTime) * 1000)
+        self._lastTime = newTime
         
-        t1 = ptime.time()
-        msg2 = "  "+self.msg+" "+msg+" "+"%gms" % ((t1-self.t1)*1000)
-        if self.delayed:
-            self.msgs.append(msg2)
+    def mark(self, msg=None):
+        self(msg)
+
+    def _newMsg(self, msg, *args):
+        msg = "  " * (self._depth - 1) + msg
+        if self._delayed:
+            self._msgs.append((msg, args))
         else:
-            print(msg2)
-        self.t1 = ptime.time()  ## don't measure time it took to print
-        
+            self.flush()
+            print(msg % args)
+
+    def __del__(self):
+        self.finish()
+    
     def finish(self, msg=None):
-        if self.disabled or self.finished: 
-            return
-        
+        """Add a final message; flush the message list if no parent profiler.
+        """
+        if self._finished or self.disable:
+            return        
+        self._finished = True
         if msg is not None:
-            self.mark(msg)
-        t1 = ptime.time()
-        msg = self.msg + ' <<< Finished, total time: %gms' % ((t1-self.t0)*1000)
-        if self.delayed:
-            self.msgs.append(msg)
-            if self.depth == 0:
-                for line in self.msgs:
-                    print(line)
-                Profiler.msgs = []
-        else:
-            print(msg)
-        Profiler.depth = self.depth
-        self.finished = True
+            self(msg)
+        self._newMsg("< Exiting %s, total time: %0.4f ms", 
+                     self._name, (ptime.time() - self._firstTime) * 1000)
+        type(self)._depth -= 1
+        if self._depth < 1:
+            self.flush()
         
-            
-        
+    def flush(self):
+        if self._msgs:
+            print("\n".join([m[0]%m[1] for m in self._msgs]))
+            type(self)._msgs = []
+
 
 def profile(code, name='profile_run', sort='cumulative', num=30):
     """Common-use for cProfile"""
@@ -573,12 +680,12 @@ class ObjTracker(object):
         
         ## Which refs have disappeared since call to start()  (these are only displayed once, then forgotten.)
         delRefs = {}
-        for i in self.startRefs.keys():
+        for i in list(self.startRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.startRefs[i]
                 del self.startRefs[i]
                 self.forgetRef(delRefs[i])
-        for i in self.newRefs.keys():
+        for i in list(self.newRefs.keys()):
             if i not in refs:
                 delRefs[i] = self.newRefs[i]
                 del self.newRefs[i]
@@ -616,7 +723,8 @@ class ObjTracker(object):
         for k in self.startCount:
             c1[k] = c1.get(k, 0) - self.startCount[k]
         typs = list(c1.keys())
-        typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        #typs.sort(lambda a,b: cmp(c1[a], c1[b]))
+        typs.sort(key=lambda a: c1[a])
         for t in typs:
             if c1[t] == 0:
                 continue
@@ -716,7 +824,8 @@ class ObjTracker(object):
             c = count.get(typ, [0,0])
             count[typ] =  [c[0]+1, c[1]+objectSize(obj)]
         typs = list(count.keys())
-        typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        #typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
+        typs.sort(key=lambda a: count[a][1])
         
         for t in typs:
             line = "  %d\t%d\t%s" % (count[t][0], count[t][1], t)
@@ -776,14 +885,15 @@ def describeObj(obj, depth=4, path=None, ignore=None):
 def typeStr(obj):
     """Create a more useful type string by making <instance> types report their class."""
     typ = type(obj)
-    if typ == types.InstanceType:
+    if typ == getattr(types, 'InstanceType', None):
         return "<instance of %s>" % obj.__class__.__name__
     else:
         return str(typ)
     
 def searchRefs(obj, *args):
     """Pseudo-interactive function for tracing references backward.
-    Arguments:
+    **Arguments:**
+    
         obj:   The initial object from which to start searching
         args:  A set of string or int arguments.
                each integer selects one of obj's referrers to be the new 'obj'
@@ -795,7 +905,8 @@ def searchRefs(obj, *args):
                   ro: return obj
                   rr: return list of obj's referrers
     
-    Examples:
+    Examples::
+    
        searchRefs(obj, 't')                    ## Print types of all objects referring to obj
        searchRefs(obj, 't', 0, 't')            ##   ..then select the first referrer and print the types of its referrers
        searchRefs(obj, 't', 0, 't', 'l')       ##   ..also print lengths of the last set of referrers
@@ -928,6 +1039,7 @@ def qObjectReport(verbose=False):
         
 
 class PrintDetector(object):
+    """Find code locations that print to stdout."""
     def __init__(self):
         self.stdout = sys.stdout
         sys.stdout = self
@@ -944,3 +1056,114 @@ class PrintDetector(object):
         
     def flush(self):
         self.stdout.flush()
+
+
+def listQThreads():
+    """Prints Thread IDs (Qt's, not OS's) for all QThreads."""
+    thr = findObj('[Tt]hread')
+    thr = [t for t in thr if isinstance(t, QtCore.QThread)]
+    import sip
+    for t in thr:
+        print("--> ", t)
+        print("     Qt ID: 0x%x" % sip.unwrapinstance(t))
+
+
+def pretty(data, indent=''):
+    """Format nested dict/list/tuple structures into a more human-readable string
+    This function is a bit better than pprint for displaying OrderedDicts.
+    """
+    ret = ""
+    ind2 = indent + "    "
+    if isinstance(data, dict):
+        ret = indent+"{\n"
+        for k, v in data.iteritems():
+            ret += ind2 + repr(k) + ":  " + pretty(v, ind2).strip() + "\n"
+        ret += indent+"}\n"
+    elif isinstance(data, list) or isinstance(data, tuple):
+        s = repr(data)
+        if len(s) < 40:
+            ret += indent + s
+        else:
+            if isinstance(data, list):
+                d = '[]'
+            else:
+                d = '()'
+            ret = indent+d[0]+"\n"
+            for i, v in enumerate(data):
+                ret += ind2 + str(i) + ":  " + pretty(v, ind2).strip() + "\n"
+            ret += indent+d[1]+"\n"
+    else:
+        ret += indent + repr(data)
+    return ret
+
+
+class PeriodicTrace(object):
+    """ 
+    Used to debug freezing by starting a new thread that reports on the 
+    location of the main thread periodically.
+    """
+    class ReportThread(QtCore.QThread):
+        def __init__(self):
+            self.frame = None
+            self.ind = 0
+            self.lastInd = None
+            self.lock = Mutex()
+            QtCore.QThread.__init__(self)
+
+        def notify(self, frame):
+            with self.lock:
+                self.frame = frame
+                self.ind += 1
+
+        def run(self):
+            while True:
+                time.sleep(1)
+                with self.lock:
+                    if self.lastInd != self.ind:
+                        print("== Trace %d: ==" % self.ind)
+                        traceback.print_stack(self.frame)
+                        self.lastInd = self.ind
+
+    def __init__(self):
+        self.mainThread = threading.current_thread()
+        self.thread = PeriodicTrace.ReportThread()
+        self.thread.start()
+        sys.settrace(self.trace)
+
+    def trace(self, frame, event, arg):
+        if threading.current_thread() is self.mainThread: # and 'threading' not in frame.f_code.co_filename:
+            self.thread.notify(frame)
+            # print("== Trace ==", event, arg)
+            # traceback.print_stack(frame)
+        return self.trace
+
+
+
+class ThreadColor(object):
+    """
+    Wrapper on stdout/stderr that colors text by the current thread ID.
+
+    *stream* must be 'stdout' or 'stderr'.
+    """
+    colors = {}
+    lock = Mutex()
+
+    def __init__(self, stream):
+        self.stream = getattr(sys, stream)
+        self.err = stream == 'stderr'
+        setattr(sys, stream, self)
+
+    def write(self, msg):
+        with self.lock:
+            cprint.cprint(self.stream, self.color(), msg, -1, stderr=self.err)
+
+    def flush(self):
+        with self.lock:
+            self.stream.flush()
+
+    def color(self):
+        tid = threading.current_thread()
+        if tid not in self.colors:
+            c = (len(self.colors) % 15) + 1
+            self.colors[tid] = c
+        return self.colors[tid]

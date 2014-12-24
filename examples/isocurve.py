@@ -10,7 +10,6 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
-import scipy.ndimage as ndi
 
 app = QtGui.QApplication([])
 
@@ -18,7 +17,7 @@ app = QtGui.QApplication([])
 frames = 200
 data = np.random.normal(size=(frames,30,30), loc=0, scale=100)
 data = np.concatenate([data, data], axis=0)
-data = ndi.gaussian_filter(data, (10, 10, 10))[frames/2:frames + frames/2]
+data = pg.gaussianFilter(data, (10, 10, 10))[frames/2:frames + frames/2]
 data[:, 15:16, 15:17] += 1
 
 win = pg.GraphicsWindow()

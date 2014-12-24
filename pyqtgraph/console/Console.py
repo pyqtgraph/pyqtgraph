@@ -1,14 +1,14 @@
 
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE
 import sys, re, os, time, traceback, subprocess
-import pyqtgraph as pg
 if USE_PYSIDE:
     from . import template_pyside as template
 else:
     from . import template_pyqt as template
     
-import pyqtgraph.exceptionHandling as exceptionHandling
+from .. import exceptionHandling as exceptionHandling
 import pickle
+from .. import getConfigOption
 
 class ConsoleWidget(QtGui.QWidget):
     """
@@ -31,16 +31,16 @@ class ConsoleWidget(QtGui.QWidget):
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
-        ============  ============================================================================
-        Arguments:
-        namespace     dictionary containing the initial variables present in the default namespace
-        historyFile   optional file for storing command history
-        text          initial text to display in the console window
-        editor        optional string for invoking code editor (called when stack trace entries are 
-                      double-clicked). May contain {fileName} and {lineNum} format keys. Example:: 
+        ==============  ============================================================================
+        **Arguments:**
+        namespace       dictionary containing the initial variables present in the default namespace
+        historyFile     optional file for storing command history
+        text            initial text to display in the console window
+        editor          optional string for invoking code editor (called when stack trace entries are 
+                        double-clicked). May contain {fileName} and {lineNum} format keys. Example:: 
                       
-                        editorCommand --loadfile {fileName} --gotoline {lineNum}
-        ============  =============================================================================
+                            editorCommand --loadfile {fileName} --gotoline {lineNum}
+        ==============  =============================================================================
         """
         QtGui.QWidget.__init__(self, parent)
         if namespace is None:
@@ -281,7 +281,7 @@ class ConsoleWidget(QtGui.QWidget):
     def stackItemDblClicked(self, item):
         editor = self.editor
         if editor is None:
-            editor = pg.getConfigOption('editorCommand')
+            editor = getConfigOption('editorCommand')
         if editor is None:
             return
         tb = self.currentFrame()
@@ -341,6 +341,17 @@ class ConsoleWidget(QtGui.QWidget):
         filename = tb.tb_frame.f_code.co_filename
         function = tb.tb_frame.f_code.co_name
         
+        filterStr = str(self.ui.filterText.text())
+        if filterStr != '':
+            if isinstance(exc, Exception):
+                msg = exc.message
+            elif isinstance(exc, basestring):
+                msg = exc
+            else:
+                msg = repr(exc)
+            match = re.search(filterStr, "%s:%s:%s" % (filename, function, msg))
+            return match is not None
+
         ## Go through a list of common exception points we like to ignore:
         if excType is GeneratorExit or excType is StopIteration:
             return False

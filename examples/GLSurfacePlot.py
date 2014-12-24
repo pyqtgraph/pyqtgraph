@@ -10,7 +10,6 @@ import initExample
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import scipy.ndimage as ndi
 import numpy as np
 
 ## Create a GL View widget to display data
@@ -29,7 +28,7 @@ w.addItem(g)
 
 ## Simple surface plot example
 ## x, y values are not specified, so assumed to be 0:50
-z = ndi.gaussian_filter(np.random.normal(size=(50,50)), (1,1))
+z = pg.gaussianFilter(np.random.normal(size=(50,50)), (1,1))
 p1 = gl.GLSurfacePlotItem(z=z, shader='shaded', color=(0.5, 0.5, 1, 1))
 p1.scale(16./49., 16./49., 1.0)
 p1.translate(-18, 2, 0)
@@ -46,7 +45,7 @@ w.addItem(p2)
 
 
 ## Manually specified colors
-z = ndi.gaussian_filter(np.random.normal(size=(50,50)), (1,1))
+z = pg.gaussianFilter(np.random.normal(size=(50,50)), (1,1))
 x = np.linspace(-12, 12, 50)
 y = np.linspace(-12, 12, 50)
 colors = np.ones((50,50,4), dtype=float)

@@ -3,8 +3,8 @@ GraphicsWidget displaying an image histogram along with gradient editor. Can be 
 """
 
 
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 from .ViewBox import *
 from .GradientEditorItem import *
@@ -12,11 +12,12 @@ from .LinearRegionItem import *
 from .PlotDataItem import *
 from .AxisItem import *
 from .GridItem import *
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Point import Point
+from .. import functions as fn
 import numpy as np
-import pyqtgraph.debug as debug
+from .. import debug as debug
 
+import weakref
 
 __all__ = ['HistogramLUTItem']
 
@@ -42,13 +43,13 @@ class HistogramLUTItem(GraphicsWidget):
         """
         GraphicsWidget.__init__(self)
         self.lut = None
-        self.imageItem = None
+        self.imageItem = lambda: None  # fake a dead weakref
         
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1,1,1,1)
         self.layout.setSpacing(0)
-        self.vb = ViewBox()
+        self.vb = ViewBox(parent=self)
         self.vb.setMaximumWidth(152)
         self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
@@ -58,7 +59,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.region = LinearRegionItem([0, 1], LinearRegionItem.Horizontal)
         self.region.setZValue(1000)
         self.vb.addItem(self.region)
-        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, showValues=False)
+        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
         self.layout.addItem(self.axis, 0, 0)
         self.layout.addItem(self.vb, 0, 1)
         self.layout.addItem(self.gradient, 0, 2)
@@ -138,7 +139,7 @@ class HistogramLUTItem(GraphicsWidget):
         #self.region.setBounds([vr.top(), vr.bottom()])
 
     def setImageItem(self, img):
-        self.imageItem = img
+        self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
         img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
         #self.gradientChanged()
@@ -150,11 +151,11 @@ class HistogramLUTItem(GraphicsWidget):
         self.update()
     
     def gradientChanged(self):
-        if self.imageItem is not None:
+        if self.imageItem() is not None:
             if self.gradient.isLookupTrivial():
-                self.imageItem.setLookupTable(None) #lambda x: x.astype(np.uint8))
+                self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
             else:
-                self.imageItem.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+                self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
             
         self.lut = None
         #if self.imageItem is not None:
@@ -178,25 +179,24 @@ class HistogramLUTItem(GraphicsWidget):
         #self.update()
 
     def regionChanging(self):
-        if self.imageItem is not None:
-            self.imageItem.setLevels(self.region.getRegion())
+        if self.imageItem() is not None:
+            self.imageItem().setLevels(self.region.getRegion())
         self.sigLevelsChanged.emit(self)
         self.update()
 
     def imageChanged(self, autoLevel=False, autoRange=False):
-        prof = debug.Profiler('HistogramLUTItem.imageChanged', disabled=True)
-        h = self.imageItem.getHistogram()
-        prof.mark('get histogram')
+        profiler = debug.Profiler()
+        h = self.imageItem().getHistogram()
+        profiler('get histogram')
         if h[0] is None:
             return
         self.plot.setData(*h)
-        prof.mark('set plot')
+        profiler('set plot')
         if autoLevel:
             mn = h[0][0]
             mx = h[0][-1]
             self.region.setRegion([mn, mx])
-            prof.mark('set region')
-        prof.finish()
+            profiler('set region')
             
     def getLevels(self):
         return self.region.getRegion()

@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
 from .. import shaders
-from pyqtgraph import QtGui
+from ... import QtGui
 import numpy as np
 
 __all__ = ['GLScatterPlotItem']
@@ -28,8 +28,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         colors unchanged, etc.
         
         ====================  ==================================================
-        Arguments:
-        ------------------------------------------------------------------------
+        **Arguments:**
         pos                   (N,3) array of floats specifying point locations.
         color                 (N,4) array of floats (0.0-1.0) specifying
                               spot colors OR a tuple of floats specifying
@@ -60,14 +59,15 @@ class GLScatterPlotItem(GLGraphicsItem):
         w = 64
         def fn(x,y):
             r = ((x-w/2.)**2 + (y-w/2.)**2) ** 0.5
-            return 200 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
+            return 255 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
         pData = np.empty((w, w, 4))
         pData[:] = 255
         pData[:,:,3] = np.fromfunction(fn, pData.shape[:2])
         #print pData.shape, pData.min(), pData.max()
         pData = pData.astype(np.ubyte)
         
-        self.pointTexture = glGenTextures(1)
+        if getattr(self, "pointTexture", None) is None:
+            self.pointTexture = glGenTextures(1)
         glActiveTexture(GL_TEXTURE0)
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.pointTexture)

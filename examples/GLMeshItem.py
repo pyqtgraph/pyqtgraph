@@ -53,21 +53,26 @@ m1.translate(5, 5, 0)
 m1.setGLOptions('additive')
 w.addItem(m1)
 
+
 ## Example 2:
 ## Array of vertex positions, three per face
+verts = np.empty((36, 3, 3), dtype=np.float32)
+theta = np.linspace(0, 2*np.pi, 37)[:-1]
+verts[:,0] = np.vstack([2*np.cos(theta), 2*np.sin(theta), [0]*36]).T
+verts[:,1] = np.vstack([4*np.cos(theta+0.2), 4*np.sin(theta+0.2), [-1]*36]).T
+verts[:,2] = np.vstack([4*np.cos(theta-0.2), 4*np.sin(theta-0.2), [1]*36]).T
+    
 ## Colors are specified per-vertex
-
-verts = verts[faces]  ## Same mesh geometry as example 2, but now we are passing in 12 vertexes
 colors = np.random.random(size=(verts.shape[0], 3, 4))
-#colors[...,3] = 1.0
-
-m2 = gl.GLMeshItem(vertexes=verts, vertexColors=colors, smooth=False, shader='balloon')
+m2 = gl.GLMeshItem(vertexes=verts, vertexColors=colors, smooth=False, shader='balloon', 
+                   drawEdges=True, edgeColor=(1, 1, 0, 1))
 m2.translate(-5, 5, 0)
 w.addItem(m2)
 
 
+
 ## Example 3:
-## icosahedron
+## sphere
 
 md = gl.MeshData.sphere(rows=10, cols=20)
 #colors = np.random.random(size=(md.faceCount(), 4))
@@ -79,7 +84,7 @@ colors[:,1] = np.linspace(0, 1, colors.shape[0])
 md.setFaceColors(colors)
 m3 = gl.GLMeshItem(meshdata=md, smooth=False)#, shader='balloon')
 
-#m3.translate(-5, -5, 0)
+m3.translate(5, -5, 0)
 w.addItem(m3)
 
 
@@ -91,49 +96,29 @@ m4 = gl.GLMeshItem(meshdata=md, smooth=False, drawFaces=False, drawEdges=True, e
 m4.translate(0,10,0)
 w.addItem(m4)
 
+# Example 5:
+# cylinder
+md = gl.MeshData.cylinder(rows=10, cols=20, radius=[1., 2.0], length=5.)
+md2 = gl.MeshData.cylinder(rows=10, cols=20, radius=[2., 0.5], length=10.)
+colors = np.ones((md.faceCount(), 4), dtype=float)
+colors[::2,0] = 0
+colors[:,1] = np.linspace(0, 1, colors.shape[0])
+md.setFaceColors(colors)
+m5 = gl.GLMeshItem(meshdata=md, smooth=True, drawEdges=True, edgeColor=(1,0,0,1), shader='balloon')
+colors = np.ones((md.faceCount(), 4), dtype=float)
+colors[::2,0] = 0
+colors[:,1] = np.linspace(0, 1, colors.shape[0])
+md2.setFaceColors(colors)
+m6 = gl.GLMeshItem(meshdata=md2, smooth=True, drawEdges=False, shader='balloon')
+m6.translate(0,0,7.5)
+
+m6.rotate(0., 0, 1, 1)
+#m5.translate(-3,3,0)
+w.addItem(m5)
+w.addItem(m6)
 
 
 
-
-
-#def psi(i, j, k, offset=(25, 25, 50)):
-    #x = i-offset[0]
-    #y = j-offset[1]
-    #z = k-offset[2]
-    #th = np.arctan2(z, (x**2+y**2)**0.5)
-    #phi = np.arctan2(y, x)
-    #r = (x**2 + y**2 + z **2)**0.5
-    #a0 = 1
-    ##ps = (1./81.) * (2./np.pi)**0.5 * (1./a0)**(3/2) * (6 - r/a0) * (r/a0) * np.exp(-r/(3*a0)) * np.cos(th)
-    #ps = (1./81.) * 1./(6.*np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * np.exp(-r/(3*a0)) * (3 * np.cos(th)**2 - 1)
-    
-    #return ps
-    
-    ##return ((1./81.) * (1./np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * (r/a0) * np.exp(-r/(3*a0)) * np.sin(th) * np.cos(th) * np.exp(2 * 1j * phi))**2 
-
-
-#print("Generating scalar field..")
-#data = np.abs(np.fromfunction(psi, (50,50,100)))
-
-
-##data = np.fromfunction(lambda i,j,k: np.sin(0.2*((i-25)**2+(j-15)**2+k**2)**0.5), (50,50,50)); 
-#print("Generating isosurface..")
-#verts = pg.isosurface(data, data.max()/4.)
-
-#md = gl.MeshData.MeshData(vertexes=verts)
-
-#colors = np.ones((md.vertexes(indexed='faces').shape[0], 4), dtype=float)
-#colors[:,3] = 0.3
-#colors[:,2] = np.linspace(0, 1, colors.shape[0])
-#m1 = gl.GLMeshItem(meshdata=md, color=colors, smooth=False)
-
-#w.addItem(m1)
-#m1.translate(-25, -25, -20)
-
-#m2 = gl.GLMeshItem(vertexes=verts, color=colors, smooth=True)
-
-#w.addItem(m2)
-#m2.translate(-25, -25, -50)
     
 
 

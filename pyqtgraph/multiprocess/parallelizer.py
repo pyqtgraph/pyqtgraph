@@ -40,7 +40,7 @@ class Parallelize(object):
     def __init__(self, tasks=None, workers=None, block=True, progressDialog=None, randomReseed=True, **kwds):
         """
         ===============  ===================================================================
-        Arguments:
+        **Arguments:**
         tasks            list of objects to be processed (Parallelize will determine how to 
                          distribute the tasks). If unspecified, then each worker will receive
                          a single task with a unique id number.
@@ -63,8 +63,8 @@ class Parallelize(object):
             self.showProgress = True
             if isinstance(progressDialog, basestring):
                 progressDialog = {'labelText': progressDialog}
-            import pyqtgraph as pg
-            self.progressDlg = pg.ProgressDialog(**progressDialog)
+            from ..widgets.ProgressDialog import ProgressDialog
+            self.progressDlg = ProgressDialog(**progressDialog)
         
         if workers is None:
             workers = self.suggestedWorkerCount()

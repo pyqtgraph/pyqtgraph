@@ -58,8 +58,9 @@ s1.sigClicked.connect(clicked)
 
 
 ## 2) Spots are transform-invariant, but not identical (top-right plot). 
-## In this case, drawing is as fast as 1), but there is more startup overhead
-## and memory usage since each spot generates its own pre-rendered image.
+## In this case, drawing is almsot as fast as 1), but there is more startup 
+## overhead and memory usage since each spot generates its own pre-rendered 
+## image.
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
 pos = np.random.normal(size=(2,n), scale=1e-5)

@@ -1,12 +1,12 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 try:
-    from pyqtgraph.Qt import QtOpenGL
+    from ..Qt import QtOpenGL
     from OpenGL.GL import *
     HAVE_OPENGL = True
 except ImportError:
     HAVE_OPENGL = False
 
-import pyqtgraph.functions as fn
+from .. import functions as fn
 import numpy as np
 
 class RawImageWidget(QtGui.QWidget):

@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from .Qt import QtCore, QtGui
 from .Vector import Vector
-from .SRTTransform import SRTTransform
-import pyqtgraph as pg
+from .Transform3D import Transform3D
+from .Vector import Vector
 import numpy as np
-import scipy.linalg
 
-class SRTTransform3D(pg.Transform3D):
+class SRTTransform3D(Transform3D):
     """4x4 Transform matrix that can always be represented as a combination of 3 matrices: scale * rotate * translate
     This transform has no shear; angles are always preserved.
     """
     def __init__(self, init=None):
-        pg.Transform3D.__init__(self)
+        Transform3D.__init__(self)
         self.reset()
         if init is None:
             return
@@ -44,14 +43,14 @@ class SRTTransform3D(pg.Transform3D):
 
         
     def getScale(self):
-        return pg.Vector(self._state['scale'])
+        return Vector(self._state['scale'])
         
     def getRotation(self):
         """Return (angle, axis) of rotation"""
-        return self._state['angle'], pg.Vector(self._state['axis'])
+        return self._state['angle'], Vector(self._state['axis'])
         
     def getTranslation(self):
-        return pg.Vector(self._state['pos'])
+        return Vector(self._state['pos'])
     
     def reset(self):
         self._state = {
@@ -118,11 +117,13 @@ class SRTTransform3D(pg.Transform3D):
         The input matrix must be affine AND have no shear,
         otherwise the conversion will most likely fail.
         """
+        import numpy.linalg
         for i in range(4):
             self.setRow(i, m.row(i))
         m = self.matrix().reshape(4,4)
         ## translation is 4th column
-        self._state['pos'] = m[:3,3] 
+        self._state['pos'] = m[:3,3]
+        
         ## scale is vector-length of first three columns
         scale = (m[:3,:3]**2).sum(axis=0)**0.5
         ## see whether there is an inversion
@@ -132,9 +133,9 @@ class SRTTransform3D(pg.Transform3D):
         self._state['scale'] = scale
         
         ## rotation axis is the eigenvector with eigenvalue=1
-        r = m[:3, :3] / scale[:, np.newaxis]
+        r = m[:3, :3] / scale[np.newaxis, :]
         try:
-            evals, evecs = scipy.linalg.eig(r)
+            evals, evecs = numpy.linalg.eig(r)
         except:
             print("Rotation matrix: %s" % str(r))
             print("Scale: %s" % str(scale))
@@ -169,7 +170,7 @@ class SRTTransform3D(pg.Transform3D):
         
     def as2D(self):
         """Return a QTransform representing the x,y portion of this transform (if possible)"""
-        return pg.SRTTransform(self)
+        return SRTTransform(self)
 
     #def __div__(self, t):
         #"""A / B  ==  B^-1 * A"""
@@ -202,11 +203,11 @@ class SRTTransform3D(pg.Transform3D):
         self.update()
 
     def update(self):
-        pg.Transform3D.setToIdentity(self)
+        Transform3D.setToIdentity(self)
         ## modifications to the transform are multiplied on the right, so we need to reverse order here.
-        pg.Transform3D.translate(self, *self._state['pos'])
-        pg.Transform3D.rotate(self, self._state['angle'], *self._state['axis'])
-        pg.Transform3D.scale(self, *self._state['scale'])
+        Transform3D.translate(self, *self._state['pos'])
+        Transform3D.rotate(self, self._state['angle'], *self._state['axis'])
+        Transform3D.scale(self, *self._state['scale'])
 
     def __repr__(self):
         return str(self.saveState())
@@ -311,4 +312,4 @@ if __name__ == '__main__':
     w1.sigRegionChanged.connect(update)
     #w2.sigRegionChanged.connect(update2)
     
-    	
+from .SRTTransform import SRTTransform

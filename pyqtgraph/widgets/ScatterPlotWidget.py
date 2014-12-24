@@ -1,12 +1,13 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .PlotWidget import PlotWidget
 from .DataFilterWidget import DataFilterParameter
 from .ColorMapWidget import ColorMapParameter
-import pyqtgraph.parametertree as ptree
-import pyqtgraph.functions as fn
+from .. import parametertree as ptree
+from .. import functions as fn
+from .. import getConfigOption
+from ..graphicsItems.TextItem import TextItem
 import numpy as np
-from pyqtgraph.pgcollections import OrderedDict
-import pyqtgraph as pg
+from ..pgcollections import OrderedDict
 
 __all__ = ['ScatterPlotWidget']
 
@@ -48,9 +49,9 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.ctrlPanel.addWidget(self.ptree)
         self.addWidget(self.plot)
         
-        bg = pg.mkColor(pg.getConfigOption('background'))
+        bg = fn.mkColor(getConfigOption('background'))
         bg.setAlpha(150)
-        self.filterText = pg.TextItem(border=pg.getConfigOption('foreground'), color=bg)
+        self.filterText = TextItem(border=getConfigOption('foreground'), color=bg)
         self.filterText.setPos(60,20)
         self.filterText.setParentItem(self.plot.plotItem)
         
@@ -193,7 +194,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
                 imax = int(xy[ax].max()) if len(xy[ax]) > 0 else 0
                 for i in range(imax+1):
                     keymask = xy[ax] == i
-                    scatter = pg.pseudoScatter(xy[1-ax][keymask], bidir=True)
+                    scatter = fn.pseudoScatter(xy[1-ax][keymask], bidir=True)
                     if len(scatter) == 0:
                         continue
                     smax = np.abs(scatter).max()

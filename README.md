@@ -10,7 +10,7 @@ Copyright 2012 Luke Campagnola, University of North Carolina at Chapel Hill
 Maintainer
 ----------
 
-  * Luke Campagnola   ('luke.campagnola@%s.com' % 'gmail')
+  * Luke Campagnola   <luke.campagnola@gmail.com>
 
 Contributors
 ------------
@@ -23,14 +23,24 @@ Contributors
   * Ulrich Leutner
   * Felix Schill
   * Guillaume Poulin
+  * Antony Lee
+  * Mattias Põldaru
+  * Thomas S.
+  * Fabio Zadrozny
+  * Mikhail Terekhov
+  * Pietro Zambelli
+  * Stefan Holzmann
+  * Nicholas TJ
+  * John David Reaver
+  * David Kaplan
 
 Requirements
 ------------
 
   * PyQt 4.7+ or PySide
   * python 2.6, 2.7, or 3.x
-  * numpy, scipy
-  * For 3D graphics: pyopengl
+  * NumPy 
+  * For 3D graphics: pyopengl and qt-opengl
   * Known to run on Windows, Linux, and Mac.
 
 Support
@@ -42,10 +52,14 @@ Installation Methods
 --------------------
 
   * To use with a specific project, simply copy the pyqtgraph subdirectory
-      anywhere that is importable from your project
+      anywhere that is importable from your project. PyQtGraph may also be
+      used as a git subtree by cloning the git-core repository from github.
   * To install system-wide from source distribution:
         `$ python setup.py install`
-  * For instalation packages, see the website (pyqtgraph.org)
+  * For installation packages, see the website (pyqtgraph.org)
+  * On debian-like systems, pyqtgraph requires the following packages:
+        python-numpy, python-qt4 | python-pyside
+        For 3D support: python-opengl, python-qt4-gl | python-pyside.qtopengl
 
 Documentation
 -------------
@@ -61,4 +75,4 @@ Some (incomplete) documentation exists at this time.
           `$ make html`
   
 Please feel free to pester Luke or post to the forum if you need a specific
-  section of documentation.
+  section of documentation to be expanded.

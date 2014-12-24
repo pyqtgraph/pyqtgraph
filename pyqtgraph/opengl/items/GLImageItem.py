@@ -1,6 +1,6 @@
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
-from pyqtgraph.Qt import QtGui
+from ...Qt import QtGui
 import numpy as np
 
 __all__ = ['GLImageItem']
@@ -25,13 +25,21 @@ class GLImageItem(GLGraphicsItem):
         """
         
         self.smooth = smooth
-        self.data = data
+        self._needUpdate = False
         GLGraphicsItem.__init__(self)
+        self.setData(data)
         self.setGLOptions(glOptions)
         
     def initializeGL(self):
         glEnable(GL_TEXTURE_2D)
         self.texture = glGenTextures(1)
+        
+    def setData(self, data):
+        self.data = data
+        self._needUpdate = True
+        self.update()
+        
+    def _updateTexture(self):
         glBindTexture(GL_TEXTURE_2D, self.texture)
         if self.smooth:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -63,7 +71,8 @@ class GLImageItem(GLGraphicsItem):
 
                 
     def paint(self):
-        
+        if self._needUpdate:
+            self._updateTexture()
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         

@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = None
+__version__ = '0.9.9'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -48,14 +48,15 @@ else:
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
-    'foreground': (150, 150, 150),  ## default foreground color for axes, labels, etc.
-    'background': (0, 0, 0),        ## default background for GraphicsWidget
+    'foreground': 'd',  ## default foreground color for axes, labels, etc.
+    'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'useWeave': True,       ## Use weave to speed up some operations, if it is available
+    'useWeave': False,       ## Use weave to speed up some operations, if it is available
     'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
+    'crashWarning': False,  # If True, print warnings about situations that may result in a crash
 } 
 
 
@@ -130,56 +131,119 @@ if __version__ is None and not hasattr(sys, 'frozen') and sys.version_info[0] ==
 ## Import almost everything to make it available from a single namespace
 ## don't import the more complex systems--canvas, parametertree, flowchart, dockarea
 ## these must be imported separately.
-from . import frozenSupport
-def importModules(path, globals, locals, excludes=()):
-    """Import all modules residing within *path*, return a dict of name: module pairs.
+#from . import frozenSupport
+#def importModules(path, globals, locals, excludes=()):
+    #"""Import all modules residing within *path*, return a dict of name: module pairs.
     
-    Note that *path* MUST be relative to the module doing the import.    
-    """
-    d = os.path.join(os.path.split(globals['__file__'])[0], path)
-    files = set()
-    for f in frozenSupport.listdir(d):
-        if frozenSupport.isdir(os.path.join(d, f)) and f not in ['__pycache__', 'tests']:
-            files.add(f)
-        elif f[-3:] == '.py' and f != '__init__.py':
-            files.add(f[:-3])
-        elif f[-4:] == '.pyc' and f != '__init__.pyc':
-            files.add(f[:-4])
+    #Note that *path* MUST be relative to the module doing the import.    
+    #"""
+    #d = os.path.join(os.path.split(globals['__file__'])[0], path)
+    #files = set()
+    #for f in frozenSupport.listdir(d):
+        #if frozenSupport.isdir(os.path.join(d, f)) and f not in ['__pycache__', 'tests']:
+            #files.add(f)
+        #elif f[-3:] == '.py' and f != '__init__.py':
+            #files.add(f[:-3])
+        #elif f[-4:] == '.pyc' and f != '__init__.pyc':
+            #files.add(f[:-4])
         
-    mods = {}
-    path = path.replace(os.sep, '.')
-    for modName in files:
-        if modName in excludes:
-            continue
-        try:
-            if len(path) > 0:
-                modName = path + '.' + modName
-            #mod = __import__(modName, globals, locals, fromlist=['*'])
-            mod = __import__(modName, globals, locals, ['*'], 1)
-            mods[modName] = mod
-        except:
-            import traceback
-            traceback.print_stack()
-            sys.excepthook(*sys.exc_info())
-            print("[Error importing module: %s]" % modName)
+    #mods = {}
+    #path = path.replace(os.sep, '.')
+    #for modName in files:
+        #if modName in excludes:
+            #continue
+        #try:
+            #if len(path) > 0:
+                #modName = path + '.' + modName
+            #print( "from .%s import * " % modName)
+            #mod = __import__(modName, globals, locals, ['*'], 1)
+            #mods[modName] = mod
+        #except:
+            #import traceback
+            #traceback.print_stack()
+            #sys.excepthook(*sys.exc_info())
+            #print("[Error importing module: %s]" % modName)
             
-    return mods
+    #return mods
 
-def importAll(path, globals, locals, excludes=()):
-    """Given a list of modules, import all names from each module into the global namespace."""
-    mods = importModules(path, globals, locals, excludes)
-    for mod in mods.values():
-        if hasattr(mod, '__all__'):
-            names = mod.__all__
-        else:
-            names = [n for n in dir(mod) if n[0] != '_']
-        for k in names:
-            if hasattr(mod, k):
-                globals[k] = getattr(mod, k)
+#def importAll(path, globals, locals, excludes=()):
+    #"""Given a list of modules, import all names from each module into the global namespace."""
+    #mods = importModules(path, globals, locals, excludes)
+    #for mod in mods.values():
+        #if hasattr(mod, '__all__'):
+            #names = mod.__all__
+        #else:
+            #names = [n for n in dir(mod) if n[0] != '_']
+        #for k in names:
+            #if hasattr(mod, k):
+                #globals[k] = getattr(mod, k)
 
-importAll('graphicsItems', globals(), locals())
-importAll('widgets', globals(), locals(),
-          excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
+# Dynamic imports are disabled. This causes too many problems.
+#importAll('graphicsItems', globals(), locals())
+#importAll('widgets', globals(), locals(),
+          #excludes=['MatplotlibWidget', 'RawImageWidget', 'RemoteGraphicsView'])
+
+from .graphicsItems.VTickGroup import * 
+from .graphicsItems.GraphicsWidget import * 
+from .graphicsItems.ScaleBar import * 
+from .graphicsItems.PlotDataItem import * 
+from .graphicsItems.GraphItem import * 
+from .graphicsItems.TextItem import * 
+from .graphicsItems.GraphicsLayout import * 
+from .graphicsItems.UIGraphicsItem import * 
+from .graphicsItems.GraphicsObject import * 
+from .graphicsItems.PlotItem import * 
+from .graphicsItems.ROI import * 
+from .graphicsItems.InfiniteLine import * 
+from .graphicsItems.HistogramLUTItem import * 
+from .graphicsItems.GridItem import * 
+from .graphicsItems.GradientLegend import * 
+from .graphicsItems.GraphicsItem import * 
+from .graphicsItems.BarGraphItem import * 
+from .graphicsItems.ViewBox import * 
+from .graphicsItems.ArrowItem import * 
+from .graphicsItems.ImageItem import * 
+from .graphicsItems.AxisItem import * 
+from .graphicsItems.LabelItem import * 
+from .graphicsItems.CurvePoint import * 
+from .graphicsItems.GraphicsWidgetAnchor import * 
+from .graphicsItems.PlotCurveItem import * 
+from .graphicsItems.ButtonItem import * 
+from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.MultiPlotItem import * 
+from .graphicsItems.ErrorBarItem import * 
+from .graphicsItems.IsocurveItem import * 
+from .graphicsItems.LinearRegionItem import * 
+from .graphicsItems.FillBetweenItem import * 
+from .graphicsItems.LegendItem import * 
+from .graphicsItems.ScatterPlotItem import * 
+from .graphicsItems.ItemGroup import * 
+
+from .widgets.MultiPlotWidget import * 
+from .widgets.ScatterPlotWidget import * 
+from .widgets.ColorMapWidget import * 
+from .widgets.FileDialog import * 
+from .widgets.ValueLabel import * 
+from .widgets.HistogramLUTWidget import * 
+from .widgets.CheckTable import * 
+from .widgets.BusyCursor import * 
+from .widgets.PlotWidget import * 
+from .widgets.ComboBox import * 
+from .widgets.GradientWidget import * 
+from .widgets.DataFilterWidget import * 
+from .widgets.SpinBox import * 
+from .widgets.JoystickButton import * 
+from .widgets.GraphicsLayoutWidget import * 
+from .widgets.TreeWidget import * 
+from .widgets.PathButton import * 
+from .widgets.VerticalLabel import * 
+from .widgets.FeedbackButton import * 
+from .widgets.ColorButton import * 
+from .widgets.DataTreeWidget import * 
+from .widgets.GraphicsView import * 
+from .widgets.LayoutWidget import * 
+from .widgets.TableWidget import * 
+from .widgets.ProgressDialog import *
 
 from .imageview import *
 from .WidgetGroup import *
@@ -193,6 +257,8 @@ from .graphicsWindows import *
 from .SignalProxy import *
 from .colormap import *
 from .ptime import time
+from .Qt import isQObjectAlive
+
 
 ##############################################################
 ## PyQt and PySide both are prone to crashing on exit. 
@@ -204,7 +270,12 @@ from .ptime import time
 
 ## Attempts to work around exit crashes:
 import atexit
+_cleanupCalled = False
 def cleanup():
+    global _cleanupCalled
+    if _cleanupCalled:
+        return
+    
     if not getConfigOption('exitCleanup'):
         return
     
@@ -220,11 +291,30 @@ def cleanup():
     s = QtGui.QGraphicsScene()
     for o in gc.get_objects():
         try:
-            if isinstance(o, QtGui.QGraphicsItem) and o.scene() is None:
+            if isinstance(o, QtGui.QGraphicsItem) and isQObjectAlive(o) and o.scene() is None:
+                if getConfigOption('crashWarning'):
+                    sys.stderr.write('Error: graphics item without scene. '
+                        'Make sure ViewBox.close() and GraphicsView.close() '
+                        'are properly called before app shutdown (%s)\n' % (o,))
+                
                 s.addItem(o)
         except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
             continue
+    _cleanupCalled = True
+
 atexit.register(cleanup)
+
+# Call cleanup when QApplication quits. This is necessary because sometimes
+# the QApplication will quit before the atexit callbacks are invoked.
+# Note: cannot connect this function until QApplication has been created, so
+# instead we have GraphicsView.__init__ call this for us.
+_cleanupConnected = False
+def _connectCleanup():
+    global _cleanupConnected
+    if _cleanupConnected:
+        return
+    QtGui.QApplication.instance().aboutToQuit.connect(cleanup)
+    _cleanupConnected = True
 
 
 ## Optional function for exiting immediately (with some manual teardown)
@@ -254,8 +344,13 @@ def exit():
     atexit._run_exitfuncs()
     
     ## close file handles
-    os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
-    
+    if sys.platform == 'darwin':
+        for fd in xrange(3, 4096):
+            if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+                os.close(fd)
+    else:
+        os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
+
     os._exit(0)
     
 
@@ -292,7 +387,8 @@ def plot(*args, **kargs):
             dataArgs[k] = kargs[k]
         
     w = PlotWindow(**pwArgs)
-    w.plot(*args, **dataArgs)
+    if len(args) > 0 or len(dataArgs) > 0:
+        w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
@@ -328,6 +424,7 @@ def dbg(*args, **kwds):
         consoles.append(c)
     except NameError:
         consoles = [c]
+    return c
     
     
 def mkQApp():

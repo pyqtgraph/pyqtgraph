@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
+from ...Qt import QtCore, QtGui
 from ..Node import Node
-from scipy.signal import detrend
-from scipy.ndimage import median_filter, gaussian_filter
-#from pyqtgraph.SignalProxy import SignalProxy
 from . import functions
+from ... import functions as pgfn
 from .common import *
 import numpy as np
 
-import pyqtgraph.metaarray as metaarray
+from ... import PolyLineROI
+from ... import Point
+from ... import metaarray as metaarray
 
 
 class Downsample(CtrlNode):
@@ -119,7 +119,11 @@ class Median(CtrlNode):
     
     @metaArrayWrapper
     def processData(self, data):
-        return median_filter(data, self.ctrls['n'].value())
+        try:
+            import scipy.ndimage
+        except ImportError:
+            raise Exception("MedianFilter node requires the package scipy.ndimage.")
+        return scipy.ndimage.median_filter(data, self.ctrls['n'].value())
 
 class Mode(CtrlNode):
     """Filters data by taking the mode (histogram-based) of a sliding window"""
@@ -156,7 +160,11 @@ class Gaussian(CtrlNode):
     
     @metaArrayWrapper
     def processData(self, data):
-        return gaussian_filter(data, self.ctrls['sigma'].value())
+        try:
+            import scipy.ndimage
+        except ImportError:
+            raise Exception("GaussianFilter node requires the package scipy.ndimage.")
+        return pgfn.gaussianFilter(data, self.ctrls['sigma'].value())
 
 
 class Derivative(CtrlNode):
@@ -189,7 +197,77 @@ class Detrend(CtrlNode):
     
     @metaArrayWrapper
     def processData(self, data):
+        try:
+            from scipy.signal import detrend
+        except ImportError:
+            raise Exception("DetrendFilter node requires the package scipy.signal.")
         return detrend(data)
+
+class RemoveBaseline(PlottingCtrlNode):
+    """Remove an arbitrary, graphically defined baseline from the data."""
+    nodeName = 'RemoveBaseline'
+    
+    def __init__(self, name):
+        ## define inputs and outputs (one output needs to be a plot)
+        PlottingCtrlNode.__init__(self, name)
+        self.line = PolyLineROI([[0,0],[1,0]])
+        self.line.sigRegionChanged.connect(self.changed)
+        
+        ## create a PolyLineROI, add it to a plot -- actually, I think we want to do this after the node is connected to a plot (look at EventDetection.ThresholdEvents node for ideas), and possible after there is data. We will need to update the end positions of the line each time the input data changes
+        #self.line = None ## will become a PolyLineROI
+        
+    def connectToPlot(self, node):
+        """Define what happens when the node is connected to a plot"""
+
+        if node.plot is None:
+            return
+        node.getPlot().addItem(self.line)
+       
+    def disconnectFromPlot(self, plot):
+        """Define what happens when the node is disconnected from a plot"""
+        plot.removeItem(self.line)    
+    
+    def processData(self, data):
+        ## get array of baseline (from PolyLineROI)
+        h0 = self.line.getHandles()[0]
+        h1 = self.line.getHandles()[-1]
+        
+        timeVals = data.xvals(0)
+        h0.setPos(timeVals[0], h0.pos()[1])
+        h1.setPos(timeVals[-1], h1.pos()[1])      
+        
+        pts = self.line.listPoints() ## lists line handles in same coordinates as data
+        pts, indices = self.adjustXPositions(pts, timeVals) ## maxe sure x positions match x positions of data points
+        
+        ## construct an array that represents the baseline
+        arr = np.zeros(len(data), dtype=float)
+        n = 1
+        arr[0] = pts[0].y()
+        for i in range(len(pts)-1):
+            x1 = pts[i].x()
+            x2 = pts[i+1].x()
+            y1 = pts[i].y()
+            y2 = pts[i+1].y()
+            m = (y2-y1)/(x2-x1)
+            b = y1
+            
+            times = timeVals[(timeVals > x1)*(timeVals <= x2)]
+            arr[n:n+len(times)] = (m*(times-times[0]))+b
+            n += len(times)
+                
+        return data - arr ## subract baseline from data
+        
+    def adjustXPositions(self, pts, data):
+        """Return a list of Point() where the x position is set to the nearest x value in *data* for each point in *pts*."""
+        points = []
+        timeIndices = []
+        for p in pts:
+            x = np.argwhere(abs(data - p.x()) == abs(data - p.x()).min())
+            points.append(Point(data[x], p.y()))
+            timeIndices.append(x)
+            
+        return points, timeIndices
+
 
 
 class AdaptiveDetrend(CtrlNode):

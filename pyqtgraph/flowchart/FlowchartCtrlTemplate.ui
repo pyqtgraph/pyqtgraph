@@ -107,12 +107,12 @@
   <customwidget>
    <class>TreeWidget</class>
    <extends>QTreeWidget</extends>
-   <header>pyqtgraph.widgets.TreeWidget</header>
+   <header>..widgets.TreeWidget</header>
   </customwidget>
   <customwidget>
    <class>FeedbackButton</class>
    <extends>QPushButton</extends>
-   <header>pyqtgraph.widgets.FeedbackButton</header>
+   <header>..widgets.FeedbackButton</header>
   </customwidget>
  </customwidgets>
  <resources/>

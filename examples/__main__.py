@@ -8,6 +8,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+import pyqtgraph as pg
 
 if USE_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form
@@ -25,17 +26,26 @@ examples = OrderedDict([
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Image Analysis', 'imageAnalysis.py'),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
+    ('Scrolling plots', 'scrollingPlots.py'),
+    ('HDF5 big data', 'hdf5.py'),
+    ('Demos', OrderedDict([
+        ('Optics', 'optics_demos.py'),
+        ('Special relativity', 'relativity_demo.py'),
+        ('Verlet chain', 'verlet_chain_demo.py'),
+    ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
         ('IsocurveItem', 'isocurve.py'),
         ('GraphItem', 'GraphItem.py'),
         ('ErrorBarItem', 'ErrorBarItem.py'),
+        ('FillBetweenItem', 'FillBetweenItem.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROIExamples.py'),
@@ -51,6 +61,7 @@ examples = OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
         ('Line Plot update', 'PlotSpeedTest.py'),
         ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
+        ('Multiple plots', 'MultiPlotSpeedTest.py'),
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
@@ -281,6 +292,9 @@ except:
 
 if __name__ == '__main__':
     if '--test' in sys.argv[1:]:
+        # get rid of orphaned cache files first
+        pg.renamePyc(path)
+
         files = buildFileList(examples)
         if '--pyside' in sys.argv[1:]:
             lib = 'PySide'

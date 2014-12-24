@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 import weakref
 
 class Container(object):
@@ -22,6 +22,9 @@ class Container(object):
         return None
 
     def insert(self, new, pos=None, neighbor=None):
+        # remove from existing parent first
+        new.setParent(None)
+        
         if not isinstance(new, list):
             new = [new]
         if neighbor is None:
@@ -240,6 +243,13 @@ class TContainer(Container, QtGui.QWidget):
                     self.stack.setCurrentIndex(i)
                 else:
                     w.label.setDim(True)
+        
+    def raiseDock(self, dock):
+        """Move *dock* to the top of the stack"""
+        self.stack.currentWidget().label.setDim(True)
+        self.stack.setCurrentWidget(dock)
+        dock.label.setDim(False)
+        
         
     def type(self):
         return 'tab'

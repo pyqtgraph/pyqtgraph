@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.widgets.SpinBox import SpinBox
-#from pyqtgraph.SignalProxy import SignalProxy
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...Qt import QtCore, QtGui
+from ...widgets.SpinBox import SpinBox
+#from ...SignalProxy import SignalProxy
+from ...WidgetGroup import WidgetGroup
 #from ColorMapper import ColorMapper
 from ..Node import Node
 import numpy as np
-from pyqtgraph.widgets.ColorButton import ColorButton
+from ...widgets.ColorButton import ColorButton
 try:
     import metaarray
     HAVE_METAARRAY = True
@@ -130,6 +130,42 @@ class CtrlNode(Node):
         w.show()
         l.show()
 
+
+class PlottingCtrlNode(CtrlNode):
+    """Abstract class for CtrlNodes that can connect to plots."""
+    
+    def __init__(self, name, ui=None, terminals=None):
+        #print "PlottingCtrlNode.__init__ called."
+        CtrlNode.__init__(self, name, ui=ui, terminals=terminals)
+        self.plotTerminal = self.addOutput('plot', optional=True)
+        
+    def connected(self, term, remote):
+        CtrlNode.connected(self, term, remote)
+        if term is not self.plotTerminal:
+            return
+        node = remote.node()
+        node.sigPlotChanged.connect(self.connectToPlot)
+        self.connectToPlot(node)    
+        
+    def disconnected(self, term, remote):
+        CtrlNode.disconnected(self, term, remote)
+        if term is not self.plotTerminal:
+            return
+        remote.node().sigPlotChanged.disconnect(self.connectToPlot)
+        self.disconnectFromPlot(remote.node().getPlot())   
+       
+    def connectToPlot(self, node):
+        """Define what happens when the node is connected to a plot"""
+        raise Exception("Must be re-implemented in subclass")
+    
+    def disconnectFromPlot(self, plot):
+        """Define what happens when the node is disconnected from a plot"""
+        raise Exception("Must be re-implemented in subclass")
+
+    def process(self, In, display=True):
+        out = CtrlNode.process(self, In, display)
+        out['plot'] = None
+        return out
 
 
 def metaArrayWrapper(fn):

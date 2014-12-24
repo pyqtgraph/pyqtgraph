@@ -123,6 +123,17 @@ def change(param, changes):
 p.sigTreeStateChanged.connect(change)
 
 
+def valueChanging(param, value):
+    print("Value changing (not finalized):", param, value)
+    
+# Too lazy for recursion:
+for child in p.children():
+    child.sigValueChanging.connect(valueChanging)
+    for ch2 in child.children():
+        ch2.sigValueChanging.connect(valueChanging)
+        
+
+
 def save():
     global state
     state = p.saveState()

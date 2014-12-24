@@ -7,7 +7,6 @@ Use a HistogramLUTWidget to control the contrast / coloration of an image.
 import initExample
 
 import numpy as np
-import scipy.ndimage as ndi
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
@@ -34,7 +33,7 @@ l.addWidget(v, 0, 0)
 w = pg.HistogramLUTWidget()
 l.addWidget(w, 0, 1)
 
-data = ndi.gaussian_filter(np.random.normal(size=(256, 256)), (20, 20))
+data = pg.gaussianFilter(np.random.normal(size=(256, 256)), (20, 20))
 for i in range(32):
     for j in range(32):
         data[i*8, j*8] += .1

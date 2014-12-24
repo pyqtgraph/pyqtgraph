@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from numpy import ndarray, bool_
-from pyqtgraph.metaarray import MetaArray
+from ..metaarray import MetaArray
 
 def eq(a, b):
     """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
@@ -29,7 +29,7 @@ def eq(a, b):
         except:
             return False
         if (hasattr(e, 'implements') and e.implements('MetaArray')):
-             return e.asarray().all()
+            return e.asarray().all()
         else:
             return e.all()
     else:

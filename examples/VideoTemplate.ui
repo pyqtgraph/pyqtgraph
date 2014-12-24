@@ -15,6 +15,20 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="8" column="0" colspan="2">
+     <widget class="QCheckBox" name="downsampleCheck">
+      <property name="text">
+       <string>Auto downsample</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QCheckBox" name="scaleCheck">
+      <property name="text">
+       <string>Scale Data</string>
+      </property>
+     </widget>
+    </item>
     <item row="1" column="0" colspan="4">
      <layout class="QGridLayout" name="gridLayout">
       <item row="3" column="0">
@@ -78,14 +92,7 @@
       </item>
      </layout>
     </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Data type</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
+    <item row="3" column="2">
      <widget class="QComboBox" name="dtypeCombo">
       <item>
        <property name="text">
@@ -105,40 +112,20 @@
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QCheckBox" name="scaleCheck">
+     <widget class="QLabel" name="label">
       <property name="text">
-       <string>Scale Data</string>
+       <string>Data type</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
+    <item row="4" column="1">
      <widget class="QCheckBox" name="rgbLevelsCheck">
       <property name="text">
        <string>RGB</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="2">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="SpinBox" name="minSpin1"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>&lt;---&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="SpinBox" name="maxSpin1"/>
-      </item>
-     </layout>
-    </item>
-    <item row="4" column="2">
+    <item row="5" column="2">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="SpinBox" name="minSpin2">
@@ -166,7 +153,27 @@
       </item>
      </layout>
     </item>
-    <item row="5" column="2">
+    <item row="4" column="2">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="SpinBox" name="minSpin1"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>&lt;---&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="SpinBox" name="maxSpin1"/>
+      </item>
+     </layout>
+    </item>
+    <item row="6" column="2">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="SpinBox" name="minSpin3">
@@ -194,21 +201,21 @@
       </item>
      </layout>
     </item>
-    <item row="6" column="0">
+    <item row="7" column="0">
      <widget class="QCheckBox" name="lutCheck">
       <property name="text">
        <string>Use Lookup  Table</string>
       </property>
      </widget>
     </item>
-    <item row="6" column="1">
+    <item row="7" column="1">
      <widget class="QCheckBox" name="alphaCheck">
       <property name="text">
        <string>alpha</string>
       </property>
      </widget>
     </item>
-    <item row="6" column="2" colspan="2">
+    <item row="7" column="2" colspan="2">
      <widget class="GradientWidget" name="gradient" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -218,7 +225,7 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="3">
+    <item row="3" column="3">
      <spacer name="horizontalSpacer">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -246,10 +253,64 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
+    <item row="3" column="1">
      <widget class="QCheckBox" name="rgbCheck">
       <property name="text">
        <string>RGB</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Image size</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QSpinBox" name="framesSpin">
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="value">
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="widthSpin">
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::PlusMinus</enum>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>512</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="heightSpin">
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>512</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="sizeLabel">
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </item>

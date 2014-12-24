@@ -16,16 +16,17 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
-import pyqtgraph.pixmaps
+from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ... import pixmaps
+import sys
 
 if USE_PYSIDE:
     from .plotConfigTemplate_pyside import *
 else:
     from .plotConfigTemplate_pyqt import *
 
-import pyqtgraph.functions as fn
-from pyqtgraph.widgets.FileDialog import FileDialog
+from ... import functions as fn
+from ...widgets.FileDialog import FileDialog
 import weakref
 import numpy as np
 import os
@@ -37,7 +38,7 @@ from .. LegendItem import LegendItem
 from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from .. InfiniteLine import InfiniteLine
-from pyqtgraph.WidgetGroup import WidgetGroup
+from ...WidgetGroup import WidgetGroup
 
 __all__ = ['PlotItem']
 
@@ -69,6 +70,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
     :func:`setAutoVisible <pyqtgraph.ViewBox.setAutoVisible>`,
+    :func:`setLimits <pyqtgraph.ViewBox.setLimits>`,
     :func:`viewRect <pyqtgraph.ViewBox.viewRect>`,
     :func:`viewRange <pyqtgraph.ViewBox.viewRange>`,
     :func:`setMouseEnabled <pyqtgraph.ViewBox.setMouseEnabled>`,
@@ -76,13 +78,14 @@ class PlotItem(GraphicsWidget):
     :func:`disableAutoRange <pyqtgraph.ViewBox.disableAutoRange>`,
     :func:`setAspectLocked <pyqtgraph.ViewBox.setAspectLocked>`,
     :func:`invertY <pyqtgraph.ViewBox.invertY>`,
+    :func:`invertX <pyqtgraph.ViewBox.invertX>`,
     :func:`register <pyqtgraph.ViewBox.register>`,
     :func:`unregister <pyqtgraph.ViewBox.unregister>`
     
     The ViewBox itself can be accessed by calling :func:`getViewBox() <pyqtgraph.PlotItem.getViewBox>` 
     
     ==================== =======================================================================
-    **Signals**
+    **Signals:**
     sigYRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigXRangeChanged     wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
     sigRangeChanged      wrapped from :class:`ViewBox <pyqtgraph.ViewBox>`
@@ -95,7 +98,6 @@ class PlotItem(GraphicsWidget):
     
     
     lastFileDir = None
-    managers = {}
     
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
@@ -103,7 +105,7 @@ class PlotItem(GraphicsWidget):
         Any extra keyword arguments are passed to PlotItem.plot().
         
         ==============  ==========================================================================================
-        **Arguments**
+        **Arguments:**
         *title*         Title to display at the top of the item. Html is allowed.
         *labels*        A dictionary specifying the axis labels to display::
                    
@@ -129,7 +131,7 @@ class PlotItem(GraphicsWidget):
         path = os.path.dirname(__file__)
         #self.autoImageFile = os.path.join(path, 'auto.png')
         #self.lockImageFile = os.path.join(path, 'lock.png')
-        self.autoBtn = ButtonItem(pyqtgraph.pixmaps.getPixmap('auto'), 14, self)
+        self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         #self.autoBtn.hide()
@@ -143,7 +145,7 @@ class PlotItem(GraphicsWidget):
         self.layout.setVerticalSpacing(0)
         
         if viewBox is None:
-            viewBox = ViewBox()
+            viewBox = ViewBox(parent=self)
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
         self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
@@ -166,14 +168,14 @@ class PlotItem(GraphicsWidget):
             axisItems = {}
         self.axes = {}
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            axis = axisItems.get(k, AxisItem(orientation=k))
+            axis = axisItems.get(k, AxisItem(orientation=k, parent=self))
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
             axis.setZValue(-1000)
             axis.setFlag(axis.ItemNegativeZStacksBehindParent)
         
-        self.titleLabel = LabelItem('', size='11pt')
+        self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
         self.setTitle(None)  ## hide
         
@@ -193,14 +195,6 @@ class PlotItem(GraphicsWidget):
         self.layout.setColumnStretchFactor(1, 100)
         
 
-        ## Wrap a few methods from viewBox
-        for m in [
-            'setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan', 'setAutoVisible',
-            'setRange', 'autoRange', 'viewRect', 'viewRange', 'setMouseEnabled',
-            'enableAutoRange', 'disableAutoRange', 'setAspectLocked', 'invertY',
-            'register', 'unregister']:  ## NOTE: If you update this list, please update the class docstring as well.
-            setattr(self, m, getattr(self.vb, m))
-            
         self.items = []
         self.curves = []
         self.itemMeta = weakref.WeakKeyDictionary()
@@ -297,7 +291,26 @@ class PlotItem(GraphicsWidget):
     def getViewBox(self):
         """Return the :class:`ViewBox <pyqtgraph.ViewBox>` contained within."""
         return self.vb
+
     
+    ## Wrap a few methods from viewBox. 
+    #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
+    #because we had a reference to an instance method (creating wrapper methods at runtime instead).
+    
+    for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
+              'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
+              'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
+              'setAspectLocked', 'invertY', 'invertX', 'register', 'unregister']:                # as well.
+                
+        def _create_method(name):
+            def method(self, *args, **kwargs):
+                return getattr(self.vb, name)(*args, **kwargs)
+            method.__name__ = name
+            return method
+        
+        locals()[m] = _create_method(m)
+        
+    del _create_method
     
     
     def setLogMode(self, x=None, y=None):
@@ -339,9 +352,8 @@ class PlotItem(GraphicsWidget):
             self.ctrl.gridAlphaSlider.setValue(v)
         
     #def paint(self, *args):
-        #prof = debug.Profiler('PlotItem.paint', disabled=True)
+        #prof = debug.Profiler()
         #QtGui.QGraphicsWidget.paint(self, *args)
-        #prof.finish()
         
     ## bad idea. 
     #def __getattr__(self, attr):  ## wrap ms
@@ -357,10 +369,8 @@ class PlotItem(GraphicsWidget):
         self.ctrlMenu.setParent(None)
         self.ctrlMenu = None
         
-        #self.ctrlBtn.setParent(None)
-        #self.ctrlBtn = None
-        #self.autoBtn.setParent(None)
-        #self.autoBtn = None
+        self.autoBtn.setParent(None)
+        self.autoBtn = None
         
         for k in self.axes:
             i = self.axes[k]['item']
@@ -370,28 +380,6 @@ class PlotItem(GraphicsWidget):
         self.scene().removeItem(self.vb)
         self.vb = None
         
-        ## causes invalid index errors:
-        #for i in range(self.layout.count()):
-            #self.layout.removeAt(i)
-            
-        #for p in self.proxies:
-            #try:
-                #p.setWidget(None)
-            #except RuntimeError:
-                #break
-            #self.scene().removeItem(p)
-        #self.proxies = []
-        
-        #self.menuAction.releaseWidget(self.menuAction.defaultWidget())
-        #self.menuAction.setParent(None)
-        #self.menuAction = None
-        
-        #if self.manager is not None:
-            #self.manager.sigWidgetListChanged.disconnect(self.updatePlotList)
-            #self.manager.removeWidget(self.name)
-        #else:
-            #print "no manager"
-
     def registerPlot(self, name):   ## for backward compatibility
         self.vb.register(name)
         
@@ -481,7 +469,8 @@ class PlotItem(GraphicsWidget):
         
         ### Average data together
         (x, y) = curve.getData()
-        if plot.yData is not None:
+        if plot.yData is not None and y.shape == plot.yData.shape:
+            # note that if shapes do not match, then the average resets.
             newData = plot.yData * (n-1) / float(n) + y * 1.0 / float(n)
             plot.setData(plot.xData, newData)
         else:
@@ -515,7 +504,9 @@ class PlotItem(GraphicsWidget):
         if 'ignoreBounds' in kargs:
             vbargs['ignoreBounds'] = kargs['ignoreBounds']
         self.vb.addItem(item, *args, **vbargs)
+        name = None
         if hasattr(item, 'implements') and item.implements('plotData'):
+            name = item.name()
             self.dataItems.append(item)
             #self.plotChanged()
             
@@ -548,7 +539,7 @@ class PlotItem(GraphicsWidget):
             #c.connect(c, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
             #self.plotChanged()
-        name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
+        #name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
             self.legend.addItem(item, name=name)
             
@@ -952,18 +943,18 @@ class PlotItem(GraphicsWidget):
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.
         
-        ===========  =================================================================
-        Arguments
-        ds           (int) Reduce visible plot samples by this factor, or
-                     (bool) To enable/disable downsampling without changing the value.
-        auto         (bool) If True, automatically pick *ds* based on visible range
-        mode         'subsample': Downsample by taking the first of N samples. 
-                         This method is fastest and least accurate.
-                     'mean': Downsample by taking the mean of N samples.
-                     'peak': Downsample by drawing a saw wave that follows the min 
-                         and max of the original data. This method produces the best 
-                         visual representation of the data but is slower.
-        ===========  =================================================================
+        =============== =================================================================
+        **Arguments:**
+        ds              (int) Reduce visible plot samples by this factor, or
+                        (bool) To enable/disable downsampling without changing the value.
+        auto            (bool) If True, automatically pick *ds* based on visible range
+        mode            'subsample': Downsample by taking the first of N samples.
+                        This method is fastest and least accurate.
+                        'mean': Downsample by taking the mean of N samples.
+                        'peak': Downsample by drawing a saw wave that follows the min
+                        and max of the original data. This method produces the best
+                        visual representation of the data but is slower.
+        =============== =================================================================
         """
         if ds is not None:
             if ds is False:
@@ -1134,15 +1125,15 @@ class PlotItem(GraphicsWidget):
         """
         Set the label for an axis. Basic HTML formatting is allowed.
         
-        ============= =================================================================
-        **Arguments**
-        axis          must be one of 'left', 'bottom', 'right', or 'top'
-        text          text to display along the axis. HTML allowed.
-        units         units to display after the title. If units are given, 
-                      then an SI prefix will be automatically appended
-                      and the axis values will be scaled accordingly.
-                      (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ============= =================================================================
+        ==============  =================================================================
+        **Arguments:**
+        axis            must be one of 'left', 'bottom', 'right', or 'top'
+        text            text to display along the axis. HTML allowed.
+        units           units to display after the title. If units are given,
+                        then an SI prefix will be automatically appended
+                        and the axis values will be scaled accordingly.
+                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
+        ==============  =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, **args)
         self.showAxis(axis)
@@ -1217,10 +1208,13 @@ class PlotItem(GraphicsWidget):
         self.updateButtons()
         
     def updateButtons(self):
-        if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
-            self.autoBtn.show()
-        else:
-            self.autoBtn.hide()
+        try:
+            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+                self.autoBtn.show()
+            else:
+                self.autoBtn.hide()
+        except RuntimeError:
+            pass  # this can happen if the plot has been deleted.
             
     def _plotArray(self, arr, x=None, **kargs):
         if arr.ndim != 1:

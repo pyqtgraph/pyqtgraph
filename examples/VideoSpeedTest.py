@@ -13,7 +13,6 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
 import numpy as np
 import pyqtgraph as pg
-import scipy.ndimage as ndi
 import pyqtgraph.ptime as ptime
 
 if USE_PYSIDE:
@@ -71,40 +70,67 @@ ui.rgbLevelsCheck.toggled.connect(updateScale)
     
 cache = {}
 def mkData():
-    global data, cache, ui
-    dtype = (ui.dtypeCombo.currentText(), ui.rgbCheck.isChecked())
-    if dtype not in cache:
-        if dtype[0] == 'uint8':
-            dt = np.uint8
-            loc = 128
-            scale = 64
-            mx = 255
-        elif dtype[0] == 'uint16':
-            dt = np.uint16
-            loc = 4096
-            scale = 1024
-            mx = 2**16
-        elif dtype[0] == 'float':
-            dt = np.float
-            loc = 1.0
-            scale = 0.1
-        
-        if ui.rgbCheck.isChecked():
-            data = np.random.normal(size=(20,512,512,3), loc=loc, scale=scale)
-            data = ndi.gaussian_filter(data, (0, 6, 6, 0))
-        else:
-            data = np.random.normal(size=(20,512,512), loc=loc, scale=scale)
-            data = ndi.gaussian_filter(data, (0, 6, 6))
-        if dtype[0] != 'float':
-            data = np.clip(data, 0, mx)
-        data = data.astype(dt)
-        cache[dtype] = data
-        
-    data = cache[dtype]
-    updateLUT()
+    with pg.BusyCursor():
+        global data, cache, ui
+        frames = ui.framesSpin.value()
+        width = ui.widthSpin.value()
+        height = ui.heightSpin.value()
+        dtype = (ui.dtypeCombo.currentText(), ui.rgbCheck.isChecked(), frames, width, height)
+        if dtype not in cache:
+            if dtype[0] == 'uint8':
+                dt = np.uint8
+                loc = 128
+                scale = 64
+                mx = 255
+            elif dtype[0] == 'uint16':
+                dt = np.uint16
+                loc = 4096
+                scale = 1024
+                mx = 2**16
+            elif dtype[0] == 'float':
+                dt = np.float
+                loc = 1.0
+                scale = 0.1
+            
+            if ui.rgbCheck.isChecked():
+                data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
+                data = pg.gaussianFilter(data, (0, 6, 6, 0))
+            else:
+                data = np.random.normal(size=(frames,width,height), loc=loc, scale=scale)
+                data = pg.gaussianFilter(data, (0, 6, 6))
+            if dtype[0] != 'float':
+                data = np.clip(data, 0, mx)
+            data = data.astype(dt)
+            cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
+            
+        data = cache[dtype]
+        updateLUT()
+        updateSize()
+
+def updateSize():
+    global ui
+    frames = ui.framesSpin.value()
+    width = ui.widthSpin.value()
+    height = ui.heightSpin.value()
+    dtype = np.dtype(str(ui.dtypeCombo.currentText()))
+    rgb = 3 if ui.rgbCheck.isChecked() else 1
+    ui.sizeLabel.setText('%d MB' % (frames * width * height * rgb * dtype.itemsize / 1e6))
+    
+
 mkData()
+
+
 ui.dtypeCombo.currentIndexChanged.connect(mkData)
 ui.rgbCheck.toggled.connect(mkData)
+ui.widthSpin.editingFinished.connect(mkData)
+ui.heightSpin.editingFinished.connect(mkData)
+ui.framesSpin.editingFinished.connect(mkData)
+
+ui.widthSpin.valueChanged.connect(updateSize)
+ui.heightSpin.valueChanged.connect(updateSize)
+ui.framesSpin.valueChanged.connect(updateSize)
+
+
 
 ptr = 0
 lastTime = ptime.time()
@@ -115,6 +141,8 @@ def update():
         useLut = LUT
     else:
         useLut = None
+        
+    downsample = ui.downsampleCheck.isChecked()
 
     if ui.scaleCheck.isChecked():
         if ui.rgbLevelsCheck.isChecked():
@@ -134,7 +162,7 @@ def update():
         ui.rawGLImg.setImage(data[ptr%data.shape[0]], lut=useLut, levels=useScale)
         ui.stack.setCurrentIndex(2)
     else:
-        img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut)
+        img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut, autoDownsample=downsample)
         ui.stack.setCurrentIndex(0)
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
         

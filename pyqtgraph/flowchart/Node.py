@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
+from ..Qt import QtCore, QtGui
+from ..graphicsItems.GraphicsObject import GraphicsObject
+from .. import functions as fn
 from .Terminal import *
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.debug import *
+from ..pgcollections import OrderedDict
+from ..debug import *
 import numpy as np
 from .eq import *
 
@@ -37,7 +37,7 @@ class Node(QtCore.QObject):
     def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         """
         ==============  ============================================================
-        Arguments
+        **Arguments:**
         name            The name of this specific node instance. It can be any 
                         string, but must be unique within a flowchart. Usually,
                         we simply let the flowchart decide on a name when calling
@@ -501,8 +501,8 @@ class NodeGraphicsItem(GraphicsObject):
         bounds = self.boundingRect()
         self.nameItem.setPos(bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
 
-    def setPen(self, pen):
-        self.pen = pen
+    def setPen(self, *args, **kwargs):
+        self.pen = fn.mkPen(*args, **kwargs)
         self.update()
         
     def setBrush(self, brush):
@@ -617,9 +617,6 @@ class NodeGraphicsItem(GraphicsObject):
 
     def getMenu(self):
         return self.menu
-
-    def getContextMenus(self, event):
-        return [self.menu]
     
     def raiseContextMenu(self, ev):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)

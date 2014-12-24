@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.widgets.GraphicsView import GraphicsView
-from pyqtgraph.GraphicsScene import GraphicsScene
-from pyqtgraph.graphicsItems.ViewBox import ViewBox
+from ..Qt import QtGui, QtCore
+from ..widgets.GraphicsView import GraphicsView
+from ..GraphicsScene import GraphicsScene
+from ..graphicsItems.ViewBox import ViewBox
 
 #class FlowchartGraphicsView(QtGui.QGraphicsView):
 class FlowchartGraphicsView(GraphicsView):

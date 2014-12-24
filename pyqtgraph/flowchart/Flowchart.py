@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE
 from .Node import *
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.widgets.TreeWidget import *
+from ..pgcollections import OrderedDict
+from ..widgets.TreeWidget import *
+from .. import FileDialog, DataTreeWidget
 
 ## pyside and pyqt use incompatible ui files.
 if USE_PYSIDE:
@@ -14,60 +15,32 @@ else:
     
 from .Terminal import Terminal
 from numpy import ndarray
-from . import library
-from pyqtgraph.debug import printExc
-import pyqtgraph.configfile as configfile
-import pyqtgraph.dockarea as dockarea
-import pyqtgraph as pg
+from .library import LIBRARY
+from ..debug import printExc
+from .. import configfile as configfile
+from .. import dockarea as dockarea
 from . import FlowchartGraphicsView
+from .. import functions as fn
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
 
 
-def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
-    """Topological sort. Arguments are:
-      deps    dictionary describing dependencies where a:[b,c] means "a depends on b and c"
-      nodes   optional, specifies list of starting nodes (these should be the nodes 
-              which are not depended on by any other nodes) 
-    """
-    
-    if nodes is None:
-        ## run through deps to find nodes that are not depended upon
-        rem = set()
-        for dep in deps.values():
-            rem |= set(dep)
-        nodes = set(deps.keys()) - rem
-    if seen is None:
-        seen = set()
-        stack = []
-    sorted = []
-    #print "  "*depth, "Starting from", nodes
-    for n in nodes:
-        if n in stack:
-            raise Exception("Cyclic dependency detected", stack + [n])
-        if n in seen:
-            continue
-        seen.add(n)
-        #print "  "*depth, "  descending into", n, deps[n]
-        sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
-        #print "  "*depth, "  Added", n
-        sorted.append(n)
-        #print "  "*depth, "  ", sorted
-    return sorted
         
 
 class Flowchart(Node):
-    
     sigFileLoaded = QtCore.Signal(object)
     sigFileSaved = QtCore.Signal(object)
     
     
     #sigOutputChanged = QtCore.Signal() ## inherited from Node
     sigChartLoaded = QtCore.Signal()
-    sigStateChanged = QtCore.Signal()
+    sigStateChanged = QtCore.Signal()  # called when output is expected to have changed
+    sigChartChanged = QtCore.Signal(object, object, object) # called when nodes are added, removed, or renamed.
+                                                            # (self, action, node)
     
-    def __init__(self, terminals=None, name=None, filePath=None):
+    def __init__(self, terminals=None, name=None, filePath=None, library=None):
+        self.library = library or LIBRARY
         if name is None:
             name = "Flowchart"
         if terminals is None:
@@ -104,6 +77,10 @@ class Flowchart(Node):
             
         for name, opts in terminals.items():
             self.addTerminal(name, **opts)
+      
+    def setLibrary(self, lib):
+        self.library = lib
+        self.widget().chartWidget.buildMenu()
       
     def setInput(self, **args):
         """Set the input values of the flowchart. This will automatically propagate
@@ -194,7 +171,7 @@ class Flowchart(Node):
                     break
                 n += 1
                 
-        node = library.getNodeType(nodeType)(name)
+        node = self.library.getNodeType(nodeType)(name)
         self.addNode(node, name, pos)
         return node
         
@@ -213,6 +190,7 @@ class Flowchart(Node):
         node.sigClosed.connect(self.nodeClosed)
         node.sigRenamed.connect(self.nodeRenamed)
         node.sigOutputChanged.connect(self.nodeOutputChanged)
+        self.sigChartChanged.emit(self, 'add', node)
         
     def removeNode(self, node):
         node.close()
@@ -220,23 +198,18 @@ class Flowchart(Node):
     def nodeClosed(self, node):
         del self._nodes[node.name()]
         self.widget().removeNode(node)
-        try:
-            node.sigClosed.disconnect(self.nodeClosed)
-        except TypeError:
-            pass
-        try:
-            node.sigRenamed.disconnect(self.nodeRenamed)
-        except TypeError:
-            pass
-        try:
-            node.sigOutputChanged.disconnect(self.nodeOutputChanged)
-        except TypeError:
-            pass
+        for signal in ['sigClosed', 'sigRenamed', 'sigOutputChanged']:
+            try:
+                getattr(node, signal).disconnect(self.nodeClosed)
+            except (TypeError, RuntimeError):
+                pass
+        self.sigChartChanged.emit(self, 'remove', node)
         
     def nodeRenamed(self, node, oldName):
         del self._nodes[oldName]
         self._nodes[node.name()] = node
         self.widget().nodeRenamed(node, oldName)
+        self.sigChartChanged.emit(self, 'rename', node)
         
     def arrangeNodes(self):
         pass
@@ -276,9 +249,10 @@ class Flowchart(Node):
         
         ## Record inputs given to process()
         for n, t in self.inputNode.outputs().items():
-            if n not in args:
-                raise Exception("Parameter %s required to process this chart." % n)
-            data[t] = args[n]
+            # if n not in args:
+            #     raise Exception("Parameter %s required to process this chart." % n)
+            if n in args:
+                data[t] = args[n]
         
         ret = {}
             
@@ -303,7 +277,7 @@ class Flowchart(Node):
                     if len(inputs) == 0:
                         continue
                     if inp.isMultiValue():  ## multi-input terminals require a dict of all inputs
-                        args[inp.name()] = dict([(i, data[i]) for i in inputs])
+                        args[inp.name()] = dict([(i, data[i]) for i in inputs if i in data])
                     else:                   ## single-inputs terminals only need the single input value available
                         args[inp.name()] = data[inputs[0]]  
                         
@@ -323,9 +297,8 @@ class Flowchart(Node):
                         #print out.name()
                         try:
                             data[out] = result[out.name()]
-                        except:
-                            print(out, out.name())
-                            raise
+                        except KeyError:
+                            pass
             elif c == 'd':   ## delete a terminal result (no longer needed; may be holding a lot of memory)
                 #print "===> delete", arg
                 if arg in data:
@@ -350,7 +323,7 @@ class Flowchart(Node):
         #print "DEPS:", deps
         ## determine correct node-processing order
         #deps[self] = []
-        order = toposort(deps)
+        order = fn.toposort(deps)
         #print "ORDER1:", order
         
         ## construct list of operations
@@ -399,7 +372,7 @@ class Flowchart(Node):
                     deps[node].extend(t.dependentNodes())
             
             ## determine order of updates 
-            order = toposort(deps, nodes=[startNode])
+            order = fn.toposort(deps, nodes=[startNode])
             order.reverse()
             
             ## keep track of terminals that have been updated
@@ -532,7 +505,7 @@ class Flowchart(Node):
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
-            self.fileDialog = pg.FileDialog(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog = FileDialog(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
             #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
             #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             self.fileDialog.show()
@@ -540,7 +513,7 @@ class Flowchart(Node):
             return
             ## NOTE: was previously using a real widget for the file dialog's parent, but this caused weird mouse event bugs..
             #fileName = QtGui.QFileDialog.getOpenFileName(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = str(fileName)
+        fileName = unicode(fileName)
         state = configfile.readConfigFile(fileName)
         self.restoreState(state, clear=True)
         self.viewBox.autoRange()
@@ -553,7 +526,7 @@ class Flowchart(Node):
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
-            self.fileDialog = pg.FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog = FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
             #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
             self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             #self.fileDialog.setDirectory(startDir)
@@ -561,7 +534,7 @@ class Flowchart(Node):
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
             #fileName = QtGui.QFileDialog.getSaveFileName(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = str(fileName)
+        fileName = unicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
@@ -683,7 +656,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(str(fileName))
+        self.setCurrentFile(unicode(fileName))
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -712,7 +685,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = str(fileName)
+        self.currentFileName = unicode(fileName)
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
@@ -760,7 +733,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
             #self.disconnect(item.bypassBtn, QtCore.SIGNAL('clicked()'), self.bypassClicked)
             try:
                 item.bypassBtn.clicked.disconnect(self.bypassClicked)
-            except TypeError:
+            except (TypeError, RuntimeError):
                 pass
             self.ui.ctrlList.removeTopLevelItem(item)
             
@@ -816,7 +789,7 @@ class FlowchartWidget(dockarea.DockArea):
         self.selDescLabel = QtGui.QLabel()
         self.selNameLabel = QtGui.QLabel()
         self.selDescLabel.setWordWrap(True)
-        self.selectedTree = pg.DataTreeWidget()
+        self.selectedTree = DataTreeWidget()
         #self.selectedTree.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         #self.selInfoLayout.addWidget(self.selNameLabel)
         self.selInfoLayout.addWidget(self.selDescLabel)
@@ -846,20 +819,24 @@ class FlowchartWidget(dockarea.DockArea):
         self.nodeMenu.triggered.disconnect(self.nodeMenuTriggered)
         self.nodeMenu = None
         self.subMenus = []
-        library.loadLibrary(reloadLibs=True)
+        self.chart.library.reload()
         self.buildMenu()
         
     def buildMenu(self, pos=None):
+        def buildSubMenu(node, rootMenu, subMenus, pos=None):
+            for section, node in node.items():
+                menu = QtGui.QMenu(section)
+                rootMenu.addMenu(menu)
+                if isinstance(node, OrderedDict): 
+                    buildSubMenu(node, menu, subMenus, pos=pos)
+                    subMenus.append(menu)
+                else:
+                    act = rootMenu.addAction(section)
+                    act.nodeType = section
+                    act.pos = pos
         self.nodeMenu = QtGui.QMenu()
-        self.subMenus = []
-        for section, nodes in library.getNodeTree().items():
-            menu = QtGui.QMenu(section)
-            self.nodeMenu.addMenu(menu)
-            for name in nodes:
-                act = menu.addAction(name)
-                act.nodeType = name
-                act.pos = pos
-            self.subMenus.append(menu)
+        self.subMenus = []       
+        buildSubMenu(self.chart.library.getNodeTree(), self.nodeMenu, self.subMenus, pos=pos)
         self.nodeMenu.triggered.connect(self.nodeMenuTriggered)
         return self.nodeMenu
     

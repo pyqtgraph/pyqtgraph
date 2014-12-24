@@ -7,7 +7,7 @@ Demonstrates basic use of ErrorBarItem
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
 import pyqtgraph as pg

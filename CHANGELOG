@@ -1,3 +1,105 @@
+pyqtgraph-0.9.9
+
+  API / behavior changes:
+    - Dynamic import system abandoned; pg now uses static imports throughout.
+        - Flowcharts and exporters have new pluggin systems
+    - Version strings:
+        - __init__.py in git repo now contains latest release version string
+          (previously, only packaged releases had version strings).
+        - installing from git checkout that does not correspond to a release 
+          commit will result in a more descriptive version string.
+    - Speed improvements in functions.makeARGB
+    - ImageItem is faster by avoiding makeQImage(transpose=True)
+    - ComboBox will raise error when adding multiple items of the same name
+    - ArrowItem.setStyle now updates style options rather than replacing them 
+    - Renamed GraphicsView signals to avoid collision with ViewBox signals that
+      are wrapped in PlotWidget: sigRangeChanged => sigDeviceRangeChanged and
+      sigTransformChanged => sigDeviceTransformChanged.
+    - GLViewWidget.itemsAt() now measures y from top of widget to match mouse 
+      event position.
+    - Made setPen() methods consistent throughout the package
+    - Fix in GLScatterPlotItem requires that points will appear slightly more opaque 
+      (so you may need to adjust to lower alpha to achieve the same results)
+
+  New Features:
+    - Added ViewBox.setLimits() method
+    - Adde ImageItem downsampling
+    - New HDF5 example for working with very large datasets
+    - Removed all dependency on scipy
+    - Added Qt.loadUiType function for PySide
+    - Simplified Profilers; can be activated with environmental variables
+    - Added Dock.raiseDock() method
+    - ComboBox updates:
+        - Essentially a graphical interface to dict; all items have text and value
+        - Assigns previously-selected text after list is cleared and repopulated
+        - Get, set current value
+    - Flowchart updates
+        - Added Flowchart.sigChartChanged
+        - Custom nodes may now be registered in sub-menu trees
+    - ImageItem.getHistogram is more clever about constructing histograms
+    - Added FillBetweenItem.setCurves()
+    - MultiPlotWidget now has setMinimumPlotHeight method and displays scroll bar
+      when plots do not fit inside the widget.
+    - Added BarGraphItem.shape() to allow better mouse interaction
+    - Added MeshData.cylinder
+    - Added ViewBox.setBackgroundColor() and GLViewWidget.setBackgroundColor()
+    - Utilities / debugging tools
+        - Mutex used for tracing deadlocks
+        - Color output on terminal
+        - Multiprocess debugging colors messages by process
+        - Stdout filter that colors text by thread
+        - PeriodicTrace used to report deadlocks
+    - Added AxisItem.setStyle()
+    - Added configurable formatting for TableWidget
+    - Added 'stepMode' argument to PlotDataItem()
+    - Added ViewBox.invertX()
+    - Docks now have optional close button
+    - Added InfiniteLine.setHoverPen
+    - Added GLVolumeItem.setData
+    - Added PolyLineROI.setPoints, clearPoints, saveState, setState
+    - Added ErrorBarItem.setData
+
+  Bugfixes:
+    - PlotCurveItem now has correct clicking behavior--clicks within a few px
+      of the line will trigger a signal.
+    - Fixes related to CSV exporter:
+        - CSV headers include data names, if available
+        - Exporter correctly handles items with no data
+        - pg.plot() avoids creating empty data item
+        - removed call to reduce() from exporter; not available in python 3
+        - Gave .name() methods to PlotDataItem, PlotCurveItem, and ScatterPlotItem
+    - fixed ImageItem handling of rgb images
+    - fixed makeARGB re-ordering of color channels
+    - fixed unicode usage in AxisItem tick strings
+    - fixed PlotCurveItem generating exceptions when data has length=0
+    - fixed ImageView.setImage only working once
+    - PolyLineROI.setPen() now changes the pen of its segments as well
+    - Prevent divide-by-zero in AxisItem
+    - Major speedup when using ScatterPlotItem in pxMode
+    - PlotCurveItem ignores clip-to-view when auto range is enabled
+    - FillBetweenItem now forces PlotCurveItem to generate path
+    - Fixed import errors and py3 issues in MultiPlotWidget
+    - Isosurface works for arrays with shapes > 255
+    - Fixed ImageItem exception building histogram when image has only one value
+    - Fixed MeshData exception caused when vertexes have no matching faces
+    - Fixed GLViewWidget exception handler
+    - Fixed unicode support in Dock
+    - Fixed PySide crash caused by emitting signal from GraphicsObject.itemChange
+    - Fixed possible infinite loop from FiniteCache
+    - Allow images with NaN in ImageView
+    - MeshData can generate edges from face-indexed vertexes
+    - Fixed multiprocess deadlocks on windows
+    - Fixed GLGridItem.setSize
+    - Fixed parametertree.Parameter.sigValueChanging
+    - Fixed AxisItem.__init__(showValues=False)
+    - Fixed TableWidget append / sort issues
+    - Fixed AxisItem not resizing text area when setTicks() is used
+    - Removed a few cyclic references
+    - Fixed Parameter 'readonly' option for bool, color, and text parameter types
+    - Fixed alpha on GLScatterPlotItem spots (formerly maxed out at alpha=200)
+    - Fixed a few bugs causing exit crashes
+
+
 pyqtgraph-0.9.8  2013-11-24
 
   API / behavior changes:

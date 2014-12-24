@@ -1,11 +1,12 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.python2_3 import sortList
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from ..python2_3 import sortList
+from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
+from ..widgets.SpinBox import SpinBox
 import weakref
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.colormap import ColorMap
+from ..pgcollections import OrderedDict
+from ..colormap import ColorMap
 
 import numpy as np
 
@@ -35,14 +36,14 @@ class TickSliderItem(GraphicsWidget):
         
     def __init__(self, orientation='bottom', allowAdd=True, **kargs):
         """
-        ============= =================================================================================
-        **Arguments**
-        orientation   Set the orientation of the gradient. Options are: 'left', 'right'
-                      'top', and 'bottom'.
-        allowAdd      Specifies whether ticks can be added to the item by the user.
-        tickPen       Default is white. Specifies the color of the outline of the ticks.
-                      Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
-        ============= =================================================================================        
+        ==============  =================================================================================
+        **Arguments:**
+        orientation     Set the orientation of the gradient. Options are: 'left', 'right'
+                        'top', and 'bottom'.
+        allowAdd        Specifies whether ticks can be added to the item by the user.
+        tickPen         Default is white. Specifies the color of the outline of the ticks.
+                        Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
+        ==============  =================================================================================
         """
         ## public
         GraphicsWidget.__init__(self)
@@ -103,13 +104,13 @@ class TickSliderItem(GraphicsWidget):
         ## public
         """Set the orientation of the TickSliderItem.
         
-        ============= ===================================================================
-        **Arguments**
-        orientation   Options are: 'left', 'right', 'top', 'bottom'
-                      The orientation option specifies which side of the slider the
-                      ticks are on, as well as whether the slider is vertical ('right'
-                      and 'left') or horizontal ('top' and 'bottom').
-        ============= ===================================================================
+        ==============  ===================================================================
+        **Arguments:**
+        orientation     Options are: 'left', 'right', 'top', 'bottom'
+                        The orientation option specifies which side of the slider the
+                        ticks are on, as well as whether the slider is vertical ('right'
+                        and 'left') or horizontal ('top' and 'bottom').
+        ==============  ===================================================================
         """
         self.orientation = orientation
         self.setMaxDim()
@@ -136,13 +137,13 @@ class TickSliderItem(GraphicsWidget):
         """
         Add a tick to the item.
         
-        ============= ==================================================================
-        **Arguments**
-        x             Position where tick should be added.
-        color         Color of added tick. If color is not specified, the color will be
-                      white.
-        movable       Specifies whether the tick is movable with the mouse.
-        ============= ==================================================================
+        ==============  ==================================================================
+        **Arguments:**
+        x               Position where tick should be added.
+        color           Color of added tick. If color is not specified, the color will be
+                        white.
+        movable         Specifies whether the tick is movable with the mouse.
+        ==============  ==================================================================
         """        
         
         if color is None:
@@ -265,14 +266,14 @@ class TickSliderItem(GraphicsWidget):
     def setTickColor(self, tick, color):
         """Set the color of the specified tick.
         
-        ============= ==================================================================
-        **Arguments** 
-        tick          Can be either an integer corresponding to the index of the tick 
-                      or a Tick object. Ex: if you had a slider with 3 ticks and you 
-                      wanted to change the middle tick, the index would be 1.
-        color         The color to make the tick. Can be any argument that is valid for 
-                      :func:`mkBrush <pyqtgraph.mkBrush>`
-        ============= ==================================================================
+        ==============  ==================================================================
+        **Arguments:**
+        tick            Can be either an integer corresponding to the index of the tick
+                        or a Tick object. Ex: if you had a slider with 3 ticks and you
+                        wanted to change the middle tick, the index would be 1.
+        color           The color to make the tick. Can be any argument that is valid for
+                        :func:`mkBrush <pyqtgraph.mkBrush>`
+        ==============  ==================================================================
         """
         tick = self.getTick(tick)
         tick.color = color
@@ -284,14 +285,14 @@ class TickSliderItem(GraphicsWidget):
         """
         Set the position (along the slider) of the tick.
         
-        ============= ==================================================================
-        **Arguments** 
-        tick          Can be either an integer corresponding to the index of the tick 
-                      or a Tick object. Ex: if you had a slider with 3 ticks and you 
-                      wanted to change the middle tick, the index would be 1.
-        val           The desired position of the tick. If val is < 0, position will be 
-                      set to 0. If val is > 1, position will be set to 1.
-        ============= ==================================================================        
+        ==============   ==================================================================
+        **Arguments:**
+        tick             Can be either an integer corresponding to the index of the tick
+                         or a Tick object. Ex: if you had a slider with 3 ticks and you
+                         wanted to change the middle tick, the index would be 1.
+        val              The desired position of the tick. If val is < 0, position will be
+                         set to 0. If val is > 1, position will be set to 1.
+        ==============   ==================================================================
         """
         tick = self.getTick(tick)
         val = min(max(0.0, val), 1.0)
@@ -300,17 +301,18 @@ class TickSliderItem(GraphicsWidget):
         pos.setX(x)
         tick.setPos(pos)
         self.ticks[tick] = val
+        self.updateGradient()
         
     def tickValue(self, tick):
         ## public
         """Return the value (from 0.0 to 1.0) of the specified tick.
         
-        ============= ==================================================================
-        **Arguments** 
-        tick          Can be either an integer corresponding to the index of the tick 
-                      or a Tick object. Ex: if you had a slider with 3 ticks and you 
-                      wanted the value of the middle tick, the index would be 1.
-        ============= ==================================================================        
+        ==============  ==================================================================
+        **Arguments:**
+        tick            Can be either an integer corresponding to the index of the tick
+                        or a Tick object. Ex: if you had a slider with 3 ticks and you
+                        wanted the value of the middle tick, the index would be 1.
+        ==============  ==================================================================
         """
         tick = self.getTick(tick)
         return self.ticks[tick]
@@ -319,11 +321,11 @@ class TickSliderItem(GraphicsWidget):
         ## public
         """Return the Tick object at the specified index.
         
-        ============= ==================================================================
-        **Arguments**       
-        tick          An integer corresponding to the index of the desired tick. If the 
-                      argument is not an integer it will be returned unchanged.  
-        ============= ==================================================================
+        ==============  ==================================================================
+        **Arguments:**
+        tick            An integer corresponding to the index of the desired tick. If the
+                        argument is not an integer it will be returned unchanged.
+        ==============  ==================================================================
         """
         if type(tick) is int:
             tick = self.listTicks()[tick][0]
@@ -349,7 +351,7 @@ class GradientEditorItem(TickSliderItem):
     with a GradientEditorItem that can be added to a GUI. 
     
     ================================ ===========================================================
-    **Signals**
+    **Signals:**
     sigGradientChanged(self)         Signal is emitted anytime the gradient changes. The signal 
                                      is emitted in real time while ticks are being dragged or 
                                      colors are being changed.
@@ -366,14 +368,14 @@ class GradientEditorItem(TickSliderItem):
         Create a new GradientEditorItem. 
         All arguments are passed to :func:`TickSliderItem.__init__ <pyqtgraph.TickSliderItem.__init__>`
         
-        ============= =================================================================================
-        **Arguments**
-        orientation   Set the orientation of the gradient. Options are: 'left', 'right'
-                      'top', and 'bottom'.
-        allowAdd      Default is True. Specifies whether ticks can be added to the item.
-        tickPen       Default is white. Specifies the color of the outline of the ticks.
-                      Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
-        ============= =================================================================================
+        ===============  =================================================================================
+        **Arguments:**
+        orientation      Set the orientation of the gradient. Options are: 'left', 'right'
+                         'top', and 'bottom'.
+        allowAdd         Default is True. Specifies whether ticks can be added to the item.
+        tickPen          Default is white. Specifies the color of the outline of the ticks.
+                         Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
+        ===============  =================================================================================
         """
         self.currentTick = None
         self.currentTickColor = None
@@ -445,13 +447,13 @@ class GradientEditorItem(TickSliderItem):
         """
         Set the orientation of the GradientEditorItem. 
         
-        ============= ===================================================================
-        **Arguments**
-        orientation   Options are: 'left', 'right', 'top', 'bottom'
-                      The orientation option specifies which side of the gradient the
-                      ticks are on, as well as whether the gradient is vertical ('right'
-                      and 'left') or horizontal ('top' and 'bottom').
-        ============= ===================================================================
+        ==============  ===================================================================
+        **Arguments:**
+        orientation     Options are: 'left', 'right', 'top', 'bottom'
+                        The orientation option specifies which side of the gradient the
+                        ticks are on, as well as whether the gradient is vertical ('right'
+                        and 'left') or horizontal ('top' and 'bottom').
+        ==============  ===================================================================
         """
         TickSliderItem.setOrientation(self, orientation)
         self.translate(0, self.rectSize)
@@ -537,23 +539,22 @@ class GradientEditorItem(TickSliderItem):
     def tickClicked(self, tick, ev):
         #private
         if ev.button() == QtCore.Qt.LeftButton:
-            if not tick.colorChangeAllowed:
-                return
-            self.currentTick = tick
-            self.currentTickColor = tick.color
-            self.colorDialog.setCurrentColor(tick.color)
-            self.colorDialog.open()
-            #color = QtGui.QColorDialog.getColor(tick.color, self, "Select Color", QtGui.QColorDialog.ShowAlphaChannel)
-            #if color.isValid():
-                #self.setTickColor(tick, color)
-                #self.updateGradient()
+            self.raiseColorDialog(tick)
         elif ev.button() == QtCore.Qt.RightButton:
-            if not tick.removeAllowed:
-                return
-            if len(self.ticks) > 2:
-                self.removeTick(tick)
-                self.updateGradient()
-                
+            self.raiseTickContextMenu(tick, ev)
+            
+    def raiseColorDialog(self, tick):
+        if not tick.colorChangeAllowed:
+            return
+        self.currentTick = tick
+        self.currentTickColor = tick.color
+        self.colorDialog.setCurrentColor(tick.color)
+        self.colorDialog.open()
+        
+    def raiseTickContextMenu(self, tick, ev):
+        self.tickMenu = TickMenu(tick, self)
+        self.tickMenu.popup(ev.screenPos().toQPoint())
+    
     def tickMoved(self, tick, pos):
         #private
         TickSliderItem.tickMoved(self, tick, pos)
@@ -588,11 +589,11 @@ class GradientEditorItem(TickSliderItem):
         """
         Return a color for a given value.
         
-        ============= ==================================================================
-        **Arguments** 
-        x             Value (position on gradient) of requested color.
-        toQColor      If true, returns a QColor object, else returns a (r,g,b,a) tuple.
-        ============= ==================================================================
+        ==============  ==================================================================
+        **Arguments:**
+        x               Value (position on gradient) of requested color.
+        toQColor        If true, returns a QColor object, else returns a (r,g,b,a) tuple.
+        ==============  ==================================================================
         """
         ticks = self.listTicks()
         if x <= ticks[0][1]:
@@ -648,12 +649,12 @@ class GradientEditorItem(TickSliderItem):
         """
         Return an RGB(A) lookup table (ndarray). 
         
-        ============= ============================================================================
-        **Arguments**
-        nPts           The number of points in the returned lookup table.
-        alpha          True, False, or None - Specifies whether or not alpha values are included 
-                       in the table.If alpha is None, alpha will be automatically determined.
-        ============= ============================================================================
+        ==============  ============================================================================
+        **Arguments:**
+        nPts            The number of points in the returned lookup table.
+        alpha           True, False, or None - Specifies whether or not alpha values are included
+                        in the table.If alpha is None, alpha will be automatically determined.
+        ==============  ============================================================================
         """
         if alpha is None:
             alpha = self.usesAlpha()
@@ -702,13 +703,13 @@ class GradientEditorItem(TickSliderItem):
         """
         Add a tick to the gradient. Return the tick.
         
-        ============= ==================================================================
-        **Arguments**
-        x             Position where tick should be added.
-        color         Color of added tick. If color is not specified, the color will be
-                      the color of the gradient at the specified position.
-        movable       Specifies whether the tick is movable with the mouse.
-        ============= ==================================================================
+        ==============  ==================================================================
+        **Arguments:**
+        x               Position where tick should be added.
+        color           Color of added tick. If color is not specified, the color will be
+                        the color of the gradient at the specified position.
+        movable         Specifies whether the tick is movable with the mouse.
+        ==============  ==================================================================
         """
         
         
@@ -726,6 +727,7 @@ class GradientEditorItem(TickSliderItem):
     def removeTick(self, tick, finish=True):
         TickSliderItem.removeTick(self, tick)
         if finish:
+            self.updateGradient()
             self.sigGradientChangeFinished.emit(self)
         
         
@@ -748,16 +750,16 @@ class GradientEditorItem(TickSliderItem):
         """
         Restore the gradient specified in state.
         
-        ============= ====================================================================
-        **Arguments**
-        state         A dictionary with same structure as those returned by 
-                      :func:`saveState <pyqtgraph.GradientEditorItem.saveState>`
+        ==============  ====================================================================
+        **Arguments:**
+        state           A dictionary with same structure as those returned by
+                        :func:`saveState <pyqtgraph.GradientEditorItem.saveState>`
                       
-                      Keys must include:
+                        Keys must include:
                       
-                         - 'mode': hsv or rgb
-                         - 'ticks': a list of tuples (pos, (r,g,b,a))
-        ============= ====================================================================
+                            - 'mode': hsv or rgb
+                            - 'ticks': a list of tuples (pos, (r,g,b,a))
+        ==============  ====================================================================
         """
         ## public
         self.setColorMode(state['mode'])
@@ -867,44 +869,59 @@ class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsO
             self.currentPen = self.pen
         self.update()
         
-    #def mouseMoveEvent(self, ev):
-        ##print self, "move", ev.scenePos()
-        #if not self.movable:
-            #return
-        #if not ev.buttons() & QtCore.Qt.LeftButton:
-            #return
-            
-            
-        #newPos = ev.scenePos() + self.mouseOffset
-        #newPos.setY(self.pos().y())
-        ##newPos.setX(min(max(newPos.x(), 0), 100))
-        #self.setPos(newPos)
-        #self.view().tickMoved(self, newPos)
-        #self.movedSincePress = True
-        ##self.emit(QtCore.SIGNAL('tickChanged'), self)
-        #ev.accept()
 
-    #def mousePressEvent(self, ev):
-        #self.movedSincePress = False
-        #if ev.button() == QtCore.Qt.LeftButton:
-            #ev.accept()
-            #self.mouseOffset = self.pos() - ev.scenePos()
-            #self.pressPos = ev.scenePos()
-        #elif ev.button() == QtCore.Qt.RightButton:
-            #ev.accept()
-            ##if self.endTick:
-                ##return
-            ##self.view.tickChanged(self, delete=True)
-            
-    #def mouseReleaseEvent(self, ev):
-        ##print self, "release", ev.scenePos()
-        #if not self.movedSincePress:
-            #self.view().tickClicked(self, ev)
+class TickMenu(QtGui.QMenu):
+    
+    def __init__(self, tick, sliderItem):
+        QtGui.QMenu.__init__(self)
         
-        ##if ev.button() == QtCore.Qt.LeftButton and ev.scenePos() == self.pressPos:
-            ##color = QtGui.QColorDialog.getColor(self.color, None, "Select Color", QtGui.QColorDialog.ShowAlphaChannel)
-            ##if color.isValid():
-                ##self.color = color
-                ##self.setBrush(QtGui.QBrush(QtGui.QColor(self.color)))
-                ###self.emit(QtCore.SIGNAL('tickChanged'), self)
-                ##self.view.tickChanged(self)
+        self.tick = weakref.ref(tick)
+        self.sliderItem = weakref.ref(sliderItem)
+        
+        self.removeAct = self.addAction("Remove Tick", lambda: self.sliderItem().removeTick(tick))
+        if (not self.tick().removeAllowed) or len(self.sliderItem().ticks) < 3:
+            self.removeAct.setEnabled(False)
+            
+        positionMenu = self.addMenu("Set Position")
+        w = QtGui.QWidget()
+        l = QtGui.QGridLayout()
+        w.setLayout(l)
+        
+        value = sliderItem.tickValue(tick)
+        self.fracPosSpin = SpinBox()
+        self.fracPosSpin.setOpts(value=value, bounds=(0.0, 1.0), step=0.01, decimals=2)
+        #self.dataPosSpin = SpinBox(value=dataVal)
+        #self.dataPosSpin.setOpts(decimals=3, siPrefix=True)
+                
+        l.addWidget(QtGui.QLabel("Position:"), 0,0)
+        l.addWidget(self.fracPosSpin, 0, 1)
+        #l.addWidget(QtGui.QLabel("Position (data units):"), 1, 0)
+        #l.addWidget(self.dataPosSpin, 1,1)
+        
+        #if self.sliderItem().dataParent is None:
+        #    self.dataPosSpin.setEnabled(False)
+        
+        a = QtGui.QWidgetAction(self)
+        a.setDefaultWidget(w)
+        positionMenu.addAction(a)        
+        
+        self.fracPosSpin.sigValueChanging.connect(self.fractionalValueChanged)
+        #self.dataPosSpin.valueChanged.connect(self.dataValueChanged)
+        
+        colorAct = self.addAction("Set Color", lambda: self.sliderItem().raiseColorDialog(self.tick()))
+        if not self.tick().colorChangeAllowed:
+            colorAct.setEnabled(False)
+
+    def fractionalValueChanged(self, x):
+        self.sliderItem().setTickValue(self.tick(), self.fracPosSpin.value())
+        #if self.sliderItem().dataParent is not None:
+        #    self.dataPosSpin.blockSignals(True)
+        #    self.dataPosSpin.setValue(self.sliderItem().tickDataValue(self.tick()))
+        #    self.dataPosSpin.blockSignals(False)
+            
+    #def dataValueChanged(self, val):
+    #    self.sliderItem().setTickValue(self.tick(), val, dataUnits=True)
+    #    self.fracPosSpin.blockSignals(True)
+    #    self.fracPosSpin.setValue(self.sliderItem().tickValue(self.tick()))
+    #    self.fracPosSpin.blockSignals(False)
+

@@ -1,14 +1,14 @@
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.python2_3 import asUnicode
+from ..Qt import QtCore, QtGui
+from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
-from pyqtgraph.widgets.SpinBox import SpinBox
-from pyqtgraph.widgets.ColorButton import ColorButton
-#from pyqtgraph.widgets.GradientWidget import GradientWidget ## creates import loop
-import pyqtgraph as pg
-import pyqtgraph.pixmaps as pixmaps
+from ..widgets.SpinBox import SpinBox
+from ..widgets.ColorButton import ColorButton
+#from ..widgets.GradientWidget import GradientWidget ## creates import loop
+from .. import pixmaps as pixmaps
+from .. import functions as fn
 import os
-from pyqtgraph.pgcollections import OrderedDict
+from ..pgcollections import OrderedDict
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -18,16 +18,16 @@ class WidgetParameterItem(ParameterItem):
     * simple widget for editing value (displayed instead of label when item is selected)
     * button that resets value to default
     
-    ================= =============================================================
-    Registered Types:
-    int               Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
-                      mode.
-    float             Displays a :class:`SpinBox <pyqtgraph.SpinBox>`.
-    bool              Displays a QCheckBox
-    str               Displays a QLineEdit
-    color             Displays a :class:`ColorButton <pyqtgraph.ColorButton>`
-    colormap          Displays a :class:`GradientWidget <pyqtgraph.GradientWidget>`
-    ================= =============================================================
+    ==========================  =============================================================
+    **Registered Types:**
+    int                         Displays a :class:`SpinBox <pyqtgraph.SpinBox>` in integer
+                                mode.
+    float                       Displays a :class:`SpinBox <pyqtgraph.SpinBox>`.
+    bool                        Displays a QCheckBox
+    str                         Displays a QLineEdit
+    color                       Displays a :class:`ColorButton <pyqtgraph.ColorButton>`
+    colormap                    Displays a :class:`GradientWidget <pyqtgraph.GradientWidget>`
+    ==========================  =============================================================
     
     This class can be subclassed by overriding makeWidget() to provide a custom widget.
     """
@@ -78,6 +78,7 @@ class WidgetParameterItem(ParameterItem):
             ## no starting value was given; use whatever the widget has
             self.widgetValueChanged()
 
+        self.updateDefaultBtn()
 
     def makeWidget(self):
         """
@@ -125,6 +126,7 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanged = w.toggled
             w.value = w.isChecked
             w.setValue = w.setChecked
+            w.setEnabled(not opts.get('readonly', False))
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
@@ -140,8 +142,9 @@ class WidgetParameterItem(ParameterItem):
             w.setValue = w.setColor
             self.hideWidget = False
             w.setFlat(True)
+            w.setEnabled(not opts.get('readonly', False))            
         elif t == 'colormap':
-            from pyqtgraph.widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
+            from ..widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
             w = GradientWidget(orientation='bottom')
             w.sigChanged = w.sigGradientChangeFinished
             w.sigChanging = w.sigGradientChanged
@@ -189,6 +192,9 @@ class WidgetParameterItem(ParameterItem):
     def updateDefaultBtn(self):
         ## enable/disable default btn 
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
+        
+        # hide / show
+        self.defaultBtn.setVisible(not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -208,12 +214,14 @@ class WidgetParameterItem(ParameterItem):
         val = self.widget.value()
         newVal = self.param.setValue(val)
 
-    def widgetValueChanging(self):
+    def widgetValueChanging(self, *args):
         """
         Called when the widget's value is changing, but not finalized.
         For example: editing text before pressing enter or changing focus.
         """
-        pass
+        # This is a bit sketchy: assume the last argument of each signal is
+        # the value..
+        self.param.sigValueChanging.emit(self.param, args[-1])
         
     def selected(self, sel):
         """Called when this item has been selected (sel=True) OR deselected (sel=False)"""
@@ -230,6 +238,8 @@ class WidgetParameterItem(ParameterItem):
         self.widget.show()
         self.displayLabel.hide()
         self.widget.setFocus(QtCore.Qt.OtherFocusReason)
+        if isinstance(self.widget, SpinBox):
+            self.widget.selectNumber()  # select the numerical portion of the text for quick editing
 
     def hideEditor(self):
         self.widget.hide()
@@ -272,6 +282,8 @@ class WidgetParameterItem(ParameterItem):
         
         if 'readonly' in opts:
             self.updateDefaultBtn()
+            if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
+                self.widget.setEnabled(not opts['readonly'])
         
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
@@ -279,6 +291,9 @@ class WidgetParameterItem(ParameterItem):
                 opts['suffix'] = opts['units']
             self.widget.setOpts(**opts)
             self.updateDisplayLabel()
+        
+        
+        
             
 class EventProxy(QtCore.QObject):
     def __init__(self, qobj, callback):
@@ -304,11 +319,11 @@ class SimpleParameter(Parameter):
             self.saveState = self.saveColorState
     
     def colorValue(self):
-        return pg.mkColor(Parameter.value(self))
+        return fn.mkColor(Parameter.value(self))
     
-    def saveColorState(self):
-        state = Parameter.saveState(self)
-        state['value'] = pg.colorTuple(self.value())
+    def saveColorState(self, *args, **kwds):
+        state = Parameter.saveState(self, *args, **kwds)
+        state['value'] = fn.colorTuple(self.value())
         return state
         
     
@@ -530,8 +545,7 @@ class ListParameter(Parameter):
         self.forward, self.reverse = self.mapping(limits)
         
         Parameter.setLimits(self, limits)
-        #print self.name(), self.value(), limits
-        if len(self.reverse) > 0 and self.value() not in self.reverse[0]:
+        if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
             self.setValue(self.reverse[0][0])
             
     #def addItem(self, name, value=None):
@@ -634,6 +648,7 @@ class TextParameterItem(WidgetParameterItem):
     def makeWidget(self):
         self.textBox = QtGui.QTextEdit()
         self.textBox.setMaximumHeight(100)
+        self.textBox.setReadOnly(self.param.opts.get('readonly', False))
         self.textBox.value = lambda: str(self.textBox.toPlainText())
         self.textBox.setValue = self.textBox.setPlainText
         self.textBox.sigChanged = self.textBox.textChanged

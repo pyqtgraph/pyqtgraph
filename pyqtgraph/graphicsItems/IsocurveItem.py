@@ -1,8 +1,8 @@
 
 
 from .GraphicsObject import *
-import pyqtgraph.functions as fn
-from pyqtgraph.Qt import QtGui, QtCore
+from .. import functions as fn
+from ..Qt import QtGui, QtCore
 
 
 class IsocurveItem(GraphicsObject):
@@ -18,14 +18,14 @@ class IsocurveItem(GraphicsObject):
         """
         Create a new isocurve item. 
         
-        ============= ===============================================================
-        **Arguments**
-        data          A 2-dimensional ndarray. Can be initialized as None, and set 
-                      later using :func:`setData <pyqtgraph.IsocurveItem.setData>`
-        level         The cutoff value at which to draw the isocurve.
-        pen           The color of the curve item. Can be anything valid for 
-                      :func:`mkPen <pyqtgraph.mkPen>`
-        ============= ===============================================================
+        ==============  ===============================================================
+        **Arguments:**
+        data            A 2-dimensional ndarray. Can be initialized as None, and set
+                        later using :func:`setData <pyqtgraph.IsocurveItem.setData>`
+        level           The cutoff value at which to draw the isocurve.
+        pen             The color of the curve item. Can be anything valid for
+                        :func:`mkPen <pyqtgraph.mkPen>`
+        ==============  ===============================================================
         """
         GraphicsObject.__init__(self)
 
@@ -35,22 +35,17 @@ class IsocurveItem(GraphicsObject):
         self.setPen(pen)
         self.setData(data, level)
         
-        
-
-        #if data is not None and level is not None:
-            #self.updateLines(data, level)
-            
     
     def setData(self, data, level=None):
         """
         Set the data/image to draw isocurves for.
         
-        ============= ========================================================================
-        **Arguments**
-        data          A 2-dimensional ndarray.
-        level         The cutoff value at which to draw the curve. If level is not specified,
-                      the previously set level is used.
-        ============= ========================================================================
+        ==============  ========================================================================
+        **Arguments:**
+        data            A 2-dimensional ndarray.
+        level           The cutoff value at which to draw the curve. If level is not specified,
+                        the previously set level is used.
+        ==============  ========================================================================
         """
         if level is None:
             level = self.level
@@ -65,6 +60,7 @@ class IsocurveItem(GraphicsObject):
         """Set the level at which the isocurve is drawn."""
         self.level = level
         self.path = None
+        self.prepareGeometryChange()
         self.update()
     
 

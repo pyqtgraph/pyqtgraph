@@ -1,3 +1,0 @@
-#!/bin/sh -e
-#DEBHELPER#
-rm -rf /usr/lib/python2.7/dist-packages/pyqtgraph

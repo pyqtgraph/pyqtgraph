@@ -14,7 +14,6 @@ displaying and analyzing 2D and 3D data. ImageView provides:
 import initExample
 
 import numpy as np
-import scipy
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
@@ -29,7 +28,7 @@ win.show()
 win.setWindowTitle('pyqtgraph example: ImageView')
 
 ## Create random 3D data set with noisy signals
-img = scipy.ndimage.gaussian_filter(np.random.normal(size=(200, 200)), (5, 5)) * 20 + 100
+img = pg.gaussianFilter(np.random.normal(size=(200, 200)), (5, 5)) * 20 + 100
 img = img[np.newaxis,:,:]
 decay = np.exp(-np.linspace(0,0.3,100))[:,np.newaxis,np.newaxis]
 data = np.random.normal(size=(100, 200, 200))

@@ -103,6 +103,14 @@ class MetaArray(object):
     """
   
     version = '2'
+
+    # Default hdf5 compression to use when writing
+    #   'gzip' is widely available and somewhat slow
+    #   'lzf' is faster, but generally not available outside h5py
+    #   'szip' is also faster, but lacks write support on windows
+    # (so by default, we use no compression)
+    # May also be a tuple (filter, opts), such as ('gzip', 3)
+    defaultCompression = None
     
     ## Types allowed as axis or column names
     nameTypes = [basestring, tuple]
@@ -122,7 +130,7 @@ class MetaArray(object):
         if file is not None:
             self._data = None
             self.readFile(file, **kwargs)
-            if self._data is None:
+            if kwargs.get("readAllData", True) and self._data is None:
                 raise Exception("File read failed: %s" % file)
         else:
             self._info = info
@@ -720,25 +728,28 @@ class MetaArray(object):
         
         """
         ## decide which read function to use
-        fd = open(filename, 'rb')
-        magic = fd.read(8)
-        if magic == '\x89HDF\r\n\x1a\n':
-            fd.close()
-            self._readHDF5(filename, **kwargs)
-            self._isHDF = True
-        else:
-            fd.seek(0)
-            meta = MetaArray._readMeta(fd)
-            if 'version' in meta:
-                ver = meta['version']
+        with open(filename, 'rb') as fd:
+            magic = fd.read(8)
+            if magic == '\x89HDF\r\n\x1a\n':
+                fd.close()
+                self._readHDF5(filename, **kwargs)
+                self._isHDF = True
             else:
-                ver = 1
-            rFuncName = '_readData%s' % str(ver)
-            if not hasattr(MetaArray, rFuncName):
-                raise Exception("This MetaArray library does not support array version '%s'" % ver)
-            rFunc = getattr(self, rFuncName)
-            rFunc(fd, meta, **kwargs)
-            self._isHDF = False
+                fd.seek(0)
+                meta = MetaArray._readMeta(fd)
+
+                if not kwargs.get("readAllData", True):
+                    self._data = np.empty(meta['shape'], dtype=meta['type'])
+                if 'version' in meta:
+                    ver = meta['version']
+                else:
+                    ver = 1
+                rFuncName = '_readData%s' % str(ver)
+                if not hasattr(MetaArray, rFuncName):
+                    raise Exception("This MetaArray library does not support array version '%s'" % ver)
+                rFunc = getattr(self, rFuncName)
+                rFunc(fd, meta, **kwargs)
+                self._isHDF = False
 
     @staticmethod
     def _readMeta(fd):
@@ -756,7 +767,7 @@ class MetaArray(object):
         #print ret
         return ret
 
-    def _readData1(self, fd, meta, mmap=False):
+    def _readData1(self, fd, meta, mmap=False, **kwds):
         ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
         frameSize = 1
@@ -766,16 +777,18 @@ class MetaArray(object):
                 frameSize *= ax['values_len']
                 del ax['values_len']
                 del ax['values_type']
+        self._info = meta['info']
+        if not kwds.get("readAllData", True):
+            return
         ## the remaining data is the actual array
         if mmap:
             subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
         else:
             subarr = np.fromstring(fd.read(), dtype=meta['type'])
             subarr.shape = meta['shape']
-        self._info = meta['info']
         self._data = subarr
             
-    def _readData2(self, fd, meta, mmap=False, subset=None):
+    def _readData2(self, fd, meta, mmap=False, subset=None, **kwds):
         ## read in axis values
         dynAxis = None
         frameSize = 1
@@ -792,7 +805,10 @@ class MetaArray(object):
                     frameSize *= ax['values_len']
                     del ax['values_len']
                     del ax['values_type']
-                    
+        self._info = meta['info']
+        if not kwds.get("readAllData", True):
+            return
+
         ## No axes are dynamic, just read the entire array in at once
         if dynAxis is None:
             #if rewriteDynamic is not None:
@@ -929,7 +945,7 @@ class MetaArray(object):
         if proc == False:
             raise Exception('remote read failed')
         if proc == None:
-            import pyqtgraph.multiprocess as mp
+            from .. import multiprocess as mp
             #print "new process"
             proc = mp.Process(executable='/usr/bin/python')
             proc.setProxyOptions(deferGetattr=True)
@@ -1027,10 +1043,18 @@ class MetaArray(object):
 
     def writeHDF5(self, fileName, **opts):
         ## default options for writing datasets
+        comp = self.defaultCompression
+        if isinstance(comp, tuple):
+            comp, copts = comp
+        else:
+            copts = None
+
         dsOpts = {  
-            'compression': 'lzf',
+            'compression': comp,
             'chunks': True,
         }
+        if copts is not None:
+            dsOpts['compression_opts'] = copts
         
         ## if there is an appendable axis, then we can guess the desired chunk shape (optimized for appending)
         appAxis = opts.get('appendAxis', None)

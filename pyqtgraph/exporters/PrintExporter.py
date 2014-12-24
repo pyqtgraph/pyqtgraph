@@ -1,6 +1,6 @@
 from .Exporter import Exporter
-from pyqtgraph.parametertree import Parameter
-from pyqtgraph.Qt import QtGui, QtCore, QtSvg
+from ..parametertree import Parameter
+from ..Qt import QtGui, QtCore, QtSvg
 import re
 
 __all__ = ['PrintExporter']  
@@ -36,7 +36,7 @@ class PrintExporter(Exporter):
         dialog = QtGui.QPrintDialog(printer)
         dialog.setWindowTitle("Print Document")
         if dialog.exec_() != QtGui.QDialog.Accepted:
-            return;
+            return
             
         #dpi = QtGui.QDesktopWidget().physicalDpiX()
         
@@ -63,3 +63,6 @@ class PrintExporter(Exporter):
         finally:
             self.setExportMode(False)
         painter.end()
+
+
+#PrintExporter.register()        

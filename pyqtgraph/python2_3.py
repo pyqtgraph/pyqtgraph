@@ -1,5 +1,5 @@
 """
-Helper functions which smooth out the differences between python 2 and 3.
+Helper functions that smooth out the differences between python 2 and 3.
 """
 import sys
 

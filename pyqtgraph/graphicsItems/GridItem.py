@@ -1,8 +1,8 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .UIGraphicsItem import *
 import numpy as np
-from pyqtgraph.Point import Point
-import pyqtgraph.functions as fn
+from ..Point import Point
+from .. import functions as fn
 
 __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):

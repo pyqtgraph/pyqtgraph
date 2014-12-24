@@ -3,8 +3,9 @@ from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..Point import Point
+from .ScatterPlotItem import ScatterPlotItem, drawSymbol
+from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
-import pyqtgraph as pg
 __all__ = ['LegendItem']
 
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
@@ -20,17 +21,17 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     def __init__(self, size=None, offset=None):
         """
-        ==========  ===============================================================
-        Arguments
-        size        Specifies the fixed size (width, height) of the legend. If 
-                    this argument is omitted, the legend will autimatically resize
-                    to fit its contents.
-        offset      Specifies the offset position relative to the legend's parent.
-                    Positive values offset from the left or top; negative values
-                    offset from the right or bottom. If offset is None, the 
-                    legend must be anchored manually by calling anchor() or
-                    positioned by calling setPos(). 
-        ==========  ===============================================================
+        ==============  ===============================================================
+        **Arguments:**
+        size            Specifies the fixed size (width, height) of the legend. If
+                        this argument is omitted, the legend will autimatically resize
+                        to fit its contents.
+        offset          Specifies the offset position relative to the legend's parent.
+                        Positive values offset from the left or top; negative values
+                        offset from the right or bottom. If offset is None, the
+                        legend must be anchored manually by calling anchor() or
+                        positioned by calling setPos().
+        ==============  ===============================================================
         
         """
         
@@ -60,21 +61,21 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         Add a new entry to the legend. 
 
-        =========== ========================================================
-        Arguments
-        item        A PlotDataItem from which the line and point style
-                    of the item will be determined or an instance of 
-                    ItemSample (or a subclass), allowing the item display
-                    to be customized.
-        title       The title to display for this item. Simple HTML allowed.
-        =========== ========================================================
+        ==============  ========================================================
+        **Arguments:**
+        item            A PlotDataItem from which the line and point style
+                        of the item will be determined or an instance of
+                        ItemSample (or a subclass), allowing the item display
+                        to be customized.
+        title           The title to display for this item. Simple HTML allowed.
+        ==============  ========================================================
         """
         label = LabelItem(name)
         if isinstance(item, ItemSample):
             sample = item
         else:
             sample = ItemSample(item)        
-        row = len(self.items)
+        row = self.layout.rowCount()
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
@@ -84,10 +85,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         Removes one item from the legend. 
 
-        =========== ========================================================
-        Arguments
-        title       The title displayed for this item.
-        =========== ========================================================
+        ==============  ========================================================
+        **Arguments:**
+        title           The title displayed for this item.
+        ==============  ========================================================
         """
         # Thanks, Ulrich!
         # cycle for a match
@@ -152,21 +153,21 @@ class ItemSample(GraphicsWidget):
             p.setPen(fn.mkPen(None))
             p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
         
-        if not isinstance(self.item, pg.ScatterPlotItem):
+        if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(2, 18, 18, 2)
         
         symbol = opts.get('symbol', None)
         if symbol is not None:
-            if isinstance(self.item, pg.PlotDataItem):
+            if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
                 
-            pen = pg.mkPen(opts['pen'])
-            brush = pg.mkBrush(opts['brush'])
+            pen = fn.mkPen(opts['pen'])
+            brush = fn.mkBrush(opts['brush'])
             size = opts['size']
             
             p.translate(10,10)
-            path = pg.graphicsItems.ScatterPlotItem.drawSymbol(p, symbol, size, pen, brush)
+            path = drawSymbol(p, symbol, size, pen, brush)
         
         
         

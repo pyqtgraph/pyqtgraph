@@ -1,7 +1,7 @@
 3D Graphics
 ===========
 
-Pyqtgraph uses OpenGL to provide a 3D scenegraph system. This system is functional but still early in development. 
+PyQtGraph uses OpenGL to provide a 3D scenegraph system. This system is functional but still early in development. 
 Current capabilities include:
     
 * 3D view widget with zoom/rotate controls (mouse drag and wheel)

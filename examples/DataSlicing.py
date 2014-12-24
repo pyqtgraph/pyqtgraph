@@ -11,7 +11,6 @@ a 2D plane and interpolate data along that plane to generate a slice image
 import initExample
 
 import numpy as np
-import scipy
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 

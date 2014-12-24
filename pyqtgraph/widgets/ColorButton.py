@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as functions
+from ..Qt import QtGui, QtCore
+from .. import functions as functions
 
 __all__ = ['ColorButton']
 
@@ -11,7 +11,7 @@ class ColorButton(QtGui.QPushButton):
     Button displaying a color and allowing the user to select a new color.
     
     ====================== ============================================================
-    **Signals**:
+    **Signals:**
     sigColorChanging(self) emitted whenever a new color is picked in the color dialog
     sigColorChanged(self)  emitted when the selected color is accepted (user clicks OK)
     ====================== ============================================================

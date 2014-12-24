@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from weakref import *
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']

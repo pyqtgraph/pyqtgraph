@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
 import weakref
-#from pyqtgraph import graphicsItems
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.graphicsItems.ScatterPlotItem import ScatterPlotItem
-from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
-from pyqtgraph import PlotDataItem
+from ...Qt import QtCore, QtGui
+from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
+from ...graphicsItems.PlotCurveItem import PlotCurveItem
+from ... import PlotDataItem, ComboBox
 
 from .common import *
 import numpy as np
@@ -17,7 +16,9 @@ class PlotWidgetNode(Node):
     
     def __init__(self, name):
         Node.__init__(self, name, terminals={'In': {'io': 'in', 'multi': True}})
-        self.plot = None
+        self.plot = None  # currently selected plot 
+        self.plots = {}   # list of available plots user may select from
+        self.ui = None 
         self.items = {}
         
     def disconnected(self, localTerm, remoteTerm):
@@ -27,16 +28,27 @@ class PlotWidgetNode(Node):
         
     def setPlot(self, plot):
         #print "======set plot"
+        if plot == self.plot:
+            return
+        
+        # clear data from previous plot
+        if self.plot is not None:
+            for vid in list(self.items.keys()):
+                self.plot.removeItem(self.items[vid])
+                del self.items[vid]
+
         self.plot = plot
+        self.updateUi()
+        self.update()
         self.sigPlotChanged.emit(self)
         
     def getPlot(self):
         return self.plot
         
     def process(self, In, display=True):
-        if display:
-            #self.plot.clearPlots()
+        if display and self.plot is not None:
             items = set()
+            # Add all new input items to selected plot
             for name, vals in In.items():
                 if vals is None:
                     continue
@@ -46,14 +58,13 @@ class PlotWidgetNode(Node):
                 for val in vals:
                     vid = id(val)
                     if vid in self.items and self.items[vid].scene() is self.plot.scene():
+                        # Item is already added to the correct scene
+                        #   possible bug: what if two plots occupy the same scene? (should
+                        #   rarely be a problem because items are removed from a plot before
+                        #   switching).
                         items.add(vid)
                     else:
-                        #if isinstance(val, PlotCurveItem):
-                            #self.plot.addItem(val)
-                            #item = val
-                        #if isinstance(val, ScatterPlotItem):
-                            #self.plot.addItem(val)
-                            #item = val
+                        # Add the item to the plot, or generate a new item if needed.
                         if isinstance(val, QtGui.QGraphicsItem):
                             self.plot.addItem(val)
                             item = val
@@ -61,22 +72,48 @@ class PlotWidgetNode(Node):
                             item = self.plot.plot(val)
                         self.items[vid] = item
                         items.add(vid)
+                        
+            # Any left-over items that did not appear in the input must be removed
             for vid in list(self.items.keys()):
                 if vid not in items:
-                    #print "remove", self.items[vid]
                     self.plot.removeItem(self.items[vid])
                     del self.items[vid]
             
     def processBypassed(self, args):
+        if self.plot is None:
+            return
         for item in list(self.items.values()):
             self.plot.removeItem(item)
         self.items = {}
         
-    #def setInput(self, **args):
-        #for k in args:
-            #self.plot.plot(args[k])
+    def ctrlWidget(self):
+        if self.ui is None:
+            self.ui = ComboBox()
+            self.ui.currentIndexChanged.connect(self.plotSelected)
+            self.updateUi()
+        return self.ui
     
-
+    def plotSelected(self, index):
+        self.setPlot(self.ui.value())
+    
+    def setPlotList(self, plots):
+        """
+        Specify the set of plots (PlotWidget or PlotItem) that the user may
+        select from.
+        
+        *plots* must be a dictionary of {name: plot} pairs.
+        """
+        self.plots = plots
+        self.updateUi()
+    
+    def updateUi(self):
+        # sets list and automatically preserves previous selection
+        self.ui.setItems(self.plots)
+        try:
+            self.ui.setValue(self.plot)
+        except ValueError:
+            pass
+        
 
 class CanvasNode(Node):
     """Connection to a Canvas widget."""

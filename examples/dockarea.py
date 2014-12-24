@@ -35,7 +35,7 @@ win.setWindowTitle('pyqtgraph example: dockarea')
 ## Note that size arguments are only a suggestion; docks will still have to
 ## fill the entire dock area and obey the limits of their internal widgets.
 d1 = Dock("Dock1", size=(1, 1))     ## give this dock the minimum possible size
-d2 = Dock("Dock2 - Console", size=(500,300))
+d2 = Dock("Dock2 - Console", size=(500,300), closable=True)
 d3 = Dock("Dock3", size=(500,400))
 d4 = Dock("Dock4 (tabbed) - Plot", size=(500,200))
 d5 = Dock("Dock5 - Image", size=(500,200))

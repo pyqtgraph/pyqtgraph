@@ -1,7 +1,7 @@
 Displaying images and video
 ===========================
 
-Pyqtgraph displays 2D numpy arrays as images and provides tools for determining how to translate between the numpy data type and RGB values on the screen. If you want to display data from common image and video file formats, you will need to load the data first using another library (PIL works well for images and built-in numpy conversion). 
+PyQtGraph displays 2D numpy arrays as images and provides tools for determining how to translate between the numpy data type and RGB values on the screen. If you want to display data from common image and video file formats, you will need to load the data first using another library (PIL works well for images and built-in numpy conversion). 
 
 The easiest way to display 2D or 3D data is using the :func:`pyqtgraph.image` function::
     

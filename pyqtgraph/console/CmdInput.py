@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.python2_3 import asUnicode
+from ..Qt import QtCore, QtGui
+from ..python2_3 import asUnicode
 
 class CmdInput(QtGui.QLineEdit):
     

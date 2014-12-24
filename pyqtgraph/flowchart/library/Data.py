@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
-from pyqtgraph.Qt import QtGui, QtCore
+from ...Qt import QtGui, QtCore
 import numpy as np
 from .common import *
-from pyqtgraph.SRTTransform import SRTTransform
-from pyqtgraph.Point import Point
-from pyqtgraph.widgets.TreeWidget import TreeWidget
-from pyqtgraph.graphicsItems.LinearRegionItem import LinearRegionItem
+from ...SRTTransform import SRTTransform
+from ...Point import Point
+from ...widgets.TreeWidget import TreeWidget
+from ...graphicsItems.LinearRegionItem import LinearRegionItem
 
 from . import functions
 
@@ -182,8 +182,8 @@ class EvalNode(Node):
     def __init__(self, name):
         Node.__init__(self, name, 
             terminals = {
-                'input': {'io': 'in', 'renamable': True},
-                'output': {'io': 'out', 'renamable': True},
+                'input': {'io': 'in', 'renamable': True, 'multiable': True},
+                'output': {'io': 'out', 'renamable': True, 'multiable': True},
             },
             allowAddInput=True, allowAddOutput=True)
         
@@ -328,7 +328,7 @@ class ColumnJoinNode(Node):
 
         ## Node.restoreState should have created all of the terminals we need
         ## However: to maintain support for some older flowchart files, we need
-	## to manually add any terminals that were not taken care of.
+        ## to manually add any terminals that were not taken care of.
         for name in [n for n in state['order'] if n not in inputs]:
             Node.addInput(self, name, renamable=True, removable=True, multiable=True)
         inputs = self.inputs()

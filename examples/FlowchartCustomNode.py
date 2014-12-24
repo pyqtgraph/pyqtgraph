@@ -12,7 +12,6 @@ from pyqtgraph.flowchart.library.common import CtrlNode
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
-import scipy.ndimage
 
 app = QtGui.QApplication([])
 
@@ -44,7 +43,7 @@ win.show()
 
 ## generate random input data
 data = np.random.normal(size=(100,100))
-data = 25 * scipy.ndimage.gaussian_filter(data, (5,5))
+data = 25 * pg.gaussianFilter(data, (5,5))
 data += np.random.normal(size=(100,100))
 data[40:60, 40:60] += 15.0
 data[30:50, 30:50] += 15.0
@@ -83,15 +82,14 @@ class ImageViewNode(Node):
             else:
                 self.view.setImage(data)
 
-## register the class so it will appear in the menu of node types.
-## It will appear in the 'display' sub-menu.
-fclib.registerNodeType(ImageViewNode, [('Display',)])
+
+
         
 ## We will define an unsharp masking filter node as a subclass of CtrlNode.
 ## CtrlNode is just a convenience class that automatically creates its
 ## control widget based on a simple data structure.
 class UnsharpMaskNode(CtrlNode):
-    """Return the input data passed through scipy.ndimage.gaussian_filter."""
+    """Return the input data passed through pg.gaussianFilter."""
     nodeName = "UnsharpMask"
     uiTemplate = [
         ('sigma',  'spin', {'value': 1.0, 'step': 1.0, 'range': [0.0, None]}),
@@ -111,14 +109,30 @@ class UnsharpMaskNode(CtrlNode):
         # CtrlNode has created self.ctrls, which is a dict containing {ctrlName: widget}
         sigma = self.ctrls['sigma'].value()
         strength = self.ctrls['strength'].value()
-        output = dataIn - (strength * scipy.ndimage.gaussian_filter(dataIn, (sigma,sigma)))
+        output = dataIn - (strength * pg.gaussianFilter(dataIn, (sigma,sigma)))
         return {'dataOut': output}
+
+
+## To make our custom node classes available in the flowchart context menu,
+## we can either register them with the default node library or make a
+## new library.
+
         
-## register the class so it will appear in the menu of node types.
-## It will appear in a new 'image' sub-menu.
-fclib.registerNodeType(UnsharpMaskNode, [('Image',)])
-    
-    
+## Method 1: Register to global default library:
+#fclib.registerNodeType(ImageViewNode, [('Display',)])
+#fclib.registerNodeType(UnsharpMaskNode, [('Image',)])
+
+## Method 2: If we want to make our custom node available only to this flowchart,
+## then instead of registering the node type globally, we can create a new 
+## NodeLibrary:
+library = fclib.LIBRARY.copy() # start with the default node set
+library.addNodeType(ImageViewNode, [('Display',)])
+# Add the unsharp mask node to two locations in the menu to demonstrate
+# that we can create arbitrary menu structures
+library.addNodeType(UnsharpMaskNode, [('Image',), 
+                                      ('Submenu_test','submenu2','submenu3')])
+fc.setLibrary(library)
+
 
 ## Now we will programmatically add nodes to define the function of the flowchart.
 ## Normally, the user will do this manually or by loading a pre-generated

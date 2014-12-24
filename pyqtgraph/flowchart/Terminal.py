@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 import weakref
-from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
-import pyqtgraph.functions as fn
-from pyqtgraph.Point import Point
+from ..graphicsItems.GraphicsObject import GraphicsObject
+from .. import functions as fn
+from ..Point import Point
 #from PySide import QtCore, QtGui
 from .eq import *
 
@@ -436,10 +436,6 @@ class TerminalGraphicsItem(GraphicsObject):
     def toggleMulti(self):
         multi = self.menu.multiAct.isChecked()
         self.term.setMultiValue(multi)
-        
-    ## probably never need this
-    #def getContextMenus(self, ev):
-        #return [self.getMenu()]
     
     def removeSelf(self):
         self.term.node().removeTerminal(self.term)

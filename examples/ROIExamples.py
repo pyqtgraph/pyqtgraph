@@ -132,7 +132,7 @@ label4 = w4.addLabel(text, row=0, col=0)
 v4 = w4.addViewBox(row=1, col=0, lockAspect=True)
 g = pg.GridItem()
 v4.addItem(g)
-r4 = pg.ROI([0,0], [100,100])
+r4 = pg.ROI([0,0], [100,100], removable=True)
 r4.addRotateHandle([1,0], [0.5, 0.5])
 r4.addRotateHandle([0,1], [0.5, 0.5])
 img4 = pg.ImageItem(arr)
@@ -141,6 +141,12 @@ img4.setParentItem(r4)
 
 v4.disableAutoRange('xy')
 v4.autoRange()
+
+# Provide a callback to remove the ROI (and its children) when
+# "remove" is selected from the context menu.
+def remove():
+    v4.removeItem(r4)
+r4.sigRemoveRequested.connect(remove)
 
 
 

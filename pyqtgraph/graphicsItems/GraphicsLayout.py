@@ -1,5 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import pyqtgraph.functions as fn
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
 from .GraphicsWidget import GraphicsWidget
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox
@@ -31,6 +31,15 @@ class GraphicsLayout(GraphicsWidget):
         #ret = GraphicsWidget.resizeEvent(self, ev)
         #print self.pos(), self.mapToDevice(self.rect().topLeft())
         #return ret
+
+    def setBorder(self, *args, **kwds):
+        """
+        Set the pen used to draw border between cells.
+        
+        See :func:`mkPen <pyqtgraph.mkPen>` for arguments.        
+        """
+        self.border = fn.mkPen(*args, **kwds)
+        self.update()
     
     def nextRow(self):
         """Advance to next row for automatic item placement"""
@@ -151,4 +160,12 @@ class GraphicsLayout(GraphicsWidget):
         for i in list(self.items.keys()):
             self.removeItem(i)
 
+    def setContentsMargins(self, *args):
+        # Wrap calls to layout. This should happen automatically, but there
+        # seems to be a Qt bug:
+        # http://stackoverflow.com/questions/27092164/margins-in-pyqtgraphs-graphicslayout
+        self.layout.setContentsMargins(*args)
 
+    def setSpacing(self, *args):
+        self.layout.setSpacing(*args)
+    

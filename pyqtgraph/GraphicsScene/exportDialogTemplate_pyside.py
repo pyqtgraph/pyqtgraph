@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './GraphicsScene/exportDialogTemplate.ui'
+# Form implementation generated from reading ui file './pyqtgraph/GraphicsScene/exportDialogTemplate.ui'
 #
-# Created: Wed Jan 30 21:02:28 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.1
+# Created: Mon Dec 23 10:10:53 2013
+#      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -60,4 +60,4 @@ class Ui_Form(object):
         self.label_3.setText(QtGui.QApplication.translate("Form", "Export options", None, QtGui.QApplication.UnicodeUTF8))
         self.copyBtn.setText(QtGui.QApplication.translate("Form", "Copy", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.parametertree import ParameterTree
+from ..parametertree import ParameterTree

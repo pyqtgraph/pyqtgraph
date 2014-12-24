@@ -3,9 +3,9 @@ Widget displaying an image histogram along with gradient editor. Can be used to 
 This is a wrapper around HistogramLUTItem
 """
 
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
 from .GraphicsView import GraphicsView
-from pyqtgraph.graphicsItems.HistogramLUTItem import HistogramLUTItem
+from ..graphicsItems.HistogramLUTItem import HistogramLUTItem
 
 __all__ = ['HistogramLUTWidget']
 

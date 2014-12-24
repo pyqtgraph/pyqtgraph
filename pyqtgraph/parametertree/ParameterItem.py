@@ -1,4 +1,5 @@
-from pyqtgraph.Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode
 import os, weakref, re
 
 class ParameterItem(QtGui.QTreeWidgetItem):
@@ -15,8 +16,11 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     """
     
     def __init__(self, param, depth=0):
-        QtGui.QTreeWidgetItem.__init__(self, [param.name(), ''])
-        
+        title = param.opts.get('title', None)
+        if title is None:
+            title = param.name()
+        QtGui.QTreeWidgetItem.__init__(self, [title, ''])
+
         self.param = param
         self.param.registerItem(self)  ## let parameter know this item is connected to it (for debugging)
         self.depth = depth
@@ -30,7 +34,6 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         param.sigOptionsChanged.connect(self.optsChanged)
         param.sigParentChanged.connect(self.parentChanged)
         
-        
         opts = param.opts
         
         ## Generate context menu for renaming/removing parameter
@@ -38,6 +41,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         self.contextMenu.addSeparator()
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         if opts.get('renamable', False):
+            if param.opts.get('title', None) is not None:
+                raise Exception("Cannot make parameter with both title != None and renamable == True.")
             flags |= QtCore.Qt.ItemIsEditable
             self.contextMenu.addAction('Rename').triggered.connect(self.editName)
         if opts.get('removable', False):
@@ -107,15 +112,15 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         self.contextMenu.popup(ev.globalPos())
         
     def columnChangedEvent(self, col):
-        """Called when the text in a column has been edited.
+        """Called when the text in a column has been edited (or otherwise changed).
         By default, we only use changes to column 0 to rename the parameter.
         """
-        if col == 0:
+        if col == 0  and (self.param.opts.get('title', None) is None):
             if self.ignoreNameColumnChange:
                 return
             try:
-                newName = self.param.setName(str(self.text(col)))
-            except:
+                newName = self.param.setName(asUnicode(self.text(col)))
+            except Exception:
                 self.setText(0, self.param.name())
                 raise
                 
@@ -127,8 +132,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
                 
     def nameChanged(self, param, name):
         ## called when the parameter's name has changed.
-        self.setText(0, name)
-
+        if self.param.opts.get('title', None) is None:
+            self.setText(0, name)
+    
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
         pass

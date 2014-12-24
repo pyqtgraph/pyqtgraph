@@ -67,4 +67,21 @@ class Vector(QtGui.QVector3D):
         yield(self.x())
         yield(self.y())
         yield(self.z())
+
+    def angle(self, a):
+        """Returns the angle in degrees between this vector and the vector a."""
+        n1 = self.length()
+        n2 = a.length()
+        if n1 == 0. or n2 == 0.:
+            return None
+        ## Probably this should be done with arctan2 instead..
+        ang = np.arccos(np.clip(QtGui.QVector3D.dotProduct(self, a) / (n1 * n2), -1.0, 1.0)) ### in radians
+#        c = self.crossProduct(a)
+#        if c > 0:
+#            ang *= -1.
+        return ang * 180. / np.pi
+
+    def __abs__(self):
+        return Vector(abs(self.x()), abs(self.y()), abs(self.z()))
+        
         
