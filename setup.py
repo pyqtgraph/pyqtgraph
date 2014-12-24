@@ -35,15 +35,14 @@ setupOpts = dict(
 
 
 import distutils.dir_util
+from distutils.command import build
 import os, sys, re
 try:
     import setuptools
     from setuptools import setup
-    from setuptools.command import build
     from setuptools.command import install
 except ImportError:
     from distutils.core import setup
-    from distutils.command import build
     from distutils.command import install
 
 
