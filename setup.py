@@ -34,14 +34,18 @@ setupOpts = dict(
 )
 
 
-from distutils.core import setup
 import distutils.dir_util
 import os, sys, re
 try:
-    # just avoids warning about install_requires
     import setuptools
+    from setuptools import setup
+    from setuptools.command import build
+    from setuptools.command import install
 except ImportError:
-    pass
+    from distutils.core import setup
+    from distutils.command import build
+    from distutils.command import install
+
 
 path = os.path.split(__file__)[0]
 sys.path.insert(0, os.path.join(path, 'tools'))
@@ -55,9 +59,8 @@ allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') +
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
 
 
-import distutils.command.build
 
-class Build(distutils.command.build.build):
+class Build(build.build):
     """
     * Clear build path before building
     * Set version string in __init__ after building
@@ -71,7 +74,7 @@ class Build(distutils.command.build.build):
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
     
-        ret = distutils.command.build.build.run(self)
+        ret = build.build.run(self)
         
         # If the version in __init__ is different from the automatically-generated
         # version string, then we will update __init__ in the build directory
@@ -94,9 +97,8 @@ class Build(distutils.command.build.build):
             sys.excepthook(*sys.exc_info())
         return ret
         
-import distutils.command.install
 
-class Install(distutils.command.install.install):
+class Install(install.install):
     """
     * Check for previously-installed version before installing
     """
@@ -108,7 +110,8 @@ class Install(distutils.command.install.install):
                             "installed at %s; remove this before installing." 
                             % (name, path))
         print("Installing to %s" % path)
-        return distutils.command.install.install.run(self)
+        return install.install.run(self)
+
         
 setup(
     version=version,
