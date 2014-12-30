@@ -75,7 +75,7 @@ class LayoutWidget(QtGui.QWidget):
 
     def getWidget(self, row, col):
         """Return the widget in (*row*, *col*)"""
-        return self.row[row][col]
+        return self.rows[row][col]
 
     #def itemIndex(self, item):
         #for i in range(self.layout.count()):
