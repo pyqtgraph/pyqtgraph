@@ -471,12 +471,13 @@ class PlotItem(GraphicsWidget):
         
         ### Average data together
         (x, y) = curve.getData()
+        stepMode = curve.opts['stepMode']
         if plot.yData is not None and y.shape == plot.yData.shape:
             # note that if shapes do not match, then the average resets.
             newData = plot.yData * (n-1) / float(n) + y * 1.0 / float(n)
-            plot.setData(plot.xData, newData)
+            plot.setData(plot.xData, newData, stepMode=stepMode)
         else:
-            plot.setData(x, y)
+            plot.setData(x, y, stepMode=stepMode)
         
     def autoBtnClicked(self):
         if self.autoBtn.mode == 'auto':
