@@ -1,4 +1,8 @@
-pyqtgraph-0.9.9  [unreleased]
+pyqtgraph-0.9.10
+
+  Fixed installation issues with more recent pip versions.
+
+pyqtgraph-0.9.9
 
   API / behavior changes:
     - Dynamic import system abandoned; pg now uses static imports throughout.
@@ -97,6 +101,8 @@ pyqtgraph-0.9.9  [unreleased]
     - Removed a few cyclic references
     - Fixed Parameter 'readonly' option for bool, color, and text parameter types
     - Fixed alpha on GLScatterPlotItem spots (formerly maxed out at alpha=200)
+    - Fixed a few bugs causing exit crashes
+
 
 pyqtgraph-0.9.8  2013-11-24
 

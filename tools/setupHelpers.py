@@ -360,12 +360,9 @@ def getGitVersion(tagPrefix):
         
     # Find last tag matching "tagPrefix.*"
     tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
-    while True:
-        if len(tagNames) == 0:
-            raise Exception("Could not determine last tagged version.")
-        lastTagName = tagNames.pop()
-        if re.match(tagPrefix+r'\d+\.\d+.*', lastTagName):
-            break
+    tagNames = [x for x in tagNames if re.match(tagPrefix + r'\d+\.\d+\..*', x)]
+    tagNames.sort(key=lambda s: map(int, s[len(tagPrefix):].split('.')))
+    lastTagName = tagNames[-1]
     gitVersion = lastTagName.replace(tagPrefix, '')
     
     # is this commit an unchanged checkout of the last tagged version? 

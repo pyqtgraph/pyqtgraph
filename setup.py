@@ -34,29 +34,32 @@ setupOpts = dict(
 )
 
 
-from distutils.core import setup
 import distutils.dir_util
+from distutils.command import build
 import os, sys, re
 try:
-    # just avoids warning about install_requires
     import setuptools
+    from setuptools import setup
+    from setuptools.command import install
 except ImportError:
-    pass
+    from distutils.core import setup
+    from distutils.command import install
+
 
 path = os.path.split(__file__)[0]
 sys.path.insert(0, os.path.join(path, 'tools'))
 import setupHelpers as helpers
 
 ## generate list of all sub-packages
-allPackages = helpers.listAllPackages(pkgroot='pyqtgraph') + ['pyqtgraph.examples']
+allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') + 
+               ['pyqtgraph.'+x for x in helpers.listAllPackages(pkgroot='examples')])
 
 ## Decide what version string to use in the build
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
 
 
-import distutils.command.build
 
-class Build(distutils.command.build.build):
+class Build(build.build):
     """
     * Clear build path before building
     * Set version string in __init__ after building
@@ -70,7 +73,7 @@ class Build(distutils.command.build.build):
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
     
-        ret = distutils.command.build.build.run(self)
+        ret = build.build.run(self)
         
         # If the version in __init__ is different from the automatically-generated
         # version string, then we will update __init__ in the build directory
@@ -93,20 +96,21 @@ class Build(distutils.command.build.build):
             sys.excepthook(*sys.exc_info())
         return ret
         
-import distutils.command.install
 
-class Install(distutils.command.install.install):
+class Install(install.install):
     """
     * Check for previously-installed version before installing
     """
     def run(self):
         name = self.config_vars['dist_name']
-        if name in os.listdir(self.install_libbase):
+        path = self.install_libbase
+        if os.path.exists(path) and name in os.listdir(path):
             raise Exception("It appears another version of %s is already "
                             "installed at %s; remove this before installing." 
-                            % (name, self.install_libbase))
-        print("Installing to %s" % self.install_libbase)
-        return distutils.command.install.install.run(self)
+                            % (name, path))
+        print("Installing to %s" % path)
+        return install.install.run(self)
+
         
 setup(
     version=version,
@@ -119,7 +123,7 @@ setup(
               'style': helpers.StyleCommand},
     packages=allPackages,
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
-    #package_data={'pyqtgraph': ['graphicsItems/PlotItem/*.png']},
+    package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg']},
     install_requires = [
         'numpy',
         ],
