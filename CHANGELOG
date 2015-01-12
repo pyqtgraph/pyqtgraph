@@ -1,8 +1,14 @@
-pyqtgraph-0.9.10
+pyqtgraph-0.9.11  Unreleased
+
+  Bugfixes:
+    - Fixed extraneous axis being drawn when providing a custom AxisItem to a
+      PlotItem
+
+pyqtgraph-0.9.10  2014-12-24
 
   Fixed installation issues with more recent pip versions.
 
-pyqtgraph-0.9.9
+pyqtgraph-0.9.9  2014-12-13
 
   API / behavior changes:
     - Dynamic import system abandoned; pg now uses static imports throughout.
