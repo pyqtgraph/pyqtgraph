@@ -168,7 +168,9 @@ class PlotItem(GraphicsWidget):
             axisItems = {}
         self.axes = {}
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            axis = axisItems.get(k, AxisItem(orientation=k, parent=self))
+            axis = axisItems.get(k)
+            if axis is None:
+                axis = AxisItem(orientation=k, parent=self)
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
