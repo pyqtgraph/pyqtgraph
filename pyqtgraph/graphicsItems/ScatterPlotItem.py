@@ -32,7 +32,7 @@ coords = {
         (0.05, 0.5), (0.05, 0.05), (0.5, 0.05), (0.5, -0.05),
         (0.05, -0.05), (0.05, -0.5), (-0.05, -0.5), (-0.05, -0.05)
     ],
-    'arrow_up': [
+    'arrow_down': [
         (-0.125, 0.125), (0, 0), (0.125, 0.125),
         (0.05, 0.125), (0.05, 0.5), (-0.05, 0.5), (-0.05, 0.125)
     ],
@@ -46,9 +46,9 @@ tr = QtGui.QTransform()
 tr.rotate(45)
 Symbols['x'] = tr.map(Symbols['+'])
 tr.rotate(45)
-Symbols['arrow_right'] = tr.map(Symbols['arrow_up'])
-Symbols['arrow_down'] = tr.map(Symbols['arrow_right'])
-Symbols['arrow_left'] = tr.map(Symbols['arrow_down'])
+Symbols['arrow_right'] = tr.map(Symbols['arrow_down'])
+Symbols['arrow_up'] = tr.map(Symbols['arrow_right'])
+Symbols['arrow_left'] = tr.map(Symbols['arrow_up'])
 
 
 def drawSymbol(painter, symbol, size, pen, brush):
