@@ -20,7 +20,7 @@ QT_LIB = None
 ## Automatically determine whether to use PyQt or PySide. 
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
-libOrder = [PYQT4, PYSIDE, PYQT5]
+libOrder = [PYQT5, PYQT4, PYSIDE]
 
 for lib in libOrder:
     if lib in sys.modules:
@@ -172,6 +172,8 @@ if QT_LIB.startswith('PyQt'):
 ## Make sure we have Qt >= 4.7
 versionReq = [4, 7]
 USE_PYSIDE = QT_LIB == PYSIDE # for backward compatibility
+USE_PYQT5 = QT_LIB == PYQT5 # for backward compatibility
+USE_PYQT4 = QT_LIB == PYQT4 # for backward compatibility
 QtVersion = PySide.QtCore.__version__ if QT_LIB ==  PYSIDE else QtCore.QT_VERSION_STR
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:

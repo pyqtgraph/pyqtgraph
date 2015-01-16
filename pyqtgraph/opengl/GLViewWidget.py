@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtOpenGL
+from ..Qt import QtCore, QtGui, QtOpenGL, USE_PYQT5
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
@@ -323,10 +323,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         
     def wheelEvent(self, ev):
-        if (ev.modifiers() & QtCore.Qt.ControlModifier):
-            self.opts['fov'] *= 0.999**ev.delta()
+        delta = 0
+        if not USE_PYQT5:
+            delta = ev.delta()
         else:
-            self.opts['distance'] *= 0.999**ev.delta()
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                delta = ev.angleDelta().y()
+        if (ev.modifiers() & QtCore.Qt.ControlModifier):
+            self.opts['fov'] *= 0.999**delta
+        else:
+            self.opts['distance'] *= 0.999**delta
         self.update()
 
     def keyPressEvent(self, ev):
