@@ -500,12 +500,12 @@ class ROI(GraphicsObject):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
             h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen, parent=self)
-            h.setPos(info['pos'] * self.state['size'])
             info['item'] = h
         else:
             h = info['item']
             if info['pos'] is None:
                 info['pos'] = h.pos()
+        h.setPos(info['pos'] * self.state['size'])
             
         ## connect the handle to this ROI
         #iid = len(self.handles)
