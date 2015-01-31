@@ -1200,14 +1200,16 @@ class Handle(UIGraphicsItem):
     sigClicked = QtCore.Signal(object, object)   # self, event
     sigRemoveRequested = QtCore.Signal(object)   # self
     
-    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None, deletable=False):
+    def __init__(self, radius, typ=None, pen=fn.mkPen(200, 200, 220), parent=None, deletable=False,
+                 activePen = fn.mkPen(255, 255,0)):
         #print "   create item with parent", parent
         #self.bounds = QtCore.QRectF(-1e-10, -1e-10, 2e-10, 2e-10)
         #self.setFlags(self.ItemIgnoresTransformations | self.ItemSendsScenePositionChanges)
         self.rois = []
         self.radius = radius
         self.typ = typ
-        self.pen = fn.mkPen(pen)
+        self.pen = pen
+        self.activePen = activePen
         self.currentPen = self.pen
         self.pen.setWidth(0)
         self.pen.setCosmetic(True)
@@ -1259,7 +1261,7 @@ class Handle(UIGraphicsItem):
                     hover=True
                     
         if hover:
-            self.currentPen = fn.mkPen(255, 255,0)
+            self.currentPen = self.activePen
         else:
             self.currentPen = self.pen
         self.update()
@@ -1327,16 +1329,21 @@ class Handle(UIGraphicsItem):
                 for r in self.rois:
                     r.stateChangeFinished()
             self.isMoving = False
+            self.currentPen = self.pen
+            self.update()
         elif ev.isStart():
             for r in self.rois:
                 r.handleMoveStarted()
             self.isMoving = True
             self.startPos = self.scenePos()
             self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
+            self.currentPen = self.activePen
             
         if self.isMoving:  ## note: isMoving may become False in mid-drag due to right-click.
             pos = ev.scenePos() + self.cursorOffset
+            self.currentPen = self.activePen
             self.movePoint(pos, ev.modifiers(), finish=False)
+
 
     def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
         for r in self.rois:
