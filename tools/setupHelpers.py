@@ -372,7 +372,7 @@ def getGitVersion(tagPrefix):
         #branch = getGitBranch()
         #gitVersion = gitVersion + "-%s-%s" % (branch, head[:10])
         
-    gitVersion = check_output(['git', 'describe', '--tags']).strip()
+    gitVersion = check_output(['git', 'describe', '--tags']).strip().decode('utf-8')
     
     # any uncommitted modifications?
     modified = False
