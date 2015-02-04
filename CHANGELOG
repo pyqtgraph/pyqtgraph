@@ -1,3 +1,8 @@
+pyqtgraph-0.9.11  [unreleased]
+
+  Bugfixes:
+    - Fixed git version string generation on python3
+
 pyqtgraph-0.9.10
 
   Fixed installation issues with more recent pip versions.

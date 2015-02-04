@@ -351,7 +351,7 @@ def gitCommit(name):
 def getGitVersion(tagPrefix):
     """Return a version string with information about this git checkout.
     If the checkout is an unmodified, tagged commit, then return the tag version.
-    If this is not a tagged commit, return version-branch_name-commit_id.
+    If this is not a tagged commit, return the output of ``git describe --tags``.
     If this checkout has been modified, append "+" to the version.
     """
     path = os.getcwd()
@@ -359,18 +359,20 @@ def getGitVersion(tagPrefix):
         return None
         
     # Find last tag matching "tagPrefix.*"
-    tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
-    tagNames = [x for x in tagNames if re.match(tagPrefix + r'\d+\.\d+\..*', x)]
-    tagNames.sort(key=lambda s: map(int, s[len(tagPrefix):].split('.')))
-    lastTagName = tagNames[-1]
-    gitVersion = lastTagName.replace(tagPrefix, '')
+    #tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
+    #tagNames = [x for x in tagNames if re.match(tagPrefix + r'\d+\.\d+\..*', x)]
+    #tagNames.sort(key=lambda s: map(int, s[len(tagPrefix):].split('.')))
+    #lastTagName = tagNames[-1]
+    #gitVersion = lastTagName.replace(tagPrefix, '')
     
-    # is this commit an unchanged checkout of the last tagged version? 
-    lastTag = gitCommit(lastTagName)
-    head = gitCommit('HEAD')
-    if head != lastTag:
-        branch = getGitBranch()
-        gitVersion = gitVersion + "-%s-%s" % (branch, head[:10])
+    ## is this commit an unchanged checkout of the last tagged version? 
+    #lastTag = gitCommit(lastTagName)
+    #head = gitCommit('HEAD')
+    #if head != lastTag:
+        #branch = getGitBranch()
+        #gitVersion = gitVersion + "-%s-%s" % (branch, head[:10])
+        
+    gitVersion = check_output(['git', 'describe', '--tags']).strip().decode('utf-8')
     
     # any uncommitted modifications?
     modified = False
