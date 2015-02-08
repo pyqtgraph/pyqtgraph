@@ -160,4 +160,12 @@ class GraphicsLayout(GraphicsWidget):
         for i in list(self.items.keys()):
             self.removeItem(i)
 
+    def setContentsMargins(self, *args):
+        # Wrap calls to layout. This should happen automatically, but there
+        # seems to be a Qt bug:
+        # http://stackoverflow.com/questions/27092164/margins-in-pyqtgraphs-graphicslayout
+        self.layout.setContentsMargins(*args)
 
+    def setSpacing(self, *args):
+        self.layout.setSpacing(*args)
+    

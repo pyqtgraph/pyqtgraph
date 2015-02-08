@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.9.8'
+__version__ = '0.9.10'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -275,7 +275,12 @@ from .Qt import isQObjectAlive
 
 ## Attempts to work around exit crashes:
 import atexit
+_cleanupCalled = False
 def cleanup():
+    global _cleanupCalled
+    if _cleanupCalled:
+        return
+    
     if not getConfigOption('exitCleanup'):
         return
     
@@ -300,7 +305,21 @@ def cleanup():
                 s.addItem(o)
         except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
             continue
+    _cleanupCalled = True
+
 atexit.register(cleanup)
+
+# Call cleanup when QApplication quits. This is necessary because sometimes
+# the QApplication will quit before the atexit callbacks are invoked.
+# Note: cannot connect this function until QApplication has been created, so
+# instead we have GraphicsView.__init__ call this for us.
+_cleanupConnected = False
+def _connectCleanup():
+    global _cleanupConnected
+    if _cleanupConnected:
+        return
+    QtGui.QApplication.instance().aboutToQuit.connect(cleanup)
+    _cleanupConnected = True
 
 
 ## Optional function for exiting immediately (with some manual teardown)

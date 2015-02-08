@@ -159,7 +159,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
-        
         return [self._itemNames[i[1]] for i in items]
     
     def paintGL(self, region=None, viewport=None, useItemNames=False):
@@ -193,8 +192,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 try:
                     glPushAttrib(GL_ALL_ATTRIB_BITS)
                     if useItemNames:
-                        glLoadName(id(i))
-                        self._itemNames[id(i)] = i
+                        glLoadName(i._id)
+                        self._itemNames[i._id] = i
                     i.paint()
                 except:
                     from .. import debug

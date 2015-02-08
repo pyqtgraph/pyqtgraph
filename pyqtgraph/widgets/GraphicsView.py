@@ -72,6 +72,13 @@ class GraphicsView(QtGui.QGraphicsView):
         
         QtGui.QGraphicsView.__init__(self, parent)
         
+        # This connects a cleanup function to QApplication.aboutToQuit. It is
+        # called from here because we have no good way to react when the
+        # QApplication is created by the user.
+        # See pyqtgraph.__init__.py
+        from .. import _connectCleanup
+        _connectCleanup()
+        
         if useOpenGL is None:
             useOpenGL = getConfigOption('useOpenGL')
         
@@ -103,7 +110,8 @@ class GraphicsView(QtGui.QGraphicsView):
         self.currentItem = None
         self.clearMouse()
         self.updateMatrix()
-        self.sceneObj = GraphicsScene()
+        # GraphicsScene must have parent or expect crashes!
+        self.sceneObj = GraphicsScene(parent=self)
         self.setScene(self.sceneObj)
         
         ## Workaround for PySide crash
@@ -144,7 +152,6 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
-        #print "GV: paint", ev.rect()
         return QtGui.QGraphicsView.paintEvent(self, ev)
     
     def render(self, *args, **kwds):
