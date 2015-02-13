@@ -23,8 +23,8 @@ def plot():
     pts = 100
     x = np.linspace(0, 0.8, pts)
     y = np.random.random(size=pts)*0.8
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(n):
+        for j in range(n):
             ## calling PlotWidget.plot() generates a PlotDataItem, which 
             ## has a bit more overhead than PlotCurveItem, which is all 
             ## we need here. This overhead adds up quickly and makes a big

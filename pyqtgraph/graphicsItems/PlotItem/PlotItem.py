@@ -17,6 +17,7 @@ This class is very heavily featured:
     display, power spectrum, svg/png export, plot linking, and more.
 """
 from ...Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ...python2_3 import string_types
 from ... import pixmaps
 import sys
 
@@ -274,7 +275,7 @@ class PlotItem(GraphicsWidget):
                 labels[label] = kargs[label]
                 del kargs[label]
         for k in labels:
-            if isinstance(labels[k], basestring):
+            if isinstance(labels[k], string_types):
                 labels[k] = (labels[k],)
             self.setLabel(k, *labels[k])
                 
@@ -769,8 +770,8 @@ class PlotItem(GraphicsWidget):
                     
                     fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" stroke="none" fill-opacity="%f"/>\n' % (x, y, color, opacity))
                     #fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                    #for i in xrange(1, len(x)):
-                        #fh.write('L%f,%f ' % (x[i], y[i]))
+                    #for xi, yi in zip(x, y)
+                        #fh.write('L%f,%f ' % (xi, yi))
                     
                     #fh.write('"/>')
             
@@ -1148,7 +1149,7 @@ class PlotItem(GraphicsWidget):
             if k == 'title':
                 self.setTitle(v)
             else:
-                if isinstance(v, basestring):
+                if isinstance(v, string_types):
                     v = (v,)
                 self.setLabel(k, *v)
         

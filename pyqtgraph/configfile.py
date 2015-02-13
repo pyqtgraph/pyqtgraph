@@ -13,7 +13,7 @@ import re, os, sys
 from .pgcollections import OrderedDict
 GLOBAL_PATH = None # so not thread safe.
 from . import units
-from .python2_3 import asUnicode
+from .python2_3 import asUnicode, string_types
 from .Qt import QtCore
 from .Point import Point
 from .colormap import ColorMap
@@ -98,7 +98,7 @@ def genString(data, indent=''):
 def parseString(lines, start=0):
     
     data = OrderedDict()
-    if isinstance(lines, basestring):
+    if isinstance(lines, string_types):
         lines = lines.split('\n')
         lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
         

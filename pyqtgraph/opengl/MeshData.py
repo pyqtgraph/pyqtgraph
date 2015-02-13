@@ -207,7 +207,7 @@ class MeshData(object):
             faceNorms = self.faceNormals()
             vertFaces = self.vertexFaces()
             self._vertexNormals = np.empty(self._vertexes.shape, dtype=float)
-            for vindex in xrange(self._vertexes.shape[0]):
+            for vindex, faces in enumerate(vertFaces):
                 faces = vertFaces[vindex]
                 if len(faces) == 0:
                     self._vertexNormals[vindex] = (0,0,0)
@@ -316,10 +316,9 @@ class MeshData(object):
         self._vertexFaces = []
         self._faceNormals = None
         self._vertexNormals = None
-        for i in xrange(faces.shape[0]):
-            face = faces[i]
+        for i, face in enumerate(faces):
             inds = []
-            for j in range(face.shape[0]):
+            for j, pt in enumerate(face):
                 pt = face[j]
                 pt2 = tuple([round(x*1e14) for x in pt])  ## quantize to be sure that nearly-identical points will be merged
                 index = verts.get(pt2, None)
@@ -348,9 +347,8 @@ class MeshData(object):
         Return list mapping each vertex index to a list of face indexes that use the vertex.
         """
         if self._vertexFaces is None:
-            self._vertexFaces = [[] for i in xrange(len(self.vertexes()))]
-            for i in xrange(self._faces.shape[0]):
-                face = self._faces[i]
+            self._vertexFaces = [[] for _ in self.vertexes()]
+            for i, face in enumerate(self._faces):
                 for ind in face:
                     self._vertexFaces[ind].append(i)
         return self._vertexFaces

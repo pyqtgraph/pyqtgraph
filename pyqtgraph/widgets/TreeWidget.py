@@ -162,7 +162,7 @@ class TreeWidget(QtGui.QTreeWidget):
         if hasattr(item, 'treeWidgetChanged'):
             item.treeWidgetChanged()
         else:
-            for i in xrange(item.childCount()):
+            for i in range(item.childCount()):
                 TreeWidget.informTreeWidgetChange(item.child(i))
         
         
@@ -194,7 +194,7 @@ class TreeWidget(QtGui.QTreeWidget):
         return item
 
     def topLevelItems(self):
-        return map(self.topLevelItem, xrange(self.topLevelItemCount()))
+        return map(self.topLevelItem, range(self.topLevelItemCount()))
         
     def clear(self):
         items = self.topLevelItems()

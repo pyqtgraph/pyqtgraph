@@ -723,7 +723,6 @@ class ObjTracker(object):
         for k in self.startCount:
             c1[k] = c1.get(k, 0) - self.startCount[k]
         typs = list(c1.keys())
-        #typs.sort(lambda a,b: cmp(c1[a], c1[b]))
         typs.sort(key=lambda a: c1[a])
         for t in typs:
             if c1[t] == 0:
@@ -824,7 +823,6 @@ class ObjTracker(object):
             c = count.get(typ, [0,0])
             count[typ] =  [c[0]+1, c[1]+objectSize(obj)]
         typs = list(count.keys())
-        #typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
         typs.sort(key=lambda a: count[a][1])
         
         for t in typs:

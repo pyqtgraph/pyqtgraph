@@ -1,5 +1,6 @@
 from .. import metaarray as metaarray
 from ..Qt import QtCore
+from ..python2_3 import string_types
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
@@ -767,7 +768,7 @@ def isSequence(obj):
         ##print rec1, dtype
         #arr = np.empty(len(self), dtype=dtype)
         #arr[0] = tuple(rec1.values())
-        #for i in xrange(1, len(self)):
+        #for i in range(1, len(self)):
             #arr[i] = tuple(self[i].values())
         #return arr
             
@@ -778,7 +779,7 @@ def isSequence(obj):
             #return self.data[arg]
             
     #def __getitem__list(self, arg):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, string_types):
             #return [d.get(arg, None) for d in self.data]
         #elif isinstance(arg, int):
             #return self.data[arg]
@@ -789,7 +790,7 @@ def isSequence(obj):
             #raise TypeError(type(arg))
         
     #def __getitem__dict(self, arg):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, string_types):
             #return self.data[arg]
         #elif isinstance(arg, int):
             #return dict([(k, v[arg]) for k, v in self.data.iteritems()])
@@ -806,7 +807,7 @@ def isSequence(obj):
             #self.data[arg] = val
 
     #def __setitem__list(self, arg, val):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, string_types):
             #if len(val) != len(self.data):
                 #raise Exception("Values (%d) and data set (%d) are not the same length." % (len(val), len(self.data)))
             #for i, rec in enumerate(self.data):
@@ -820,7 +821,7 @@ def isSequence(obj):
             #raise TypeError(type(arg))
         
     #def __setitem__dict(self, arg, val):
-        #if isinstance(arg, basestring):
+        #if isinstance(arg, string_types):
             #if len(val) != len(self.data[arg]):
                 #raise Exception("Values (%d) and data set (%d) are not the same length." % (len(val), len(self.data[arg])))
             #self.data[arg] = val
@@ -835,13 +836,13 @@ def isSequence(obj):
 
     #def _orderArgs(self, args):
         ### return args in (int, str) order
-        #if isinstance(args[0], basestring):
+        #if isinstance(args[0], string_types):
             #return (args[1], args[0])
         #else:
             #return args
         
     #def __iter__(self):
-        #for i in xrange(len(self)):
+        #for i in range(len(self)):
             #yield self[i]
 
     #def __len__(self):

@@ -1,4 +1,5 @@
 from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..python2_3 import string_types
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsItem import GraphicsItem
@@ -47,7 +48,7 @@ def drawSymbol(painter, symbol, size, pen, brush):
     painter.scale(size, size)
     painter.setPen(pen)
     painter.setBrush(brush)
-    if isinstance(symbol, basestring):
+    if isinstance(symbol, string_types):
         symbol = Symbols[symbol]
     if np.isscalar(symbol):
         symbol = list(Symbols.values())[symbol % len(Symbols)]
@@ -455,7 +456,7 @@ class ScatterPlotItem(GraphicsObject):
                 brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
-            #for i in xrange(len(brushes)):
+            #for i in range(len(brushes)):
                 #self.data[i]['brush'] = fn.mkBrush(brushes[i], **kargs)
             dataSet['brush'] = brushes
         else:
@@ -815,7 +816,7 @@ class ScatterPlotItem(GraphicsObject):
             #else:
                 #print "No hit:", (x, y), (sx, sy)
                 #print "       ", (sx-s2x, sy-s2y), (sx+s2x, sy+s2y)
-        #pts.sort(lambda a,b: cmp(b.zValue(), a.zValue()))
+        #pts.sort(key=lambda s: s.zValue(), reverse=True)
         return pts[::-1]
             
 

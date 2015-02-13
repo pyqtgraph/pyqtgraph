@@ -19,7 +19,7 @@ def getPixmap(name):
     """
     key = name+'.png'
     data = pixmapData.pixmapData[key]
-    if isinstance(data, basestring) or isinstance(data, bytes):
+    if isinstance(data, (str, bytes)):
         pixmapData.pixmapData[key] = pickle.loads(data)
     arr = pixmapData.pixmapData[key]
     return QtGui.QPixmap(makeQImage(arr, alpha=True))

@@ -1,4 +1,5 @@
 from ..Qt import QtGui, QtCore
+from ..python2_3 import string_types
 from .. import Transform3D
 from OpenGL.GL import *
 from OpenGL import GL
@@ -89,7 +90,7 @@ class GLGraphicsItem(QtCore.QObject):
             
         
         """
-        if isinstance(opts, basestring):
+        if isinstance(opts, string_types):
             opts = GLOptions[opts]
         self.__glOpts = opts.copy()
         self.update()
@@ -243,7 +244,7 @@ class GLGraphicsItem(QtCore.QObject):
         for k,v in self.__glOpts.items():
             if v is None:
                 continue
-            if isinstance(k, basestring):
+            if isinstance(k, string_types):
                 func = getattr(GL, k)
                 func(*v)
             else:

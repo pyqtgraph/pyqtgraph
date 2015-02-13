@@ -2,7 +2,7 @@ from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
 import sys
 from ..pgcollections import OrderedDict
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, string_types
 
 class ComboBox(QtGui.QComboBox):
     """Extends QComboBox to add extra functionality.
@@ -158,7 +158,7 @@ class ComboBox(QtGui.QComboBox):
     def addItem(self, *args, **kwds):
         # Need to handle two different function signatures for QComboBox.addItem
         try:
-            if isinstance(args[0], basestring):
+            if isinstance(args[0], string_types):
                 text = args[0]
                 if len(args) == 2:
                     value = args[1]

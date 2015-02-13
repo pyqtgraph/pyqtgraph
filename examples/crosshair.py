@@ -31,7 +31,7 @@ p1.setAutoVisible(y=True)
 
 
 #create numpy arrays
-#make the numbers large to show that the xrange shows data from 10000 to all the way 0
+#make the numbers large to show that the range shows data from 10000 to all the way 0
 data1 = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
 data2 = 15000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
 

@@ -232,10 +232,8 @@ def unitTests():
     Return the exit code.
     """
     try:
-        if sys.version[0] == '3':
-            out = check_output('PYTHONPATH=. py.test-3', shell=True)
-        else:
-            out = check_output('PYTHONPATH=. py.test', shell=True)
+        out = check_output([sys.executable, "-mpy.test"],
+                           env=dict(os.environ, PYTHONPATH="."))
         ret = 0
     except Exception as e:
         out = e.output
