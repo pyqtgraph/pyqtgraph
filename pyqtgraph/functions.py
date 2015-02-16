@@ -447,11 +447,9 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     
     ## Build array of sample locations. 
     grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
-    #print shape, grid.shape
     x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
     x += origin
-    #print "X values:"
-    #print x
+
     ## iterate manually over unused axes since map_coordinates won't do it for us
     if have_scipy:
         extraShape = data.shape[len(axes):]
@@ -464,7 +462,6 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         # interpolateArray expects indexes at the last axis. 
         tr = tuple(range(1,x.ndim)) + (0,)
         output = interpolateArray(data, x.transpose(tr))
-        
     
     tr = list(range(output.ndim))
     trb = []
@@ -483,7 +480,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
 
 def interpolateArray(data, x, default=0.0):
     """
-    N-dimensional interpolation similar scipy.ndimage.map_coordinates.
+    N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
     
     This function returns linearly-interpolated values sampled from a regular
     grid of data. 
@@ -492,7 +489,7 @@ def interpolateArray(data, x, default=0.0):
     *x* is an array with (shape[-1] <= data.ndim) containing the locations
         within *data* to interpolate. 
     
-    Returns array of shape (x.shape[:-1] + data.shape)
+    Returns array of shape (x.shape[:-1] + data.shape[x.shape[-1]:])
     
     For example, assume we have the following 2D image data::
     
@@ -535,11 +532,12 @@ def interpolateArray(data, x, default=0.0):
 
     This is useful for interpolating from arrays of colors, vertexes, etc.
     """
-    
     prof = debug.Profiler()
     
     nd = data.ndim
     md = x.shape[-1]
+    if md > nd:
+        raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
     # First we generate arrays of indexes that are needed to 
     # extract the data surrounding each point
@@ -552,21 +550,19 @@ def interpolateArray(data, x, default=0.0):
     for ax in range(md):
         mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
         # keep track of points that need to be set to default
-        totalMask &= mask  
+        totalMask &= mask
         
         # ..and keep track of indexes that are out of bounds 
         # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
         #  of bounds, but the interpolation will work anyway)
         mask &= (xmax[...,ax] < data.shape[ax])
         axisIndex = indexes[...,ax][fields[ax]]
-        #axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
         axisIndex[axisIndex < 0] = 0
         axisIndex[axisIndex >= data.shape[ax]] = 0
         fieldInds.append(axisIndex)
     prof()
-    
+
     # Get data values surrounding each requested point
-    # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
     fieldData = data[tuple(fieldInds)]
     prof()
     
@@ -585,8 +581,13 @@ def interpolateArray(data, x, default=0.0):
         result = result.sum(axis=0)
 
     prof()
-    totalMask.shape = totalMask.shape + (1,) * (nd - md)
-    result[~totalMask] = default
+
+    if totalMask.ndim > 0:
+        result[~totalMask] = default
+    else:
+        if totalMask is False:
+            result[:] = default
+
     prof()
     return result
 

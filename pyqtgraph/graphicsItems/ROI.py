@@ -1061,8 +1061,8 @@ class ROI(GraphicsObject):
         =================== ====================================================
         
         This method uses :func:`affineSlice <pyqtgraph.affineSlice>` to generate
-        the slice from *data* and uses :func:`getAffineSliceParams <pyqtgraph.ROI.getAffineSliceParams>` to determine the parameters to 
-        pass to :func:`affineSlice <pyqtgraph.affineSlice>`.
+        the slice from *data* and uses :func:`getAffineSliceParams <pyqtgraph.ROI.getAffineSliceParams>`
+        to determine the parameters to pass to :func:`affineSlice <pyqtgraph.affineSlice>`.
         
         If *returnMappedCoords* is True, then the method returns a tuple (result, coords) 
         such that coords is the set of coordinates used to interpolate values from the original
@@ -1079,24 +1079,16 @@ class ROI(GraphicsObject):
         else:
             kwds['returnCoords'] = True
             result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
-            #tr = fn.transformToArray(img.transform())[:2]  ## remove perspective transform values
-            
-            ### separate translation from scale/rotate
-            #translate = tr[:,2]
-            #tr = tr[:,:2]
-            #tr = tr.reshape((2,2) + (1,)*(coords.ndim-1))
-            #coords = coords[np.newaxis, ...]
             
             ### map coordinates and return
-            #mapped = (tr*coords).sum(axis=0)  ## apply scale/rotate
-            #mapped += translate.reshape((2,1,1))
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
     def getAffineSliceParams(self, data, img, axes=(0,1)):
         """
-        Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>` to 
-        extract a subset of *data* using this ROI and *img* to specify the subset.
+        Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>`
+        (shape, vectors, origin) to extract a subset of *data* using this ROI 
+        and *img* to specify the subset.
         
         See :func:`getArrayRegion <pyqtgraph.ROI.getArrayRegion>` for more information.
         """
@@ -1137,8 +1129,6 @@ class ROI(GraphicsObject):
         ## this is only allowed because we will be comparing the two 
         relativeTo['scale'] = relativeTo['size']
         st['scale'] = st['size']
-        
-        
         
         t1 = SRTTransform(relativeTo)
         t2 = SRTTransform(st)

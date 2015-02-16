@@ -2,6 +2,7 @@ pyqtgraph-0.9.11  [unreleased]
 
   Bugfixes:
     - Fixed git version string generation on python3
+    - Fixed setting default values for out-of-bound points in pg.interpolateArray
 
 pyqtgraph-0.9.10
 
