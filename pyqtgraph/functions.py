@@ -535,11 +535,12 @@ def interpolateArray(data, x, default=0.0):
 
     This is useful for interpolating from arrays of colors, vertexes, etc.
     """
-    print "x:\n", x.shape, x
     prof = debug.Profiler()
     
     nd = data.ndim
     md = x.shape[-1]
+    if md > nd:
+        raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
     # First we generate arrays of indexes that are needed to 
     # extract the data surrounding each point
@@ -559,14 +560,12 @@ def interpolateArray(data, x, default=0.0):
         #  of bounds, but the interpolation will work anyway)
         mask &= (xmax[...,ax] < data.shape[ax])
         axisIndex = indexes[...,ax][fields[ax]]
-        #axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
         axisIndex[axisIndex < 0] = 0
         axisIndex[axisIndex >= data.shape[ax]] = 0
         fieldInds.append(axisIndex)
     prof()
-    print "fieldInds:\n", fieldInds
+
     # Get data values surrounding each requested point
-    # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
     fieldData = data[tuple(fieldInds)]
     prof()
     
@@ -585,11 +584,13 @@ def interpolateArray(data, x, default=0.0):
         result = result.sum(axis=0)
 
     prof()
-    #totalMask.shape = totalMask.shape + (1,) * (nd - md)
-    print "mask:\n", totalMask.shape, totalMask
-    print "result:\n", result.shape, result
-    result[~totalMask] = default
-    print "masked:\n", result.shape, result
+
+    if totalMask.ndim > 0:
+        result[~totalMask] = default
+    else:
+        if totalMask is False:
+            result[:] = default
+
     prof()
     return result
 

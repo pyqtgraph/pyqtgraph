@@ -1,6 +1,7 @@
 import pyqtgraph as pg
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
+import pytest
 
 np.random.seed(12345)
 
