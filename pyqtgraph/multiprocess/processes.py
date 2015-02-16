@@ -6,8 +6,11 @@ except ImportError:
     import pickle
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
-from ..Qt import USE_PYSIDE
+from .. import Qt
 from ..util import cprint  # color printing for debugging
+
+
+USING_PYSIDE_LIB = (Qt.QT_LIB == Qt.LIB_PYSIDE)
 
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
@@ -121,7 +124,7 @@ class Process(RemoteEventHandler):
             ppid=pid, 
             targetStr=targetStr, 
             path=sysPath, 
-            pyside=USE_PYSIDE,
+            pyside=USING_PYSIDE_LIB,
             debug=procDebug
             )
         pickle.dump(data, self.proc.stdin)

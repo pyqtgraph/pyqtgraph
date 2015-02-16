@@ -5,7 +5,8 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui
+from .. import Qt
 
 try:
     from ..Qt import QtOpenGL
@@ -115,7 +116,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         ## Workaround for PySide crash
         ## This ensures that the scene will outlive the view.
-        if USE_PYSIDE:
+        if Qt.QT_LIB == Qt.LIB_PYSIDE:
             self.sceneObj._view_ref_workaround = self
         
         ## by default we set up a central widget with a grid layout.

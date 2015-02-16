@@ -16,7 +16,6 @@ app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
 w = pg.GraphicsView()
-w.show()
 w.resize(800,800)
 w.setWindowTitle('pyqtgraph example: Draw')
 
@@ -41,6 +40,10 @@ kern = np.array([
 ])
 img.setDrawKernel(kern, mask=kern, center=(1,1), mode='add')
 img.setLevels([0, 10])
+
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+w.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

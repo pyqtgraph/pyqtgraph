@@ -20,7 +20,6 @@ cw = QtGui.QWidget()
 mw.setCentralWidget(cw)
 layout = QtGui.QGridLayout()
 cw.setLayout(layout)
-mw.show()
 
 l1 = pg.ValueLabel(siPrefix=True, suffix='m')
 l2 = pg.ValueLabel(siPrefix=True, suffix='m')
@@ -47,7 +46,9 @@ timer.timeout.connect(update)
 timer.start(30)
     
     
-
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+mw.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

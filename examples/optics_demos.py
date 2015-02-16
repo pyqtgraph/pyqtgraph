@@ -5,6 +5,12 @@ Optical system design demo
 
 
 """
+#First we try and force PyQt4 import since the optics demos expect PyQt4...
+# - this is primarily to accomodate Qt lib emulation in Qt.py
+try:
+    import PyQt4
+except ImportError:
+    pass
 
 import initExample ## Add path to library (just for examples; you do not need this)
 

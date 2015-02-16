@@ -17,7 +17,7 @@ app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
-p = pg.plot()
+p = pg.plot(show_now=False)
 p.setWindowTitle('pyqtgraph example: MultiPlotSpeedTest')
 #p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
 p.setLabel('bottom', 'Index', units='B')
@@ -64,11 +64,14 @@ def update():
         fps = fps * (1-s) + (1.0/dt) * s
     p.setTitle('%0.2f fps' % fps)
     #app.processEvents()  ## force complete redraw for every plot
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+p.win.show()
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':

@@ -1,8 +1,16 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore
+from .. import Qt
 import matplotlib
 
-if USE_PYSIDE: 
+if Qt.QT_LIB == Qt.LIB_PYSIDE: 
     matplotlib.rcParams['backend.qt4']='PySide'
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
+    #not sure whether to choose 'PyQt4' or 'PyQt4v2' here. However, previous
+    #versions of this code only dealt with PySide, so *presumably* the default
+    #is to do the right thing for PyQt4...
+    pass
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    matplotlib.rcParams['backend.qt5']='PyQt5'
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar

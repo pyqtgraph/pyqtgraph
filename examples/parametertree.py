@@ -160,13 +160,15 @@ win.setLayout(layout)
 layout.addWidget(QtGui.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
-win.show()
 win.resize(800,800)
 
 ## test save/restore
 s = p.saveState()
 p.restoreState(s)
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

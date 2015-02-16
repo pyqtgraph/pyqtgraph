@@ -14,7 +14,6 @@ import numpy as np
 
 app = QtGui.QApplication([])
 w = QtGui.QMainWindow()
-w.show()
 w.setWindowTitle('pyqtgraph example: GradientWidget')
 w.resize(400,400)
 cw = QtGui.QWidget()
@@ -44,6 +43,9 @@ l.addWidget(w3, 2, 1)
 l.addWidget(w4, 1, 0)
 l.addWidget(label, 1, 1)
 
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+w.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

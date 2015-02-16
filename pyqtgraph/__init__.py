@@ -41,7 +41,12 @@ elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but als
     useOpenGL = False
     if QtGui.QApplication.instance() is not None:
         print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
-    QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
+    # work around a variety of bugs in the native graphics system
+    #  - note that Qt5 does not have a setGraphicsSystem() call (qt_backport
+    #     eats this call when using Qt5).  It isn't clear what the status of
+    #     any of the "variety of bugs" (what are they?) that were fixed by
+    #     'raster' will be with Qt5.
+    QtGui.QApplication.setGraphicsSystem('raster')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -377,7 +382,7 @@ def plot(*args, **kargs):
     #if len(args)+len(kargs) > 0:
         #w.plot(*args, **kargs)
         
-    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
+    pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background', 'show_now']
     pwArgs = {}
     dataArgs = {}
     for k in kargs:
@@ -390,7 +395,11 @@ def plot(*args, **kargs):
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
-    w.show()
+    if kargs.get("show_now", True):
+        #There is a Qt bug that causes problems if you show() before layout
+        #is finished.  show_now provides a workaround for this.
+        #  - see https://bugreports.qt-project.org/browse/QTBUG-39019
+        w.win.show()
     return w
     
 def image(*args, **kargs):

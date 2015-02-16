@@ -15,11 +15,15 @@ Widget used for displaying 2D or 3D data. Features:
 import os, sys
 import numpy as np
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
-if USE_PYSIDE:
-    from .ImageViewTemplate_pyside import *
-else:
-    from .ImageViewTemplate_pyqt import *
+from .. import Qt
+from ..Qt import QtCore, QtGui
+
+if Qt.QT_LIB == Qt.LIB_PYQT5:
+    from .ImageViewTemplate_pyqt5 import Ui_Form
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
+    from .ImageViewTemplate_pyqt import Ui_Form
+elif Qt.QT_LIB == Qt.LIB_PYSIDE:
+    from .ImageViewTemplate_pyside import Ui_Form
     
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *

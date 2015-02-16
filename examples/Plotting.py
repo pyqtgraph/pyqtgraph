@@ -17,7 +17,7 @@ app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
-win = pg.GraphicsWindow(title="Basic plotting examples")
+win = pg.GraphicsWindow(show_now=False)
 win.resize(1000,600)
 win.setWindowTitle('pyqtgraph example: Plotting')
 
@@ -95,6 +95,10 @@ def updateRegion():
 lr.sigRegionChanged.connect(updatePlot)
 p9.sigXRangeChanged.connect(updateRegion)
 updatePlot()
+
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+win.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

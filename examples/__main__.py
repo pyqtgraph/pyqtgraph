@@ -7,13 +7,16 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     __package__ = "examples"
 
 from . import initExample
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from pyqtgraph import Qt
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-if USE_PYSIDE:
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form
-else:
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
     from .exampleLoaderTemplate_pyqt import Ui_Form
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    from .exampleLoaderTemplate_pyqt5 import Ui_Form
     
 import os, sys
 from pyqtgraph.pgcollections import OrderedDict

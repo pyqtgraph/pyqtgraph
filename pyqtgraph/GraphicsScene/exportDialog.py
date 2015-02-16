@@ -1,13 +1,17 @@
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui
+from .. import Qt
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.PlotItem import PlotItem
 
-if USE_PYSIDE:
+
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
     from . import exportDialogTemplate_pyside as exportDialogTemplate
-else:
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
     from . import exportDialogTemplate_pyqt as exportDialogTemplate
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
 
 
 class ExportDialog(QtGui.QWidget):

@@ -1,11 +1,14 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
-if not USE_PYSIDE:
-    import sip
+from ..Qt import QtGui, QtCore
+from .. import Qt
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 from .. import CONFIG_OPTIONS
 import numpy as np
 import mmap, tempfile, ctypes, atexit, sys, random
+
+USING_PYSIDE_LIB = (Qt.QT_LIB == Qt.LIB_PYSIDE)
+if not USING_PYSIDE_LIB:
+    import sip
 
 __all__ = ['RemoteGraphicsView']
 
@@ -197,11 +200,11 @@ class Renderer(GraphicsView):
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
-            if USE_PYSIDE:
+            if USING_PYSIDE_LIB:
                 ch = ctypes.c_char.from_buffer(self.shm, 0)
                 #ch = ctypes.c_char_p(address)
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
-            else:
+            else: #PyQt (and sip) are in use
                 address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
 
                 # different versions of pyqt have different requirements here..

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg
+from .. import Qt
 from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
-if USE_PYSIDE:
-    from . import TransformGuiTemplate_pyside as TransformGuiTemplate
-else:
-    from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
-
 from .. import debug
+
+if Qt.QT_LIB == Qt.LIB_PYSIDE:
+    from . import TransformGuiTemplate_pyside as TransformGuiTemplate
+elif Qt.QT_LIB == Qt.LIB_PYQT4:
+    from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
+elif Qt.QT_LIB == Qt.LIB_PYQT5:
+    from . import TransformGuiTemplate_pyqt5 as TransformGuiTemplate
+
 
 class SelectBox(ROI):
     def __init__(self, scalable=False, rotatable=True):

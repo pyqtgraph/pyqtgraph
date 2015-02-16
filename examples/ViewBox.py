@@ -21,7 +21,6 @@ import pyqtgraph as pg
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: ViewBox')
-mw.show()
 mw.resize(800, 600)
 
 gv = pg.GraphicsView()
@@ -92,6 +91,10 @@ vb.autoRange()
 t = QtCore.QTimer()
 t.timeout.connect(updateData)
 t.start(50)
+
+#show() moved to end of file to get around this bug:
+#  https://bugreports.qt-project.org/browse/QTBUG-39019
+mw.show()
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
