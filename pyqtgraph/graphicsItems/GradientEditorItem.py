@@ -29,7 +29,7 @@ Gradients = OrderedDict([
 
 
 class TickSliderItem(GraphicsWidget):
-    ## public class
+    # public class
     """**Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
     
     A rectangular item with tick marks along its length that can (optionally) be moved by the user."""
@@ -45,7 +45,7 @@ class TickSliderItem(GraphicsWidget):
                         Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
         ==============  =================================================================================
         """
-        ## public
+        # public
         GraphicsWidget.__init__(self)
         self.orientation = orientation
         self.length = 100
@@ -101,7 +101,7 @@ class TickSliderItem(GraphicsWidget):
             
     
     def setOrientation(self, orientation):
-        ## public
+        # public
         """Set the orientation of the TickSliderItem.
         
         ==============  ===================================================================
@@ -133,7 +133,7 @@ class TickSliderItem(GraphicsWidget):
         self.translate(self.tickSize/2., 0)
     
     def addTick(self, x, color=None, movable=True):
-        ## public
+        # public
         """
         Add a tick to the item.
         
@@ -154,7 +154,7 @@ class TickSliderItem(GraphicsWidget):
         return tick
     
     def removeTick(self, tick):
-        ## public
+        # public
         """
         Removes the specified tick.
         """
@@ -165,7 +165,7 @@ class TickSliderItem(GraphicsWidget):
     
     def tickMoved(self, tick, pos):
         #print "tick changed"
-        ## Correct position of tick if it has left bounds.
+        # Correct position of tick if it has left bounds.
         newX = min(max(0, pos.x()), self.length)
         pos.setX(newX)
         tick.setPos(pos)
@@ -207,8 +207,8 @@ class TickSliderItem(GraphicsWidget):
             #if isinstance(i, Tick):
                 #self.ignoreRelease = True
                 #break
-        ##if len(self.items(ev.pos())) > 0:  ## Let items handle their own clicks
-            ##self.ignoreRelease = True
+        #if len(self.items(ev.pos())) > 0:  # Let items handle their own clicks
+            #self.ignoreRelease = True
         
     #def mouseReleaseEvent(self, ev):
         #QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
@@ -249,12 +249,12 @@ class TickSliderItem(GraphicsWidget):
             #else:
                 #pass
                 #self.view().tickClicked(self, ev)
-                ###remove
+                #remove
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptClicks(QtCore.Qt.LeftButton):
             ev.acceptClicks(QtCore.Qt.RightButton)
-            ## show ghost tick
+            # show ghost tick
             #self.currentPen = fn.mkPen(255, 0,0)
         #else:
             #self.currentPen = self.pen
@@ -281,7 +281,7 @@ class TickSliderItem(GraphicsWidget):
         #tick.setBrush(QtGui.QBrush(QtGui.QColor(tick.color)))
 
     def setTickValue(self, tick, val):
-        ## public
+        # public
         """
         Set the position (along the slider) of the tick.
         
@@ -304,7 +304,7 @@ class TickSliderItem(GraphicsWidget):
         self.updateGradient()
         
     def tickValue(self, tick):
-        ## public
+        # public
         """Return the value (from 0.0 to 1.0) of the specified tick.
         
         ==============  ==================================================================
@@ -318,7 +318,7 @@ class TickSliderItem(GraphicsWidget):
         return self.ticks[tick]
         
     def getTick(self, tick):
-        ## public
+        # public
         """Return the Tick object at the specified index.
         
         ==============  ==================================================================
@@ -336,9 +336,9 @@ class TickSliderItem(GraphicsWidget):
 
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
-        ## public
+        # public
         ticks = list(self.ticks.items())
-        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  ## see pyqtgraph.python2_3.sortList
+        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  # see pyqtgraph.python2_3.sortList
         return ticks
 
 
@@ -443,7 +443,7 @@ class GradientEditorItem(TickSliderItem):
         self.updateGradient()
     
     def setOrientation(self, orientation):
-        ## public
+        # public
         """
         Set the orientation of the GradientEditorItem. 
         
@@ -496,7 +496,6 @@ class GradientEditorItem(TickSliderItem):
         
         """
 
-        ## public
         if cm not in ['rgb', 'hsv']:
             raise Exception("Unknown color mode %s. Options are 'rgb' and 'hsv'." % str(cm))
         
@@ -584,7 +583,7 @@ class GradientEditorItem(TickSliderItem):
         if self.colorMode == 'rgb':
             ticks = self.listTicks()
             g.setStops([(x, QtGui.QColor(t.color)) for t,x in ticks])
-        elif self.colorMode == 'hsv':  ## HSV mode is approximated for display by interpolating 10 points between each stop
+        elif self.colorMode == 'hsv':  # HSV mode is approximated for display by interpolating 10 points between each stop
             ticks = self.listTicks()
             stops = []
             stops.append((ticks[0][1], ticks[0][0].color))
@@ -752,7 +751,7 @@ class GradientEditorItem(TickSliderItem):
            - 'mode': hsv or rgb
            - 'ticks': a list of tuples (pos, (r,g,b,a))
         """
-        ## public
+        # public
         ticks = []
         for t in self.ticks:
             c = t.color
@@ -775,7 +774,7 @@ class GradientEditorItem(TickSliderItem):
                             - 'ticks': a list of tuples (pos, (r,g,b,a))
         ==============  ====================================================================
         """
-        ## public
+        # public
         self.setColorMode(state['mode'])
         for t in list(self.ticks.keys()):
             self.removeTick(t, finish=False)
@@ -798,9 +797,9 @@ class GradientEditorItem(TickSliderItem):
         self.sigGradientChangeFinished.emit(self)
 
         
-class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsObject instead results in 
-                                    ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
-    ## private class
+class Tick(QtGui.QGraphicsObject):  # NOTE: Making this a subclass of GraphicsObject instead results in 
+                                    # activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
+    # private class
     
     sigMoving = QtCore.Signal(object)
     sigMoved = QtCore.Signal(object)
@@ -872,7 +871,7 @@ class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsO
             self.sigMoved.emit(self)
         else:
             self.view().tickClicked(self, ev)
-            ##remove
+            #remove
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
