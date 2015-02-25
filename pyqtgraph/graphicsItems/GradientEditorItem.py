@@ -412,11 +412,11 @@ class GradientEditorItem(TickSliderItem):
         ## build context menu of gradients
         l = self.length
         self.length = 100
-        global Gradients
-        for g in Gradients:
+        self.gradients = Gradients
+        for g in self.gradients:
             px = QtGui.QPixmap(100, 15)
             p = QtGui.QPainter(px)
-            self.restoreState(Gradients[g])
+            self.restoreState(self.gradients[g])
             grad = self.getGradient()
             brush = QtGui.QBrush(grad)
             p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
@@ -463,8 +463,6 @@ class GradientEditorItem(TickSliderItem):
         self.menu.popup(ev.screenPos().toQPoint())
     
     def contextMenuClicked(self, b=None):
-        #private
-        #global Gradients
         act = self.sender()
         self.loadPreset(act.name)
         
@@ -473,15 +471,30 @@ class GradientEditorItem(TickSliderItem):
         Load a predefined gradient. 
     
         """ ## TODO: provide image with names of defined gradients
-        #global Gradients
-        self.restoreState(Gradients[name])
+        self.restoreState(self.gradients[name])
+
+    def addPreset(self, name, gradient):
+        """
+        Add a gradient to the list of predefined gradients.
+
+        ===============  =================================================================================
+        **Arguments:**
+        name            Name of the new preset gradient
+        gradient        Dict containing new gradient
+                        Keys must include:
+                            - 'mode': hsv or rgb
+                            - 'ticks': a list of tuples (pos, (r,g,b,a))
+
+        ===============  =================================================================================
+        """
+        self.gradients[name] = gradient
     
     def setColorMode(self, cm):
         """
         Set the color mode for the gradient. Options are: 'hsv', 'rgb'
         
         """
-        
+
         ## public
         if cm not in ['rgb', 'hsv']:
             raise Exception("Unknown color mode %s. Options are 'rgb' and 'hsv'." % str(cm))
