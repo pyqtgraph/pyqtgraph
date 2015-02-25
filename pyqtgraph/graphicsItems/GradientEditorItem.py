@@ -409,7 +409,7 @@ class GradientEditorItem(TickSliderItem):
             
         self.menu = QtGui.QMenu()
         
-        ## build context menu of gradients
+        # build context menu of gradients
         l = self.length
         self.length = 100
         self.gradients = Gradients
@@ -470,7 +470,8 @@ class GradientEditorItem(TickSliderItem):
         """
         Load a predefined gradient. 
     
-        """ ## TODO: provide image with names of defined gradients
+        """ 
+        # TODO: provide image with names of defined gradients
         self.restoreState(self.gradients[name])
 
     def addPreset(self, name, gradient):
