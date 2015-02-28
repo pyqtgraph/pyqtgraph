@@ -8,7 +8,7 @@ This class addresses the problem of having to save and restore the state
 of a large group of widgets. 
 """
 
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, USE_PYQT5
 import weakref, inspect
 from .python2_3 import asUnicode
 
@@ -219,7 +219,9 @@ class WidgetGroup(QtCore.QObject):
         v2 = self.readWidget(w)
         if v1 != v2:
             #print "widget", n, " = ", v2
-            self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
+            if not USE_PYQT5:
+                #I don't think this line have any different from the next line
+                self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
             self.sigChanged.emit(self.widgetList[w], v2)
         
     def state(self):
