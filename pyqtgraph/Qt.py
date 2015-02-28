@@ -139,13 +139,13 @@ elif QT_LIB == PYQT5:
         self.setTransform(tr)
     QtWidgets.QGraphicsItem.translate = translate
 
-    #def setMargin(self, i):
-        #self.setContentsMargins(i, i, i, i)
-    #QtWidgets.QGridLayout.setMargin = setMargin
+    def setMargin(self, i):
+        self.setContentsMargins(i, i, i, i)
+    QtWidgets.QGridLayout.setMargin = setMargin
 
-    #def setResizeMode(self, mode):
-        #self.setSectionResizeMode(mode)
-    #QtWidgets.QHeaderView.setResizeMode = setResizeMode
+    def setResizeMode(self, mode):
+        self.setSectionResizeMode(mode)
+    QtWidgets.QHeaderView.setResizeMode = setResizeMode
 
     
     QtGui.QApplication = QtWidgets.QApplication

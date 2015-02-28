@@ -268,15 +268,19 @@ except:
 
 
 if __name__ == '__main__':
-    if '--test' in sys.argv[1:]:
+    args = sys.argv[1:]
+        
+    if '--test' in args:
         # get rid of orphaned cache files first
         pg.renamePyc(path)
-
+        
         files = buildFileList(examples)
-        if '--pyside' in sys.argv[1:]:
+        if '--pyside' in args:
             lib = 'PySide'
-        elif '--pyqt' in sys.argv[1:]:
+        elif '--pyqt' in args or '--pyqt4' in args:
             lib = 'PyQt4'
+        elif '--pyqt5' in args:
+            lib = 'PyQt5'
         else:
             lib = ''
             

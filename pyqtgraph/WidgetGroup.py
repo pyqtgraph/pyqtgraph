@@ -60,9 +60,13 @@ def setComboState(w, v):
         
 
 class WidgetGroup(QtCore.QObject):
-    """This class takes a list of widgets and keeps an internal record of their state which is always up to date. Allows reading and writing from groups of widgets simultaneously."""
+    """This class takes a list of widgets and keeps an internal record of their
+    state that is always up to date. 
     
-    ## List of widget types which can be handled by WidgetGroup.
+    Allows reading and writing from groups of widgets simultaneously.
+    """
+    
+    ## List of widget types that can be handled by WidgetGroup.
     ## The value for each type is a tuple (change signal function, get function, set function, [auto-add children])
     ## The change signal function that takes an object and returns a signal that is emitted any time the state of the widget changes, not just 
     ##   when it is changed by user interaction. (for example, 'clicked' is not a valid signal here)
@@ -200,53 +204,35 @@ class WidgetGroup(QtCore.QObject):
         if hasattr(obj, 'widgetGroupInterface'):
             return True
         return False
-        #return (type(obj) in WidgetGroup.classes)
 
     def setScale(self, widget, scale):
         val = self.readWidget(widget)
         self.scales[widget] = scale
         self.setWidget(widget, val)
-        #print "scaling %f to %f" % (val, self.readWidget(widget))
-        
 
     def mkChangeCallback(self, w):
         return lambda *args: self.widgetChanged(w, *args)
         
     def widgetChanged(self, w, *args):
-        #print "widget changed"
         n = self.widgetList[w]
         v1 = self.cache[n]
         v2 = self.readWidget(w)
         if v1 != v2:
-            #print "widget", n, " = ", v2
             if not USE_PYQT5:
-                #I don't think this line have any different from the next line
+                # Old signal kept for backward compatibility.
                 self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
             self.sigChanged.emit(self.widgetList[w], v2)
         
     def state(self):
         for w in self.uncachedWidgets:
             self.readWidget(w)
-        
-        #cc = self.cache.copy()
-        #if 'averageGroup' in cc:
-            #val = cc['averageGroup']
-            #w = self.findWidget('averageGroup')
-            #self.readWidget(w)
-            #if val != self.cache['averageGroup']:
-                #print "  AverageGroup did not match cached value!"
-            #else:
-                #print "  AverageGroup OK"
         return self.cache.copy()
 
     def setState(self, s):
-        #print "SET STATE", self, s
         for w in self.widgetList:
             n = self.widgetList[w]
-            #print "  restore %s?" % n
             if n not in s:
                 continue
-            #print "    restore state", w, n, s[n]
             self.setWidget(w, s[n])
 
     def readWidget(self, w):
