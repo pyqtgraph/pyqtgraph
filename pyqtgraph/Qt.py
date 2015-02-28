@@ -20,7 +20,7 @@ QT_LIB = None
 ## Automatically determine whether to use PyQt or PySide. 
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
-libOrder = [PYQT5, PYQT4, PYSIDE]
+libOrder = [PYQT4, PYSIDE, PYQT5]
 
 for lib in libOrder:
     if lib in sys.modules:
@@ -36,8 +36,6 @@ if QT_LIB is None:
         except ImportError:
             pass
 
-print(QT_LIB)
-    
 if QT_LIB == None:
     raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
 
@@ -124,24 +122,30 @@ elif QT_LIB == PYQT5:
 
     # Re-implement deprecated APIs
     def scale(self, sx, sy):
-        self.setTransform(QtGui.QTransform.fromScale(sx, sy), True)
+        tr = self.transform()
+        tr.scale(sx, sy)
+        self.setTransform(tr)
     QtWidgets.QGraphicsItem.scale = scale
 
     def rotate(self, angle):
-        self.setRotation(self.rotation() + angle)
+        tr = self.transform()
+        tr.rotate(angle)
+        self.setTransform(tr)
     QtWidgets.QGraphicsItem.rotate = rotate
 
     def translate(self, dx, dy):
-        self.setTransform(QtGui.QTransform.fromTranslate(dx, dy), True)
+        tr = self.transform()
+        tr.translate(dx, dy)
+        self.setTransform(tr)
     QtWidgets.QGraphicsItem.translate = translate
 
-    def setMargin(self, i):
-        self.setContentsMargins(i, i, i, i)
-    QtWidgets.QGridLayout.setMargin = setMargin
+    #def setMargin(self, i):
+        #self.setContentsMargins(i, i, i, i)
+    #QtWidgets.QGridLayout.setMargin = setMargin
 
-    def setResizeMode(self, mode):
-        self.setSectionResizeMode(mode)
-    QtWidgets.QHeaderView.setResizeMode = setResizeMode
+    #def setResizeMode(self, mode):
+        #self.setSectionResizeMode(mode)
+    #QtWidgets.QHeaderView.setResizeMode = setResizeMode
 
     
     QtGui.QApplication = QtWidgets.QApplication
@@ -171,12 +175,11 @@ if QT_LIB.startswith('PyQt'):
     
 ## Make sure we have Qt >= 4.7
 versionReq = [4, 7]
-USE_PYSIDE = QT_LIB == PYSIDE # for backward compatibility
-USE_PYQT5 = QT_LIB == PYQT5 # for backward compatibility
-USE_PYQT4 = QT_LIB == PYQT4 # for backward compatibility
-QtVersion = PySide.QtCore.__version__ if QT_LIB ==  PYSIDE else QtCore.QT_VERSION_STR
+USE_PYSIDE = QT_LIB == PYSIDE
+USE_PYQT4 = QT_LIB == PYQT4
+USE_PYQT5 = QT_LIB == PYQT5
+QtVersion = PySide.QtCore.__version__ if QT_LIB == PYSIDE else QtCore.QT_VERSION_STR
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
-

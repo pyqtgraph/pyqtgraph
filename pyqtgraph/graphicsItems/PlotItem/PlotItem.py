@@ -16,7 +16,7 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from ...Qt import QtGui, QtCore, QtSvg, QT_LIB
+from ...Qt import QtGui, QtCore, QT_LIB
 from ... import pixmaps
 import sys
 
@@ -785,42 +785,9 @@ class PlotItem(GraphicsWidget):
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
-        self.svg = QtSvg.QSvgGenerator()
-        self.svg.setFileName(fileName)
-        res = 120.
-        view = self.scene().views()[0]
-        bounds = view.viewport().rect()
-        bounds = QtCore.QRectF(0, 0, bounds.width(), bounds.height())
-        
-        self.svg.setResolution(res)
-        self.svg.setViewBox(bounds)
-        
-        self.svg.setSize(QtCore.QSize(bounds.width(), bounds.height()))
-        
-        painter = QtGui.QPainter(self.svg)
-        view.render(painter, bounds)
-        
-        painter.end()
-        
-        ## Workaround to set pen widths correctly
-        import re
-        data = open(fileName).readlines()
-        for i in range(len(data)):
-            line = data[i]
-            m = re.match(r'(<g .*)stroke-width="1"(.*transform="matrix\(([^\)]+)\)".*)', line)
-            if m is not None:
-                #print "Matched group:", line
-                g = m.groups()
-                matrix = list(map(float, g[2].split(',')))
-                #print "matrix:", matrix
-                scale = max(abs(matrix[0]), abs(matrix[3]))
-                if scale == 0 or scale == 1.0:
-                    continue
-                data[i] = g[0] + ' stroke-width="%0.2g" ' % (1.0/scale) + g[1] + '\n'
-                #print "old line:", line
-                #print "new line:", data[i]
-        open(fileName, 'w').write(''.join(data))
-        
+        from ...exporters import SVGExporter
+        ex = SVGExporter(self)
+        ex.export(fileName)
         
     def writeImage(self, fileName=None):
         if fileName is None:
