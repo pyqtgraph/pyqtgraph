@@ -61,7 +61,6 @@ class InfiniteLine(GraphicsObject):
             pen = (200, 200, 100)
         self.setPen(pen)
         self.currentPen = self.pen
-        #self.setFlag(self.ItemSendsScenePositionChanges)
       
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -176,7 +175,6 @@ class InfiniteLine(GraphicsObject):
         br = self.boundingRect()
         p.setPen(self.currentPen)
         p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
-        #p.drawRect(self.boundingRect())
         
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
@@ -184,25 +182,6 @@ class InfiniteLine(GraphicsObject):
         else:
             return (0,0)
         
-    #def mousePressEvent(self, ev):
-        #if self.movable and ev.button() == QtCore.Qt.LeftButton:
-            #ev.accept()
-            #self.pressDelta = self.mapToParent(ev.pos()) - QtCore.QPointF(*self.p)
-        #else:
-            #ev.ignore()
-            
-    #def mouseMoveEvent(self, ev):
-        #self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
-        ##self.emit(QtCore.SIGNAL('dragged'), self)
-        #self.sigDragged.emit(self)
-        #self.hasMoved = True
-
-    #def mouseReleaseEvent(self, ev):
-        #if self.hasMoved and ev.button() == QtCore.Qt.LeftButton:
-            #self.hasMoved = False
-            ##self.emit(QtCore.SIGNAL('positionChangeFinished'), self)
-            #self.sigPositionChangeFinished.emit(self)
-
     def mouseDragEvent(self, ev):
         if self.movable and ev.button() == QtCore.Qt.LeftButton:
             if ev.isStart():
@@ -214,15 +193,11 @@ class InfiniteLine(GraphicsObject):
             if not self.moving:
                 return
                 
-            #pressDelta = self.mapToParent(ev.buttonDownPos()) - Point(self.p)
             self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
             self.sigDragged.emit(self)
             if ev.isFinish():
                 self.moving = False
                 self.sigPositionChangeFinished.emit(self)
-        #else:
-            #print ev
-
             
     def mouseClickEvent(self, ev):
         if self.moving and ev.button() == QtCore.Qt.RightButton:
@@ -248,30 +223,3 @@ class InfiniteLine(GraphicsObject):
         else:
             self.currentPen = self.pen
         self.update()
-        
-    #def hoverEnterEvent(self, ev):
-        #print "line hover enter"
-        #ev.ignore()
-        #self.updateHoverPen()
-
-    #def hoverMoveEvent(self, ev):
-        #print "line hover move"
-        #ev.ignore()
-        #self.updateHoverPen()
-
-    #def hoverLeaveEvent(self, ev):
-        #print "line hover leave"
-        #ev.ignore()
-        #self.updateHoverPen(False)
-        
-    #def updateHoverPen(self, hover=None):
-        #if hover is None:
-            #scene = self.scene()
-            #hover = scene.claimEvent(self, QtCore.Qt.LeftButton, scene.Drag)
-        
-        #if hover:
-            #self.currentPen = fn.mkPen(255, 0,0)
-        #else:
-            #self.currentPen = self.pen
-        #self.update()
-

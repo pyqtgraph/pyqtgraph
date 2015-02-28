@@ -24,9 +24,7 @@ from ..graphicsItems.ROI import *
 from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.InfiniteLine import *
 from ..graphicsItems.ViewBox import *
-#from widgets import ROI
 import sys
-#from numpy import ndarray
 from .. import ptime as ptime
 import numpy as np
 from .. import debug as debug
@@ -38,12 +36,6 @@ try:
 except ImportError:
     from numpy import nanmin, nanmax
 
-#try:
-    #from .. import metaarray as metaarray
-    #HAVE_METAARRAY = True
-#except:
-    #HAVE_METAARRAY = False
-    
 
 class PlotROI(ROI):
     def __init__(self, size):
@@ -119,13 +111,13 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.roi)
         self.roi.hide()
         self.normRoi = PlotROI(10)
-        self.normRoi.setPen(QtGui.QPen(QtGui.QColor(255,255,0)))
+        self.normRoi.setPen('y')
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
-        self.timeLine.setPen(QtGui.QPen(QtGui.QColor(255, 255, 0, 200)))
+        self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
