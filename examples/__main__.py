@@ -7,11 +7,13 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     __package__ = "examples"
 
 from . import initExample
-from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE
+from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
 import pyqtgraph as pg
 
 if USE_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form
+elif USE_PYQT5:
+    from .exampleLoaderTemplate_pyqt5 import Ui_Form
 else:
     from .exampleLoaderTemplate_pyqt import Ui_Form
     
@@ -123,19 +125,8 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.loadBtn.clicked.connect(self.loadFile)
         self.ui.exampleTree.currentItemChanged.connect(self.showFile)
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
-        self.ui.pyqtCheck.toggled.connect(self.pyqtToggled)
-        self.ui.pysideCheck.toggled.connect(self.pysideToggled)
         self.ui.codeView.textChanged.connect(self.codeEdited)
         self.codeBtn.clicked.connect(self.runEditedCode)
-
-    def pyqtToggled(self, b):
-        if b:
-            self.ui.pysideCheck.setChecked(False)
-        
-    def pysideToggled(self, b):
-        if b:
-            self.ui.pyqtCheck.setChecked(False)
-        
 
     def populateTree(self, root, examples):
         for key, val in examples.items():
@@ -148,7 +139,6 @@ class ExampleLoader(QtGui.QMainWindow):
             else:
                 self.populateTree(item, val)
             root.addChild(item)
-            
     
     def currentFile(self):
         item = self.ui.exampleTree.currentItem()
@@ -160,19 +150,13 @@ class ExampleLoader(QtGui.QMainWindow):
     def loadFile(self, edited=False):
         
         extra = []
-        if self.ui.pyqtCheck.isChecked():
-            extra.append('pyqt')
-        elif self.ui.pysideCheck.isChecked():
-            extra.append('pyside')
+        qtLib = str(self.ui.qtLibCombo.currentText())
+        gfxSys = str(self.ui.graphicsSystemCombo.currentText())
         
-        if self.ui.forceGraphicsCheck.isChecked():
-            extra.append(str(self.ui.forceGraphicsCombo.currentText()))
-
-        
-        #if sys.platform.startswith('win'):
-            #os.spawnl(os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"', *extra)
-        #else:
-            #os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
+        if qtLib != 'default':
+            extra.append(qtLib.lower())
+        elif gfxSys != 'default':
+            extra.append(gfxSys)
         
         if edited:
             path = os.path.abspath(os.path.dirname(__file__))
@@ -291,15 +275,19 @@ except:
 
 
 if __name__ == '__main__':
-    if '--test' in sys.argv[1:]:
+    args = sys.argv[1:]
+        
+    if '--test' in args:
         # get rid of orphaned cache files first
         pg.renamePyc(path)
-
+        
         files = buildFileList(examples)
-        if '--pyside' in sys.argv[1:]:
+        if '--pyside' in args:
             lib = 'PySide'
-        elif '--pyqt' in sys.argv[1:]:
+        elif '--pyqt' in args or '--pyqt4' in args:
             lib = 'PyQt4'
+        elif '--pyqt5' in args:
+            lib = 'PyQt5'
         else:
             lib = ''
             

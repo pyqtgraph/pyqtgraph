@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
 #
-# Created: Mon Feb 25 09:02:09 2013
-#      by: PyQt4 UI code generator 4.9.3
+# Created: Sat Feb 28 10:30:29 2015
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,58 +12,64 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    _fromUtf8 = lambda s: s
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(623, 380)
-        self.gridLayout = QtGui.QGridLayout(Form)
-        self.gridLayout.setMargin(0)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        Form.resize(846, 552)
+        self.gridLayout_2 = QtGui.QGridLayout(Form)
+        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.splitter = QtGui.QSplitter(Form)
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName(_fromUtf8("splitter"))
         self.widget = QtGui.QWidget(self.splitter)
         self.widget.setObjectName(_fromUtf8("widget"))
-        self.verticalLayout = QtGui.QVBoxLayout(self.widget)
-        self.verticalLayout.setMargin(0)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.gridLayout = QtGui.QGridLayout(self.widget)
+        self.gridLayout.setMargin(0)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.exampleTree = QtGui.QTreeWidget(self.widget)
         self.exampleTree.setObjectName(_fromUtf8("exampleTree"))
         self.exampleTree.headerItem().setText(0, _fromUtf8("1"))
         self.exampleTree.header().setVisible(False)
-        self.verticalLayout.addWidget(self.exampleTree)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.pyqtCheck = QtGui.QCheckBox(self.widget)
-        self.pyqtCheck.setObjectName(_fromUtf8("pyqtCheck"))
-        self.horizontalLayout.addWidget(self.pyqtCheck)
-        self.pysideCheck = QtGui.QCheckBox(self.widget)
-        self.pysideCheck.setObjectName(_fromUtf8("pysideCheck"))
-        self.horizontalLayout.addWidget(self.pysideCheck)
-        self.verticalLayout.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.forceGraphicsCheck = QtGui.QCheckBox(self.widget)
-        self.forceGraphicsCheck.setObjectName(_fromUtf8("forceGraphicsCheck"))
-        self.horizontalLayout_2.addWidget(self.forceGraphicsCheck)
-        self.forceGraphicsCombo = QtGui.QComboBox(self.widget)
-        self.forceGraphicsCombo.setObjectName(_fromUtf8("forceGraphicsCombo"))
-        self.forceGraphicsCombo.addItem(_fromUtf8(""))
-        self.forceGraphicsCombo.addItem(_fromUtf8(""))
-        self.forceGraphicsCombo.addItem(_fromUtf8(""))
-        self.horizontalLayout_2.addWidget(self.forceGraphicsCombo)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.gridLayout.addWidget(self.exampleTree, 0, 0, 1, 2)
+        self.graphicsSystemCombo = QtGui.QComboBox(self.widget)
+        self.graphicsSystemCombo.setObjectName(_fromUtf8("graphicsSystemCombo"))
+        self.graphicsSystemCombo.addItem(_fromUtf8(""))
+        self.graphicsSystemCombo.addItem(_fromUtf8(""))
+        self.graphicsSystemCombo.addItem(_fromUtf8(""))
+        self.graphicsSystemCombo.addItem(_fromUtf8(""))
+        self.gridLayout.addWidget(self.graphicsSystemCombo, 2, 1, 1, 1)
+        self.qtLibCombo = QtGui.QComboBox(self.widget)
+        self.qtLibCombo.setObjectName(_fromUtf8("qtLibCombo"))
+        self.qtLibCombo.addItem(_fromUtf8(""))
+        self.qtLibCombo.addItem(_fromUtf8(""))
+        self.qtLibCombo.addItem(_fromUtf8(""))
+        self.qtLibCombo.addItem(_fromUtf8(""))
+        self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
+        self.label_2 = QtGui.QLabel(self.widget)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
+        self.label = QtGui.QLabel(self.widget)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
         self.loadBtn = QtGui.QPushButton(self.widget)
         self.loadBtn.setObjectName(_fromUtf8("loadBtn"))
-        self.verticalLayout.addWidget(self.loadBtn)
+        self.gridLayout.addWidget(self.loadBtn, 3, 1, 1, 1)
         self.widget1 = QtGui.QWidget(self.splitter)
         self.widget1.setObjectName(_fromUtf8("widget1"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.widget1)
-        self.verticalLayout_2.setMargin(0)
-        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.verticalLayout = QtGui.QVBoxLayout(self.widget1)
+        self.verticalLayout.setMargin(0)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.loadedFileLabel = QtGui.QLabel(self.widget1)
         font = QtGui.QFont()
         font.setBold(True)
@@ -72,25 +78,29 @@ class Ui_Form(object):
         self.loadedFileLabel.setText(_fromUtf8(""))
         self.loadedFileLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.loadedFileLabel.setObjectName(_fromUtf8("loadedFileLabel"))
-        self.verticalLayout_2.addWidget(self.loadedFileLabel)
+        self.verticalLayout.addWidget(self.loadedFileLabel)
         self.codeView = QtGui.QPlainTextEdit(self.widget1)
         font = QtGui.QFont()
         font.setFamily(_fromUtf8("FreeMono"))
         self.codeView.setFont(font)
         self.codeView.setObjectName(_fromUtf8("codeView"))
-        self.verticalLayout_2.addWidget(self.codeView)
-        self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
+        self.verticalLayout.addWidget(self.codeView)
+        self.gridLayout_2.addWidget(self.splitter, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.pyqtCheck.setText(QtGui.QApplication.translate("Form", "Force PyQt", None, QtGui.QApplication.UnicodeUTF8))
-        self.pysideCheck.setText(QtGui.QApplication.translate("Form", "Force PySide", None, QtGui.QApplication.UnicodeUTF8))
-        self.forceGraphicsCheck.setText(QtGui.QApplication.translate("Form", "Force Graphics System:", None, QtGui.QApplication.UnicodeUTF8))
-        self.forceGraphicsCombo.setItemText(0, QtGui.QApplication.translate("Form", "native", None, QtGui.QApplication.UnicodeUTF8))
-        self.forceGraphicsCombo.setItemText(1, QtGui.QApplication.translate("Form", "raster", None, QtGui.QApplication.UnicodeUTF8))
-        self.forceGraphicsCombo.setItemText(2, QtGui.QApplication.translate("Form", "opengl", None, QtGui.QApplication.UnicodeUTF8))
-        self.loadBtn.setText(QtGui.QApplication.translate("Form", "Run Example", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(_translate("Form", "Form", None))
+        self.graphicsSystemCombo.setItemText(0, _translate("Form", "default", None))
+        self.graphicsSystemCombo.setItemText(1, _translate("Form", "native", None))
+        self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster", None))
+        self.graphicsSystemCombo.setItemText(3, _translate("Form", "opengl", None))
+        self.qtLibCombo.setItemText(0, _translate("Form", "default", None))
+        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4", None))
+        self.qtLibCombo.setItemText(2, _translate("Form", "PySide", None))
+        self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5", None))
+        self.label_2.setText(_translate("Form", "Graphics System:", None))
+        self.label.setText(_translate("Form", "Qt Library:", None))
+        self.loadBtn.setText(_translate("Form", "Run Example", None))
 

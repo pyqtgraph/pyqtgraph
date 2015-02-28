@@ -1,8 +1,10 @@
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
 import sys, re, os, time, traceback, subprocess
 if USE_PYSIDE:
     from . import template_pyside as template
+elif USE_PYQT5:
+    from . import template_pyqt5 as template
 else:
     from . import template_pyqt as template
     

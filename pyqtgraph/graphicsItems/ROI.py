@@ -1020,7 +1020,7 @@ class ROI(GraphicsObject):
         #print "  dataBounds:", dataBounds
         
         ## Intersect transformed ROI bounds with data bounds
-        intBounds = dataBounds.intersect(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
+        intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
         #print "  intBounds:", intBounds
         
         ## Determine index values to use when referencing the array. 

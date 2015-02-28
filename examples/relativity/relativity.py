@@ -4,7 +4,6 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
 import pyqtgraph.configfile
 import numpy as np
-import user
 import collections
 import sys, os
 
@@ -247,7 +246,7 @@ class GridParam(pTypes.GroupParameter):
         template = self.param('ClockTemplate')
         spacing = self['Spacing']
         for i in range(self['Number of Clocks']):
-            c = template.buildClocks().values()[0]
+            c = list(template.buildClocks().values())[0]
             c.x0 += i * spacing
             clocks[self.name() + '%02d' % i] = c
         return clocks
@@ -502,7 +501,7 @@ class Simulation:
         
     def run(self):
         nPts = int(self.duration/self.dt)+1
-        for cl in self.clocks.itervalues():
+        for cl in self.clocks.values():
             cl.init(nPts)
             
         if self.ref is None:
@@ -514,7 +513,7 @@ class Simulation:
         clocks = self.clocks
         dt = self.dt
         tVals = np.linspace(0, dt*(nPts-1), nPts)
-        for cl in self.clocks.itervalues():
+        for cl in self.clocks.values():
             for i in xrange(1,nPts):
                 nextT = tVals[i]
                 while True:
@@ -549,7 +548,7 @@ class Simulation:
         
         ## make sure reference clock is not present in the list of clocks--this will be handled separately.
         clocks = clocks.copy()
-        for k,v in clocks.iteritems():
+        for k,v in clocks.items():
             if v is ref:
                 del clocks[k]
                 break
@@ -586,7 +585,7 @@ class Simulation:
             
             
             ## update all other clocks
-            for cl in clocks.itervalues():
+            for cl in clocks.values():
                 while True:
                     g = cl.acceleration()
                     tau1, tau2 = cl.accelLimits()
@@ -635,7 +634,7 @@ class Simulation:
         
     def plot(self, plot):
         plot.clear()
-        for cl in self.clocks.itervalues():
+        for cl in self.clocks.values():
             c, p = cl.getCurve()
             plot.addItem(c)
             plot.addItem(p)
