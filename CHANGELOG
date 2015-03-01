@@ -4,6 +4,9 @@ pyqtgraph-0.9.11  [unreleased]
     - Fixed git version string generation on python3
     - Fixed setting default values for out-of-bound points in pg.interpolateArray
 
+  New Features:
+    - PyQt5 support
+
 pyqtgraph-0.9.10
 
   Fixed installation issues with more recent pip versions.

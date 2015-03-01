@@ -33,11 +33,12 @@ Contributors
   * Nicholas TJ
   * John David Reaver
   * David Kaplan
+  * Martin Fitzpatrick
 
 Requirements
 ------------
 
-  * PyQt 4.7+ or PySide
+  * PyQt 4.7+, PySide, or PyQt5
   * python 2.6, 2.7, or 3.x
   * NumPy 
   * For 3D graphics: pyopengl and qt-opengl

@@ -32,6 +32,7 @@ examples = OrderedDict([
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
+    ('Beeswarm plot', 'beeswarm.py'),
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
@@ -51,6 +52,7 @@ examples = OrderedDict([
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
         ('Region-of-Interest', 'ROIExamples.py'),
+        ('Bar Graph', 'BarGraphItem.py'),
         ('GraphicsLayout', 'GraphicsLayout.py'),
         ('LegendItem', 'Legend.py'),
         ('Text Item', 'text.py'),
@@ -58,6 +60,7 @@ examples = OrderedDict([
         ('Arrow', 'Arrow.py'),
         ('ViewBox', 'ViewBox.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
+        ('Labeled Graph', 'CustomGraphItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
@@ -81,6 +84,7 @@ examples = OrderedDict([
         ('ConsoleWidget', 'ConsoleWidget.py'),
         ('Histogram / lookup table', 'HistogramLUT.py'),
         ('TreeWidget', 'TreeWidget.py'),
+        ('ScatterPlotWidget', 'ScatterPlotWidget.py'),
         ('DataTreeWidget', 'DataTreeWidget.py'),
         ('GradientWidget', 'GradientWidget.py'),
         ('TableWidget', 'TableWidget.py'),
@@ -90,11 +94,8 @@ examples = OrderedDict([
         ('JoystickButton', 'JoystickButton.py'),
     ])),
     
-    #('GraphicsScene', 'GraphicsScene.py'),
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
-    #('Canvas', '../canvas'),
-    #('MultiPlotWidget', 'MultiPlotWidget.py'),
 ])
 
 path = os.path.abspath(os.path.dirname(__file__))
