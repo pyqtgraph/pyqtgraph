@@ -569,11 +569,11 @@ class PlotDataItem(GraphicsObject):
                     x = x[::ds]
                     y = y[::ds]
                 elif self.opts['downsampleMethod'] == 'mean':
-                    n = len(x) / ds
+                    n = len(x) // ds
                     x = x[:n*ds:ds]
                     y = y[:n*ds].reshape(n,ds).mean(axis=1)
                 elif self.opts['downsampleMethod'] == 'peak':
-                    n = len(x) / ds
+                    n = len(x) // ds
                     x1 = np.empty((n,2))
                     x1[:] = x[:n*ds:ds,np.newaxis]
                     x = x1.reshape(n*2)
