@@ -296,10 +296,11 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
 
     def apoptose(self):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
-        if self.temporary and self.topContainer.count() == 0:
+        if self.topContainer.count() == 0:
             self.topContainer = None
-            self.home.removeTempArea(self)
-            #self.close()
+            if self.temporary:
+                self.home.removeTempArea(self)
+                #self.close()
             
     ## PySide bug: We need to explicitly redefine these methods
     ## or else drag/drop events will not be delivered.
