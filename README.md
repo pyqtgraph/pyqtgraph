@@ -34,6 +34,7 @@ Contributors
   * John David Reaver
   * David Kaplan
   * Martin Fitzpatrick
+  * Daniel Lidstrom
 
 Requirements
 ------------

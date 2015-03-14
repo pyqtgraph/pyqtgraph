@@ -102,9 +102,12 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
             'below': 'after'
         }[position]
         #print "request insert", dock, insertPos, neighbor
+        old = dock.container()
         container.insert(dock, insertPos, neighbor)
         dock.area = self
         self.docks[dock.name()] = dock
+        if old is not None:
+            old.apoptose()
         
         return dock
         
@@ -112,12 +115,10 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """
         Move an existing Dock to a new location. 
         """
-        old = dock.container()
         ## Moving to the edge of a tabbed dock causes a drop outside the tab box
         if position in ['left', 'right', 'top', 'bottom'] and neighbor is not None and neighbor.container() is not None and neighbor.container().type() == 'tab':
             neighbor = neighbor.container()
         self.addDock(dock, position, neighbor)
-        old.apoptose()
         
     def getContainer(self, obj):
         if obj is None:
@@ -296,10 +297,11 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
 
     def apoptose(self):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
-        if self.temporary and self.topContainer.count() == 0:
+        if self.topContainer.count() == 0:
             self.topContainer = None
-            self.home.removeTempArea(self)
-            #self.close()
+            if self.temporary:
+                self.home.removeTempArea(self)
+                #self.close()
             
     ## PySide bug: We need to explicitly redefine these methods
     ## or else drag/drop events will not be delivered.

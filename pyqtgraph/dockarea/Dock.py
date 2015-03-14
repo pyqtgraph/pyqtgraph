@@ -11,6 +11,7 @@ class Dock(QtGui.QWidget, DockDrop):
     def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
+        self._container = None
         self.area = area
         self.label = DockLabel(name, self, closable)
         if closable:
