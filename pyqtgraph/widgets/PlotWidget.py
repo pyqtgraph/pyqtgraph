@@ -43,7 +43,7 @@ class PlotWidget(GraphicsView):
     For all 
     other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
-    def __init__(self, parent=None, background='default', **kargs):
+    def __init__(self, parent=None, background='default', plotItem=None, **kargs):
         """When initializing PlotWidget, *parent* and *background* are passed to 
         :func:`GraphicsWidget.__init__() <pyqtgraph.GraphicsWidget.__init__>`
         and all others are passed
@@ -51,7 +51,10 @@ class PlotWidget(GraphicsView):
         GraphicsView.__init__(self, parent, background=background)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.enableMouse(False)
-        self.plotItem = PlotItem(**kargs)
+        if plotItem is None:
+            self.plotItem = PlotItem(**kargs)
+        else:
+            self.plotItem = plotItem
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
         ## NOTE: If you change this list, update the documentation above as well.
