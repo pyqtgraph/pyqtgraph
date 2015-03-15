@@ -12,6 +12,7 @@ class Dock(QtGui.QWidget, DockDrop):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
         self._container = None
+        self._name = name
         self.area = area
         self.label = DockLabel(name, self, closable)
         if closable:
@@ -127,6 +128,18 @@ class Dock(QtGui.QWidget, DockDrop):
         self.labelHidden = False
         self.allowedAreas.add('center')
         self.updateStyle()
+
+    def title(self):
+        """
+        Gets the text displayed in the title bar for this dock.
+        """
+        return asUnicode(self.label.text())
+
+    def setTitle(self, text):
+        """
+        Sets the text displayed in title bar for this Dock.
+        """
+        self.label.setText(text)
         
     def setOrientation(self, o='auto', force=False):
         """
@@ -171,7 +184,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.resizeOverlay(self.size())
 
     def name(self):
-        return asUnicode(self.label.text())
+        return self._name
 
     def container(self):
         return self._container
