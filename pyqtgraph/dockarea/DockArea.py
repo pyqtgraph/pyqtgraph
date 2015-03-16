@@ -197,7 +197,13 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """
         Return a serialized (storable) representation of the state of
         all Docks in this DockArea."""
-        state = {'main': self.childState(self.topContainer), 'float': []}
+
+        if self.topContainer is None:
+            main = None
+        else:
+            main = self.childState(self.topContainer)
+
+        state = {'main': main, 'float': []}
         for a in self.tempAreas:
             geo = a.win.geometry()
             geo = (geo.x(), geo.y(), geo.width(), geo.height())
@@ -229,7 +235,8 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         #print "found docks:", docks
         
         ## 2) create container structure, move docks into new containers
-        self.buildFromState(state['main'], docks, self)
+        if state['main'] is not None:
+            self.buildFromState(state['main'], docks, self)
         
         ## 3) create floating areas, populate
         for s in state['float']:
