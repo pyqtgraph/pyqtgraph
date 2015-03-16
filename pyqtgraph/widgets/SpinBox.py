@@ -51,6 +51,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         value          (float/int) initial value. Default is 0.0.
         bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
                        Either may be None to leave the value unbounded. By default, values are unbounded.
+        wrapping       (bool) If True and both bounds are not None, spin box has circular behavior.
         suffix         (str) suffix (units) to display after the numerical value. By default, suffix is an empty str.
         siPrefix       (bool) If True, then an SI prefix is automatically prepended
                        to the units and the value is scaled accordingly. For example,
@@ -81,6 +82,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         self.opts = {
             'bounds': [None, None],
+            'wrapping': False,
             
             ## Log scaling options   #### Log mode is no longer supported.
             #'step': 0.1,
@@ -205,6 +207,14 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.opts['bounds'][0] = m
         if update:
             self.setValue()
+
+    def wrapping(self):
+        """Return whether or not the spin box is circular."""
+        return self.opts['wrapping']
+
+    def setWrapping(self, s):
+        """Set whether spin box is circular.  Both bounds must be set for this to have an effect."""
+        self.opts['wrapping'] = s
         
     def setPrefix(self, p):
         """Set a string prefix.
@@ -282,10 +292,17 @@ class SpinBox(QtGui.QAbstractSpinBox):
             value = self.value()
         
         bounds = self.opts['bounds']
-        if bounds[0] is not None and value < bounds[0]:
-            value = bounds[0]
-        if bounds[1] is not None and value > bounds[1]:
-            value = bounds[1]
+
+        if bounds[0] is not None and bounds[1] is not None and self.opts['wrapping']:
+            # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
+            value = float(value)
+            l, u = float(bounds[0]), float(bounds[1])
+            value = (value - l) % (u - l) + l
+        else:
+            if bounds[0] is not None and value < bounds[0]:
+                value = bounds[0]
+            if bounds[1] is not None and value > bounds[1]:
+                value = bounds[1]
 
         if self.opts['int']:
             value = int(value)
