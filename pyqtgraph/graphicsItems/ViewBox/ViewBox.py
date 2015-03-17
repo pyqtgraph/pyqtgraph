@@ -326,7 +326,7 @@ class ViewBox(GraphicsWidget):
         del state['linkedViews']
         
         self.state.update(state)
-        #self.updateMatrix()
+        self._matrixNeedsUpdate = True  # updateViewRange won't detect this for us
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
@@ -1091,7 +1091,7 @@ class ViewBox(GraphicsWidget):
             return
         
         self.state['xInverted'] = b
-        #self.updateMatrix(changed=(False, True))
+        self._matrixNeedsUpdate = True  # updateViewRange won't detect this for us
         self.updateViewRange()
         self.sigStateChanged.emit(self)
         self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
