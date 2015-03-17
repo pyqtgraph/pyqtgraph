@@ -15,9 +15,9 @@ import weakref
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):
-    def __init__(self, temporary=False, home=None):
+    def __init__(self, parent=None, temporary=False, home=None):
         Container.__init__(self, self)
-        QtGui.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self, parent=parent)
         DockDrop.__init__(self, allowedAreas=['left', 'right', 'top', 'bottom'])
         self.layout = QtGui.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
