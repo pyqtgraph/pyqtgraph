@@ -7,6 +7,7 @@ from ..python2_3 import asUnicode
 class Dock(QtGui.QWidget, DockDrop):
     
     sigStretchChanged = QtCore.Signal()
+    sigClosed = QtCore.Signal(object)
     
     def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
         QtGui.QWidget.__init__(self)
@@ -237,6 +238,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.label.setParent(None)
         self._container.apoptose()
         self._container = None
+        self.sigClosed.emit(self)
 
     def __repr__(self):
         return "<Dock %s %s>" % (self.name(), self.stretch())

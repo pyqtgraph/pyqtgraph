@@ -172,8 +172,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         if self.home is None:
             area = DockArea(temporary=True, home=self)
             self.tempAreas.append(area)
-            win = QtGui.QMainWindow()
-            win.setCentralWidget(area)
+            win = TempAreaWindow(area)
             area.win = win
             win.show()
         else:
@@ -309,6 +308,11 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
             if self.temporary:
                 self.home.removeTempArea(self)
                 #self.close()
+
+    def clear(self):
+        docks = self.findAll()[1]
+        for dock in docks.values():
+            dock.close()
             
     ## PySide bug: We need to explicitly redefine these methods
     ## or else drag/drop events will not be delivered.
@@ -324,5 +328,12 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
     def dropEvent(self, *args):
         DockDrop.dropEvent(self, *args)
 
-        
-        
+
+class TempAreaWindow(QtGui.QMainWindow):
+    def __init__(self, area, **kwargs):
+        QtGui.QMainWindow.__init__(self, **kwargs)
+        self.setCentralWidget(area)
+
+    def closeEvent(self, *args, **kwargs):
+        self.centralWidget().clear()
+        QtGui.QMainWindow.closeEvent(self, *args, **kwargs)
