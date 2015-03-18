@@ -324,9 +324,9 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
 
 class TempAreaWindow(QtGui.QMainWindow):
     def __init__(self, area, **kwargs):
-        super().__init__(**kwargs)
+        QtGui.QMainWindow.__init__(self, **kwargs)
         self.setCentralWidget(area)
 
     def closeEvent(self, *args, **kwargs):
         self.centralWidget().clear()
-        super().closeEvent(*args, **kwargs)
+        QtGui.QMainWindow.closeEvent(self, *args, **kwargs)
