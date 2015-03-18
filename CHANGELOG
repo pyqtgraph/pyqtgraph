@@ -8,6 +8,7 @@ pyqtgraph-0.9.11  [unreleased]
 
   New Features:
     - Preliminary PyQt5 support
+    - Dock titles can be changed
 
 pyqtgraph-0.9.10
 
