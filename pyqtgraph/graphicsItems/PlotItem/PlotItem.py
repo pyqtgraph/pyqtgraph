@@ -170,7 +170,13 @@ class PlotItem(GraphicsWidget):
             axisItems = {}
         self.axes = {}
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            axis = axisItems.get(k, AxisItem(orientation=k, parent=self))
+            try:
+                axis = axisItems[k]
+                assert(axis.orientation == k)
+                axis.setParent(self)
+            except KeyError:
+                axis = AxisItem(orientation=k, parent=self)
+
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
