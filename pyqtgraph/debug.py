@@ -1097,46 +1097,44 @@ def pretty(data, indent=''):
     return ret
 
 
-class PeriodicTrace(object):
+class ThreadTrace(object):
     """ 
     Used to debug freezing by starting a new thread that reports on the 
-    location of the main thread periodically.
+    location of other threads periodically.
     """
-    class ReportThread(QtCore.QThread):
-        def __init__(self):
-            self.frame = None
-            self.ind = 0
-            self.lastInd = None
-            self.lock = Mutex()
-            QtCore.QThread.__init__(self)
+    def __init__(self, interval=10.0):
+        self.interval = interval
+        self.lock = Mutex()
+        self._stop = False
+        self.start()
 
-        def notify(self, frame):
-            with self.lock:
-                self.frame = frame
-                self.ind += 1
+    def stop(self):
+        with self.lock:
+            self._stop = True
 
-        def run(self):
-            while True:
-                time.sleep(1)
-                with self.lock:
-                    if self.lastInd != self.ind:
-                        print("== Trace %d: ==" % self.ind)
-                        traceback.print_stack(self.frame)
-                        self.lastInd = self.ind
-
-    def __init__(self):
-        self.mainThread = threading.current_thread()
-        self.thread = PeriodicTrace.ReportThread()
+    def start(self, interval=None):
+        if interval is not None:
+            self.interval = interval
+        self._stop = False
+        self.thread = threading.Thread(target=self.run)
+        self.thread.daemon = True
         self.thread.start()
-        sys.settrace(self.trace)
 
-    def trace(self, frame, event, arg):
-        if threading.current_thread() is self.mainThread: # and 'threading' not in frame.f_code.co_filename:
-            self.thread.notify(frame)
-            # print("== Trace ==", event, arg)
-            # traceback.print_stack(frame)
-        return self.trace
-
+    def run(self):
+        while True:
+            with self.lock:
+                if self._stop is True:
+                    return
+                    
+            print("\n=============  THREAD FRAMES:  ================")
+            for id, frame in sys._current_frames().items():
+                if id == threading.current_thread().ident:
+                    continue
+                print("<< thread %d >>" % id)
+                traceback.print_stack(frame)
+            print("===============================================\n")
+            
+            time.sleep(self.interval)
 
 
 class ThreadColor(object):
