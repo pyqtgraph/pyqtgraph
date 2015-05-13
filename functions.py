@@ -1222,6 +1222,8 @@ def downsample(data, n, axis=0, xvals='subsample'):
             data = downsample(data, n[i], axis[i])
         return data
     
+    if n <= 1:
+        return data
     nPts = int(data.shape[axis] / n)
     s = list(data.shape)
     s[axis] = nPts

@@ -355,6 +355,9 @@ class HoverEvent(object):
         return Point(self.currentItem.mapFromScene(self._lastScenePos))
 
     def __repr__(self):
+        if self.exit:
+            return "<HoverEvent exit=True>"
+        
         if self.currentItem is None:
             lp = self._lastScenePos
             p = self._scenePos

@@ -7,6 +7,8 @@ from .. import functions as fn
 
 ##Vector = QtGui.QVector3D
 
+ShareWidget = None
+
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
     Basic widget for displaying 3D data
@@ -16,14 +18,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
     """
     
-    ShareWidget = None
-    
     def __init__(self, parent=None):
-        if GLViewWidget.ShareWidget is None:
+        global ShareWidget
+
+        if ShareWidget is None:
             ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
-            GLViewWidget.ShareWidget = QtOpenGL.QGLWidget()
+            ShareWidget = QtOpenGL.QGLWidget()
             
-        QtOpenGL.QGLWidget.__init__(self, parent, GLViewWidget.ShareWidget)
+        QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
@@ -157,7 +159,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             
         items = [(h.near, h.names[0]) for h in hits]
         items.sort(key=lambda i: i[0])
-        
         return [self._itemNames[i[1]] for i in items]
     
     def paintGL(self, region=None, viewport=None, useItemNames=False):
@@ -191,8 +192,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 try:
                     glPushAttrib(GL_ALL_ATTRIB_BITS)
                     if useItemNames:
-                        glLoadName(id(i))
-                        self._itemNames[id(i)] = i
+                        glLoadName(i._id)
+                        self._itemNames[i._id] = i
                     i.paint()
                 except:
                     from .. import debug

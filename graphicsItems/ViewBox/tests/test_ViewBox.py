@@ -20,11 +20,11 @@ def test_ViewBox():
     win.show()
     vb = win.addViewBox()
     
+    # set range before viewbox is shown
     vb.setRange(xRange=[0, 10], yRange=[0, 10], padding=0)
     
     # required to make mapFromView work properly.
     qtest.qWaitForWindowShown(win)
-    vb.update() 
     
     g = pg.GridItem()
     vb.addItem(g)

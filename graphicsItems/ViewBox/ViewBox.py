@@ -427,10 +427,10 @@ class ViewBox(GraphicsWidget):
         self.linkedYChanged()
         self.updateAutoRange()
         self.updateViewRange()
+        self._matrixNeedsUpdate = True
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
         self.sigResized.emit(self)
-        
         
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -909,7 +909,7 @@ class ViewBox(GraphicsWidget):
                 if k in args:
                     if not np.all(np.isfinite(args[k])):
                         r = args.pop(k)
-                        print "Warning: %s is invalid: %s" % (k, str(r))
+                        #print("Warning: %s is invalid: %s" % (k, str(r))
                         
             self.setRange(**args)
         finally:
@@ -1135,6 +1135,8 @@ class ViewBox(GraphicsWidget):
         Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
         (This maps from inside the viewbox to outside)
         """ 
+        if self._matrixNeedsUpdate:
+            self.updateMatrix()
         m = self.childGroup.transform()
         #m1 = QtGui.QTransform()
         #m1.translate(self.childGroup.pos().x(), self.childGroup.pos().y())
@@ -1694,6 +1696,8 @@ class ViewBox(GraphicsWidget):
     def forgetView(vid, name):
         if ViewBox is None:     ## can happen as python is shutting down
             return
+        if QtGui.QApplication.instance() is None:
+            return
         ## Called with ID and name of view (the view itself is no longer available)
         for v in list(ViewBox.AllViews.keys()):
             if id(v) == vid:
@@ -1715,6 +1719,8 @@ class ViewBox(GraphicsWidget):
             except RuntimeError:  ## signal is already disconnected.
                 pass
             except TypeError:  ## view has already been deleted (?)
+                pass
+            except AttributeError:  # PySide has deleted signal
                 pass
             
     def locate(self, item, timeout=3.0, children=False):

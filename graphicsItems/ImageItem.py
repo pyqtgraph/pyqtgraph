@@ -9,6 +9,8 @@ from .GraphicsObject import GraphicsObject
 from ..Point import Point
 
 __all__ = ['ImageItem']
+
+
 class ImageItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
