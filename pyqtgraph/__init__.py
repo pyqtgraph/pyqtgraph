@@ -346,7 +346,7 @@ def exit():
     
     ## close file handles
     if sys.platform == 'darwin':
-        for fd in xrange(3, 4096):
+        for fd in range(3, 4096):
             if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
                 os.close(fd)
     else:

@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from __future__ import division
-from .python2_3 import asUnicode
+from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
 Colors = {
     'b': QtGui.QColor(0,0,255,255),

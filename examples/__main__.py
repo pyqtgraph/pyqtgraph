@@ -8,6 +8,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 from . import initExample
 from pyqtgraph.Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.python2_3 import basestring
 import pyqtgraph as pg
 
 if USE_PYSIDE:

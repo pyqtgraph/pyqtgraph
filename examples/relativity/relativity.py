@@ -1,12 +1,12 @@
+import numpy as np
+import collections
+import sys, os
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
 import pyqtgraph.configfile
-import numpy as np
-import collections
-import sys, os
-
+from pyqtgraph.python2_3 import xrange
 
 
 class RelativityGUI(QtGui.QWidget):

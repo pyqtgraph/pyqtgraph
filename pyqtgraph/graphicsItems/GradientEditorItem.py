@@ -1,14 +1,15 @@
+import weakref
+import numpy as np
 from ..Qt import QtGui, QtCore
 from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 from ..widgets.SpinBox import SpinBox
-import weakref
 from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
+from ..python2_3 import cmp
 
-import numpy as np
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
 
@@ -23,8 +24,6 @@ Gradients = OrderedDict([
     ('greyclip', {'ticks': [(0.0, (0, 0, 0, 255)), (0.99, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}),
     ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
 ])
-
-
 
 
 
