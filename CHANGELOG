@@ -8,6 +8,7 @@ pyqtgraph-0.9.11  [unreleased]
         - Fixed adding Docks to DockArea after all Docks have been removed
         - Fixed DockArea save/restoreState when area is empty
     - Properly remove select box when export dialog is closed using window decorations
+    - Remove all modifications to builtins
 
   New Features:
     - Preliminary PyQt5 support

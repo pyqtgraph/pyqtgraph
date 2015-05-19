@@ -1,5 +1,7 @@
 import numpy as np
 from .Qt import QtGui, QtCore
+from .python2_3 import basestring
+
 
 class ColorMap(object):
     """

@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
+import weakref
 from ..Qt import QtCore, QtGui
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
 from .. import debug as debug
-import weakref
-
-## TODO:
-# - containers should be drop areas, not docks. (but every slot within a container must have its own drop areas?)
-# - drop between tabs
-# - nest splitters inside tab boxes, etc.
-
-
+from ..python2_3 import basestring
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):

@@ -16,22 +16,14 @@ This class is very heavily featured:
   - Control panel with a huge feature set including averaging, decimation,
     display, power spectrum, svg/png export, plot linking, and more.
 """
-from ...Qt import QtGui, QtCore, QT_LIB
-from ... import pixmaps
 import sys
-
-if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
-elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
-elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
-
-from ... import functions as fn
-from ...widgets.FileDialog import FileDialog
 import weakref
 import numpy as np
 import os
+from ...Qt import QtGui, QtCore, QT_LIB
+from ... import pixmaps
+from ... import functions as fn
+from ...widgets.FileDialog import FileDialog
 from .. PlotDataItem import PlotDataItem
 from .. ViewBox import ViewBox
 from .. AxisItem import AxisItem
@@ -41,6 +33,14 @@ from .. GraphicsWidget import GraphicsWidget
 from .. ButtonItem import ButtonItem
 from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
+from ...python2_3 import basestring
+
+if QT_LIB == 'PyQt4':
+    from .plotConfigTemplate_pyqt import *
+elif QT_LIB == 'PySide':
+    from .plotConfigTemplate_pyside import *
+elif QT_LIB == 'PyQt5':
+    from .plotConfigTemplate_pyqt5 import *
 
 __all__ = ['PlotItem']
 
@@ -773,14 +773,6 @@ class PlotItem(GraphicsWidget):
                     y = pos.y() * sy
                     
                     fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" stroke="none" fill-opacity="%f"/>\n' % (x, y, color, opacity))
-                    #fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                    #for i in xrange(1, len(x)):
-                        #fh.write('L%f,%f ' % (x[i], y[i]))
-                    
-                    #fh.write('"/>')
-            
-        ## get list of curves, scatter plots
-        
         
         fh.write("</svg>\n")
         

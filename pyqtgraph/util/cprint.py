@@ -7,6 +7,7 @@ import sys, re
 
 from .colorama.winterm import WinTerm, WinColor, WinStyle
 from .colorama.win32 import windll
+from ..python2_3 import basestring
 
 _WIN = sys.platform.startswith('win')
 if windll is not None:
