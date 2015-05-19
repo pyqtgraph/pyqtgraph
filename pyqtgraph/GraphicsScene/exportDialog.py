@@ -139,5 +139,6 @@ class ExportDialog(QtGui.QWidget):
         self.selectBox.setVisible(False)
         self.setVisible(False)
 
-
-    
+    def closeEvent(self, event):
+        self.close()
+        QtGui.QWidget.closeEvent(self, event)
