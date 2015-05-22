@@ -14,8 +14,9 @@ class CrossHair(UIGraphicsItem):
     """
     **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
     
-    Used for marking a horizontal or vertical region in plots.
-    The region can be dragged and is bounded by lines which can be dragged individually.
+    Used for marking a specific region in plots using a vertical and a
+    horizontal line. 
+    The item can be dragged to point a specific location in the plot.
     
     ===============================  =============================================================================
     **Signals:**
@@ -87,13 +88,10 @@ class CrossHair(UIGraphicsItem):
         if not self.label:
             self.text.hide()
 
-        # important : on s'assurce que les objets sont bien des parents de la classe
-        # cela permet de bénéficier de l'ensemble de ses méthodes. 
         self.hline.setParentItem(self)
         self.vline.setParentItem(self)
         self.text.setParentItem(self)
 
-        # we set the lines to be movable or not
         self.setMovable(movable)
             
         self.hline.sigPositionChangeFinished.connect(self.linesMoveFinished)
@@ -103,9 +101,7 @@ class CrossHair(UIGraphicsItem):
 
         
     def value(self):
-        """
-        Returns the current position of the crosshair
-        """
+        """ Returns the current position of the crosshair """
         return self.hline.value(), self.vline.value()
 
     def setValue(self, val):
@@ -211,6 +207,14 @@ class CrossHair(UIGraphicsItem):
             fmt = fmt + self.units[1]
         self.text.setText(fmt.format(posX, posY), color=self.textColor)
         self.text.setPos(posX, posY)
+
+    def getPen(self):
+        """ Returns the current pen in use (the same for each line). """
+        return self.hline.pen
+
+    def getHoverPen(self):
+        """ Returns the current hover pen in use (the same for each line). """
+        return self.hline.hoverPen
 
     def setPen(self, *args, **kwargs):
         """
