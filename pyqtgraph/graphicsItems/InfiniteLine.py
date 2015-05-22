@@ -72,7 +72,7 @@ class InfiniteLine(UIGraphicsItem):
         self.label = label
         self.format = textFormat
         self.unit = unit
-        self.name = name
+        self._name = name
 
         self.anchorLeft = (1., 0.5)
         self.anchorRight = (0., 0.5)
@@ -291,7 +291,7 @@ class InfiniteLine(UIGraphicsItem):
         self.update()
     
     def setName(self, name):
-        self.name = name
+        self._name = name
     
-    def getName(self):
-        return self.name
+    def name(self):
+        return self._name

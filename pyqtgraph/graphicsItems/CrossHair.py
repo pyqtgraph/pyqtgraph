@@ -68,7 +68,7 @@ class CrossHair(UIGraphicsItem):
         self.format = textFormat
         self.label = label
         self.units = units
-        self.name = name
+        self._name = name
 
         self.blockLineSignal = False
         self.moving = False
@@ -309,7 +309,7 @@ class CrossHair(UIGraphicsItem):
         self.units = (x, y)
 
     def setName(self, name):
-        self.name = name
+        self._name = name
     
-    def getName(self):
-        return self.name
+    def name(self):
+        return self._name
