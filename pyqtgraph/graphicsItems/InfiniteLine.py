@@ -92,7 +92,8 @@ class InfiniteLine(UIGraphicsItem):
         self.text.setParentItem(self)
 
         ## Explicitly wrap methods from InfiniteLineBase
-        for m in ['value', 'setBounds', 'setMovable', 'setPos']:
+        for m in ['value', 'setBounds', 'setMovable', 'setPos',
+                  'pen', 'setPen', 'hoverPen', 'setHoverPen']:
             setattr(self, m, getattr(self.line, m))
 
         # we set the line to be movable or not
