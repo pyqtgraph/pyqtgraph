@@ -1950,7 +1950,7 @@ class PolyLineROI(ROI):
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
         """
-        sl = self.getArraySlice(data, img, axes=(0,1))
+        sl = self.getArraySlice(data, img, axes=axes)
         if sl is None:
             return None
         sliced = data[sl[0]]
