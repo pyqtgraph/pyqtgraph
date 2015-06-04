@@ -9,6 +9,7 @@ pyqtgraph-0.9.11  [unreleased]
         - Fixed DockArea save/restoreState when area is empty
     - Properly remove select box when export dialog is closed using window decorations
     - Remove all modifications to builtins
+    - Fix SpinBox decimals
 
   New Features:
     - Preliminary PyQt5 support

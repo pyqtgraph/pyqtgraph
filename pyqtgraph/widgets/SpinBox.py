@@ -112,8 +112,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
             
-            ## for compatibility with QDoubleSpinBox and QSpinBox
-            'decimals': 2,
+            'decimals': 3,
             
         }
         
@@ -125,7 +124,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setCorrectionMode(self.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
         self.setOpts(**kwargs)
-        
         
         self.editingFinished.connect(self.editingFinishedEvent)
         self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
@@ -146,20 +144,20 @@ class SpinBox(QtGui.QAbstractSpinBox):
         #print opts
         for k in opts:
             if k == 'bounds':
-                #print opts[k]
                 self.setMinimum(opts[k][0], update=False)
                 self.setMaximum(opts[k][1], update=False)
-                #for i in [0,1]:
-                    #if opts[k][i] is None:
-                        #self.opts[k][i] = None
-                    #else:
-                        #self.opts[k][i] = D(unicode(opts[k][i]))
+            elif k == 'min':
+                self.setMinimum(opts[k], update=False)
+            elif k == 'max':
+                self.setMaximum(opts[k], update=False)
             elif k in ['step', 'minStep']:
                 self.opts[k] = D(asUnicode(opts[k]))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
-            else:
+            elif k in self.opts:
                 self.opts[k] = opts[k]
+            else:
+                raise TypeError("Invalid keyword argument '%s'." % k)
         if 'value' in opts:
             self.setValue(opts['value'])
             
@@ -192,8 +190,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.updateText()
 
-
-
     def setMaximum(self, m, update=True):
         """Set the maximum allowed value (or None for no limit)"""
         if m is not None:
@@ -211,9 +207,13 @@ class SpinBox(QtGui.QAbstractSpinBox):
             self.setValue()
         
     def setPrefix(self, p):
+        """Set a string prefix.
+        """
         self.setOpts(prefix=p)
     
     def setRange(self, r0, r1):
+        """Set the upper and lower limits for values in the spinbox.
+        """
         self.setOpts(bounds = [r0,r1])
         
     def setProperty(self, prop, val):
@@ -226,12 +226,20 @@ class SpinBox(QtGui.QAbstractSpinBox):
             print("Warning: SpinBox.setProperty('%s', ..) not supported." % prop)
 
     def setSuffix(self, suf):
+        """Set the string suffix appended to the spinbox text.
+        """
         self.setOpts(suffix=suf)
 
     def setSingleStep(self, step):
+        """Set the step size used when responding to the mouse wheel, arrow
+        buttons, or arrow keys.
+        """
         self.setOpts(step=step)
         
     def setDecimals(self, decimals):
+        """Set the number of decimals to be displayed when formatting numeric
+        values.
+        """
         self.setOpts(decimals=decimals)
         
     def selectNumber(self):
@@ -368,62 +376,63 @@ class SpinBox(QtGui.QAbstractSpinBox):
             if int(value) != value:
                 return False
         return True
-        
 
     def updateText(self, prev=None):
-        #print "Update text."
+        # get the number of decimal places to print
+        decimals = self.opts.get('decimals')
+        
+        # temporarily disable validation
         self.skipValidate = True
+
+        # add a prefix to the units if requested
         if self.opts['siPrefix']:
+
+            # special case: if it's zero use the previous prefix
             if self.val == 0 and prev is not None:
                 (s, p) = fn.siScale(prev)
-                txt = "0.0 %s%s" % (p, self.opts['suffix'])
+
+                # NOTE: insert optional format string here?
+                txt = ("%."+str(decimals)+"g %s%s") % (0, p, self.opts['suffix'])
             else:
-                txt = fn.siFormat(float(self.val), suffix=self.opts['suffix'])
+                # NOTE: insert optional format string here as an argument?
+                txt = fn.siFormat(float(self.val), precision=decimals, suffix=self.opts['suffix'])
+
+        # otherwise, format the string manually
         else:
-            txt = '%g%s' % (self.val , self.opts['suffix'])
+            # NOTE: insert optional format string here?
+            txt = ('%.'+str(decimals)+'g%s') % (self.val , self.opts['suffix'])
+
+        # actually set the text
         self.lineEdit().setText(txt)
         self.lastText = txt
+
+        # re-enable the validation
         self.skipValidate = False
-        
+    
     def validate(self, strn, pos):
         if self.skipValidate:
-            #print "skip validate"
-            #self.textValid = False
             ret = QtGui.QValidator.Acceptable
         else:
             try:
                 ## first make sure we didn't mess with the suffix
                 suff = self.opts.get('suffix', '')
                 if len(suff) > 0 and asUnicode(strn)[-len(suff):] != suff:
-                    #print '"%s" != "%s"' % (unicode(strn)[-len(suff):], suff)
                     ret = QtGui.QValidator.Invalid
                     
                 ## next see if we actually have an interpretable value
                 else:
                     val = self.interpret()
                     if val is False:
-                        #print "can't interpret"
-                        #self.setStyleSheet('SpinBox {border: 2px solid #C55;}')
-                        #self.textValid = False
                         ret = QtGui.QValidator.Intermediate
                     else:
                         if self.valueInRange(val):
                             if not self.opts['delayUntilEditFinished']:
                                 self.setValue(val, update=False)
-                            #print "  OK:", self.val
-                            #self.setStyleSheet('')
-                            #self.textValid = True
-                            
                             ret = QtGui.QValidator.Acceptable
                         else:
                             ret = QtGui.QValidator.Intermediate
                         
             except:
-                #print "  BAD"
-                #import sys
-                #sys.excepthook(*sys.exc_info())
-                #self.textValid = False
-                #self.setStyleSheet('SpinBox {border: 2px solid #C55;}')
                 ret = QtGui.QValidator.Intermediate
             
         ## draw / clear border
@@ -471,14 +480,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
         #print val
         return val
         
-    #def interpretText(self, strn=None):
-        #print "Interpret:", strn
-        #if strn is None:
-            #strn = self.lineEdit().text()
-        #self.setValue(siEval(strn), update=False)
-        ##QtGui.QAbstractSpinBox.interpretText(self)
-        
-        
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         #print "Edit finished."
@@ -497,22 +498,3 @@ class SpinBox(QtGui.QAbstractSpinBox):
             #print "no value change:", val, self.val
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
-        
-    #def textChanged(self):
-        #print "Text changed."
-        
-        
-### Drop-in replacement for SpinBox; just for crash-testing
-#class SpinBox(QtGui.QDoubleSpinBox):
-    #valueChanged = QtCore.Signal(object)     # (value)  for compatibility with QSpinBox
-    #sigValueChanged = QtCore.Signal(object)  # (self)
-    #sigValueChanging = QtCore.Signal(object)  # (value)
-    #def __init__(self, parent=None, *args, **kargs):
-        #QtGui.QSpinBox.__init__(self, parent)
-    
-    #def  __getattr__(self, attr):
-        #return lambda *args, **kargs: None
-        
-    #def widgetGroupInterface(self):
-        #return (self.valueChanged, SpinBox.value, SpinBox.setValue)
-    
