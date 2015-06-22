@@ -426,7 +426,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #self.searchRect.setRect(rgn)
 
 
-        items = self.items(point, selMode, sortOrder, tr)
+        items = self.items(rgn, selMode, sortOrder, tr)
         
         ## remove items whose shape does not contain point (scene.items() apparently sucks at this)
         items2 = []
@@ -436,8 +436,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             shape = item.shape() # Note: default shape() returns boundingRect()
             if shape is None:
                 continue
-            if shape.contains(item.mapFromScene(point)):
-                items2.append(item)
+            items2.append(item)
         
         ## Sort by descending Z-order (don't trust scene.itms() to do this either)
         ## use 'absolute' z value, which is the sum of all item/parent ZValues
