@@ -111,7 +111,97 @@ def initShaders():
                 }
             """)
         ]),
-        
+
+        ShaderProgram('customShader', [
+            VertexShader("""
+                varying vec4 diffuse,ambient,baseColor;
+                varying vec3 normal,halfVector;
+
+
+                void main()
+                {
+                    gl_LightSource[0].position=(10,10,10);
+                    gl_LightSource[0].ambient=(1,1,1,0.1);
+                    gl_LightSource[0].diffuse=(.01,.01,.01,0.7);
+                    gl_LightSource[0].specular=(0.01,0.01,0.01,1);
+                    gl_LightSource[0].spotDirection=(0,0,0);
+
+
+                    baseColor = gl_Color;
+                    /* first transform the normal into eye space and
+                    normalize the result */
+                    normal = normalize(gl_NormalMatrix * gl_Normal);
+
+                    /* pass the halfVector to the fragment shader */
+                    halfVector = gl_LightSource[0].halfVector.xyz;
+
+                    /* Compute the diffuse, ambient and globalAmbient terms */
+                    diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
+                    ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;
+                    ambient += gl_LightModel.ambient * gl_FrontMaterial.ambient;
+                    gl_Position = ftransform();
+
+                }
+            """),
+            FragmentShader("""
+                varying vec4 diffuse,ambient,baseColor;
+                varying vec3 normal,halfVector;
+
+                void main()
+                {
+                    vec3 n,halfV,lightDir;
+                    float NdotL,NdotHV;
+
+                    gl_FrontMaterial.specular=0.001;
+                    gl_FrontMaterial.shininess=0.001;
+
+                    lightDir = vec3(gl_LightSource[0].position);
+
+                    /* The ambient term will always be present */
+                    vec4 color = ambient;
+                    /* a fragment shader can't write a varying variable, hence we need
+                    a new variable to store the normalized interpolated normal */
+                    /* n = normalize(normal); */
+                    /* compute the dot product between normal and ldir */
+
+                   if (gl_FrontFacing) // is the fragment part of a front face?
+                    {
+                        n = normalize(normal);
+
+                        NdotL = max(dot(n,lightDir),0.0);
+                        if (NdotL > 0.0) {
+                            color += diffuse * NdotL;
+                            halfV = normalize(halfVector);
+                            NdotHV = max(dot(n,halfV),0.0);
+                            color += gl_FrontMaterial.specular *
+                                    gl_LightSource[0].specular *
+                                    pow(NdotHV, gl_FrontMaterial.shininess);
+                        }
+
+                        gl_FragColor = baseColor + color;
+                    }
+                  else // fragment is part of a back face
+                    {
+                        n = normalize(-normal);
+
+                        NdotL = max(dot(n,lightDir),0.0);
+                        if (NdotL > 0.0) {
+                            color += diffuse * NdotL;
+                            halfV = normalize(halfVector);
+                            NdotHV = max(dot(n,halfV),0.0);
+                            color += gl_FrontMaterial.specular *
+                                    gl_LightSource[0].specular *
+                                    pow(NdotHV, gl_FrontMaterial.shininess);
+                        }
+
+                        gl_FragColor = baseColor + color;
+                    }
+
+                }
+
+            """)
+        ]),
+
         ## colors get brighter near edges of object
         ShaderProgram('edgeHilight', [   
             VertexShader("""
