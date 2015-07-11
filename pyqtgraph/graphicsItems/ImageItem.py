@@ -293,6 +293,9 @@ class ImageItem(GraphicsObject):
             h = Point(y-o).length()
             xds = max(1, int(1/w))
             yds = max(1, int(1/h))
+            # xds = int(1/max(1,w))
+            # yds = int(1/max(1,h))
+            # 1/0
             image = fn.downsample(self.image, xds, axis=0)
             image = fn.downsample(image, yds, axis=1)
         else:
