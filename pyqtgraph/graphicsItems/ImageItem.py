@@ -291,11 +291,8 @@ class ImageItem(GraphicsObject):
             y = self.mapToDevice(QtCore.QPointF(0,1))
             w = Point(x-o).length()
             h = Point(y-o).length()
-            xds = max(1, int(1/w))
-            yds = max(1, int(1/h))
-            # xds = int(1/max(1,w))
-            # yds = int(1/max(1,h))
-            # 1/0
+            xds = int(1/max(1, w))
+            yds = int(1/max(1, h))
             image = fn.downsample(self.image, xds, axis=0)
             image = fn.downsample(image, yds, axis=1)
         else:
