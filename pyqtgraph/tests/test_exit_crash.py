@@ -12,8 +12,8 @@ w = pg.{classname}({args})
 
 
 def test_exit_crash():
-    # For each Widget subclass, run a simple python script that creates an 
-    # instance and then shuts down. The intent is to check for segmentation 
+    # For each Widget subclass, run a simple python script that creates an
+    # instance and then shuts down. The intent is to check for segmentation
     # faults when each script exits.
     tmp = tempfile.mktemp(".py")
     path = os.path.dirname(pg.__file__)
