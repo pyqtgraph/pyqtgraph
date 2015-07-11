@@ -28,8 +28,8 @@ def test_exit_crash():
         obj = getattr(pg, name)
         if not isinstance(obj, type) or not issubclass(obj, pg.QtGui.QWidget):
             continue
-        
-        print name
+
+        print(name)
         argstr = initArgs.get(name, "")
         open(tmp, 'w').write(code.format(path=path, classname=name, args=argstr))
         proc = subprocess.Popen([sys.executable, tmp])

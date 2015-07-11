@@ -17,7 +17,7 @@ TreeWidget
 VerticalLabel""".split('\n')
 
 for f in files:
-    print f
+    print(f)
     fh = open(f.lower()+'.rst', 'w')
     fh.write(
 """%s
