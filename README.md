@@ -35,6 +35,7 @@ Contributors
   * David Kaplan
   * Martin Fitzpatrick
   * Daniel Lidstrom
+  * Eric Dill
 
 Requirements
 ------------
