@@ -1,14 +1,14 @@
 import sys, os
-import pyqtgraph as pg
-import subprocess
-from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
-
 if __name__ == "__main__" and (__package__ is None or __package__==''):
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, parent_dir)
     import examples
     __package__ = "examples"
+import pyqtgraph as pg
+import subprocess
+from pyqtgraph.python2_3 import basestring
+from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+
 
 from .utils import buildFileList, testFile, path, examples
 

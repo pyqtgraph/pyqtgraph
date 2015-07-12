@@ -144,7 +144,6 @@ except:
     while True:
         c = process.stdout.read(1).decode()
         output += c
-        print(output)
         #sys.stdout.write(c)
         #sys.stdout.flush()
         if output.endswith('test complete'):
