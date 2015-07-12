@@ -50,13 +50,15 @@ running::
     import pyqtgraph.examples
     pyqtgraph.examples.run()
 
+Or by running ``python examples/`` from the source root.
+
 This will start a launcher with a list of available examples. Select an item
 from the list to view its source code and double-click an item to run the
 example.
 
-(Note If you have installed pyqtgraph with ``python setup.py develop``
-it does the wrong thing and you then need to ``import examples`` and then
-``examples.run()``)
+Note If you have installed pyqtgraph with ``python setup.py develop``
+then the examples are incorrectly exposed as a top-level module. In this case,
+use ``import examples; examples.run()``.
 
 
 How does it compare to...
