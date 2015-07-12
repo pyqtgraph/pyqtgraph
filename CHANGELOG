@@ -17,6 +17,10 @@ pyqtgraph-0.9.11  [unreleased]
 	- Dock titles can be changed after creation
         - Added Dock.sigClosed
 
+  Maintenance:
+    - Add examples to unit tests
+
+
 pyqtgraph-0.9.10
 
   Fixed installation issues with more recent pip versions.

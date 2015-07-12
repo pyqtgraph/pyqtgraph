@@ -1,14 +1,32 @@
 from __future__ import print_function, division, absolute_import
 from pyqtgraph import Qt
-from . import utils
+from examples import utils
+import importlib
+import itertools
+import pytest
 
 files = utils.buildFileList(utils.examples)
 
-import pytest
+frontends = {Qt.PYQT4: False, Qt.PYSIDE: False}
+# frontends = {Qt.PYQT4: False, Qt.PYQT5: False, Qt.PYSIDE: False}
 
+# sort out which of the front ends are available
+for frontend in frontends.keys():
+    try:
+        importlib.import_module(frontend)
+        frontends[frontend] = True
+    except ImportError:
+        pass
 
-@pytest.mark.parametrize("f", files)
-def test_examples(f):
+@pytest.mark.parametrize(
+    "frontend, f", itertools.product(sorted(list(frontends.keys())), files))
+def test_examples(frontend, f):
     # Test the examples with whatever the current QT_LIB front
     # end is
-    utils.testFile(f[0], f[1], utils.sys.executable, Qt.QT_LIB)
+    print('frontend = %s. f = %s' % (frontend, f))
+    if not frontends[frontend]:
+        pytest.skip('{} is not installed. Skipping tests'.format(frontend))
+    utils.testFile(f[0], f[1], utils.sys.executable, frontend)
+
+if __name__ == "__main__":
+    pytest.cmdline.main()

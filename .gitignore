@@ -99,3 +99,6 @@ generated/
 MANIFEST
 deb_build
 rtr.cvs
+
+# pytest parallel
+.coverage*
