@@ -812,7 +812,7 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        QtGui.QGraphicsObject.__init__(self)
+        QtGui.QGraphicsWidget.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)
