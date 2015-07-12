@@ -8,7 +8,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     import examples
     __package__ = "examples"
 
-from .utils import buildFileList, testFile, run, path
+from .utils import buildFileList, testFile, run, path, examples
 
 if __name__ == '__main__':
 

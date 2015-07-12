@@ -208,7 +208,7 @@ def buildFileList(examples, files=None):
 
 def testFile(name, f, exe, lib, graphicsSystem=None):
     global path
-    fn =  os.path.join(path,f)
+    fn = os.path.join(path,f)
     #print "starting process: ", fn
     os.chdir(path)
     sys.stdout.write(name)
@@ -235,7 +235,7 @@ except:
     print("test failed")
     raise
 
-"""  % (import1, graphicsSystem, import2)
+""" % (import1, graphicsSystem, import2)
 
     if sys.platform.startswith('win'):
         process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
