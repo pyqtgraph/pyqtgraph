@@ -41,6 +41,7 @@ cover/
 .cache
 nosetests.xml
 coverage.xml
+.coverage.*
 
 # Translations
 *.mo

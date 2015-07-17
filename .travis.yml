@@ -51,13 +51,14 @@ install:
     - conda update conda --yes
     - conda create -n test_env python=${PYTHON} --yes
     - source activate test_env
-    - conda install numpy pyopengl pyqt pytest flake8 six --yes
+    - conda install numpy pyopengl pyqt pytest flake8 six coverage --yes
     - if [${PYTHON} == '2.7']; then
           conda install pyside --yes;
       fi;
     - pip install pytest-xdist # multi-thread py.test
-    - pip install coveralls
-    - export PYTEST=py.test;
+    - pip install pytest-cov # add coverage stats
+    - pip install codecov # add coverage integration service
+    - pip install coveralls # add another coverage integration service
     
     # Debugging helpers
     - uname -a
@@ -128,16 +129,12 @@ script:
     - source activate test_env
     
     # Run unit tests
-    - pwd
-    - ls
     - start_test "unit tests";
-      PYTHONPATH=. py.test;
+      PYTHONPATH=. py.test --cov pyqtgraph -n 4;
       check_output "unit tests";
     
     
     # check line endings
-    - pwd
-    - ls
     - if [ "${TEST}" == "extra" ]; then
         start_test "line ending check";
         ! find ./ -name "*.py" | xargs file | grep CRLF &&
@@ -146,8 +143,6 @@ script:
       fi;
 
     # Check repo size does not expand too much
-    - pwd
-    - ls
     - if [ "${TEST}" == "extra" ]; then
         start_test "repo size check";
         echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
@@ -156,8 +151,6 @@ script:
       fi;
 
     # Check for style issues
-    - pwd
-    - ls
     - if [ "${TEST}" == "extra" ]; then
         start_test "style check";
         cd ~/repo-clone &&
@@ -167,27 +160,22 @@ script:
       fi;
 
     # Check install works
-    - pwd
-    - ls
     - start_test "install test";
       python setup.py --quiet install;
       check_output "install test";
     
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
-    - pwd
-    - ls
     - start_test "double install test";
       bash -c "! python setup.py --quiet install";
       check_output "double install test";
       
     # Check we can import pg
-    - pwd
-    - ls
     - start_test "import test";
       echo "import sys; print(sys.path)" | python &&
       cd /; echo "import pyqtgraph.examples" | python;
       check_output "import test";
 
 after_success:
+  codecov
   coveralls
