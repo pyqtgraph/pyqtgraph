@@ -101,4 +101,4 @@ deb_build
 rtr.cvs
 
 # pytest parallel
-.coverage*
+.coverage

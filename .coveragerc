@@ -1,0 +1,11 @@
+[run]
+source = 
+    pyqtgraph
+
+[report]
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    *test*
+    */__pycache__/*
+    *.pyc

@@ -56,6 +56,7 @@ install:
           conda install pyside --yes;
       fi;
     - pip install pytest-xdist # multi-thread py.test
+    - pip install coveralls
     - export PYTEST=py.test;
     
     # Debugging helpers
@@ -130,7 +131,7 @@ script:
     - pwd
     - ls
     - start_test "unit tests";
-      PYTHONPATH=. py.test pyqtgraph/;
+      PYTHONPATH=. py.test;
       check_output "unit tests";
     
     
@@ -165,8 +166,6 @@ script:
         check_output "style check";
       fi;
 
-    # - cd $TRAVIS_DIR
-    
     # Check install works
     - pwd
     - ls
@@ -189,4 +188,6 @@ script:
       echo "import sys; print(sys.path)" | python &&
       cd /; echo "import pyqtgraph.examples" | python;
       check_output "import test";
-    
+
+after_success:
+  coveralls
