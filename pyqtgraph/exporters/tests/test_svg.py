@@ -1,11 +1,9 @@
 """
 SVG export test
 """
-from __future__ import (division, print_function, absolute_import)
+from __future__ import division, print_function, absolute_import
 import pyqtgraph as pg
-import pyqtgraph.exporters
 import tempfile
-from . import utils
 import os
 
 
@@ -13,7 +11,8 @@ app = pg.mkQApp()
 
 
 def test_plotscene():
-    tempfile = utils.gentempfilename(suffix='.svg')
+    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
+    print("using %s as a temporary file" % tempfilename)
     pg.setConfigOption('foreground', (0,0,0))
     w = pg.GraphicsWindow()
     w.show()        
@@ -26,12 +25,13 @@ def test_plotscene():
     app.processEvents()
     
     ex = pg.exporters.SVGExporter(w.scene())
-    ex.export(fileName=tempfile)
+    ex.export(fileName=tempfilename)
     # clean up after the test is done
-    os.unlink(tempfile)
+    os.unlink(tempfilename)
 
 def test_simple():
-    tempfile = utils.gentempfilename(suffix='.svg')
+    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
+    print("using %s as a temporary file" % tempfilename)
     scene = pg.QtGui.QGraphicsScene()
     #rect = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
     #scene.addItem(rect)
@@ -73,5 +73,5 @@ def test_simple():
     grp2.addItem(rect3)
 
     ex = pg.exporters.SVGExporter(scene)
-    ex.export(fileName=tempfile)
-    os.unlink(tempfile)
+    ex.export(fileName=tempfilename)
+    os.unlink(tempfilename)
