@@ -1,5 +1,6 @@
 import gc
 import weakref
+import pytest
 # try:
 #     import faulthandler
 #     faulthandler.enable()
@@ -11,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 app = pg.mkQApp()
 
-
+@pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qWait")
 def test_dividebyzero():
     import pyqtgraph as pg
     im = pg.image(pg.np.random.normal(size=(100,100)))

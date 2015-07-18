@@ -4,7 +4,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 * Automatically import either PyQt4 or PySide depending on availability
 * Allow to import QtCore/QtGui pyqtgraph.Qt without specifying which Qt wrapper
   you want to use.
-* Declare QtCore.Signal, .Slot in PyQt4  
+* Declare QtCore.Signal, .Slot in PyQt4
 * Declare loadUiType function for Pyside
 
 """
@@ -19,7 +19,7 @@ PYQT5 = 'PyQt5'
 
 QT_LIB = None
 
-## Automatically determine whether to use PyQt or PySide. 
+## Automatically determine whether to use PyQt or PySide.
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
 libOrder = [PYQT4, PYSIDE, PYQT5]
@@ -69,7 +69,7 @@ if QT_LIB == PYSIDE:
     
     # Make a loadUiType function like PyQt has
     
-    # Credit: 
+    # Credit:
     # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
     class StringIO(object):
@@ -85,7 +85,15 @@ if QT_LIB == PYSIDE:
         
     def loadUiType(uiFile):
         """
-        Pyside "loadUiType" command like PyQt4 has one, so we have to convert the ui file to py code in-memory first    and then execute it in a special frame to retrieve the form_class.
+        Pyside "loadUiType" command like PyQt4 has one, so we have to convert
+        the ui file to py code in-memory first and then execute it in a
+        special frame to retrieve the form_class.
+
+        from stackoverflow: http://stackoverflow.com/a/14195313/3781327
+
+        seems like this might also be a legitimate solution, but I'm not sure
+        how to make PyQt4 and pyside look the same...
+            http://stackoverflow.com/a/8717832
         """
         import pysideuic
         import xml.etree.ElementTree as xml

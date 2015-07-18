@@ -3,7 +3,6 @@ import pyqtgraph as pg
 import pytest
 
 app = pg.mkQApp()
-qtest = pg.Qt.QtTest.QTest
 
 def assertMapping(vb, r1, r2):
     assert vb.mapFromView(r1.topLeft()) == r2.topLeft()
@@ -11,10 +10,14 @@ def assertMapping(vb, r1, r2):
     assert vb.mapFromView(r1.topRight()) == r2.topRight()
     assert vb.mapFromView(r1.bottomRight()) == r2.bottomRight()
 
+
 # TODO fix this test!
-@pytest.mark.skipif(True, reason=('unclear why test is failing. skipping until '
-                                  'someone has time to fix it'))
+# @pytest.mark.skipif(True or pg.Qt.USE_PYSIDE, 
+#                     reason=('unclear why test is failing. skipping until '
+#                             'someone has time to fix it'))
+@pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qTest")
 def test_ViewBox():
+    qtest = pg.Qt.QtTest.QTest
     global app, win, vb
     QRectF = pg.QtCore.QRectF
     
