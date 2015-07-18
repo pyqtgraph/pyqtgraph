@@ -52,7 +52,9 @@ install:
     - conda create -n test_env python=${PYTHON} --yes
     - source activate test_env
     - conda install numpy pyopengl pyqt pytest flake8 six coverage --yes
-    - if [${PYTHON} == '2.7']; then
+    - if [${QT} == 'pyqt']; then
+          conda install pyqt4 --yes;
+      elif [${QT} == 'pyside']; then
           conda install pyside --yes;
       fi;
     - pip install pytest-xdist # multi-thread py.test
