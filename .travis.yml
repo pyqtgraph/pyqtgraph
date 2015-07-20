@@ -137,7 +137,7 @@ script:
     
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. py.test --cov pyqtgraph -n 4;
+      PYTHONPATH=. py.test --cov pyqtgraph -n 4 -sv;
       check_output "unit tests";
     
     
