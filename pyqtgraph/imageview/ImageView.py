@@ -237,19 +237,7 @@ class ImageView(QtGui.QWidget):
         
         self.image = img
         self.imageDisp = None
-        
-        if xvals is not None:
-            self.tVals = xvals
-        elif hasattr(img, 'xvals'):
-            try:
-                self.tVals = img.xvals(0)
-            except:
-                self.tVals = np.arange(img.shape[0])
-        else:
-            self.tVals = np.arange(img.shape[0])
-        
-        profiler()
-        
+         
         if axes is None:
             if img.ndim == 2:
                 self.axes = {'t': None, 'x': 0, 'y': 1, 'c': None}
@@ -270,10 +258,28 @@ class ImageView(QtGui.QWidget):
                 self.axes[axes[i]] = i
         else:
             raise Exception("Can not interpret axis specification %s. Must be like {'t': 2, 'x': 0, 'y': 1} or ('t', 'x', 'y', 'c')" % (str(axes)))
-            
+        
+        xpose = []
         for x in ['t', 'x', 'y', 'c']:
-            self.axes[x] = self.axes.get(x, None)
-
+            ax = self.axes.get(x, None)
+            if ax is not None:
+                xpose.append(ax)
+            self.axes[x] = ax
+ 
+        self.image = np.transpose(self.image, xpose) 
+       
+        profiler()
+        
+        if xvals is not None:
+            self.tVals = xvals
+        elif hasattr(self.image, 'xvals'):
+            try:
+                self.tVals = self.image.xvals(0)
+            except:
+                self.tVals = np.arange(self.image.shape[0])
+        else:
+            self.tVals = np.arange(self.image.shape[0])
+        
         profiler()
 
         self.currentIndex = 0
