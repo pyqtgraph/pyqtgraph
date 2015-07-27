@@ -155,8 +155,7 @@ class ViewBox(GraphicsWidget):
             'mouseEnabled': [enableMouse, enableMouse],
             'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,  
             'enableMenu': enableMenu,
-            'wheelScaleFactor': -1.0 / 8.0,
-
+            'wheelScaleFactor': [-1.0 / 8.0, -1.0/8.0], #wheel scale factor for each axis or None to disable for that axis
             'background': None,
             
             # Limits
@@ -696,8 +695,6 @@ class ViewBox(GraphicsWidget):
             self.updateViewRange()
                     
             
-            
-            
     def scaleBy(self, s=None, center=None, x=None, y=None):
         """
         Scale by *s* around given center point (or center of view).
@@ -847,6 +844,9 @@ class ViewBox(GraphicsWidget):
         
         if x is not None or y is not None:
             self.updateAutoRange()
+
+    def setWheelScaleFactor(self, x=None, y=None):
+        self.state['wheelScaleFactor'] = (x, y)
 
     def updateAutoRange(self):
         ## Break recursive loops when auto-ranging.
@@ -1208,13 +1208,17 @@ class ViewBox(GraphicsWidget):
             mv = mask[axis]
             mask[:] = 0
             mask[axis] = mv
-        s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+        
+        xfactor = self.state['wheelScaleFactor'][0]
+        xs = ((mask[0] * 0.02) + 1) ** (ev.delta() * xfactor) if xfactor is not None else None
+        yfactor = self.state['wheelScaleFactor'][1]
+        ys = ((mask[1] * 0.02) + 1) ** (ev.delta() * yfactor) if yfactor is not None else None
         
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         #center = ev.pos()
         
         self._resetTarget()
-        self.scaleBy(s, center)
+        self.scaleBy(x=xs, y=ys, center=center)
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         ev.accept()
 
