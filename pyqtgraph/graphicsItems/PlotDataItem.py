@@ -547,7 +547,7 @@ class PlotDataItem(GraphicsObject):
             if self.opts['autoDownsample']:
                 # this option presumes that x-values have uniform spacing
                 range = self.viewRect()
-                if range is not None:
+                if range is not None and len(x) > 1:
                     dx = float(x[-1]-x[0]) / (len(x)-1)
                     x0 = (range.left()-x[0]) / dx
                     x1 = (range.right()-x[0]) / dx
