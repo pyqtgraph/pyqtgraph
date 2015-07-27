@@ -104,6 +104,8 @@ class PlotDataItem(GraphicsObject):
             downsampleMethod 'subsample': Downsample by taking the first of N samples. 
                              This method is fastest and least accurate.
                              'mean': Downsample by taking the mean of N samples.
+                             'min': Downsample by taking the min of N samples.
+                             'max': Downsample by taking the max of N samples.
                              'peak': Downsample by drawing a saw wave that follows the min 
                              and max of the original data. This method produces the best 
                              visual representation of the data but is slower.
@@ -314,6 +316,8 @@ class PlotDataItem(GraphicsObject):
         mode            'subsample': Downsample by taking the first of N samples.
                         This method is fastest and least accurate.
                         'mean': Downsample by taking the mean of N samples.
+                        'min': Downsample by taking the min of N samples.
+                        'max': Downsample by taking the max of N samples.
                         'peak': Downsample by drawing a saw wave that follows the min
                         and max of the original data. This method produces the best
                         visual representation of the data but is slower.
@@ -560,6 +564,7 @@ class PlotDataItem(GraphicsObject):
                         ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
                     ## downsampling is expensive; delay until after clipping.
             
+
             if self.opts['clipToView']:
                 view = self.getViewBox()
                 if view is None or not view.autoRangeEnabled()[0]:
@@ -589,16 +594,23 @@ class PlotDataItem(GraphicsObject):
                 x = x[indices] + float(x[-1]-x[0]) / (len(x)-1)
                 if self.opts['downsampleMethod'] == 'subsample':
                     y = y[indices]
-                elif self.opts['downsampleMethod'] == "mean":
+                elif self.opts['downsampleMethod'] in ['mean', 'max', 'min']:
+                    if self.opts['downsampleMethod'] == 'mean':
+                        downsampler = np.mean
+                    elif self.opts['downsampleMethod'] == 'max':
+                        downsampler = np.max
+                    else:
+                        downsampler = np.min
+ 
                     n = len(indices)
                     y1 = np.zeros(n)
                      
                     for i in np.arange(1, n):
                         i0 = indices[i-1]
                         i1 = indices[i]
-                        y1[i] = np.mean(y[i0:i1]) 
+                        y1[i] = downsampler(y[i0:i1]) 
                     """ final value """
-                    y1[-1] = np.mean(y[indices[-1]:])
+                    y1[-1] = downsampler(y[indices[-1]:])
                     y = y1
                 elif self.opts['downsampleMethod'] == 'peak':
                     n = len(x) // ds
