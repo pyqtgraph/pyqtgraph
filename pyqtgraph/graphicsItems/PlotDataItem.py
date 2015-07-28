@@ -175,7 +175,7 @@ class PlotDataItem(GraphicsObject):
             'autoDownsample': False,
             'downsampleMethod': 'peak',
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
-            'quantizedDownsample': True, #ensures downsample points align across scrolls
+            'quantizedDownsample': False, #ensures downsample points align across scrolls
             'clipToView': False,
             
             'data': None,
@@ -587,11 +587,12 @@ class PlotDataItem(GraphicsObject):
                         indices = np.arange(i0, n*ds, ds)
                     else:
                         indices = [0]
+                    """use midpoint of x downsample points"""
+                    x = x[indices] + float(x[-1]-x[0]) / (len(x)-1)
                 else: 
                     indices = np.arange(0, n*ds, ds)
-                
-                """use midpoint of x downsample points"""
-                x = x[indices] + float(x[-1]-x[0]) / (len(x)-1)
+                    x = x[indices]
+
                 if self.opts['downsampleMethod'] == 'subsample':
                     y = y[indices]
                 elif self.opts['downsampleMethod'] in ['mean', 'max', 'min']:
