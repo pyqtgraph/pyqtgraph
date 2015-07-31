@@ -97,6 +97,13 @@ def setup_function(function):
     g = pg.GridItem()
     vb.addItem(g)
     win.resize(400, 400)
+    
+    w = vb.geometry().width()
+    h = vb.geometry().height()
+    view1 = QRectF(0, 0, 10, 10)
+    size1 = QRectF(0, h, w, -h)
+    
+    _assert_mapping(vb, view1, size1)
     vb.setAspectLocked()
     win.resize(800, 400)
     app.processEvents()
