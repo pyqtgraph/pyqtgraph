@@ -181,5 +181,5 @@ script:
       check_output "import test";
 
 after_success:
-  codecov
-  coveralls
+  - codecov
+  - coveralls
