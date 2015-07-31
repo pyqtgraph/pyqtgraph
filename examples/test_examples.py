@@ -18,11 +18,11 @@ for frontend in frontends.keys():
     except ImportError:
         pass
 
+
 @pytest.mark.parametrize(
     "frontend, f", itertools.product(sorted(list(frontends.keys())), files))
 def test_examples(frontend, f):
-    # Test the examples with whatever the current QT_LIB front
-    # end is
+    # Test the examples with all available front-ends
     print('frontend = %s. f = %s' % (frontend, f))
     if not frontends[frontend]:
         pytest.skip('{} is not installed. Skipping tests'.format(frontend))

@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/pyqtgraph/pyqtgraph.svg?branch=develop)](https://travis-ci.org/pyqtgraph/pyqtgraph)
+[![codecov.io](http://codecov.io/github/Nikea/scikit-xray/coverage.svg?branch=develop)](http://codecov.io/github/Nikea/scikit-xray?branch=develop)
+
 PyQtGraph
 =========
 

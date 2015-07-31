@@ -41,6 +41,7 @@ cover/
 .cache
 nosetests.xml
 coverage.xml
+.coverage.*
 
 # Translations
 *.mo
@@ -101,4 +102,8 @@ deb_build
 rtr.cvs
 
 # pytest parallel
-.coverage*
+.coverage
+
+# ctags
+.tags*
+

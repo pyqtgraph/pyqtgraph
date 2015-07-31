@@ -1,5 +1,5 @@
 language: python
-
+sudo: false
 # Credit: Original .travis.yml lifted from VisPy
 
 # Here we use anaconda for 2.6 and 3.3, since it provides the simplest
@@ -20,22 +20,18 @@ env:
     #- PYTHON=2.6 QT=pyqt TEST=standard
     - PYTHON=2.7 QT=pyqt TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
-    - PYTHON=3.2 QT=pyqt TEST=standard
-    - PYTHON=3.2 QT=pyside TEST=standard
+    - PYTHON=3.4 QT=pyqt TEST=standard
+    # - PYTHON=3.4 QT=pyside TEST=standard # pyside isn't available for 3.4 with conda
     #- PYTHON=3.2 QT=pyqt5 TEST=standard
 
 
 before_install:
-    - TRAVIS_DIR=`pwd`
-    - travis_retry sudo apt-get update;
-#     - if [ "${PYTHON}" != "2.7" ]; then
-#         wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh &&
-#         chmod +x miniconda.sh &&
-#         ./miniconda.sh -b &&
-#         export PATH=/home/$USER/anaconda/bin:$PATH &&
-#         conda update --yes conda &&
-#         travis_retry sudo apt-get -qq -y install libgl1-mesa-dri;
-#       fi;
+    - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b -p /home/travis/mc
+    - export PATH=/home/travis/mc/bin:$PATH
+    
+    # not sure what is if block is for
     - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
           GIT_TARGET_EXTRA="+refs/heads/${TRAVIS_BRANCH}";
           GIT_SOURCE_EXTRA="+refs/pull/${TRAVIS_PULL_REQUEST}/merge";
@@ -51,61 +47,26 @@ before_install:
     - echo ${GIT_SOURCE_EXTRA}
 
 install:
-    # Dependencies
-    - if [ "${PYTHON}" == "2.7" ]; then
-        travis_retry sudo apt-get -qq -y install python-numpy &&
-        export PIP=pip &&
-        sudo ${PIP} install pytest &&
-        sudo ${PIP} install flake8 &&
-        export PYTEST=py.test;
-      else
-        travis_retry sudo apt-get -qq -y install python3-numpy &&
-        curl http://python-distribute.org/distribute_setup.py | sudo python3 &&
-        curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python3 &&
-        export PIP=pip3.2 &&
-        sudo ${PIP} install pytest &&
-        sudo ${PIP} install flake8 &&
-        export PYTEST=py.test-3.2;
-      fi;
+    - export GIT_FULL_HASH=`git rev-parse HEAD`
+    - conda update conda --yes
+    - conda create -n test_env python=${PYTHON} --yes
+    - source activate test_env
+    - conda install numpy pyopengl pytest flake8 six coverage --yes
+    - echo ${QT}
+    - echo ${TEST}
+    - echo ${PYTHON}
     
-    # Qt
-    - if [ "${PYTHON}" == "2.7" ]; then
-        if [ ${QT} == 'pyqt' ]; then
-          travis_retry sudo apt-get -qq -y install python-qt4 python-qt4-gl;
-        else
-          travis_retry sudo apt-get -qq -y install python-pyside.qtcore python-pyside.qtgui python-pyside.qtsvg python-pyside.qtopengl;
-        fi;
-      elif [ "${PYTHON}" == "3.2" ]; then
-        if [ ${QT} == 'pyqt' ]; then
-          travis_retry sudo apt-get -qq -y install python3-pyqt4;
-        elif [ ${QT} == 'pyside' ]; then
-          travis_retry sudo apt-get -qq -y install python3-pyside;
-        else
-          ${PIP} search PyQt5;
-          ${PIP} install PyQt5;
-          cat /home/travis/.pip/pip.log;
-        fi;
-      else
-        conda create -n testenv --yes --quiet pip python=$PYTHON &&
-        source activate testenv &&
-        if [ ${QT} == 'pyqt' ]; then
-          conda install --yes --quiet pyside;
-        else
-          conda install --yes --quiet pyside;
-        fi;
+    - if [ "${QT}" == "pyqt" ]; then
+          conda install pyqt --yes;
       fi;
-
-    # Install PyOpenGL
-    - if [ "${PYTHON}" == "2.7" ]; then
-          echo "Using OpenGL stable version (apt)";
-          travis_retry sudo apt-get -qq -y install python-opengl;
-      else
-          echo "Using OpenGL stable version (pip)";
-          ${PIP} install -q PyOpenGL;
-          cat /home/travis/.pip/pip.log;
+    - if [ "${QT}" == "pyside" ]; then
+          conda install pyside --yes;
       fi;
-      
-
+    - pip install pytest-xdist # multi-thread py.test
+    - pip install pytest-cov # add coverage stats
+    - pip install codecov # add coverage integration service
+    - pip install coveralls # add another coverage integration service
+    
     # Debugging helpers
     - uname -a
     - cat /etc/issue
@@ -114,23 +75,18 @@ install:
       else
         python3 --version;
       fi;
-    - apt-cache search python3-pyqt
-    - apt-cache search python3-pyside
-    - apt-cache search pytest
-    - apt-cache search python pip
-    - apt-cache search python qt5
-    
 
 before_script:
     # We need to create a (fake) display on Travis, let's use a funny resolution
     - export DISPLAY=:99.0
+    - "sh -e /etc/init.d/xvfb start"
     - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
     
-    # Make sure everyone uses the correct python
-    - mkdir ~/bin && ln -s `which python${PYTHON}` ~/bin/python
-    - export PATH=/home/travis/bin:$PATH
+    # Make sure everyone uses the correct python (this is handled by conda)
     - which python
     - python --version
+    - pwd
+    - ls
     # Help color output from each test
     - RESET='\033[0m';
       RED='\033[00;31m';
@@ -157,12 +113,12 @@ before_script:
         start_test "repo size check";
         mkdir ~/repo-clone && cd ~/repo-clone &&
         git init && git remote add -t ${TRAVIS_BRANCH} origin git://github.com/${TRAVIS_REPO_SLUG}.git &&
-        git fetch origin ${GIT_TARGET_EXTRA} && 
-        git checkout -qf FETCH_HEAD && 
+        git fetch origin ${GIT_TARGET_EXTRA} &&
+        git checkout -qf FETCH_HEAD &&
         git tag travis-merge-target &&
         git gc --aggressive &&
         TARGET_SIZE=`du -s . | sed -e "s/\t.*//"` &&
-        git pull origin ${GIT_SOURCE_EXTRA} && 
+        git pull origin ${GIT_SOURCE_EXTRA} &&
         git gc --aggressive &&
         MERGE_SIZE=`du -s . | sed -e "s/\t.*//"` &&
         if [ "${MERGE_SIZE}" != "${TARGET_SIZE}" ]; then
@@ -171,15 +127,14 @@ before_script:
           SIZE_DIFF=0;
         fi;
       fi;
-      
-    - cd $TRAVIS_DIR
-
 
 script:
+  
+    - source activate test_env
     
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. ${PYTEST} pyqtgraph/;
+      PYTHONPATH=. py.test --cov pyqtgraph -n 4 -sv;
       check_output "unit tests";
     
     
@@ -208,17 +163,15 @@ script:
         check_output "style check";
       fi;
 
-    - cd $TRAVIS_DIR
-    
     # Check install works
     - start_test "install test";
-      sudo python${PYTHON} setup.py --quiet install;
+      python setup.py --quiet install;
       check_output "install test";
     
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
     - start_test "double install test";
-      bash -c "! sudo python${PYTHON} setup.py --quiet install";
+      bash -c "! python setup.py --quiet install";
       check_output "double install test";
       
     # Check we can import pg
@@ -226,5 +179,7 @@ script:
       echo "import sys; print(sys.path)" | python &&
       cd /; echo "import pyqtgraph.examples" | python;
       check_output "import test";
-    
 
+after_success:
+  codecov
+  coveralls
