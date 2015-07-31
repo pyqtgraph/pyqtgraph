@@ -1,5 +1,6 @@
 #import PySide
 import pyqtgraph as pg
+import pytest
 
 app = pg.mkQApp()
 qtest = pg.Qt.QtTest.QTest
