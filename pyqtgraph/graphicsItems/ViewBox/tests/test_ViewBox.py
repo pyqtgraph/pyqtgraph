@@ -2,17 +2,18 @@
 import pyqtgraph as pg
 import pytest
 
-QRectF = None
-app = None
+QRectF = pg.QtCore.QRectF
+qtest = pg.Qt.QtTest.QTest
+app = pg.mkQApp()
 win = None
 vb = None
 
 
 def test_resize():
+    global app, win, vb
     # test resize
     win.resize(400, 400)
     app.processEvents()
-    
     w = vb.geometry().width()
     h = vb.geometry().height()
     view1 = QRectF(0, 0, 10, 10)
@@ -22,6 +23,9 @@ def test_resize():
 
 
 def test_wide_resize():
+    global app, win, vb
+    win.resize(400,400)
+    vb.setAspectLocked()
     # test wide resize
     win.resize(800, 400)
     app.processEvents()
@@ -33,6 +37,7 @@ def test_wide_resize():
 
 
 def test_tall_resize():
+    global app, win, vb
     # test tall resize
     win.resize(400, 800)
     app.processEvents()
@@ -45,7 +50,7 @@ def test_tall_resize():
 
 skipreason = ('unclear why these tests are failing. skipping until someone '
               'has time to fix it.')
-@pytest.mark.skipif(True, reason=skipreason)
+# @pytest.mark.skipif(True, reason=skipreason)
 def test_aspect_ratio_constraint():
     # test limits + resize  (aspect ratio constraint has priority over limits
     win.resize(400, 400)
@@ -73,11 +78,7 @@ function_set = set([test_resize, test_wide_resize, test_tall_resize,
                     
 @pytest.mark.parametrize('function', function_set)
 def setup_function(function):
-    print('\nsetting up function %s' % function)
-    global app, win, vb, QRectF
-    app = pg.mkQApp()
-    QRectF = pg.QtCore.QRectF
-    qtest = pg.Qt.QtTest.QTest
+    global app, win, vb
     
     win = pg.GraphicsWindow()
     win.ci.layout.setContentsMargins(0,0,0,0)
@@ -93,26 +94,21 @@ def setup_function(function):
     
     g = pg.GridItem()
     vb.addItem(g)
-
-    g = pg.GridItem()
-    vb.addItem(g)
-    win.resize(400, 400)
     
     w = vb.geometry().width()
     h = vb.geometry().height()
     view1 = QRectF(0, 0, 10, 10)
     size1 = QRectF(0, h, w, -h)
-    
     _assert_mapping(vb, view1, size1)
+    
+    win.resize(400, 400)
+    
     vb.setAspectLocked()
     win.resize(800, 400)
     app.processEvents()
 
 @pytest.mark.parametrize('function', function_set)
 def teardown_function(function):
-    print('\ntearing down function %s' % function)
-    global app, win, vb
-    app.exit()
-    app = None
+    global win, vb
     win = None
     vb = None
