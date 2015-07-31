@@ -103,3 +103,7 @@ rtr.cvs
 
 # pytest parallel
 .coverage
+
+# ctags
+.tags*
+
