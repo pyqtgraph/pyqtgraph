@@ -71,8 +71,6 @@ def test_wide_resize():
     _assert_mapping(vb, view1, size1)
 
 
-skipreason = ('unclear why these tests are failing. skipping until someone '
-              'has time to fix it.')
 @pytest.mark.skipif(True, reason=skipreason)
 def test_tall_resize():
     # test tall resize
@@ -85,8 +83,6 @@ def test_tall_resize():
     _assert_mapping(vb, view1, size1)
 
 
-skipreason = ('unclear why these tests are failing. skipping until someone '
-              'has time to fix it.')
 @pytest.mark.skipif(True, reason=skipreason)
 def test_aspect_radio_constraint():
     # test limits + resize  (aspect ratio constraint has priority over limits
