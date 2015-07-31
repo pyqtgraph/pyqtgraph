@@ -113,12 +113,12 @@ before_script:
         start_test "repo size check";
         mkdir ~/repo-clone && cd ~/repo-clone &&
         git init && git remote add -t ${TRAVIS_BRANCH} origin git://github.com/${TRAVIS_REPO_SLUG}.git &&
-        git fetch origin ${GIT_TARGET_EXTRA} && 
-        git checkout -qf FETCH_HEAD && 
+        git fetch origin ${GIT_TARGET_EXTRA} &&
+        git checkout -qf FETCH_HEAD &&
         git tag travis-merge-target &&
         git gc --aggressive &&
         TARGET_SIZE=`du -s . | sed -e "s/\t.*//"` &&
-        git pull origin ${GIT_SOURCE_EXTRA} && 
+        git pull origin ${GIT_SOURCE_EXTRA} &&
         git gc --aggressive &&
         MERGE_SIZE=`du -s . | sed -e "s/\t.*//"` &&
         if [ "${MERGE_SIZE}" != "${TARGET_SIZE}" ]; then
@@ -127,9 +127,6 @@ before_script:
           SIZE_DIFF=0;
         fi;
       fi;
-      
-    #- cd $TRAVIS_DIR
-    
 
 script:
   
