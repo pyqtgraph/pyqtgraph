@@ -12,9 +12,6 @@ def assertMapping(vb, r1, r2):
 
 
 # TODO fix this test!
-# @pytest.mark.skipif(True or pg.Qt.USE_PYSIDE, 
-#                     reason=('unclear why test is failing. skipping until '
-#                             'someone has time to fix it'))
 @pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qTest")
 def test_ViewBox():
     qtest = pg.Qt.QtTest.QTest
@@ -43,7 +40,7 @@ def test_ViewBox():
     view1 = QRectF(0, 0, 10, 10)
     size1 = QRectF(0, h, w, -h)
     assertMapping(vb, view1, size1)
-    
+
     # test resize
     win.resize(400, 400)
     app.processEvents()
