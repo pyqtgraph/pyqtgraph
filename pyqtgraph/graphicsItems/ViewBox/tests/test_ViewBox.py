@@ -3,6 +3,7 @@ import pyqtgraph as pg
 
 app = pg.mkQApp()
 qtest = pg.Qt.QtTest.QTest
+QRectF = pg.QtCore.QRectF
 
 def assertMapping(vb, r1, r2):
     assert vb.mapFromView(r1.topLeft()) == r2.topLeft()
@@ -10,9 +11,10 @@ def assertMapping(vb, r1, r2):
     assert vb.mapFromView(r1.topRight()) == r2.topRight()
     assert vb.mapFromView(r1.bottomRight()) == r2.bottomRight()
 
-def test_ViewBox():
-    global app, win, vb
-    QRectF = pg.QtCore.QRectF
+def init_viewbox():
+    """Helper function to init the ViewBox
+    """
+    global win, vb
     
     win = pg.GraphicsWindow()
     win.ci.layout.setContentsMargins(0,0,0,0)
@@ -30,6 +32,9 @@ def test_ViewBox():
     vb.addItem(g)
     
     app.processEvents()
+    
+def test_ViewBox():
+    init_viewbox()
     
     w = vb.geometry().width()
     h = vb.geometry().height()
@@ -68,26 +73,8 @@ def test_ViewBox():
 
 
 def test_limits_and_resize():
-    global app, win, vb
-    QRectF = pg.QtCore.QRectF
-    
-    win = pg.GraphicsWindow()
-    win.ci.layout.setContentsMargins(0,0,0,0)
-    win.resize(200, 200)
-    win.show()
-    vb = win.addViewBox()
-    
-    # set range before viewbox is shown
-    vb.setRange(xRange=[0, 10], yRange=[0, 10], padding=0)
-    
-    # required to make mapFromView work properly.
-    qtest.qWaitForWindowShown(win)
-    
-    g = pg.GridItem()
-    vb.addItem(g)
-    
-    app.processEvents()
-    
+    init_viewbox()
+
     # now lock aspect
     vb.setAspectLocked()
     # test limits + resize  (aspect ratio constraint has priority over limits
