@@ -64,8 +64,6 @@ install:
       fi;
     - pip install pytest-xdist # multi-thread py.test
     - pip install pytest-cov # add coverage stats
-    - pip install codecov # add coverage integration service
-    - pip install coveralls # add another coverage integration service
     
     # Debugging helpers
     - uname -a
@@ -183,5 +181,7 @@ script:
 
 after_success:
   - cd /home/travis/build/pyqtgraph/pyqtgraph
+  - pip install codecov --upgrade  # add coverage integration service
   - codecov
+  - pip install coveralls --upgrade  # add another coverage integration service
   - coveralls
