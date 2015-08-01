@@ -182,6 +182,6 @@ script:
       check_output "import test";
 
 after_success:
-  - cd ~/repo-clone
+  - cd /home/travis/build/pyqtgraph/pyqtgraph
   - codecov
   - coveralls
