@@ -136,7 +136,8 @@ script:
     - start_test "unit tests";
       PYTHONPATH=. py.test --cov pyqtgraph -n 4 -sv;
       check_output "unit tests";
-    
+    - echo "test script finished. Current directory:"
+    - pwd
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
@@ -181,5 +182,6 @@ script:
       check_output "import test";
 
 after_success:
+  - cd ~/repo-clone
   - codecov
   - coveralls
