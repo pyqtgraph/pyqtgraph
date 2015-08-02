@@ -30,7 +30,7 @@ def test_examples(frontend, f):
     # Test the examples with all available front-ends
     print('frontend = %s. f = %s' % (frontend, f))
     if not frontends[frontend]:
-        pytest.skip('{} is not installed. Skipping tests'.format(frontend))
+        pytest.skip('%s is not installed. Skipping tests' % frontend)
     utils.testFile(f[0], f[1], utils.sys.executable, frontend)
 
 if __name__ == "__main__":
