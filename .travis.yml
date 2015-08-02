@@ -65,6 +65,11 @@ install:
     - pip install pytest-xdist # multi-thread py.test
     - pip install pytest-cov # add coverage stats
     
+    # required for example testing on python 2.6
+    - if [ "${PYTHON}" == "2.6" ]; then
+        pip install importlib
+      fi;
+    
     # Debugging helpers
     - uname -a
     - cat /etc/issue
