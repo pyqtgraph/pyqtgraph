@@ -27,6 +27,8 @@ The advantage is that there is less to do to get an exported file cleaned and re
 publication. Fonts are not vectorized (outlined), and window colors are white.
 
 """
+
+import six
     
 class MatplotlibExporter(Exporter):
     Name = "Matplotlib Window"
@@ -43,7 +45,7 @@ class MatplotlibExporter(Exporter):
         for ax in axl:
             if ax is None:
                 continue
-            for loc, spine in ax.spines.iteritems():
+            for loc, spine in six.iteritems(ax.spines):
                 if loc in ['left', 'bottom']:
                     pass
                 elif loc in ['right', 'top']:

@@ -543,7 +543,7 @@ class RemoteEventHandler(object):
         
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
-            for k, v in kwds.iteritems():
+            for k, v in six.iteritems(kwds):
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
         byteMsgs = []

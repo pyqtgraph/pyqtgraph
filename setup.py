@@ -126,6 +126,7 @@ setup(
     package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg']},
     install_requires = [
         'numpy',
+        'six'
         ],
     **setupOpts
 )

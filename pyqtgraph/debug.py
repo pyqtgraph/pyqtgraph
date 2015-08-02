@@ -13,6 +13,8 @@ from numpy import ndarray
 from .Qt import QtCore, QtGui
 from .util.mutex import Mutex
 from .util import cprint
+import six
+
 
 __ftraceDepth = 0
 def ftrace(func):
@@ -1074,7 +1076,7 @@ def pretty(data, indent=''):
     ind2 = indent + "    "
     if isinstance(data, dict):
         ret = indent+"{\n"
-        for k, v in data.iteritems():
+        for k, v in six.iteritems(data):
             ret += ind2 + repr(k) + ":  " + pretty(v, ind2).strip() + "\n"
         ret += indent+"}\n"
     elif isinstance(data, list) or isinstance(data, tuple):

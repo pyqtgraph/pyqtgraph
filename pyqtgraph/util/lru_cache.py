@@ -5,6 +5,9 @@ import itertools
 
 _IS_PY3 = sys.version_info[0] == 3
 
+# might be worth replacing this LRU cache with the one from boltons.
+# https://github.com/mahmoud/boltons/blob/e2e5094bf6cd2974201d948710b8179635857dec/boltons/cacheutils.py#L73
+
 class LRUCache(object):
     '''
     This LRU cache should be reasonable for short collections (until around 100 items), as it does a
@@ -117,5 +120,5 @@ class LRUCache(object):
                 for x in sorted(self._dict.itervalues(), key=operator.itemgetter(2)):
                     yield x[0], x[1]
             else:
-                for x in self._dict.iteritems():
+                for x in six.iteritems(self._dict):
                     yield x[0], x[1]

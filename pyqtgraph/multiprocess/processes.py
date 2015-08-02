@@ -238,7 +238,7 @@ class ForkedProcess(RemoteEventHandler):
         
         proxyIDs = {}
         if preProxy is not None:
-            for k, v in preProxy.iteritems():
+            for k, v in six.iteritems(preProxy):
                 proxyId = LocalObjectProxy.registerObject(v)
                 proxyIDs[k] = proxyId
         
@@ -287,7 +287,7 @@ class ForkedProcess(RemoteEventHandler):
             RemoteEventHandler.__init__(self, remoteConn, name+'_child', pid=ppid)
             
             self.forkedProxies = {}
-            for name, proxyId in proxyIDs.iteritems():
+            for name, proxyId in six.iteritems(proxyIDs):
                 self.forkedProxies[name] = ObjectProxy(ppid, proxyId=proxyId, typeStr=repr(preProxy[name]))
             
             if target is not None:
