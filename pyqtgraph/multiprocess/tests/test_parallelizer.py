@@ -4,5 +4,5 @@ from pyqtgraph.multiprocess.parallelizer import Tasker
 
 def test_Tasker_creation():
     # This is verify python2/3 compatibility
-    tasker = Tasker(parallelizer=None, process=None, tasks=tasks,  
+    tasker = Tasker(parallelizer=None, process=None, tasks=None,
                     kwds={'1': 2, '3': 4})
