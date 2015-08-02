@@ -1,7 +1,6 @@
 [run]
-source = 
-    pyqtgraph
-
+source = pyqtgraph
+branch = True
 [report]
 omit =
     */python?.?/*
@@ -9,3 +8,12 @@ omit =
     *test*
     */__pycache__/*
     *.pyc
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self\.debug
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+ignore_errors = True

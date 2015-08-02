@@ -64,8 +64,6 @@ install:
       fi;
     - pip install pytest-xdist # multi-thread py.test
     - pip install pytest-cov # add coverage stats
-    - pip install codecov # add coverage integration service
-    - pip install coveralls # add another coverage integration service
     
     # Debugging helpers
     - uname -a
@@ -136,7 +134,8 @@ script:
     - start_test "unit tests";
       PYTHONPATH=. py.test --cov pyqtgraph -n 4 -sv;
       check_output "unit tests";
-    
+    - echo "test script finished. Current directory:"
+    - pwd
     
     # check line endings
     - if [ "${TEST}" == "extra" ]; then
@@ -181,5 +180,8 @@ script:
       check_output "import test";
 
 after_success:
-  codecov
-  coveralls
+  - cd /home/travis/build/pyqtgraph/pyqtgraph
+  - pip install codecov --upgrade  # add coverage integration service
+  - codecov
+  - pip install coveralls --upgrade  # add another coverage integration service
+  - coveralls
