@@ -1679,12 +1679,12 @@ class EllipseROI(ROI):
         
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None):
+    def getArrayRegion(self, arr, img=None,axes=(0,1)):
         """
         Return the result of ROI.getArrayRegion() masked by the elliptical shape
         of the ROI. Regions outside the ellipse are set to 0.
         """
-        arr = ROI.getArrayRegion(self, arr, img)
+        arr = ROI.getArrayRegion(self, arr, img,axes=axes)
         if arr is None or arr.shape[0] == 0 or arr.shape[1] == 0:
             return None
         w = arr.shape[0]
@@ -1950,7 +1950,7 @@ class PolyLineROI(ROI):
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
         """
-        sl = self.getArraySlice(data, img, axes=(0,1))
+        sl = self.getArraySlice(data, img, axes=axes)
         if sl is None:
             return None
         sliced = data[sl[0]]
