@@ -121,5 +121,5 @@ class LRUCache(object):
                 for x in sorted(self._dict.itervalues(), key=operator.itemgetter(2)):
                     yield x[0], x[1]
             else:
-                or x in self._dict.iteritems():
+                for x in self._dict.iteritems():
                     yield x[0], x[1]
