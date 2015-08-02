@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+import six
 from pyqtgraph import Qt
 from examples import utils
 import importlib
@@ -20,7 +21,7 @@ for frontend in frontends.keys():
 
 
 @pytest.mark.parametrize(
-    "frontend, f", itertools.product(sorted(list(frontends.keys())), files))
+    "frontend, f", itertools.product(sorted(list(six.iterkeys(frontends))), files))
 def test_examples(frontend, f):
     # Test the examples with all available front-ends
     print('frontend = %s. f = %s' % (frontend, f))
