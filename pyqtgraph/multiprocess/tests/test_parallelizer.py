@@ -1,5 +1,5 @@
 from __future__ import print_function, absolute_import, division
-import six
+from pyqtgraph.util import six
 from pyqtgraph.multiprocess.parallelizer import Tasker
 
 def test_Tasker_creation():

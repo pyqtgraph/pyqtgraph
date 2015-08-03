@@ -13,8 +13,7 @@ from numpy import ndarray
 from .Qt import QtCore, QtGui
 from .util.mutex import Mutex
 from .util import cprint
-import six
-
+from .util import six
 
 __ftraceDepth = 0
 def ftrace(func):

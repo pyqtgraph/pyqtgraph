@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-import six
+from pyqtgraph.util import six
 from pyqtgraph import Qt
 from examples import utils
 import importlib

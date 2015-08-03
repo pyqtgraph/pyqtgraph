@@ -2,8 +2,7 @@ import os, sys, time, multiprocessing, re
 from .processes import ForkedProcess
 from .remoteproxy import ClosedError
 from ..python2_3 import basestring, xrange
-import six
-
+from ..util import six
 
 class CanceledError(Exception):
     """Raised when the progress dialog is canceled during a processing operation."""

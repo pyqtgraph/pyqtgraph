@@ -27,8 +27,7 @@ The advantage is that there is less to do to get an exported file cleaned and re
 publication. Fonts are not vectorized (outlined), and window colors are white.
 
 """
-
-import six
+from ..util import six
     
 class MatplotlibExporter(Exporter):
     Name = "Matplotlib Window"
