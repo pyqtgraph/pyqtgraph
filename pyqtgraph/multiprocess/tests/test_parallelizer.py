@@ -3,6 +3,7 @@ from pyqtgraph.util import six
 from pyqtgraph.multiprocess.parallelizer import Tasker
 
 def test_Tasker_creation():
-    # This is verify python2/3 compatibility
+    # This is a smoketest to make sure that Tasker does not blow up because
+    # python2/3 incompatibilities
     tasker = Tasker(parallelizer=None, process=None, tasks=None,
                     kwds={'1': 2, '3': 4})
