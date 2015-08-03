@@ -31,13 +31,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
-        # self.ui.codeView.font.pointSize = 100
-        # print('\n\ndir(codeView.font):\n%s\n\n' % dir(self.ui.codeView.font))
-        # print('\n\type(codeView.font):\n%s\n\n' % type(self.ui.codeView.font))
-        # print('\n\nhelp(self.ui.codeView.font()):\n%s\n\n' % help(self.ui.codeView.font()))
-        self.codeViewFont = QtGui.QFont('monospace', 12)
-        self.codeViewFont.setStyleHint(QtGui.QFont.Monospace)
-        self.codeViewFont.setFamily('monospace')
+        self.codeViewFont = QtGui.QFont()
         self.ui.codeView.setFont(self.codeViewFont)
 
         global examples
