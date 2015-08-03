@@ -4,28 +4,26 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     sys.path.insert(0, parent_dir)
     import examples
     __package__ = "examples"
+
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
-
+from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5, loadUiType
 
 from .utils import buildFileList, testFile, path, examples
 
-if USE_PYSIDE:
-    from .exampleLoaderTemplate_pyside import Ui_Form
-elif USE_PYQT5:
-    from .exampleLoaderTemplate_pyqt5 import Ui_Form
-else:
-    from .exampleLoaderTemplate_pyqt import Ui_Form
+form_class, base_class = loadUiType(os.path.dirname(__file__) + os.sep + 'exampleLoaderTemplate.ui')
+class Loader(form_class, base_class):
+    def __init__(self):
+        super(Loader, self).__init__()
+        self.setupUi(self)
+
 
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
-        self.ui = Ui_Form()
-        self.cw = QtGui.QWidget()
-        self.setCentralWidget(self.cw)
-        self.ui.setupUi(self.cw)
+        self.ui = Loader()
+        self.setCentralWidget(self.ui)
 
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
@@ -33,6 +31,14 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
+        # self.ui.codeView.font.pointSize = 100
+        # print('\n\ndir(codeView.font):\n%s\n\n' % dir(self.ui.codeView.font))
+        # print('\n\type(codeView.font):\n%s\n\n' % type(self.ui.codeView.font))
+        # print('\n\nhelp(self.ui.codeView.font()):\n%s\n\n' % help(self.ui.codeView.font()))
+        self.codeViewFont = QtGui.QFont('monospace', 12)
+        self.codeViewFont.setStyleHint(QtGui.QFont.Monospace)
+        self.codeViewFont.setFamily('monospace')
+        self.ui.codeView.setFont(self.codeViewFont)
 
         global examples
         self.itemCache = []
@@ -47,6 +53,11 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.codeEdited)
         self.codeBtn.clicked.connect(self.runEditedCode)
+        self.ui.fontSize.valueChanged.connect(self.updateFontSize)
+
+    def updateFontSize(self, fontSize):
+        self.codeViewFont.setPointSize(fontSize)
+        self.ui.codeView.setFont(self.codeViewFont)
 
     def populateTree(self, root, examples):
         for key, val in examples.items():
@@ -120,11 +131,11 @@ def run():
 if __name__ == '__main__':
 
     args = sys.argv[1:]
-        
+
     if '--test' in args:
         # get rid of orphaned cache files first
         pg.renamePyc(path)
-        
+
         files = buildFileList(examples)
         if '--pyside' in args:
             lib = 'PySide'
@@ -134,10 +145,10 @@ if __name__ == '__main__':
             lib = 'PyQt5'
         else:
             lib = ''
-            
+
         exe = sys.executable
         print("Running tests:", lib, sys.executable)
         for f in files:
             testFile(f[0], f[1], exe, lib)
-    else: 
+    else:
         run()

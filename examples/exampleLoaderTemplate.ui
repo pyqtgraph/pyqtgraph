@@ -19,7 +19,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0" colspan="2">
         <widget class="QTreeWidget" name="exampleTree">
@@ -102,9 +102,22 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <widget class="QSpinBox" name="fontSize">
+         <property name="suffix">
+          <string/>
+         </property>
+         <property name="prefix">
+          <string>font (pt):   </string>
+         </property>
+         <property name="value">
+          <number>12</number>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QLabel" name="loadedFileLabel">
