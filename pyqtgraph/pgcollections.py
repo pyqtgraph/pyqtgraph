@@ -13,6 +13,8 @@ Includes:
 import threading, sys, copy, collections
 #from debug import *
 
+from .util import six
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -269,17 +271,20 @@ class ProtectedDict(dict):
     """
     def __init__(self, data):
         self._data_ = data
-    
+
     ## List of methods to directly wrap from _data_
-    wrapMethods = ['_cmp_', '__contains__', '__eq__', '__format__', '__ge__', '__gt__', '__le__', '__len__', '__lt__', '__ne__', '__reduce__', '__reduce_ex__', '__repr__', '__str__', 'count', 'has_key', 'iterkeys', 'keys', ]
-    
+    wrapMethods = ['_cmp_', '__contains__', '__eq__', '__format__', '__ge__', 
+                   '__gt__', '__le__', '__len__', '__lt__', '__ne__', 
+                   '__reduce__', '__reduce_ex__', '__repr__', '__str__', 
+                   'count', 'has_key', 'iterkeys', 'keys', ]
+
     ## List of methods which wrap from _data_ but return protected results
     protectMethods = ['__getitem__', '__iter__', 'get', 'items', 'values']
-    
+
     ## List of methods to disable
-    disableMethods = ['__delitem__', '__setitem__', 'clear', 'pop', 'popitem', 'setdefault', 'update']
-    
-    
+    disableMethods = ['__delitem__', '__setitem__', 'clear', 'pop', 'popitem',
+                      'setdefault', 'update']
+
     ## Template methods 
     def wrapMethod(methodName):
         return lambda self, *a, **k: getattr(self._data_, methodName)(*a, **k)
@@ -289,8 +294,7 @@ class ProtectedDict(dict):
     
     def error(self, *args, **kargs):
         raise Exception("Can not modify read-only list.")
-    
-    
+
     ## Directly (and explicitly) wrap some methods from _data_
     ## Many of these methods can not be intercepted using __getattribute__, so they
     ## must be implemented explicitly
@@ -304,23 +308,27 @@ class ProtectedDict(dict):
     ## Disable any methods that could change data in the list
     for methodName in disableMethods:
         locals()[methodName] = error
-
     
     ## Add a few extra methods.
     def copy(self):
-        raise Exception("It is not safe to copy protected dicts! (instead try deepcopy, but be careful.)")
+        raise Exception("It is not safe to copy protected dicts! (instead try "
+                        "deepcopy, but be careful.)")
     
-    def itervalues(self):
-        for v in self._data_.itervalues():
+    def iterkeys(self):
+        for v in six.iterkeys(self._data_):
             yield protect(v)
-        
+
+    def itervalues(self):
+        for v in six.itervalues(self._data_):
+            yield protect(v)
+
     def iteritems(self):
         for k, v in six.iteritems(self._data_):
             yield (k, protect(v))
-        
+
     def deepcopy(self):
         return copy.deepcopy(self._data_)
-    
+
     def __deepcopy__(self, memo):
         return copy.deepcopy(self._data_, memo)
 
