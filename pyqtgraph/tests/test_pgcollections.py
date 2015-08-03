@@ -1,12 +1,12 @@
 import pytest
-from pyqtgraph.pgcollections import ProtectedDict
+from pyqtgraph.pgcollections import ProtectedDict, CaselessDict
 
 protected = None
 labels = None
 targets = None
 
 
-def test_ProtectedDict_iterkeys():    
+def test_ProtectedDict_iterkeys():
     for k in protected.iterkeys():
         assert k in labels
 
@@ -21,7 +21,7 @@ def test_ProtectedDict_itervalues():
 
 
 protected_dict_functions = [test_ProtectedDict_iterkeys,
-                            test_ProtectedDict_iteritems, 
+                            test_ProtectedDict_iteritems,
                             test_ProtectedDict_itervalues]
 
 
@@ -34,7 +34,7 @@ def setup_function(func):
     lst = ['a', 'b', 'c', 'd']
     labels = ['a_string', 'tuple', 'dict', 'list']
     targets = [string, tup, dct, lst]
-    read_only_dict = dict((label, target) for label, target in 
+    read_only_dict = dict((label, target) for label, target in
                            zip(labels, targets))
     protected = ProtectedDict(read_only_dict)
 
@@ -44,3 +44,13 @@ def teardown_function(func):
     protected = None
     labels = None
     targets = None
+
+
+def test_CaselessDict_update():
+    dct1 = {'a': 1, 'b': 2, 'c': 3}
+    dct2 = {'a': 10, 'b': 20, 'c': 30}
+
+    caseless_dct1 = CaselessDict(dct1)
+    caseless_dct1.update(dct2)
+
+    assert dct2 == dict(caseless_dct1)
