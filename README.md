@@ -1,5 +1,3 @@
-TRAVIS TEST COMMIT
-
 PyQtGraph
 =========
 
