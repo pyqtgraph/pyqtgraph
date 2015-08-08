@@ -72,9 +72,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def setBackgroundColor(self, *args, **kwds):
         """
         Set the background color of the widget. Accepts the same arguments as
-        pg.mkColor().
+        pg.mkColor() and pg.glColor().
         """
-        self.opts['bgcolor'] = fn.mkColor(*args, **kwds)
+        self.opts['bgcolor'] = fn.glColor(*args, **kwds)
         self.update()
         
     def getViewport(self):
@@ -174,7 +174,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setProjection(region=region)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
-        glClearColor(bgcolor.red(), bgcolor.green(), bgcolor.blue(), 1.0)
+        glClearColor(*bgcolor)
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
