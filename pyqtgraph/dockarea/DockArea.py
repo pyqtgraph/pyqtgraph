@@ -306,7 +306,10 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
     def clear(self):
         docks = self.findAll()[1]
         for dock in docks.values():
-            dock.close()
+            if dock.closable:
+                dock.close()
+            else:
+                self.home.moveDock(dock, "top", None)
             
     ## PySide bug: We need to explicitly redefine these methods
     ## or else drag/drop events will not be delivered.
