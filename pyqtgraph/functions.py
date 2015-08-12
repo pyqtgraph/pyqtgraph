@@ -1072,8 +1072,12 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 # does not leak memory, is not mutable
                 img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
             else:
-                # mutable, but leaks memory
-                img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+                # Memoryview does not exist in Python 2.6
+                if sys.version_info < (2, 7, 0):
+                    img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+                else:
+                    # mutable, but leaks memory
+                    img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
                 
     img.data = imgData
     return img
@@ -1101,7 +1105,11 @@ def imageToArray(img, copy=False, transpose=True):
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())
-        arr = np.asarray(ptr)
+        #Patch for version 2.6
+        if sys.version_info < (2, 7, 0):
+            arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
+        else:
+            arr = np.asarray(ptr)
         if img.byteCount() != arr.size * arr.itemsize:
             # Required for Python 2.6, PyQt 4.10
             # If this works on all platforms, then there is no need to use np.asarray..
