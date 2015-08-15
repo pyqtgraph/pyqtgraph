@@ -514,7 +514,6 @@ class Flowchart(Node):
             return
             ## NOTE: was previously using a real widget for the file dialog's parent, but this caused weird mouse event bugs..
             #fileName = QtGui.QFileDialog.getOpenFileName(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = unicode(fileName)
         state = configfile.readConfigFile(fileName)
         self.restoreState(state, clear=True)
         self.viewBox.autoRange()
@@ -535,7 +534,8 @@ class Flowchart(Node):
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
             #fileName = QtGui.QFileDialog.getSaveFileName(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
-        fileName = unicode(fileName)
+        if not fileName.endswith('.fc'):
+            fileName += '.fc'
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
@@ -660,7 +660,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(unicode(fileName))
+        self.setCurrentFile(fileName)
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -689,7 +689,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = unicode(fileName)
+        self.currentFileName = fileName
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
