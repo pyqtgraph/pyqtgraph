@@ -381,22 +381,22 @@ class Flowchart(Node):
             terms = set(startNode.outputs().values())
             
             #print "======= Updating", startNode
-            #print "Order:", order
+            # print("Order:", order)
             for node in order[1:]:
-                #print "Processing node", node
+                # print("Processing node", node)
+                update = False
                 for term in list(node.inputs().values()):
-                    #print "  checking terminal", term
+                    # print("  checking terminal", term)
                     deps = list(term.connections().keys())
-                    update = False
                     for d in deps:
                         if d in terms:
-                            #print "    ..input", d, "changed"
-                            update = True
+                            # print("    ..input", d, "changed")
+                            update |= True
                             term.inputChanged(d, process=False)
-                    if update:
-                        #print "  processing.."
-                        node.update()
-                        terms |= set(node.outputs().values())
+                if update:
+                    # print("  processing..")
+                    node.update()
+                    terms |= set(node.outputs().values())
                     
         finally:
             self.processing = False
