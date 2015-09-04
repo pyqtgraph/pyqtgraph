@@ -156,14 +156,14 @@ class Process(RemoteEventHandler):
                 time.sleep(0.05)
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
 
-    def debugMsg(self, msg):
+    def debugMsg(self, msg, *args):
         if hasattr(self, '_stdoutForwarder'):
             ## Lock output from subprocess to make sure we do not get line collisions
             with self._stdoutForwarder.lock:
                 with self._stderrForwarder.lock:
-                    RemoteEventHandler.debugMsg(self, msg)
+                    RemoteEventHandler.debugMsg(self, msg, *args)
         else:
-            RemoteEventHandler.debugMsg(self, msg)
+            RemoteEventHandler.debugMsg(self, msg, *args)
 
         
 def startEventLoop(name, port, authkey, ppid, debug=False):
