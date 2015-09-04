@@ -69,6 +69,11 @@ class RemoteEventHandler(object):
             'deferGetattr': False,   ## True, False
             'noProxyTypes': [ type(None), str, int, float, tuple, list, dict, LocalObjectProxy, ObjectProxy ],
         }
+        if int(sys.version[0]) < 3:
+            self.proxyOptions['noProxyTypes'].append(unicode)
+        else:
+            self.proxyOptions['noProxyTypes'].append(bytes)
+        
         self.optsLock = threading.RLock()
         
         self.nextRequestId = 0
