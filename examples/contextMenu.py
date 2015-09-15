@@ -3,9 +3,9 @@
 Demonstrates adding a custom context menu to a GraphicsItem
 and extending the context menu of a ViewBox.
 
-PyQtGraph implements a system that allows each item in a scene to implement its 
-own context menu, and for the menus of its parent items to be automatically 
-displayed as well. 
+PyQtGraph implements a system that allows each item in a scene to implement its
+own context menu, and for the menus of its parent items to be automatically
+displayed as well.
 
 """
 import initExample ## Add path to library (just for examples; you do not need this)
@@ -41,30 +41,30 @@ class MenuBox(pg.GraphicsObject):
     """
     This class draws a rectangular area. Right-clicking inside the area will
     raise a custom context menu which also includes the context menus of
-    its parents.    
+    its parents.
     """
     def __init__(self, name):
         self.name = name
         self.pen = pg.mkPen('r')
-        
+
         # menu creation is deferred because it is expensive and often
         # the user will never see the menu anyway.
         self.menu = None
-        
-        # note that the use of super() is often avoided because Qt does not 
-        # allow to inherit from multiple QObject subclasses.
-        pg.GraphicsObject.__init__(self) 
 
-    
+        # note that the use of super() is often avoided because Qt does not
+        # allow to inherit from multiple QObject subclasses.
+        pg.GraphicsObject.__init__(self)
+
+
     # All graphics items must have paint() and boundingRect() defined.
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 10, 10)
-    
+
     def paint(self, p, *args):
         p.setPen(self.pen)
         p.drawRect(self.boundingRect())
-    
-    
+
+
     # On right-click, raise the context menu
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton:
@@ -73,11 +73,11 @@ class MenuBox(pg.GraphicsObject):
 
     def raiseContextMenu(self, ev):
         menu = self.getContextMenus()
-        
+
         # Let the scene add on to the end of our context menu
         # (this is optional)
         menu = self.scene().addParentContextMenus(self, menu, ev)
-        
+
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
         return True
@@ -88,17 +88,17 @@ class MenuBox(pg.GraphicsObject):
         if self.menu is None:
             self.menu = QtGui.QMenu()
             self.menu.setTitle(self.name+ " options..")
-            
+
             green = QtGui.QAction("Turn green", self.menu)
             green.triggered.connect(self.setGreen)
             self.menu.addAction(green)
             self.menu.green = green
-            
+
             blue = QtGui.QAction("Turn blue", self.menu)
             blue.triggered.connect(self.setBlue)
             self.menu.addAction(blue)
             self.menu.green = blue
-            
+
             alpha = QtGui.QWidgetAction(self.menu)
             alphaSlider = QtGui.QSlider()
             alphaSlider.setOrientation(QtCore.Qt.Horizontal)

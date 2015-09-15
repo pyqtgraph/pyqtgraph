@@ -1,5 +1,5 @@
 """
-Allows easy loading of pixmaps used in UI elements. 
+Allows easy loading of pixmaps used in UI elements.
 Provides support for frozen environments as well.
 """
 
@@ -24,4 +24,3 @@ def getPixmap(name):
         pixmapData.pixmapData[key] = pickle.loads(data)
     arr = pixmapData.pixmapData[key]
     return QtGui.QPixmap(makeQImage(arr, alpha=True))
-    

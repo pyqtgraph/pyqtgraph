@@ -13,20 +13,20 @@ class ColorMapWidget(ptree.ParameterTree):
     multiple criteria for assigning colors to each record in a numpy record array.
     Multiple criteria are evaluated and combined into a single color for each
     record by user-defined compositing methods.
-    
-    For simpler color mapping using a single gradient editor, see 
+
+    For simpler color mapping using a single gradient editor, see
     :class:`GradientWidget <pyqtgraph.GradientWidget>`
     """
     sigColorMapChanged = QtCore.Signal(object)
-    
+
     def __init__(self, parent=None):
         ptree.ParameterTree.__init__(self, parent=parent, showHeader=False)
-        
+
         self.params = ColorMapParameter()
         self.setParameters(self.params)
         self.params.sigTreeStateChanged.connect(self.mapChanged)
-        
-        ## wrap a couple methods 
+
+        ## wrap a couple methods
         self.setFields = self.params.setFields
         self.map = self.params.map
 
@@ -41,19 +41,19 @@ class ColorMapWidget(ptree.ParameterTree):
 
     def restoreState(self, state):
         self.params.restoreState(state)
-        
+
 
 class ColorMapParameter(ptree.types.GroupParameter):
     sigColorMapChanged = QtCore.Signal(object)
-    
+
     def __init__(self):
         self.fields = {}
         ptree.types.GroupParameter.__init__(self, name='Color Map', addText='Add Mapping..', addList=[])
         self.sigTreeStateChanged.connect(self.mapChanged)
-        
+
     def mapChanged(self):
         self.sigColorMapChanged.emit(self)
-        
+
     def addNew(self, name):
         mode = self.fields[name].get('mode', 'range')
         if mode == 'range':
@@ -62,28 +62,28 @@ class ColorMapParameter(ptree.types.GroupParameter):
             item = EnumColorMapItem(name, self.fields[name])
         self.addChild(item)
         return item
-        
+
     def fieldNames(self):
         return self.fields.keys()
-    
+
     def setFields(self, fields):
         """
-        Set the list of fields to be used by the mapper. 
-        
+        Set the list of fields to be used by the mapper.
+
         The format of *fields* is::
-        
+
             [ (fieldName, {options}), ... ]
-        
+
         ============== ============================================================
         Field Options:
-        mode           Either 'range' or 'enum' (default is range). For 'range', 
-                       The user may specify a gradient of colors to be applied 
-                       linearly across a specific range of values. For 'enum', 
+        mode           Either 'range' or 'enum' (default is range). For 'range',
+                       The user may specify a gradient of colors to be applied
+                       linearly across a specific range of values. For 'enum',
                        the user specifies a single color for each unique value
                        (see *values* option).
         units          String indicating the units of the data for this field.
-        values         List of unique values for which the user may assign a 
-                       color when mode=='enum'. Optionally may specify a dict 
+        values         List of unique values for which the user may assign a
+                       color when mode=='enum'. Optionally may specify a dict
                        instead {value: name}.
         ============== ============================================================
         """
@@ -92,11 +92,11 @@ class ColorMapParameter(ptree.types.GroupParameter):
         #self.fields.sort()
         names = self.fieldNames()
         self.setAddList(names)
-        
+
     def map(self, data, mode='byte'):
         """
-        Return an array of colors corresponding to *data*. 
-        
+        Return an array of colors corresponding to *data*.
+
         ==============  =================================================================
         **Arguments:**
         data            A numpy record array where the fields in data.dtype match those
@@ -117,9 +117,9 @@ class ColorMapParameter(ptree.types.GroupParameter):
             mask = np.empty((len(data), 4), dtype=bool)
             for i,f in enumerate(['Red', 'Green', 'Blue', 'Alpha']):
                 mask[:,i] = chans[f]
-            
+
             colors2 = item.map(data)
-            
+
             op = item['Operation']
             if op == 'Add':
                 colors[mask] = colors[mask] + colors2[mask]
@@ -132,14 +132,14 @@ class ColorMapParameter(ptree.types.GroupParameter):
                 colors = c3
             elif op == 'Set':
                 colors[mask] = colors2[mask]
-            
-                
+
+
         colors = np.clip(colors, 0, 1)
         if mode == 'byte':
             colors = (colors * 255).astype(np.ubyte)
-        
+
         return colors
-            
+
     def saveState(self):
         items = OrderedDict()
         for item in self:
@@ -155,16 +155,16 @@ class ColorMapParameter(ptree.types.GroupParameter):
         for itemState in state['items']:
             item = self.addNew(itemState['field'])
             item.restoreState(itemState)
-        
-    
+
+
 class RangeColorMapItem(ptree.types.SimpleParameter):
     mapType = 'range'
-    
+
     def __init__(self, name, opts):
         self.fieldName = name
         units = opts.get('units', '')
-        ptree.types.SimpleParameter.__init__(self, 
-            name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True, 
+        ptree.types.SimpleParameter.__init__(self,
+            name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True,
             children=[
                 #dict(name="Field", type='list', value=name, values=fields),
                 dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
@@ -179,39 +179,39 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
                 dict(name='Enabled', type='bool', value=True),
                 dict(name='NaN', type='color'),
             ])
-    
+
     def map(self, data):
         data = data[self.fieldName]
-        
+
         scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
         cmap = self.value()
         colors = cmap.map(scaled, mode='float')
-        
+
         mask = np.isnan(data) | np.isinf(data)
         nanColor = self['NaN']
         nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
         colors[mask] = nanColor
-        
-        return colors        
+
+        return colors
 
 class EnumColorMapItem(ptree.types.GroupParameter):
     mapType = 'enum'
-    
+
     def __init__(self, name, opts):
         self.fieldName = name
         vals = opts.get('values', [])
         if isinstance(vals, list):
             vals = OrderedDict([(v,str(v)) for v in vals])
         childs = [{'name': v, 'type': 'color'} for v in vals]
-        
+
         childs = []
         for val,vname in vals.items():
             ch = ptree.Parameter.create(name=vname, type='color')
             ch.maskValue = val
             childs.append(ch)
-        
-        ptree.types.GroupParameter.__init__(self, 
-            name=name, autoIncrementName=True, removable=True, renamable=True, 
+
+        ptree.types.GroupParameter.__init__(self,
+            name=name, autoIncrementName=True, removable=True, renamable=True,
             children=[
                 dict(name='Values', type='group', children=childs),
                 dict(name='Operation', type='list', value='Overlay', values=['Overlay', 'Add', 'Multiply', 'Set']),
@@ -224,13 +224,13 @@ class EnumColorMapItem(ptree.types.GroupParameter):
                 dict(name='Enabled', type='bool', value=True),
                 dict(name='Default', type='color'),
             ])
-    
+
     def map(self, data):
         data = data[self.fieldName]
         colors = np.empty((len(data), 4))
         default = np.array(fn.colorTuple(self['Default'])) / 255.
         colors[:] = default
-        
+
         for v in self.param('Values'):
             mask = data == v.maskValue
             c = np.array(fn.colorTuple(v.value())) / 255.
@@ -238,12 +238,10 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         #scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
         #cmap = self.value()
         #colors = cmap.map(scaled, mode='float')
-        
+
         #mask = np.isnan(data) | np.isinf(data)
         #nanColor = self['NaN']
         #nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
         #colors[mask] = nanColor
-        
+
         return colors
-
-

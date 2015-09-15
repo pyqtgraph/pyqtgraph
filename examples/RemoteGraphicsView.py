@@ -2,7 +2,7 @@
 """
 Very simple example demonstrating RemoteGraphicsView.
 
-This allows graphics to be rendered in a child process and displayed in the 
+This allows graphics to be rendered in a child process and displayed in the
 parent, which can improve CPU usage on multi-core processors.
 """
 import initExample ## Add path to library (just for examples; you do not need this)
@@ -18,7 +18,7 @@ v = RemoteGraphicsView(debug=False)  # setting debug=True causes both processes 
 v.show()
 v.setWindowTitle('pyqtgraph example: RemoteGraphicsView')
 
-## v.pg is a proxy to the remote process' pyqtgraph module. All attribute 
+## v.pg is a proxy to the remote process' pyqtgraph module. All attribute
 ## requests and function calls made with this object are forwarded to the
 ## remote process and executed there. See pyqtgraph.multiprocess.remoteproxy
 ## for more inormation.

@@ -32,8 +32,8 @@ print("Generating data, this takes a few seconds...")
 ## There are a few different ways we can draw scatter plots; each is optimized for different types of data:
 
 
-## 1) All spots identical and transform-invariant (top-left plot). 
-## In this case we can get a huge performance boost by pre-rendering the spot 
+## 1) All spots identical and transform-invariant (top-left plot).
+## In this case we can get a huge performance boost by pre-rendering the spot
 ## image and just drawing that image repeatedly.
 
 n = 300
@@ -57,9 +57,9 @@ s1.sigClicked.connect(clicked)
 
 
 
-## 2) Spots are transform-invariant, but not identical (top-right plot). 
-## In this case, drawing is almsot as fast as 1), but there is more startup 
-## overhead and memory usage since each spot generates its own pre-rendered 
+## 2) Spots are transform-invariant, but not identical (top-right plot).
+## In this case, drawing is almsot as fast as 1), but there is more startup
+## overhead and memory usage since each spot generates its own pre-rendered
 ## image.
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
@@ -70,8 +70,8 @@ w2.addItem(s2)
 s2.sigClicked.connect(clicked)
 
 
-## 3) Spots are not transform-invariant, not identical (bottom-left). 
-## This is the slowest case, since all spots must be completely re-drawn 
+## 3) Spots are not transform-invariant, not identical (bottom-left).
+## This is the slowest case, since all spots must be completely re-drawn
 ## every time because their apparent transformation may have changed.
 
 s3 = pg.ScatterPlotItem(pxMode=False)   ## Set pxMode=False to allow spots to transform with the view
@@ -99,4 +99,3 @@ if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-

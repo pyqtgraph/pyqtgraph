@@ -33,4 +33,4 @@ setup(
                       "compressed": 2,
                       "bundle_files": 1}},
   zipfile=None,
-) 
+)

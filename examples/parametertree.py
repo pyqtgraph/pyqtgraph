@@ -26,14 +26,14 @@ class ComplexParameter(pTypes.GroupParameter):
         opts['type'] = 'bool'
         opts['value'] = True
         pTypes.GroupParameter.__init__(self, **opts)
-        
+
         self.addChild({'name': 'A = 1/B', 'type': 'float', 'value': 7, 'suffix': 'Hz', 'siPrefix': True})
         self.addChild({'name': 'B = 1/A', 'type': 'float', 'value': 1/7., 'suffix': 's', 'siPrefix': True})
         self.a = self.param('A = 1/B')
         self.b = self.param('B = 1/A')
         self.a.sigValueChanged.connect(self.aChanged)
         self.b.sigValueChanged.connect(self.bChanged)
-        
+
     def aChanged(self):
         self.b.setValue(1.0 / self.a.value(), blockSignal=self.bChanged)
 
@@ -49,7 +49,7 @@ class ScalableGroup(pTypes.GroupParameter):
         opts['addText'] = "Add"
         opts['addList'] = ['str', 'float', 'int']
         pTypes.GroupParameter.__init__(self, **opts)
-    
+
     def addNew(self, typ):
         val = {
             'str': '',
@@ -82,7 +82,7 @@ params = [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
         {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},
         {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'siPrefix': True, 'suffix': 'Hz'},
-        
+
     ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
         {'name': 'Save State', 'type': 'action'},
@@ -119,25 +119,25 @@ def change(param, changes):
         print('  change:    %s'% change)
         print('  data:      %s'% str(data))
         print('  ----------')
-    
+
 p.sigTreeStateChanged.connect(change)
 
 
 def valueChanging(param, value):
     print("Value changing (not finalized): %s %s" % (param, value))
-    
+
 # Too lazy for recursion:
 for child in p.children():
     child.sigValueChanging.connect(valueChanging)
     for ch2 in child.children():
         ch2.sigValueChanging.connect(valueChanging)
-        
+
 
 
 def save():
     global state
     state = p.saveState()
-    
+
 def restore():
     global state
     add = p['Save/Restore functionality', 'Restore State', 'Add missing items']

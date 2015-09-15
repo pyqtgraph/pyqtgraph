@@ -17,15 +17,15 @@ class DataTreeWidget(QtGui.QTreeWidget):
     Widget for displaying hierarchical python data structures
     (eg, nested dicts, lists, and arrays)
     """
-    
-    
+
+
     def __init__(self, parent=None, data=None):
         QtGui.QTreeWidget.__init__(self, parent)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setData(data)
         self.setColumnCount(3)
         self.setHeaderLabels(['key / index', 'type', 'value'])
-        
+
     def setData(self, data, hideRoot=False):
         """data should be a dictionary."""
         self.clear()
@@ -37,7 +37,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             #self.invisibleRootItem().addChild(c)
         self.expandToDepth(3)
         self.resizeColumnToContents(0)
-        
+
     def buildTree(self, data, parent, name='', hideRoot=False):
         if hideRoot:
             node = parent
@@ -47,7 +47,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
                 typeStr += ": " + data.__class__.__name__
             node = QtGui.QTreeWidgetItem([name, typeStr, ""])
             parent.addChild(node)
-        
+
         if isinstance(data, types.TracebackType):  ## convert traceback to a list of strings
             data = list(map(str.strip, traceback.format_list(traceback.extract_tb(data))))
         elif HAVE_METAARRAY and (hasattr(data, 'implements') and data.implements('MetaArray')):
@@ -55,7 +55,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
                 'data': data.view(np.ndarray),
                 'meta': data.infoCopy()
             }
-            
+
         if isinstance(data, dict):
             for k in data.keys():
                 self.buildTree(data[k], node, str(k))
@@ -64,8 +64,8 @@ class DataTreeWidget(QtGui.QTreeWidget):
                 self.buildTree(data[i], node, str(i))
         else:
             node.setText(2, str(data))
-        
-        
+
+
     #def mkNode(self, name, v):
         #if type(v) is list and len(v) > 0 and isinstance(v[0], dict):
             #inds = map(unicode, range(len(v)))
@@ -80,4 +80,3 @@ class DataTreeWidget(QtGui.QTreeWidget):
             ##print "\nadd value", k, str(v)
             #node = QtGui.QTreeWidgetItem([unicode(name), unicode(v)])
         #return node
-        

@@ -32,15 +32,15 @@ class GlassDB:
             'TAUI25/250': 0.95,    ## transmission data is fabricated, but close.
             'TAUI25/1400': 0.98,
         }
-        
+
         for k in self.data:
             self.data[k]['ior_cache'] = {}
-            
+
 
     def ior(self, glass, wl):
         """
         Return the index of refraction for *glass* at wavelength *wl*.
-        
+
         The *glass* argument must be a key in self.data.
         """
         info = self.data[glass]
@@ -52,7 +52,7 @@ class GlassDB:
             n = np.sqrt(1.0 + (B[0]*w2 / (w2-C[0])) + (B[1]*w2 / (w2-C[1])) + (B[2]*w2 / (w2-C[2])))
             cache[wl] = n
         return cache[wl]
-        
+
     def transmissionCurve(self, glass):
         data = self.data[glass]
         keys = [int(x[7:]) for x in data.keys() if 'TAUI25' in x]
@@ -68,7 +68,7 @@ class GlassDB:
                 val = float(val)
             curve[1][i] = val
         return curve
-            
+
 
 GLASSDB = GlassDB()
 
@@ -93,13 +93,13 @@ class ParamObj:
     # Just a helper for tracking parameters and responding to changes
     def __init__(self):
         self.__params = {}
-    
+
     def __setitem__(self, item, val):
         self.setParam(item, val)
-        
+
     def setParam(self, param, val):
         self.setParams(**{param:val})
-        
+
     def setParams(self, **params):
         """Set parameters for this optic. This is a good function to override for subclasses."""
         self.__params.update(params)
@@ -116,10 +116,10 @@ class ParamObj:
 
 
 class Optic(pg.GraphicsObject, ParamObj):
-    
+
     sigStateChanged = QtCore.Signal()
-    
-    
+
+
     def __init__(self, gitem, **params):
         ParamObj.__init__(self)
         pg.GraphicsObject.__init__(self) #, [0,0], [1,1])
@@ -127,11 +127,11 @@ class Optic(pg.GraphicsObject, ParamObj):
         self.gitem = gitem
         self.surfaces = gitem.surfaces
         gitem.setParentItem(self)
-        
+
         self.roi = pg.ROI([0,0], [1,1])
         self.roi.addRotateHandle([1, 1], [0.5, 0.5])
         self.roi.setParentItem(self)
-        
+
         defaults = {
             'pos': Point(0,0),
             'angle': 0,
@@ -140,13 +140,13 @@ class Optic(pg.GraphicsObject, ParamObj):
         self._ior_cache = {}
         self.roi.sigRegionChanged.connect(self.roiChanged)
         self.setParams(**defaults)
-        
+
     def updateTransform(self):
         self.resetTransform()
         self.setPos(0, 0)
         self.translate(Point(self['pos']))
         self.rotate(self['angle'])
-        
+
     def setParam(self, param, val):
         ParamObj.setParam(self, param, val)
 
@@ -156,7 +156,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         self.gitem.setPos(Point(self['pos']))
         self.gitem.resetTransform()
         self.gitem.rotate(self['angle'])
-        
+
         # Move ROI to match
         try:
             self.roi.sigRegionChanged.disconnect(self.roiChanged)
@@ -167,7 +167,7 @@ class Optic(pg.GraphicsObject, ParamObj):
             self.roi.setSize([br.width(), br.height()])
         finally:
             self.roi.sigRegionChanged.connect(self.roiChanged)
-        
+
         self.sigStateChanged.emit()
 
     def roiChanged(self, *args):
@@ -178,16 +178,16 @@ class Optic(pg.GraphicsObject, ParamObj):
         br = self.gitem.boundingRect()
         o1 = self.gitem.mapToParent(br.topLeft())
         self.setParams(angle=self.roi.angle(), pos=pos + (self.gitem.pos() - o1))
-        
+
     def boundingRect(self):
         return QtCore.QRectF()
-        
+
     def paint(self, p, *args):
         pass
 
     def ior(self, wavelength):
         return GLASSDB.ior(self['glass'], wavelength)
-        
+
 
 
 class Lens(Optic):
@@ -204,10 +204,10 @@ class Lens(Optic):
         d = defaults.pop('d')
         defaults['x1'] = -d/2.
         defaults['x2'] = d/2.
-        
+
         gitem = CircularSolid(brush=(100, 100, 130, 100), **defaults)
         Optic.__init__(self, gitem, **defaults)
-        
+
     def propagateRay(self, ray):
         """Refract, reflect, absorb, and/or scatter ray. This function may create and return new rays"""
 
@@ -249,7 +249,7 @@ class Lens(Optic):
                 ray.setEnd(None)
                 break
             p1 = surface.mapToItem(ray, p1)
-            
+
             #print "adjusted position:", p1
             #ior = self.ior(ray['wl'])
             rd = ray['dir']
@@ -265,7 +265,7 @@ class Lens(Optic):
             #dpp = Point(p2p-p1p)
             ray = Ray(parent=ray, ior=ior, dir=dp)
         return [ray]
-        
+
 
 class Mirror(Optic):
     def __init__(self, **params):
@@ -280,10 +280,10 @@ class Mirror(Optic):
         defaults['x2'] = d/2.
         gitem = CircularSolid(brush=(100,100,100,255), **defaults)
         Optic.__init__(self, gitem, **defaults)
-        
+
     def propagateRay(self, ray):
         """Refract, reflect, absorb, and/or scatter ray. This function may create and return new rays"""
-        
+
         surface = self.surfaces[0]
         p1, ai = surface.intersectRay(ray)
         if p1 is not None:
@@ -315,13 +315,13 @@ class CircularSolid(pg.GraphicsObject, ParamObj):
         pg.GraphicsObject.__init__(self)
         for s in self.surfaces:
             s.setParentItem(self)
-        
+
         if pen is None:
             self.pen = pg.mkPen((220,220,255,200), width=1, cosmetic=True)
         else:
             self.pen = pg.mkPen(pen)
-        
-        if brush is None: 
+
+        if brush is None:
             self.brush = pg.mkBrush((230, 230, 255, 30))
         else:
             self.brush = pg.mkBrush(brush)
@@ -336,41 +336,41 @@ class CircularSolid(pg.GraphicsObject, ParamObj):
         self.surfaces[1].setParams(-self['r2'], self['d2'])
         self.surfaces[0].setPos(self['x1'], 0)
         self.surfaces[1].setPos(self['x2'], 0)
-        
+
         self.path = QtGui.QPainterPath()
         self.path.connectPath(self.surfaces[0].path.translated(self.surfaces[0].pos()))
         self.path.connectPath(self.surfaces[1].path.translated(self.surfaces[1].pos()).toReversed())
         self.path.closeSubpath()
-        
+
     def boundingRect(self):
         return self.path.boundingRect()
-        
+
     def shape(self):
         return self.path
-    
+
     def paint(self, p, *args):
         p.setRenderHints(p.renderHints() | p.Antialiasing)
         p.setPen(self.pen)
         p.fillPath(self.path, self.brush)
         p.drawPath(self.path)
-        
+
 
 class CircleSurface(pg.GraphicsObject):
     def __init__(self, radius=None, diameter=None):
         """center of physical surface is at 0,0
-        radius is the radius of the surface. If radius is None, the surface is flat. 
+        radius is the radius of the surface. If radius is None, the surface is flat.
         diameter is of the optic's edge."""
         pg.GraphicsObject.__init__(self)
-        
+
         self.r = radius
         self.d = diameter
         self.mkPath()
-        
+
     def setParams(self, r, d):
         self.r = r
         self.d = d
         self.mkPath()
-        
+
     def mkPath(self):
         self.prepareGeometryChange()
         r = self.r
@@ -383,7 +383,7 @@ class CircleSurface(pg.GraphicsObject):
         else:
             ## half-height of surface can't be larger than radius
             h2 = min(h2, abs(r))
-            
+
             #dx = abs(r) - (abs(r)**2 - abs(h2)**2)**0.5
             #p.moveTo(-d*w/2.+ d*dx, d*h2)
             arc = QtCore.QRectF(0, -r, r*2, r*2)
@@ -398,15 +398,15 @@ class CircleSurface(pg.GraphicsObject):
                 #p1.addRect(arc)
                 #self.paths.append(p1)
         self.h2 = h2
-        
+
     def boundingRect(self):
         return self.path.boundingRect()
-        
+
     def paint(self, p, *args):
         return  ## usually we let the optic draw.
         #p.setPen(pg.mkPen('r'))
         #p.drawPath(self.path)
-            
+
     def intersectRay(self, ray):
         ## return the point of intersection and the angle of incidence
         #print "intersect ray"
@@ -416,7 +416,7 @@ class CircleSurface(pg.GraphicsObject):
         #print "  ray: ", p, dir
         p = p - Point(r, 0)  ## move position so center of circle is at 0,0
         #print "  adj: ", p, r
-        
+
         if r == 0:
             #print "  flat"
             if dir[0] == 0:
@@ -443,8 +443,8 @@ class CircleSurface(pg.GraphicsObject):
                 sgn = -1
             else:
                 sgn = 1
-            
-        
+
+
             br = self.path.boundingRect()
             x1 = (D*dy + sgn*dx*disc2) * idr2
             y1 = (-D*dx + abs(dy)*disc2) * idr2
@@ -457,26 +457,26 @@ class CircleSurface(pg.GraphicsObject):
                 if not br.contains(x2+r, y2):
                     return None, None
                     raise Exception("No intersection!")
-                
+
             norm = np.arctan2(pt[1], pt[0])
             if r < 0:
                 norm += np.pi
             #print "  norm:", norm*180/3.1415
             dp = p - pt
             #print "  dp:", dp
-            ang = np.arctan2(dp[1], dp[0]) 
+            ang = np.arctan2(dp[1], dp[0])
             #print "  ang:", ang*180/3.1415
             #print "  ai:", (ang-norm)*180/3.1415
-            
+
             #print "  intersection:", pt
             return pt + Point(r, 0), ang-norm
 
-            
+
 class Ray(pg.GraphicsObject, ParamObj):
     """Represents a single straight segment of a ray"""
-    
+
     sigStateChanged = QtCore.Signal()
-    
+
     def __init__(self, **params):
         ParamObj.__init__(self)
         defaults = {
@@ -495,26 +495,26 @@ class Ray(pg.GraphicsObject, ParamObj):
             self['ior'] = parent['ior']
             self['dir'] = parent['dir']
             parent.addChild(self)
-        
+
         defaults.update(params)
         defaults['dir'] = Point(defaults['dir'])
         self.setParams(**defaults)
         self.mkPath()
-        
+
     def clearChildren(self):
         for c in self.children:
             c.clearChildren()
             c.setParentItem(None)
             self.scene().removeItem(c)
         self.children = []
-        
+
     def paramStateChanged(self):
         pass
-        
+
     def addChild(self, ch):
         self.children.append(ch)
         ch.setParentItem(self)
-        
+
     def currentState(self, relativeTo=None):
         pos = self['start']
         dir = self['dir']
@@ -525,22 +525,22 @@ class Ray(pg.GraphicsObject, ParamObj):
             p1 = trans.map(pos)
             p2 = trans.map(pos + dir)
             return Point(p1), Point(p2-p1)
-            
-            
+
+
     def setEnd(self, end):
         self['end'] = end
         self.mkPath()
 
     def boundingRect(self):
         return self.path.boundingRect()
-        
+
     def paint(self, p, *args):
         #p.setPen(pg.mkPen((255,0,0, 150)))
         p.setRenderHints(p.renderHints() | p.Antialiasing)
         p.setCompositionMode(p.CompositionMode_Plus)
         p.setPen(wlPen(self['wl']))
         p.drawPath(self.path)
-        
+
     def mkPath(self):
         self.prepareGeometryChange()
         self.path = QtGui.QPainterPath()
@@ -562,9 +562,9 @@ def trace(rays, optics):
 
 class Tracer(QtCore.QObject):
     """
-    Simple ray tracer. 
-    
-    Initialize with a list of rays and optics; 
+    Simple ray tracer.
+
+    Initialize with a list of rays and optics;
     calling trace() will cause rays to be extended by propagating them through
     each optic in sequence.
     """
@@ -575,7 +575,6 @@ class Tracer(QtCore.QObject):
         for o in self.optics:
             o.sigStateChanged.connect(self.trace)
         self.trace()
-            
+
     def trace(self):
         trace(self.rays, self.optics)
-

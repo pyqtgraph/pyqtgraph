@@ -7,13 +7,13 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     """
     For displaying scale-invariant arrows.
     For arrows pointing to a location on a curve, see CurveArrow
-    
+
     """
-    
-    
+
+
     def __init__(self, **opts):
         """
-        Arrows can be initialized with any keyword arguments accepted by 
+        Arrows can be initialized with any keyword arguments accepted by
         the setStyle() method.
         """
         self.opts = {}
@@ -36,17 +36,17 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             'brush': (50,50,200),
         }
         defaultOpts.update(opts)
-        
+
         self.setStyle(**defaultOpts)
-        
+
         self.rotate(self.opts['angle'])
         self.moveBy(*self.opts['pos'])
-    
+
     def setStyle(self, **opts):
         """
         Changes the appearance of the arrow.
         All arguments are optional:
-        
+
         ======================  =================================================
         **Keyword Arguments:**
         angle                   Orientation of the arrow in degrees. Default is
@@ -70,23 +70,23 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         ======================  =================================================
         """
         self.opts.update(opts)
-        
+
         opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
         self.path = fn.makeArrowPath(**opt)
         self.setPath(self.path)
-        
+
         self.setPen(fn.mkPen(self.opts['pen']))
         self.setBrush(fn.mkBrush(self.opts['brush']))
-        
+
         if self.opts['pxMode']:
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
-        
+
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         QtGui.QGraphicsPathItem.paint(self, p, *args)
-        
+
         #p.setPen(fn.mkPen('r'))
         #p.setBrush(fn.mkBrush(None))
         #p.drawRect(self.boundingRect())
@@ -95,9 +95,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         #if not self.opts['pxMode']:
             #return QtGui.QGraphicsPathItem.shape(self)
         return self.path
-    
+
     ## dataBounds and pixelPadding methods are provided to ensure ViewBox can
-    ## properly auto-range 
+    ## properly auto-range
     def dataBounds(self, ax, frac, orthoRange=None):
         pw = 0
         pen = self.pen()
@@ -111,7 +111,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
                 return [br.left()-pw, br.right()+pw]
             else:
                 return [br.top()-pw, br.bottom()+pw]
-        
+
     def pixelPadding(self):
         pad = 0
         if self.opts['pxMode']:
@@ -121,6 +121,3 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         if pen.isCosmetic():
             pad += max(1, pen.width()) * 0.7072
         return pad
-        
-        
-    

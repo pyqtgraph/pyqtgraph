@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates the use of ImageView, which is a high-level widget for 
+This example demonstrates the use of ImageView, which is a high-level widget for
 displaying and analyzing 2D and 3D data. ImageView provides:
 
   1. A zoomable region (ViewBox) for displaying the image

@@ -4,17 +4,17 @@ import weakref
 
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
-    
+
     def __init__(self, area):
         object.__init__(self)
         self.area = area
         self._container = None
         self._stretch = (10, 10)
         self.stretches = weakref.WeakKeyDictionary()
-        
+
     def container(self):
         return self._container
-        
+
     def containerChanged(self, c):
         self._container = c
 
@@ -24,7 +24,7 @@ class Container(object):
     def insert(self, new, pos=None, neighbor=None):
         # remove from existing parent first
         new.setParent(None)
-        
+
         if not isinstance(new, list):
             new = [new]
         if neighbor is None:
@@ -38,7 +38,7 @@ class Container(object):
                 index = 0
             if pos == 'after':
                 index += 1
-                
+
         for n in new:
             #print "change container", n, " -> ", self
             n.containerChanged(self)
@@ -48,7 +48,7 @@ class Container(object):
             n.sigStretchChanged.connect(self.childStretchChanged)
         #print "child added", self
         self.updateStretch()
-            
+
     def apoptose(self, propagate=True):
         ##if there is only one (or zero) item in this container, disappear.
         cont = self._container
@@ -63,12 +63,12 @@ class Container(object):
         self.close()
         if propagate and cont is not None:
             cont.apoptose()
-        
+
     def close(self):
         self.area = None
         self._container = None
         self.setParent(None)
-        
+
     def childEvent(self, ev):
         ch = ev.child()
         if ev.removed() and hasattr(ch, 'sigStretchChanged'):
@@ -78,11 +78,11 @@ class Container(object):
             except:
                 pass
             self.updateStretch()
-        
+
     def childStretchChanged(self):
         #print "child", QtCore.QObject.sender(self), "changed shape, updating", self
         self.updateStretch()
-        
+
     def setStretch(self, x=None, y=None):
         #print "setStretch", self, x, y
         self._stretch = (x, y)
@@ -91,35 +91,35 @@ class Container(object):
     def updateStretch(self):
         ###Set the stretch values for this container to reflect its contents
         pass
-        
-        
+
+
     def stretch(self):
         """Return the stretch factors for this container"""
         return self._stretch
-            
+
 
 class SplitContainer(Container, QtGui.QSplitter):
     """Horizontal or vertical splitter with some changes:
      - save/restore works correctly
     """
     sigStretchChanged = QtCore.Signal()
-    
+
     def __init__(self, area, orientation):
         QtGui.QSplitter.__init__(self)
         self.setOrientation(orientation)
         Container.__init__(self, area)
         #self.splitterMoved.connect(self.restretchChildren)
-        
+
     def _insertItem(self, item, index):
         self.insertWidget(index, item)
         item.show()  ## need to show since it may have been previously hidden by tab
-        
+
     def saveState(self):
         sizes = self.sizes()
         if all([x == 0 for x in sizes]):
             sizes = [10] * len(sizes)
         return {'sizes': sizes}
-        
+
     def restoreState(self, state):
         sizes = state['sizes']
         self.setSizes(sizes)
@@ -133,17 +133,17 @@ class SplitContainer(Container, QtGui.QSplitter):
     #def restretchChildren(self):
         #sizes = self.sizes()
         #tot = sum(sizes)
-        
-        
-        
+
+
+
 
 class HContainer(SplitContainer):
     def __init__(self, area):
         SplitContainer.__init__(self, area, QtCore.Qt.Horizontal)
-        
+
     def type(self):
         return 'horizontal'
-        
+
     def updateStretch(self):
         ##Set the stretch values for this container to reflect its contents
         #print "updateStretch", self
@@ -158,20 +158,20 @@ class HContainer(SplitContainer):
             #print "  child", self.widget(i), wx, wy
         self.setStretch(x, y)
         #print sizes
-        
+
         tot = float(sum(sizes))
         if tot == 0:
             scale = 1.0
         else:
             scale = self.width() / tot
         self.setSizes([int(s*scale) for s in sizes])
-        
+
 
 
 class VContainer(SplitContainer):
     def __init__(self, area):
         SplitContainer.__init__(self, area, QtCore.Qt.Vertical)
-        
+
     def type(self):
         return 'vertical'
 
@@ -207,7 +207,7 @@ class TContainer(Container, QtGui.QWidget):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
-        
+
         self.hTabLayout = QtGui.QHBoxLayout()
         self.hTabBox = QtGui.QWidget()
         self.hTabBox.setLayout(self.hTabLayout)
@@ -233,7 +233,7 @@ class TContainer(Container, QtGui.QWidget):
         #QtCore.QObject.connect(item.label, QtCore.SIGNAL('clicked'), self.tabClicked)
         item.label.sigClicked.connect(self.tabClicked)
         self.tabClicked(item.label)
-        
+
     def tabClicked(self, tab, ev=None):
         if ev is None or ev.button() == QtCore.Qt.LeftButton:
             for i in range(self.count()):
@@ -243,23 +243,23 @@ class TContainer(Container, QtGui.QWidget):
                     self.stack.setCurrentIndex(i)
                 else:
                     w.label.setDim(True)
-        
+
     def raiseDock(self, dock):
         """Move *dock* to the top of the stack"""
         self.stack.currentWidget().label.setDim(True)
         self.stack.setCurrentWidget(dock)
         dock.label.setDim(False)
-        
-        
+
+
     def type(self):
         return 'tab'
 
     def saveState(self):
         return {'index': self.stack.currentIndex()}
-        
+
     def restoreState(self, state):
         self.stack.setCurrentIndex(state['index'])
-        
+
     def updateStretch(self):
         ##Set the stretch values for this container to reflect its contents
         x = 0
@@ -269,9 +269,9 @@ class TContainer(Container, QtGui.QWidget):
             x = max(x, wx)
             y = max(y, wy)
         self.setStretch(x, y)
-        
+
     def stackChildEvent(self, ev):
         QtGui.QStackedWidget.childEvent(self.stack, ev)
         Container.childEvent(self, ev)
-        
+
 from . import Dock

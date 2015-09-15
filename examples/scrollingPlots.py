@@ -26,14 +26,14 @@ def update1():
                             # (see also: np.roll)
     data1[-1] = np.random.normal()
     curve1.setData(data1)
-    
+
     ptr1 += 1
     curve2.setData(data1)
     curve2.setPos(ptr1, 0)
-    
+
 
 # 2) Allow data to accumulate. In these examples, the array doubles in length
-#    whenever it is full. 
+#    whenever it is full.
 win.nextRow()
 p3 = win.addPlot()
 p4 = win.addPlot()
@@ -81,13 +81,13 @@ def update3():
     now = pg.ptime.time()
     for c in curves:
         c.setPos(-(now-startTime), 0)
-    
+
     i = ptr5 % chunkSize
     if i == 0:
         curve = p5.plot()
         curves.append(curve)
         last = data5[-1]
-        data5 = np.empty((chunkSize+1,2))        
+        data5 = np.empty((chunkSize+1,2))
         data5[0] = last
         while len(curves) > maxChunks:
             c = curves.pop(0)

@@ -52,4 +52,3 @@ class Ui_Form(object):
         self.scaleLabel.setText(QtGui.QApplication.translate("Form", "Scale:", None, QtGui.QApplication.UnicodeUTF8))
         self.mirrorImageBtn.setText(QtGui.QApplication.translate("Form", "Mirror", None, QtGui.QApplication.UnicodeUTF8))
         self.reflectImageBtn.setText(QtGui.QApplication.translate("Form", "Reflect", None, QtGui.QApplication.UnicodeUTF8))
-

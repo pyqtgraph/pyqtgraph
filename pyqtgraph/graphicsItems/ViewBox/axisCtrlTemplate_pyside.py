@@ -85,4 +85,3 @@ class Ui_Form(object):
         self.visibleOnlyCheck.setText(QtGui.QApplication.translate("Form", "Visible Data Only", None, QtGui.QApplication.UnicodeUTF8))
         self.autoPanCheck.setToolTip(QtGui.QApplication.translate("Form", "<html><head/><body><p>When checked, the axis will automatically pan to center on the current data, but the scale along this axis will not change.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.autoPanCheck.setText(QtGui.QApplication.translate("Form", "Auto Pan Only", None, QtGui.QApplication.UnicodeUTF8))
-

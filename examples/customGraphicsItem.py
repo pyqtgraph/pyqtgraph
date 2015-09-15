@@ -8,16 +8,16 @@ import pyqtgraph as pg
 from pyqtgraph import QtCore, QtGui
 
 ## Create a subclass of GraphicsObject.
-## The only required methods are paint() and boundingRect() 
+## The only required methods are paint() and boundingRect()
 ## (see QGraphicsItem documentation)
 class CandlestickItem(pg.GraphicsObject):
     def __init__(self, data):
         pg.GraphicsObject.__init__(self)
         self.data = data  ## data must have fields: time, open, close, min, max
         self.generatePicture()
-    
+
     def generatePicture(self):
-        ## pre-computing a QPicture object allows paint() to run much more quickly, 
+        ## pre-computing a QPicture object allows paint() to run much more quickly,
         ## rather than re-drawing the shapes every time.
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter(self.picture)
@@ -31,10 +31,10 @@ class CandlestickItem(pg.GraphicsObject):
                 p.setBrush(pg.mkBrush('g'))
             p.drawRect(QtCore.QRectF(t-w, open, w*2, close-open))
         p.end()
-    
+
     def paint(self, p, *args):
         p.drawPicture(0, 0, self.picture)
-    
+
     def boundingRect(self):
         ## boundingRect _must_ indicate the entire area that will be drawn on
         ## or else we will get artifacts and possibly crashing.

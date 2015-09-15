@@ -1,22 +1,22 @@
-from ..Qt import QtGui, QtCore  
+from ..Qt import QtGui, QtCore
 from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']
 
 class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
-    
+
     _qtBaseClass = QtGui.QGraphicsWidget
     def __init__(self, *args, **kargs):
         """
         **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtGui.QGraphicsWidget`
-        
-        Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs. 
+
+        Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs.
         Most of the extra functionality is inherited from :class:`GraphicsItem <pyqtgraph.GraphicsItem>`.
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
-        
+
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
@@ -38,10 +38,10 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     def setFixedWidth(self, h):
         self.setMaximumWidth(h)
         self.setMinimumWidth(h)
-        
+
     def height(self):
         return self.geometry().height()
-    
+
     def width(self):
         return self.geometry().width()
 
@@ -49,11 +49,9 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         br = self.mapRectFromParent(self.geometry()).normalized()
         #print "bounds:", br
         return br
-        
+
     def shape(self):  ## No idea why this is necessary, but rotated items do not receive clicks otherwise.
         p = QtGui.QPainterPath()
         p.addRect(self.boundingRect())
         #print "shape:", p.boundingRect()
         return p
-
-

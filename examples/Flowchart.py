@@ -32,7 +32,7 @@ cw.setLayout(layout)
 ## Create flowchart, define input/output terminals
 fc = Flowchart(terminals={
     'dataIn': {'io': 'in'},
-    'dataOut': {'io': 'out'}    
+    'dataOut': {'io': 'out'}
 })
 w = fc.widget()
 
@@ -56,7 +56,7 @@ data = metaarray.MetaArray(data, info=[{'name': 'Time', 'values': np.linspace(0,
 ## Feed data into the input terminal of the flowchart
 fc.setInput(dataIn=data)
 
-## populate the flowchart with a basic set of processing nodes. 
+## populate the flowchart with a basic set of processing nodes.
 ## (usually we let the user do this)
 plotList = {'Top Plot': pw1, 'Bottom Plot': pw2}
 

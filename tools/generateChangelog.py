@@ -16,8 +16,8 @@ def generateDebianChangelog(package, logFile, version, maintainer):
     * Initial release.
 
     -- Luke <luke.campagnola@gmail.com>  Sat, 29 Dec 2012 01:07:23 -0500
-    
-    
+
+
     *package* is the name of the python package.
     *logFile* is the CHANGELOG file to read; must have the format described above.
     *version* will be used to check that the most recent log entry corresponds
@@ -42,11 +42,11 @@ def generateDebianChangelog(package, logFile, version, maintainer):
 
     if releases[0][0] != version:
         raise Exception("Latest release in changelog (%s) does not match current release (%s)\n" % (releases[0][0],  version))
-    
+
     output = []
     for release, changes, date in releases:
         date = time.strptime(date, '%Y-%m-%d')
-        changeset = [ 
+        changeset = [
             "python-%s (%s-1) UNRELEASED; urgency=low\n" % (package, release),
             "\n"] + changes + [
             " -- %s  %s -0%d00\n"  % (maintainer, time.strftime('%a, %d %b %Y %H:%M:%S', date), time.timezone/3600),
@@ -65,7 +65,7 @@ def generateDebianChangelog(package, logFile, version, maintainer):
             else:
                 clean += line
                 lastBlank = False
-                
+
         output.append(clean)
         output.append("")
     return "\n".join(output) + "\n"
@@ -75,6 +75,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 5:
         sys.stderr.write('Usage: generateChangelog.py package_name log_file version "Maintainer <maint@email.com>"\n')
         sys.exit(-1)
-    
-    print(generateDebianChangelog(*sys.argv[1:]))
 
+    print(generateDebianChangelog(*sys.argv[1:]))

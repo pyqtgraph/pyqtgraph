@@ -22,7 +22,7 @@ class MultiPlotWidget(GraphicsView):
             #setattr(self, m, getattr(self.mPlotItem, m))
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-                
+
     def __getattr__(self, attr):  ## implicitly wrap methods from plotItem
         if hasattr(self.mPlotItem, attr):
             m = getattr(self.mPlotItem, attr)
@@ -31,12 +31,12 @@ class MultiPlotWidget(GraphicsView):
         raise AttributeError(attr)
 
     def setMinimumPlotHeight(self, min):
-        """Set the minimum height for each sub-plot displayed. 
-        
-        If the total height of all plots is greater than the height of the 
+        """Set the minimum height for each sub-plot displayed.
+
+        If the total height of all plots is greater than the height of the
         widget, then a scroll bar will appear to provide access to the entire
         set of plots.
-        
+
         Added in version 0.9.9
         """
         self.minPlotHeight = min
@@ -48,7 +48,7 @@ class MultiPlotWidget(GraphicsView):
     def saveState(self):
         return {}
         #return self.plotItem.saveState()
-        
+
     def restoreState(self, state):
         pass
         #return self.plotItem.restoreState(state)

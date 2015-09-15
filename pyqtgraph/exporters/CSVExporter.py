@@ -4,8 +4,8 @@ from ..parametertree import Parameter
 from .. import PlotItem
 
 __all__ = ['CSVExporter']
-    
-    
+
+
 class CSVExporter(Exporter):
     Name = "CSV from plot data"
     windows = []
@@ -16,15 +16,15 @@ class CSVExporter(Exporter):
             {'name': 'precision', 'type': 'int', 'value': 10, 'limits': [0, None]},
             {'name': 'columnMode', 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']}
         ])
-        
+
     def parameters(self):
         return self.params
-    
+
     def export(self, fileName=None):
-        
+
         if not isinstance(self.item, PlotItem):
             raise Exception("Must have a PlotItem selected for CSV export.")
-        
+
         if fileName is None:
             self.fileSaveDialog(filter=["*.csv", "*.tsv"])
             return
@@ -55,22 +55,22 @@ class CSVExporter(Exporter):
             sep = ','
         else:
             sep = '\t'
-            
+
         fd.write(sep.join(header) + '\n')
         i = 0
         numFormat = '%%0.%dg' % self.params['precision']
         numRows = max([len(d[0]) for d in data])
         for i in range(numRows):
             for j, d in enumerate(data):
-                # write x value if this is the first column, or if we want x 
+                # write x value if this is the first column, or if we want x
                 # for all rows
                 if appendAllX or j == 0:
                     if d is not None and i < len(d[0]):
                         fd.write(numFormat % d[0][i] + sep)
                     else:
                         fd.write(' %s' % sep)
-                
-                # write y value 
+
+                # write y value
                 if d is not None and i < len(d[1]):
                     fd.write(numFormat % d[1][i] + sep)
                 else:
@@ -78,6 +78,4 @@ class CSVExporter(Exporter):
             fd.write('\n')
         fd.close()
 
-CSVExporter.register()        
-                
-        
+CSVExporter.register()

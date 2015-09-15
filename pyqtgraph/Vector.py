@@ -10,7 +10,7 @@ import numpy as np
 
 class Vector(QtGui.QVector3D):
     """Extension of QVector3D which adds a few helpful methods."""
-    
+
     def __init__(self, *args):
         if len(args) == 1:
             if isinstance(args[0], QtCore.QSizeF):
@@ -39,10 +39,10 @@ class Vector(QtGui.QVector3D):
         if USE_PYSIDE and isinstance(b, QtGui.QVector3D):
             b = Vector(b)
         return QtGui.QVector3D.__add__(self, b)
-    
+
     #def __reduce__(self):
         #return (Point, (self.x(), self.y()))
-        
+
     def __getitem__(self, i):
         if i == 0:
             return self.x()
@@ -52,7 +52,7 @@ class Vector(QtGui.QVector3D):
             return self.z()
         else:
             raise IndexError("Point has no index %s" % str(i))
-        
+
     def __setitem__(self, i, x):
         if i == 0:
             return self.setX(x)
@@ -62,7 +62,7 @@ class Vector(QtGui.QVector3D):
             return self.setZ(x)
         else:
             raise IndexError("Point has no index %s" % str(i))
-        
+
     def __iter__(self):
         yield(self.x())
         yield(self.y())
@@ -83,5 +83,3 @@ class Vector(QtGui.QVector3D):
 
     def __abs__(self):
         return Vector(abs(self.x()), abs(self.y()), abs(self.z()))
-        
-        

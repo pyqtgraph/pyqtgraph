@@ -23,22 +23,22 @@ class VerticalLabel(QtGui.QLabel):
         self.forceWidth = forceWidth
         self.orientation = None
         self.setOrientation(orientation)
-        
+
     def setOrientation(self, o):
         if self.orientation == o:
             return
         self.orientation = o
         self.update()
         self.updateGeometry()
-        
+
     def paintEvent(self, ev):
         p = QtGui.QPainter(self)
         #p.setBrush(QtGui.QBrush(QtGui.QColor(100, 100, 200)))
         #p.setPen(QtGui.QPen(QtGui.QColor(50, 50, 100)))
         #p.drawRect(self.rect().adjusted(0, 0, -1, -1))
-        
+
         #p.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
-        
+
         if self.orientation == 'vertical':
             p.rotate(-90)
             rgn = QtCore.QRect(-self.height(), 0, self.height(), self.width())
@@ -46,10 +46,10 @@ class VerticalLabel(QtGui.QLabel):
             rgn = self.contentsRect()
         align = self.alignment()
         #align  = QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter
-            
+
         self.hint = p.drawText(rgn, align, self.text())
         p.end()
-        
+
         if self.orientation == 'vertical':
             self.setMaximumWidth(self.hint.height())
             self.setMinimumWidth(0)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     w = QtGui.QWidget()
     l = QtGui.QGridLayout()
     w.setLayout(l)
-    
+
     l1 = VerticalLabel("text 1", orientation='horizontal')
     l2 = VerticalLabel("text 2")
     l3 = VerticalLabel("text 3")

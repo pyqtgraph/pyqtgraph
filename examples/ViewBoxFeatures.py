@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-ViewBox is the general-purpose graphical container that allows the user to 
-zoom / pan to inspect any area of a 2D coordinate system. 
+ViewBox is the general-purpose graphical container that allows the user to
+zoom / pan to inspect any area of a 2D coordinate system.
 
 This example demonstrates many of the features ViewBox provides.
 """
@@ -14,7 +14,7 @@ import numpy as np
 
 x = np.arange(1000, dtype=float)
 y = np.random.normal(size=1000)
-y += 5 * np.sin(x/100) 
+y += 5 * np.sin(x/100)
 
 win = pg.GraphicsWindow()
 win.setWindowTitle('pyqtgraph example: ____')
@@ -51,8 +51,8 @@ sub4 = win.addLayout()
 sub4.addLabel("<b>View limits:</b><br>prevent panning or zooming past limits.")
 sub4.nextRow()
 v4 = sub4.addViewBox()
-v4.setLimits(xMin=-100, xMax=1100, 
-             minXRange=20, maxXRange=500, 
+v4.setLimits(xMin=-100, xMax=1100,
+             minXRange=20, maxXRange=500,
              yMin=-10, yMax=10,
              minYRange=1, maxYRange=10)
 l4 = pg.PlotDataItem(y)

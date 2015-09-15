@@ -2,7 +2,7 @@
 PyQt/PySide stress test:
 
 Create lots of random widgets and graphics items, connect them together randomly,
-the tear them down repeatedly. 
+the tear them down repeatedly.
 
 The purpose of this is to attempt to generate segmentation faults.
 """
@@ -16,18 +16,18 @@ app = pg.mkQApp()
 seed(12345)
 
 widgetTypes = [
-    pg.PlotWidget, 
-    pg.ImageView, 
-    pg.GraphicsView, 
+    pg.PlotWidget,
+    pg.ImageView,
+    pg.GraphicsView,
     pg.QtGui.QWidget,
-    pg.QtGui.QTreeWidget, 
+    pg.QtGui.QTreeWidget,
     pg.QtGui.QPushButton,
     ]
 
 itemTypes = [
-    pg.PlotCurveItem, 
-    pg.ImageItem, 
-    pg.PlotDataItem, 
+    pg.PlotCurveItem,
+    pg.ImageItem,
+    pg.PlotDataItem,
     pg.ViewBox,
     pg.QtGui.QGraphicsRectItem
     ]
@@ -82,7 +82,7 @@ class WorkThread(pg.QtCore.QThread):
             i += 1
             if (i % 1000000) == 0:
                 print('--worker--')
-            
+
 
 def randItem(items):
     return items[randint(0, len(items)-1)]
@@ -151,10 +151,10 @@ def addReference():
         return
     obj1 = randItem(widgets)
     obj2 = randItem(widgets)
-    p('    %s -> %s' % (obj1, obj2))    
+    p('    %s -> %s' % (obj1, obj2))
     obj1._testref = obj2
-    
 
-        
+
+
 if __name__ == '__main__':
     test_stability()

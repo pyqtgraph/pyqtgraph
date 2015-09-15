@@ -1,5 +1,5 @@
 """
-Example distutils setup script for packaging a program with 
+Example distutils setup script for packaging a program with
 pyqtgraph and py2exe. See the packaging tutorial at
 http://luke.campagnola.me/code/pyqtgraph for more information.
 """

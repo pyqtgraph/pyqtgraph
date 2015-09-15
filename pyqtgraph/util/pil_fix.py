@@ -60,5 +60,5 @@ if Image.VERSION == '1.1.6':
             obj = obj.tostring()
 
         return frombuffer(mode, size, obj, "raw", mode, 0, 1)
-        
+
     Image.fromarray=fromarray

@@ -3,12 +3,12 @@ from ..widgets.TreeWidget import TreeWidget
 import os, weakref, re
 from .ParameterItem import ParameterItem
 #import functions as fn
-        
-            
+
+
 
 class ParameterTree(TreeWidget):
     """Widget used to display or control data from a hierarchy of Parameters"""
-    
+
     def __init__(self, parent=None, showHeader=True):
         """
         ============== ========================================================
@@ -30,34 +30,34 @@ class ParameterTree(TreeWidget):
         self.itemChanged.connect(self.itemChangedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
-        
+
     def setParameters(self, param, showTop=True):
         """
         Set the top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`
         to be displayed in this ParameterTree.
 
-        If *showTop* is False, then the top-level parameter is hidden and only 
-        its children will be visible. This is a convenience method equivalent 
+        If *showTop* is False, then the top-level parameter is hidden and only
+        its children will be visible. This is a convenience method equivalent
         to::
-        
+
             tree.clear()
             tree.addParameters(param, showTop)
         """
         self.clear()
         self.addParameters(param, showTop=showTop)
-        
+
     def addParameters(self, param, root=None, depth=0, showTop=True):
         """
         Adds one top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`
-        to the view. 
-        
+        to the view.
+
         ============== ==========================================================
-        **Arguments:** 
-        param          The :class:`Parameter <pyqtgraph.parametertree.Parameter>` 
+        **Arguments:**
+        param          The :class:`Parameter <pyqtgraph.parametertree.Parameter>`
                        to add.
         root           The item within the tree to which *param* should be added.
                        By default, *param* is added as a top-level item.
-        showTop        If False, then *param* will be hidden, and only its 
+        showTop        If False, then *param* will be hidden, and only its
                        children will be visible in the tree.
         ============== ==========================================================
         """
@@ -72,16 +72,16 @@ class ParameterTree(TreeWidget):
                 depth -= 1
         root.addChild(item)
         item.treeWidgetChanged()
-            
+
         for ch in param:
             self.addParameters(ch, root=item, depth=depth+1)
 
     def clear(self):
         """
-        Remove all parameters from the tree.        
+        Remove all parameters from the tree.
         """
-        self.invisibleRootItem().takeChildren()        
-            
+        self.invisibleRootItem().takeChildren()
+
     def focusNext(self, item, forward=True):
         """Give input focus to the next (or previous) item after *item*
         """
@@ -110,12 +110,12 @@ class ParameterTree(TreeWidget):
                 index = root.indexOfChild(startItem) + 1
             else:
                 index = root.indexOfChild(startItem) - 1
-            
+
         if forward:
             inds = list(range(index, root.childCount()))
         else:
             inds = list(range(index, -1, -1))
-            
+
         for i in inds:
             item = root.child(i)
             if hasattr(item, 'isFocusable') and item.isFocusable():
@@ -130,11 +130,11 @@ class ParameterTree(TreeWidget):
         item = self.currentItem()
         if hasattr(item, 'contextMenuEvent'):
             item.contextMenuEvent(ev)
-            
+
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
             item.columnChangedEvent(col)
-            
+
     def selectionChanged(self, *args):
         sel = self.selectedItems()
         if len(sel) != 1:
@@ -148,7 +148,7 @@ class ParameterTree(TreeWidget):
         if hasattr(sel[0], 'selected'):
             sel[0].selected(True)
         return TreeWidget.selectionChanged(self, *args)
-        
+
     def wheelEvent(self, ev):
         self.clearSelection()
         return TreeWidget.wheelEvent(self, ev)

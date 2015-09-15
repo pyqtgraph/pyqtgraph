@@ -7,9 +7,9 @@ __all__ = ['ColorButton']
 class ColorButton(QtGui.QPushButton):
     """
     **Bases:** QtGui.QPushButton
-    
+
     Button displaying a color and allowing the user to select a new color.
-    
+
     ====================== ============================================================
     **Signals:**
     sigColorChanging(self) emitted whenever a new color is picked in the color dialog
@@ -18,7 +18,7 @@ class ColorButton(QtGui.QPushButton):
     """
     sigColorChanging = QtCore.Signal(object)  ## emitted whenever a new color is picked in the color dialog
     sigColorChanged = QtCore.Signal(object)   ## emitted when the selected color is accepted (user clicks OK)
-    
+
     def __init__(self, parent=None, color=(128,128,128)):
         QtGui.QPushButton.__init__(self, parent)
         self.setColor(color)
@@ -33,7 +33,7 @@ class ColorButton(QtGui.QPushButton):
         self.clicked.connect(self.selectColor)
         self.setMinimumHeight(15)
         self.setMinimumWidth(15)
-        
+
     def paintEvent(self, ev):
         QtGui.QPushButton.paintEvent(self, ev)
         p = QtGui.QPainter(self)
@@ -46,7 +46,7 @@ class ColorButton(QtGui.QPushButton):
         p.setBrush(functions.mkBrush(self._color))
         p.drawRect(rect)
         p.end()
-    
+
     def setColor(self, color, finished=True):
         """Sets the button's color and emits both sigColorChanged and sigColorChanging."""
         self._color = functions.mkColor(color)
@@ -55,28 +55,28 @@ class ColorButton(QtGui.QPushButton):
         else:
             self.sigColorChanging.emit(self)
         self.update()
-        
+
     def selectColor(self):
         self.origColor = self.color()
         self.colorDialog.setCurrentColor(self.color())
         self.colorDialog.open()
-        
+
     def dialogColorChanged(self, color):
         if color.isValid():
             self.setColor(color, finished=False)
-            
+
     def colorRejected(self):
         self.setColor(self.origColor, finished=False)
-    
+
     def colorSelected(self, color):
         self.setColor(self._color, finished=True)
-    
+
     def saveState(self):
         return functions.colorTuple(self._color)
-        
+
     def restoreState(self, state):
         self.setColor(state)
-        
+
     def color(self, mode='qcolor'):
         color = functions.mkColor(self._color)
         if mode == 'qcolor':
@@ -88,4 +88,3 @@ class ColorButton(QtGui.QPushButton):
 
     def widgetGroupInterface(self):
         return (self.sigColorChanged, ColorButton.saveState, ColorButton.restoreState)
-    

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Demonstrate a simple data-slicing task: given 3D data (displayed at top), select 
-a 2D plane and interpolate data along that plane to generate a slice image 
-(displayed at bottom). 
+Demonstrate a simple data-slicing task: given 3D data (displayed at top), select
+a 2D plane and interpolate data along that plane to generate a slice image
+(displayed at bottom).
 
 
 """
@@ -46,7 +46,7 @@ def update():
     global data, imv1, imv2
     d2 = roi.getArrayRegion(data, imv1.imageItem, axes=(1,2))
     imv2.setImage(d2)
-    
+
 roi.sigRegionChanged.connect(update)
 
 

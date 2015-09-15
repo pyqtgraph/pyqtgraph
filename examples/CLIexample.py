@@ -1,5 +1,5 @@
 """
-Display a plot and an image with minimal setup. 
+Display a plot and an image with minimal setup.
 
 pg.plot() and pg.image() are indended to be used from an interactive prompt
 to allow easy data inspection (but note that PySide unfortunately does not

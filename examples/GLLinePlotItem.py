@@ -42,7 +42,7 @@ for i in range(n):
     pts = np.vstack([x,yi,z]).transpose()
     plt = gl.GLLinePlotItem(pos=pts, color=pg.glColor((i,n*1.3)), width=(i+1)/10., antialias=True)
     w.addItem(plt)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

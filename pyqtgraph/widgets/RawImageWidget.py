@@ -11,7 +11,7 @@ import numpy as np
 
 class RawImageWidget(QtGui.QWidget):
     """
-    Widget optimized for very fast video display. 
+    Widget optimized for very fast video display.
     Generally using an ImageItem inside GraphicsView is fast enough.
     On some systems this may provide faster video. See the VideoSpeedTest example for benchmarking.
     """
@@ -24,7 +24,7 @@ class RawImageWidget(QtGui.QWidget):
         self.scaled = scaled
         self.opts = None
         self.image = None
-    
+
     def setImage(self, img, *args, **kargs):
         """
         img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
@@ -52,7 +52,7 @@ class RawImageWidget(QtGui.QWidget):
                 rect.setWidth(int(rect.width() * imar/ar))
             else:
                 rect.setHeight(int(rect.height() * ar/imar))
-                
+
             p.drawImage(rect, self.image)
         else:
             p.drawImage(QtCore.QPointF(), self.image)
@@ -85,7 +85,7 @@ if HAVE_OPENGL:
 
         def initializeGL(self):
             self.texture = glGenTextures(1)
-            
+
         def uploadTexture(self):
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -99,15 +99,15 @@ if HAVE_OPENGL:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
             #glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
             shape = self.image.shape
-            
+
             ### Test texture dimensions first
             #glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
             #if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
                 #raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
-            
+
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, self.image.transpose((1,0,2)))
             glDisable(GL_TEXTURE_2D)
-            
+
         def paintGL(self):
             if self.image is None:
                 if self.opts is None:
@@ -115,10 +115,10 @@ if HAVE_OPENGL:
                 img, args, kwds = self.opts
                 kwds['useRGBA'] = True
                 self.image, alpha = fn.makeARGB(img, *args, **kwds)
-            
+
             if not self.uploaded:
                 self.uploadTexture()
-            
+
             glViewport(0, 0, self.width(), self.height())
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -135,6 +135,3 @@ if HAVE_OPENGL:
             glVertex3f(-1, 1, 0)
             glEnd()
             glDisable(GL_TEXTURE_3D)
-            
-
-

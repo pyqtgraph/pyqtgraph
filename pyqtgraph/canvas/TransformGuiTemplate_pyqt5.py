@@ -53,4 +53,3 @@ class Ui_Form(object):
         self.scaleLabel.setText(_translate("Form", "Scale:"))
         self.mirrorImageBtn.setText(_translate("Form", "Mirror"))
         self.reflectImageBtn.setText(_translate("Form", "Reflect"))
-

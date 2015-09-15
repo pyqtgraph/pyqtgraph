@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## Add path to library (just for examples; you do not need this)                                                                           
+## Add path to library (just for examples; you do not need this)
 import initExample
 
 import numpy as np

@@ -22,7 +22,3 @@ for mod in [Data, Display, Filters, Operators]:
     nodes = [getattr(mod, name) for name in dir(mod) if isNodeClass(getattr(mod, name))]
     for node in nodes:
         LIBRARY.addNodeType(node, [(mod.__name__.split('.')[-1],)])
-    
-
-
-

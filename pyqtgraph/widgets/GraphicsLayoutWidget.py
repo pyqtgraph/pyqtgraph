@@ -5,9 +5,9 @@ from .GraphicsView import GraphicsView
 __all__ = ['GraphicsLayoutWidget']
 class GraphicsLayoutWidget(GraphicsView):
     """
-    Convenience class consisting of a :class:`GraphicsView 
+    Convenience class consisting of a :class:`GraphicsView
     <pyqtgraph.GraphicsView>` with a single :class:`GraphicsLayout
-    <pyqtgraph.GraphicsLayout>` as its central item. 
+    <pyqtgraph.GraphicsLayout>` as its central item.
 
     This class wraps several methods from its internal GraphicsLayout:
     :func:`nextRow <pyqtgraph.GraphicsLayout.nextRow>`

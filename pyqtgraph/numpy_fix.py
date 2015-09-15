@@ -1,6 +1,6 @@
 try:
     import numpy as np
-    
+
     ## Wrap np.concatenate to catch and avoid a segmentation fault bug
     ## (numpy trac issue #2084)
     if not hasattr(np, 'concatenate_orig'):
@@ -14,9 +14,8 @@ try:
         if any([dt != dtypes[0] for dt in dtypes[1:]]):
             raise TypeError("Cannot concatenate structured arrays of different dtype.")
         return np.concatenate_orig(vals, *args, **kwds)
-    
+
     np.concatenate = concatenate
-    
+
 except ImportError:
     pass
-

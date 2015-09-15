@@ -17,7 +17,7 @@ except ImportError:
         return output
 
 # Maximum allowed repository size difference (in kB) following merge.
-# This is used to prevent large files from being inappropriately added to 
+# This is used to prevent large files from being inappropriately added to
 # the repository history.
 MERGE_SIZE_LIMIT = 100
 
@@ -42,19 +42,19 @@ FLAKE_MANDATORY = set([
 
     'E901',  #  SyntaxError or IndentationError
     'E902',  #  IOError
-        
+
     'W191',  #  indentation contains tabs
-        
+
     'W601',  #  .has_key() is deprecated, use ‘in’
     'W602',  #  deprecated form of raising exception
     'W603',  #  ‘<>’ is deprecated, use ‘!=’
-    'W604',  #  backticks are deprecated, use ‘repr()’    
+    'W604',  #  backticks are deprecated, use ‘repr()’
     ])
 
 FLAKE_RECOMMENDED = set([
     'E124',  #  closing bracket does not match visual indentation
     'E231',  #  missing whitespace after ‘,’
-    
+
     'E211',  #  whitespace before ‘(‘
     'E261',  #  at least two spaces before inline comment
     'E271',  #  multiple spaces after keyword
@@ -65,10 +65,10 @@ FLAKE_RECOMMENDED = set([
     'F402',  #  import module from line N shadowed by loop variable
     'F403',  #  ‘from module import *’ used; unable to detect undefined names
     'F404',  #  future import(s) name after other statements
-        
+
     'E501',  #  line too long (82 > 79 characters)
     'E502',  #  the backslash is redundant between brackets
-    
+
     'E702',  #  multiple statements on one line (semicolon)
     'E703',  #  statement ends with a semicolon
     'E711',  #  comparison to None should be ‘if cond is None:’
@@ -82,7 +82,7 @@ FLAKE_RECOMMENDED = set([
     'F823',  #  local variable name ... referenced before assignment
     'F831',  #  duplicate argument name in function definition
     'F841',  #  local variable name is assigned to but never used
-    
+
     'W292',  #  no newline at end of file
 
     ])
@@ -93,7 +93,7 @@ FLAKE_OPTIONAL = set([
     'E126',  #  continuation line over-indented for hanging indent
     'E127',  #  continuation line over-indented for visual indent
     'E128',  #  continuation line under-indented for visual indent
-        
+
     'E201',  #  whitespace after ‘(‘
     'E202',  #  whitespace before ‘)’
     'E203',  #  whitespace before ‘:’
@@ -105,19 +105,19 @@ FLAKE_OPTIONAL = set([
     'E228',  #  missing whitespace around modulo operator
     'E241',  #  multiple spaces after ‘,’
     'E251',  #  unexpected spaces around keyword / parameter equals
-    'E262',  #  inline comment should start with ‘# ‘     
-        
+    'E262',  #  inline comment should start with ‘# ‘
+
     'E301',  #  expected 1 blank line, found 0
     'E302',  #  expected 2 blank lines, found 0
     'E303',  #  too many blank lines (3)
-        
+
     'E401',  #  multiple imports on one line
 
     'E701',  #  multiple statements on one line (colon)
-        
+
     'W291',  #  trailing whitespace
     'W293',  #  blank line contains whitespace
-        
+
     'W391',  #  blank line at end of file
     ])
 
@@ -144,7 +144,7 @@ def checkStyle():
     """ Run flake8, checking only lines that are modified since the last
     git commit. """
     test = [ 1,2,3 ]
-    
+
     # First check _all_ code against mandatory error codes
     print('flake8: check all code against mandatory error set...')
     errors = ','.join(FLAKE_MANDATORY)
@@ -154,7 +154,7 @@ def checkStyle():
     output = proc.stdout.read().decode('utf-8')
     ret = proc.wait()
     printFlakeOutput(output)
-    
+
     # Check for DOS newlines
     print('check line endings in all files...')
     count = 0
@@ -173,20 +173,20 @@ def checkStyle():
                 ret = ret | 2
             count += 1
     print('checked line endings in %d files' % count)
-            
-    
+
+
     # Next check new code with optional error codes
     print('flake8: check new code against recommended error set...')
     diff = subprocess.check_output(['git', 'diff'])
     proc = subprocess.Popen(['flake8', '--diff', #'--show-source',
                                 '--ignore=' + errors],
-                            stdin=subprocess.PIPE, 
+                            stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
     proc.stdin.write(diff)
     proc.stdin.close()
     output = proc.stdout.read().decode('utf-8')
     ret |= printFlakeOutput(output)
-    
+
     if ret == 0:
         print('style test passed.')
     else:
@@ -251,7 +251,7 @@ def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, target
     if sourceBranch is None:
         sourceBranch = getGitBranch()
         sourceRepo = '..'
-        
+
     if targetBranch is None:
         if sourceBranch == 'develop':
             targetBranch = 'develop'
@@ -259,38 +259,38 @@ def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, target
         else:
             targetBranch = 'develop'
             targetRepo = '..'
-    
+
     workingDir = '__merge-test-clone'
-    env = dict(TARGET_BRANCH=targetBranch, 
-               SOURCE_BRANCH=sourceBranch, 
-               TARGET_REPO=targetRepo, 
+    env = dict(TARGET_BRANCH=targetBranch,
+               SOURCE_BRANCH=sourceBranch,
+               TARGET_REPO=targetRepo,
                SOURCE_REPO=sourceRepo,
                WORKING_DIR=workingDir,
                )
-    
+
     print("Testing merge size difference:\n"
           "  SOURCE: {SOURCE_REPO} {SOURCE_BRANCH}\n"
           "  TARGET: {TARGET_BRANCH} {TARGET_REPO}".format(**env))
-    
+
     setup = """
         mkdir {WORKING_DIR} && cd {WORKING_DIR} &&
         git init && git remote add -t {TARGET_BRANCH} target {TARGET_REPO} &&
-        git fetch target {TARGET_BRANCH} && 
-        git checkout -qf target/{TARGET_BRANCH} && 
+        git fetch target {TARGET_BRANCH} &&
+        git checkout -qf target/{TARGET_BRANCH} &&
         git gc -q --aggressive
         """.format(**env)
-        
+
     checkSize = """
-        cd {WORKING_DIR} && 
+        cd {WORKING_DIR} &&
         du -s . | sed -e "s/\t.*//"
         """.format(**env)
-    
+
     merge = """
         cd {WORKING_DIR} &&
-        git pull -q {SOURCE_REPO} {SOURCE_BRANCH} && 
+        git pull -q {SOURCE_REPO} {SOURCE_BRANCH} &&
         git gc -q --aggressive
         """.format(**env)
-    
+
     try:
         print("Check out target branch:\n" + setup)
         check_call(setup, shell=True)
@@ -300,7 +300,7 @@ def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, target
         check_call(merge, shell=True)
         mergeSize = int(check_output(checkSize, shell=True))
         print("MERGE SIZE: %d kB" % mergeSize)
-        
+
         diff = mergeSize - targetSize
         if diff <= MERGE_SIZE_LIMIT:
             print("DIFFERENCE: %d kB  [OK]" % diff)
@@ -357,17 +357,17 @@ def getGitVersion(tagPrefix):
     path = os.getcwd()
     if not os.path.isdir(os.path.join(path, '.git')):
         return None
-        
+
     gitVersion = check_output(['git', 'describe', '--tags']).strip().decode('utf-8')
-    
+
     # any uncommitted modifications?
     modified = False
     status = check_output(['git', 'status', '--porcelain'], universal_newlines=True).strip().split('\n')
     for line in status:
         if line != '' and line[:2] != '??':
             modified = True
-            break        
-                
+            break
+
     if modified:
         gitVersion = gitVersion + '+'
 
@@ -382,16 +382,16 @@ def getGitBranch():
 
 def getVersionStrings(pkg):
     """
-    Returns 4 version strings: 
-    
+    Returns 4 version strings:
+
     * the version string to use for this build,
     * version string requested with --force-version (or None)
     * version string that describes the current git checkout (or None).
-    * version string in the pkg/__init__.py, 
-    
+    * version string in the pkg/__init__.py,
+
     The first return value is (forceVersion or gitVersion or initVersion).
     """
-    
+
     ## Determine current version string from __init__.py
     initVersion = getInitVersion(pkgroot='pyqtgraph')
 
@@ -416,8 +416,8 @@ def getVersionStrings(pkg):
             elif arg.startswith('--force-version='):
                 forcedVersion = sys.argv[i].replace('--force-version=', '')
                 sys.argv.pop(i)
-                
-                
+
+
     ## Finally decide on a version string to use:
     if forcedVersion is not None:
         version = forcedVersion
@@ -439,29 +439,29 @@ class DebCommand(Command):
     maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
     debTemplate = "debian"
     debDir = "deb_build"
-    
+
     user_options = []
-    
+
     def initialize_options(self):
         self.cwd = None
-        
+
     def finalize_options(self):
         self.cwd = os.getcwd()
-        
+
     def run(self):
         version = self.distribution.get_version()
         pkgName = self.distribution.get_name()
         debName = "python-" + pkgName
         debDir = self.debDir
-        
+
         assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
-        
+
         if os.path.isdir(debDir):
             raise Exception('DEB build dir already exists: "%s"' % debDir)
         sdist = "dist/%s-%s.tar.gz" % (pkgName, version)
         if not os.path.isfile(sdist):
             raise Exception("No source distribution; run `setup.py sdist` first.")
-        
+
         # copy sdist to build directory and extract
         os.mkdir(debDir)
         renamedSdist = '%s_%s.orig.tar.gz' % (debName, version)
@@ -471,16 +471,16 @@ class DebCommand(Command):
         if os.system("cd %s; tar -xzf %s" % (debDir, renamedSdist)) != 0:
             raise Exception("Error extracting source distribution.")
         buildDir = '%s/%s-%s' % (debDir, pkgName, version)
-        
+
         # copy debian control structure
         print("copytree %s => %s" % (self.debTemplate, buildDir+'/debian'))
         shutil.copytree(self.debTemplate, buildDir+'/debian')
-        
+
         # Write new changelog
         chlog = generateDebianChangelog(pkgName, 'CHANGELOG', version, self.maintainer)
         print("write changelog %s" % buildDir+'/debian/changelog')
         open(buildDir+'/debian/changelog', 'w').write(chlog)
-        
+
         # build package
         print('cd %s; debuild -us -uc' % buildDir)
         if os.system('cd %s; debuild -us -uc' % buildDir) != 0:
@@ -505,41 +505,40 @@ class DebugCommand(Command):
 class TestCommand(Command):
     description = "Run all package tests and exit immediately with informative return code."
     user_options = []
-    
+
     def run(self):
         sys.exit(unitTests())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
-    
+
 
 class StyleCommand(Command):
     description = "Check all code for style, exit immediately with informative return code."
     user_options = []
-    
+
     def run(self):
         sys.exit(checkStyle())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
 
-    
+
 class MergeTestCommand(Command):
     description = "Run all tests needed to determine whether the current code is suitable for merge."
     user_options = []
-    
+
     def run(self):
         sys.exit(mergeTests())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
-

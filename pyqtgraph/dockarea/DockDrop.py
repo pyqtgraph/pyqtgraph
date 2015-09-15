@@ -12,13 +12,13 @@ class DockDrop(object):
         self.dropArea = None
         self.overlay = DropAreaOverlay(self)
         self.overlay.raise_()
-    
+
     def resizeOverlay(self, size):
         self.overlay.resize(size)
-        
+
     def raiseOverlay(self):
         self.overlay.raise_()
-    
+
     def dragEnterEvent(self, ev):
         src = ev.source()
         if hasattr(src, 'implements') and src.implements('dock'):
@@ -27,14 +27,14 @@ class DockDrop(object):
         else:
             #print "drag enter ignore"
             ev.ignore()
-        
+
     def dragMoveEvent(self, ev):
         #print "drag move"
         ld = ev.pos().x()
         rd = self.width() - ld
         td = ev.pos().y()
         bd = self.height() - td
-        
+
         mn = min(ld, rd, td, bd)
         if mn > 30:
             self.dropArea = "center"
@@ -42,7 +42,7 @@ class DockDrop(object):
             self.dropArea = "center"
         elif (rd == mn or ld == mn) and mn > self.width()/3.:
             self.dropArea = "center"
-            
+
         elif rd == mn:
             self.dropArea = "right"
         elif ld == mn:
@@ -51,7 +51,7 @@ class DockDrop(object):
             self.dropArea = "top"
         elif bd == mn:
             self.dropArea = "bottom"
-            
+
         if ev.source() is self and self.dropArea == 'center':
             #print "  no self-center"
             self.dropArea = None
@@ -64,11 +64,11 @@ class DockDrop(object):
             #print "  ok"
             ev.accept()
         self.overlay.setDropArea(self.dropArea)
-            
+
     def dragLeaveEvent(self, ev):
         self.dropArea = None
         self.overlay.setDropArea(self.dropArea)
-    
+
     def dropEvent(self, ev):
         area = self.dropArea
         if area is None:
@@ -79,17 +79,17 @@ class DockDrop(object):
         self.dropArea = None
         self.overlay.setDropArea(self.dropArea)
 
-        
+
 
 class DropAreaOverlay(QtGui.QWidget):
     """Overlay widget that draws drop areas during a drag-drop operation"""
-    
+
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
         self.dropArea = None
         self.hide()
         self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
-        
+
     def setDropArea(self, area):
         self.dropArea = area
         if area is None:
@@ -101,7 +101,7 @@ class DropAreaOverlay(QtGui.QWidget):
             rgn = QtCore.QRect(prgn)
             w = min(30, prgn.width()/3.)
             h = min(30, prgn.height()/3.)
-            
+
             if self.dropArea == 'left':
                 rgn.setWidth(w)
             elif self.dropArea == 'right':
@@ -116,7 +116,7 @@ class DropAreaOverlay(QtGui.QWidget):
             self.show()
 
         self.update()
-    
+
     def paintEvent(self, ev):
         if self.dropArea is None:
             return

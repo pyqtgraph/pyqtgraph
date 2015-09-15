@@ -30,7 +30,7 @@ pos = np.array([
     [5,5],
     [15,5]
     ])
-    
+
 ## Define the set of connections in the graph
 adj = np.array([
     [0,1],
@@ -40,7 +40,7 @@ adj = np.array([
     [1,5],
     [3,5],
     ])
-    
+
 ## Define the symbol to use for each node (this is optional)
 symbols = ['o','o','o','o','t','+']
 

@@ -6,12 +6,12 @@ def eq(a, b):
     """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
     if a is b:
         return True
-        
+
     try:
         e = a==b
     except ValueError:
         return False
-    except AttributeError: 
+    except AttributeError:
         return False
     except:
         print("a:", str(type(a)), str(a))

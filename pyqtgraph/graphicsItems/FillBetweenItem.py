@@ -19,18 +19,18 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
             self.setBrush(brush)
         self.setPen(pen)
         self.updatePath()
-        
+
     def setBrush(self, *args, **kwds):
         QtGui.QGraphicsPathItem.setBrush(self, fn.mkBrush(*args, **kwds))
-        
+
     def setPen(self, *args, **kwds):
         QtGui.QGraphicsPathItem.setPen(self, fn.mkPen(*args, **kwds))
 
     def setCurves(self, curve1, curve2):
         """Set the curves to fill between.
-        
+
         Arguments must be instances of PlotDataItem or PlotCurveItem.
-        
+
         Added in version 0.9.9
         """
         if self.curves is not None:

@@ -5,9 +5,9 @@ from . import VerticalLabel
 __all__ = ['CheckTable']
 
 class CheckTable(QtGui.QWidget):
-    
+
     sigStateChanged = QtCore.Signal(object, object, object) # (row, col, state)
-    
+
     def __init__(self, columns):
         QtGui.QWidget.__init__(self)
         self.layout = QtGui.QGridLayout()
@@ -21,11 +21,11 @@ class CheckTable(QtGui.QWidget):
             self.headers.append(label)
             self.layout.addWidget(label, 0, col)
             col += 1
-        
+
         self.rowNames = []
         self.rowWidgets = []
         self.oldRows = {}  ## remember settings from removed rows; reapply if they reappear.
-        
+
 
     def updateRows(self, rows):
         for r in self.rowNames[:]:
@@ -54,7 +54,7 @@ class CheckTable(QtGui.QWidget):
             check.stateChanged.connect(self.checkChanged)
         self.rowNames.append(name)
         self.rowWidgets.append([label] + checks)
-        
+
     def removeRow(self, name):
         row = self.rowNames.index(name)
         self.oldRows[name] = self.saveState()['rows'][row]  ## save for later
@@ -75,14 +75,14 @@ class CheckTable(QtGui.QWidget):
         check = QtCore.QObject.sender(self)
         #self.emit(QtCore.SIGNAL('stateChanged'), check.row, check.col, state)
         self.sigStateChanged.emit(check.row, check.col, state)
-        
+
     def saveState(self):
         rows = []
         for i in range(len(self.rowNames)):
             row = [self.rowNames[i]] + [c.isChecked() for c in self.rowWidgets[i][1:]]
             rows.append(row)
         return {'cols': self.columns, 'rows': rows}
-        
+
     def restoreState(self, state):
         rows = [r[0] for r in state['rows']]
         self.updateRows(rows)
@@ -90,4 +90,3 @@ class CheckTable(QtGui.QWidget):
             rowNum = self.rowNames.index(r[0])
             for i in range(1, len(r)):
                 self.rowWidgets[rowNum][i].setChecked(r[i])
-            

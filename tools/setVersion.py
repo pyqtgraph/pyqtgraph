@@ -19,8 +19,5 @@ for filename, search, sub in replace:
         print('Error: Search expression "%s" not found in file %s.' % (search, filename))
         os._exit(1)
     open(filename, 'w').write(re.sub(search, sub, data))
-    
+
 print("Updated version strings to %s" % version)
-
-
-

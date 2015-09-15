@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Demonstrates a variety of uses for ROI. This class provides a user-adjustable
-region of interest marker. It is possible to customize the layout and 
-function of the scale/rotate handles in very flexible ways. 
+region of interest marker. It is possible to customize the layout and
+function of the scale/rotate handles in very flexible ways.
 """
 
 import initExample ## Add path to library (just for examples; you do not need this)
@@ -61,13 +61,13 @@ rois.append(pg.PolyLineROI([[80, 60], [90, 30], [60, 40]], pen=(6,9), closed=Tru
 def update(roi):
     img1b.setImage(roi.getArrayRegion(arr, img1a), levels=(0, arr.max()))
     v1b.autoRange()
-    
+
 for roi in rois:
     roi.sigRegionChanged.connect(update)
     v1a.addItem(roi)
 
 update(rois[-1])
-    
+
 
 
 text = """User-Modifiable ROIs<br>

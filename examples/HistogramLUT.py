@@ -3,7 +3,7 @@
 Use a HistogramLUTWidget to control the contrast / coloration of an image.
 """
 
-## Add path to library (just for examples; you do not need this)                                                                           
+## Add path to library (just for examples; you do not need this)
 import initExample
 
 import numpy as np

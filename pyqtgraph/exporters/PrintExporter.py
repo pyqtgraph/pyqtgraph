@@ -3,7 +3,7 @@ from ..parametertree import Parameter
 from ..Qt import QtGui, QtCore, QtSvg
 import re
 
-__all__ = ['PrintExporter']  
+__all__ = ['PrintExporter']
 #__all__ = []   ## Printer is disabled for now--does not work very well.
 
 class PrintExporter(Exporter):
@@ -22,24 +22,24 @@ class PrintExporter(Exporter):
         sr = self.getSourceRect()
         ar = sr.height() / sr.width()
         self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
-        
+
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = sr.width() / sr.height()
         self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
-        
+
     def parameters(self):
         return self.params
-    
+
     def export(self, fileName=None):
         printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
         dialog = QtGui.QPrintDialog(printer)
         dialog.setWindowTitle("Print Document")
         if dialog.exec_() != QtGui.QDialog.Accepted:
             return
-            
+
         #dpi = QtGui.QDesktopWidget().physicalDpiX()
-        
+
         #self.svg.setSize(QtCore.QSize(100,100))
         #self.svg.setResolution(600)
         #res = printer.resolution()
@@ -53,7 +53,7 @@ class PrintExporter(Exporter):
         w = self.params['width'] * res * 100. / 2.54
         x = center.x() - w/2.
         y = center.y() - h/2.
-        
+
         targetRect = QtCore.QRect(x, y, w, h)
         sourceRect = self.getSourceRect()
         painter = QtGui.QPainter(printer)
@@ -65,4 +65,4 @@ class PrintExporter(Exporter):
         painter.end()
 
 
-#PrintExporter.register()        
+#PrintExporter.register()
