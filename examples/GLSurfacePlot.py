@@ -75,7 +75,7 @@ z = np.sin(d[np.newaxis,...] + phi.reshape(phi.shape[0], 1, 1)) / d2[np.newaxis,
 
 
 ## create a surface plot, tell it to use the 'heightColor' shader
-## since this does not require normal vectors to render (thus we 
+## since this does not require normal vectors to render (thus we
 ## can set computeNormals=False to save time when the mesh updates)
 p4 = gl.GLSurfacePlotItem(x=x[:,0], y = y[0,:], shader='heightColor', computeNormals=False, smooth=False)
 p4.shader()['colorMap'] = np.array([0.2, 2, 0.5, 0.2, 1, 1, 0.2, 0, 2])
@@ -87,7 +87,7 @@ def update():
     global p4, z, index
     index -= 1
     p4.setData(z=z[index%z.shape[0]])
-    
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(30)

@@ -6,11 +6,11 @@ The widget consists of four components:
 
 1) A list of column names from which the user may select 1 or 2 columns
     to plot. If one column is selected, the data for that column will be
-    plotted in a histogram-like manner by using pg.pseudoScatter(). 
+    plotted in a histogram-like manner by using pg.pseudoScatter().
     If two columns are selected, then the
     scatter plot will be generated with x determined by the first column
     that was selected and y by the second.
-2) A DataFilter that allows the user to select a subset of the data by 
+2) A DataFilter that allows the user to select a subset of the data by
     specifying multiple selection criteria.
 3) A ColorMap that allows the user to determine how points are colored by
     specifying multiple criteria.
@@ -26,8 +26,8 @@ import numpy as np
 pg.mkQApp()
 
 # Make up some tabular data with structure
-data = np.empty(1000, dtype=[('x_pos', float), ('y_pos', float), 
-                             ('count', int), ('amplitude', float), 
+data = np.empty(1000, dtype=[('x_pos', float), ('y_pos', float),
+                             ('count', int), ('amplitude', float),
                              ('decay', float), ('type', 'S10')])
 strings = ['Type-A', 'Type-B', 'Type-C', 'Type-D', 'Type-E']
 typeInds = np.random.randint(5, size=1000)
@@ -55,10 +55,10 @@ spw.setFields([
     ('y_pos', {'units': 'm'}),
     ('count', {}),
     ('amplitude', {'units': 'V'}),
-    ('decay', {'units': 's'}),    
+    ('decay', {'units': 's'}),
     ('type', {'mode': 'enum', 'values': strings}),
     ])
-    
+
 spw.setData(data)
 spw.show()
 

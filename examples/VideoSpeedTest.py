@@ -21,7 +21,7 @@ elif USE_PYQT5:
     import VideoTemplate_pyqt5 as VideoTemplate
 else:
     import VideoTemplate_pyqt as VideoTemplate
-    
+
 
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
@@ -69,7 +69,7 @@ def updateScale():
         for s in spins[2:]:
             s.setEnabled(False)
 ui.rgbLevelsCheck.toggled.connect(updateScale)
-    
+
 cache = {}
 def mkData():
     with pg.BusyCursor():
@@ -93,7 +93,7 @@ def mkData():
                 dt = np.float
                 loc = 1.0
                 scale = 0.1
-            
+
             if ui.rgbCheck.isChecked():
                 data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
                 data = pg.gaussianFilter(data, (0, 6, 6, 0))
@@ -104,7 +104,7 @@ def mkData():
                 data = np.clip(data, 0, mx)
             data = data.astype(dt)
             cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
-            
+
         data = cache[dtype]
         updateLUT()
         updateSize()
@@ -117,7 +117,7 @@ def updateSize():
     dtype = np.dtype(str(ui.dtypeCombo.currentText()))
     rgb = 3 if ui.rgbCheck.isChecked() else 1
     ui.sizeLabel.setText('%d MB' % (frames * width * height * rgb * dtype.itemsize / 1e6))
-    
+
 
 mkData()
 
@@ -143,14 +143,14 @@ def update():
         useLut = LUT
     else:
         useLut = None
-        
+
     downsample = ui.downsampleCheck.isChecked()
 
     if ui.scaleCheck.isChecked():
         if ui.rgbLevelsCheck.isChecked():
             useScale = [
-                [ui.minSpin1.value(), ui.maxSpin1.value()], 
-                [ui.minSpin2.value(), ui.maxSpin2.value()], 
+                [ui.minSpin1.value(), ui.maxSpin1.value()],
+                [ui.minSpin2.value(), ui.maxSpin2.value()],
                 [ui.minSpin3.value(), ui.maxSpin3.value()]]
         else:
             useScale = [ui.minSpin1.value(), ui.maxSpin1.value()]
@@ -167,7 +167,7 @@ def update():
         img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut, autoDownsample=downsample)
         ui.stack.setCurrentIndex(0)
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
-        
+
     ptr += 1
     now = ptime.time()
     dt = now - lastTime
@@ -182,7 +182,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

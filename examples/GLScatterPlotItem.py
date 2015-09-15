@@ -23,8 +23,8 @@ w.addItem(g)
 
 ##
 ##  First example is a set of points with pxMode=False
-##  These demonstrate the ability to have points with real size down to a very small scale 
-## 
+##  These demonstrate the ability to have points with real size down to a very small scale
+##
 pos = np.empty((53, 3))
 size = np.empty((53))
 color = np.empty((53, 4))
@@ -40,7 +40,7 @@ for i in range(3,53):
     color[i] = (0.0, 1.0, 0.0, 0.5)
     z *= 0.5
     d *= 2.0
-    
+
 sp1 = gl.GLScatterPlotItem(pos=pos, size=size, color=color, pxMode=False)
 sp1.translate(5,5,0)
 w.addItem(sp1)
@@ -89,7 +89,7 @@ def update():
     color[:,2] = np.clip(s ** 3, 0, 1)
     sp2.setData(color=color)
     phase -= 0.1
-    
+
     ## update surface positions and colors
     global sp3, d3, pos3
     z = -np.cos(d3*2+phase)
@@ -100,7 +100,7 @@ def update():
     color[:,1] = np.clip(z * 1.0, 0, 1)
     color[:,2] = np.clip(z ** 3, 0, 1)
     sp3.setData(pos=pos3, color=color)
-    
+
 t = QtCore.QTimer()
 t.timeout.connect(update)
 t.start(50)

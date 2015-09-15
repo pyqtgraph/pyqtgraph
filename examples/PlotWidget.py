@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Demonstrates use of PlotWidget class. This is little more than a 
+Demonstrates use of PlotWidget class. This is little more than a
 GraphicsView with a PlotItem placed in its center.
 """
 
@@ -53,7 +53,7 @@ def rand(n):
     data[int(n*0.18)] *= 20
     data *= 1e-12
     return data, np.arange(n, n+len(data)) / float(n)
-    
+
 
 def updateData():
     yd, xd = rand(10000)

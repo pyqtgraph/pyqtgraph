@@ -20,8 +20,8 @@ def mkQApp():
 
 class GraphicsWindow(GraphicsLayoutWidget):
     """
-    Convenience subclass of :class:`GraphicsLayoutWidget 
-    <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from 
+    Convenience subclass of :class:`GraphicsLayoutWidget
+    <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from
     the interactive python prompt.
     """
     def __init__(self, title=None, size=(800,600), **kargs):
@@ -31,7 +31,7 @@ class GraphicsWindow(GraphicsLayoutWidget):
         if title is not None:
             self.setWindowTitle(title)
         self.show()
-        
+
 
 class TabWindow(QtGui.QMainWindow):
     def __init__(self, title=None, size=(800,600)):
@@ -43,13 +43,13 @@ class TabWindow(QtGui.QMainWindow):
         if title is not None:
             self.setWindowTitle(title)
         self.show()
-        
+
     def __getattr__(self, attr):
         if hasattr(self.cw, attr):
             return getattr(self.cw, attr)
         else:
             raise NameError(attr)
-    
+
 
 class PlotWindow(PlotWidget):
     def __init__(self, title=None, **kargs):

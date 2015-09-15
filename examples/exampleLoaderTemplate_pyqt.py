@@ -103,4 +103,3 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Graphics System:", None))
         self.label.setText(_translate("Form", "Qt Library:", None))
         self.loadBtn.setText(_translate("Form", "Run Example", None))
-

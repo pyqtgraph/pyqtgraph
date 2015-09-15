@@ -16,4 +16,3 @@ for f in os.listdir(path):
 ver = sys.version_info[0]
 fh = open(os.path.join(path, 'pixmapData_%d.py' %ver), 'w')
 fh.write("import numpy as np; pixmapData=%s" % repr(pixmaps))
-    

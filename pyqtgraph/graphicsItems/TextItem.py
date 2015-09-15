@@ -5,7 +5,7 @@ from .. import functions as fn
 
 class TextItem(UIGraphicsItem):
     """
-    GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
+    GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox).
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
         """
@@ -22,11 +22,11 @@ class TextItem(UIGraphicsItem):
         *fill*          A brush to use when filling within the border
         ==============  =================================================================================
         """
-        
+
         ## not working yet
-        #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
+        #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's
                      #transformation will be ignored)
-                     
+
         self.anchor = Point(anchor)
         #self.angle = 0
         UIGraphicsItem.__init__(self)
@@ -45,8 +45,8 @@ class TextItem(UIGraphicsItem):
 
     def setText(self, text, color=(200,200,200)):
         """
-        Set the text and color of this item. 
-        
+        Set the text and color of this item.
+
         This method sets the plain text of the item; see also setHtml().
         """
         color = fn.mkColor(color)
@@ -55,72 +55,72 @@ class TextItem(UIGraphicsItem):
         self.updateText()
         #html = '<span style="color: #%s; text-align: center;">%s</span>' % (color, text)
         #self.setHtml(html)
-        
+
     def updateAnchor(self):
         pass
         #self.resetTransform()
         #self.translate(0, 20)
-        
+
     def setPlainText(self, *args):
         """
-        Set the plain text to be rendered by this item. 
-        
+        Set the plain text to be rendered by this item.
+
         See QtGui.QGraphicsTextItem.setPlainText().
         """
         self.textItem.setPlainText(*args)
         self.updateText()
-        
+
     def setHtml(self, *args):
         """
-        Set the HTML code to be rendered by this item. 
-        
+        Set the HTML code to be rendered by this item.
+
         See QtGui.QGraphicsTextItem.setHtml().
         """
         self.textItem.setHtml(*args)
         self.updateText()
-        
+
     def setTextWidth(self, *args):
         """
         Set the width of the text.
-        
+
         If the text requires more space than the width limit, then it will be
         wrapped into multiple lines.
-        
+
         See QtGui.QGraphicsTextItem.setTextWidth().
         """
         self.textItem.setTextWidth(*args)
         self.updateText()
-        
+
     def setFont(self, *args):
         """
-        Set the font for this text. 
-        
+        Set the font for this text.
+
         See QtGui.QGraphicsTextItem.setFont().
         """
         self.textItem.setFont(*args)
         self.updateText()
-        
+
     #def setAngle(self, angle):
         #self.angle = angle
         #self.updateText()
-        
-        
+
+
     def updateText(self):
-        
+
         ## Needed to maintain font size when rendering to image with increased resolution
         self.textItem.resetTransform()
         #self.textItem.rotate(self.angle)
         if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
             s = self._exportOpts['resolutionScale']
             self.textItem.scale(s, s)
-        
+
         #br = self.textItem.mapRectToParent(self.textItem.boundingRect())
         self.textItem.setPos(0,0)
         br = self.textItem.boundingRect()
         apos = self.textItem.mapToParent(Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
         #print br, apos
         self.textItem.setPos(-apos.x(), -apos.y())
-        
+
     #def textBoundingRect(self):
         ### return the bounds of the text box in device coordinates
         #pos = self.mapToDevice(QtCore.QPointF(0,0))
@@ -135,18 +135,16 @@ class TextItem(UIGraphicsItem):
 
     def boundingRect(self):
         return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
-        
+
     def paint(self, p, *args):
         tr = p.transform()
         if self.lastTransform is not None:
             if tr != self.lastTransform:
                 self.viewRangeChanged()
         self.lastTransform = tr
-        
+
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
             p.setPen(self.border)
             p.setBrush(self.fill)
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
-        
-        

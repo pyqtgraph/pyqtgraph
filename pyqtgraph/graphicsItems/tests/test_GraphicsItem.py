@@ -25,7 +25,7 @@ def test_getViewWidget_deleted():
     item = pg.InfiniteLine()
     view.addItem(item)
     assert item.getViewWidget() is view
-    
+
     # Arrange to have Qt automatically delete the view widget
     obj = pg.QtGui.QWidget()
     view.setParent(obj)
@@ -43,5 +43,3 @@ def test_getViewWidget_deleted():
     #view.addItem(item)
     #del view
     #gc.collect()
-    
-    

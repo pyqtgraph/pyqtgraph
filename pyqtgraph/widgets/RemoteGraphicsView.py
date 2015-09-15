@@ -13,9 +13,9 @@ class RemoteGraphicsView(QtGui.QWidget):
     """
     Replacement for GraphicsView that does all scene management and rendering on a remote process,
     while displaying on the local widget.
-    
+
     GraphicsItems must be created by proxy to the remote process.
-    
+
     """
     def __init__(self, parent=None, *args, **kwds):
         """
@@ -40,7 +40,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         rpgRemote = self._proc._import('pyqtgraph.widgets.RemoteGraphicsView')
         self._view = rpgRemote.Renderer(*args, **remoteKwds)
         self._view._setProxyOptions(deferGetattr=True)
-        
+
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.setMouseTracking(True)
@@ -50,24 +50,24 @@ class RemoteGraphicsView(QtGui.QWidget):
             self.shmtag = shmFileName
         else:
             self.shmFile = open(shmFileName, 'r')
-        
+
         self._view.sceneRendered.connect(mp.proxy(self.remoteSceneChanged)) #, callSync='off'))
                                                                             ## Note: we need synchronous signals
                                                                             ## even though there is no return value--
-                                                                            ## this informs the renderer that it is 
-                                                                            ## safe to begin rendering again. 
-        
+                                                                            ## this informs the renderer that it is
+                                                                            ## safe to begin rendering again.
+
         for method in ['scene', 'setCentralItem']:
             setattr(self, method, getattr(self._view, method))
-        
+
     def resizeEvent(self, ev):
         ret = QtGui.QWidget.resizeEvent(self, ev)
         self._view.resize(self.size(), _callSync='off')
         return ret
-        
+
     def sizeHint(self):
         return QtCore.QSize(*self._sizeHint)
-        
+
     def remoteSceneChanged(self, data):
         w, h, size, newfile = data
         #self._sizeHint = (whint, hhint)
@@ -84,14 +84,14 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._img = QtGui.QImage(data, w, h, QtGui.QImage.Format_ARGB32)
         self._img.data = data  # data must be kept alive or PySide 1.2.1 (and probably earlier) will crash.
         self.update()
-        
+
     def paintEvent(self, ev):
         if self._img is None:
             return
         p = QtGui.QPainter(self)
         p.drawImage(self.rect(), self._img, QtCore.QRect(0, 0, self._img.width(), self._img.height()))
         p.end()
-        
+
     def mousePressEvent(self, ev):
         self._view.mousePressEvent(int(ev.type()), ev.pos(), ev.globalPos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
         ev.accept()
@@ -106,25 +106,25 @@ class RemoteGraphicsView(QtGui.QWidget):
         self._view.mouseMoveEvent(int(ev.type()), ev.pos(), ev.globalPos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
         ev.accept()
         return QtGui.QWidget.mouseMoveEvent(self, ev)
-        
+
     def wheelEvent(self, ev):
         self._view.wheelEvent(ev.pos(), ev.globalPos(), ev.delta(), int(ev.buttons()), int(ev.modifiers()), int(ev.orientation()), _callSync='off')
         ev.accept()
         return QtGui.QWidget.wheelEvent(self, ev)
-    
+
     def keyEvent(self, ev):
         if self._view.keyEvent(int(ev.type()), int(ev.modifiers()), text, autorep, count):
             ev.accept()
         return QtGui.QWidget.keyEvent(self, ev)
-        
+
     def enterEvent(self, ev):
         self._view.enterEvent(int(ev.type()), _callSync='off')
         return QtGui.QWidget.enterEvent(self, ev)
-        
+
     def leaveEvent(self, ev):
         self._view.leaveEvent(int(ev.type()), _callSync='off')
         return QtGui.QWidget.leaveEvent(self, ev)
-        
+
     def remoteProcess(self):
         """Return the remote process handle. (see multiprocess.remoteproxy.RemoteEventHandler)"""
         return self._proc
@@ -136,9 +136,9 @@ class RemoteGraphicsView(QtGui.QWidget):
 
 class Renderer(GraphicsView):
     ## Created by the remote process to handle render requests
-    
+
     sceneRendered = QtCore.Signal(object)
-    
+
     def __init__(self, *args, **kwds):
         ## Create shared memory for rendered image
         #pg.dbg(namespace={'r': self})
@@ -151,14 +151,14 @@ class Renderer(GraphicsView):
             fd = self.shmFile.fileno()
             self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         atexit.register(self.close)
-        
+
         GraphicsView.__init__(self, *args, **kwds)
         self.scene().changed.connect(self.update)
         self.img = None
         self.renderTimer = QtCore.QTimer()
         self.renderTimer.timeout.connect(self.renderView)
         self.renderTimer.start(16)
-        
+
     def close(self):
         self.shm.close()
         if not sys.platform.startswith('win'):
@@ -169,17 +169,17 @@ class Renderer(GraphicsView):
             return self.shmtag
         else:
             return self.shmFile.name
-        
+
     def update(self):
         self.img = None
         return GraphicsView.update(self)
-        
+
     def resize(self, size):
         oldSize = self.size()
         GraphicsView.resize(self, size)
         self.resizeEvent(QtGui.QResizeEvent(size, oldSize))
         self.update()
-        
+
     def renderView(self):
         if self.img is None:
             ## make sure shm is large enough and get its address
@@ -195,7 +195,7 @@ class Renderer(GraphicsView):
                     self.shm = mmap.mmap(-1, size, self.shmtag)
                 else:
                     self.shm.resize(size)
-            
+
             ## render the scene directly to shared memory
             if USE_PYSIDE:
                 ch = ctypes.c_char.from_buffer(self.shm, 0)
@@ -251,7 +251,7 @@ class Renderer(GraphicsView):
         mods = QtCore.Qt.KeyboardModifiers(mods)
         GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
         return ev.accepted()
-        
+
     def enterEvent(self, typ):
         ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
         return GraphicsView.enterEvent(self, ev)
@@ -259,4 +259,3 @@ class Renderer(GraphicsView):
     def leaveEvent(self, typ):
         ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
         return GraphicsView.leaveEvent(self, ev)
-

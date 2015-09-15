@@ -216,4 +216,3 @@ man_pages = [
     ('index', 'pyqtgraph', 'pyqtgraph Documentation',
      ['Luke Campagnola'], 1)
 ]
-

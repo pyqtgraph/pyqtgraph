@@ -46,7 +46,7 @@ for y in np.linspace(-10, 10, 21):
 
 for o in optics:
     view.addItem(o)
-    
+
 t1 = Tracer(allRays, optics)
 
 
@@ -130,14 +130,14 @@ IROptics2 = [m1a, m2a, l3a, l4a, obja]
 
 for o in set(IROptics+IROptics2):
     view.addItem(o)
-    
+
 IRRays = []
 IRRays2 = []
 
 for dy in [-0.4, -0.15, 0, 0.15, 0.4]:
     IRRays.append(Ray(start=Point(-50, dy), dir=(1, 0), wl=780))
     IRRays2.append(Ray(start=Point(-50, dy+2*scany), dir=(1, 0), wl=780))
-    
+
 for r in set(IRRays+IRRays2):
     view.addItem(r)
 
@@ -154,7 +154,7 @@ def update():
         m2['angle'] = 135 + 1.5*np.sin(phase)
         m2a['angle'] = 135 + 1.5*np.sin(phase)
     phase += 0.2
-    
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(40)

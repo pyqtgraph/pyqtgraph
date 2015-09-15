@@ -64,11 +64,11 @@ if QT_LIB == PYSIDE:
                 return False
             else:
                 return True
-    
+
     VERSION_INFO = 'PySide ' + PySide.__version__
-    
+
     # Make a loadUiType function like PyQt has
-    
+
     # Credit:
     # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
@@ -76,13 +76,13 @@ if QT_LIB == PYSIDE:
         """Alternative to built-in StringIO needed to circumvent unicode/ascii issues"""
         def __init__(self):
             self.data = []
-        
+
         def write(self, data):
             self.data.append(data)
-            
+
         def getvalue(self):
             return ''.join(map(asUnicode, self.data)).encode('utf8')
-        
+
     def loadUiType(uiFile):
         """
         Pyside "loadUiType" command like PyQt4 has one, so we have to convert
@@ -98,11 +98,11 @@ if QT_LIB == PYSIDE:
         import pysideuic
         import xml.etree.ElementTree as xml
         #from io import StringIO
-        
+
         parsed = xml.parse(uiFile)
         widget_class = parsed.find('widget').get('class')
         form_class = parsed.find('class').text
-        
+
         with open(uiFile, 'r') as f:
             o = StringIO()
             frame = {}
@@ -136,7 +136,7 @@ elif QT_LIB == PYQT4:
     VERSION_INFO = 'PyQt4 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT5:
-    
+
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
     from PyQt5 import QtGui, QtCore, QtWidgets, Qt, uic
@@ -176,19 +176,19 @@ elif QT_LIB == PYQT5:
         self.setSectionResizeMode(mode)
     QtWidgets.QHeaderView.setResizeMode = setResizeMode
 
-    
+
     QtGui.QApplication = QtWidgets.QApplication
     QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
     QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
     QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
 
     QtGui.QApplication.setGraphicsSystem = None
-    
+
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
         if o.startswith('Q'):
             setattr(QtGui, o, getattr(QtWidgets,o) )
-    
+
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 # Common to PyQt4 and 5
@@ -199,9 +199,9 @@ if QT_LIB.startswith('PyQt'):
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
-    
 
-    
+
+
 ## Make sure we have Qt >= 4.7
 versionReq = [4, 7]
 USE_PYSIDE = QT_LIB == PYSIDE

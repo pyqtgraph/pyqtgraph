@@ -17,7 +17,7 @@ class Downsample(CtrlNode):
     uiTemplate = [
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
-    
+
     def processData(self, data):
         return functions.downsample(data, self.ctrls['n'].value(), axis=0)
 
@@ -28,7 +28,7 @@ class Subsample(CtrlNode):
     uiTemplate = [
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
-    
+
     def processData(self, data):
         return data[::self.ctrls['n'].value()]
 
@@ -42,7 +42,7 @@ class Bessel(CtrlNode):
         ('order', 'intSpin', {'value': 4, 'min': 1, 'max': 16}),
         ('bidir', 'check', {'checked': True})
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         if s['band'] == 'lowpass':
@@ -63,7 +63,7 @@ class Butterworth(CtrlNode):
         ('gStop', 'spin', {'value': 20.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
         ('bidir', 'check', {'checked': True})
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         if s['band'] == 'lowpass':
@@ -73,7 +73,7 @@ class Butterworth(CtrlNode):
         ret = functions.butterworthFilter(data, bidir=s['bidir'], btype=mode, wPass=s['wPass'], wStop=s['wStop'], gPass=s['gPass'], gStop=s['gStop'])
         return ret
 
-        
+
 class ButterworthNotch(CtrlNode):
     """Butterworth notch filter"""
     nodeName = 'ButterworthNotchFilter'
@@ -88,14 +88,14 @@ class ButterworthNotch(CtrlNode):
         ('high_gStop', 'spin', {'value': 20.0, 'step': 1, 'dec': True, 'range': [0.0, None], 'suffix': 'dB', 'siPrefix': True}),
         ('bidir', 'check', {'checked': True})
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
-        
+
         low = functions.butterworthFilter(data, bidir=s['bidir'], btype='low', wPass=s['low_wPass'], wStop=s['low_wStop'], gPass=s['low_gPass'], gStop=s['low_gStop'])
         high = functions.butterworthFilter(data, bidir=s['bidir'], btype='high', wPass=s['high_wPass'], wStop=s['high_wStop'], gPass=s['high_gPass'], gStop=s['high_gStop'])
         return low + high
-    
+
 
 class Mean(CtrlNode):
     """Filters data by taking the mean of a sliding window"""
@@ -103,7 +103,7 @@ class Mean(CtrlNode):
     uiTemplate = [
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
-    
+
     @metaArrayWrapper
     def processData(self, data):
         n = self.ctrls['n'].value()
@@ -116,7 +116,7 @@ class Median(CtrlNode):
     uiTemplate = [
         ('n', 'intSpin', {'min': 1, 'max': 1000000})
     ]
-    
+
     @metaArrayWrapper
     def processData(self, data):
         try:
@@ -131,7 +131,7 @@ class Mode(CtrlNode):
     uiTemplate = [
         ('window', 'intSpin', {'value': 500, 'min': 1, 'max': 1000000}),
     ]
-    
+
     @metaArrayWrapper
     def processData(self, data):
         return functions.modeFilter(data, self.ctrls['window'].value())
@@ -144,7 +144,7 @@ class Denoise(CtrlNode):
         ('radius', 'intSpin', {'value': 2, 'min': 0, 'max': 1000000}),
         ('threshold', 'doubleSpin', {'value': 4.0, 'min': 0, 'max': 1000})
     ]
-    
+
     def processData(self, data):
         #print "DENOISE"
         s = self.stateGroup.state()
@@ -157,7 +157,7 @@ class Gaussian(CtrlNode):
     uiTemplate = [
         ('sigma', 'doubleSpin', {'min': 0, 'max': 1000000})
     ]
-    
+
     @metaArrayWrapper
     def processData(self, data):
         try:
@@ -170,7 +170,7 @@ class Gaussian(CtrlNode):
 class Derivative(CtrlNode):
     """Returns the pointwise derivative of the input"""
     nodeName = 'DerivativeFilter'
-    
+
     def processData(self, data):
         if hasattr(data, 'implements') and data.implements('MetaArray'):
             info = data.infoCopy()
@@ -184,7 +184,7 @@ class Derivative(CtrlNode):
 class Integral(CtrlNode):
     """Returns the pointwise integral of the input"""
     nodeName = 'IntegralFilter'
-    
+
     @metaArrayWrapper
     def processData(self, data):
         data[1:] += data[:-1]
@@ -194,7 +194,7 @@ class Integral(CtrlNode):
 class Detrend(CtrlNode):
     """Removes linear trend from the data"""
     nodeName = 'DetrendFilter'
-    
+
     @metaArrayWrapper
     def processData(self, data):
         try:
@@ -206,39 +206,39 @@ class Detrend(CtrlNode):
 class RemoveBaseline(PlottingCtrlNode):
     """Remove an arbitrary, graphically defined baseline from the data."""
     nodeName = 'RemoveBaseline'
-    
+
     def __init__(self, name):
         ## define inputs and outputs (one output needs to be a plot)
         PlottingCtrlNode.__init__(self, name)
         self.line = PolyLineROI([[0,0],[1,0]])
         self.line.sigRegionChanged.connect(self.changed)
-        
+
         ## create a PolyLineROI, add it to a plot -- actually, I think we want to do this after the node is connected to a plot (look at EventDetection.ThresholdEvents node for ideas), and possible after there is data. We will need to update the end positions of the line each time the input data changes
         #self.line = None ## will become a PolyLineROI
-        
+
     def connectToPlot(self, node):
         """Define what happens when the node is connected to a plot"""
 
         if node.plot is None:
             return
         node.getPlot().addItem(self.line)
-       
+
     def disconnectFromPlot(self, plot):
         """Define what happens when the node is disconnected from a plot"""
-        plot.removeItem(self.line)    
-    
+        plot.removeItem(self.line)
+
     def processData(self, data):
         ## get array of baseline (from PolyLineROI)
         h0 = self.line.getHandles()[0]
         h1 = self.line.getHandles()[-1]
-        
+
         timeVals = data.xvals(0)
         h0.setPos(timeVals[0], h0.pos()[1])
-        h1.setPos(timeVals[-1], h1.pos()[1])      
-        
+        h1.setPos(timeVals[-1], h1.pos()[1])
+
         pts = self.line.listPoints() ## lists line handles in same coordinates as data
         pts, indices = self.adjustXPositions(pts, timeVals) ## maxe sure x positions match x positions of data points
-        
+
         ## construct an array that represents the baseline
         arr = np.zeros(len(data), dtype=float)
         n = 1
@@ -250,13 +250,13 @@ class RemoveBaseline(PlottingCtrlNode):
             y2 = pts[i+1].y()
             m = (y2-y1)/(x2-x1)
             b = y1
-            
+
             times = timeVals[(timeVals > x1)*(timeVals <= x2)]
             arr[n:n+len(times)] = (m*(times-times[0]))+b
             n += len(times)
-                
+
         return data - arr ## subract baseline from data
-        
+
     def adjustXPositions(self, pts, data):
         """Return a list of Point() where the x position is set to the nearest x value in *data* for each point in *pts*."""
         points = []
@@ -265,7 +265,7 @@ class RemoveBaseline(PlottingCtrlNode):
             x = np.argwhere(abs(data - p.x()) == abs(data - p.x()).min())
             points.append(Point(data[x], p.y()))
             timeIndices.append(x)
-            
+
         return points, timeIndices
 
 
@@ -276,7 +276,7 @@ class AdaptiveDetrend(CtrlNode):
     uiTemplate = [
         ('threshold', 'doubleSpin', {'value': 3.0, 'min': 0, 'max': 1000000})
     ]
-    
+
     def processData(self, data):
         return functions.adaptiveDetrend(data, threshold=self.ctrls['threshold'].value())
 
@@ -288,7 +288,7 @@ class HistogramDetrend(CtrlNode):
         ('numBins', 'intSpin', {'value': 50, 'min': 3, 'max': 1000000}),
         ('offsetOnly', 'check', {'checked': False}),
     ]
-    
+
     def processData(self, data):
         s = self.stateGroup.state()
         #ws = self.ctrls['windowSize'].value()
@@ -297,7 +297,7 @@ class HistogramDetrend(CtrlNode):
         return functions.histogramDetrend(data, window=s['windowSize'], bins=s['numBins'], offsetOnly=s['offsetOnly'])
 
 
-    
+
 class RemovePeriodic(CtrlNode):
     nodeName = 'RemovePeriodic'
     uiTemplate = [
@@ -311,19 +311,19 @@ class RemovePeriodic(CtrlNode):
     def processData(self, data):
         times = data.xvals('Time')
         dt = times[1]-times[0]
-        
+
         data1 = data.asarray()
         ft = np.fft.fft(data1)
-        
+
         ## determine frequencies in fft data
         df = 1.0 / (len(data1) * dt)
         freqs = np.linspace(0.0, (len(ft)-1) * df, len(ft))
-        
+
         ## flatten spikes at f0 and harmonics
         f0 = self.ctrls['f0'].value()
         for i in xrange(1, self.ctrls['harmonics'].value()+2):
             f = f0 * i # target frequency
-            
+
             ## determine index range to check for this frequency
             ind1 = int(np.floor(f / df))
             ind2 = int(np.ceil(f / df)) + (self.ctrls['samples'].value()-1)
@@ -336,11 +336,8 @@ class RemovePeriodic(CtrlNode):
                 im = mag * np.sin(phase)
                 ft[j] = re + im*1j
                 ft[len(ft)-j] = re - im*1j
-                
+
         data2 = np.fft.ifft(ft).real
-        
+
         ma = metaarray.MetaArray(data2, info=data.infoCopy())
         return ma
-        
-        
-        

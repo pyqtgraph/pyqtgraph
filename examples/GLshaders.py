@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Demonstration of some of the shader programs included with pyqtgraph that can be 
+Demonstration of some of the shader programs included with pyqtgraph that can be
 used to affect the appearance of a surface.
 """
 
@@ -72,17 +72,17 @@ w.addItem(m6)
     #a0 = 1
     ##ps = (1./81.) * (2./np.pi)**0.5 * (1./a0)**(3/2) * (6 - r/a0) * (r/a0) * np.exp(-r/(3*a0)) * np.cos(th)
     #ps = (1./81.) * 1./(6.*np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * np.exp(-r/(3*a0)) * (3 * np.cos(th)**2 - 1)
-    
+
     #return ps
-    
-    ##return ((1./81.) * (1./np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * (r/a0) * np.exp(-r/(3*a0)) * np.sin(th) * np.cos(th) * np.exp(2 * 1j * phi))**2 
+
+    ##return ((1./81.) * (1./np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * (r/a0) * np.exp(-r/(3*a0)) * np.sin(th) * np.cos(th) * np.exp(2 * 1j * phi))**2
 
 
 #print("Generating scalar field..")
 #data = np.abs(np.fromfunction(psi, (50,50,100)))
 
 
-##data = np.fromfunction(lambda i,j,k: np.sin(0.2*((i-25)**2+(j-15)**2+k**2)**0.5), (50,50,50)); 
+##data = np.fromfunction(lambda i,j,k: np.sin(0.2*((i-25)**2+(j-15)**2+k**2)**0.5), (50,50,50));
 #print("Generating isosurface..")
 #verts = pg.isosurface(data, data.max()/4.)
 
@@ -100,7 +100,7 @@ w.addItem(m6)
 
 #w.addItem(m2)
 #m2.translate(-25, -25, -50)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

@@ -12,5 +12,3 @@ class GLTest(QtOpenGL.QGLWidget):
         print("Extensions: " + glGetString(GL_EXTENSIONS))
 
 GLTest()
-
-

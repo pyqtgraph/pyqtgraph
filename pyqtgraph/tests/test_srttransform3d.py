@@ -26,7 +26,7 @@ def testMatrix():
 
     tr2 = pg.Transform3D(tr)
     assert np.all(tr.matrix() == tr2.matrix())
-    
+
     # This is the most important test:
     # The transition from Transform3D to SRTTransform3D is a tricky one.
     tr3 = pg.SRTTransform3D(tr2)
@@ -35,5 +35,3 @@ def testMatrix():
     assert_array_almost_equal(tr3.getRotation()[1], tr.getRotation()[1])
     assert_array_almost_equal(tr3.getScale(), tr.getScale())
     assert_array_almost_equal(tr3.getTranslation(), tr.getTranslation())
-
-

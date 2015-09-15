@@ -22,7 +22,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         cancelText     Text to display on cancel button, or None to disable it.
         minimum
         maximum
-        parent       
+        parent
         wait           Length of time (im ms) to wait before displaying dialog
         busyCursor     If True, show busy cursor until dialog finishes
         disable        If True, the progress dialog will not be displayed
@@ -30,7 +30,7 @@ class ProgressDialog(QtGui.QProgressDialog):
                        If ProgressDialog is entered from a non-gui thread, it will
                        always be disabled.
         ============== ================================================================
-        """    
+        """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
         if self.disabled:
@@ -40,16 +40,16 @@ class ProgressDialog(QtGui.QProgressDialog):
         if cancelText is None:
             cancelText = ''
             noCancel = True
-            
+
         self.busyCursor = busyCursor
-            
+
         QtGui.QProgressDialog.__init__(self, labelText, cancelText, minimum, maximum, parent)
         self.setMinimumDuration(wait)
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setValue(self.minimum())
         if noCancel:
             self.setCancelButton(None)
-        
+
 
     def __enter__(self):
         if self.disabled:
@@ -64,7 +64,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.busyCursor:
             QtGui.QApplication.restoreOverrideCursor()
         self.setValue(self.maximum())
-        
+
     def __iadd__(self, val):
         """Use inplace-addition operator for easy incrementing."""
         if self.disabled:
@@ -74,17 +74,17 @@ class ProgressDialog(QtGui.QProgressDialog):
 
 
     ## wrap all other functions to make sure they aren't being called from non-gui threads
-    
+
     def setValue(self, val):
         if self.disabled:
             return
         QtGui.QProgressDialog.setValue(self, val)
-        
+
     def setLabelText(self, val):
         if self.disabled:
             return
         QtGui.QProgressDialog.setLabelText(self, val)
-    
+
     def setMaximum(self, val):
         if self.disabled:
             return
@@ -94,7 +94,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return
         QtGui.QProgressDialog.setMinimum(self, val)
-        
+
     def wasCanceled(self):
         if self.disabled:
             return False
@@ -109,4 +109,3 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return 0
         return QtGui.QProgressDialog.minimum(self)
-        

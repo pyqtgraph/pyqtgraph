@@ -8,13 +8,13 @@ elif QT_LIB == 'PySide':
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-    
-import weakref 
+
+import weakref
 
 class ViewBoxMenu(QtGui.QMenu):
     def __init__(self, view):
         QtGui.QMenu.__init__(self)
-        
+
         self.view = weakref.ref(view)  ## keep weakref to view to avoid circular reference (don't know why, but this prevents the ViewBox from being collected)
         self.valid = False  ## tells us whether the ui needs to be updated
         self.viewMap = weakref.WeakValueDictionary()  ## weakrefs to all views listed in the link combos
@@ -23,7 +23,7 @@ class ViewBoxMenu(QtGui.QMenu):
         self.viewAll = QtGui.QAction("View All", self)
         self.viewAll.triggered.connect(self.autoRange)
         self.addAction(self.viewAll)
-        
+
         self.axes = []
         self.ctrl = []
         self.widgetGroups = []
@@ -42,7 +42,7 @@ class ViewBoxMenu(QtGui.QMenu):
             self.ctrl.append(ui)
             wg = WidgetGroup(w)
             self.widgetGroups.append(w)
-            
+
             connects = [
                 (ui.mouseCheck.toggled, 'MouseToggled'),
                 (ui.manualRadio.clicked, 'ManualClicked'),
@@ -54,7 +54,7 @@ class ViewBoxMenu(QtGui.QMenu):
                 (ui.autoPanCheck.toggled, 'AutoPanToggled'),
                 (ui.visibleOnlyCheck.toggled, 'VisibleOnlyToggled')
             ]
-            
+
             for sig, fn in connects:
                 sig.connect(getattr(self, axis.lower()+fn))
 
@@ -64,11 +64,11 @@ class ViewBoxMenu(QtGui.QMenu):
         #self.export = QtGui.QMenu("Export")
         #self.setExportMethods(view.exportMethods)
         #self.addMenu(self.export)
-        
+
         self.leftMenu = QtGui.QMenu("Mouse Mode")
         group = QtGui.QActionGroup(self)
-        
-        # This does not work! QAction _must_ be initialized with a permanent 
+
+        # This does not work! QAction _must_ be initialized with a permanent
         # object as the parent or else it may be collected prematurely.
         #pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
         #zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
@@ -78,16 +78,16 @@ class ViewBoxMenu(QtGui.QMenu):
         self.leftMenu.addAction(zoom)
         pan.triggered.connect(self.set3ButtonMode)
         zoom.triggered.connect(self.set1ButtonMode)
-        
+
         pan.setCheckable(True)
         zoom.setCheckable(True)
         pan.setActionGroup(group)
         zoom.setActionGroup(group)
         self.mouseModes = [pan, zoom]
         self.addMenu(self.leftMenu)
-        
+
         self.view().sigStateChanged.connect(self.viewStateChanged)
-        
+
         self.updateState()
 
     def setExportMethods(self, methods):
@@ -95,22 +95,22 @@ class ViewBoxMenu(QtGui.QMenu):
         self.export.clear()
         for opt, fn in methods.items():
             self.export.addAction(opt, self.exportMethod)
-        
+
 
     def viewStateChanged(self):
         self.valid = False
         if self.ctrl[0].minText.isVisible() or self.ctrl[1].minText.isVisible():
             self.updateState()
-        
+
     def updateState(self):
         ## Something about the viewbox has changed; update the menu GUI
-        
+
         state = self.view().getState(copy=False)
         if state['mouseMode'] == ViewBox.PanMode:
             self.mouseModes[0].setChecked(True)
         else:
             self.mouseModes[1].setChecked(True)
-            
+
         for i in [0,1]:  # x, y
             tr = state['targetRange'][i]
             self.ctrl[i].minText.setText("%0.5g" % tr[0])
@@ -122,7 +122,7 @@ class ViewBoxMenu(QtGui.QMenu):
             else:
                 self.ctrl[i].manualRadio.setChecked(True)
             self.ctrl[i].mouseCheck.setChecked(state['mouseEnabled'][i])
-            
+
             ## Update combo to show currently linked view
             c = self.ctrl[i].linkCombo
             c.blockSignals(True)
@@ -130,27 +130,27 @@ class ViewBoxMenu(QtGui.QMenu):
                 view = state['linkedViews'][i]  ## will always be string or None
                 if view is None:
                     view = ''
-                    
+
                 ind = c.findText(view)
-                    
+
                 if ind == -1:
                     ind = 0
                 c.setCurrentIndex(ind)
             finally:
                 c.blockSignals(False)
-            
+
             self.ctrl[i].autoPanCheck.setChecked(state['autoPan'][i])
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
             xy = ['x', 'y'][i]
             self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
-        
+
         self.valid = True
-        
+
     def popup(self, *args):
         if not self.valid:
             self.updateState()
         QtGui.QMenu.popup(self, *args)
-        
+
     def autoRange(self):
         self.view().autoRange()  ## don't let signal call this directly--it'll add an unwanted argument
 
@@ -159,7 +159,7 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def xManualClicked(self):
         self.view().enableAutoRange(ViewBox.XAxis, False)
-        
+
     def xMinTextChanged(self):
         self.ctrl[0].manualRadio.setChecked(True)
         self.view().setXRange(float(self.ctrl[0].minText.text()), float(self.ctrl[0].maxText.text()), padding=0)
@@ -167,11 +167,11 @@ class ViewBoxMenu(QtGui.QMenu):
     def xMaxTextChanged(self):
         self.ctrl[0].manualRadio.setChecked(True)
         self.view().setXRange(float(self.ctrl[0].minText.text()), float(self.ctrl[0].maxText.text()), padding=0)
-        
+
     def xAutoClicked(self):
         val = self.ctrl[0].autoPercentSpin.value() * 0.01
         self.view().enableAutoRange(ViewBox.XAxis, val)
-        
+
     def xAutoSpinChanged(self, val):
         self.ctrl[0].autoRadio.setChecked(True)
         self.view().enableAutoRange(ViewBox.XAxis, val*0.01)
@@ -181,7 +181,7 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def xAutoPanToggled(self, b):
         self.view().setAutoPan(x=b)
-    
+
     def xVisibleOnlyToggled(self, b):
         self.view().setAutoVisible(x=b)
 
@@ -191,19 +191,19 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def yManualClicked(self):
         self.view().enableAutoRange(ViewBox.YAxis, False)
-        
+
     def yMinTextChanged(self):
         self.ctrl[1].manualRadio.setChecked(True)
         self.view().setYRange(float(self.ctrl[1].minText.text()), float(self.ctrl[1].maxText.text()), padding=0)
-        
+
     def yMaxTextChanged(self):
         self.ctrl[1].manualRadio.setChecked(True)
         self.view().setYRange(float(self.ctrl[1].minText.text()), float(self.ctrl[1].maxText.text()), padding=0)
-        
+
     def yAutoClicked(self):
         val = self.ctrl[1].autoPercentSpin.value() * 0.01
         self.view().enableAutoRange(ViewBox.YAxis, val)
-        
+
     def yAutoSpinChanged(self, val):
         self.ctrl[1].autoRadio.setChecked(True)
         self.view().enableAutoRange(ViewBox.YAxis, val*0.01)
@@ -213,7 +213,7 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def yAutoPanToggled(self, b):
         self.view().setAutoPan(y=b)
-    
+
     def yVisibleOnlyToggled(self, b):
         self.view().setAutoVisible(y=b)
 
@@ -229,14 +229,14 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def set3ButtonMode(self):
         self.view().setLeftButtonAction('pan')
-        
+
     def set1ButtonMode(self):
         self.view().setLeftButtonAction('rect')
-        
+
     def setViewList(self, views):
         names = ['']
         self.viewMap.clear()
-        
+
         ## generate list of views to show in the link combo
         for v in views:
             name = v.name
@@ -244,7 +244,7 @@ class ViewBoxMenu(QtGui.QMenu):
                 continue
             names.append(name)
             self.viewMap[name] = v
-            
+
         for i in [0,1]:
             c = self.ctrl[i].linkCombo
             current = asUnicode(c.currentText())
@@ -259,11 +259,9 @@ class ViewBoxMenu(QtGui.QMenu):
                         c.setCurrentIndex(c.count()-1)
             finally:
                 c.blockSignals(False)
-                
+
             if changed:
                 c.setCurrentIndex(0)
                 c.currentIndexChanged.emit(c.currentIndex())
-        
+
 from .ViewBox import ViewBox
-        
-    

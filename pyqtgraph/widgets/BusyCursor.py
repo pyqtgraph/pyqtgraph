@@ -21,4 +21,3 @@ class BusyCursor(object):
         BusyCursor.active.pop(-1)
         if len(BusyCursor.active) == 0:
             QtGui.QApplication.restoreOverrideCursor()
-        

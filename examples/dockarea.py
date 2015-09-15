@@ -4,11 +4,11 @@ This example demonstrates the use of pyqtgraph's dock widget system.
 
 The dockarea system allows the design of user interfaces which can be rearranged by
 the user at runtime. Docks can be moved, resized, stacked, and torn out of the main
-window. This is similar in principle to the docking system built into Qt, but 
-offers a more deterministic dock placement API (in Qt it is very difficult to 
-programatically generate complex dock arrangements). Additionally, Qt's docks are 
-designed to be used as small panels around the outer edge of a window. Pyqtgraph's 
-docks were created with the notion that the entire window (or any portion of it) 
+window. This is similar in principle to the docking system built into Qt, but
+offers a more deterministic dock placement API (in Qt it is very difficult to
+programatically generate complex dock arrangements). Additionally, Qt's docks are
+designed to be used as small panels around the outer edge of a window. Pyqtgraph's
+docks were created with the notion that the entire window (or any portion of it)
 would consist of dockable components.
 
 """
@@ -57,9 +57,9 @@ area.moveDock(d5, 'top', d2)     ## move d5 to top edge of d2
 
 ## first dock gets save/restore buttons
 w1 = pg.LayoutWidget()
-label = QtGui.QLabel(""" -- DockArea Example -- 
+label = QtGui.QLabel(""" -- DockArea Example --
 This window has 6 Dock widgets in it. Each dock can be dragged
-by its title bar to occupy a different space within the window 
+by its title bar to occupy a different space within the window
 but note that one dock has its title bar hidden). Additionally,
 the borders between docks may be dragged to resize. Docks that are dragged on top
 of one another are stacked in a tabbed layout. Double-click a dock title

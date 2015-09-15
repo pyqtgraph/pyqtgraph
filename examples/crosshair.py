@@ -1,5 +1,5 @@
 """
-Demonstrates some customized mouse interaction by drawing a crosshair that follows 
+Demonstrates some customized mouse interaction by drawing a crosshair that follows
 the mouse.
 
 
@@ -22,7 +22,7 @@ p2 = win.addPlot(row=2, col=0)
 
 region = pg.LinearRegionItem()
 region.setZValue(10)
-# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this 
+# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this
 # item when doing auto-range calculations.
 p2.addItem(region, ignoreBounds=True)
 
@@ -43,7 +43,7 @@ p2.plot(data1, pen="w")
 def update():
     region.setZValue(10)
     minX, maxX = region.getRegion()
-    p1.setXRange(minX, maxX, padding=0)    
+    p1.setXRange(minX, maxX, padding=0)
 
 region.sigRegionChanged.connect(update)
 

@@ -35,10 +35,10 @@ def psi(i, j, k, offset=(25, 25, 50)):
     a0 = 1
     #ps = (1./81.) * (2./np.pi)**0.5 * (1./a0)**(3/2) * (6 - r/a0) * (r/a0) * np.exp(-r/(3*a0)) * np.cos(th)
     ps = (1./81.) * 1./(6.*np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * np.exp(-r/(3*a0)) * (3 * np.cos(th)**2 - 1)
-    
+
     return ps
-    
-    #return ((1./81.) * (1./np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * (r/a0) * np.exp(-r/(3*a0)) * np.sin(th) * np.cos(th) * np.exp(2 * 1j * phi))**2 
+
+    #return ((1./81.) * (1./np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * (r/a0) * np.exp(-r/(3*a0)) * np.sin(th) * np.cos(th) * np.exp(2 * 1j * phi))**2
 
 
 print("Generating scalar field..")
@@ -65,7 +65,7 @@ m2.setGLOptions('additive')
 
 w.addItem(m2)
 m2.translate(-25, -25, -50)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

@@ -8,4 +8,3 @@ from .HDF5Exporter import *
 
 def listExporters():
     return Exporter.Exporters[:]
-

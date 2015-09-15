@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-configfile.py - Human-readable text configuration file library 
+configfile.py - Human-readable text configuration file library
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 
@@ -27,7 +27,7 @@ class ParseError(Exception):
         #self.message = message
         self.fileName = fileName
         Exception.__init__(self, message)
-        
+
     def __str__(self):
         if self.fileName is None:
             msg = "Error parsing string at line %d:\n" % self.lineNum
@@ -36,14 +36,14 @@ class ParseError(Exception):
         msg += "%s\n%s" % (self.line, self.message)
         return msg
         #raise Exception()
-        
+
 
 def writeConfigFile(data, fname):
     s = genString(data)
     fd = open(fname, 'w')
     fd.write(s)
     fd.close()
-    
+
 def readConfigFile(fname):
     #cwd = os.getcwd()
     global GLOBAL_PATH
@@ -53,7 +53,7 @@ def readConfigFile(fname):
             fname = fname2
 
     GLOBAL_PATH = os.path.dirname(os.path.abspath(fname))
-        
+
     try:
         #os.chdir(newDir)  ## bad.
         fd = open(fname)
@@ -95,30 +95,30 @@ def genString(data, indent=''):
         else:
             s += indent + sk + ': ' + repr(data[k]) + '\n'
     return s
-    
+
 def parseString(lines, start=0):
-    
+
     data = OrderedDict()
     if isinstance(lines, basestring):
         lines = lines.split('\n')
         lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
-        
+
     indent = measureIndent(lines[start])
     ln = start - 1
-    
+
     try:
         while True:
             ln += 1
             #print ln
             if ln >= len(lines):
                 break
-            
+
             l = lines[ln]
-            
+
             ## Skip blank lines or lines starting with #
             if re.match(r'\s*#', l) or not re.search(r'\S', l):
                 continue
-            
+
             ## Measure line indentation, make sure it is correct for this level
             lineInd = measureIndent(l)
             if lineInd < indent:
@@ -127,15 +127,15 @@ def parseString(lines, start=0):
             if lineInd > indent:
                 #print lineInd, indent
                 raise ParseError('Indentation is incorrect. Expected %d, got %d' % (indent, lineInd), ln+1, l)
-            
-            
+
+
             if ':' not in l:
                 raise ParseError('Missing colon', ln+1, l)
-            
+
             (k, p, v) = l.partition(':')
             k = k.strip()
             v = v.strip()
-            
+
             ## set up local variables to use for eval
             local = units.allUnits.copy()
             local['OrderedDict'] = OrderedDict
@@ -145,12 +145,12 @@ def parseString(lines, start=0):
             local['ColorMap'] = ColorMap
             # Needed for reconstructing numpy arrays
             local['array'] = numpy.array
-            for dtype in ['int8', 'uint8', 
+            for dtype in ['int8', 'uint8',
                           'int16', 'uint16', 'float16',
                           'int32', 'uint32', 'float32',
                           'int64', 'uint64', 'float64']:
                 local[dtype] = getattr(numpy, dtype)
-                
+
             if len(k) < 1:
                 raise ParseError('Missing name preceding colon', ln+1, l)
             if k[0] == '(' and k[-1] == ')':  ## If the key looks like a tuple, try evaluating it.
@@ -182,15 +182,15 @@ def parseString(lines, start=0):
         raise ParseError("%s: %s" % (ex.__class__.__name__, str(ex)), ln+1, l)
     #print "Returning shallower..", ln+1
     return (ln, data)
-    
+
 def measureIndent(s):
     n = 0
     while n < len(s) and s[n] == ' ':
         n += 1
     return n
-    
-    
-    
+
+
+
 if __name__ == '__main__':
     import tempfile
     fn = tempfile.mktemp()

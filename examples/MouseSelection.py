@@ -16,7 +16,7 @@ curves = [
     pg.PlotCurveItem(y=np.sin(np.linspace(1, 21, 1000)), pen='g', clickable=True),
     pg.PlotCurveItem(y=np.sin(np.linspace(2, 22, 1000)), pen='b', clickable=True),
     ]
-              
+
 def plotClicked(curve):
     global curves
     for i,c in enumerate(curves):
@@ -24,8 +24,8 @@ def plotClicked(curve):
             c.setPen('rgb'[i], width=3)
         else:
             c.setPen('rgb'[i], width=1)
-            
-    
+
+
 for c in curves:
     win.addItem(c)
     c.sigClicked.connect(plotClicked)

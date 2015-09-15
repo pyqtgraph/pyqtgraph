@@ -5,12 +5,12 @@ import traceback
 class Mutex(QtCore.QMutex):
     """
     Subclass of QMutex that provides useful debugging information during
-    deadlocks--tracebacks are printed for both the code location that is 
+    deadlocks--tracebacks are printed for both the code location that is
     attempting to lock the mutex as well as the location that has already
     acquired the lock.
-    
+
     Also provides __enter__ and __exit__ methods for use in "with" statements.
-    """    
+    """
     def __init__(self, *args, **kargs):
         if kargs.get('recursive', False):
             args = (QtCore.QMutex.Recursive,)
@@ -36,7 +36,7 @@ class Mutex(QtCore.QMutex):
             finally:
                 self.l.unlock()
         return locked
-        
+
     def lock(self, id=None):
         c = 0
         waitTime = 5000  # in ms
@@ -47,7 +47,7 @@ class Mutex(QtCore.QMutex):
             if self.debug:
                 self.l.lock()
                 try:
-                    print("Waiting for mutex lock (%0.1f sec). Traceback follows:" 
+                    print("Waiting for mutex lock (%0.1f sec). Traceback follows:"
                           % (c*waitTime/1000.))
                     traceback.print_stack()
                     if len(self.tb) > 0:

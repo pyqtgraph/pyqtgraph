@@ -20,17 +20,17 @@ if not hasattr(sys, 'frozen'):
                 sys.path.insert(0, p)
 
 ## should force example to use PySide instead of PyQt
-if 'pyside' in sys.argv:  
+if 'pyside' in sys.argv:
     from PySide import QtGui
-elif 'pyqt' in sys.argv: 
+elif 'pyqt' in sys.argv:
     from PyQt4 import QtGui
-elif 'pyqt5' in sys.argv: 
+elif 'pyqt5' in sys.argv:
     from PyQt5 import QtGui
 else:
     from pyqtgraph.Qt import QtGui
 
-import pyqtgraph as pg    
-    
+import pyqtgraph as pg
+
 ## Force use of a specific graphics system
 use_gs = 'default'
 for gs in ['raster', 'native', 'opengl']:
@@ -41,7 +41,7 @@ for gs in ['raster', 'native', 'opengl']:
 
 print("Using %s (%s graphics system)" % (pg.Qt.QT_LIB, use_gs))
 
-## Enable fault handling to give more helpful error messages on crash. 
+## Enable fault handling to give more helpful error messages on crash.
 ## Only available in python 3.3+
 try:
     import faulthandler

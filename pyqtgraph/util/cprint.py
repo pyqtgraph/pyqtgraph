@@ -98,5 +98,3 @@ def cout(*args):
 def cerr(*args):
     """Shorthand for cprint('stderr', ...)"""
     cprint('stderr', *args)
-
-

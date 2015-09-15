@@ -9,7 +9,7 @@ class UniOpNode(Node):
             'In': {'io': 'in'},
             'Out': {'io': 'out', 'bypass': 'In'}
         })
-        
+
     def process(self, **args):
         return {'Out': getattr(args['In'], self.fn)()}
 
@@ -22,7 +22,7 @@ class BinOpNode(Node):
             'B': {'io': 'in'},
             'Out': {'io': 'out', 'bypass': 'A'}
         })
-        
+
     def process(self, **args):
         if isinstance(self.fn, tuple):
             for name in self.fn:
@@ -70,5 +70,3 @@ class DivideNode(BinOpNode):
     def __init__(self, name):
         # try truediv first, followed by div
         BinOpNode.__init__(self, name, ('__truediv__', '__div__'))
-        
-

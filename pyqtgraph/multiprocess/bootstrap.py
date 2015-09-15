@@ -17,11 +17,11 @@ if __name__ == '__main__':
         while len(sys.path) > 0:
             sys.path.pop()
         sys.path.extend(path)
-        
+
     if opts.pop('pyside', False):
         import PySide
-        
-    
+
+
     targetStr = opts.pop('targetStr')
     target = pickle.loads(targetStr)  ## unpickling the target should import everything we need
     target(**opts)  ## Send all other options to the target function

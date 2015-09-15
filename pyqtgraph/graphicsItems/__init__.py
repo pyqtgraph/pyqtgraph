@@ -9,7 +9,7 @@
         #files.append(f)
     #elif f[-3:] == '.py' and f != '__init__.py':
         #files.append(f[:-3])
-    
+
 #for modName in files:
     #mod = __import__(modName, globals(), locals(), fromlist=['*'])
     #if hasattr(mod, '__all__'):

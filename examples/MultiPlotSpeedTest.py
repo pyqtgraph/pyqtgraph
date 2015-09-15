@@ -19,7 +19,7 @@ app = QtGui.QApplication([])
 
 p = pg.plot()
 p.setWindowTitle('pyqtgraph example: MultiPlotSpeedTest')
-#p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
+#p.setRange(QtCore.QRectF(0, -10, 5000, 20))
 p.setLabel('bottom', 'Index', units='B')
 
 nPlots = 100
@@ -51,7 +51,7 @@ def update():
     #print "---------", count
     for i in range(nPlots):
         curves[i].setData(data[(ptr+i)%data.shape[0]])
-        
+
     #print "   setData done."
     ptr += nPlots
     now = time()
@@ -67,7 +67,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

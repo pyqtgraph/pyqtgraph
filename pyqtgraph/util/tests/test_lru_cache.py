@@ -17,7 +17,7 @@ def checkLru(lru):
 
     lru[2] = 2
     assert set([2, 3]) == set(lru.values())
-    
+
     lru[1] = 1
     set([2, 1]) == set(lru.values())
 

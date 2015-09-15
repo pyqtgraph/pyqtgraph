@@ -89,4 +89,3 @@ class Ui_Form(object):
         self.label_2.setText(QtGui.QApplication.translate("Form", "Graphics System:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Form", "Qt Library:", None, QtGui.QApplication.UnicodeUTF8))
         self.loadBtn.setText(QtGui.QApplication.translate("Form", "Run Example", None, QtGui.QApplication.UnicodeUTF8))
-

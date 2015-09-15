@@ -72,7 +72,7 @@ img.scale(0.2, 0.2)
 img.translate(-50, 0)
 
 # zoom to fit imageo
-p1.autoRange()  
+p1.autoRange()
 
 
 # Callbacks for handling user interaction

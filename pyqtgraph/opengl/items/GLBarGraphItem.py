@@ -22,8 +22,5 @@ class GLBarGraphItem(GLMeshItem):
         verts = cubeVerts * size + pos
         faces = cubeFaces + (np.arange(nCubes) * 8).reshape(nCubes,1,1)
         md = MeshData(verts.reshape(nCubes*8,3), faces.reshape(nCubes*12,3))
-        
-        GLMeshItem.__init__(self, meshdata=md, shader='shaded', smooth=False)
 
-        
-        
+        GLMeshItem.__init__(self, meshdata=md, shader='shaded', smooth=False)

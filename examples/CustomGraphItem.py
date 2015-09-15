@@ -24,7 +24,7 @@ class Graph(pg.GraphItem):
         self.textItems = []
         pg.GraphItem.__init__(self)
         self.scatter.sigClicked.connect(self.clicked)
-        
+
     def setData(self, **kwds):
         self.text = kwds.pop('text', [])
         self.data = kwds
@@ -34,7 +34,7 @@ class Graph(pg.GraphItem):
             self.data['data']['index'] = np.arange(npts)
         self.setTexts(self.text)
         self.updateGraph()
-        
+
     def setTexts(self, text):
         for i in self.textItems:
             i.scene().removeItem(i)
@@ -43,21 +43,21 @@ class Graph(pg.GraphItem):
             item = pg.TextItem(t)
             self.textItems.append(item)
             item.setParentItem(self)
-        
+
     def updateGraph(self):
         pg.GraphItem.setData(self, **self.data)
         for i,item in enumerate(self.textItems):
             item.setPos(*self.data['pos'][i])
-        
-        
+
+
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
             return
-        
+
         if ev.isStart():
             # We are already one step into the drag.
-            # Find the point(s) at the mouse cursor when the button was first 
+            # Find the point(s) at the mouse cursor when the button was first
             # pressed:
             pos = ev.buttonDownPos()
             pts = self.scatter.pointsAt(pos)
@@ -74,12 +74,12 @@ class Graph(pg.GraphItem):
             if self.dragPoint is None:
                 ev.ignore()
                 return
-        
+
         ind = self.dragPoint.data()[0]
         self.data['pos'][ind] = ev.pos() + self.dragOffset
         self.updateGraph()
         ev.accept()
-        
+
     def clicked(self, pts):
         print("clicked: %s" % pts)
 
@@ -96,7 +96,7 @@ pos = np.array([
     [5,5],
     [15,5]
     ], dtype=float)
-    
+
 ## Define the set of connections in the graph
 adj = np.array([
     [0,1],
@@ -106,7 +106,7 @@ adj = np.array([
     [1,5],
     [3,5],
     ])
-    
+
 ## Define the symbol to use for each node (this is optional)
 symbols = ['o','o','o','o','t','+']
 

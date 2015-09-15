@@ -5,40 +5,40 @@ from .python2_3 import basestring
 
 class ColorMap(object):
     """
-    A ColorMap defines a relationship between a scalar value and a range of colors. 
-    ColorMaps are commonly used for false-coloring monochromatic images, coloring 
-    scatter-plot points, and coloring surface plots by height. 
-    
+    A ColorMap defines a relationship between a scalar value and a range of colors.
+    ColorMaps are commonly used for false-coloring monochromatic images, coloring
+    scatter-plot points, and coloring surface plots by height.
+
     Each color map is defined by a set of colors, each corresponding to a
     particular scalar value. For example:
-    
+
         | 0.0  -> black
         | 0.2  -> red
         | 0.6  -> yellow
         | 1.0  -> white
-        
-    The colors for intermediate values are determined by interpolating between 
+
+    The colors for intermediate values are determined by interpolating between
     the two nearest colors in either RGB or HSV color space.
-    
+
     To provide user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
     """
-    
-    
+
+
     ## color interpolation modes
     RGB = 1
     HSV_POS = 2
     HSV_NEG = 3
-    
+
     ## boundary modes
     CLIP = 1
     REPEAT = 2
     MIRROR = 3
-    
+
     ## return types
     BYTE = 1
     FLOAT = 2
     QCOLOR = 3
-    
+
     enumMap = {
         'rgb': RGB,
         'hsv+': HSV_POS,
@@ -50,7 +50,7 @@ class ColorMap(object):
         'float': FLOAT,
         'qcolor': QCOLOR,
     }
-    
+
     def __init__(self, pos, color, mode=None):
         """
         ===============     ==============================================================
@@ -71,31 +71,31 @@ class ColorMap(object):
             mode = np.ones(len(pos))
         self.mode = mode
         self.stopsCache = {}
-        
+
     def map(self, data, mode='byte'):
         """
-        Return an array of colors corresponding to the values in *data*. 
+        Return an array of colors corresponding to the values in *data*.
         Data must be either a scalar position or an array (any shape) of positions.
-        
+
         The *mode* argument determines the type of data returned:
-        
+
         =========== ===============================================================
         byte        (default) Values are returned as 0-255 unsigned bytes.
-        float       Values are returned as 0.0-1.0 floats. 
+        float       Values are returned as 0.0-1.0 floats.
         qcolor      Values are returned as an array of QColor objects.
         =========== ===============================================================
         """
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
-            
+
         if mode == self.QCOLOR:
             pos, color = self.getStops(self.BYTE)
         else:
             pos, color = self.getStops(mode)
-            
+
         # don't need this--np.interp takes care of it.
         #data = np.clip(data, pos.min(), pos.max())
-            
+
         # Interpolate
         # TODO: is griddata faster?
         #          interp = scipy.interpolate.griddata(pos, color, data)
@@ -116,7 +116,7 @@ class ColorMap(object):
                 return [QtGui.QColor(*x) for x in interp]
         else:
             return interp
-        
+
     def mapToQColor(self, data):
         """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.QCOLOR)
@@ -128,7 +128,7 @@ class ColorMap(object):
     def mapToFloat(self, data):
         """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.FLOAT)
-    
+
     def getGradient(self, p1=None, p2=None):
         """Return a QLinearGradient object spanning from QPoints p1 to p2."""
         if p1 == None:
@@ -136,11 +136,11 @@ class ColorMap(object):
         if p2 == None:
             p2 = QtCore.QPointF(self.pos.max()-self.pos.min(),0)
         g = QtGui.QLinearGradient(p1, p2)
-        
+
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
         g.setStops(zip(pos, color))
-        
+
         #if self.colorMode == 'rgb':
             #ticks = self.listTicks()
             #g.setStops([(x, QtGui.QColor(t.color)) for t,x in ticks])
@@ -158,24 +158,24 @@ class ColorMap(object):
                 #stops.append((x2, self.getColor(x2)))
             #g.setStops(stops)
         return g
-    
+
     def getColors(self, mode=None):
         """Return list of all color stops converted to the specified mode.
         If mode is None, then no conversion is done."""
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
-        
+
         color = self.color
         if mode in [self.BYTE, self.QCOLOR] and color.dtype.kind == 'f':
             color = (color * 255).astype(np.ubyte)
         elif mode == self.FLOAT and color.dtype.kind != 'f':
             color = color.astype(float) / 255.
-            
+
         if mode == self.QCOLOR:
             color = [QtGui.QColor(*x) for x in color]
-            
+
         return color
-        
+
     def getStops(self, mode):
         ## Get fully-expanded set of RGBA stops in either float or byte mode.
         if mode not in self.stopsCache:
@@ -184,25 +184,25 @@ class ColorMap(object):
                 color = (color * 255).astype(np.ubyte)
             elif mode == self.FLOAT and color.dtype.kind != 'f':
                 color = color.astype(float) / 255.
-        
+
             ## to support HSV mode, we need to do a little more work..
             #stops = []
             #for i in range(len(self.pos)):
                 #pos = self.pos[i]
                 #color = color[i]
-                
+
                 #imode = self.mode[i]
                 #if imode == self.RGB:
-                    #stops.append((x,color)) 
+                    #stops.append((x,color))
                 #else:
-                    #ns = 
+                    #ns =
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
-        
+
     def getLookupTable(self, start=0.0, stop=1.0, nPts=512, alpha=None, mode='byte'):
         """
-        Return an RGB(A) lookup table (ndarray). 
-        
+        Return an RGB(A) lookup table (ndarray).
+
         ===============   =============================================================================
         **Arguments:**
         start             The starting value in the lookup table (default=0.0)
@@ -216,23 +216,23 @@ class ColorMap(object):
         """
         if isinstance(mode, basestring):
             mode = self.enumMap[mode.lower()]
-        
+
         if alpha is None:
             alpha = self.usesAlpha()
-            
+
         x = np.linspace(start, stop, nPts)
         table = self.map(x, mode)
-        
+
         if not alpha:
             return table[:,:3]
         else:
             return table
-    
+
     def usesAlpha(self):
         """Return True if any stops have an alpha < 255"""
         max = 1.0 if self.color.dtype.kind == 'f' else 255
         return np.any(self.color[:,3] != max)
-            
+
     def isMapTrivial(self):
         """
         Return True if the gradient has exactly two stops in it: black at 0.0 and white at 1.0.

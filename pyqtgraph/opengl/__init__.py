@@ -4,16 +4,16 @@ from .GLViewWidget import GLViewWidget
 #from .. import importAll
 #importAll('items', globals(), locals())
 
-from .items.GLGridItem import * 
-from .items.GLBarGraphItem import * 
-from .items.GLScatterPlotItem import *                                                                                                                      
-from .items.GLMeshItem import *                                                                                                                             
-from .items.GLLinePlotItem import *                                                                                                                         
-from .items.GLAxisItem import *                                                                                                                             
-from .items.GLImageItem import *                                                                                                                            
-from .items.GLSurfacePlotItem import *                                                                                                                      
-from .items.GLBoxItem import *                                                                                                                              
-from .items.GLVolumeItem import *                                                                                                                           
+from .items.GLGridItem import *
+from .items.GLBarGraphItem import *
+from .items.GLScatterPlotItem import *
+from .items.GLMeshItem import *
+from .items.GLLinePlotItem import *
+from .items.GLAxisItem import *
+from .items.GLImageItem import *
+from .items.GLSurfacePlotItem import *
+from .items.GLBoxItem import *
+from .items.GLVolumeItem import *
 
 from .MeshData import MeshData
 ## for backward compatibility:

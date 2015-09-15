@@ -8,26 +8,26 @@ __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):
     """
     **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
-    
+
     Displays a rectangular grid of lines indicating major divisions within a coordinate system.
     Automatically determines what divisions to use.
     """
-    
+
     def __init__(self):
         UIGraphicsItem.__init__(self)
         #QtGui.QGraphicsItem.__init__(self, *args)
         #self.setFlag(QtGui.QGraphicsItem.ItemClipsToShape)
         #self.setCacheMode(QtGui.QGraphicsItem.DeviceCoordinateCache)
-        
+
         self.picture = None
-        
-        
+
+
     def viewRangeChanged(self):
         UIGraphicsItem.viewRangeChanged(self)
         self.picture = None
         #UIGraphicsItem.viewRangeChanged(self)
         #self.update()
-        
+
     def paint(self, p, opt, widget):
         #p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
         #p.drawRect(self.boundingRect())
@@ -41,13 +41,13 @@ class GridItem(UIGraphicsItem):
         #p.drawLine(0, -100, 0, 100)
         #p.drawLine(-100, 0, 100, 0)
         #print "drawing Grid."
-        
-        
+
+
     def generatePicture(self):
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter()
         p.begin(self.picture)
-        
+
         dt = fn.invertQTransform(self.viewTransform())
         vr = self.getViewWidget().rect()
         unit = self.pixelWidth(), self.pixelHeight()
@@ -55,9 +55,9 @@ class GridItem(UIGraphicsItem):
         lvr = self.boundingRect()
         ul = np.array([lvr.left(), lvr.top()])
         br = np.array([lvr.right(), lvr.bottom()])
-        
+
         texts = []
-        
+
         if ul[1] > br[1]:
             x = ul[1]
             ul[1] = br[1]
@@ -78,8 +78,8 @@ class GridItem(UIGraphicsItem):
             for ax in range(0,2):  ## Draw grid for both axes
                 ppl = dim[ax] / nl[ax]
                 c = np.clip(3.*(ppl-3), 0., 30.)
-                linePen = QtGui.QPen(QtGui.QColor(255, 255, 255, c)) 
-                textPen = QtGui.QPen(QtGui.QColor(255, 255, 255, c*2)) 
+                linePen = QtGui.QPen(QtGui.QColor(255, 255, 255, c))
+                textPen = QtGui.QPen(QtGui.QColor(255, 255, 255, c*2))
                 #linePen.setCosmetic(True)
                 #linePen.setWidth(1)
                 bx = (ax+1) % 2

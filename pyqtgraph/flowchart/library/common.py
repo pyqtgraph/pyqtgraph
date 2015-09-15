@@ -43,7 +43,7 @@ def generateUi(opts):
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
-                w.setMinimum(o['min'])                
+                w.setMinimum(o['min'])
             if 'value' in o:
                 w.setValue(o['value'])
         elif t == 'spin':
@@ -71,7 +71,7 @@ def generateUi(opts):
             w.hide()
             label = l.labelForField(w)
             label.hide()
-            
+
         ctrls[k] = w
         w.rowNum = row
         row += 1
@@ -81,9 +81,9 @@ def generateUi(opts):
 
 class CtrlNode(Node):
     """Abstract class for nodes with auto-generated control UI"""
-    
+
     sigStateChanged = QtCore.Signal(object)
-    
+
     def __init__(self, name, ui=None, terminals=None):
         if ui is None:
             if hasattr(self, 'uiTemplate'):
@@ -93,13 +93,13 @@ class CtrlNode(Node):
         if terminals is None:
             terminals = {'In': {'io': 'in'}, 'Out': {'io': 'out', 'bypass': 'In'}}
         Node.__init__(self, name=name, terminals=terminals)
-        
+
         self.ui, self.stateGroup, self.ctrls = generateUi(ui)
         self.stateGroup.sigChanged.connect(self.changed)
-       
+
     def ctrlWidget(self):
         return self.ui
-       
+
     def changed(self):
         self.update()
         self.sigStateChanged.emit(self)
@@ -107,23 +107,23 @@ class CtrlNode(Node):
     def process(self, In, display=True):
         out = self.processData(In)
         return {'Out': out}
-    
+
     def saveState(self):
         state = Node.saveState(self)
         state['ctrl'] = self.stateGroup.state()
         return state
-    
+
     def restoreState(self, state):
         Node.restoreState(self, state)
         if self.stateGroup is not None:
             self.stateGroup.setState(state.get('ctrl', {}))
-            
+
     def hideRow(self, name):
         w = self.ctrls[name]
         l = self.ui.layout().labelForField(w)
         w.hide()
         l.hide()
-        
+
     def showRow(self, name):
         w = self.ctrls[name]
         l = self.ui.layout().labelForField(w)
@@ -133,31 +133,31 @@ class CtrlNode(Node):
 
 class PlottingCtrlNode(CtrlNode):
     """Abstract class for CtrlNodes that can connect to plots."""
-    
+
     def __init__(self, name, ui=None, terminals=None):
         #print "PlottingCtrlNode.__init__ called."
         CtrlNode.__init__(self, name, ui=ui, terminals=terminals)
         self.plotTerminal = self.addOutput('plot', optional=True)
-        
+
     def connected(self, term, remote):
         CtrlNode.connected(self, term, remote)
         if term is not self.plotTerminal:
             return
         node = remote.node()
         node.sigPlotChanged.connect(self.connectToPlot)
-        self.connectToPlot(node)    
-        
+        self.connectToPlot(node)
+
     def disconnected(self, term, remote):
         CtrlNode.disconnected(self, term, remote)
         if term is not self.plotTerminal:
             return
         remote.node().sigPlotChanged.disconnect(self.connectToPlot)
-        self.disconnectFromPlot(remote.node().getPlot())   
-       
+        self.disconnectFromPlot(remote.node().getPlot())
+
     def connectToPlot(self, node):
         """Define what happens when the node is connected to a plot"""
         raise Exception("Must be re-implemented in subclass")
-    
+
     def disconnectFromPlot(self, plot):
         """Define what happens when the node is disconnected from a plot"""
         raise Exception("Must be re-implemented in subclass")
@@ -181,4 +181,3 @@ def metaArrayWrapper(fn):
         else:
             return fn(self, data, *args, **kargs)
     return newFn
-

@@ -5,11 +5,11 @@ def listdir(path):
     """Replacement for os.listdir that works in frozen environments."""
     if not hasattr(sys, 'frozen'):
         return os.listdir(path)
-    
+
     (zipPath, archivePath) = splitZip(path)
     if archivePath is None:
         return os.listdir(path)
-    
+
     with zipfile.ZipFile(zipPath, "r") as zipobj:
         contents = zipobj.namelist()
     results = set()
@@ -24,7 +24,7 @@ def isdir(path):
     """Replacement for os.path.isdir that works in frozen environments."""
     if not hasattr(sys, 'frozen'):
         return os.path.isdir(path)
-    
+
     (zipPath, archivePath) = splitZip(path)
     if archivePath is None:
         return os.path.isdir(path)
@@ -35,8 +35,8 @@ def isdir(path):
         if c.startswith(archivePath):
             return True
     return False
-    
-    
+
+
 def splitZip(path):
     """Splits a path containing a zip file into (zipfile, subpath).
     If there is no zip file, returns (path, None)"""
@@ -48,5 +48,3 @@ def splitZip(path):
             return (zipPath, archivePath)
     else:
         return (path, None)
-    
-    

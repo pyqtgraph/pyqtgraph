@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 
 p = pg.plot()
 p.setWindowTitle('pyqtgraph example: PlotSpeedTest')
-p.setRange(QtCore.QRectF(0, -10, 5000, 20)) 
+p.setRange(QtCore.QRectF(0, -10, 5000, 20))
 p.setLabel('bottom', 'Index', units='B')
 curve = p.plot()
 
@@ -47,7 +47,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

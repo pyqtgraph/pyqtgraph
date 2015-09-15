@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Special relativity simulation 
+Special relativity simulation
 
 
 

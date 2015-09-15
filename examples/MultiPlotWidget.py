@@ -25,10 +25,10 @@ mw.show()
 data = random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
 ma = MetaArray(data, info=[
     {'name': 'Signal', 'cols': [
-        {'name': 'Col1', 'units': 'V'}, 
-        {'name': 'Col2', 'units': 'A'}, 
+        {'name': 'Col1', 'units': 'V'},
+        {'name': 'Col2', 'units': 'A'},
         {'name': 'Col3'},
-        ]}, 
+        ]},
     {'name': 'Time', 'values': linspace(0., 1., 1000), 'units': 's'}
     ])
 pw.plot(ma)
@@ -38,4 +38,3 @@ if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-

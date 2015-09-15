@@ -20,8 +20,8 @@ namespace = {'pg': pg, 'np': np}
 
 ## initial text to display in the console
 text = """
-This is an interactive python console. The numpy and pyqtgraph modules have already been imported 
-as 'np' and 'pg'. 
+This is an interactive python console. The numpy and pyqtgraph modules have already been imported
+as 'np' and 'pg'.
 
 Go, play.
 """

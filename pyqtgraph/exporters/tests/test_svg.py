@@ -15,7 +15,7 @@ def test_plotscene():
     print("using %s as a temporary file" % tempfilename)
     pg.setConfigOption('foreground', (0,0,0))
     w = pg.GraphicsWindow()
-    w.show()        
+    w.show()
     p1 = w.addPlot()
     p2 = w.addPlot()
     p1.plot([1,3,2,3,1,6,9,8,4,2,3,5,3], pen={'color':'k'})
@@ -23,7 +23,7 @@ def test_plotscene():
     p2.plot([1,5,2,3,4,6,1,2,4,2,3,5,3], pen={'color':'k', 'cosmetic':False, 'width': 0.3})
     app.processEvents()
     app.processEvents()
-    
+
     ex = pg.exporters.SVGExporter(w.scene())
     ex.export(fileName=tempfilename)
     # clean up after the test is done
@@ -39,20 +39,20 @@ def test_simple():
     #rect.translate(50, 50)
     #rect.rotate(30)
     #rect.scale(0.5, 0.5)
-    
+
     #rect1 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
     #rect1.setParentItem(rect)
     #rect1.setFlag(rect1.ItemIgnoresTransformations)
     #rect1.setPos(20, 20)
     #rect1.scale(2,2)
-    
+
     #el1 = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 100)
     #el1.setParentItem(rect1)
     ##grp = pg.ItemGroup()
     #grp.setParentItem(rect)
     #grp.translate(200,0)
     ##grp.rotate(30)
-    
+
     #rect2 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 25)
     #rect2.setFlag(rect2.ItemClipsChildrenToShape)
     #rect2.setParentItem(grp)

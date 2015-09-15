@@ -1,6 +1,6 @@
 DESCRIPTION = """\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
-numpy. 
+numpy.
 
 It is intended for use in mathematics / scientific / engineering applications.
 Despite being written entirely in python, the library is very fast due to its
@@ -51,7 +51,7 @@ sys.path.insert(0, os.path.join(path, 'tools'))
 import setupHelpers as helpers
 
 ## generate list of all sub-packages
-allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') + 
+allPackages = (helpers.listAllPackages(pkgroot='pyqtgraph') +
                ['pyqtgraph.'+x for x in helpers.listAllPackages(pkgroot='examples')])
 
 ## Decide what version string to use in the build
@@ -72,14 +72,14 @@ class Build(build.build):
         buildPath = os.path.join(path, self.build_lib)
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
-    
+
         ret = build.build.run(self)
-        
+
         # If the version in __init__ is different from the automatically-generated
         # version string, then we will update __init__ in the build directory
         if initVersion == version:
             return ret
-        
+
         try:
             initfile = os.path.join(buildPath, 'pyqtgraph', '__init__.py')
             data = open(initfile, 'r').read()
@@ -95,7 +95,7 @@ class Build(build.build):
                              )
             sys.excepthook(*sys.exc_info())
         return ret
-        
+
 
 class Install(install.install):
     """
@@ -106,17 +106,17 @@ class Install(install.install):
         path = self.install_libbase
         if os.path.exists(path) and name in os.listdir(path):
             raise Exception("It appears another version of %s is already "
-                            "installed at %s; remove this before installing." 
+                            "installed at %s; remove this before installing."
                             % (name, path))
         print("Installing to %s" % path)
         return install.install.run(self)
 
-        
+
 setup(
     version=version,
-    cmdclass={'build': Build, 
+    cmdclass={'build': Build,
               'install': Install,
-              'deb': helpers.DebCommand, 
+              'deb': helpers.DebCommand,
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
               'mergetest': helpers.MergeTestCommand,
@@ -129,4 +129,3 @@ setup(
         ],
     **setupOpts
 )
-

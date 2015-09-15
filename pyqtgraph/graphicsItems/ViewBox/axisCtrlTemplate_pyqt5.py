@@ -86,4 +86,3 @@ class Ui_Form(object):
         self.visibleOnlyCheck.setText(_translate("Form", "Visible Data Only"))
         self.autoPanCheck.setToolTip(_translate("Form", "<html><head/><body><p>When checked, the axis will automatically pan to center on the current data, but the scale along this axis will not change.</p></body></html>"))
         self.autoPanCheck.setText(_translate("Form", "Auto Pan Only"))
-

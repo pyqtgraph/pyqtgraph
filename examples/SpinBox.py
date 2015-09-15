@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates the SpinBox widget, which is an extension of 
+This example demonstrates the SpinBox widget, which is an extension of
 QDoubleSpinBox providing some advanced features:
 
   * SI-prefixed units
@@ -19,17 +19,17 @@ app = QtGui.QApplication([])
 
 
 spins = [
-    ("Floating-point spin box, min=0, no maximum.", 
+    ("Floating-point spin box, min=0, no maximum.",
      pg.SpinBox(value=5.0, bounds=[0, None])),
-    ("Integer spin box, dec stepping<br>(1-9, 10-90, 100-900, etc), decimals=4", 
+    ("Integer spin box, dec stepping<br>(1-9, 10-90, 100-900, etc), decimals=4",
      pg.SpinBox(value=10, int=True, dec=True, minStep=1, step=1, decimals=4)),
-    ("Float with SI-prefixed units<br>(n, u, m, k, M, etc)", 
+    ("Float with SI-prefixed units<br>(n, u, m, k, M, etc)",
      pg.SpinBox(value=0.9, suffix='V', siPrefix=True)),
-    ("Float with SI-prefixed units,<br>dec step=0.1, minStep=0.1", 
+    ("Float with SI-prefixed units,<br>dec step=0.1, minStep=0.1",
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.1, minStep=0.1)),
-    ("Float with SI-prefixed units,<br>dec step=0.5, minStep=0.01", 
+    ("Float with SI-prefixed units,<br>dec step=0.5, minStep=0.01",
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.5, minStep=0.01)),
-    ("Float with SI-prefixed units,<br>dec step=1.0, minStep=0.001", 
+    ("Float with SI-prefixed units,<br>dec step=1.0, minStep=0.001",
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=1.0, minStep=0.001)),
 ]
 
@@ -59,7 +59,7 @@ def valueChanged(sb):
 def valueChanging(sb, value):
     changingLabel.setText("Value changing: %s" % str(sb.value()))
 
-    
+
 for text, spin in spins:
     label = QtGui.QLabel(text)
     labels.append(label)

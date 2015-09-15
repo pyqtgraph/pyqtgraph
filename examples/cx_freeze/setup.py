@@ -32,5 +32,3 @@ setup(name = "cx_freeze plot test",
       description = "cx_freeze plot test",
       options = {"build_exe": build_exe_options},
       executables = [Executable("plotTest.py", base=base)])
-
-

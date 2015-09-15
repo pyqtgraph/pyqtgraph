@@ -9,7 +9,7 @@ from pyqtgraph.python2_3 import xrange
 
 print( "\n=================\nParallelize")
 
-## Do a simple task: 
+## Do a simple task:
 ##   for x in range(N):
 ##      sum([x*i for i in range(M)])
 ##
@@ -62,4 +62,3 @@ with mp.Parallelize(enumerate(tasks), results=results3, progressDialog='processi
         tasker.results[i] = tot
 print( "\nParallel time, %d workers: %0.2f" % (mp.Parallelize.suggestedWorkerCount(), time.time() - start))
 print( "Results match serial:      %s" % str(results3 == results))
-

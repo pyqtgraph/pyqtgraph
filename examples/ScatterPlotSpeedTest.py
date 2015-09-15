@@ -48,8 +48,8 @@ def update():
         size = sizeArray
     else:
         size = ui.sizeSpin.value()
-    curve = pg.ScatterPlotItem(x=data[ptr%50], y=data[(ptr+1)%50], 
-                               pen='w', brush='b', size=size, 
+    curve = pg.ScatterPlotItem(x=data[ptr%50], y=data[(ptr+1)%50],
+                               pen='w', brush='b', size=size,
                                pxMode=ui.pixelModeCheck.isChecked())
     p.addItem(curve)
     ptr += 1
@@ -67,7 +67,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode.

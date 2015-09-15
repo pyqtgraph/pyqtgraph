@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Demonstrates a way to put multiple axes around a single plot. 
+Demonstrates a way to put multiple axes around a single plot.
 
 (This will eventually become a built-in feature of PlotItem)
 
@@ -27,7 +27,7 @@ p1.getAxis('right').linkToView(p2)
 p2.setXLink(p1)
 p1.getAxis('right').setLabel('axis2', color='#0000ff')
 
-## create third ViewBox. 
+## create third ViewBox.
 ## this time we need to create a new axis as well.
 p3 = pg.ViewBox()
 ax3 = pg.AxisItem('right')
@@ -39,13 +39,13 @@ ax3.setZValue(-10000)
 ax3.setLabel('axis 3', color='#ff0000')
 
 
-## Handle view resizing 
+## Handle view resizing
 def updateViews():
     ## view has resized; update auxiliary views to match
     global p1, p2, p3
     p2.setGeometry(p1.vb.sceneBoundingRect())
     p3.setGeometry(p1.vb.sceneBoundingRect())
-    
+
     ## need to re-update linked axes since this was called
     ## incorrectly while views had different shapes.
     ## (probably this should be handled in ViewBox.resizeEvent)

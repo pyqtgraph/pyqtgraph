@@ -13,10 +13,10 @@ Extension for building Qt-like documentation.
 def setup(app):
     # probably we will be making a wrapper around autodoc
     app.setup_extension('sphinx.ext.autodoc')
-    
+
     # would it be useful to define a new domain?
-    #app.add_domain(QtDomain) 
-    
+    #app.add_domain(QtDomain)
+
     ## Add new configuration options
     app.add_config_value('todo_include_todos', False, False)
 
@@ -31,11 +31,11 @@ def setup(app):
     ## New directives like ".. todo:"
     app.add_directive('todo', TodoDirective)
     app.add_directive('todolist', TodolistDirective)
-    
+
     ## Connect callbacks to specific hooks in the build process
     app.connect('doctree-resolved', process_todo_nodes)
     app.connect('env-purge-doc', purge_todos)
-    
+
 
 from docutils import nodes
 from sphinx.util.compat import Directive
@@ -63,7 +63,7 @@ def visit_todo_node(self, node):
     self.visit_admonition(node)
 
 def depart_todo_node(self, node):
-    self.depart_admonition(node)    
+    self.depart_admonition(node)
 
 class TodoDirective(Directive):
 
@@ -72,7 +72,7 @@ class TodoDirective(Directive):
 
     def run(self):
         env = self.state.document.settings.env
-    
+
         # create a new target node for linking to
         targetid = "todo-%d" % env.new_serialno('todo')
         targetnode = nodes.target('', '', ids=[targetid])
@@ -102,7 +102,7 @@ def purge_todos(app, env, docname):
         return
     env.todo_all_todos = [todo for todo in env.todo_all_todos
                           if todo['docname'] != docname]
-                          
+
 
 # called at the end of resolving phase; we will convert temporary nodes
 # into finalized nodes
@@ -146,4 +146,3 @@ def process_todo_nodes(app, doctree, fromdocname):
             content.append(para)
 
         node.replace_self(content)
-        

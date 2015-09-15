@@ -19,10 +19,10 @@ class LRUCache(object):
         '''
         ============== =========================================================
         **Arguments:**
-        maxSize        (int) This is the maximum size of the cache. When some 
-                       item is added and the cache would become bigger than 
+        maxSize        (int) This is the maximum size of the cache. When some
+                       item is added and the cache would become bigger than
                        this, it's resized to the value passed on resizeTo.
-        resizeTo       (int) When a resize operation happens, this is the size 
+        resizeTo       (int) When a resize operation happens, this is the size
                        of the final cache.
         ============== =========================================================
         '''
@@ -49,37 +49,37 @@ class LRUCache(object):
         if item is None:
             if len(self._dict) + 1 > self.maxSize:
                 self._resizeTo()
-            
+
             item = [key, value, self._nextTime()]
             self._dict[key] = item
         else:
             item[1] = value
             item[2] = self._nextTime()
-            
+
     def __delitem__(self, key):
         del self._dict[key]
-        
+
     def get(self, key, default=None):
         try:
             return self[key]
         except KeyError:
             return default
-        
+
     def clear(self):
         self._dict.clear()
- 
+
     if _IS_PY3:
         def values(self):
             return [i[1] for i in self._dict.values()]
-        
+
         def keys(self):
             return [x[0] for x in self._dict.values()]
-        
+
         def _resizeTo(self):
             ordered = sorted(self._dict.values(), key=operator.itemgetter(2))[:self.resizeTo]
             for i in ordered:
                 del self._dict[i[0]]
-                
+
         def iteritems(self, accessTime=False):
             '''
             :param bool accessTime:
@@ -91,25 +91,25 @@ class LRUCache(object):
             else:
                 for x in self._dict.items():
                     yield x[0], x[1]
-                    
+
     else:
         def values(self):
             return [i[1] for i in self._dict.itervalues()]
-        
+
         def keys(self):
             return [x[0] for x in self._dict.itervalues()]
-            
-        
+
+
         def _resizeTo(self):
             ordered = sorted(self._dict.itervalues(), key=operator.itemgetter(2))[:self.resizeTo]
             for i in ordered:
                 del self._dict[i[0]]
-                
+
         def iteritems(self, accessTime=False):
             '''
             ============= ======================================================
             **Arguments**
-            accessTime    (bool) If True sorts the returned items by the 
+            accessTime    (bool) If True sorts the returned items by the
                           internal access time.
             ============= ======================================================
             '''

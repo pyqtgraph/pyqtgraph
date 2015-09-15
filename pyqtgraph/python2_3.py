@@ -13,7 +13,7 @@ def asUnicode(x):
             return unicode(x)
     else:
         return str(x)
-        
+
 def cmpToKey(mycmp):
     'Convert a cmp= function into a key= function'
     class K(object):
@@ -54,5 +54,3 @@ else:
     basestring = __builtin__.basestring
     cmp = __builtin__.cmp
     xrange = __builtin__.xrange
-    
-    

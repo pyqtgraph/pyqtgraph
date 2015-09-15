@@ -18,25 +18,25 @@ class PathButton(QtGui.QPushButton):
         if size is not None:
             self.setFixedWidth(size[0])
             self.setFixedHeight(size[1])
-            
-            
+
+
     def setBrush(self, brush):
         self.brush = fn.mkBrush(brush)
-        
+
     def setPen(self, *args, **kwargs):
         self.pen = fn.mkPen(*args, **kwargs)
-        
+
     def setPath(self, path):
         self.path = path
         self.update()
-        
+
     def paintEvent(self, ev):
         QtGui.QPushButton.paintEvent(self, ev)
         margin = 7
         geom = QtCore.QRectF(0, 0, self.width(), self.height()).adjusted(margin, margin, -margin, -margin)
         rect = self.path.boundingRect()
         scale = min(geom.width() / float(rect.width()), geom.height() / float(rect.height()))
-        
+
         p = QtGui.QPainter(self)
         p.setRenderHint(p.Antialiasing)
         p.translate(geom.center())
@@ -46,5 +46,3 @@ class PathButton(QtGui.QPushButton):
         p.setBrush(self.brush)
         p.drawPath(self.path)
         p.end()
-
-    

@@ -179,4 +179,3 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "Opacity", None))
         self.alphaGroup.setTitle(_translate("Form", "Alpha", None))
         self.autoAlphaCheck.setText(_translate("Form", "Auto", None))
-

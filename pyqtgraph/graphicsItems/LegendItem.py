@@ -32,10 +32,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
         ==============  ===============================================================
-        
+
         """
-        
-        
+
+
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
@@ -46,7 +46,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.offset = offset
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
-        
+
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
         if self.offset is not None:
@@ -56,10 +56,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
-        
+
     def addItem(self, item, name):
         """
-        Add a new entry to the legend. 
+        Add a new entry to the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -74,16 +74,16 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = ItemSample(item)        
+            sample = ItemSample(item)
         row = self.layout.rowCount()
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
         self.updateSize()
-    
+
     def removeItem(self, name):
         """
-        Removes one item from the legend. 
+        Removes one item from the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -104,7 +104,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     def updateSize(self):
         if self.size is not None:
             return
-            
+
         height = 0
         width = 0
         #print("-------")
@@ -114,10 +114,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             #print(width, height)
         #print width, height
         self.setGeometry(0, 0, width+25, height)
-    
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.width(), self.height())
-    
+
     def paint(self, p, *args):
         p.setPen(fn.mkPen(255,255,255,100))
         p.setBrush(fn.mkBrush(100,100,100,50))
@@ -125,50 +125,46 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def hoverEvent(self, ev):
         ev.acceptDrags(QtCore.Qt.LeftButton)
-        
+
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
-        
+
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
-    
+
     This may be subclassed to draw custom graphics in a Legend.
     """
     ## Todo: make this more generic; let each item decide how it should be represented.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
-    
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
-        
+
     def paint(self, p, *args):
         #p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
         opts = self.item.opts
-        
+
         if opts.get('fillLevel',None) is not None and opts.get('fillBrush',None) is not None:
             p.setBrush(fn.mkBrush(opts['fillBrush']))
             p.setPen(fn.mkPen(None))
             p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
-        
+
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(2, 18, 18, 2)
-        
+
         symbol = opts.get('symbol', None)
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
-                
+
             pen = fn.mkPen(opts['pen'])
             brush = fn.mkBrush(opts['brush'])
             size = opts['size']
-            
+
             p.translate(10,10)
             path = drawSymbol(p, symbol, size, pen, brush)
-        
-        
-        
-        

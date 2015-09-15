@@ -4,7 +4,7 @@ Mechanical simulation of a chain using verlet integration.
 Use the mouse to interact with one of the chains.
 
 By default, this uses a slow, pure-python integrator to solve the chain link
-positions. Unix users may compile a small math library to speed this up by 
+positions. Unix users may compile a small math library to speed this up by
 running the `examples/verlet_chain/make` script.
 
 """
@@ -28,7 +28,7 @@ else:
     chlen1 = 10
     chlen2 = 8
     linklen = 8
-    
+
 npts = chlen1 + chlen2
 
 sim.mass = np.ones(npts)
@@ -77,12 +77,12 @@ def display():
     global view, sim
     view.clear()
     view.addItem(sim.makeGraph())
-    
+
 def relaxed():
     global app
     display()
     app.processEvents()
-    
+
 def mouse(pos):
     global mousepos
     pos = view.mapSceneToView(pos)
@@ -118,7 +118,7 @@ timer = pg.QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(16)
 
-    
+
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys

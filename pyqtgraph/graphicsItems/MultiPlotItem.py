@@ -18,7 +18,7 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     def __init__(self, *args, **kwds):
         GraphicsLayout.GraphicsLayout.__init__(self, *args, **kwds)
         self.plots = []
-        
+
 
     def plot(self, data):
         #self.layout.clear()
@@ -57,6 +57,3 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
             p[0].close()
         self.plots = None
         self.clear()
-
-
-

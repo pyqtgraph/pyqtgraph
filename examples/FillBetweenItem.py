@@ -30,7 +30,7 @@ def update():
     a = 5 / abs(np.random.normal(loc=1, scale=0.2))
     y1 = -np.abs(a*gauss + np.random.normal(size=len(x)))
     y2 =  np.abs(a*gauss + np.random.normal(size=len(x)))
-    
+
     s = 0.01
     mn = np.where(y1<mn, y1, mn) * (1-s) + y1 * s
     mx = np.where(y2>mx, y2, mx) * (1-s) + y2 * s
@@ -38,7 +38,7 @@ def update():
     curves[1].setData(x, y1)
     curves[2].setData(x, y2)
     curves[3].setData(x, mx)
-    
+
 
 timer = QtCore.QTimer()
 timer.timeout.connect(update)

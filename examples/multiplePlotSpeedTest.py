@@ -11,7 +11,7 @@ plt = pg.PlotWidget()
 app.processEvents()
 
 ## Putting this at the beginning or end does not have much effect
-plt.show()   
+plt.show()
 
 ## The auto-range is recomputed after each item is added,
 ## so disabling it before plotting helps
@@ -25,19 +25,19 @@ def plot():
     y = np.random.random(size=pts)*0.8
     for i in range(n):
         for j in range(n):
-            ## calling PlotWidget.plot() generates a PlotDataItem, which 
-            ## has a bit more overhead than PlotCurveItem, which is all 
+            ## calling PlotWidget.plot() generates a PlotDataItem, which
+            ## has a bit more overhead than PlotCurveItem, which is all
             ## we need here. This overhead adds up quickly and makes a big
             ## difference in speed.
-            
+
             #plt.plot(x=x+i, y=y+j)
             plt.addItem(pg.PlotCurveItem(x=x+i, y=y+j))
-            
+
             #path = pg.arrayToQPath(x+i, y+j)
             #item = QtGui.QGraphicsPathItem(path)
             #item.setPen(pg.mkPen('w'))
             #plt.addItem(item)
-            
+
     dt = pg.ptime.time() - start
     print("Create plots took: %0.3fms" % (dt*1000))
 
@@ -70,7 +70,7 @@ def fastPlot():
     item = QtGui.QGraphicsPathItem(path)
     item.setPen(pg.mkPen('w'))
     plt.addItem(item)
-    
+
     dt = pg.ptime.time() - start
     print("Create plots took: %0.3fms" % (dt*1000))
 

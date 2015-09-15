@@ -37,7 +37,7 @@ arr[:, 75] = 5
 arr[50, :] = 10
 arr[:, 50] = 10
 
-## Create image items, add to scene and set position 
+## Create image items, add to scene and set position
 im1 = pg.ImageItem(arr)
 im2 = pg.ImageItem(arr)
 v.addItem(im1)
@@ -82,7 +82,7 @@ def updateRoi(roi):
     arr2 = roi.getArrayRegion(im2.image, img=im2)
     im4.setImage(arr2)
     updateRoiPlot(roi, arr1)
-    
+
 def updateRoiPlot(roi, data=None):
     if data is None:
         data = roi.getArrayRegion(im1.image, img=im1)
@@ -114,8 +114,8 @@ def updateImage():
     updateRoi(lastRoi)
     for r in rois:
         updateRoiPlot(r)
-    
-## Rapidly update one of the images with random noise    
+
+## Rapidly update one of the images with random noise
 t = QtCore.QTimer()
 t.timeout.connect(updateImage)
 t.start(50)

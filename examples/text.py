@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-This example shows how to insert text into a scene using TextItem. This class 
+This example shows how to insert text into a scene using TextItem. This class
 is for displaying text that is anchored to a particular location in the data
-coordinate system, but which is always displayed unscaled. 
+coordinate system, but which is always displayed unscaled.
 
-For text that scales with the data, use QTextItem. 
+For text that scales with the data, use QTextItem.
 For text that can be placed in a layout, use LabelItem.
 """
 
@@ -48,7 +48,7 @@ def update():
     curvePoint.setPos(float(index)/(len(x)-1))
     #text2.viewRangeChanged()
     text2.setText('[%0.1f, %0.1f]' % (x[index], y[index]))
-    
+
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(10)

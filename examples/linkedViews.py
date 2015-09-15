@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This example demonstrates the ability to link the axes of views together
-Views can be linked manually using the context menu, but only if they are given 
+Views can be linked manually using the context menu, but only if they are given
 names.
 """
 
@@ -47,4 +47,3 @@ if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-
