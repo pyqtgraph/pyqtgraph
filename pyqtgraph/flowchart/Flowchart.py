@@ -24,6 +24,7 @@ from .. import configfile as configfile
 from .. import dockarea as dockarea
 from . import FlowchartGraphicsView
 from .. import functions as fn
+from ..python2_3 import asUnicode
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
@@ -660,7 +661,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(fileName)
+        self.setCurrentFile(asUnicode(fileName))
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -689,7 +690,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = fileName
+        self.currentFileName = asUnicode(fileName)
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
