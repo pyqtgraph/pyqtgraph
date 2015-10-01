@@ -910,6 +910,7 @@ class AxisItem(GraphicsWidget):
             #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
             
         textSize2 = 0
+        last_textSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
         
@@ -971,7 +972,9 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
-            
+
+            last_textSize2 = textSize2
+
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
             # Determine exactly where tick text should be drawn
@@ -1006,7 +1009,7 @@ class AxisItem(GraphicsWidget):
         profiler('compute text')
             
         ## update max text size if needed.
-        self._updateMaxTextSize(textSize2)
+        self._updateMaxTextSize(last_textSize2)
         
         return (axisSpec, tickSpecs, textSpecs)
     
