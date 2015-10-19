@@ -7,10 +7,13 @@ from ..python2_3 import asUnicode
 class Dock(QtGui.QWidget, DockDrop):
     
     sigStretchChanged = QtCore.Signal()
+    sigClosed = QtCore.Signal(object)
     
     def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
+        self._container = None
+        self._name = name
         self.area = area
         self.label = DockLabel(name, self, closable)
         if closable:
@@ -126,6 +129,18 @@ class Dock(QtGui.QWidget, DockDrop):
         self.labelHidden = False
         self.allowedAreas.add('center')
         self.updateStyle()
+
+    def title(self):
+        """
+        Gets the text displayed in the title bar for this dock.
+        """
+        return asUnicode(self.label.text())
+
+    def setTitle(self, text):
+        """
+        Sets the text displayed in title bar for this Dock.
+        """
+        self.label.setText(text)
         
     def setOrientation(self, o='auto', force=False):
         """
@@ -170,7 +185,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.resizeOverlay(self.size())
 
     def name(self):
-        return asUnicode(self.label.text())
+        return self._name
 
     def container(self):
         return self._container
@@ -223,6 +238,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.label.setParent(None)
         self._container.apoptose()
         self._container = None
+        self.sigClosed.emit(self)
 
     def __repr__(self):
         return "<Dock %s %s>" % (self.name(), self.stretch())

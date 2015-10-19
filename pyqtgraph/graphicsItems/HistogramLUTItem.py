@@ -139,6 +139,9 @@ class HistogramLUTItem(GraphicsWidget):
         #self.region.setBounds([vr.top(), vr.bottom()])
 
     def setImageItem(self, img):
+        """Set an ImageItem to have its levels and LUT automatically controlled
+        by this HistogramLUTItem.
+        """
         self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
         img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
@@ -163,6 +166,9 @@ class HistogramLUTItem(GraphicsWidget):
         self.sigLookupTableChanged.emit(self)
 
     def getLookupTable(self, img=None, n=None, alpha=None):
+        """Return a lookup table from the color gradient defined by this 
+        HistogramLUTItem.
+        """
         if n is None:
             if img.dtype == np.uint8:
                 n = 256
@@ -199,7 +205,11 @@ class HistogramLUTItem(GraphicsWidget):
             profiler('set region')
             
     def getLevels(self):
+        """Return the min and max levels.
+        """
         return self.region.getRegion()
         
     def setLevels(self, mn, mx):
+        """Set the min and max levels.
+        """
         self.region.setRegion([mn, mx])

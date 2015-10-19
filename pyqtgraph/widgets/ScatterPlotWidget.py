@@ -13,10 +13,11 @@ __all__ = ['ScatterPlotWidget']
 
 class ScatterPlotWidget(QtGui.QSplitter):
     """
-    Given a record array, display a scatter plot of a specific set of data.
-    This widget includes controls for selecting the columns to plot,
-    filtering data, and determining symbol color and shape. This widget allows
-    the user to explore relationships between columns in a record array.
+    This is a high-level widget for exploring relationships in tabular data.
+        
+    Given a multi-column record array, the widget displays a scatter plot of a
+    specific subset of the data. Includes controls for selecting the columns to
+    plot, filtering data, and determining symbol color and shape.
     
     The widget consists of four components:
     

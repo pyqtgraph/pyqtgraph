@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
 from .Node import *
 from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *
@@ -9,6 +9,9 @@ from .. import FileDialog, DataTreeWidget
 if USE_PYSIDE:
     from . import FlowchartTemplate_pyside as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyside as FlowchartCtrlTemplate
+elif USE_PYQT5:
+    from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
+    from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
 else:
     from . import FlowchartTemplate_pyqt as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyqt as FlowchartCtrlTemplate
@@ -349,7 +352,6 @@ class Flowchart(Node):
             #tdeps[t] = lastNode
             if lastInd is not None:
                 dels.append((lastInd+1, t))
-        #dels.sort(lambda a,b: cmp(b[0], a[0]))
         dels.sort(key=lambda a: a[0], reverse=True)
         for i, t in dels:
             ops.insert(i, ('d', t))
@@ -464,7 +466,6 @@ class Flowchart(Node):
                 self.clear()
             Node.restoreState(self, state)
             nodes = state['nodes']
-            #nodes.sort(lambda a, b: cmp(a['pos'][0], b['pos'][0]))
             nodes.sort(key=lambda a: a['pos'][0])
             for n in nodes:
                 if n['name'] in self._nodes:
@@ -619,7 +620,10 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         self.cwWin.resize(1000,800)
         
         h = self.ui.ctrlList.header()
-        h.setResizeMode(0, h.Stretch)
+        if not USE_PYQT5:
+            h.setResizeMode(0, h.Stretch)
+        else:
+            h.setSectionResizeMode(0, h.Stretch)
         
         self.ui.ctrlList.itemChanged.connect(self.itemChanged)
         self.ui.loadBtn.clicked.connect(self.loadClicked)

@@ -12,7 +12,7 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import os, sys
+import os
 import numpy as np
 
 from ..Qt import QtCore, QtGui, USE_PYSIDE
@@ -34,7 +34,7 @@ try:
     from bottleneck import nanmin, nanmax
 except ImportError:
     from numpy import nanmin, nanmax
-    
+
 
 class PlotROI(ROI):
     def __init__(self, size):
@@ -145,13 +145,13 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.roi)
         self.roi.hide()
         self.normRoi = PlotROI(10)
-        self.normRoi.setPen(QtGui.QPen(QtGui.QColor(255,255,0)))
+        self.normRoi.setPen('y')
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
-        self.timeLine.setPen(QtGui.QPen(QtGui.QColor(255, 255, 0, 200)))
+        self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])

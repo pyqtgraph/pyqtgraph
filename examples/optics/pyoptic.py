@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
-#from pyqtgraph.canvas import Canvas, CanvasItem
+from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import csv, gzip, os
 from pyqtgraph import Point

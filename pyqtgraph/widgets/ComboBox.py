@@ -1,8 +1,9 @@
+import sys
 from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
-import sys
 from ..pgcollections import OrderedDict
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, basestring
+
 
 class ComboBox(QtGui.QComboBox):
     """Extends QComboBox to add extra functionality.

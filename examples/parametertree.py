@@ -124,7 +124,7 @@ p.sigTreeStateChanged.connect(change)
 
 
 def valueChanging(param, value):
-    print("Value changing (not finalized):", param, value)
+    print("Value changing (not finalized): %s %s" % (param, value))
     
 # Too lazy for recursion:
 for child in p.children():

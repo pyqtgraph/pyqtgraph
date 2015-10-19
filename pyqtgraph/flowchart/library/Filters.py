@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 from ...Qt import QtCore, QtGui
 from ..Node import Node
 from . import functions
 from ... import functions as pgfn
 from .common import *
-import numpy as np
-
+from ...python2_3 import xrange
 from ... import PolyLineROI
 from ... import Point
 from ... import metaarray as metaarray

@@ -10,13 +10,15 @@ is used by the view widget
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
 import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 
 if USE_PYSIDE:
     import VideoTemplate_pyside as VideoTemplate
+elif USE_PYQT5:
+    import VideoTemplate_pyqt5 as VideoTemplate
 else:
     import VideoTemplate_pyqt as VideoTemplate
     

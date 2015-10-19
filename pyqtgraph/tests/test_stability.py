@@ -6,7 +6,7 @@ the tear them down repeatedly.
 
 The purpose of this is to attempt to generate segmentation faults.
 """
-from PyQt4.QtTest import QTest
+from pyqtgraph.Qt import QtTest
 import pyqtgraph as pg
 from random import seed, randint
 import sys, gc, weakref
@@ -63,7 +63,7 @@ def crashtest():
                 print("Caught interrupt; send another to exit.")
                 try:
                     for i in range(100):
-                        QTest.qWait(100)
+                        QtTest.QTest.qWait(100)
                 except KeyboardInterrupt:
                     thread.terminate()
                     break
@@ -135,7 +135,7 @@ def showWidget():
 
 def processEvents():
     p('process events')
-    QTest.qWait(25)
+    QtTest.QTest.qWait(25)
 
 class TstException(Exception):
     pass

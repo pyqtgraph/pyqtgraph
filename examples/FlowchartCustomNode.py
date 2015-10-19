@@ -89,7 +89,7 @@ class ImageViewNode(Node):
 ## CtrlNode is just a convenience class that automatically creates its
 ## control widget based on a simple data structure.
 class UnsharpMaskNode(CtrlNode):
-    """Return the input data passed through pg.gaussianFilter."""
+    """Return the input data passed through an unsharp mask."""
     nodeName = "UnsharpMask"
     uiTemplate = [
         ('sigma',  'spin', {'value': 1.0, 'step': 1.0, 'range': [0.0, None]}),

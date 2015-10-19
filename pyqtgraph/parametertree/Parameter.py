@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}

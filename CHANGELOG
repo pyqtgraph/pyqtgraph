@@ -1,3 +1,30 @@
+pyqtgraph-0.9.11  [unreleased]
+
+  Bugfixes:
+    - Fixed git version string generation on python3
+    - Fixed setting default values for out-of-bound points in pg.interpolateArray
+    - Fixed plot downsampling bug on python 3
+    - DockArea:
+        - Fixed adding Docks to DockArea after all Docks have been removed
+        - Fixed DockArea save/restoreState when area is empty
+    - Properly remove select box when export dialog is closed using window decorations
+    - Remove all modifications to builtins
+    - Fix SpinBox decimals
+
+  New Features:
+    - Preliminary PyQt5 support
+    - DockArea:
+	- Dock titles can be changed after creation
+        - Added Dock.sigClosed
+
+  Maintenance:
+    - Add examples to unit tests
+
+
+pyqtgraph-0.9.10
+
+  Fixed installation issues with more recent pip versions.
+
 pyqtgraph-0.9.9
 
   API / behavior changes:

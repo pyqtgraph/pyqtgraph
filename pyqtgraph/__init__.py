@@ -41,13 +41,15 @@ elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but als
     useOpenGL = False
     if QtGui.QApplication.instance() is not None:
         print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
-    QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
+    if QtGui.QApplication.setGraphicsSystem:
+        QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
 CONFIG_OPTIONS = {
     'useOpenGL': useOpenGL, ## by default, this is platform-dependent (see widgets/GraphicsView). Set to True or False to explicitly enable/disable opengl.
     'leftButtonPan': True,  ## if false, left button drags a rubber band for zooming in viewbox
+    # foreground/background take any arguments to the 'mkColor' in /pyqtgraph/functions.py
     'foreground': 'd',  ## default foreground color for axes, labels, etc.
     'background': 'k',        ## default background for GraphicsWidget
     'antialias': False,
@@ -345,7 +347,7 @@ def exit():
     
     ## close file handles
     if sys.platform == 'darwin':
-        for fd in xrange(3, 4096):
+        for fd in range(3, 4096):
             if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
                 os.close(fd)
     else:

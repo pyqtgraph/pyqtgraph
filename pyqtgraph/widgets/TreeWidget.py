@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
 from weakref import *
+from ..Qt import QtGui, QtCore
+from ..python2_3 import xrange
+
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
+
+
 class TreeWidget(QtGui.QTreeWidget):
     """Extends QTreeWidget to allow internal drag/drop with widgets in the tree.
     Also maintains the expanded state of subtrees as they are moved.

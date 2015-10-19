@@ -1,9 +1,109 @@
-__pycache__
-build
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+doc/_build
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+cover/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+.coverage.*
+
+# Translations
+*.mo
+*.pot
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Sphinx documentation
+docs/_build/
+
+#mac
+.DS_Store
+*~
+
+#vim
 *.swp
+
+#pycharm
+.idea/*
+
+#Dolphin browser files
+.directory/
+.directory
+
+#Binary data files
+*.volume
+*.am
+*.tiff
+*.tif
+*.dat
+*.DAT
+
+#generated documntation files
+doc/resource/api/generated/
+
+# Enaml
+__enamlcache__/
+
+
+# PyBuilder
+target/
+
+# sphinx docs
+generated/
+
 MANIFEST
 deb_build
-dist
-.idea
 rtr.cvs
+
+# pytest parallel
+.coverage
+
+# ctags
+.tags*
+
