@@ -31,6 +31,8 @@ spins = [
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.5, minStep=0.01)),
     ("Float with SI-prefixed units,<br>dec step=1.0, minStep=0.001", 
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=1.0, minStep=0.001)),
+    ("Integer with bounds=[10, 20] and wrapping",
+     pg.SpinBox(value=10, bounds=[10, 20], int=False, minStep=1, step=1, wrapping=True)),
 ]
 
 
