@@ -18,6 +18,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.label = DockLabel(name, self, closable)
         if closable:
             self.label.sigCloseClicked.connect(self.close)
+        self.closable = closable
         self.labelHidden = False
         self.moveLabel = True  ## If false, the dock is no longer allowed to move the label.
         self.autoOrient = autoOrientation
