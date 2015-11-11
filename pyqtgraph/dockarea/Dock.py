@@ -9,13 +9,15 @@ class Dock(QtGui.QWidget, DockDrop):
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
     
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False, label=None):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
         self._container = None
         self._name = name
         self.area = area
-        self.label = DockLabel(name, self, closable)
+        if label is None:
+            label = name
+        self.label = DockLabel(label, self, closable)
         if closable:
             self.label.sigCloseClicked.connect(self.close)
         self.closable = closable
