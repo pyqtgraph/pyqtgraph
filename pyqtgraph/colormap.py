@@ -223,7 +223,7 @@ class ColorMap(object):
         x = np.linspace(start, stop, nPts)
         table = self.map(x, mode)
         
-        if not alpha:
+        if not alpha and mode != ColorMap.QCOLOR:
             return table[:,:3]
         else:
             return table
