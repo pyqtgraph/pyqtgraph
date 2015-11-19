@@ -7,15 +7,20 @@ pyqtgraph-0.9.11  [unreleased]
     - DockArea:
         - Fixed adding Docks to DockArea after all Docks have been removed
         - Fixed DockArea save/restoreState when area is empty
+        - Fixed do not close non-closable docks
     - Properly remove select box when export dialog is closed using window decorations
     - Remove all modifications to builtins
     - Fix SpinBox decimals
+    - ColorMap:
+        -Fixed calling getLookupTable with mode='qcolor' work correctly
 
   New Features:
     - Preliminary PyQt5 support
     - DockArea:
-	- Dock titles can be changed after creation
+	    - Dock titles can be changed after creation
         - Added Dock.sigClosed
+        - Closable property can change after creation
+        - Setting label and name independently
 
   Maintenance:
     - Add examples to unit tests
