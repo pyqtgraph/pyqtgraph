@@ -1,9 +1,3 @@
-pyqtgraph-0.9.99 [allebacco]
-
-    - ColorMap:
-        -Fixed calling getLookupTable with mode='qcolor' work correctly
-
-
 pyqtgraph-0.9.11  [unreleased]
 
   Bugfixes:
