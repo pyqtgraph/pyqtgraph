@@ -17,7 +17,7 @@ pyqtgraph-0.9.11  [unreleased]
   New Features:
     - Preliminary PyQt5 support
     - DockArea:
-	    - Dock titles can be changed after creation
+        - Dock titles can be changed after creation
         - Added Dock.sigClosed
         - Closable property can change after creation
         - Setting label and name independently
