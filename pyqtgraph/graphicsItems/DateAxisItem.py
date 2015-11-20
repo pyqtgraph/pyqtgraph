@@ -131,18 +131,18 @@ class ZoomLevel:
 
 YEAR_MONTH_ZOOM_LEVEL = ZoomLevel([
     TickSpec(YEAR_SPACING, makeYStepper(1), '%Y', autoSkip=[1, 5, 10, 25]),
-    TickSpec(MONTH_SPACING, makeMStepper(1), '%b')
+    TickSpec(MONTH_SPACING, makeMStepper(1), '%m-%Y')
 ])
 MONTH_DAY_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(MONTH_SPACING, makeMStepper(1), '%b'),
-    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d', autoSkip=[1, 5])
+    TickSpec(MONTH_SPACING, makeMStepper(1), '%m-%Y'),
+    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d-%m-%Y', autoSkip=[1, 5])
 ])
 DAY_HOUR_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
+    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d-%m-%Y'),
     TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), '%H:%M', autoSkip=[1, 6])
 ])
 HOUR_MINUTE_ZOOM_LEVEL = ZoomLevel([
-    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
+    TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d-%m-%Y'),
     TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M',
              autoSkip=[1, 5, 15])
 ])
@@ -213,7 +213,7 @@ class DateAxisItem(AxisItem):
         key = next((k for k in keys if density < k), keys[-1])
         self.zoomLevel = self.zoomLevels[key]
         self.zoomLevel.utcOffset = self.utcOffset
-    
+
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`
@@ -225,4 +225,3 @@ class DateAxisItem(AxisItem):
             self.updateAutoSIPrefix()
         self.picture = None
         self.update()
-
