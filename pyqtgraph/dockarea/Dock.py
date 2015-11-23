@@ -9,15 +9,18 @@ class Dock(QtGui.QWidget, DockDrop):
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
     
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False, label=None):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
         self._container = None
         self._name = name
         self.area = area
-        self.label = DockLabel(name, self, closable)
-        if closable:
-            self.label.sigCloseClicked.connect(self.close)
+        if label is None:
+            label = name
+        self.label = DockLabel(label, self)
+        self.label.setShowCloseButton(closable)
+        self.label.sigCloseClicked.connect(self.close)
+        self.closable = closable
         self.labelHidden = False
         self.moveLabel = True  ## If false, the dock is no longer allowed to move the label.
         self.autoOrient = autoOrientation
@@ -75,6 +78,10 @@ class Dock(QtGui.QWidget, DockDrop):
 
         if hideTitle:
             self.hideTitleBar()
+
+    def setClosable(self, closable):
+        self.closable = closable
+        self.label.setShowCloseButton(closable)
 
     def implements(self, name=None):
         if name is None:
@@ -263,7 +270,7 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
     
-    def __init__(self, text, dock, showCloseButton):
+    def __init__(self, text, dock):
         self.dim = False
         self.fixedWidth = False
         VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
@@ -273,11 +280,15 @@ class DockLabel(VerticalLabel):
         self.setAutoFillBackground(False)
         self.startedDrag = False
 
-        self.closeButton = None
-        if showCloseButton:
-            self.closeButton = QtGui.QToolButton(self)
-            self.closeButton.clicked.connect(self.sigCloseClicked)
-            self.closeButton.setIcon(QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+        self.closeButton = QtGui.QToolButton(self)
+        self.closeButton.clicked.connect(self.sigCloseClicked)
+        self.closeButton.setIcon(QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton))
+
+    def setShowCloseButton(self, show):
+        if show:
+            self.closeButton.show()
+        else:
+            self.closeButton.hide()
 
     def updateStyle(self):
         r = '3px'
@@ -348,14 +359,13 @@ class DockLabel(VerticalLabel):
         if ev.button() == QtCore.Qt.LeftButton:
             self.dock.float()
             
-    def resizeEvent (self, ev):
-        if self.closeButton:
-            if self.orientation == 'vertical':
-                size = ev.size().width()
-                pos = QtCore.QPoint(0, 0)
-            else:
-                size = ev.size().height()
-                pos = QtCore.QPoint(ev.size().width() - size, 0)
-            self.closeButton.setFixedSize(QtCore.QSize(size, size))
-            self.closeButton.move(pos)
+    def resizeEvent(self, ev):
+        if self.orientation == 'vertical':
+            size = ev.size().width()
+            pos = QtCore.QPoint(0, 0)
+        else:
+            size = ev.size().height()
+            pos = QtCore.QPoint(ev.size().width() - size, 0)
+        self.closeButton.setFixedSize(QtCore.QSize(size, size))
+        self.closeButton.move(pos)
         super(DockLabel,self).resizeEvent(ev)
