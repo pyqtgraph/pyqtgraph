@@ -826,7 +826,7 @@ def rescaleData(data, scale, offset, dtype=None):
         #p = np.poly1d([scale, -offset*scale])
         #data = p(data).astype(dtype)
         d2 = data-offset
-        d2 *= scale
+        d2 = d2 * scale
         data = d2.astype(dtype)
     return data
     
