@@ -353,11 +353,11 @@ class TableWidget(QtGui.QTableWidget):
         self.contextMenu.popup(ev.globalPos())
         
     def keyPressEvent(self, ev):
-        if ev.text() == 'c' and ev.modifiers() == QtCore.Qt.ControlModifier:
+        if ev.key() == QtCore.Qt.Key_C and ev.modifiers() == QtCore.Qt.ControlModifier:
             ev.accept()
-            self.copy()
+            self.copySel()
         else:
-            ev.ignore()
+            QtGui.QTableWidget.keyPressEvent(self, ev)
 
     def handleItemChanged(self, item):
         item.itemChanged()
