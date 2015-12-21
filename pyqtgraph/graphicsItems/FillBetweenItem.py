@@ -70,11 +70,14 @@ class FillBetweenItem(QtGui.QGraphicsPathItem):
 
         path = QtGui.QPainterPath()
         transform = QtGui.QTransform()
-        p1 = paths[0].toSubpathPolygons(transform)
-        p2 = paths[1].toReversed().toSubpathPolygons(transform)
-        if len(p1) == 0 or len(p2) == 0:
+        ps1 = paths[0].toSubpathPolygons(transform)
+        ps2 = paths[1].toReversed().toSubpathPolygons(transform)
+        ps2.reverse()
+        if len(ps1) == 0 or len(ps2) == 0:
             self.setPath(QtGui.QPainterPath())
             return
-
-        path.addPolygon(p1[0] + p2[0])
+        
+            
+        for p1, p2 in zip(ps1, ps2):
+            path.addPolygon(p1 + p2)
         self.setPath(path)
