@@ -99,7 +99,7 @@ def createWidget():
     widget = randItem(widgetTypes)()
     widget.setWindowTitle(widget.__class__.__name__)
     widgets.append(widget)
-    allWidgets['widget'] = 1
+    allWidgets[widget] = 1
     p("    %s" % widget)
     return widget
 
