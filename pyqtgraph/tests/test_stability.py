@@ -34,7 +34,7 @@ itemTypes = [
 
 widgets = []
 items = []
-allWidgets = weakref.WeakSet()
+allWidgets = weakref.WeakKeyDictionary()
 
 
 def crashtest():
@@ -99,7 +99,7 @@ def createWidget():
     widget = randItem(widgetTypes)()
     widget.setWindowTitle(widget.__class__.__name__)
     widgets.append(widget)
-    allWidgets.add(widget)
+    allWidgets['widget'] = 1
     p("    %s" % widget)
     return widget
 
