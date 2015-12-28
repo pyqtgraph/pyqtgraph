@@ -63,6 +63,11 @@ class InfiniteLine(GraphicsObject):
         self.setPen(pen)
         self.setHoverPen(color=(255,0,0), width=self.pen.width())
         self.currentPen = self.pen
+        
+        # Caching pixel length and bounding rect for improving performance
+        self._pxLength = None
+        self._boundingRect = None
+        self._line = None
       
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -135,10 +140,12 @@ class InfiniteLine(GraphicsObject):
                 newPos[1] = min(newPos[1], self.maxRange[1])
             
         if self.p != newPos:
+            self._boundingRect = None
+            self._line = None
             self.p = newPos
             GraphicsObject.setPos(self, Point(self.p))
-            self.update()
             self.sigPositionChanged.emit(self)
+            self.update()
 
     def getXPos(self):
         return self.p[0]
@@ -174,24 +181,31 @@ class InfiniteLine(GraphicsObject):
         #else:
             #print "ignore", change
         #return GraphicsObject.itemChange(self, change, val)
-                
+
     def boundingRect(self):
-        #br = UIGraphicsItem.boundingRect(self)
-        br = self.viewRect()
-        ## add a 4-pixel radius around the line for mouse interaction.
-        
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
-        w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-        br.setBottom(-w)
-        br.setTop(w)
-        return br.normalized()
+        if self._boundingRect is None:
+            #br = UIGraphicsItem.boundingRect(self)
+            br = self.viewRect()
+            ## add a 4-pixel radius around the line for mouse interaction.
+
+            if self._pxLength is None:
+                px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+                if px is None:
+                    px = 0
+                self._pxLength = px
+            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * self._pxLength
+            br.setBottom(-w)
+            br.setTop(w)
+            self._boundingRect = br.normalized()
+        return self._boundingRect
     
     def paint(self, p, *args):
-        br = self.boundingRect()
+        if self._line is None:
+            br = self.boundingRect()
+            self._line = QtCore.QLineF(QtCore.QPointF(br.right(), 0), QtCore.QPointF(br.left(), 0))
         p.setPen(self.currentPen)
-        p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
+        #p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
+        p.drawLine(self._line)
         
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
@@ -240,3 +254,21 @@ class InfiniteLine(GraphicsObject):
         else:
             self.currentPen = self.pen
         self.update()
+    
+    def viewTransformChanged(self):
+        """
+        Called whenever the transformation matrix of the view has changed.
+        (eg, the view range has changed or the view was resized)
+        """
+        self._pxLength = None
+        self._boundingRect = None
+        self._line = None
+        GraphicsObject.viewTransformChanged(self)
+
+    def viewChanged(self, view, oldView):
+        """Called when this item's view has changed
+        (ie, the item has been added to or removed from a ViewBox)"""
+        self._pxLength = None
+        self._boundingRect = None
+        self._line = None
+        GraphicsObject.viewChanged(self, view, oldView)
