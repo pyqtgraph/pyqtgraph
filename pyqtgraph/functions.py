@@ -2122,10 +2122,19 @@ def invertQTransform(tr):
     Note that this function is preferred over QTransform.inverted() due to
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
-    """
-    try:
 
-        #arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+    Hensissrl: use QTransform.inverted() instead of numpy for performance reason
+    """
+    # Try first with QTransform.inverted()
+
+    inv = tr.inverted()
+    if inv[1] is True:
+        return inv[0]
+    else:
+        raise Exception("Transform is not invertible.")
+
+    '''
+    try:
         inv = linalg_inv([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
         return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     except ImportError:
@@ -2133,6 +2142,8 @@ def invertQTransform(tr):
         if inv[1] is False:
             raise Exception("Transform is not invertible.")
         return inv[0]
+    '''
+
 
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
