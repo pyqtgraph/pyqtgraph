@@ -184,27 +184,22 @@ class InfiniteLine(GraphicsObject):
 
     def boundingRect(self):
         if self._boundingRect is None:
-            #br = UIGraphicsItem.boundingRect(self)
             br = self.viewRect()
             ## add a 4-pixel radius around the line for mouse interaction.
 
             if self._pxLength is None:
-                px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-                if px is None:
-                    px = 0
-                self._pxLength = px
-            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * self._pxLength
+                px = self.pixelLength(direction=QtCore.QPointF(1.0, 0.0), ortho=True)  ## get pixel length orthogonal to the line
+                self._pxLength = 0.0 if px is None else px
+            w = (max(4.0, self.pen.width()/2.0, self.hoverPen.width()/2.0)+1.0) * self._pxLength
             br.setBottom(-w)
             br.setTop(w)
-            self._boundingRect = br.normalized()
+            br = br.normalized()
+            self._boundingRect = br
+            self._line = QtCore.QLineF(br.right(), 0, br.left(), 0)
         return self._boundingRect
     
     def paint(self, p, *args):
-        if self._line is None:
-            br = self.boundingRect()
-            self._line = QtCore.QLineF(QtCore.QPointF(br.right(), 0), QtCore.QPointF(br.left(), 0))
         p.setPen(self.currentPen)
-        #p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
         p.drawLine(self._line)
         
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
