@@ -7,6 +7,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 from .Qt import QtCore
 import numpy as np
+from math import sqrt
 
 def clip(x, mn, mx):
     if x > mx:
@@ -105,7 +106,8 @@ class Point(QtCore.QPointF):
     
     def length(self):
         """Returns the vector length of this Point."""
-        return (self[0]**2 + self[1]**2) ** 0.5
+        #return (self[0]**2 + self[1]**2) ** 0.5
+        return sqrt(self.x()**2 + self.y()**2)
     
     def norm(self):
         """Returns a vector in the same direction with unit length."""
