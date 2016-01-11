@@ -111,6 +111,70 @@ def test_subArray():
     assert np.all(bb == cc)
     
     
+def test_rescaleData():
+    dtypes = map(np.dtype, ('ubyte', 'uint16', 'byte', 'int16', 'int', 'float'))
+    for dtype1 in dtypes:
+        for dtype2 in dtypes:
+            data = (np.random.random(size=10) * 2**32 - 2**31).astype(dtype1)
+            for scale, offset in [(10, 0), (10., 0.), (1, -50), (0.2, 0.5), (0.001, 0)]:
+                if dtype2.kind in 'iu':
+                    lim = np.iinfo(dtype2)
+                    lim = lim.min, lim.max
+                else:
+                    lim = (-np.inf, np.inf)
+                s1 = np.clip(float(scale) * (data-float(offset)), *lim).astype(dtype2)
+                s2 = pg.rescaleData(data, scale, offset, dtype2)
+                assert s1.dtype == s2.dtype
+                if dtype2.kind in 'iu':
+                    assert np.all(s1 == s2)
+                else:
+                    assert np.allclose(s1, s2)
+
+
+def test_makeARGB():
+    
+    # uint8 data tests
+    
+    im1 = np.array([[1,2,3], [4,5,8]], dtype='ubyte')
+    im2, alpha = pg.makeARGB(im1, levels=(0, 6))
+    assert im2.dtype == np.ubyte
+    assert alpha == False
+    assert np.all(im2[...,3] == 255)
+    assert np.all(im2[...,:3] == np.array([[42, 85, 127], [170, 212, 255]], dtype=np.ubyte)[...,np.newaxis])
+    
+    im3, alpha = pg.makeARGB(im1, levels=(0.0, 6.0))
+    assert im3.dtype == np.ubyte
+    assert alpha == False
+    assert np.all(im3 == im2)
+
+    im2, alpha = pg.makeARGB(im1, levels=(2, 10))
+    assert im2.dtype == np.ubyte
+    assert alpha == False
+    assert np.all(im2[...,3] == 255)
+    assert np.all(im2[...,:3] == np.array([[0, 0, 31], [63, 95, 191]], dtype=np.ubyte)[...,np.newaxis])
+
+    im2, alpha = pg.makeARGB(im1, levels=(2, 10), scale=1.0)
+    assert im2.dtype == np.float
+    assert alpha == False
+    assert np.all(im2[...,3] == 1.0)
+    assert np.all(im2[...,:3] == np.array([[0, 0, 31], [63, 95, 191]], dtype=np.ubyte)[...,np.newaxis])
+
+    # uint8 input + uint8 LUT
+    lut = np.arange(512).astype(np.ubyte)[::2][::-1]
+    im2, alpha = pg.makeARGB(im1, lut=lut, levels=(2, 10))
+    assert im2.dtype == np.ubyte
+    assert alpha == False
+    assert np.all(im2[...,3] == 255)
+    assert np.all(im2[...,:3] == np.array([[0, 0, 31], [63, 95, 191]], dtype=np.ubyte)[...,np.newaxis])
+    
+    # uint8 data + uint16 LUT
+
+    # uint8 data + float LUT
+    
+    # uint16 data tests
+    
+    im1 = np.array([[1,2,3], [4,5,8]], dtype='ubyte')
+    
     
 if __name__ == '__main__':
     test_interpolateArray()

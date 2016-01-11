@@ -824,9 +824,14 @@ def rescaleData(data, scale, offset, dtype=None):
             setConfigOptions(useWeave=False)
         
         #p = np.poly1d([scale, -offset*scale])
-        #data = p(data).astype(dtype)
-        d2 = data-offset
-        np.multiply(d2, scale, out=d2, casting="unsafe")
+        #d2 = p(data)
+        d2 = data - float(offset)
+        d2 *= scale
+        
+        # Clip before converting dtype to avoid overflow
+        if dtype.kind in 'ui':
+            lim = np.iinfo(dtype)
+            d2 = np.clip(d2, lim.min, lim.max)
         data = d2.astype(dtype)
     return data
     
@@ -875,8 +880,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                    channel). The use of this feature requires that levels.shape[0] == data.shape[-1].
     scale          The maximum value to which data will be rescaled before being passed through the 
                    lookup table (or returned if there is no lookup table). By default this will
-                   be set to the length of the lookup table, or 256 is no lookup table is provided.
-                   For OpenGL color specifications (as in GLColor4f) use scale=1.0
+                   be set to the length of the lookup table, or 255 if no lookup table is provided.
+                   For OpenGL color specifications (as in GLColor4f) use scale=1.0. 
     lut            Optional lookup table (array with dtype=ubyte).
                    Values in data will be converted to color by indexing directly from lut.
                    The output data shape will be input.shape + lut.shape[1:].
@@ -884,7 +889,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                    Note: the output of makeARGB will have the same dtype as the lookup table, so
                    for conversion to QImage, the dtype must be ubyte.
                    
-                   Lookup tables can be built using GradientWidget.
+                   Lookup tables can be built using ColorMap or GradientWidget.
     useRGBA        If True, the data is returned in RGBA order (useful for building OpenGL textures). 
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
@@ -918,6 +923,13 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             scale = lut.shape[0]
         else:
             scale = 255.
+            
+    if lut is not None:
+        dtype = lut.dtype
+    elif scale == 255:
+        dtype = np.ubyte
+    else:
+        dtype = np.float
 
     ## Apply levels if given
     if levels is not None:
@@ -931,16 +943,26 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
                     maxVal += 1e-16
-                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=int)
+                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
             data = newData
         else:
             minVal, maxVal = levels
             if minVal == maxVal:
                 maxVal += 1e-16
             if maxVal == minVal:
-                data = rescaleData(data, 1, minVal, dtype=int)
+                data = rescaleData(data, 1, minVal, dtype=dtype)
             else:
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=int)
+                lutSize = 2**(data.itemsize*8)
+                if data.dtype in (np.ubyte, np.uint16) and data.size > lutSize:
+                    # Rather than apply scaling to image, scale the LUT for better performance.
+                    ind = np.arange(lutSize)
+                    indr = rescaleData(ind, scale/(maxVal-minVal), minVal, dtype=dtype)
+                    if lut is None:
+                        lut = indr
+                    else:
+                        lut = lut[indr]
+                else:
+                    data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
 
     profile()
 
