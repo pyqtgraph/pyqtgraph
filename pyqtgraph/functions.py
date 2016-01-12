@@ -1312,15 +1312,15 @@ def arrayToQPath(x, y, connect='all'):
         connect[:,0] = 1
         connect[:,1] = 0
         connect = connect.flatten()
-    if connect == 'finite':
+    elif connect == 'finite':
         connect = np.isfinite(x) & np.isfinite(y)
         arr[1:-1]['c'] = connect
-    if connect == 'all':
+    elif connect == 'all':
         arr[1:-1]['c'] = 1
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
-        raise Exception('connect argument must be "all", "pairs", or array')
+        raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
     #profiler('fill array')
     # write last 0
