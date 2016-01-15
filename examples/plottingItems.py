@@ -12,7 +12,6 @@ import pyqtgraph as pg
 app = QtGui.QApplication([])
 win = pg.GraphicsWindow(title="Plotting items examples")
 win.resize(1000,600)
-win.setWindowTitle('pyqtgraph example: plotting with items')
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
