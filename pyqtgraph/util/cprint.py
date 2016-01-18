@@ -69,27 +69,21 @@ def cprint(stream, *args, **kwds):
     else:
         err = kwds.get('stderr', False)
 
-    if hasattr(stream, 'isatty') and stream.isatty():
-        if _WIN:
-            # convert to win32 calls
-            for arg in args:
-                if isinstance(arg, basestring):
-                    stream.write(arg)
-                else:
-                    kwds = WIN[arg]
-                    winset(stderr=err, **kwds)
-        else:
-            # convert to ANSI
-            for arg in args:
-                if isinstance(arg, basestring):
-                    stream.write(arg)
-                else:
-                    stream.write(ANSI[arg])
-    else:
-        # ignore colors
-        for arg in args:
-            if isinstance(arg, basestring):
-                stream.write(arg)
+    for arg in args:
+        if isinstance(arg, bytes):
+            arg = arg.decode('latin1')
+
+        if isinstance(arg, basestring):
+            stream.write(arg)
+        elif hasattr(stream, 'isatty') and stream.isatty():
+            # ignore colors if not a tty
+            if _WIN:
+                # convert to win32 calls
+                kwds = WIN[arg]
+                winset(stderr=err, **kwds)
+            else:
+                # convert to ANSI
+                stream.write(ANSI[arg])
 
 def cout(*args):
     """Shorthand for cprint('stdout', ...)"""
