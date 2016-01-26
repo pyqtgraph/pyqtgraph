@@ -1305,17 +1305,17 @@ def arrayToQPath(x, y, connect='all'):
     arr[1:-1]['y'] = y
 
     # decide which points are connected by lines
-    if connect == 'pairs':
+    if connect is 'pairs':
         connect = np.empty((n/2,2), dtype=np.int32)
         if connect.size != n:
             raise Exception("x,y array lengths must be multiple of 2 to use connect='pairs'")
         connect[:,0] = 1
         connect[:,1] = 0
         connect = connect.flatten()
-    if connect == 'finite':
+    if connect is 'finite':
         connect = np.isfinite(x) & np.isfinite(y)
         arr[1:-1]['c'] = connect
-    if connect == 'all':
+    if connect is 'all':
         arr[1:-1]['c'] = 1
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
