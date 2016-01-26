@@ -188,8 +188,9 @@ class InfiniteLine(GraphicsObject):
             ## add a 4-pixel radius around the line for mouse interaction.
 
             if self._pxLength is None:
-                px = self.pixelLength(direction=QtCore.QPointF(1.0, 0.0), ortho=True)  ## get pixel length orthogonal to the line
-                self._pxLength = 0.0 if px is None else px
+                tr = self.deviceTransform()
+                self._pxLength = 0.0 if tr is None else (-1.0 / tr.m21())
+
             w = (max(4.0, self.pen.width()/2.0, self.hoverPen.width()/2.0)+1.0) * self._pxLength
             br.setBottom(-w)
             br.setTop(w)
