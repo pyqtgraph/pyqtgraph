@@ -52,6 +52,21 @@ tr.rotate(45)
 Symbols['x'] = tr.map(Symbols['+'])
 
 
+
+def makeRegularPolygon(numEdges):
+    path = QtGui.QPainterPath()
+    if numEdges < 3:
+        raise ValueError('The number of edges must be at least 3')
+
+    f = 2.0*np.pi/float(numEdges)
+    path.moveTo(0.5, 0)
+    for i in range(numEdges):
+        angle = i*f
+        path.lineTo(0.5*np.cos(angle), 0.5*np.sin(angle))
+    path.closeSubpath()
+    return path
+
+
 def drawSymbol(painter, symbol, size, pen, brush):
     if symbol is None:
         return
