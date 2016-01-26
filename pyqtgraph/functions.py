@@ -774,12 +774,11 @@ def solveBilinearTransform(points1, points2):
     
     return matrix
     
-def rescaleData(data, scale, offset, dtype=None):
+def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype::
     
         data => (data-offset) * scale
         
-    Uses scipy.weave (if available) to improve performance.
     """
     if dtype is None:
         dtype = data.dtype
@@ -831,7 +830,14 @@ def rescaleData(data, scale, offset, dtype=None):
         # Clip before converting dtype to avoid overflow
         if dtype.kind in 'ui':
             lim = np.iinfo(dtype)
-            d2 = np.clip(d2, lim.min, lim.max)
+            if clip is None:
+                # don't let rescale cause integer overflow
+                d2 = np.clip(d2, lim.min, lim.max)
+            else:
+                d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+        else:
+            if clip is not None:
+                d2 = np.clip(d2, *clip)
         data = d2.astype(dtype)
     return data
     
@@ -853,15 +859,18 @@ def makeRGBA(*args, **kwds):
     kwds['useRGBA'] = True
     return makeARGB(*args, **kwds)
 
+
 def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False): 
     """ 
-    Convert an array of values into an ARGB array suitable for building QImages, OpenGL textures, etc.
+    Convert an array of values into an ARGB array suitable for building QImages,
+    OpenGL textures, etc.
     
-    Returns the ARGB array (values 0-255) and a boolean indicating whether there is alpha channel data.
-    This is a two stage process:
+    Returns the ARGB array (unsigned byte) and a boolean indicating whether
+    there is alpha channel data. This is a two stage process:
     
         1) Rescale the data based on the values in the *levels* argument (min, max).
-        2) Determine the final output by passing the rescaled values through a lookup table.
+        2) Determine the final output by passing the rescaled values through a
+           lookup table.
    
     Both stages are optional.
     
@@ -881,18 +890,13 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     scale          The maximum value to which data will be rescaled before being passed through the 
                    lookup table (or returned if there is no lookup table). By default this will
                    be set to the length of the lookup table, or 255 if no lookup table is provided.
-                   For OpenGL color specifications (as in GLColor4f) use scale=1.0. 
     lut            Optional lookup table (array with dtype=ubyte).
                    Values in data will be converted to color by indexing directly from lut.
                    The output data shape will be input.shape + lut.shape[1:].
-                   
-                   Note: the output of makeARGB will have the same dtype as the lookup table, so
-                   for conversion to QImage, the dtype must be ubyte.
-                   
                    Lookup tables can be built using ColorMap or GradientWidget.
     useRGBA        If True, the data is returned in RGBA order (useful for building OpenGL textures). 
                    The default is False, which returns in ARGB order for use with QImage 
-                   (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
+                   (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
     ============== ==================================================================================
     """
@@ -909,7 +913,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 raise Exception('levels argument must have length 2')
         elif levels.ndim == 2:
             if lut is not None and lut.ndim > 1:
-                raise Exception('Cannot make ARGB data when bot levels and lut have ndim > 2')
+                raise Exception('Cannot make ARGB data when both levels and lut have ndim > 2')
             if levels.shape != (data.shape[-1], 2):
                 raise Exception('levels must have shape (data.shape[-1], 2)')
         else:
@@ -918,19 +922,19 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
 
     profile()
 
+    # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0]
+            scale = lut.shape[0] - 1
         else:
             scale = 255.
-            
-    if lut is not None:
-        dtype = lut.dtype
-    elif scale == 255:
+
+    # Decide on the dtype we want after scaling
+    if lut is None:
         dtype = np.ubyte
     else:
-        dtype = np.float
-
+        dtype = np.min_scalar_type(lut.shape[0]-1)
+            
     ## Apply levels if given
     if levels is not None:
         
@@ -949,20 +953,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal == maxVal:
                 maxVal += 1e-16
-            if maxVal == minVal:
-                data = rescaleData(data, 1, minVal, dtype=dtype)
-            else:
-                lutSize = 2**(data.itemsize*8)
-                if data.dtype in (np.ubyte, np.uint16) and data.size > lutSize:
-                    # Rather than apply scaling to image, scale the LUT for better performance.
-                    ind = np.arange(lutSize)
-                    indr = rescaleData(ind, scale/(maxVal-minVal), minVal, dtype=dtype)
-                    if lut is None:
-                        lut = indr
-                    else:
-                        lut = lut[indr]
-                else:
-                    data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+            data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
 
     profile()
 
