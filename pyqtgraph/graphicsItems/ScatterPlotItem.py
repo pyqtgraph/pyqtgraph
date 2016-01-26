@@ -709,7 +709,7 @@ class ScatterPlotItem(GraphicsObject):
         #pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         pts -= self.data['width']
-        pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
+        np.clip(pts, -2**30, 2**30, out=pts) ## prevent Qt segmentation fault.
 
         return pts
 
@@ -729,19 +729,21 @@ class ScatterPlotItem(GraphicsObject):
 
 
     @debug.warnOnException  ## raising an exception here causes crash
-    def paint(self, p, *args):
+    def paint(self, p, option, widget):
 
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
+
+        opts = self.opts
 
         if self._exportOpts is not False:
             aa = self._exportOpts.get('antialias', True)
             scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
         else:
-            aa = self.opts['antialias']
+            aa = opts['antialias']
             scale = 1.0
 
-        if self.opts['pxMode'] is True:
+        if opts['pxMode'] is True:
             p.resetTransform()
 
             # Map point coordinates to device
@@ -755,7 +757,7 @@ class ScatterPlotItem(GraphicsObject):
             #pts = pts[:,mask]
             #data = self.data[mask]
 
-            if self.opts['useCache'] and self._exportOpts is False:
+            if opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
                 atlas = self.fragmentAtlas.getAtlas()
 
