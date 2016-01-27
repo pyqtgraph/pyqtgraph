@@ -179,105 +179,68 @@ class GraphicsItem(object):
         return bounds
         
         
-        
+
     def pixelVectors(self, direction=None):
         """Return vectors in local coordinates representing the width and height of a view pixel.
         If direction is specified, then return vectors parallel and orthogonal to it.
-        
+
         Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)
         or if pixel size is below floating-point precision limit.
         """
-        
-        ## This is an expensive function that gets called very frequently.
-        ## We have two levels of cache to try speeding things up.
-        
+
+        # This is an expensive function that gets called very frequently.
+
         dt = self.deviceTransform()
         if dt is None:
             return None, None
-            
-        ## Ignore translation. If the translation is much larger than the scale
-        ## (such as when looking at unix timestamps), we can get floating-point errors.
-        dt.setMatrix(dt.m11(), dt.m12(), 0.0, dt.m21(), dt.m22(), 0.0, 0.0, 0.0, 1.0)
-        
-        '''
-        ## check local cache
-        if direction is None and dt == self._pixelVectorCache[0]:
-            pv = self._pixelVectorCache[1]
-            return (Point(pv[0]), Point(pv[1]))  # return a *copy*
-            #return tuple(map(Point, self._pixelVectorCache[1]))  ## return a *copy*
-        
-        ## check global cache
-        #key = (dt.m11(), dt.m21(), dt.m31(), dt.m12(), dt.m22(), dt.m32(), dt.m31(), dt.m32())
-        key = (dt.m11(), dt.m21(), dt.m12(), dt.m22())
-        pv = self._pixelVectorGlobalCache.get(key, None)
-        if direction is None and pv is not None:
-            self._pixelVectorCache = [dt, pv]
-            return (Point(pv[0]), Point(pv[1]))  # return a *copy*
-            #return tuple(map(Point, pv))  ## return a *copy*
-        '''
-        
-        
+
+        # Ignore translation. If the translation is much larger than the scale
+        # (such as when looking at unix timestamps), we can get floating-point errors.
+        m11 = dt.m11()
+        m12 = dt.m12()
+        m21 = dt.m21()
+        m22 = dt.m22()
+        dt = QtGui.QTransform(m11, m12, m21, m22, 0.0, 0.0)
+
         if direction is None:
             direction = QtCore.QPointF(1.0, 0.0)
         else:
             if direction.manhattanLength() == 0:
                 raise Exception("Cannot compute pixel length for 0-length vector.")
-            
-        ## attempt to re-scale direction vector to fit within the precision of the coordinate system
-        ## Here's the problem: we need to map the vector 'direction' from the item to the device, via transform 'dt'.
-        ## In some extreme cases, this mapping can fail unless the length of 'direction' is cleverly chosen.
-        ## Example:
-        ##   dt = [ 1, 0,    2 
-        ##          0, 2, 1e20
-        ##          0, 0,    1 ]
-        ## Then we map the origin (0,0) and direction (0,1) and get:
-        ##    o' = 2,1e20
-        ##    d' = 2,1e20  <-- should be 1e20+2, but this can't be represented with a 32-bit float
-        ##    
-        ##    |o' - d'|  == 0    <-- this is the problem.
-        
-        ## Perhaps the easiest solution is to exclude the transformation column from dt. Does this cause any other problems?
-        
-        #if direction.x() == 0:
-            #r = abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))
-            ##r = 1.0/(abs(dt.m12()) + abs(dt.m22()))
-        #elif direction.y() == 0:
-            #r = abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))
-            ##r = 1.0/(abs(dt.m11()) + abs(dt.m21()))
-        #else:
-            #r = ((abs(dt.m32())/(abs(dt.m12()) + abs(dt.m22()))) * (abs(dt.m31())/(abs(dt.m11()) + abs(dt.m21()))))**0.5
-        #if r == 0:
-            #r = 1.  ## shouldn't need to do this; probably means the math above is wrong?
-        #directionr = direction * r
-        #directionr = direction
-        
-        ## map direction vector onto device
-        #viewDir = Point(dt.map(directionr) - dt.map(Point(0,0)))
-        #mdirection = dt.map(directionr)
-        dirLine = QtCore.QLineF(QtCore.QPointF(0.0, 0.0), direction)
+
+        dirLine = QtCore.QLineF()  # p1 and p2 are (0, 0)
+        dirLine.setP2(direction)
         viewDir = dt.map(dirLine)
         if viewDir.length() == 0.0:
-            return None, None   ##  pixel size cannot be represented on this scale
-           
-        ## get unit vector and orthogonal vector (length of pixel)
-        #orthoDir = Point(viewDir[1], -viewDir[0])  ## orthogonal to line in pixel-space
-        try:  
+            return None, None  # pixel size cannot be represented on this scale
+
+        # get unit vector and orthogonal vector (length of pixel)
+        try:
             normView = viewDir.unitVector()
-            #normView = viewDir.norm()  ## direction of one pixel orthogonal to line
             normOrtho = normView.normalVector()
-            #normOrtho = orthoDir.norm()
         except:
             raise Exception("Invalid direction %s" % direction)
-            
-        ## map back to item 
-        dti = fn.invertQTransform(dt)
-        #pv = Point(dti.map(normView)-dti.map(Point(0,0))), Point(dti.map(normOrtho)-dti.map(Point(0,0)))
-        pv = Point(dti.map(normView).p2()), Point(dti.map(normOrtho).p2())
-        #self._pixelVectorCache[1] = pv
-        #self._pixelVectorCache[0] = dt
-        #self._pixelVectorGlobalCache[key] = pv
-        #return self._pixelVectorCache[1]
-        return pv
+
+        # map back to item
+        try:
+            # fast path (new code)
+            m11_i = 1.0/m11
+            m22_i = 1.0/m22
+            x = normView.p2().x()
+            y = normView.p2().y()
+            p1 = Point(m11_i*x + m21*y,
+                       m22_i*y + m12*x)
+            x = normOrtho.p2().x()
+            y = normOrtho.p2().y()
+            p2 = Point(m11_i*x + m21*y,
+                       m22_i*y + m12*x)
+        except:
+            # Slow path (old code, more stable)
+            dti = fn.invertQTransform(dt)
+            p1 = Point(dti.map(normView).p2())
+            p2 = Point(dti.map(normOrtho).p2())
+
+        return (p1, p2)
     
         
     def pixelLength(self, direction, ortho=False):
