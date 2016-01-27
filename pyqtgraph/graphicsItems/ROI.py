@@ -141,7 +141,7 @@ class ROI(GraphicsObject):
         self.hoverPen = fn.mkPen(hoverPen)
 
         if handlePen is None:
-            handlePen = QtGui.QPen(QtGui.QColor(150, 255, 255))
+            handlePen = (150, 255, 255)
         self.handlePen = fn.mkPen(handlePen)
         self.handles = []
         self.state = {'pos': Point(0,0), 'size': Point(1,1), 'angle': 0}  ## angle is in degrees for ease of Qt integration
