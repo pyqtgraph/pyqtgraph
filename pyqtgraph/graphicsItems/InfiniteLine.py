@@ -189,7 +189,8 @@ class InfiniteLine(GraphicsObject):
 
             if self._pxLength is None:
                 tr = self.deviceTransform()
-                self._pxLength = 0.0 if tr is None else (-1.0 / tr.m21())
+                px = self.pixelLength(direction=Point(1,0), ortho=True)
+                self._pxLength = 0.0 if px is None else px
 
             w = (max(4.0, self.pen.width()/2.0, self.hoverPen.width()/2.0)+1.0) * self._pxLength
             br.setBottom(-w)
