@@ -1633,6 +1633,8 @@ class ViewBox(GraphicsWidget):
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
         self._matrixNeedsUpdate = False
 
+        print 'scale', 1.0 / scale.x(), 1.0 / scale.y()
+
     def paint(self, p, opt, widget):
         self.checkSceneChange()
 
