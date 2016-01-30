@@ -901,24 +901,36 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
+
+    if data.ndim not in (2, 3):
+        raise TypeError("data must be 2D or 3D")
+    if data.ndim == 3 and data.shape[2] > 4:
+        raise TypeError("data.shape[2] must be <= 4")
     
     if lut is not None and not isinstance(lut, np.ndarray):
         lut = np.array(lut)
-    if levels is not None and not isinstance(levels, np.ndarray):
-        levels = np.array(levels)
     
-    if levels is not None:
-        if levels.ndim == 1:
-            if len(levels) != 2:
-                raise Exception('levels argument must have length 2')
-        elif levels.ndim == 2:
-            if lut is not None and lut.ndim > 1:
-                raise Exception('Cannot make ARGB data when both levels and lut have ndim > 2')
-            if levels.shape != (data.shape[-1], 2):
-                raise Exception('levels must have shape (data.shape[-1], 2)')
+    if levels is None:
+        # automatically decide levels based on data dtype
+        if data.dtype.kind == 'u':
+            levels = np.array([0, 2**(data.itemsize*8)-1])
+        elif data.dtype.kind == 'i':
+            s = 2**(data.itemsize*8 - 1)
+            levels = np.array([-s, s-1])
         else:
-            print(levels)
-            raise Exception("levels argument must be 1D or 2D.")
+            raise Exception('levels argument is required for float input types')
+    if not isinstance(levels, np.ndarray):
+        levels = np.array(levels)
+    if levels.ndim == 1:
+        if levels.shape[0] != 2:
+            raise Exception('levels argument must have length 2')
+    elif levels.ndim == 2:
+        if lut is not None and lut.ndim > 1:
+            raise Exception('Cannot make ARGB data when both levels and lut have ndim > 2')
+        if levels.shape != (data.shape[-1], 2):
+            raise Exception('levels must have shape (data.shape[-1], 2)')
+    else:
+        raise Exception("levels argument must be 1D or 2D.")
 
     profile()
 
@@ -935,11 +947,10 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
             
-    ## Apply levels if given
+    # Apply levels if given
     if levels is not None:
-        
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
-            ## we are going to rescale each channel independently
+            # we are going to rescale each channel independently
             if levels.shape[0] != data.shape[-1]:
                 raise Exception("When rescaling multi-channel data, there must be the same number of levels as channels (data.shape[-1] == levels.shape[0])")
             newData = np.empty(data.shape, dtype=int)
@@ -950,14 +961,17 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
             data = newData
         else:
+            # Apply level scaling unless it would have no effect on the data
             minVal, maxVal = levels
-            if minVal == maxVal:
-                maxVal += 1e-16
-            data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+            if minVal != 0 or maxVal != scale:
+                if minVal == maxVal:
+                    maxVal += 1e-16
+                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+            
 
     profile()
 
-    ## apply LUT if given
+    # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
     else:
@@ -966,16 +980,18 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
 
     profile()
 
-    ## copy data into ARGB ordered array
+    # this will be the final image array
     imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
 
     profile()
 
+    # decide channel order
     if useRGBA:
-        order = [0,1,2,3] ## array comes out RGBA
+        order = [0,1,2,3] # array comes out RGBA
     else:
-        order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
+        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
         
+    # copy data into image array
     if data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., np.newaxis]
@@ -990,7 +1006,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             imgData[..., i] = data[..., order[i]] 
         
     profile()
-        
+    
+    # add opaque alpha channel if needed
     if data.ndim == 2 or data.shape[2] == 3:
         alpha = False
         imgData[..., 3] = 255
