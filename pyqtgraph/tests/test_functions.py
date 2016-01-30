@@ -249,6 +249,14 @@ def test_makeARGB():
     lut = (np.arange(512, 2**16)[::-1] // 256).astype('ubyte')
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=(512, 2**16-256))
     checkImage(im2, np.clip(np.linspace(257, 2, 256), 0, 255).astype('ubyte'), alpha, False)
+
+    lut = np.zeros(2**16, dtype='ubyte')
+    lut[1000:1256] = np.arange(256)
+    lut[1256:] = 255
+    im1 = np.arange(1000, 1256).astype('uint16')[:, None]
+    im2, alpha = pg.makeARGB(im1, lut=lut)
+    checkImage(im2, np.arange(256).astype('ubyte'), alpha, False)
+    
     
     
     # float data tests

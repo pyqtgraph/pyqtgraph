@@ -309,11 +309,12 @@ class ImageItem(GraphicsObject):
 
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
-        if self.levels is not None and self.levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
+        levels = self.levels
+        if levels is not None and levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = np.arange(eflsize)
-                minlev, maxlev = self.levels
+                minlev, maxlev = levels
                 if lut is None:
                     efflut = fn.rescaleData(ind, scale=255./(maxlev-minlev), 
                                             offset=minlev, dtype=np.ubyte)
@@ -327,8 +328,7 @@ class ImageItem(GraphicsObject):
             lut = self._effectiveLut
             levels = None
 
-        
-        argb, alpha = fn.makeARGB(image.transpose((1, 0, 2)[:image.ndim]), lut=lut, levels=self.levels)
+        argb, alpha = fn.makeARGB(image.transpose((1, 0, 2)[:image.ndim]), lut=lut, levels=levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
