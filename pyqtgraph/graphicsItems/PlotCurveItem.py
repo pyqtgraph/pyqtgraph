@@ -167,28 +167,16 @@ class PlotCurveItem(GraphicsObject):
 
     def boundingRect(self):
         if self._boundingRect is None:
-            (xmn, xmx) = self.dataBounds(ax=0)
-            (ymn, ymx) = self.dataBounds(ax=1)
-            if xmn is None:
-                return QtCore.QRectF()
+            br = self.getPath().boundingRect()
 
-            self._boundingRect = QtCore.QRectF(xmn, ymn, xmx-xmn, ymx-ymn)
-            #px = py = 0.0
             pxPad = self.pixelPadding()
             if pxPad > 0:
                 # determine length of pixel in local x, y directions
-                px, py = self.pixelVectors()
-                # return bounds expanded by pixel size
-                try:
-                    px = 0 if px is None else px.length() * pxPad
-                except OverflowError:
-                    px = 0
-                try:
-                    py = 0 if py is None else py.length() * pxPad
-                except OverflowError:
-                    py = 0
-                #self._boundingRect = QtCore.QRectF(xmn-px, ymn-py, (2*px)+xmx-xmn, (2*py)+ymx-ymn)
-                self._boundingRect.adjust(-px, -py, px, py)
+                dt = self.deviceTransform()
+                px = 1.0/dt.m11() * pxPad
+                py = abs(1.0/dt.m22()) * pxPad
+                br.adjust(-px, -py, px, py)
+            self._boundingRect = br
 
         return self._boundingRect
 
@@ -302,6 +290,7 @@ class PlotCurveItem(GraphicsObject):
         self.updateData(*args, **kargs)
 
     def updateData(self, *args, **kargs):
+        print 'update data'
         profiler = debug.Profiler()
 
         if len(args) == 1:
