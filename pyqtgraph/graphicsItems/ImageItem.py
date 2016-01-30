@@ -47,6 +47,10 @@ class ImageItem(GraphicsObject):
         self.lut = None
         self.autoDownsample = False
         
+        # In some cases, we use a modified lookup table to handle both rescaling
+        # and LUT more efficiently
+        self._effectiveLut = None
+        
         self.drawKernel = None
         self.border = None
         self.removable = False
@@ -74,11 +78,6 @@ class ImageItem(GraphicsObject):
         """
         self.paintMode = mode
         self.update()
-
-    ## use setOpacity instead.
-    #def setAlpha(self, alpha):
-        #self.setOpacity(alpha)
-        #self.updateImage()
         
     def setBorder(self, b):
         self.border = fn.mkPen(b)
@@ -99,16 +98,6 @@ class ImageItem(GraphicsObject):
             return QtCore.QRectF(0., 0., 0., 0.)
         return QtCore.QRectF(0., 0., float(self.width()), float(self.height()))
 
-    #def setClipLevel(self, level=None):
-        #self.clipLevel = level
-        #self.updateImage()
-        
-    #def paint(self, p, opt, widget):
-        #pass
-        #if self.pixmap is not None:
-            #p.drawPixmap(0, 0, self.pixmap)
-            #print "paint"
-
     def setLevels(self, levels, update=True):
         """
         Set image scaling levels. Can be one of:
@@ -119,9 +108,13 @@ class ImageItem(GraphicsObject):
         Only the first format is compatible with lookup tables. See :func:`makeARGB <pyqtgraph.makeARGB>`
         for more details on how levels are applied.
         """
-        self.levels = levels
-        if update:
-            self.updateImage()
+        if levels is not None:
+            levels = np.asarray(levels)
+        if not fn.eq(levels, self.levels):
+            self.levels = levels
+            self._effectiveLut = None
+            if update:
+                self.updateImage()
         
     def getLevels(self):
         return self.levels
@@ -137,9 +130,11 @@ class ImageItem(GraphicsObject):
         Ordinarily, this table is supplied by a :class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>`
         or :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
         """
-        self.lut = lut
-        if update:
-            self.updateImage()
+        if lut is not self.lut:
+            self.lut = lut
+            self._effectiveLut = None
+            if update:
+                self.updateImage()
 
     def setAutoDownsample(self, ads):
         """
@@ -222,7 +217,10 @@ class ImageItem(GraphicsObject):
         else:
             gotNewData = True
             shapeChanged = (self.image is None or image.shape != self.image.shape)
-            self.image = image.view(np.ndarray)
+            image = image.view(np.ndarray)
+            if self.image is None or image.dtype != self.image.dtype:
+                self._effectiveLut = None
+            self.image = image
             if self.image.shape[0] > 2**15-1 or self.image.shape[1] > 2**15-1:
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
@@ -261,6 +259,17 @@ class ImageItem(GraphicsObject):
         if gotNewData:
             self.sigImageChanged.emit()
 
+    def quickMinMax(self, targetSize=1e6):
+        """
+        Estimate the min/max values of the image data by subsampling.
+        """
+        data = self.image
+        while data.size > targetSize:
+            ax = np.argmax(data.shape)
+            sl = [slice(None)] * data.ndim
+            sl[ax] = slice(None, None, 2)
+            data = data[sl]
+        return nanmin(data), nanmax(data)
 
     def updateImage(self, *args, **kargs):
         ## used for re-rendering qimage from self.image.
@@ -297,6 +306,27 @@ class ImageItem(GraphicsObject):
             image = fn.downsample(image, yds, axis=1)
         else:
             image = self.image
+
+        # if the image data is a small int, then we can combine levels + lut
+        # into a single lut for better performance
+        if self.levels is not None and self.levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
+            if self._effectiveLut is None:
+                eflsize = 2**(image.itemsize*8)
+                ind = np.arange(eflsize)
+                minlev, maxlev = self.levels
+                if lut is None:
+                    efflut = fn.rescaleData(ind, scale=255./(maxlev-minlev), 
+                                            offset=minlev, dtype=np.ubyte)
+                else:
+                    lutdtype = np.min_scalar_type(lut.shape[0]-1)
+                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/(maxlev-minlev),
+                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
+                    efflut = lut[efflut]
+                
+                self._effectiveLut = efflut
+            lut = self._effectiveLut
+            levels = None
+
         
         argb, alpha = fn.makeARGB(image.transpose((1, 0, 2)[:image.ndim]), lut=lut, levels=self.levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
