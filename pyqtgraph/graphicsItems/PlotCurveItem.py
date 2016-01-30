@@ -290,7 +290,6 @@ class PlotCurveItem(GraphicsObject):
         self.updateData(*args, **kargs)
 
     def updateData(self, *args, **kargs):
-        print 'update data'
         profiler = debug.Profiler()
 
         if len(args) == 1:
