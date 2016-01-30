@@ -6,8 +6,18 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from __future__ import division
+import warnings
+import numpy as np
+import decimal, re
+import ctypes
+import sys, struct
 from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
+from . import getConfigOption, setConfigOptions
+from . import debug
+
+
+
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),
@@ -27,14 +37,6 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 
-from .Qt import QtGui, QtCore, USE_PYSIDE
-from . import getConfigOption, setConfigOptions
-import numpy as np
-import decimal, re
-import ctypes
-import sys, struct
-
-from . import debug
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
@@ -378,7 +380,8 @@ def eq(a, b):
         return True
         
     try:
-        e = a==b
+        with warnings.catch_warnings(np):  # ignore numpy futurewarning (numpy v. 1.10)
+            e = a==b
     except ValueError:
         return False
     except AttributeError: 
@@ -1374,19 +1377,13 @@ def arrayToQPath(x, y, connect='all'):
     arr[1:-1]['y'] = y
 
     # decide which points are connected by lines
-    if eq(connect, 'pairs'):
-        connect = np.empty((n/2,2), dtype=np.int32)
-        if connect.size != n:
-            raise Exception("x,y array lengths must be multiple of 2 to use connect='pairs'")
-        connect[:,0] = 1
-        connect[:,1] = 0
-        connect = connect.flatten()
-        arr[1:-1]['c'] = connect
-    elif eq(connect, 'finite'):
-        connect = np.isfinite(x) & np.isfinite(y)
-        arr[1:-1]['c'] = connect
-    elif eq(connect, 'all'):
+    if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
+    elif eq(connect, 'pairs'):
+        arr[1:-1]['c'][::2] = 1
+        arr[1:-1]['c'][1::2] = 0
+    elif eq(connect, 'finite'):
+        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
