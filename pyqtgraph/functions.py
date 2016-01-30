@@ -380,7 +380,7 @@ def eq(a, b):
         return True
         
     try:
-        with warnings.catch_warnings(np):  # ignore numpy futurewarning (numpy v. 1.10)
+        with warnings.catch_warnings(module=np):  # ignore numpy futurewarning (numpy v. 1.10)
             e = a==b
     except ValueError:
         return False
