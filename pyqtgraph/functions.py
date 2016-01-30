@@ -243,6 +243,7 @@ def mkBrush(*args, **kwds):
         color = args
     return QtGui.QBrush(mkColor(color))
 
+
 def mkPen(*args, **kargs):
     """
     Convenience function for constructing QPen. 
@@ -292,6 +293,7 @@ def mkPen(*args, **kargs):
         pen.setDashPattern(dash)
     return pen
 
+
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
     c = QtGui.QColor()
@@ -303,9 +305,11 @@ def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
     return (c.red(), c.green(), c.blue(), c.alpha())
 
+
 def colorStr(c):
     """Generate a hex string code from a QColor"""
     return ('%02x'*4) % colorTuple(c)
+
 
 def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
     """
@@ -330,6 +334,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     c.setHsv(h, sat, v)
     c.setAlpha(alpha)
     return c
+
 
 def glColor(*args, **kargs):
     """
@@ -367,6 +372,40 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     return path
     
     
+def eq(a, b):
+    """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
+    if a is b:
+        return True
+        
+    try:
+        e = a==b
+    except ValueError:
+        return False
+    except AttributeError: 
+        return False
+    except:
+        print('failed to evaluate equivalence for:')
+        print("  a:", str(type(a)), str(a))
+        print("  b:", str(type(b)), str(b))
+        raise
+    t = type(e)
+    if t is bool:
+        return e
+    elif t is np.bool_:
+        return bool(e)
+    elif isinstance(e, np.ndarray) or (hasattr(e, 'implements') and e.implements('MetaArray')):
+        try:   ## disaster: if a is an empty array and b is not, then e.all() is True
+            if a.shape != b.shape:
+                return False
+        except:
+            return False
+        if (hasattr(e, 'implements') and e.implements('MetaArray')):
+            return e.asarray().all()
+        else:
+            return e.all()
+    else:
+        raise Exception("== operator returned type %s" % str(type(e)))
+
     
 def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
     """
@@ -930,7 +969,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         if levels.shape != (data.shape[-1], 2):
             raise Exception('levels must have shape (data.shape[-1], 2)')
     else:
-        raise Exception("levels argument must be 1D or 2D.")
+        raise Exception("levels argument must be 1D or 2D (got shape=%s)." % repr(levels.shape))
 
     profile()
 

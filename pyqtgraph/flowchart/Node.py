@@ -6,7 +6,6 @@ from .Terminal import *
 from ..pgcollections import OrderedDict
 from ..debug import *
 import numpy as np
-from .eq import *
 
 
 def strDict(d):
@@ -261,7 +260,7 @@ class Node(QtCore.QObject):
         for k, v in args.items():
             term = self._inputs[k]
             oldVal = term.value()
-            if not eq(oldVal, v):
+            if not fn.eq(oldVal, v):
                 changed = True
             term.setValue(v, process=False)
         if changed and '_updatesHandled_' not in args:
