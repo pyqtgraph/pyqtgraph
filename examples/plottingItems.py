@@ -21,6 +21,7 @@ inf1 = pg.InfiniteLine(movable=True, angle=90, label=True, textColor=(200,200,10
 inf2 = pg.InfiniteLine(movable=True, angle=0, label=True, pen=(0, 0, 200), bounds = [-2, 2], unit="mm", hoverPen=(0,200,0))
 inf3 = pg.InfiniteLine(movable=True, angle=45)
 inf1.setPos([2,2])
+inf1.setTextLocation([0.25, 0.9])
 p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)

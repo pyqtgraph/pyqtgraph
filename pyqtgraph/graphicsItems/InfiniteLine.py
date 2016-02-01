@@ -307,12 +307,10 @@ class InfiniteLine(UIGraphicsItem):
         qpp.addPolygon(self._polygon)
         return qpp
 
-
     def paint(self, p, *args):
         br = self.boundingRect()
         p.setPen(self.currentPen)
         p.drawLine(self._p1, self._p2)
-
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
@@ -397,7 +395,6 @@ class InfiniteLine(UIGraphicsItem):
             self.text.setText(fmt.format(self.value()), color=self.textColor)
             self.text.setPos(xpos, self.value())
 
-
     def showLabel(self, state):
         """
         Display or not the label indicating the location of the line in data
@@ -414,39 +411,22 @@ class InfiniteLine(UIGraphicsItem):
             self.text.hide()
         self.update()
 
-    def setLocation(self, loc):
+    def setTextLocation(self, param):
         """
-        Set the location of the textItem with respect to a specific axis. If the
-        line is vertical, the location is based on the normalized range of the
-        yaxis. Otherwise, it is based on the normalized range of the xaxis.
-
+        Set the location of the label. param is a list of two values.
+        param[0] defines the location of the label along the axis and
+        param[1] defines the shift value (defines the condition where the
+        label shifts from one side of the line to the other one).
+        New in version 0.9.11
         ==============   ==============================================
         **Arguments:**
-        loc              the normalized location of the textItem.
+        param              list of parameters.
         ==============   ==============================================
         """
-        if loc > 1.:
-            loc = 1.
-        if loc < 0.:
-            loc = 0.
-        self.location = loc
-        self.update()
-
-    def setShift(self, shift):
-        """
-        Set the value with respect to the normalized range of the corresponding
-        axis where the location of the textItem shifts from one side to another.
-
-        ==============   ==============================================
-        **Arguments:**
-        shift              the normalized shift value of the textItem.
-        ==============   ==============================================
-        """
-        if shift > 1.:
-            shift = 1.
-        if shift < 0.:
-            shift = 0.
-        self.shift = shift
+        if len(param) != 2: # check that the input data are correct
+            return
+        self.location = np.clip(param[0], 0, 1)
+        self.shift = np.clip(param[1], 0, 1)
         self.update()
 
     def setFormat(self, format):
