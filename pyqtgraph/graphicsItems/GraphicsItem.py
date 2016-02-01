@@ -251,7 +251,6 @@ class GraphicsItem(object):
         """
         normV, orthoV = self.pixelVectors(direction)
         try:
-            print 'px', orthoV.length(), normV.length()
             return orthoV.length() if ortho else normV.length()
         except:
             return None
