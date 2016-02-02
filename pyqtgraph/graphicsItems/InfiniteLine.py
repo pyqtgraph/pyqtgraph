@@ -146,6 +146,9 @@ class InfiniteLine(UIGraphicsItem):
         else:
             self.text.hide()
 
+        self._line = None
+        self._lineBoundingRect = None
+        self._polygon = None
 
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -193,6 +196,7 @@ class InfiniteLine(UIGraphicsItem):
             self.text.show()
         else:
             self.text.hide()
+        self._invalidateCache()
         self.update()
 
     def setPos(self, pos):
@@ -222,6 +226,7 @@ class InfiniteLine(UIGraphicsItem):
                 newPos[1] = min(newPos[1], self.maxRange[1])
 
         if self.p != newPos:
+            self._invalidateCache()
             self.p = newPos
             # UIGraphicsItem.setPos(self, Point(self.p)) # thanks Sylvain!
             self.update()
@@ -263,56 +268,74 @@ class InfiniteLine(UIGraphicsItem):
         #return GraphicsObject.itemChange(self, change, val)
 
     def boundingRect(self):
-        br = UIGraphicsItem.boundingRect(self) # directly in viewBox coordinates
-        # we need to limit the boundingRect to the appropriate value.
-        val = self.value()
-        if self.angle == 0: # horizontal line
-            self._p1, self._p2 = _calcLine(val, 0, *br.getCoords())
-            px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-            if px is None:
-                px = 0
-            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-            o1, o2 = _calcLine(val-w, 0, *br.getCoords())
-            o3, o4 = _calcLine(val+w, 0, *br.getCoords())
-        elif self.angle == 90: # vertical line
-            self._p1, self._p2 = _calcLine(val, 90, *br.getCoords())
-            px = self.pixelLength(direction=Point(0,1), ortho=True)  ## get pixel length orthogonal to the line
-            if px is None:
-                px = 0
-            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-            o1, o2 = _calcLine(val-w, 90, *br.getCoords())
-            o3, o4 = _calcLine(val+w, 90, *br.getCoords())
-        else: # oblique line
-            self._p1, self._p2 = _calcLine(val, self.angle, *br.getCoords())
-            pxy = self.pixelLength(direction=Point(0,1), ortho=True)
-            if pxy is None:
-                pxy = 0
-            wy = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxy
-            pxx = self.pixelLength(direction=Point(1,0), ortho=True)
-            if pxx is None:
-                pxx = 0
-            wx = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxx
-            o1, o2 = _calcLine([val[0]-wy, val[1]-wx], self.angle, *br.getCoords())
-            o3, o4 = _calcLine([val[0]+wy, val[1]+wx], self.angle, *br.getCoords())
-        self._polygon = QtGui.QPolygonF([o1, o2, o4, o3])
-        br = self._polygon.boundingRect()
-        return br.normalized()
+        if self._lineBoundingRect is None:
+            br = UIGraphicsItem.boundingRect(self) # directly in viewBox coordinates
+            # we need to limit the boundingRect to the appropriate value.
+            val = self.value()
+            if self.angle == 0: # horizontal line
+                self._p1, self._p2 = _calcLine(val, 0, *br.getCoords())
+                px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+                if px is None:
+                    px = 0
+                w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+                o1, o2 = _calcLine(val-w, 0, *br.getCoords())
+                o3, o4 = _calcLine(val+w, 0, *br.getCoords())
+            elif self.angle == 90: # vertical line
+                self._p1, self._p2 = _calcLine(val, 90, *br.getCoords())
+                px = self.pixelLength(direction=Point(0,1), ortho=True)  ## get pixel length orthogonal to the line
+                if px is None:
+                    px = 0
+                w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+                o1, o2 = _calcLine(val-w, 90, *br.getCoords())
+                o3, o4 = _calcLine(val+w, 90, *br.getCoords())
+            else: # oblique line
+                self._p1, self._p2 = _calcLine(val, self.angle, *br.getCoords())
+                pxy = self.pixelLength(direction=Point(0,1), ortho=True)
+                if pxy is None:
+                    pxy = 0
+                wy = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxy
+                pxx = self.pixelLength(direction=Point(1,0), ortho=True)
+                if pxx is None:
+                    pxx = 0
+                wx = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxx
+                o1, o2 = _calcLine([val[0]-wy, val[1]-wx], self.angle, *br.getCoords())
+                o3, o4 = _calcLine([val[0]+wy, val[1]+wx], self.angle, *br.getCoords())
 
+            polygon = QtGui.QPolygonF([o1, o2, o4, o3])
+            br = polygon.boundingRect()
+            self._polygon = polygon
+            self._lineBoundingRect = br.normalized()
+            self._line = QtCore.QLineF(self._p1, self._p2)
+        return self._lineBoundingRect
+
+    def viewTransformChanged(self):
+        """
+        Called whenever the transformation matrix of the view has changed.
+        (eg, the view range has changed or the view was resized)
+        """
+        self._invalidateCache()
+        UIGraphicsItem.viewTransformChanged(self)
+
+    def _invalidateCache(self):
+        self._line = None
+        self._polygon = None
+        self._lineBoundingRect = None
 
     def shape(self):
         # returns a QPainterPath. Needed when the item is non rectangular if
         # accurate mouse click detection is required.
         # New in version 0.9.11
         qpp = QtGui.QPainterPath()
+        # Ensure bounding cache is valid
+        self.boundingRect()
         qpp.addPolygon(self._polygon)
         return qpp
 
-
     def paint(self, p, *args):
-        br = self.boundingRect()
+        self.boundingRect()
+        assert self._line is not None
         p.setPen(self.currentPen)
-        p.drawLine(self._p1, self._p2)
-
+        p.drawLine(self._line)
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
