@@ -63,6 +63,9 @@ class InfiniteLine(GraphicsObject):
         self.setPen(pen)
         self.setHoverPen(color=(255,0,0), width=self.pen.width())
         self.currentPen = self.pen
+        
+        self._boundingRect = None
+        self._line = None
       
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -135,6 +138,10 @@ class InfiniteLine(GraphicsObject):
                 newPos[1] = min(newPos[1], self.maxRange[1])
             
         if self.p != newPos:
+            # Invalidate bounding rect and line
+            self._boundingRect = None
+            self._line = None
+
             self.p = newPos
             GraphicsObject.setPos(self, Point(self.p))
             self.update()
@@ -174,24 +181,37 @@ class InfiniteLine(GraphicsObject):
         #else:
             #print "ignore", change
         #return GraphicsObject.itemChange(self, change, val)
-                
+
+    def viewTransformChanged(self):
+        self._boundingRect = None
+        self._line = None
+        GraphicsObject.viewTransformChanged(self)
+
+    def viewChanged(self, view, oldView):
+        self._boundingRect = None
+        self._line = None
+        GraphicsObject.viewChanged(self, view, oldView)
+
     def boundingRect(self):
-        #br = UIGraphicsItem.boundingRect(self)
-        br = self.viewRect()
-        ## add a 4-pixel radius around the line for mouse interaction.
-        
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
-        w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-        br.setBottom(-w)
-        br.setTop(w)
-        return br.normalized()
+        if self._boundingRect is None:
+            #br = UIGraphicsItem.boundingRect(self)
+            br = self.viewRect()
+            ## add a 4-pixel radius around the line for mouse interaction.
+            
+            px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+            if px is None:
+                px = 0
+            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+            br.setBottom(-w)
+            br.setTop(w)
+            br = br.normalized()
+            self._boundingRect = br
+            self._line = QtCore.QLineF(br.right(), 0, br.left(), 0)
+        return self._boundingRect
     
     def paint(self, p, *args):
-        br = self.boundingRect()
         p.setPen(self.currentPen)
-        p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
+        p.drawLine(self._line)
         
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
