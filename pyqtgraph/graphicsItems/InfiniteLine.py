@@ -1,49 +1,20 @@
 from ..Qt import QtGui, QtCore
 from ..Point import Point
-from .UIGraphicsItem import UIGraphicsItem
+from .GraphicsObject import GraphicsObject
+#from UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
+from .ViewBox import ViewBox
 from .. import functions as fn
 import numpy as np
 import weakref
-import math
 
 
 __all__ = ['InfiniteLine']
 
 
-def _calcLine(pos, angle, xmin, ymin, xmax, ymax):
+class InfiniteLine(GraphicsObject):
     """
-    Evaluate the location of the points that delimitates a line into a viewbox
-    described by x and y ranges. Depending on the angle value, pos can be a
-    float (if angle=0 and 90) or a list of float (x and y coordinates).
-    Could be possible to beautify this piece of code.
-    New in verson 0.9.11
-    """
-    if angle == 0:
-        x1, y1, x2, y2 = xmin, pos, xmax, pos
-    elif angle == 90:
-        x1, y1, x2, y2 = pos, ymin, pos, ymax
-    else:
-        x0, y0 = pos
-        tana = math.tan(angle*math.pi/180)
-        y1 = tana*(xmin-x0) + y0
-        y2 = tana*(xmax-x0) + y0
-        if angle > 0:
-            y1 = max(y1, ymin)
-            y2 = min(y2, ymax)
-        else:
-            y1 = min(y1, ymax)
-            y2 = max(y2, ymin)
-        x1 = (y1-y0)/tana + x0
-        x2 = (y2-y0)/tana + x0
-    p1 = Point(x1, y1)
-    p2 = Point(x2, y2)
-    return p1, p2
-
-
-class InfiniteLine(UIGraphicsItem):
-    """
-    **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
+    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
 
     Displays a line of infinite length.
     This line may be dragged to indicate a position in data coordinates.
@@ -54,10 +25,6 @@ class InfiniteLine(UIGraphicsItem):
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
     =============================== ===================================================
-
-    Major changes have been performed in this class since version 0.9.11. The
-    number of methods in the public API has been increased, but the already
-    existing methods can be used in the same way.
     """
 
     sigDragged = QtCore.Signal(object)
@@ -66,8 +33,8 @@ class InfiniteLine(UIGraphicsItem):
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=False, textColor=None, textFill=None,
-                 textLocation=0.05, textShift=0.5, textFormat="{:.3f}",
-                 unit=None, name=None):
+                 textLocation=[0.05,0.5], textFormat="{:.3f}",
+                 suffix=None, name='InfiniteLine'):
         """
         =============== ==================================================================
         **Arguments:**
@@ -87,65 +54,63 @@ class InfiniteLine(UIGraphicsItem):
                         location in data coordinates
         textColor       color of the label. Can be any argument fn.mkColor can understand.
         textFill        A brush to use when filling within the border of the text.
-        textLocation    A float [0-1] that defines the location of the text.
-        textShift       A float [0-1] that defines when the text shifts from one side to
-                        another.
+        textLocation    list  where list[0] defines the location of the text (if
+                        vertical, a 0 value means that the textItem is on the bottom
+                        axis, and a 1 value means that thet TextItem is on the top
+                        axis, same thing if horizontal) and list[1] defines when the
+                        text shifts from one side to the other side of the line.
         textFormat      Any new python 3 str.format() format.
-        unit            If not None, corresponds to the unit to show next to the label
-        name            If not None, corresponds to the name of the object
+        suffix          If not None, corresponds to the unit to show next to the label
+        name            name of the item
         =============== ==================================================================
         """
 
-        UIGraphicsItem.__init__(self)
+        GraphicsObject.__init__(self)
 
         if bounds is None:              ## allowed value boundaries for orthogonal lines
             self.maxRange = [None, None]
         else:
             self.maxRange = bounds
         self.moving = False
+        self.setMovable(movable)
         self.mouseHovering = False
+        self.p = [0, 0]
+        self.setAngle(angle)
 
-        self.angle = ((angle+45) % 180) - 45
         if textColor is None:
-            textColor = (200, 200, 200)
+            textColor = (200, 200, 100)
         self.textColor = textColor
-        self.location = textLocation
-        self.shift = textShift
-        self.label = label
-        self.format = textFormat
-        self.unit = unit
-        self._name = name
+        self.textFill = textFill
+        self.textLocation = textLocation
+        self.suffix = suffix
+
+        if (self.angle == 0 or self.angle == 90) and label:
+            self.textItem = TextItem(fill=textFill)
+            self.textItem.setParentItem(self)
+        else:
+            self.textItem = None
 
         self.anchorLeft = (1., 0.5)
         self.anchorRight = (0., 0.5)
         self.anchorUp = (0.5, 1.)
         self.anchorDown = (0.5, 0.)
-        self.text = TextItem(fill=textFill)
-        self.text.setParentItem(self) # important
-        self.p = [0, 0]
+
+        if pos is None:
+            pos = Point(0,0)
+        self.setPos(pos)
 
         if pen is None:
             pen = (200, 200, 100)
-
         self.setPen(pen)
-
         if hoverPen is None:
             self.setHoverPen(color=(255,0,0), width=self.pen.width())
         else:
             self.setHoverPen(hoverPen)
         self.currentPen = self.pen
 
-        self.setMovable(movable)
+        self.format = textFormat
 
-        if pos is None:
-            pos = Point(0,0)
-        self.setPos(pos)
-
-        if (self.angle == 0 or self.angle == 90) and self.label:
-            self.text.show()
-        else:
-            self.text.hide()
-
+        self._name = name
 
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -187,12 +152,8 @@ class InfiniteLine(UIGraphicsItem):
         not vertical or horizontal.
         """
         self.angle = ((angle+45) % 180) - 45   ##  -45 <= angle < 135
-        # self.resetTransform()   # no longer needed since version 0.9.11
-        # self.rotate(self.angle) # no longer needed since version 0.9.11
-        if (self.angle == 0 or self.angle == 90) and self.label:
-            self.text.show()
-        else:
-            self.text.hide()
+        self.resetTransform()
+        self.rotate(self.angle)
         self.update()
 
     def setPos(self, pos):
@@ -223,9 +184,46 @@ class InfiniteLine(UIGraphicsItem):
 
         if self.p != newPos:
             self.p = newPos
-            # UIGraphicsItem.setPos(self, Point(self.p)) # thanks Sylvain!
+            GraphicsObject.setPos(self, Point(self.p))
+
+            if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
+                self.updateTextPosition()
+
             self.update()
             self.sigPositionChanged.emit(self)
+
+    def updateTextPosition(self):
+        """
+        Update the location of the textItem. Called only if a textItem is
+        requested and if the item has already been added to a PlotItem.
+        """
+        rangeX, rangeY = self.getViewBox().viewRange()
+        xmin, xmax = rangeX
+        ymin, ymax = rangeY
+        if self.angle == 90:  # vertical line
+            diffMin = self.value()-xmin
+            limInf = self.textLocation[1]*(xmax-xmin)
+            ypos = ymin+self.textLocation[0]*(ymax-ymin)
+            if diffMin < limInf:
+                self.textItem.anchor = Point(self.anchorRight)
+            else:
+                self.textItem.anchor = Point(self.anchorLeft)
+            fmt = " x = " + self.format
+            if self.suffix is not None:
+                fmt = fmt + self.suffix
+            self.textItem.setText(fmt.format(self.value()), color=self.textColor)
+        elif self.angle == 0:  # horizontal line
+            diffMin = self.value()-ymin
+            limInf = self.textLocation[1]*(ymax-ymin)
+            xpos = xmin+self.textLocation[0]*(xmax-xmin)
+            if diffMin < limInf:
+                self.textItem.anchor = Point(self.anchorUp)
+            else:
+                self.textItem.anchor = Point(self.anchorDown)
+            fmt = " y = " + self.format
+            if self.suffix is not None:
+                fmt = fmt + self.suffix
+            self.textItem.setText(fmt.format(self.value()), color=self.textColor)
 
     def getXPos(self):
         return self.p[0]
@@ -263,54 +261,22 @@ class InfiniteLine(UIGraphicsItem):
         #return GraphicsObject.itemChange(self, change, val)
 
     def boundingRect(self):
-        br = UIGraphicsItem.boundingRect(self) # directly in viewBox coordinates
-        # we need to limit the boundingRect to the appropriate value.
-        val = self.value()
-        if self.angle == 0: # horizontal line
-            self._p1, self._p2 = _calcLine(val, 0, *br.getCoords())
-            px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-            if px is None:
-                px = 0
-            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-            o1, o2 = _calcLine(val-w, 0, *br.getCoords())
-            o3, o4 = _calcLine(val+w, 0, *br.getCoords())
-        elif self.angle == 90: # vertical line
-            self._p1, self._p2 = _calcLine(val, 90, *br.getCoords())
-            px = self.pixelLength(direction=Point(0,1), ortho=True)  ## get pixel length orthogonal to the line
-            if px is None:
-                px = 0
-            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-            o1, o2 = _calcLine(val-w, 90, *br.getCoords())
-            o3, o4 = _calcLine(val+w, 90, *br.getCoords())
-        else: # oblique line
-            self._p1, self._p2 = _calcLine(val, self.angle, *br.getCoords())
-            pxy = self.pixelLength(direction=Point(0,1), ortho=True)
-            if pxy is None:
-                pxy = 0
-            wy = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxy
-            pxx = self.pixelLength(direction=Point(1,0), ortho=True)
-            if pxx is None:
-                pxx = 0
-            wx = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * pxx
-            o1, o2 = _calcLine([val[0]-wy, val[1]-wx], self.angle, *br.getCoords())
-            o3, o4 = _calcLine([val[0]+wy, val[1]+wx], self.angle, *br.getCoords())
-        self._polygon = QtGui.QPolygonF([o1, o2, o4, o3])
-        br = self._polygon.boundingRect()
+        #br = UIGraphicsItem.boundingRect(self)
+        br = self.viewRect()
+        ## add a 4-pixel radius around the line for mouse interaction.
+
+        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+        if px is None:
+            px = 0
+        w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+        br.setBottom(-w)
+        br.setTop(w)
         return br.normalized()
-
-
-    def shape(self):
-        # returns a QPainterPath. Needed when the item is non rectangular if
-        # accurate mouse click detection is required.
-        # New in version 0.9.11
-        qpp = QtGui.QPainterPath()
-        qpp.addPolygon(self._polygon)
-        return qpp
 
     def paint(self, p, *args):
         br = self.boundingRect()
         p.setPen(self.currentPen)
-        p.drawLine(self._p1, self._p2)
+        p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
@@ -322,15 +288,14 @@ class InfiniteLine(UIGraphicsItem):
         if self.movable and ev.button() == QtCore.Qt.LeftButton:
             if ev.isStart():
                 self.moving = True
-                self.cursorOffset = self.value() - ev.buttonDownPos()
-                self.startPosition = self.value()
+                self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
+                self.startPosition = self.pos()
             ev.accept()
 
             if not self.moving:
                 return
 
-            self.setPos(self.cursorOffset + ev.pos())
-            self.prepareGeometryChange() # new in version 0.9.11
+            self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
             self.sigDragged.emit(self)
             if ev.isFinish():
                 self.moving = False
@@ -361,39 +326,14 @@ class InfiniteLine(UIGraphicsItem):
             self.currentPen = self.pen
         self.update()
 
-    def update(self):
-        # new in version 0.9.11
-        UIGraphicsItem.update(self)
-        br = UIGraphicsItem.boundingRect(self) # directly in viewBox coordinates
-        xmin, ymin, xmax, ymax = br.getCoords()
-        if self.angle == 90:  # vertical line
-            diffX = xmax-xmin
-            diffMin = self.value()-xmin
-            limInf = self.shift*diffX
-            ypos = ymin+self.location*(ymax-ymin)
-            if diffMin < limInf:
-                self.text.anchor = Point(self.anchorRight)
-            else:
-                self.text.anchor = Point(self.anchorLeft)
-            fmt = " x = " + self.format
-            if self.unit is not None:
-                fmt = fmt + self.unit
-            self.text.setText(fmt.format(self.value()), color=self.textColor)
-            self.text.setPos(self.value(), ypos)
-        elif self.angle == 0:  # horizontal line
-            diffY = ymax-ymin
-            diffMin = self.value()-ymin
-            limInf = self.shift*(ymax-ymin)
-            xpos = xmin+self.location*(xmax-xmin)
-            if diffMin < limInf:
-                self.text.anchor = Point(self.anchorUp)
-            else:
-                self.text.anchor = Point(self.anchorDown)
-            fmt = " y = " + self.format
-            if self.unit is not None:
-                fmt = fmt + self.unit
-            self.text.setText(fmt.format(self.value()), color=self.textColor)
-            self.text.setPos(xpos, self.value())
+    def viewTransformChanged(self):
+        """
+        Called whenever the transformation matrix of the view has changed.
+        (eg, the view range has changed or the view was resized)
+        """
+        if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
+            self.updateTextPosition()
+        #GraphicsObject.viewTransformChanged(self)
 
     def showLabel(self, state):
         """
@@ -406,54 +346,24 @@ class InfiniteLine(UIGraphicsItem):
         ==============   ==============================================
         """
         if state:
-            self.text.show()
+            self.textItem = TextItem(fill=self.textFill)
+            self.textItem.setParentItem(self)
+            self.viewTransformChanged()
         else:
-            self.text.hide()
-        self.update()
+            self.textItem = None
 
-    def setTextLocation(self, param):
+
+    def setTextLocation(self, loc):
         """
-        Set the location of the label. param is a list of two values.
-        param[0] defines the location of the label along the axis and
-        param[1] defines the shift value (defines the condition where the
-        label shifts from one side of the line to the other one).
-        New in version 0.9.11
-        ==============   ==============================================
-        **Arguments:**
-        param              list of parameters.
-        ==============   ==============================================
+        Set the parameters that defines the location of the textItem with respect
+        to a specific axis. If the line is vertical, the location is based on the
+        normalized range of the yaxis. Otherwise, it is based on the normalized
+        range of the xaxis.
+        loc[0] defines the location of the text along the infiniteLine
+        loc[1] defines the location when the label shifts from one side of then
+        infiniteLine to the other.
         """
-        if len(param) != 2: # check that the input data are correct
-            return
-        self.location = np.clip(param[0], 0, 1)
-        self.shift = np.clip(param[1], 0, 1)
-        self.update()
-
-    def setFormat(self, format):
-        """
-        Set the format of the label used to indicate the location of the line.
-
-
-        ==============   ==============================================
-        **Arguments:**
-        format           Any format compatible with the new python
-                         str.format() format style.
-        ==============   ==============================================
-        """
-        self.format = format
-        self.update()
-
-    def setUnit(self, unit):
-        """
-        Set the unit of the label used to indicate the location of the line.
-
-
-        ==============   ==============================================
-        **Arguments:**
-        unit             Any string.
-        ==============   ==============================================
-        """
-        self.unit = unit
+        self.textLocation = [np.clip(loc[0], 0, 1), np.clip(loc[1], 0, 1)]
         self.update()
 
     def setName(self, name):
