@@ -226,12 +226,14 @@ class GraphicsItem(object):
             # fast path (new code)
             m11_i = 1.0/m11
             m22_i = 1.0/m22
-            x = normView.p2().x()
-            y = normView.p2().y()
+            p = normView.p2()
+            x = p.x()
+            y = p.y()
             p1 = Point(m11_i*x + m21*y,
                        m22_i*y + m12*x)
-            x = normOrtho.p2().x()
-            y = normOrtho.p2().y()
+            p = normOrtho.p2()
+            x = p.x()
+            y = p.y()
             p2 = Point(m11_i*x + m21*y,
                        m22_i*y + m12*x)
         except:

@@ -188,7 +188,6 @@ class InfiniteLine(GraphicsObject):
             ## add a 4-pixel radius around the line for mouse interaction.
 
             if self._pxLength is None:
-                tr = self.deviceTransform()
                 px = self.pixelLength(direction=Point(1,0), ortho=True)
                 self._pxLength = 0.0 if px is None else px
 
