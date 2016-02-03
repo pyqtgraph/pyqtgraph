@@ -112,6 +112,10 @@ class InfiniteLine(GraphicsObject):
 
         self._name = name
 
+        # Cache complex value for drawing speed-up
+        self._line = None
+        self._boundingRect = None
+
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
         self.movable = m
@@ -184,6 +188,7 @@ class InfiniteLine(GraphicsObject):
 
         if self.p != newPos:
             self.p = newPos
+            self._invalidateCache()
             GraphicsObject.setPos(self, Point(self.p))
 
             if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
@@ -260,23 +265,30 @@ class InfiniteLine(GraphicsObject):
             #print "ignore", change
         #return GraphicsObject.itemChange(self, change, val)
 
-    def boundingRect(self):
-        #br = UIGraphicsItem.boundingRect(self)
-        br = self.viewRect()
-        ## add a 4-pixel radius around the line for mouse interaction.
+    def _invalidateCache(self):
+        self._line = None
+        self._boundingRect = None
 
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
-        w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
-        br.setBottom(-w)
-        br.setTop(w)
-        return br.normalized()
+    def boundingRect(self):
+        if self._boundingRect is None:
+            #br = UIGraphicsItem.boundingRect(self)
+            br = self.viewRect()
+            ## add a 4-pixel radius around the line for mouse interaction.
+
+            px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
+            if px is None:
+                px = 0
+            w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
+            br.setBottom(-w)
+            br.setTop(w)
+            br = br.normalized()
+            self._boundingRect = br
+            self._line = QtCore.QLineF(br.right(), 0.0, br.left(), 0.0)
+        return self._boundingRect
 
     def paint(self, p, *args):
-        br = self.boundingRect()
         p.setPen(self.currentPen)
-        p.drawLine(Point(br.right(), 0), Point(br.left(), 0))
+        p.drawLine(self._line)
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
@@ -331,6 +343,8 @@ class InfiniteLine(GraphicsObject):
         Called whenever the transformation matrix of the view has changed.
         (eg, the view range has changed or the view was resized)
         """
+        self._invalidateCache()
+
         if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
             self.updateTextPosition()
         #GraphicsObject.viewTransformChanged(self)
