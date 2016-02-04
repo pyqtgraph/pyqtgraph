@@ -172,9 +172,9 @@ class PlotCurveItem(GraphicsObject):
             pxPad = self.pixelPadding()
             if pxPad > 0:
                 # determine length of pixel in local x, y directions
-                dt = self.deviceTransform()
-                px = 1.0/dt.m11() * pxPad
-                py = abs(1.0/dt.m22()) * pxPad
+                dt, _ = self.deviceTransform().inverted()
+                px = dt.m11() * pxPad
+                py = abs(dt.m22()) * pxPad
                 br.adjust(-px, -py, px, py)
             self._boundingRect = br
 
