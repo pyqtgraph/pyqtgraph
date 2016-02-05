@@ -352,10 +352,10 @@ class InfiniteLine(GraphicsObject):
         Display or not the label indicating the location of the line in data
         coordinates.
 
-        ==============   ==============================================
+        ==============   ======================================================
         **Arguments:**
         state            If True, the label is shown. Otherwise, it is hidden.
-        ==============   ==============================================
+        ==============   ======================================================
         """
         if state:
             self.textItem = TextItem(fill=self.textFill)
