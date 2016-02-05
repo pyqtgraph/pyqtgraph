@@ -1,10 +1,49 @@
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtTest, QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, QtTest
 from pyqtgraph.tests import mouseDrag, mouseMove
 pg.mkQApp()
 
-qWait = QtTest.QTest.qWait
 
+def test_InfiniteLine():
+    plt = pg.plot()
+    plt.setXRange(-10, 10)
+    plt.setYRange(-10, 10)
+    vline = plt.addLine(x=1)
+    plt.resize(600, 600)
+    QtGui.QApplication.processEvents()
+    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWait(100)
+    assert vline.angle == 90
+    br = vline.mapToView(QtGui.QPolygonF(vline.boundingRect()))
+    print(vline.boundingRect())
+    print(list(QtGui.QPolygonF(vline.boundingRect())))
+    print(list(br))
+    assert br.containsPoint(pg.Point(1, 5), QtCore.Qt.OddEvenFill)
+    assert not br.containsPoint(pg.Point(5, 0), QtCore.Qt.OddEvenFill)
+    hline = plt.addLine(y=0)
+    assert hline.angle == 0
+    assert hline.boundingRect().contains(pg.Point(5, 0))
+    assert not hline.boundingRect().contains(pg.Point(0, 5))
+
+    vline.setValue(2)
+    assert vline.value() == 2
+    vline.setPos(pg.Point(4, -5))
+    assert vline.value() == 4
+    
+    oline = pg.InfiniteLine(angle=30)
+    plt.addItem(oline)
+    oline.setPos(pg.Point(1, -1))
+    assert oline.angle == 30
+    assert oline.pos() == pg.Point(1, -1)
+    assert oline.value() == [1, -1]
+    
+    br = oline.mapToScene(oline.boundingRect())
+    pos = oline.mapToScene(pg.Point(2, 0))
+    assert br.containsPoint(pos, QtCore.Qt.OddEvenFill)
+    px = oline.pixelVectors(pg.Point(1, 0))[0]
+    assert br.containsPoint(pos + 4 * px, QtCore.Qt.OddEvenFill)
+    assert not br.containsPoint(pos + 7 * px, QtCore.Qt.OddEvenFill)
+    
 
 def test_mouseInteraction():
     plt = pg.plot()
@@ -12,6 +51,7 @@ def test_mouseInteraction():
     vline = plt.addLine(x=0, movable=True)
     plt.addItem(vline)
     hline = plt.addLine(y=0, movable=True)
+    hline2 = plt.addLine(y=-1, movable=False)
     plt.setXRange(-10, 10)
     plt.setYRange(-10, 10)
     
@@ -41,6 +81,14 @@ def test_mouseInteraction():
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
     px = hline.pixelLength(pg.Point(1, 0), ortho=True)
     assert abs(hline.value() - plt.plotItem.vb.mapSceneToView(pos2).y()) <= px
+
+    # test non-interactive line
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,-1)).toPoint()
+    pos2 = pos - QtCore.QPoint(50, 50)
+    mouseMove(plt, pos)
+    assert hline2.mouseHovering == False
+    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    assert hline2.value() == -1
 
 
 if __name__ == '__main__':
