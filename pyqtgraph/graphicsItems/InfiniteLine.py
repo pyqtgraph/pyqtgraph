@@ -32,7 +32,7 @@ class InfiniteLine(GraphicsObject):
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=False, textColor=None, textFill=None,
-                 textLocation=[0.05,0.5], textFormat="{:.3f}",
+                 textShift=0.5, textFormat="{:.3f}",
                  suffix=None, name='InfiniteLine'):
         """
         =============== ==================================================================
@@ -53,11 +53,8 @@ class InfiniteLine(GraphicsObject):
                         location in data coordinates
         textColor       color of the label. Can be any argument fn.mkColor can understand.
         textFill        A brush to use when filling within the border of the text.
-        textLocation    list  where list[0] defines the location of the text (if
-                        vertical, a 0 value means that the textItem is on the bottom
-                        axis, and a 1 value means that thet TextItem is on the top
-                        axis, same thing if horizontal) and list[1] defines when the
-                        text shifts from one side to the other side of the line.
+        textShift       float (0-1) that defines when the text shifts from one side to
+                        the other side of the line.
         textFormat      Any new python 3 str.format() format.
         suffix          If not None, corresponds to the unit to show next to the label
         name            name of the item
@@ -80,7 +77,7 @@ class InfiniteLine(GraphicsObject):
             textColor = (200, 200, 100)
         self.textColor = textColor
         self.textFill = textFill
-        self.textLocation = textLocation
+        self.textShift = textShift
         self.suffix = suffix
 
         if (self.angle == 0 or self.angle == 90) and label:
@@ -206,8 +203,7 @@ class InfiniteLine(GraphicsObject):
         ymin, ymax = rangeY
         if self.angle == 90:  # vertical line
             diffMin = self.value()-xmin
-            limInf = self.textLocation[1]*(xmax-xmin)
-            ypos = ymin+self.textLocation[0]*(ymax-ymin)
+            limInf = self.textShift*(xmax-xmin)
             if diffMin < limInf:
                 self.textItem.anchor = Point(self.anchorRight)
             else:
@@ -218,8 +214,7 @@ class InfiniteLine(GraphicsObject):
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
         elif self.angle == 0:  # horizontal line
             diffMin = self.value()-ymin
-            limInf = self.textLocation[1]*(ymax-ymin)
-            xpos = xmin+self.textLocation[0]*(xmax-xmin)
+            limInf = self.textShift*(ymax-ymin)
             if diffMin < limInf:
                 self.textItem.anchor = Point(self.anchorUp)
             else:
@@ -364,18 +359,17 @@ class InfiniteLine(GraphicsObject):
         else:
             self.textItem = None
 
+    def setTextShift(self, shift):
+        """
+        Set the parameter that defines the location when the label shifts from
+        one side of the infiniteLine to the other.
 
-    def setTextLocation(self, loc):
+        ==============   ======================================================
+        **Arguments:**
+        shift             float (range of value = [0-1]).
+        ==============   ======================================================
         """
-        Set the parameters that defines the location of the textItem with respect
-        to a specific axis. If the line is vertical, the location is based on the
-        normalized range of the yaxis. Otherwise, it is based on the normalized
-        range of the xaxis.
-        loc[0] defines the location of the text along the infiniteLine
-        loc[1] defines the location when the label shifts from one side of then
-        infiniteLine to the other.
-        """
-        self.textLocation = [np.clip(loc[0], 0, 1), np.clip(loc[1], 0, 1)]
+        self.textShift = np.clip(shift, 0, 1)
         self.update()
 
     def setName(self, name):
