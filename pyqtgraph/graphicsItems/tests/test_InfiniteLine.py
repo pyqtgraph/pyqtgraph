@@ -5,19 +5,19 @@ pg.mkQApp()
 
 
 def test_InfiniteLine():
+    # Test basic InfiniteLine API
     plt = pg.plot()
     plt.setXRange(-10, 10)
     plt.setYRange(-10, 10)
-    vline = plt.addLine(x=1)
     plt.resize(600, 600)
-    QtGui.QApplication.processEvents()
+    
+    # seemingly arbitrary requirements; might need longer wait time for some platforms..
     QtTest.QTest.qWaitForWindowShown(plt)
     QtTest.QTest.qWait(100)
+    
+    vline = plt.addLine(x=1)
     assert vline.angle == 90
     br = vline.mapToView(QtGui.QPolygonF(vline.boundingRect()))
-    print(vline.boundingRect())
-    print(list(QtGui.QPolygonF(vline.boundingRect())))
-    print(list(br))
     assert br.containsPoint(pg.Point(1, 5), QtCore.Qt.OddEvenFill)
     assert not br.containsPoint(pg.Point(5, 0), QtCore.Qt.OddEvenFill)
     hline = plt.addLine(y=0)
@@ -37,11 +37,12 @@ def test_InfiniteLine():
     assert oline.pos() == pg.Point(1, -1)
     assert oline.value() == [1, -1]
     
+    # test bounding rect for oblique line
     br = oline.mapToScene(oline.boundingRect())
     pos = oline.mapToScene(pg.Point(2, 0))
     assert br.containsPoint(pos, QtCore.Qt.OddEvenFill)
-    px = oline.pixelVectors(pg.Point(1, 0))[0]
-    assert br.containsPoint(pos + 4 * px, QtCore.Qt.OddEvenFill)
+    px = pg.Point(-0.5, -1.0 / 3**0.5)
+    assert br.containsPoint(pos + 5 * px, QtCore.Qt.OddEvenFill)
     assert not br.containsPoint(pos + 7 * px, QtCore.Qt.OddEvenFill)
     
 
