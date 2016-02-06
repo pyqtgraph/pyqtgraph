@@ -182,6 +182,7 @@ class PlotCurveItem(GraphicsObject):
 
     def viewTransformChanged(self):
         #self.invalidateBounds()
+        self._pixelPadding = None
         self._boundingRect = None
         self.prepareGeometryChange()
 
