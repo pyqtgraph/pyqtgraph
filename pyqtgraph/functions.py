@@ -1179,10 +1179,9 @@ def imageToArray(img, copy=False, transpose=True):
             # If this works on all platforms, then there is no need to use np.asarray..
             arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
     
+    arr = arr.reshape(img.height(), img.width(), 4)
     if fmt == img.Format_RGB32:
-        arr = arr.reshape(img.height(), img.width(), 3)
-    elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
-        arr = arr.reshape(img.height(), img.width(), 4)
+        arr[...,3] = 255
     
     if copy:
         arr = arr.copy()

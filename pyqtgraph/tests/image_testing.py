@@ -22,8 +22,8 @@ Procedure for unit-testing with images:
         $ git add ...
         $ git commit -a
 
-4. Look up the most recent tag name from the `test_data_tag` variable in
-   get_test_data_repo() below. Increment the tag name by 1 in the function
+4. Look up the most recent tag name from the `testDataTag` variable in
+   getTestDataRepo() below. Increment the tag name by 1 in the function
    and create a new tag in the test-data repository:
 
         $ git tag test-data-NNN
@@ -35,7 +35,7 @@ Procedure for unit-testing with images:
     tests, and also allows unit tests to continue working on older pyqtgraph
     versions.
 
-    Finally, update the tag name in ``get_test_data_repo`` to the new name.
+    Finally, update the tag name in ``getTestDataRepo`` to the new name.
 
 """
 
@@ -44,26 +44,36 @@ import os
 import sys
 import inspect
 import base64
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
 
-from ..ext.six.moves import http_client as httplib
-from ..ext.six.moves import urllib_parse as urllib
-from .. import scene, config
-from ..util import run_subprocess
+#from ..ext.six.moves import http_client as httplib
+#from ..ext.six.moves import urllib_parse as urllib
+import httplib
+import urllib
+from ..Qt import QtGui, QtCore
+from .. import functions as fn
+from .. import GraphicsLayoutWidget
+from .. import ImageItem, TextItem
+
+
+# This tag marks the test-data commit that this version of vispy should
+# be tested against. When adding or changing test images, create
+# and push a new tag and update this variable.
+testDataTag = 'test-data-2'
 
 
 tester = None
 
 
-def _get_tester():
+def getTester():
     global tester
     if tester is None:
         tester = ImageTester()
     return tester
 
 
-def assert_image_approved(image, standard_file, message=None, **kwargs):
+def assertImageApproved(image, standardFile, message=None, **kwargs):
     """Check that an image test result matches a pre-approved standard.
 
     If the result does not match, then the user can optionally invoke a GUI
@@ -80,7 +90,7 @@ def assert_image_approved(image, standard_file, message=None, **kwargs):
     Parameters
     ----------
     image : (h, w, 4) ndarray
-    standard_file : str
+    standardFile : str
         The name of the approved test image to check against. This file name
         is relative to the root of the pyqtgraph test-data repository and will
         be automatically fetched.
@@ -90,30 +100,39 @@ def assert_image_approved(image, standard_file, message=None, **kwargs):
         to fail a test.
 
     Extra keyword arguments are used to set the thresholds for automatic image
-    comparison (see ``assert_image_match()``).
+    comparison (see ``assertImageMatch()``).
     """
+    if isinstance(image, QtGui.QWidget):
+        w = image
+        image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
+        qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+        painter = QtGui.QPainter(qimg)
+        w.render(painter)
+        painter.end()
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
         message = "%s::%s" % (code.co_filename, code.co_name)
 
     # Make sure we have a test data repo available, possibly invoking git
-    data_path = get_test_data_repo()
+    dataPath = getTestDataRepo()
 
     # Read the standard image if it exists
-    std_file = os.path.join(data_path, standard_file)
-    if not os.path.isfile(std_file):
-        std_image = None
+    stdFileName = os.path.join(dataPath, standardFile + '.png')
+    if not os.path.isfile(stdFileName):
+        stdImage = None
     else:
-        std_image = read_png(std_file)
+        pxm = QtGui.QPixmap()
+        pxm.load(stdFileName)
+        stdImage = fn.imageToArray(pxm.toImage(), copy=True, transpose=False)
 
     # If the test image does not match, then we go to audit if requested.
     try:
-        if image.shape != std_image.shape:
+        if image.shape != stdImage.shape:
             # Allow im1 to be an integer multiple larger than im2 to account
             # for high-resolution displays
             ims1 = np.array(image.shape).astype(float)
-            ims2 = np.array(std_image.shape).astype(float)
+            ims2 = np.array(stdImage.shape).astype(float)
             sr = ims1 / ims2
             if (sr[0] != sr[1] or not np.allclose(sr, np.round(sr)) or
                sr[0] < 1):
@@ -123,32 +142,34 @@ def assert_image_approved(image, standard_file, message=None, **kwargs):
             sr = np.round(sr).astype(int)
             image = downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
 
-        assert_image_match(image, std_image, **kwargs)
+        assertImageMatch(image, stdImage, **kwargs)
     except Exception:
-        if standard_file in git_status(data_path):
+        if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
                   "image %s.\nTo revert this file, run `cd %s; git checkout "
-                  "%s`\n" % (std_file, data_path, standard_file))
+                  "%s`\n" % (stdFileName, dataPath, standardFile))
         if os.getenv('PYQTGRAPH_AUDIT') == '1':
             sys.excepthook(*sys.exc_info())
-            _get_tester().test(image, std_image, message)
-            std_path = os.path.dirname(std_file)
-            print('Saving new standard image to "%s"' % std_file)
-            if not os.path.isdir(std_path):
-                os.makedirs(std_path)
-            write_png(std_file, image)
+            getTester().test(image, stdImage, message)
+            stdPath = os.path.dirname(stdFileName)
+            print('Saving new standard image to "%s"' % stdFileName)
+            if not os.path.isdir(stdPath):
+                os.makedirs(stdPath)
+            img = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+            img.save(stdFileName)
         else:
-            if std_image is None:
-                raise Exception("Test standard %s does not exist." % std_file)
+            if stdImage is None:
+                raise Exception("Test standard %s does not exist. Set "
+                                "PYQTGRAPH_AUDIT=1 to add this image." % stdFileName)
             else:
                 if os.getenv('TRAVIS') is not None:
-                    _save_failed_test(image, std_image, standard_file)
+                    saveFailedTest(image, stdImage, standardFile)
                 raise
 
 
-def assert_image_match(im1, im2, min_corr=0.9, px_threshold=50.,
-                       px_count=None, max_px_diff=None, avg_px_diff=None,
-                       img_diff=None):
+def assertImageMatch(im1, im2, minCorr=0.9, pxThreshold=50.,
+                       pxCount=None, maxPxDiff=None, avgPxDiff=None,
+                       imgDiff=None):
     """Check that two images match.
 
     Images that differ in shape or dtype will fail unconditionally.
@@ -160,18 +181,18 @@ def assert_image_match(im1, im2, min_corr=0.9, px_threshold=50.,
         Test output image
     im2 : (h, w, 4) ndarray
         Test standard image
-    min_corr : float or None
+    minCorr : float or None
         Minimum allowed correlation coefficient between corresponding image
         values (see numpy.corrcoef)
-    px_threshold : float
+    pxThreshold : float
         Minimum value difference at which two pixels are considered different
-    px_count : int or None
+    pxCount : int or None
         Maximum number of pixels that may differ
-    max_px_diff : float or None
+    maxPxDiff : float or None
         Maximum allowed difference between pixels
-    avg_px_diff : float or None
+    avgPxDiff : float or None
         Average allowed difference between pixels
-    img_diff : float or None
+    imgDiff : float or None
         Maximum allowed summed difference between images
 
     """
@@ -180,29 +201,30 @@ def assert_image_match(im1, im2, min_corr=0.9, px_threshold=50.,
     assert im1.dtype == im2.dtype
 
     diff = im1.astype(float) - im2.astype(float)
-    if img_diff is not None:
-        assert np.abs(diff).sum() <= img_diff
+    if imgDiff is not None:
+        assert np.abs(diff).sum() <= imgDiff
 
     pxdiff = diff.max(axis=2)  # largest value difference per pixel
-    mask = np.abs(pxdiff) >= px_threshold
-    if px_count is not None:
-        assert mask.sum() <= px_count
+    mask = np.abs(pxdiff) >= pxThreshold
+    if pxCount is not None:
+        assert mask.sum() <= pxCount
 
-    masked_diff = diff[mask]
-    if max_px_diff is not None and masked_diff.size > 0:
-        assert masked_diff.max() <= max_px_diff
-    if avg_px_diff is not None and masked_diff.size > 0:
-        assert masked_diff.mean() <= avg_px_diff
+    maskedDiff = diff[mask]
+    if maxPxDiff is not None and maskedDiff.size > 0:
+        assert maskedDiff.max() <= maxPxDiff
+    if avgPxDiff is not None and maskedDiff.size > 0:
+        assert maskedDiff.mean() <= avgPxDiff
 
-    if min_corr is not None:
+    if minCorr is not None:
         with np.errstate(invalid='ignore'):
             corr = np.corrcoef(im1.ravel(), im2.ravel())[0, 1]
-        assert corr >= min_corr
+        assert corr >= minCorr
 
 
-def _save_failed_test(data, expect, filename):
-    from ..io import _make_png
-    commit, error = run_subprocess(['git', 'rev-parse',  'HEAD'])
+def saveFailedTest(data, expect, filename):
+    """Upload failed test images to web server to allow CI test debugging.
+    """
+    commit, error = check_output(['git', 'rev-parse',  'HEAD'])
     name = filename.split('/')
     name.insert(-1, commit.strip())
     filename = '/'.join(name)
@@ -220,7 +242,7 @@ def _save_failed_test(data, expect, filename):
     img[2:2+ds[0], 2:2+ds[1], :ds[2]] = data
     img[2:2+es[0], ds[1]+4:ds[1]+4+es[1], :es[2]] = expect
 
-    diff = make_diff_image(data, expect)
+    diff = makeDiffImage(data, expect)
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
     png = _make_png(img)
@@ -238,7 +260,7 @@ def _save_failed_test(data, expect, filename):
         print(response)
 
 
-def make_diff_image(im1, im2):
+def makeDiffImage(im1, im2):
     """Return image array showing the differences between im1 and im2.
 
     Handles images of different shape. Alpha channels are not compared.
@@ -262,20 +284,25 @@ class ImageTester(QtGui.QWidget):
         self.lastKey = None
         
         QtGui.QWidget.__init__(self)
+        self.resize(1200, 800)
+        self.showFullScreen()
         
-        layout = QtGui.QGridLayout()
+        self.layout = QtGui.QGridLayout()
         self.setLayout(self.layout)
         
-        view = GraphicsLayoutWidget()
-        self.layout.addWidget(view, 0, 0, 1, 2)
+        self.view = GraphicsLayoutWidget()
+        self.layout.addWidget(self.view, 0, 0, 1, 2)
 
         self.label = QtGui.QLabel()
         self.layout.addWidget(self.label, 1, 0, 1, 2)
+        self.label.setWordWrap(True)
+        font = QtGui.QFont("monospace", 14, QtGui.QFont.Bold)
+        self.label.setFont(font)
 
-        #self.passBtn = QtGui.QPushButton('Pass')
-        #self.failBtn = QtGui.QPushButton('Fail')
-        #self.layout.addWidget(self.passBtn, 2, 0)
-        #self.layout.addWidget(self.failBtn, 2, 0)
+        self.passBtn = QtGui.QPushButton('Pass')
+        self.failBtn = QtGui.QPushButton('Fail')
+        self.layout.addWidget(self.passBtn, 2, 0)
+        self.layout.addWidget(self.failBtn, 2, 1)
 
         self.views = (self.view.addViewBox(row=0, col=0),
                       self.view.addViewBox(row=0, col=1),
@@ -285,48 +312,61 @@ class ImageTester(QtGui.QWidget):
             v.setAspectLocked(1)
             v.invertY()
             v.image = ImageItem()
+            v.image.setAutoDownsample(True)
             v.addItem(v.image)
             v.label = TextItem(labelText[i])
+            v.setBackgroundColor(0.5)
 
         self.views[1].setXLink(self.views[0])
+        self.views[1].setYLink(self.views[0])
         self.views[2].setXLink(self.views[0])
+        self.views[2].setYLink(self.views[0])
 
     def test(self, im1, im2, message):
+        """Ask the user to decide whether an image test passes or fails.
+        
+        This method displays the test image, reference image, and the difference
+        between the two. It then blocks until the user selects the test output
+        by clicking a pass/fail button or typing p/f. If the user fails the test,
+        then an exception is raised.
+        """
         self.show()
         if im2 is None:
-            message += 'Image1: %s %s   Image2: [no standard]' % (im1.shape, im1.dtype)
+            message += '\nImage1: %s %s   Image2: [no standard]' % (im1.shape, im1.dtype)
             im2 = np.zeros((1, 1, 3), dtype=np.ubyte)
         else:
-            message += 'Image1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
+            message += '\nImage1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
         self.label.setText(message)
         
-        self.views[0].image.setImage(im1)
-        self.views[1].image.setImage(im2)
-        diff = make_diff_image(im1, im2)
+        self.views[0].image.setImage(im1.transpose(1, 0, 2))
+        self.views[1].image.setImage(im2.transpose(1, 0, 2))
+        diff = makeDiffImage(im1, im2).transpose(1, 0, 2)
 
         self.views[2].image.setImage(diff)
         self.views[0].autoRange()
 
         while True:
-            self.app.process_events()
+            QtGui.QApplication.processEvents()
             lastKey = self.lastKey
+            
             self.lastKey = None
-            if lastKey is None:
-                pass
-            elif lastKey.lower() == 'p':
-                break
-            elif lastKey.lower() in ('f', 'esc'):
+            if lastKey in ('f', 'esc') or not self.isVisible():
                 raise Exception("User rejected test result.")
+            elif lastKey == 'p':
+                break
             time.sleep(0.03)
 
         for v in self.views:
             v.image.setImage(np.zeros((1, 1, 3), dtype=np.ubyte))
 
     def keyPressEvent(self, event):
-        self.lastKey = event.text()
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.lastKey = 'esc'
+        else:
+            self.lastKey = str(event.text()).lower()
 
 
-def get_test_data_repo():
+def getTestDataRepo():
     """Return the path to a git repository with the required commit checked
     out.
 
@@ -334,66 +374,62 @@ def get_test_data_repo():
     https://github.com/vispy/test-data. If the repository already exists
     then the required commit is checked out.
     """
+    global testDataTag
 
-    # This tag marks the test-data commit that this version of vispy should
-    # be tested against. When adding or changing test images, create
-    # and push a new tag and update this variable.
-    test_data_tag = 'test-data-4'
+    dataPath = os.path.expanduser('~/.pyqtgraph/test-data')
+    gitPath = 'https://github.com/pyqtgraph/test-data'
+    gitbase = gitCmdBase(dataPath)
 
-    data_path = config['test_data_path']
-    git_path = 'https://github.com/pyqtgraph/test-data'
-    gitbase = git_cmd_base(data_path)
-
-    if os.path.isdir(data_path):
+    if os.path.isdir(dataPath):
         # Already have a test-data repository to work with.
 
-        # Get the commit ID of test_data_tag. Do a fetch if necessary.
+        # Get the commit ID of testDataTag. Do a fetch if necessary.
         try:
-            tag_commit = git_commit_id(data_path, test_data_tag)
+            tagCommit = gitCommitId(dataPath, testDataTag)
         except NameError:
             cmd = gitbase + ['fetch', '--tags', 'origin']
             print(' '.join(cmd))
             check_call(cmd)
             try:
-                tag_commit = git_commit_id(data_path, test_data_tag)
+                tagCommit = gitCommitId(dataPath, testDataTag)
             except NameError:
                 raise Exception("Could not find tag '%s' in test-data repo at"
-                                " %s" % (test_data_tag, data_path))
+                                " %s" % (testDataTag, dataPath))
         except Exception:
-            if not os.path.exists(os.path.join(data_path, '.git')):
+            if not os.path.exists(os.path.join(dataPath, '.git')):
                 raise Exception("Directory '%s' does not appear to be a git "
                                 "repository. Please remove this directory." %
-                                data_path)
+                                dataPath)
             else:
                 raise
 
         # If HEAD is not the correct commit, then do a checkout
-        if git_commit_id(data_path, 'HEAD') != tag_commit:
-            print("Checking out test-data tag '%s'" % test_data_tag)
-            check_call(gitbase + ['checkout', test_data_tag])
+        if gitCommitId(dataPath, 'HEAD') != tagCommit:
+            print("Checking out test-data tag '%s'" % testDataTag)
+            check_call(gitbase + ['checkout', testDataTag])
 
     else:
         print("Attempting to create git clone of test data repo in %s.." %
-              data_path)
+              dataPath)
 
-        parent_path = os.path.split(data_path)[0]
-        if not os.path.isdir(parent_path):
-            os.makedirs(parent_path)
+        parentPath = os.path.split(dataPath)[0]
+        if not os.path.isdir(parentPath):
+            os.makedirs(parentPath)
 
         if os.getenv('TRAVIS') is not None:
             # Create a shallow clone of the test-data repository (to avoid
             # downloading more data than is necessary)
-            os.makedirs(data_path)
+            os.makedirs(dataPath)
             cmds = [
                 gitbase + ['init'],
-                gitbase + ['remote', 'add', 'origin', git_path],
-                gitbase + ['fetch', '--tags', 'origin', test_data_tag,
+                gitbase + ['remote', 'add', 'origin', gitPath],
+                gitbase + ['fetch', '--tags', 'origin', testDataTag,
                            '--depth=1'],
                 gitbase + ['checkout', '-b', 'master', 'FETCH_HEAD'],
             ]
         else:
             # Create a full clone
-            cmds = [['git', 'clone', git_path, data_path]]
+            cmds = [['git', 'clone', gitPath, dataPath]]
 
         for cmd in cmds:
             print(' '.join(cmd))
@@ -401,34 +437,89 @@ def get_test_data_repo():
             if rval == 0:
                 continue
             raise RuntimeError("Test data path '%s' does not exist and could "
-                               "not be created with git. Either create a git "
-                               "clone of %s or set the test_data_path "
-                               "variable to an existing clone." %
-                               (data_path, git_path))
+                               "not be created with git. Please create a git "
+                               "clone of %s at this path." %
+                               (dataPath, gitPath))
 
-    return data_path
+    return dataPath
 
 
-def git_cmd_base(path):
+def gitCmdBase(path):
     return ['git', '--git-dir=%s/.git' % path, '--work-tree=%s' % path]
 
 
-def git_status(path):
+def gitStatus(path):
     """Return a string listing all changes to the working tree in a git
     repository.
     """
-    cmd = git_cmd_base(path) + ['status', '--porcelain']
-    return run_subprocess(cmd, stderr=None, universal_newlines=True)[0]
+    cmd = gitCmdBase(path) + ['status', '--porcelain']
+    return check_output(cmd, stderr=None, universal_newlines=True)
 
 
-def git_commit_id(path, ref):
+def gitCommitId(path, ref):
     """Return the commit id of *ref* in the git repository at *path*.
     """
-    cmd = git_cmd_base(path) + ['show', ref]
+    cmd = gitCmdBase(path) + ['show', ref]
     try:
-        output = run_subprocess(cmd, stderr=None, universal_newlines=True)[0]
+        output = check_output(cmd, stderr=None, universal_newlines=True)
     except CalledProcessError:
+        print(cmd)
         raise NameError("Unknown git reference '%s'" % ref)
     commit = output.split('\n')[0]
     assert commit[:7] == 'commit '
     return commit[7:]
+
+
+#import subprocess
+#def run_subprocess(command, return_code=False, **kwargs):
+    #"""Run command using subprocess.Popen
+
+    #Run command and wait for command to complete. If the return code was zero
+    #then return, otherwise raise CalledProcessError.
+    #By default, this will also add stdout= and stderr=subproces.PIPE
+    #to the call to Popen to suppress printing to the terminal.
+
+    #Parameters
+    #----------
+    #command : list of str
+        #Command to run as subprocess (see subprocess.Popen documentation).
+    #return_code : bool
+        #If True, the returncode will be returned, and no error checking
+        #will be performed (so this function should always return without
+        #error).
+    #**kwargs : dict
+        #Additional kwargs to pass to ``subprocess.Popen``.
+
+    #Returns
+    #-------
+    #stdout : str
+        #Stdout returned by the process.
+    #stderr : str
+        #Stderr returned by the process.
+    #code : int
+        #The command exit code. Only returned if ``return_code`` is True.
+    #"""
+    ## code adapted with permission from mne-python
+    #use_kwargs = dict(stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    #use_kwargs.update(kwargs)
+
+    #p = subprocess.Popen(command, **use_kwargs)
+    #output = p.communicate()
+
+    ## communicate() may return bytes, str, or None depending on the kwargs
+    ## passed to Popen(). Convert all to unicode str:
+    #output = ['' if s is None else s for s in output]
+    #output = [s.decode('utf-8') if isinstance(s, bytes) else s for s in output]
+    #output = tuple(output)
+
+    #if not return_code and p.returncode:
+        #print(output[0])
+        #print(output[1])
+        #err_fun = subprocess.CalledProcessError.__init__
+        #if 'output' in inspect.getargspec(err_fun).args:
+            #raise subprocess.CalledProcessError(p.returncode, command, output)
+        #else:
+            #raise subprocess.CalledProcessError(p.returncode, command)
+    #if return_code:
+        #output = output + (p.returncode,)
+    #return output
