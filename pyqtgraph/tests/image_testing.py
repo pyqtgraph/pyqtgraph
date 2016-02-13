@@ -44,7 +44,7 @@ import os
 import sys
 import inspect
 import base64
-from subprocess import check_call, check_output, CalledProcessError
+import subprocess as sp
 import numpy as np
 
 #from ..ext.six.moves import http_client as httplib
@@ -224,7 +224,7 @@ def assertImageMatch(im1, im2, minCorr=0.9, pxThreshold=50.,
 def saveFailedTest(data, expect, filename):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit, error = check_output(['git', 'rev-parse',  'HEAD'])
+    commit, error = runSubprocess(['git', 'rev-parse',  'HEAD'])
     name = filename.split('/')
     name.insert(-1, commit.strip())
     filename = '/'.join(name)
@@ -389,7 +389,7 @@ def getTestDataRepo():
         except NameError:
             cmd = gitbase + ['fetch', '--tags', 'origin']
             print(' '.join(cmd))
-            check_call(cmd)
+            sp.check_call(cmd)
             try:
                 tagCommit = gitCommitId(dataPath, testDataTag)
             except NameError:
@@ -406,7 +406,7 @@ def getTestDataRepo():
         # If HEAD is not the correct commit, then do a checkout
         if gitCommitId(dataPath, 'HEAD') != tagCommit:
             print("Checking out test-data tag '%s'" % testDataTag)
-            check_call(gitbase + ['checkout', testDataTag])
+            sp.check_call(gitbase + ['checkout', testDataTag])
 
     else:
         print("Attempting to create git clone of test data repo in %s.." %
@@ -433,7 +433,7 @@ def getTestDataRepo():
 
         for cmd in cmds:
             print(' '.join(cmd))
-            rval = check_call(cmd)
+            rval = sp.check_call(cmd)
             if rval == 0:
                 continue
             raise RuntimeError("Test data path '%s' does not exist and could "
@@ -453,7 +453,7 @@ def gitStatus(path):
     repository.
     """
     cmd = gitCmdBase(path) + ['status', '--porcelain']
-    return check_output(cmd, stderr=None, universal_newlines=True)
+    return runSubprocess(cmd, stderr=None, universal_newlines=True)
 
 
 def gitCommitId(path, ref):
@@ -461,8 +461,8 @@ def gitCommitId(path, ref):
     """
     cmd = gitCmdBase(path) + ['show', ref]
     try:
-        output = check_output(cmd, stderr=None, universal_newlines=True)
-    except CalledProcessError:
+        output = runSubprocess(cmd, stderr=None, universal_newlines=True)
+    except sp.CalledProcessError:
         print(cmd)
         raise NameError("Unknown git reference '%s'" % ref)
     commit = output.split('\n')[0]
@@ -470,56 +470,46 @@ def gitCommitId(path, ref):
     return commit[7:]
 
 
-#import subprocess
-#def run_subprocess(command, return_code=False, **kwargs):
-    #"""Run command using subprocess.Popen
+def runSubprocess(command, return_code=False, **kwargs):
+    """Run command using subprocess.Popen
+    
+    Similar to subprocess.check_output(), which is not available in 2.6.
 
-    #Run command and wait for command to complete. If the return code was zero
-    #then return, otherwise raise CalledProcessError.
-    #By default, this will also add stdout= and stderr=subproces.PIPE
-    #to the call to Popen to suppress printing to the terminal.
+    Run command and wait for command to complete. If the return code was zero
+    then return, otherwise raise CalledProcessError.
+    By default, this will also add stdout= and stderr=subproces.PIPE
+    to the call to Popen to suppress printing to the terminal.
 
-    #Parameters
-    #----------
-    #command : list of str
-        #Command to run as subprocess (see subprocess.Popen documentation).
-    #return_code : bool
-        #If True, the returncode will be returned, and no error checking
-        #will be performed (so this function should always return without
-        #error).
-    #**kwargs : dict
-        #Additional kwargs to pass to ``subprocess.Popen``.
+    Parameters
+    ----------
+    command : list of str
+        Command to run as subprocess (see subprocess.Popen documentation).
+    **kwargs : dict
+        Additional kwargs to pass to ``subprocess.Popen``.
 
-    #Returns
-    #-------
-    #stdout : str
-        #Stdout returned by the process.
-    #stderr : str
-        #Stderr returned by the process.
-    #code : int
-        #The command exit code. Only returned if ``return_code`` is True.
-    #"""
-    ## code adapted with permission from mne-python
-    #use_kwargs = dict(stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    #use_kwargs.update(kwargs)
+    Returns
+    -------
+    stdout : str
+        Stdout returned by the process.
+    """
+    # code adapted with permission from mne-python
+    use_kwargs = dict(stderr=None, stdout=sp.PIPE)
+    use_kwargs.update(kwargs)
 
-    #p = subprocess.Popen(command, **use_kwargs)
-    #output = p.communicate()
+    p = sp.Popen(command, **use_kwargs)
+    output = p.communicate()[0]
 
-    ## communicate() may return bytes, str, or None depending on the kwargs
-    ## passed to Popen(). Convert all to unicode str:
-    #output = ['' if s is None else s for s in output]
-    #output = [s.decode('utf-8') if isinstance(s, bytes) else s for s in output]
-    #output = tuple(output)
+    # communicate() may return bytes, str, or None depending on the kwargs
+    # passed to Popen(). Convert all to unicode str:
+    output = '' if output is None else output
+    output = output.decode('utf-8') if isinstance(output, bytes) else output
 
-    #if not return_code and p.returncode:
-        #print(output[0])
-        #print(output[1])
-        #err_fun = subprocess.CalledProcessError.__init__
-        #if 'output' in inspect.getargspec(err_fun).args:
-            #raise subprocess.CalledProcessError(p.returncode, command, output)
-        #else:
-            #raise subprocess.CalledProcessError(p.returncode, command)
-    #if return_code:
-        #output = output + (p.returncode,)
-    #return output
+    if p.returncode != 0:
+        print(output)
+        err_fun = sp.CalledProcessError.__init__
+        if 'output' in inspect.getargspec(err_fun).args:
+            raise sp.CalledProcessError(p.returncode, command, output)
+        else:
+            raise sp.CalledProcessError(p.returncode, command)
+    
+    return output
