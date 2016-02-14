@@ -62,7 +62,7 @@ from .. import ImageItem, TextItem
 # This tag marks the test-data commit that this version of pyqtgraph should
 # be tested against. When adding or changing test images, create
 # and push a new tag and update this variable.
-testDataTag = 'test-data-2'
+testDataTag = 'test-data-3'
 
 
 tester = None

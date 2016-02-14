@@ -4,13 +4,15 @@ from pyqtgraph.tests import assertImageApproved
 
 
 def test_PlotCurveItem():
-    p = pg.plot()
+    p = pg.GraphicsWindow()
+    v = p.addViewBox()
     p.resize(200, 150)
     data = np.array([1,4,2,3,np.inf,5,7,6,-np.inf,8,10,9,np.nan,-1,-2,0])
     c = pg.PlotCurveItem(data)
-    p.addItem(c)
-    p.autoRange()
+    v.addItem(c)
+    v.autoRange()
     
+    assert np.allclose(v.viewRange(), [[-1.1457564053237301, 16.145756405323731], [-3.076811473165955, 11.076811473165955]])
     assertImageApproved(p, 'plotcurveitem/connectall', "Plot curve with all points connected.")
     
     c.setData(data, connect='pairs')
