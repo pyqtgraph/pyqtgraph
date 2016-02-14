@@ -47,10 +47,12 @@ import base64
 import subprocess as sp
 import numpy as np
 
-#from ..ext.six.moves import http_client as httplib
-#from ..ext.six.moves import urllib_parse as urllib
-import httplib
-import urllib
+if sys.version[0] >= '3':
+    import http.client as httplib
+    import urllib.parse as urllib
+else:
+    import httplib
+    import urllib
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from .. import GraphicsLayoutWidget
