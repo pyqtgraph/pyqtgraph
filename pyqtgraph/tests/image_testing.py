@@ -8,7 +8,7 @@ Procedure for unit-testing with images:
 
 2. Run individual test scripts with the PYQTGRAPH_AUDIT environment variable set:
 
-       $ PYQTGRAPH_AUDIT=1 python pyqtgraph/graphicsItems/tests/test_PlotItem.py
+       $ PYQTGRAPH_AUDIT=1 python pyqtgraph/graphicsItems/tests/test_PlotCurveItem.py
 
    Any failing tests will
    display the test results, standard image, and the differences between the
@@ -59,7 +59,7 @@ from .. import GraphicsLayoutWidget
 from .. import ImageItem, TextItem
 
 
-# This tag marks the test-data commit that this version of vispy should
+# This tag marks the test-data commit that this version of pyqtgraph should
 # be tested against. When adding or changing test images, create
 # and push a new tag and update this variable.
 testDataTag = 'test-data-2'
@@ -169,13 +169,16 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                 raise
 
 
-def assertImageMatch(im1, im2, minCorr=0.9, pxThreshold=50.,
-                       pxCount=None, maxPxDiff=None, avgPxDiff=None,
+def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
+                       pxCount=0, maxPxDiff=None, avgPxDiff=None,
                        imgDiff=None):
     """Check that two images match.
 
     Images that differ in shape or dtype will fail unconditionally.
     Further tests for similarity depend on the arguments supplied.
+
+    By default, images may have no pixels that gave a value difference greater
+    than 50.
 
     Parameters
     ----------
