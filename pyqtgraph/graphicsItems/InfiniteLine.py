@@ -188,15 +188,16 @@ class InfiniteLine(GraphicsObject):
             GraphicsObject.setPos(self, Point(self.p))
 
             if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
-                self.updateTextPosition()
+                self.updateTextContent()
 
             self.update()
             self.sigPositionChanged.emit(self)
 
-    def updateTextPosition(self):
+    def updateTextContent(self):
         """
-        Update the location of the textItem. Called only if a textItem is
-        requested and if the item has already been added to a PlotItem.
+        Update the content displayed by the textItem. Called only if a 
+        textItem is requested and if the item has already been added to
+        a PlotItem.
         """
         rangeX, rangeY = self.getViewBox().viewRange()
         xmin, xmax = rangeX
@@ -340,7 +341,7 @@ class InfiniteLine(GraphicsObject):
         self._invalidateCache()
 
         if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
-            self.updateTextPosition()
+            self.updateTextContent()
 
     def showLabel(self, state):
         """
