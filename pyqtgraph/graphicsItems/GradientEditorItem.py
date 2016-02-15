@@ -13,7 +13,7 @@ from ..python2_3 import cmp
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
 
-
+##### If Gradients are added or removed, or gradient names are changed, please update the GradientEditorItem.loadPreset docstring.
 Gradients = OrderedDict([
     ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
     ('flame', {'ticks': [(0.2, (7, 0, 220, 255)), (0.5, (236, 0, 134, 255)), (0.8, (246, 246, 0, 255)), (1.0, (255, 255, 255, 255)), (0.0, (0, 0, 0, 255))], 'mode': 'rgb'}),
