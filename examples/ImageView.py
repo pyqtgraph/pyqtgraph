@@ -48,6 +48,12 @@ data[:,50:60,50:60] += sig
 ## Display the data and assign each frame a time value from 1.0 to 3.0
 imv.setImage(data, xvals=np.linspace(1., 3., data.shape[0]))
 
+## Set a custom color map
+positions = [0, 0.5, 1]
+colors =  [(0,0,255), (0,255,255), (255,255,0)]
+cm = pg.ColorMap(positions, colors)
+imv.setColorMap(cm)
+
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
     import sys
