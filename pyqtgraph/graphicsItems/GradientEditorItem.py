@@ -473,7 +473,8 @@ class GradientEditorItem(TickSliderItem):
         
     def loadPreset(self, name):
         """
-        Load a predefined gradient. 
+        Load a predefined gradient. Currently defined gradients are: 'thermal', 
+        'flame', 'yellowy', 'bipolar', 'spectrum', 'cyclic', 'greyclip', and 'grey'. 
     
         """ ## TODO: provide image with names of defined gradients
         #global Gradients
