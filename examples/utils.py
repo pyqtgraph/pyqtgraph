@@ -22,6 +22,7 @@ examples = OrderedDict([
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
     ('Beeswarm plot', 'beeswarm.py'),
+    ('Symbols', 'Symbols.py'),
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
