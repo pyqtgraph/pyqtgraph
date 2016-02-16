@@ -32,7 +32,7 @@ class InfiniteLine(GraphicsObject):
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=False, textColor=None, textFill=None,
-                 textPosition=[0.05, 0.5], textFormat="{:.3f}",
+                 textPosition=[0.05, 0.5], textFormat="{:.3f}", draggableLabel=False,
                  suffix=None, name='InfiniteLine'):
         """
         =============== ==================================================================
@@ -59,6 +59,9 @@ class InfiniteLine(GraphicsObject):
                         of the label from one side of the line to the other in the
                         orthogonal direction.
         textFormat      Any new python 3 str.format() format.
+        draggableLabel  Bool. If True, the user can relocate the label during the dragging.
+                        If set to True, the first entry of textPosition is no longer
+                        useful.
         suffix          If not None, corresponds to the unit to show next to the label
         name            name of the item
         =============== ==================================================================
@@ -81,6 +84,7 @@ class InfiniteLine(GraphicsObject):
         self.textColor = textColor
         self.textFill = textFill
         self.textPosition = textPosition
+        self.draggableLabel = draggableLabel
         self.suffix = suffix
 
         if (self.angle == 0 or self.angle == 90) and label:
@@ -190,17 +194,20 @@ class InfiniteLine(GraphicsObject):
             self._invalidateCache()
 
             if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
-                self.updateTextAndLocation()
-            else:
+                self.updateText()
+                if self.draggableLabel:
+                    GraphicsObject.setPos(self, Point(self.p))
+                else: # precise location needed
+                    GraphicsObject.setPos(self, self._exactPos)
+            else: # no label displayed or called just before being dragged for the first time
                 GraphicsObject.setPos(self, Point(self.p))
             self.update()
             self.sigPositionChanged.emit(self)
 
-    def updateTextAndLocation(self):
+    def updateText(self):
         """
-        Update the content displayed by the textItem and the location of the
-        item. Called only if a textItem is requested and if the item has
-        already been added to a PlotItem.
+        Update the content displayed by the textItem. Called only if a textItem
+        is requested and if the item has already been added to a PlotItem.
         """
         rangeX, rangeY = self.getViewBox().viewRange()
         xmin, xmax = rangeX
@@ -218,7 +225,8 @@ class InfiniteLine(GraphicsObject):
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
             posY = ymin+pos*(ymax-ymin)
-            GraphicsObject.setPos(self, Point(self.value(), posY))
+            #self.p = [self.value(), posY]
+            self._exactPos = Point(self.value(), posY)
         elif self.angle == 0:  # horizontal line
             diffMin = self.value()-ymin
             limInf = shift*(ymax-ymin)
@@ -231,7 +239,8 @@ class InfiniteLine(GraphicsObject):
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
             posX = xmin+pos*(xmax-xmin)
-            GraphicsObject.setPos(self, Point(posX, self.value()))
+            #self.p = [posX, self.value()]
+            self._exactPos = Point(posX, self.value())
 
     def getXPos(self):
         return self.p[0]
@@ -349,7 +358,7 @@ class InfiniteLine(GraphicsObject):
         self._invalidateCache()
 
         if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
-            self.updateTextAndLocation()
+            self.updateText()
 
     def showLabel(self, state):
         """
@@ -385,6 +394,15 @@ class InfiniteLine(GraphicsObject):
         pos = np.clip(position, 0, 1)
         shift = np.clip(shift, 0, 1)
         self.textPosition = [pos, shift]
+        self.update()
+
+    def setDraggableLabel(self, state):
+        """
+        Set the state of the label regarding its behaviour during the dragging
+        of the line. If True, then the location of the label change during the
+        dragging of the line.
+        """
+        self.draggableLabel = state
         self.update()
 
     def setName(self, name):
