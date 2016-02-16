@@ -32,7 +32,7 @@ class InfiniteLine(GraphicsObject):
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=False, textColor=None, textFill=None,
-                 textShift=0.5, textFormat="{:.3f}",
+                 textPosition=[0.05, 0.5], textFormat="{:.3f}",
                  suffix=None, name='InfiniteLine'):
         """
         =============== ==================================================================
@@ -53,8 +53,11 @@ class InfiniteLine(GraphicsObject):
                         location in data coordinates
         textColor       color of the label. Can be any argument fn.mkColor can understand.
         textFill        A brush to use when filling within the border of the text.
-        textShift       float (0-1) that defines when the text shifts from one side to
-                        the other side of the line.
+        textPosition    list of float (0-1) that defines when the precise location of the
+                        label. The first float governs the location of the label in the
+                        direction of the line, whereas the second one governs the shift
+                        of the label from one side of the line to the other in the
+                        orthogonal direction.
         textFormat      Any new python 3 str.format() format.
         suffix          If not None, corresponds to the unit to show next to the label
         name            name of the item
@@ -77,7 +80,7 @@ class InfiniteLine(GraphicsObject):
             textColor = (200, 200, 100)
         self.textColor = textColor
         self.textFill = textFill
-        self.textShift = textShift
+        self.textPosition = textPosition
         self.suffix = suffix
 
         if (self.angle == 0 or self.angle == 90) and label:
@@ -202,9 +205,10 @@ class InfiniteLine(GraphicsObject):
         rangeX, rangeY = self.getViewBox().viewRange()
         xmin, xmax = rangeX
         ymin, ymax = rangeY
+        pos, shift = self.textPosition
         if self.angle == 90:  # vertical line
             diffMin = self.value()-xmin
-            limInf = self.textShift*(xmax-xmin)
+            limInf = shift*(xmax-xmin)
             if diffMin < limInf:
                 self.textItem.anchor = Point(self.anchorRight)
             else:
@@ -213,11 +217,11 @@ class InfiniteLine(GraphicsObject):
             if self.suffix is not None:
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
-            posY = ymin+0.05*(ymax-ymin)
+            posY = ymin+pos*(ymax-ymin)
             GraphicsObject.setPos(self, Point(self.value(), posY))
         elif self.angle == 0:  # horizontal line
             diffMin = self.value()-ymin
-            limInf = self.textShift*(ymax-ymin)
+            limInf = shift*(ymax-ymin)
             if diffMin < limInf:
                 self.textItem.anchor = Point(self.anchorUp)
             else:
@@ -226,7 +230,7 @@ class InfiniteLine(GraphicsObject):
             if self.suffix is not None:
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
-            posX = xmin+0.05*(xmax-xmin)
+            posX = xmin+pos*(xmax-xmin)
             GraphicsObject.setPos(self, Point(posX, self.value()))
 
     def getXPos(self):
@@ -364,17 +368,23 @@ class InfiniteLine(GraphicsObject):
         else:
             self.textItem = None
 
-    def setTextShift(self, shift):
+    def setTextLocation(self, position=0.05, shift=0.5):
         """
-        Set the parameter that defines the location when the label shifts from
-        one side of the infiniteLine to the other.
+        Set the parameters that defines the location of the label on the axis.
+        The position *parameter* governs the location of the label in the
+        direction of the line, whereas the *shift* governs the shift of the
+        label from one side of the line to the other in the orthogonal
+        direction.
 
         ==============   ======================================================
         **Arguments:**
+        position          float (range of value = [0-1])
         shift             float (range of value = [0-1]).
         ==============   ======================================================
         """
-        self.textShift = np.clip(shift, 0, 1)
+        pos = np.clip(position, 0, 1)
+        shift = np.clip(shift, 0, 1)
+        self.textPosition = [pos, shift]
         self.update()
 
     def setName(self, name):
