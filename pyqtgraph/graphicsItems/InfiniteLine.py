@@ -185,19 +185,19 @@ class InfiniteLine(GraphicsObject):
         if self.p != newPos:
             self.p = newPos
             self._invalidateCache()
-            GraphicsObject.setPos(self, Point(self.p))
 
             if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
-                self.updateTextContent()
-
+                self.updateTextAndLocation()
+            else:
+                GraphicsObject.setPos(self, Point(self.p))
             self.update()
             self.sigPositionChanged.emit(self)
 
-    def updateTextContent(self):
+    def updateTextAndLocation(self):
         """
-        Update the content displayed by the textItem. Called only if a 
-        textItem is requested and if the item has already been added to
-        a PlotItem.
+        Update the content displayed by the textItem and the location of the
+        item. Called only if a textItem is requested and if the item has
+        already been added to a PlotItem.
         """
         rangeX, rangeY = self.getViewBox().viewRange()
         xmin, xmax = rangeX
@@ -213,6 +213,8 @@ class InfiniteLine(GraphicsObject):
             if self.suffix is not None:
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
+            posY = ymin+0.05*(ymax-ymin)
+            GraphicsObject.setPos(self, Point(self.value(), posY))
         elif self.angle == 0:  # horizontal line
             diffMin = self.value()-ymin
             limInf = self.textShift*(ymax-ymin)
@@ -224,6 +226,8 @@ class InfiniteLine(GraphicsObject):
             if self.suffix is not None:
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
+            posX = xmin+0.05*(xmax-xmin)
+            GraphicsObject.setPos(self, Point(posX, self.value()))
 
     def getXPos(self):
         return self.p[0]
@@ -341,7 +345,7 @@ class InfiniteLine(GraphicsObject):
         self._invalidateCache()
 
         if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
-            self.updateTextContent()
+            self.updateTextAndLocation()
 
     def showLabel(self, state):
         """
