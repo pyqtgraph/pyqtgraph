@@ -22,9 +22,9 @@ Procedure for unit-testing with images:
         $ git add ...
         $ git commit -a
 
-4. Look up the most recent tag name from the `testDataTag` variable in
-   getTestDataRepo() below. Increment the tag name by 1 in the function
-   and create a new tag in the test-data repository:
+4. Look up the most recent tag name from the `testDataTag` global variable
+   below. Increment the tag name by 1 and create a new tag in the test-data
+   repository:
 
         $ git tag test-data-NNN
         $ git push --tags origin master
@@ -35,9 +35,14 @@ Procedure for unit-testing with images:
     tests, and also allows unit tests to continue working on older pyqtgraph
     versions.
 
-    Finally, update the tag name in ``getTestDataRepo`` to the new name.
-
 """
+
+
+# This is the name of a tag in the test-data repository that this version of
+# pyqtgraph should be tested against. When adding or changing test images,
+# create and push a new tag and update this variable.
+testDataTag = 'test-data-3'
+
 
 import time
 import os
@@ -57,12 +62,6 @@ from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from .. import GraphicsLayoutWidget
 from .. import ImageItem, TextItem
-
-
-# This tag marks the test-data commit that this version of pyqtgraph should
-# be tested against. When adding or changing test images, create
-# and push a new tag and update this variable.
-testDataTag = 'test-data-3'
 
 
 tester = None
@@ -130,16 +129,19 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
 
     # If the test image does not match, then we go to audit if requested.
     try:
+        if image.shape[2] != stdImage.shape[2]:
+            raise Exception("Test result has different channel count than standard image"
+                            "(%d vs %d)" % (image.shape[2], stdImage.shape[2]))
         if image.shape != stdImage.shape:
             # Allow im1 to be an integer multiple larger than im2 to account
             # for high-resolution displays
             ims1 = np.array(image.shape).astype(float)
             ims2 = np.array(stdImage.shape).astype(float)
-            sr = ims1 / ims2
+            sr = ims1 / ims2 if ims1[0] > ims2[0] else ims2 / ims1
             if (sr[0] != sr[1] or not np.allclose(sr, np.round(sr)) or
                sr[0] < 1):
                 raise TypeError("Test result shape %s is not an integer factor"
-                                " larger than standard image shape %s." %
+                                    " different than standard image shape %s." %
                                 (ims1, ims2))
             sr = np.round(sr).astype(int)
             image = downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
@@ -250,7 +252,8 @@ def saveFailedTest(data, expect, filename):
     diff = makeDiffImage(data, expect)
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
-    png = _make_png(img)
+    png = makePng(img)
+    
     conn = httplib.HTTPConnection(host)
     req = urllib.urlencode({'name': filename,
                             'data': base64.b64encode(png)})
@@ -263,6 +266,16 @@ def saveFailedTest(data, expect, filename):
     if not response.startswith(b'OK'):
         print("WARNING: Error uploading data to %s" % host)
         print(response)
+
+
+def makePng(img):
+    """Given an array like (H, W, 4), return a PNG-encoded byte string.
+    """
+    io = QtCore.QBuffer()
+    qim = fn.makeQImage(img, alpha=False)
+    qim.save(io, format='png')
+    png = io.data().data().encode()
+    return png
 
 
 def makeDiffImage(im1, im2):
@@ -376,12 +389,12 @@ def getTestDataRepo():
     out.
 
     If the repository does not exist, then it is cloned from
-    https://github.com/vispy/test-data. If the repository already exists
+    https://github.com/pyqtgraph/test-data. If the repository already exists
     then the required commit is checked out.
     """
     global testDataTag
 
-    dataPath = os.path.expanduser('~/.pyqtgraph/test-data')
+    dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
     gitPath = 'https://github.com/pyqtgraph/test-data'
     gitbase = gitCmdBase(dataPath)
 
