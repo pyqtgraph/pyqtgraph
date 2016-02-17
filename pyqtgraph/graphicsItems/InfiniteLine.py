@@ -193,12 +193,8 @@ class InfiniteLine(GraphicsObject):
             self.p = newPos
             self._invalidateCache()
 
-            if self.textItem is not None and self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox):
+            if self.textItem is not None and isinstance(self.getViewBox(), ViewBox):
                 self.updateText()
-                if self.draggableLabel:
-                    GraphicsObject.setPos(self, Point(self.p))
-                else: # precise location needed
-                    GraphicsObject.setPos(self, self._exactPos)
             else: # no label displayed or called just before being dragged for the first time
                 GraphicsObject.setPos(self, Point(self.p))
             self.update()
@@ -225,7 +221,6 @@ class InfiniteLine(GraphicsObject):
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
             posY = ymin+pos*(ymax-ymin)
-            #self.p = [self.value(), posY]
             self._exactPos = Point(self.value(), posY)
         elif self.angle == 0:  # horizontal line
             diffMin = self.value()-ymin
@@ -239,8 +234,11 @@ class InfiniteLine(GraphicsObject):
                 fmt = fmt + self.suffix
             self.textItem.setText(fmt.format(self.value()), color=self.textColor)
             posX = xmin+pos*(xmax-xmin)
-            #self.p = [posX, self.value()]
             self._exactPos = Point(posX, self.value())
+        if self.draggableLabel:
+            GraphicsObject.setPos(self, Point(self.p))
+        else: # precise location needed
+            GraphicsObject.setPos(self, self._exactPos)
 
     def getXPos(self):
         return self.p[0]
@@ -356,8 +354,7 @@ class InfiniteLine(GraphicsObject):
         (eg, the view range has changed or the view was resized)
         """
         self._invalidateCache()
-
-        if self.getViewBox() is not None and isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
+        if isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
             self.updateText()
 
     def showLabel(self, state):
