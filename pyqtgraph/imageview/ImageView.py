@@ -723,8 +723,8 @@ class ImageView(QtGui.QWidget):
         self.ui.histogram.gradient.setColorMap(colormap)
 
     def setPredefinedGradient(self, name):
-        """Set one of the gradients defined in :class:`GradientEditorItem <pyqtgraph.graphicsItems.GradientEditorItem>`
-           Currently defined gradients are: 'thermal', 'flame', 'yellowy', 'bipolar',
-           'spectrum', 'cyclic', 'greyclip', and 'grey'.
+        """Set one of the gradients defined in :class:`GradientEditorItem <pyqtgraph.graphicsItems.GradientEditorItem>`.
+        For list of available gradients see :func:`GradientEditorItem.loadPreset() <pyqtgraph.graphicsItems.GradientEditorItem.loadPreset>`.
+           
         """
         self.ui.histogram.gradient.loadPreset(name)
