@@ -3,7 +3,7 @@ from ..Qt import QtCore, QtGui
 import weakref
 from .. import ptime as ptime
 
-from ..QtNativeUtils import MouseClickEvent
+from ..QtNativeUtils import MouseClickEvent, HoverEvent
 
 class MouseDragEvent(object):
     """
@@ -240,7 +240,7 @@ class MouseClickEvent(object):
         return self._time
 '''
 
-
+'''
 class HoverEvent(object):
     """
     Instances of this class are delivered to items in a :class:`GraphicsScene <pyqtgraph.GraphicsScene>` via their hoverEvent() method when the mouse is hovering over the item.
@@ -380,5 +380,5 @@ class HoverEvent(object):
     def dragItems(self):
         return self.__dragItems
         
-    
+'''
     

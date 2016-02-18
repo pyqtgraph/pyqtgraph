@@ -1062,9 +1062,9 @@ class PlotItem(GraphicsWidget):
         return self._menuEnabled
     
     def hoverEvent(self, ev):
-        if ev.enter:
+        if ev.isEnter():
             self.mouseHovering = True
-        if ev.exit:
+        if ev.isExit():
             self.mouseHovering = False
             
         self.updateButtons()

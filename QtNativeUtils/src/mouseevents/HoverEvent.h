@@ -78,6 +78,11 @@ public:
         return mDragItems.value(key, defaultValue);
     }
 
+    QGraphicsItem* getClickItems(const Qt::MouseButton key, QGraphicsItem* defaultValue)
+    {
+        return mClickItems.value(key, defaultValue);
+    }
+
 protected:
 
     bool mEnter;

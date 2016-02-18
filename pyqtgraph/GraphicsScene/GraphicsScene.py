@@ -215,7 +215,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def mouseDoubleClickEvent(self, ev):
         QtGui.QGraphicsScene.mouseDoubleClickEvent(self, ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
-            self.clickEvents.append(MouseClickEvent(ev, double=True))
+            self.clickEvents.append(MouseClickEvent(ev, doubleClick=True))
         
     def sendHoverEvents(self, ev, exitOnly=False):
         ## if exitOnly, then just inform all previously hovered items that the mouse has left.
@@ -276,7 +276,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #print "dragEvent: init=", init, 'final=', final, 'self.dragItem=', self.dragItem
         if init and self.dragItem is None:
             if self.lastHoverEvent is not None:
-                acceptedItem = self.lastHoverEvent.dragItems().get(event.button(), None)
+                acceptedItem = self.lastHoverEvent.getDragItem(event.button(), None)
             else:
                 acceptedItem = None
                 
@@ -328,7 +328,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         ## otherwise, search near the cursor
         else:
             if self.lastHoverEvent is not None:
-                acceptedItem = self.lastHoverEvent.clickItems().get(ev.button(), None)
+                acceptedItem = self.lastHoverEvent.getClickItems(ev.button(), None)
             else:
                 acceptedItem = None
             if acceptedItem is not None:
