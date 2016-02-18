@@ -19,5 +19,7 @@ public:
 
     bool isDoubleClick() const;
 
-    qint64 time() const;
+    double time() const;
+
+    QGraphicsItem* acceptedItem();
 };

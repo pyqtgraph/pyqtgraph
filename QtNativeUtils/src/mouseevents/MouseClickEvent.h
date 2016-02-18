@@ -34,6 +34,11 @@ public:
         return mTime;
     }
 
+    QGraphicsItem* acceptedItem()
+    {
+        return mAcceptedItem;
+    }
+
 
 protected:
 

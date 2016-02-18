@@ -1242,7 +1242,7 @@ class ViewBox(GraphicsWidget):
         pos = ev.pos()
         lastPos = ev.lastPos()
         dif = pos - lastPos
-        dif = dif * -1
+        dif = dif * -1.0
 
         ## Ignore axes if mouse is disabled
         mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
@@ -1270,7 +1270,7 @@ class ViewBox(GraphicsWidget):
                 #tr = self.mapToView(tr) - self.mapToView(Point(0,0))
                 tr = self.childGroup.transform()
                 tr = fn.invertQTransform(tr)
-                tr = tr.map(Point(dif*mask)) - tr.map(Point(0,0))
+                tr = tr.map(Point(dif)*Point(mask)) - tr.map(Point(0,0))
                 x = tr.x() if mask[0] == 1 else None
                 y = tr.y() if mask[1] == 1 else None
 

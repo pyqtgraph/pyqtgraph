@@ -329,3 +329,4 @@ public:
 %Include MouseEvent.sip
 %Include MouseClickEvent.sip
 %Include HoverEvent.sip
+%Include MouseDragEvent.sip

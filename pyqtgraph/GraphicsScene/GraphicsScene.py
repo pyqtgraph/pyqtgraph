@@ -236,24 +236,24 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #print "hover test items:", items
         for item in items:
             if hasattr(item, 'hoverEvent'):
-                event.currentItem = item
+                event.setCurrentItem(item)
                 if item not in self.hoverItems:
                     self.hoverItems[item] = None
-                    event.enter = True
+                    event.setEnter(True)
                 else:
                     prevItems.remove(item)
-                    event.enter = False
+                    event.setEnter(False)
                     
                 try:
                     item.hoverEvent(event)
                 except:
                     debug.printExc("Error sending hover event:")
                     
-        event.enter = False
-        event.exit = True
+        event.setEnter(False)
+        event.setExit(True)
         #print "hover exit items:", prevItems
         for item in prevItems:
-            event.currentItem = item
+            event.setCurrentItem(item)
             try:
                 item.hoverEvent(event)
             except:
@@ -283,7 +283,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             if acceptedItem is not None:
                 #print "Drag -> pre-selected item:", acceptedItem
                 self.dragItem = acceptedItem
-                event.currentItem = self.dragItem
+                event.setCurrentItem(self.dragItem)
                 try:
                     self.dragItem.mouseDragEvent(event)
                 except:
@@ -296,7 +296,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if not item.isVisible() or not item.isEnabled():
                         continue
                     if hasattr(item, 'mouseDragEvent'):
-                        event.currentItem = item
+                        event.setCurrentItem(item)
                         try:
                             item.mouseDragEvent(event)
                         except:
@@ -308,7 +308,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
         elif self.dragItem is not None:
-            event.currentItem = self.dragItem
+            event.setCurrentItem(self.dragItem)
             try:
                 self.dragItem.mouseDragEvent(event)
             except:
@@ -322,7 +322,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def sendClickEvent(self, ev):
         ## if we are in mid-drag, click events may only go to the dragged item.
         if self.dragItem is not None and hasattr(self.dragItem, 'mouseClickEvent'):
-            ev.currentItem = self.dragItem
+            ev.setCurrentItem(self.dragItem)
             self.dragItem.mouseClickEvent(ev)
             
         ## otherwise, search near the cursor
@@ -332,7 +332,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             else:
                 acceptedItem = None
             if acceptedItem is not None:
-                ev.currentItem = acceptedItem
+                ev.setCurrentItem(acceptedItem)
                 try:
                     acceptedItem.mouseClickEvent(ev)
                 except:
@@ -342,7 +342,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if not item.isVisible() or not item.isEnabled():
                         continue
                     if hasattr(item, 'mouseClickEvent'):
-                        ev.currentItem = item
+                        ev.setCurrentItem(item)
                         try:
                             item.mouseClickEvent(ev)
                         except:
@@ -529,7 +529,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         return menu
 
     def getContextMenus(self, event):
-        self.contextMenuItem = event.acceptedItem
+        self.contextMenuItem = event.acceptedItem()
         return self.contextMenu
 
     def showExportDialog(self):

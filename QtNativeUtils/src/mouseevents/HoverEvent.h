@@ -64,12 +64,10 @@ public:
     void setEnter(const bool enter)
     {
         mEnter = enter;
-        mExit = !enter;
     }
 
     void setExit(const bool isExit)
     {
-        mEnter = !isExit;
         mExit = isExit;
     }
 

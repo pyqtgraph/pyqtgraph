@@ -9,9 +9,9 @@ MouseDragEvent::MouseDragEvent(const QGraphicsSceneMouseEvent *moveEvent,
     mFinish = finish;
     mAccepted = false;
     mCurrentItem = NULL;
-    mButtonDownPos[0] = moveEvent->buttonDownPos(Qt::LeftButton);
-    mButtonDownPos[1] = moveEvent->buttonDownPos(Qt::MidButton);
-    mButtonDownPos[2] = moveEvent->buttonDownPos(Qt::RightButton);
+    //mButtonDownPos[0] = moveEvent->buttonDownPos(Qt::LeftButton);
+    //mButtonDownPos[1] = moveEvent->buttonDownPos(Qt::MidButton);
+    //mButtonDownPos[2] = moveEvent->buttonDownPos(Qt::RightButton);
     mButtonDownScenePos[0] = moveEvent->buttonDownScenePos(Qt::LeftButton);
     mButtonDownScenePos[1] = moveEvent->buttonDownScenePos(Qt::MidButton);
     mButtonDownScenePos[2] = moveEvent->buttonDownScenePos(Qt::RightButton);

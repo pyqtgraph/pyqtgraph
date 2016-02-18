@@ -6,7 +6,6 @@
 #include "MouseEvent.h"
 #include "MouseClickEvent.h"
 
-
 class MouseDragEvent: public MouseEvent
 {
 public:
@@ -26,17 +25,22 @@ public:
 
     QPointF	buttonDownPos(Qt::MouseButton button) const
     {
-        switch(button)
+        if(mCurrentItem!=nullptr)
         {
-        case Qt::LeftButton:
-            return mButtonDownPos[0];
-        case Qt::MidButton:
-            return mButtonDownPos[1];
-        case Qt::RightButton:
-            return mButtonDownPos[2];
-        default:
-            return QPointF();
+            switch(button)
+            {
+            case Qt::LeftButton:
+                return mCurrentItem->mapFromScene(mButtonDownScenePos[0]);
+            case Qt::MidButton:
+                return mCurrentItem->mapFromScene(mButtonDownScenePos[1]);
+            case Qt::RightButton:
+                return mCurrentItem->mapFromScene(mButtonDownScenePos[2]);
+            default:
+                return QPointF();
+            }
         }
+        else
+            return QPointF();
     }
 
     QPointF	buttonDownPos() const
@@ -99,7 +103,7 @@ protected:
     bool mStart;
     bool mFinish;
     bool mAccepted;
-    QPointF mButtonDownPos[3];
+    //QPointF mButtonDownPos[3];
     QPointF mButtonDownScenePos[3];
     QPoint mButtonDownScreenPos[3];
     QGraphicsItem* mAcceptedItem;

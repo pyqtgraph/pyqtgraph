@@ -63,7 +63,7 @@ public:
 
     QPointF pos() const
     {
-        if(mCurrentItem!=NULL)
+        if(mCurrentItem!=nullptr)
             return mCurrentItem->mapFromScene(mScenePos);
         return QPointF();
     }
@@ -72,7 +72,7 @@ public:
     {
         // Return the previous position of the mouse in the coordinate system of the item
         // that the event was delivered to.
-        if(mCurrentItem)
+        if(mCurrentItem!=nullptr)
             return mCurrentItem->mapFromScene(mLastScenePos);
         return QPointF();
     }
@@ -81,6 +81,11 @@ public:
     {
         // Return any keyboard modifiers currently pressed.
         return mModifiers;
+    }
+
+    QPoint lastScreenPos() const
+    {
+        return mLastScreenPos;
     }
 
     virtual QPointF buttonDownScenePos() const

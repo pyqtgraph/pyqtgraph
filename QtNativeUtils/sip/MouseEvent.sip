@@ -32,4 +32,6 @@ public:
 
     virtual QPointF buttonDownScenePos() const;
 
+    QPoint lastScreenPos() const;
+
 };

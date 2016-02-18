@@ -40,6 +40,7 @@ INCLUDEPATH += $$PYTHON_INCLUDE
 OTHER_FILES += \
     sip/MouseEvent.sip \
     sip/MouseClickEvent.sip \
-    sip/HoverEvent.sip
+    sip/HoverEvent.sip \
+    sip/MouseDragEvent.sip
 
 
