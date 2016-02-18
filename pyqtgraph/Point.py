@@ -16,6 +16,11 @@ def clip(x, mn, mx):
         return mn
     return x
 
+
+from QtNativeUtils import Point
+
+
+'''
 class Point(QtCore.QPointF):
     """Extension of QPointF which adds a few missing methods."""
     
@@ -155,3 +160,5 @@ class Point(QtCore.QPointF):
         
     def toQPoint(self):
         return QtCore.QPoint(*self)
+
+'''
