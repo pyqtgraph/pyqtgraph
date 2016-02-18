@@ -1,5 +1,5 @@
 
-%Module QtNativeUtils
+%Module(name=QtNativeUtils, keyword_arguments="Optional")
 
 
 %Import QtCore/QtCoremod.sip
@@ -325,3 +325,6 @@ public:
     Point toQPoint() const;
 };
 
+
+%Include MouseEvent.sip
+%Include MouseClickEvent.sip

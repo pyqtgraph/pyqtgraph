@@ -19,10 +19,12 @@ qt_sip_flags = config.pyqt_sip_flags
 
 command = [config.sip_bin,
            '-e',
+           '-o',
            '-c', './sip-generated',
            '-b', build_file,
            '-I', config.pyqt_sip_dir,
            '-I', 'src',
+           '-I', 'src/mouseevents',
            qt_sip_flags,
            'sip/QtNativeUtils.sip']
 
@@ -46,6 +48,7 @@ makefile = pyqtconfig.QtGuiModuleMakefile(configuration=config,
 makefile.LFLAGS.append('-L../build')
 makefile.extra_libs.append('QtNativeUtils')
 makefile.extra_include_dirs.append('../src')
+makefile.extra_include_dirs.append('../src/mouseevents')
 makefile.extra_cflags.append('-std=c11')
 makefile.extra_cxxflags.append('-std=c++11')
 
