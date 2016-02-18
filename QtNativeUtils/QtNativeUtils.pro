@@ -17,13 +17,15 @@ SOURCES += src/QtNativeUtils.cpp \
            src/mouseevents/MouseClickEvent.cpp \
            src/mouseevents/HoverEvent.cpp \
            src/mouseevents/MouseDragEvent.cpp \
-           src/mouseevents/MouseEvent.cpp
+           src/mouseevents/MouseEvent.cpp \
+    src/Point.cpp
 
 HEADERS += src/QtNativeUtils.h \
            src/mouseevents/MouseEvent.h \
            src/mouseevents/HoverEvent.h \
            src/mouseevents/MouseDragEvent.h \
-           src/mouseevents/MouseClickEvent.h
+           src/mouseevents/MouseClickEvent.h \
+    src/Point.h
 
 DISTFILES += sip/Exceptions.sip \
              sip/QtNativeUtils.sip
@@ -41,6 +43,7 @@ OTHER_FILES += \
     sip/MouseEvent.sip \
     sip/MouseClickEvent.sip \
     sip/HoverEvent.sip \
-    sip/MouseDragEvent.sip
+    sip/MouseDragEvent.sip \
+    sip/Point.sip
 
 
