@@ -1,20 +1,19 @@
-
 %Import QtCore/QtCoremod.sip
 %Import QtGui/QtGuimod.sip
 
 
 
 
-class QGraphicsObject2: public QGraphicsObject
+class QGraphicsWidget2: public QGraphicsWidget
 {
 
 %TypeHeaderCode
-#include "QGraphicsObject2.h"
+#include "QGraphicsWidget2.h"
 %End
 
 public:
-    QGraphicsObject2(QGraphicsItem* parent=nullptr);
-    ~QGraphicsObject2();
+    QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
+    ~QGraphicsWidget2();
 
     QGraphicsView* getViewWidget() const;
 

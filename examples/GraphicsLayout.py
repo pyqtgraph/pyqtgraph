@@ -78,6 +78,11 @@ p2.plot([1,3,2,4,3,5])
 p4.plot([1,3,2,4,3,5])
 p5.plot([1,3,2,4,3,5])
 
+p21.plot([1,3,2,4,3,5])
+p22.plot([1,3,2,4,3,5])
+p23.plot([1,3,2,4,3,5])
+p24.plot([1,3,2,4,3,5])
+
 
 
 ## Start Qt event loop unless running in interactive mode.

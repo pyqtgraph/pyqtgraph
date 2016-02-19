@@ -7,7 +7,7 @@ import operator
 from ..util.lru_cache import LRUCache
 
 
-class SimpleGraphicsItem(object):
+class GraphicsItem(object):
     """
     **Bases:** :class:`object`
 
@@ -31,6 +31,9 @@ class SimpleGraphicsItem(object):
     _pixelVectorGlobalCache = LRUCache(100, 70)
 
     def __init__(self, register=True):
+
+        raise RuntimeError('Creating an instance of graphics item')
+
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
                 if issubclass(b, QtGui.QGraphicsItem):
@@ -40,11 +43,41 @@ class SimpleGraphicsItem(object):
             raise Exception('Could not determine Qt base class for GraphicsItem: %s' % str(self))
 
         self._pixelVectorCache = [None, None]
+        self._viewWidget = None
         self._viewBox = None
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
         if register:
             GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+
+
+
+
+    def getViewWidget(self):
+        """
+        Return the view widget for this item.
+
+        If the scene has multiple views, only the first view is returned.
+        The return value is cached; clear the cached value with forgetViewWidget().
+        If the view has been deleted by Qt, return None.
+        """
+        if self._viewWidget is None:
+            scene = self.scene()
+            if scene is None:
+                return None
+            views = scene.views()
+            if len(views) < 1:
+                return None
+            self._viewWidget = weakref.ref(self.scene().views()[0])
+
+        v = self._viewWidget()
+        if v is not None and not isQObjectAlive(v):
+            return None
+
+        return v
+
+    def forgetViewWidget(self):
+        self._viewWidget = None
 
     def getViewBox(self):
         """
@@ -75,6 +108,30 @@ class SimpleGraphicsItem(object):
     def forgetViewBox(self):
         self._viewBox = None
 
+
+    def deviceTransform(self, viewportTransform=None):
+        """
+        Return the transform that converts local item coordinates to device coordinates (usually pixels).
+        Extends deviceTransform to automatically determine the viewportTransform.
+        """
+        if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
+            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
+
+        if viewportTransform is None:
+            view = self.getViewWidget()
+            if view is None:
+                return None
+            viewportTransform = view.viewportTransform()
+        dt = self._qtBaseClass.deviceTransform(self, viewportTransform)
+
+        #xmag = abs(dt.m11())+abs(dt.m12())
+        #ymag = abs(dt.m21())+abs(dt.m22())
+        #if xmag * ymag == 0:
+        if dt.determinant() == 0:  ## occurs when deviceTransform is invalid because widget has not been displayed
+            return None
+        else:
+            return dt
+
     def viewTransform(self):
         """Return the transform that maps from local coordinates to the item's ViewBox coordinates
         If there is no ViewBox, return the scene transform.
@@ -103,6 +160,20 @@ class SimpleGraphicsItem(object):
             #return self.deviceTransform(view.viewportTransform())
         '''
 
+
+
+    def getBoundingParents(self):
+        """Return a list of parents to this item that have child clipping enabled."""
+        p = self
+        parents = []
+        while True:
+            p = p.parentItem()
+            if p is None:
+                break
+            if p.flags() & self.ItemClipsChildrenToShape:
+                parents.append(p)
+        return parents
+
     def viewRect(self):
         """Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget"""
         view = self.getViewBox()
@@ -119,6 +190,86 @@ class SimpleGraphicsItem(object):
             #bounds &= self.mapRectFromScene(p.sceneBoundingRect())
 
         return bounds
+
+
+
+    def pixelVectors(self, direction=None):
+        """Return vectors in local coordinates representing the width and height of a view pixel.
+        If direction is specified, then return vectors parallel and orthogonal to it.
+
+        Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)
+        or if pixel size is below floating-point precision limit.
+        """
+
+        # This is an expensive function that gets called very frequently.
+
+        dt = self.deviceTransform()
+        if dt is None:
+            return None, None
+
+        # Ignore translation. If the translation is much larger than the scale
+        # (such as when looking at unix timestamps), we can get floating-point errors.
+        m11 = dt.m11()
+        m12 = dt.m12()
+        m21 = dt.m21()
+        m22 = dt.m22()
+        dt = QtGui.QTransform(m11, m12, m21, m22, 0.0, 0.0)
+
+        if direction is None:
+            direction = QtCore.QPointF(1.0, 0.0)
+        else:
+            if direction.manhattanLength() == 0:
+                raise Exception("Cannot compute pixel length for 0-length vector.")
+
+        dirLine = QtCore.QLineF()  # p1 and p2 are (0, 0)
+        dirLine.setP2(direction)
+        viewDir = dt.map(dirLine)
+        if viewDir.length() == 0.0:
+            return None, None  # pixel size cannot be represented on this scale
+
+        # get unit vector and orthogonal vector (length of pixel)
+        try:
+            normView = viewDir.unitVector()
+            normOrtho = normView.normalVector()
+        except:
+            raise Exception("Invalid direction %s" % direction)
+
+        # map back to item
+        try:
+            # fast path (new code)
+            m11_i = 1.0/m11
+            m22_i = 1.0/m22
+            p = normView.p2()
+            x = p.x()
+            y = p.y()
+            p1 = Point(m11_i*x + m21*y,
+                       m22_i*y + m12*x)
+            p = normOrtho.p2()
+            x = p.x()
+            y = p.y()
+            p2 = Point(m11_i*x + m21*y,
+                       m22_i*y + m12*x)
+        except:
+            # Slow path (old code, more stable)
+            dti = fn.invertQTransform(dt)
+            p1 = Point(dti.map(normView).p2())
+            p2 = Point(dti.map(normOrtho).p2())
+
+        return (p1, p2)
+
+
+    def pixelLength(self, direction, ortho=False):
+        """Return the length of one pixel in the direction indicated (in local coordinates)
+        If ortho=True, then return the length of one pixel orthogonal to the direction indicated.
+
+        Return None if pixel size is not yet defined (usually because the item has not yet been displayed).
+        """
+        normV, orthoV = self.pixelVectors(direction)
+        try:
+            return orthoV.length() if ortho else normV.length()
+        except:
+            return None
+
 
     def pixelSize(self):
         ## deprecated
@@ -355,7 +506,7 @@ class SimpleGraphicsItem(object):
         if item is None:
             item = self
         for child in item.childItems():
-            if isinstance(child, SimpleGraphicsItem):
+            if isinstance(child, GraphicsItem):
                 if child.getViewBox() is oldView:
                     child._updateView()
                         #self._replaceView(oldView, child)

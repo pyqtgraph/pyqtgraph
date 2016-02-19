@@ -1,10 +1,12 @@
-#include "QGraphicsObject2.h"
+#include "QGraphicsWidget2.h"
 
-QGraphicsObject2::QGraphicsObject2(QGraphicsItem* parent): QGraphicsObject(parent)
+QGraphicsWidget2::QGraphicsWidget2(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
+    QGraphicsWidget(parent, wFlags)
 {
 }
 
-QList<QGraphicsItem *> QGraphicsObject2::getBoundingParents() const
+
+QList<QGraphicsItem *> QGraphicsWidget2::getBoundingParents() const
 {
     // Return a list of parents to this item that have child clipping enabled.
     QGraphicsItem* p = parentItem();
@@ -22,7 +24,7 @@ QList<QGraphicsItem *> QGraphicsObject2::getBoundingParents() const
     return parents;
 }
 
-QVector<Point> QGraphicsObject2::pixelVectors(const QPointF &direction) const
+QVector<Point> QGraphicsWidget2::pixelVectors(const QPointF &direction) const
 {
     // Return vectors in local coordinates representing the width and height of a view pixel.
     // If direction is specified, then return vectors parallel and orthogonal to it.
@@ -54,7 +56,7 @@ QVector<Point> QGraphicsObject2::pixelVectors(const QPointF &direction) const
     return result;
 }
 
-double QGraphicsObject2::transformAngle(QGraphicsItem *relativeItem) const
+double QGraphicsWidget2::transformAngle(QGraphicsItem *relativeItem) const
 {
     if(relativeItem==nullptr)
         relativeItem = parentItem();

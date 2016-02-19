@@ -2,11 +2,13 @@ from ..Qt import QtGui, QtCore
 from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 
+from ..QtNativeUtils import QGraphicsWidget2
+
 __all__ = ['GraphicsWidget']
 
-class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
+class GraphicsWidget(GraphicsItem, QGraphicsWidget2):
     
-    _qtBaseClass = QtGui.QGraphicsWidget
+    _qtBaseClass = QGraphicsWidget2
     def __init__(self, *args, **kargs):
         """
         **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtGui.QGraphicsWidget`
@@ -14,7 +16,7 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs. 
         Most of the extra functionality is inherited from :class:`GraphicsItem <pyqtgraph.GraphicsItem>`.
         """
-        QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
+        QGraphicsWidget2.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
         
         ## done by GraphicsItem init
