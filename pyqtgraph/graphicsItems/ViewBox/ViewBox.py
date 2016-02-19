@@ -1227,7 +1227,7 @@ class ViewBox(GraphicsWidget):
     def raiseContextMenu(self, ev):
         menu = self.getMenu(ev)
         self.scene().addParentContextMenus(self, menu, ev)
-        menu.popup(ev.screenPos().toPoint())
+        menu.popup(ev.screenPos())
 
     def getMenu(self, ev):
         return self.menu
