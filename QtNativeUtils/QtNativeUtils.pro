@@ -19,7 +19,8 @@ SOURCES += src/QtNativeUtils.cpp \
            src/mouseevents/MouseDragEvent.cpp \
            src/mouseevents/MouseEvent.cpp \
     src/Point.cpp \
-    src/internal/Numpy.cpp
+    src/internal/Numpy.cpp \
+    src/QGraphicsObject2.cpp
 
 HEADERS += src/QtNativeUtils.h \
            src/mouseevents/MouseEvent.h \
@@ -27,7 +28,8 @@ HEADERS += src/QtNativeUtils.h \
            src/mouseevents/MouseDragEvent.h \
            src/mouseevents/MouseClickEvent.h \
     src/Point.h \
-    src/internal/Numpy.h
+    src/internal/Numpy.h \
+    src/QGraphicsObject2.h
 
 DISTFILES += sip/Exceptions.sip \
              sip/QtNativeUtils.sip
@@ -46,6 +48,7 @@ OTHER_FILES += \
     sip/MouseClickEvent.sip \
     sip/HoverEvent.sip \
     sip/MouseDragEvent.sip \
-    sip/Point.sip
+    sip/Point.sip \
+    sip/QGraphicsObject2.sip
 
 

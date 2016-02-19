@@ -81,6 +81,8 @@ class ViewBox(GraphicsWidget):
 
     """
 
+    Type = QtGui.QGraphicsItem.UserType
+
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)

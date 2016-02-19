@@ -188,7 +188,7 @@ class InfiniteLine(GraphicsObject):
             ## add a 4-pixel radius around the line for mouse interaction.
 
             if self._pxLength is None:
-                px = self.pixelLength(direction=Point(1,0), ortho=True)
+                px = self.pixelLength(Point(1,0), ortho=True)
                 self._pxLength = 0.0 if px is None else px
 
             w = (max(4.0, self.pen.width()/2.0, self.hoverPen.width()/2.0)+1.0) * self._pxLength
