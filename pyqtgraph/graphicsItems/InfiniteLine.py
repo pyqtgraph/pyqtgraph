@@ -84,14 +84,13 @@ class InfiniteLine(GraphicsObject):
         self.textColor = textColor
         self.textFill = textFill
         self.textPosition = textPosition
-        self.draggableLabel = draggableLabel
         self.suffix = suffix
 
-        if (self.angle == 0 or self.angle == 90) and label:
-            self.textItem = TextItem(fill=textFill)
-            self.textItem.setParentItem(self)
-        else:
-            self.textItem = None
+
+        self.textItem = InfLineLabel(self, fill=textFill)
+        self.textItem.setParentItem(self)
+        self.setDraggableLabel(draggableLabel)
+        self.showLabel(label)
 
         self.anchorLeft = (1., 0.5)
         self.anchorRight = (0., 0.5)
@@ -192,53 +191,8 @@ class InfiniteLine(GraphicsObject):
         if self.p != newPos:
             self.p = newPos
             self._invalidateCache()
-
-            if self.textItem is not None and isinstance(self.getViewBox(), ViewBox):
-                self.updateText()
-            else: # no label displayed or called just before being dragged for the first time
-                GraphicsObject.setPos(self, Point(self.p))
-            self.update()
-            self.sigPositionChanged.emit(self)
-
-    def updateText(self):
-        """
-        Update the content displayed by the textItem. Called only if a textItem
-        is requested and if the item has already been added to a PlotItem.
-        """
-        rangeX, rangeY = self.getViewBox().viewRange()
-        xmin, xmax = rangeX
-        ymin, ymax = rangeY
-        pos, shift = self.textPosition
-        if self.angle == 90:  # vertical line
-            diffMin = self.value()-xmin
-            limInf = shift*(xmax-xmin)
-            if diffMin < limInf:
-                self.textItem.anchor = Point(self.anchorRight)
-            else:
-                self.textItem.anchor = Point(self.anchorLeft)
-            fmt = " x = " + self.format
-            if self.suffix is not None:
-                fmt = fmt + self.suffix
-            self.textItem.setText(fmt.format(self.value()), color=self.textColor)
-            posY = ymin+pos*(ymax-ymin)
-            self._exactPos = Point(self.value(), posY)
-        elif self.angle == 0:  # horizontal line
-            diffMin = self.value()-ymin
-            limInf = shift*(ymax-ymin)
-            if diffMin < limInf:
-                self.textItem.anchor = Point(self.anchorUp)
-            else:
-                self.textItem.anchor = Point(self.anchorDown)
-            fmt = " y = " + self.format
-            if self.suffix is not None:
-                fmt = fmt + self.suffix
-            self.textItem.setText(fmt.format(self.value()), color=self.textColor)
-            posX = xmin+pos*(xmax-xmin)
-            self._exactPos = Point(posX, self.value())
-        if self.draggableLabel:
             GraphicsObject.setPos(self, Point(self.p))
-        else: # precise location needed
-            GraphicsObject.setPos(self, self._exactPos)
+            self.sigPositionChanged.emit(self)
 
     def getXPos(self):
         return self.p[0]
@@ -354,8 +308,7 @@ class InfiniteLine(GraphicsObject):
         (eg, the view range has changed or the view was resized)
         """
         self._invalidateCache()
-        if isinstance(self.getViewBox(), ViewBox) and self.textItem is not None:
-            self.updateText()
+        self.textItem.updatePosition()
 
     def showLabel(self, state):
         """
@@ -367,12 +320,7 @@ class InfiniteLine(GraphicsObject):
         state            If True, the label is shown. Otherwise, it is hidden.
         ==============   ======================================================
         """
-        if state:
-            self.textItem = TextItem(fill=self.textFill)
-            self.textItem.setParentItem(self)
-            self.viewTransformChanged()
-        else:
-            self.textItem = None
+        self.textItem.setVisible(state)
 
     def setTextLocation(self, position=0.05, shift=0.5):
         """
@@ -388,10 +336,9 @@ class InfiniteLine(GraphicsObject):
         shift             float (range of value = [0-1]).
         ==============   ======================================================
         """
-        pos = np.clip(position, 0, 1)
-        shift = np.clip(shift, 0, 1)
-        self.textPosition = [pos, shift]
-        self.update()
+        self.textItem.orthoPos = position
+        self.textItem.shiftPos = shift
+        self.textItem.updatePosition()
 
     def setDraggableLabel(self, state):
         """
@@ -399,11 +346,93 @@ class InfiniteLine(GraphicsObject):
         of the line. If True, then the location of the label change during the
         dragging of the line.
         """
-        self.draggableLabel = state
-        self.update()
+        self.textItem.setMovable(state)
 
     def setName(self, name):
         self._name = name
 
     def name(self):
         return self._name
+
+
+class InfLineLabel(TextItem):
+    # a text label that attaches itself to an InfiniteLine
+    def __init__(self, line, **kwds):
+        self.line = line
+        self.movable = False
+        self.dragAxis = None  # 0=x, 1=y
+        self.orthoPos = 0.5  # text will always be placed on the line at a position relative to view bounds
+        self.format = "{value}"
+        self.line.sigPositionChanged.connect(self.valueChanged)
+        TextItem.__init__(self, **kwds)
+        self.valueChanged()
+
+    def valueChanged(self):
+        if not self.isVisible():
+            return
+        value = self.line.value()
+        self.setText(self.format.format(value=value))
+        self.updatePosition()
+    
+    def updatePosition(self):
+        view = self.getViewBox()
+        if not self.isVisible() or not isinstance(view, ViewBox):
+            # not in a viewbox, skip update
+            return
+        
+        # 1. determine view extents along line axis
+        tr = view.childGroup.itemTransform(self.line)[0]
+        vr = tr.mapRect(view.viewRect())
+        pt1 = Point(vr.left(), 0)
+        pt2 = Point(vr.right(), 0)
+        
+        # 2. pick relative point between extents and set position
+        pt = pt2 * self.orthoPos + pt1 * (1-self.orthoPos)
+        self.setPos(pt)
+        
+    def setVisible(self, v):
+        TextItem.setVisible(self, v)
+        if v:
+            self.updateText()
+            self.updatePosition()
+            
+    def setMovable(self, m):
+        self.movable = m
+        self.setAcceptHoverEvents(m)
+        
+    def mouseDragEvent(self, ev):
+        if self.movable and ev.button() == QtCore.Qt.LeftButton:
+            if ev.isStart():
+                self._moving = True
+                self._cursorOffset = self._posToRel(ev.buttonDownPos())
+                self._startPosition = self.orthoPos
+            ev.accept()
+
+            if not self._moving:
+                return
+
+            rel = self._posToRel(ev.pos())
+            self.orthoPos = self._startPosition + rel - self._cursorOffset
+            self.updatePosition()
+            if ev.isFinish():
+                self._moving = False
+
+    def mouseClickEvent(self, ev):
+        if self.moving and ev.button() == QtCore.Qt.RightButton:
+            ev.accept()
+            self.orthoPos = self._startPosition
+            self.moving = False
+
+    def hoverEvent(self, ev):
+        if not ev.isExit() and self.movable:
+            ev.acceptDrags(QtCore.Qt.LeftButton)
+
+    def _posToRel(self, pos):
+        # convert local position to relative position along line between view bounds
+        view = self.getViewBox()
+        tr = view.childGroup.itemTransform(self.line)[0]
+        vr = tr.mapRect(view.viewRect())
+        pos = self.mapToParent(pos)
+        return (pos.x() - vr.left()) / vr.width()
+        
+        

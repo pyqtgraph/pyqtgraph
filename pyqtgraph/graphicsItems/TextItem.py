@@ -41,7 +41,7 @@ class TextItem(UIGraphicsItem):
         self.fill = fn.mkBrush(fill)
         self.border = fn.mkPen(border)
         self.rotate(angle)
-        self.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
+        #self.textItem.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
         """
@@ -114,22 +114,10 @@ class TextItem(UIGraphicsItem):
             s = self._exportOpts['resolutionScale']
             self.textItem.scale(s, s)
         
-        #br = self.textItem.mapRectToParent(self.textItem.boundingRect())
+        self.textItem.setTransform(self.sceneTransform().inverted()[0])
         self.textItem.setPos(0,0)
-        br = self.textItem.boundingRect()
-        apos = self.textItem.mapToParent(Point(br.width()*self.anchor.x(), br.height()*self.anchor.y()))
-        #print br, apos
-        self.textItem.setPos(-apos.x(), -apos.y())
+        self.textItem.setPos(-self.textItem.mapToParent(Point(0,0)))
         
-    #def textBoundingRect(self):
-        ### return the bounds of the text box in device coordinates
-        #pos = self.mapToDevice(QtCore.QPointF(0,0))
-        #if pos is None:
-            #return None
-        #tbr = self.textItem.boundingRect()
-        #return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
-
-
     def viewRangeChanged(self):
         self.updateText()
 
