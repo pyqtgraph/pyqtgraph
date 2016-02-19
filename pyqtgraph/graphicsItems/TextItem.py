@@ -32,7 +32,7 @@ class TextItem(UIGraphicsItem):
         UIGraphicsItem.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
         self.textItem.setParentItem(self)
-        self.lastTransform = None
+        self._lastTransform = None
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setText(text, color)
@@ -40,7 +40,7 @@ class TextItem(UIGraphicsItem):
             self.setHtml(html)
         self.fill = fn.mkBrush(fill)
         self.border = fn.mkPen(border)
-        self.rotate(angle)
+        self.setAngle(angle)
         #self.textItem.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
@@ -100,36 +100,41 @@ class TextItem(UIGraphicsItem):
         self.textItem.setFont(*args)
         self.updateText()
         
-    #def setAngle(self, angle):
-        #self.angle = angle
-        #self.updateText()
-        
+    def setAngle(self, angle):
+        self.textItem.resetTransform()
+        self.textItem.rotate(angle)
+        self.updateText()
         
     def updateText(self):
+        # update text position to obey anchor
+        r = self.textItem.boundingRect()
+        tl = self.textItem.mapToParent(r.topLeft())
+        br = self.textItem.mapToParent(r.bottomRight())
+        offset = (br - tl) * self.anchor
+        self.textItem.setPos(-offset)
         
-        ## Needed to maintain font size when rendering to image with increased resolution
-        self.textItem.resetTransform()
-        #self.textItem.rotate(self.angle)
-        if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
-            s = self._exportOpts['resolutionScale']
-            self.textItem.scale(s, s)
-        
-        self.textItem.setTransform(self.sceneTransform().inverted()[0])
-        self.textItem.setPos(0,0)
-        self.textItem.setPos(-self.textItem.mapToParent(Point(0,0)))
+        ### Needed to maintain font size when rendering to image with increased resolution
+        #self.textItem.resetTransform()
+        ##self.textItem.rotate(self.angle)
+        #if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
+            #s = self._exportOpts['resolutionScale']
+            #self.textItem.scale(s, s)
         
     def viewRangeChanged(self):
         self.updateText()
 
     def boundingRect(self):
         return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
+
+    def viewTransformChanged(self):
+        # called whenever view transform has changed.
+        # Do this here to avoid double-updates when view changes.
+        self.updateTransform()
         
     def paint(self, p, *args):
-        tr = p.transform()
-        if self.lastTransform is not None:
-            if tr != self.lastTransform:
-                self.viewRangeChanged()
-        self.lastTransform = tr
+        # this is not ideal because it causes another update to be scheduled.
+        # ideally, we would have a sceneTransformChanged event to react to..
+        self.updateTransform()
         
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
             p.setPen(self.border)
@@ -137,4 +142,25 @@ class TextItem(UIGraphicsItem):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
+    def updateTransform(self):
+        # update transform such that this item has the correct orientation
+        # and scaling relative to the scene, but inherits its position from its
+        # parent.
+        # This is similar to setting ItemIgnoresTransformations = True, but 
+        # does not break mouse interaction and collision detection.
+        p = self.parentItem()
+        if p is None:
+            pt = QtGui.QTransform()
+        else:
+            pt = p.sceneTransform()
+        
+        if pt == self._lastTransform:
+            return
+
+        t = pt.inverted()[0]
+        # reset translation
+        t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
+        self.setTransform(t)
+        
+        self._lastTransform = pt
         
