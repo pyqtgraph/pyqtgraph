@@ -51,6 +51,10 @@ makefile.extra_include_dirs.append('../src')
 makefile.extra_include_dirs.append('../src/mouseevents')
 makefile.extra_cflags.append('-std=c11')
 makefile.extra_cxxflags.append('-std=c++11')
+makefile.extra_cxxflags.append('-Wno-deprecated')
+makefile.extra_cxxflags.append('-Wno-unused-parameter')
+makefile.extra_cxxflags.append('-Wno-unused-function')
+
 
 # Generate the Makefile itself.
 makefile.generate()

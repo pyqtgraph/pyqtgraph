@@ -8,7 +8,7 @@ TARGET = QtNativeUtils
 TEMPLATE = lib
 CONFIG += static
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++11 -Wno-deprecated  -Wno-unused-parameter -Wno-unused-function
 
 INCLUDEPATH += src \
                src/mouseevents
