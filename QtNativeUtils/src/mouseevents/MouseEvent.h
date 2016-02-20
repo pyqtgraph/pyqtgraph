@@ -1,8 +1,6 @@
 #ifndef MOUSEEVENT_H
 #define MOUSEEVENT_H
 
-#include <Python.h>
-#include <sip.h>
 
 #include <QGraphicsItem>
 

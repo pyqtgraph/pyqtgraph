@@ -9,7 +9,7 @@
 
 static double absZValue(QGraphicsItem* item)
 {
-    if(item==NULL)
+    if(item==nullptr)
         return 0;
     return item->zValue() + absZValue(item->parentItem());
 }
@@ -27,19 +27,19 @@ QGraphicsScene2::QGraphicsScene2(const double clickRadius, const double moveDist
     setClickRadius(clickRadius);
     setMoveDistance(moveDistance);
 
-    //self.mouseGrabber = None
-    mDragItem = NULL;
-    mLastDrag = NULL;
-    mLastHoverEvent = NULL;
+    //mDragItem = nullptr;
+    //mLastDrag = nullptr;
+    //mLastHoverEvent = nullptr;
 }
 
+/*
 void QGraphicsScene2::mousePressEvent(QGraphicsSceneMouseEvent *ev)
 {
     QGraphicsScene::mousePressEvent(ev);
-    if(mouseGrabberItem()==NULL)
+    if(mouseGrabberItem()==nullptr)
     {
         // nobody claimed press; we are free to generate drag/click events
-        if(mLastHoverEvent!=NULL)
+        if(mLastHoverEvent!=nullptr)
         {
             // If the mouse has moved since the last hover event, send a new one.
             // This can happen if a context menu is open while the mouse is moving.
@@ -79,7 +79,7 @@ void QGraphicsScene2::mouseMoveEvent(QGraphicsSceneMouseEvent *ev)
     {
         // button is pressed; send mouseMoveEvents and mouseDragEvents
         QGraphicsScene::mouseMoveEvent(ev);
-        if(mouseGrabberItem()==NULL)
+        if(mouseGrabberItem()==nullptr)
         {
             qint64 now = QDateTime::currentMSecsSinceEpoch();
             bool init = false;
@@ -116,7 +116,7 @@ void QGraphicsScene2::mouseMoveEvent(QGraphicsSceneMouseEvent *ev)
 
 void QGraphicsScene2::mouseReleaseEvent(QGraphicsSceneMouseEvent *ev)
 {
-    if(mouseGrabberItem()==NULL)
+    if(mouseGrabberItem()==nullptr)
     {
         if(mDragButtons.contains(ev->button()))
         {
@@ -138,13 +138,13 @@ void QGraphicsScene2::mouseReleaseEvent(QGraphicsSceneMouseEvent *ev)
 
     if(ev->buttons()==Qt::NoButton)
     {
-        mDragItem = NULL;
+        mDragItem = nullptr;
         mDragButtons.clear();
         for(int i=0; i<mClickEvents.size(); ++i)
             delete mClickEvents[i];
         mClickEvents.clear();
         delete mLastDrag;
-        mLastDrag = NULL;
+        mLastDrag = nullptr;
     }
 
     QGraphicsScene::mouseReleaseEvent(ev);
@@ -152,14 +152,18 @@ void QGraphicsScene2::mouseReleaseEvent(QGraphicsSceneMouseEvent *ev)
     // let items prepare for next click/drag
     sendHoverEvents(ev);
 }
+*/
 
+/*
 void QGraphicsScene2::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *ev)
 {
     QGraphicsScene::mouseDoubleClickEvent(ev);
-    if(mouseGrabberItem()==NULL)
+    if(mouseGrabberItem()==nullptr)
         mClickEvents.append(new MouseClickEvent(ev, true));
 }
+*/
 
+/*
 void QGraphicsScene2::sendHoverEvents(QGraphicsSceneMouseEvent *ev, const bool exitOnly)
 {
     // if exitOnly, then just inform all previously hovered items that the mouse has left.
@@ -167,17 +171,17 @@ void QGraphicsScene2::sendHoverEvents(QGraphicsSceneMouseEvent *ev, const bool e
     // if we are in mid-drag, do not allow items to accept the hover event.
     bool acceptable = false;
     QVector<QGraphicsItem*> nearItems;
-    HoverEvent* event = NULL;
+    HoverEvent* event = nullptr;
 
     if(exitOnly)
     {
         acceptable = false;
-        event = new HoverEvent(NULL, acceptable);
+        event = new HoverEvent(nullptr, acceptable);
     }
     else
     {
         acceptable = ev->buttons() == Qt::NoButton;
-        event = new HoverEvent(NULL, acceptable);
+        event = new HoverEvent(nullptr, acceptable);
         nearItems = itemsNearEvent(event, Qt::IntersectsItemShape, Qt::DescendingOrder, true);
         emit sigMouseHover(nearItems);
     }
@@ -226,19 +230,20 @@ void QGraphicsScene2::sendHoverEvents(QGraphicsSceneMouseEvent *ev, const bool e
         delete event;
     }
 }
-
+*/
+/*
 bool QGraphicsScene2::sendDragEvent(QGraphicsSceneMouseEvent* ev, const bool init, const bool final)
 {
     // Send a MouseDragEvent to the current dragItem or to
     // items near the beginning of the drag
     MouseDragEvent* event = new MouseDragEvent(ev, mClickEvents[0], mLastDrag, init, final);
-    if(init && mDragItem==NULL)
+    if(init && mDragItem==nullptr)
     {
-        QGraphicsItem* acceptedItem = NULL;
-        if(mLastHoverEvent!=NULL)
-            acceptedItem = mLastHoverEvent->getDragItem(event->button(), NULL);
+        QGraphicsItem* acceptedItem = nullptr;
+        if(mLastHoverEvent!=nullptr)
+            acceptedItem = mLastHoverEvent->getDragItem(event->button(), nullptr);
 
-        if(acceptedItem!=NULL)
+        if(acceptedItem!=nullptr)
         {
             mDragItem = acceptedItem;
             event->setCurrentItem(acceptedItem);
@@ -265,22 +270,24 @@ bool QGraphicsScene2::sendDragEvent(QGraphicsSceneMouseEvent* ev, const bool ini
             }
         }
     }
-    else if(mDragItem!=NULL)
+    else if(mDragItem!=nullptr)
     {
         event->setCurrentItem(mDragItem);
         //mDragItem->mouseDragEvent(event); // To implement
     }
 
-    if(mLastDrag!=NULL)
+    if(mLastDrag!=nullptr)
         delete mLastDrag;
     mLastDrag = event;
     return event->isAccepted();
 }
+*/
 
+/*
 bool QGraphicsScene2::sendClickEvent(MouseClickEvent *ev)
 {
     // if we are in mid-drag, click events may only go to the dragged item.
-    if(mDragItem!=NULL)
+    if(mDragItem!=nullptr)
     {
         ev->setCurrentItem(mDragItem);
         //mDragItem->mouseClickEvent(ev); // To implement
@@ -288,11 +295,11 @@ bool QGraphicsScene2::sendClickEvent(MouseClickEvent *ev)
     else
     {
         // otherwise, search near the cursor
-        QGraphicsItem* acceptedItem = NULL;
-        if(mLastHoverEvent!=NULL)
-            acceptedItem = mLastHoverEvent->getDragItem(ev->button(), NULL);
+        QGraphicsItem* acceptedItem = nullptr;
+        if(mLastHoverEvent!=nullptr)
+            acceptedItem = mLastHoverEvent->getDragItem(ev->button(), nullptr);
 
-        if(acceptedItem!=NULL)
+        if(acceptedItem!=nullptr)
         {
             ev->setCurrentItem(acceptedItem);
             //acceptedItem->mouseClickEvent(event) // To implement
@@ -321,7 +328,8 @@ bool QGraphicsScene2::sendClickEvent(MouseClickEvent *ev)
     emit sigMouseClicked(ev);
     return ev->isAccepted();
 }
-
+*/
+/*
 QVector<QGraphicsItem *> QGraphicsScene2::itemsNearEvent(MouseEvent *event,
                                                        const Qt::ItemSelectionMode selMode,
                                                        const Qt::SortOrder sortOrder,
@@ -357,4 +365,4 @@ QVector<QGraphicsItem *> QGraphicsScene2::itemsNearEvent(MouseEvent *event,
 
     return selItems2;
 }
-
+*/

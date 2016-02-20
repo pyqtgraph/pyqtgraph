@@ -5,16 +5,16 @@
 #include <QGraphicsView>
 
 #include "Point.h"
-#include "ExtendedItem.h"
+#include "Interfaces.h"
 
-class QGraphicsWidget2: public QGraphicsWidget
+class QGraphicsWidget2: public QGraphicsWidget, public ViewWidgetGetterInterface
 {
 public:
     QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
     ~QGraphicsWidget2() {}
 
 #define ENABLE_EXTENDEDTEM_CODE     1
-#define BASE_GRAPHICSITEM_CLASS     QGraphicsObject
+#define BASE_GRAPHICSITEM_CLASS     QGraphicsWidget
 #include "ExtendedItem.h"
 #undef ENABLE_EXTENDEDTEM_CODE
 #undef BASE_GRAPHICSITEM_CLASS

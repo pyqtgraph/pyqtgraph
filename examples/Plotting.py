@@ -96,6 +96,17 @@ lr.sigRegionChanged.connect(updatePlot)
 p9.sigXRangeChanged.connect(updateRegion)
 updatePlot()
 
+
+c = 0
+def sigPrepareForPaintTest():
+    global c
+    print 'sigPrepareForPaint', c
+    c += 1
+
+
+win.scene().sigPrepareForPaint.connect(sigPrepareForPaintTest)
+
+
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys

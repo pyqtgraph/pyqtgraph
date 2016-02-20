@@ -7,6 +7,7 @@ from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
 
+from ..QtNativeUtils import QGraphicsScene2
 
 if hasattr(QtCore, 'PYQT_VERSION'):
     try:
@@ -20,7 +21,7 @@ else:
 
 __all__ = ['GraphicsScene']
 
-class GraphicsScene(QtGui.QGraphicsScene):
+class GraphicsScene(QGraphicsScene2):
     """
     Extension of QGraphicsScene that implements a complete, parallel mouse event system.
     (It would have been preferred to just alter the way QGraphicsScene creates and delivers 
@@ -68,7 +69,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
     sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
-    sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
+    #sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
     
     _addressCache = weakref.WeakValueDictionary()
     
@@ -86,9 +87,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
             
             
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
-        QtGui.QGraphicsScene.__init__(self, parent)
-        self.setClickRadius(clickRadius)
-        self.setMoveDistance(moveDistance)
+        QGraphicsScene2.__init__(self, clickRadius=2, moveDistance=5, parent=parent)
+        #self.setClickRadius(clickRadius)
+        #self.setMoveDistance(moveDistance)
         self.exportDirectory = None
         
         self.clickEvents = []
@@ -103,35 +104,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.contextMenu[0].triggered.connect(self.showExportDialog)
         
         self.exportDialog = None
-        
-    def render(self, *args):
-        self.prepareForPaint()
-        return QtGui.QGraphicsScene.render(self, *args)
-
-    def prepareForPaint(self):
-        """Called before every render. This method will inform items that the scene is about to
-        be rendered by emitting sigPrepareForPaint.
-        
-        This allows items to delay expensive processing until they know a paint will be required."""
-        self.sigPrepareForPaint.emit()
-    
-
-    def setClickRadius(self, r):
-        """
-        Set the distance away from mouse clicks to search for interacting items.
-        When clicking, the scene searches first for items that directly intersect the click position
-        followed by any other items that are within a rectangle that extends r pixels away from the 
-        click position. 
-        """
-        self._clickRadius = r
-        
-    def setMoveDistance(self, d):
-        """
-        Set the distance the mouse must move after a press before mouseMoveEvents will be delivered.
-        This ensures that clicks with a small amount of movement are recognized as clicks instead of
-        drags.
-        """
-        self._moveDistance = d
 
     def mousePressEvent(self, ev):
         #print 'scenePress'
@@ -173,7 +145,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
                         cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
                         dist = Point(ev.screenPos() - cev.screenPos())
-                        if dist.length() < self._moveDistance and now - cev.time() < 0.5:
+                        if dist.length() < self.moveDistance() and now - cev.time() < 0.5:
                             continue
                         init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
                         self.dragButtons.append(int(btn))
@@ -406,7 +378,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #tr = self.getViewWidget(event.widget()).transform()
         view = self.views()[0]
         tr = view.viewportTransform()
-        r = self._clickRadius
+        r = self.clickRadius()
         rect = view.mapToScene(QtCore.QRect(0, 0, 2*r, 2*r)).boundingRect()
         
         seen = set()
@@ -455,23 +427,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
             ##if item not in seen:
             #yield item
         
-    def getViewWidget(self):
-        return self.views()[0]
+    #def getViewWidget(self):
+    #    return self.views()[0]
     
-    #def getViewWidget(self, widget):
-        ### same pyqt bug -- mouseEvent.widget() doesn't give us the original python object.
-        ### [[doesn't seem to work correctly]]
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(widget, QtGui.QWidget))
-            ##print "convert", widget, addr
-            #for v in self.views():
-                #addr2 = sip.unwrapinstance(sip.cast(v, QtGui.QWidget))
-                ##print "   check:", v, addr2
-                #if addr2 == addr:
-                    #return v
-        #else:
-            #return widget
-
     def addParentContextMenus(self, item, menu, event):
         """
         Can be called by any item in the scene to expand its context menu to include parent context menus.

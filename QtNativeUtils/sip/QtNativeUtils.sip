@@ -16,6 +16,9 @@ init_package();
 
 
 %Include Exceptions.sip
+
+%Include Interfaces.sip
+
 %Include Point.sip
 %Include MouseEvent.sip
 %Include MouseClickEvent.sip
@@ -24,3 +27,6 @@ init_package();
 
 %Include QGraphicsObject2.sip
 %Include QGraphicsWidget2.sip
+
+
+%Include QGraphicsScene2.sip

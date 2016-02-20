@@ -5,7 +5,7 @@
 
 
 
-class QGraphicsObject2: public QGraphicsObject
+class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface
 {
 
 %TypeHeaderCode
@@ -16,9 +16,9 @@ public:
     QGraphicsObject2(QGraphicsItem* parent=nullptr);
     ~QGraphicsObject2();
 
-    QGraphicsView* getViewWidget() const;
+    virtual QGraphicsView* getViewWidget() const;
 
-    void forgetViewWidget();
+    virtual void forgetViewWidget();
 
     QTransform deviceTransform() const;
     QTransform deviceTransform(const QTransform& viewportTransform) const;

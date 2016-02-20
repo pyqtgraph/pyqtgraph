@@ -37,7 +37,8 @@ HEADERS += src/QtNativeUtils.h \
     src/QGraphicsWidget2.h \
     src/QGraphicsScene2.h \
     src/internal/point_utils.h \
-    src/ExtendedItem.h
+    src/ExtendedItem.h \
+    src/Interfaces.h
 
 #NUMPY_INCLUDE = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE = /usr/lib/python2.7/dist-packages/numpy/core/include
@@ -56,6 +57,8 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/MouseDragEvent.sip \
     sip/Point.sip \
     sip/QGraphicsObject2.sip \
-    sip/QGraphicsWidget2.sip
+    sip/QGraphicsWidget2.sip \
+    sip/Interfaces.sip \
+    sip/QGraphicsScene2.sip
 
 

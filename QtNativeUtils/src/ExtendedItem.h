@@ -6,7 +6,7 @@
     #error "No QGraphicsItem base class defined with BASE_GRAPHICSITEM_CLASS"
 #endif
 
-QGraphicsView* getViewWidget() const
+virtual QGraphicsView* getViewWidget() const
 {
     QGraphicsScene* s = scene();
     if(s==nullptr)
@@ -17,7 +17,7 @@ QGraphicsView* getViewWidget() const
     return nullptr;
 }
 
-void forgetViewWidget()
+virtual void forgetViewWidget()
 {}
 
 QTransform deviceTransform() const

@@ -12,15 +12,19 @@
 #include "mouseevents/HoverEvent.h"
 
 #include "internal/point_utils.h"
+#include "Interfaces.h"
 
-class QGraphicsScene2 : public QGraphicsScene
+class QGraphicsScene2: public QGraphicsScene, public ViewWidgetGetterInterface
 {
     Q_OBJECT
 public:
-    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent=0);
+    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent=nullptr);
 
     void setClickRadius(const double clickRadius) { mClickRadius = clickRadius; }
     void setMoveDistance(const double moveDistance) { mMoveDistance = moveDistance; }
+
+    double clickRadius() const { return mClickRadius; }
+    double moveDistance() const { return mMoveDistance; }
 
     void render(QPainter* painter, const QRectF& target=QRectF(), const QRectF& source=QRectF(),
                 Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio)
@@ -29,35 +33,37 @@ public:
         QGraphicsScene::render(painter, target, source, aspectRatioMode);
     }
 
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *ev);
+    void prepareForPaint()
+    {
+        emit sigPrepareForPaint();
+    }
 
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* ev);
+    //virtual void mousePressEvent(QGraphicsSceneMouseEvent *ev);
 
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* ev);
+    //virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* ev);
 
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* ev);
+    //virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* ev);
 
-    QGraphicsView* getViewWidget() const
+    //virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* ev);
+
+    virtual QGraphicsView* getViewWidget() const
     {
         return views()[0];
     }
-
-    // def addParentContextMenus(self, item, menu, event)
-    // def getContextMenus(self, event)
-    // def showExportDialog(self)
 
 signals:
 
     void sigPrepareForPaint();
 
-    void sigMouseMoved(const QPointF& pos);
+    //void sigMouseMoved(const QPointF& pos);
 
-    void sigMouseHover(const QVector<QGraphicsItem*>& hitems);
+    //void sigMouseHover(const QVector<QGraphicsItem*>& hitems);
 
-    void sigMouseClicked(const MouseClickEvent* event);
+    //void sigMouseClicked(const MouseClickEvent* event);
 
 protected:
 
+    /*
     void sendHoverEvents(QGraphicsSceneMouseEvent *ev, const bool exitOnly=false);
 
     bool sendDragEvent(QGraphicsSceneMouseEvent *ev, const bool init=false, const bool final=false);
@@ -70,19 +76,20 @@ protected:
         if(mDragButtons.size()==0)
             sendHoverEvents(ev, true);
     }
+    */
 
-    void prepareForPaint()
-    {
-        emit sigPrepareForPaint();
-    }
 
+
+    /*
     QVector<QGraphicsItem*> itemsNearEvent(MouseEvent* event,
                                            const Qt::ItemSelectionMode selMode=Qt::IntersectsItemShape,
                                            const Qt::SortOrder sortOrder=Qt::DescendingOrder,
                                            const bool hoverable=false);
+    */
 
 private:
 
+    /*
     MouseClickEvent* clickEventForButton(const Qt::MouseButton btn)
     {
         for(int e=0; e<mClickEvents.size(); ++e)
@@ -94,12 +101,14 @@ private:
         }
         return NULL;
     }
+    */
 
 protected:
 
     double mClickRadius;
     double mMoveDistance;
 
+    /*
     QVector<MouseClickEvent*> mClickEvents;
     QVector<Qt::MouseButton> mDragButtons;
 
@@ -107,6 +116,7 @@ protected:
     MouseDragEvent* mLastDrag;
     QVector<QGraphicsItem*> mHoverItems;
     HoverEvent* mLastHoverEvent;
+    */
 };
 
 #endif // GRAPHICSSCENE_H
