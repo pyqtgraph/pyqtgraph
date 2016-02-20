@@ -4,7 +4,7 @@
 
 
 
-class QGraphicsWidget2: public QGraphicsWidget, public ViewWidgetGetterInterface
+class QGraphicsWidget2: public QGraphicsWidget, public ViewWidgetGetterInterface, public MouseEventsInterface
 {
 
 %TypeHeaderCode

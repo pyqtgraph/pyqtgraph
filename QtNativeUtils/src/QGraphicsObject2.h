@@ -7,7 +7,7 @@
 #include "Point.h"
 #include "Interfaces.h"
 
-class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface
+class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface, public MouseEventsInterface
 {
 public:
     QGraphicsObject2(QGraphicsItem* parent=nullptr) : QGraphicsObject(parent)

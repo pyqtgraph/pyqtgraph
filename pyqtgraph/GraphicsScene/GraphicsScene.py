@@ -193,7 +193,7 @@ class GraphicsScene(QGraphicsScene2):
         ## if exitOnly, then just inform all previously hovered items that the mouse has left.
         
         if exitOnly:
-            acceptable=False
+            acceptable = False
             items = []
             event = HoverEvent(None, acceptable)
         else:
@@ -216,22 +216,22 @@ class GraphicsScene(QGraphicsScene2):
                     prevItems.remove(item)
                     event.setEnter(False)
                     
-                try:
-                    item.hoverEvent(event)
-                except:
-                    debug.printExc("Error sending hover event:")
+                #try:
+                item.hoverEvent(event)
+                #except:
+                #    debug.printExc("Error sending hover event:")
                     
         event.setEnter(False)
         event.setExit(True)
         #print "hover exit items:", prevItems
         for item in prevItems:
             event.setCurrentItem(item)
-            try:
-                item.hoverEvent(event)
-            except:
-                debug.printExc("Error sending hover exit event:")
-            finally:
-                del self.hoverItems[item]
+            #try:
+            item.hoverEvent(event)
+            #except:
+            #    debug.printExc("Error sending hover exit event:")
+            #finally:
+            del self.hoverItems[item]
         
         # Update last hover event unless:
         #   - mouse is dragging (move+buttons); in this case we want the dragged
@@ -256,10 +256,10 @@ class GraphicsScene(QGraphicsScene2):
                 #print "Drag -> pre-selected item:", acceptedItem
                 self.dragItem = acceptedItem
                 event.setCurrentItem(self.dragItem)
-                try:
-                    self.dragItem.mouseDragEvent(event)
-                except:
-                    debug.printExc("Error sending drag event:")
+                #try:
+                self.dragItem.mouseDragEvent(event)
+                #except:
+                #    debug.printExc("Error sending drag event:")
                     
             else:
                 #print "drag -> new item"
@@ -269,10 +269,10 @@ class GraphicsScene(QGraphicsScene2):
                         continue
                     if hasattr(item, 'mouseDragEvent'):
                         event.setCurrentItem(item)
-                        try:
-                            item.mouseDragEvent(event)
-                        except:
-                            debug.printExc("Error sending drag event:")
+                        #try:
+                        item.mouseDragEvent(event)
+                        #except:
+                        #    debug.printExc("Error sending drag event:")
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
@@ -281,10 +281,10 @@ class GraphicsScene(QGraphicsScene2):
                             break
         elif self.dragItem is not None:
             event.setCurrentItem(self.dragItem)
-            try:
-                self.dragItem.mouseDragEvent(event)
-            except:
-                debug.printExc("Error sending hover exit event:")
+            #try:
+            self.dragItem.mouseDragEvent(event)
+            #except:
+            #    debug.printExc("Error sending hover exit event:")
             
         self.lastDrag = event
         
@@ -305,20 +305,20 @@ class GraphicsScene(QGraphicsScene2):
                 acceptedItem = None
             if acceptedItem is not None:
                 ev.setCurrentItem(acceptedItem)
-                try:
-                    acceptedItem.mouseClickEvent(ev)
-                except:
-                    debug.printExc("Error sending click event:")
+                #try:
+                acceptedItem.mouseClickEvent(ev)
+                #except:
+                #    debug.printExc("Error sending click event:")
             else:
                 for item in self.itemsNearEvent(ev):
                     if not item.isVisible() or not item.isEnabled():
                         continue
                     if hasattr(item, 'mouseClickEvent'):
                         ev.setCurrentItem(item)
-                        try:
-                            item.mouseClickEvent(ev)
-                        except:
-                            debug.printExc("Error sending click event:")
+                        #try:
+                        item.mouseClickEvent(ev)
+                        #except:
+                        #    debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
                             if int(item.flags() & item.ItemIsFocusable) > 0:

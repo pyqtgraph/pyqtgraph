@@ -26,7 +26,7 @@ class ViewBoxGetterInterface
 %End
 
 public:
-
+    virtual ~ViewBoxGetterInterface();
     virtual ViewBoxInterface* getViewBox() const;
     virtual void forgetViewBox();
 
@@ -44,6 +44,23 @@ class ViewWidgetGetterInterface
 %End
 
 public:
+    virtual ~ViewWidgetGetterInterface();
     virtual QGraphicsView* getViewWidget() const;
     virtual void forgetViewWidget();
+};
+
+
+class MouseEventsInterface
+{
+
+%TypeHeaderCode
+#include "Interfaces.h"
+%End
+
+public:
+    virtual ~MouseEventsInterface();
+    virtual void mouseClickEvent(MouseClickEvent* event);
+    virtual void hoverEvent(HoverEvent* event);
+    virtual void mouseDragEvent(MouseDragEvent* event);
+
 };

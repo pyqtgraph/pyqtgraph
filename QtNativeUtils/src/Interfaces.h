@@ -4,6 +4,10 @@
 
 #include <QGraphicsView>
 
+#include "mouseevents/MouseClickEvent.h"
+#include "mouseevents/MouseDragEvent.h"
+#include "mouseevents/HoverEvent.h"
+
 class ViewBoxInterface
 {
 public:
@@ -16,6 +20,8 @@ public:
 class ViewBoxGetterInterface
 {
 public:
+
+    virtual ~ViewBoxGetterInterface() {}
 
     virtual ViewBoxInterface* getViewBox() const
     {
@@ -39,7 +45,10 @@ protected:
 
 class ViewWidgetGetterInterface
 {
+
 public:
+    virtual ~ViewWidgetGetterInterface() {}
+
     virtual QGraphicsView* getViewWidget() const
     {
         return nullptr;
@@ -50,6 +59,17 @@ public:
 
 
 
+class MouseEventsInterface
+{
+
+public:
+    virtual ~MouseEventsInterface() {}
+
+    virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); }
+    virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
+    virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
+
+};
 
 
 #endif // INTERFACES_H
