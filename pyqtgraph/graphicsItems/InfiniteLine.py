@@ -31,9 +31,7 @@ class InfiniteLine(GraphicsObject):
     sigPositionChanged = QtCore.Signal(object)
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
-                 hoverPen=None, label=False, textColor=None, textFill=None,
-                 textPosition=[0.05, 0.5], textFormat="{:.3f}", draggableLabel=False,
-                 suffix=None, name='InfiniteLine'):
+                 hoverPen=None, text=None, textOpts=None, name=None):
         """
         =============== ==================================================================
         **Arguments:**
@@ -49,21 +47,12 @@ class InfiniteLine(GraphicsObject):
                         Default pen is red.
         bounds          Optional [min, max] bounding values. Bounds are only valid if the
                         line is vertical or horizontal.
-        label           if True, a label is displayed next to the line to indicate its
-                        location in data coordinates
-        textColor       color of the label. Can be any argument fn.mkColor can understand.
-        textFill        A brush to use when filling within the border of the text.
-        textPosition    list of float (0-1) that defines when the precise location of the
-                        label. The first float governs the location of the label in the
-                        direction of the line, whereas the second one governs the shift
-                        of the label from one side of the line to the other in the
-                        orthogonal direction.
-        textFormat      Any new python 3 str.format() format.
-        draggableLabel  Bool. If True, the user can relocate the label during the dragging.
-                        If set to True, the first entry of textPosition is no longer
-                        useful.
-        suffix          If not None, corresponds to the unit to show next to the label
-        name            name of the item
+        text            Text to be displayed in a label attached to the line, or
+                        None to show no label (default is None). May optionally
+                        include formatting strings to display the line value.
+        textOpts        A dict of keyword arguments to use when constructing the
+                        text label. See :class:`InfLineLabel`.
+        name            Name of the item
         =============== ==================================================================
         """
 
@@ -79,18 +68,10 @@ class InfiniteLine(GraphicsObject):
         self.p = [0, 0]
         self.setAngle(angle)
 
-        if textColor is None:
-            textColor = (200, 200, 100)
-        self.textColor = textColor
-        self.textFill = textFill
-        self.textPosition = textPosition
-        self.suffix = suffix
-
-
-        self.textItem = InfLineLabel(self, fill=textFill)
-        self.textItem.setParentItem(self)
-        self.setDraggableLabel(draggableLabel)
-        self.showLabel(label)
+        if text is not None:
+            textOpts = {} if textOpts is None else textOpts
+            self.textItem = InfLineLabel(self, text=text, **textOpts)
+            self.textItem.setParentItem(self)
 
         self.anchorLeft = (1., 0.5)
         self.anchorRight = (0., 0.5)
@@ -109,8 +90,6 @@ class InfiniteLine(GraphicsObject):
         else:
             self.setHoverPen(hoverPen)
         self.currentPen = self.pen
-
-        self.format = textFormat
 
         self._name = name
 
@@ -308,46 +287,7 @@ class InfiniteLine(GraphicsObject):
         (eg, the view range has changed or the view was resized)
         """
         self._invalidateCache()
-        self.textItem.updatePosition()
-
-    def showLabel(self, state):
-        """
-        Display or not the label indicating the location of the line in data
-        coordinates.
-
-        ==============   ======================================================
-        **Arguments:**
-        state            If True, the label is shown. Otherwise, it is hidden.
-        ==============   ======================================================
-        """
-        self.textItem.setVisible(state)
-
-    def setTextLocation(self, position=0.05, shift=0.5):
-        """
-        Set the parameters that defines the location of the label on the axis.
-        The position *parameter* governs the location of the label in the
-        direction of the line, whereas the *shift* governs the shift of the
-        label from one side of the line to the other in the orthogonal
-        direction.
-
-        ==============   ======================================================
-        **Arguments:**
-        position          float (range of value = [0-1])
-        shift             float (range of value = [0-1]).
-        ==============   ======================================================
-        """
-        self.textItem.orthoPos = position
-        self.textItem.shiftPos = shift
-        self.textItem.updatePosition()
-
-    def setDraggableLabel(self, state):
-        """
-        Set the state of the label regarding its behaviour during the dragging
-        of the line. If True, then the location of the label change during the
-        dragging of the line.
-        """
-        self.textItem.setMovable(state)
-
+        
     def setName(self, name):
         self._name = name
 
@@ -356,13 +296,21 @@ class InfiniteLine(GraphicsObject):
 
 
 class InfLineLabel(TextItem):
-    # a text label that attaches itself to an InfiniteLine
-    def __init__(self, line, **kwds):
+    """
+    A TextItem that attaches itself to an InfiniteLine.
+    
+    This class extends TextItem with the following features:
+    
+    * Automatically positions adjacent to the line at a fixed position along
+      the line and within the view box.
+    * Automatically reformats text when the line value has changed.
+    * Can optionally be dragged to change its location along the line.
+    """
+    def __init__(self, line, text="", movable=False, position=0.5, **kwds):
         self.line = line
-        self.movable = False
-        self.dragAxis = None  # 0=x, 1=y
-        self.orthoPos = 0.5  # text will always be placed on the line at a position relative to view bounds
-        self.format = "{value}"
+        self.movable = movable
+        self.orthoPos = position  # text will always be placed on the line at a position relative to view bounds
+        self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
         TextItem.__init__(self, **kwds)
         self.valueChanged()
@@ -412,7 +360,7 @@ class InfLineLabel(TextItem):
                 return
 
             rel = self._posToRel(ev.pos())
-            self.orthoPos = self._startPosition + rel - self._cursorOffset
+            self.orthoPos = np.clip(self._startPosition + rel - self._cursorOffset, 0, 1)
             self.updatePosition()
             if ev.isFinish():
                 self._moving = False
@@ -426,6 +374,10 @@ class InfLineLabel(TextItem):
     def hoverEvent(self, ev):
         if not ev.isExit() and self.movable:
             ev.acceptDrags(QtCore.Qt.LeftButton)
+
+    def viewTransformChanged(self):
+        self.updatePosition()
+        TextItem.viewTransformChanged(self)
 
     def _posToRel(self, pos):
         # convert local position to relative position along line between view bounds

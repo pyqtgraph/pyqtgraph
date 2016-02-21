@@ -1,13 +1,16 @@
+import numpy as np
 from ..Qt import QtCore, QtGui
 from ..Point import Point
-from .UIGraphicsItem import *
 from .. import functions as fn
+from .GraphicsObject import GraphicsObject
 
-class TextItem(UIGraphicsItem):
+
+class TextItem(GraphicsObject):
     """
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
-    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0), border=None, fill=None, angle=0):
+    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
+                 border=None, fill=None, angle=0, rotateAxis=None):
         """
         ==============  =================================================================================
         **Arguments:**
@@ -20,16 +23,19 @@ class TextItem(UIGraphicsItem):
                         sets the lower-right corner.
         *border*        A pen to use when drawing the border
         *fill*          A brush to use when filling within the border
+        *angle*         Angle in degrees to rotate text. Default is 0; text will be displayed upright.
+        *rotateAxis*    If None, then a text angle of 0 always points along the +x axis of the scene.
+                        If a QPointF or (x,y) sequence is given, then it represents a vector direction
+                        in the parent's coordinate system that the 0-degree line will be aligned to. This
+                        Allows text to follow both the position and orientation of its parent while still
+                        discarding any scale and shear factors.
         ==============  =================================================================================
         """
-        
-        ## not working yet
-        #*angle*      Angle in degrees to rotate text (note that the rotation assigned in this item's 
-                     #transformation will be ignored)
                      
         self.anchor = Point(anchor)
+        self.rotateAxis = None if rotateAxis is None else Point(rotateAxis)
         #self.angle = 0
-        UIGraphicsItem.__init__(self)
+        GraphicsObject.__init__(self)
         self.textItem = QtGui.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self._lastTransform = None
@@ -101,9 +107,8 @@ class TextItem(UIGraphicsItem):
         self.updateText()
         
     def setAngle(self, angle):
-        self.textItem.resetTransform()
-        self.textItem.rotate(angle)
-        self.updateText()
+        self.angle = angle
+        self.updateTransform()
         
     def updateText(self):
         # update text position to obey anchor
@@ -120,9 +125,6 @@ class TextItem(UIGraphicsItem):
             #s = self._exportOpts['resolutionScale']
             #self.textItem.scale(s, s)
         
-    def viewRangeChanged(self):
-        self.updateText()
-
     def boundingRect(self):
         return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
 
@@ -160,7 +162,19 @@ class TextItem(UIGraphicsItem):
         t = pt.inverted()[0]
         # reset translation
         t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
+        
+        # apply rotation
+        angle = -self.angle
+        if self.rotateAxis is not None:
+            d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
+            a = np.arctan2(d.y(), d.x()) * 180 / np.pi
+            angle += a
+        t.rotate(angle)
+        
         self.setTransform(t)
         
         self._lastTransform = pt
+        
+        self.updateText()
+
         
