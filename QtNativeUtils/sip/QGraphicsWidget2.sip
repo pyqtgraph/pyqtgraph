@@ -58,4 +58,13 @@ public:
     virtual void mouseClickEvent(MouseClickEvent* event);
     virtual void hoverEvent(HoverEvent* event);
     virtual void mouseDragEvent(MouseDragEvent* event);
+
+    void setFixedHeight(const double h);
+    void setFixedWidth(const double w);
+
+    double height() const;
+    double width() const;
+
+    virtual QRectF boundingRect() const;
+    virtual QPainterPath shape() const;
 };

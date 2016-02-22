@@ -21,6 +21,36 @@ public:
 #undef ENABLE_EXTENDEDTEM_CODE
 #undef BASE_GRAPHICSITEM_CLASS
 
+public:
+
+    void setFixedHeight(const double h)
+    {
+        setMaximumHeight(h);
+        setMinimumHeight(h);
+    }
+
+    void setFixedWidth(const double w)
+    {
+        setMaximumWidth(w);
+        setMinimumWidth(w);
+    }
+
+    double height() const { return geometry().height(); }
+
+    double width() const { return geometry().width(); }
+
+    virtual QRectF boundingRect() const
+    {
+        return mapRectFromParent(geometry()).normalized();
+    }
+
+    virtual QPainterPath shape() const
+    {
+        QPainterPath p;
+        p.addRect(boundingRect());
+        return p;
+    }
+
 };
 
 #endif // QGRAPHICSWIDGET2_H

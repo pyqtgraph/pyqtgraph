@@ -33,6 +33,7 @@ class GraphicsWidget(GraphicsItem, QGraphicsWidget2):
             #self._updateView()
         #return ret
 
+    '''
     def setFixedHeight(self, h):
         self.setMaximumHeight(h)
         self.setMinimumHeight(h)
@@ -57,5 +58,6 @@ class GraphicsWidget(GraphicsItem, QGraphicsWidget2):
         p.addRect(self.boundingRect())
         #print "shape:", p.boundingRect()
         return p
+    '''
 
 
