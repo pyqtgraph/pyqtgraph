@@ -150,10 +150,18 @@ elif QT_LIB == PYQT5:
         pass
 
     # Re-implement deprecated APIs
-    def scale(self, sx, sy):
-        tr = self.transform()
-        tr.scale(sx, sy)
-        self.setTransform(tr)
+
+    __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
+
+    def scale(self, *args):
+        if args:
+            sx, sy = args
+            tr = self.transform()
+            tr.scale(sx, sy)
+            self.setTransform(tr)
+        else:
+            return __QGraphicsItem_scale(self)
+
     QtWidgets.QGraphicsItem.scale = scale
 
     def rotate(self, angle):
