@@ -2,6 +2,7 @@
 
 HoverEvent::HoverEvent(const QGraphicsSceneMouseEvent* moveEvent, const bool acceptable)
 {
+    mAccepted = false;
     mEnter = false;
     mAcceptable = acceptable;
     mExit = false;

@@ -6,6 +6,13 @@
     #error "No QGraphicsItem base class defined with BASE_GRAPHICSITEM_CLASS"
 #endif
 
+
+virtual int type() const
+{
+    // Enable the use of qgraphicsitem_cast with this item.
+    return Type;
+}
+
 virtual QGraphicsView* getViewWidget() const
 {
     QGraphicsScene* s = scene();
@@ -126,5 +133,9 @@ double transformAngle(QGraphicsItem* relativeItem=nullptr) const
     QLineF vec = tr.map(QLineF(0.0, 0.0, 1.0, 0.0));
     return vec.angleTo(QLineF(vec.p1(), vec.p1()+QPointF(1.0, 0.0)));
 }
+
+virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
+virtual void hoverEvent(HoverEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
+virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
 
 #endif // ENABLE_EXTENDEDTEM_CODE

@@ -17,7 +17,7 @@ init_package();
 
 %Include Exceptions.sip
 
-%Include Interfaces.sip
+//%Include Interfaces.sip
 
 %Include Point.sip
 %Include MouseEvent.sip

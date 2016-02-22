@@ -59,6 +59,15 @@ class MouseEventsInterface
 
 public:
     virtual ~MouseEventsInterface();
+
+    void setAcceptCustomMouseClickEvent(const bool accept);
+    void setAcceptCustomMouseHoverEvent(const bool accept);
+    void setAcceptCustomMouseDragEvent(const bool accept);
+
+    bool acceptCustomMouseClickEvent() const;
+    bool acceptCustomMouseHoverEvent() const;
+    bool acceptCustomMouseDragEvent() const;
+
     virtual void mouseClickEvent(MouseClickEvent* event);
     virtual void hoverEvent(HoverEvent* event);
     virtual void mouseDragEvent(MouseDragEvent* event);

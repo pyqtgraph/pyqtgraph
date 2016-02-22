@@ -84,6 +84,9 @@ p8 = win.addPlot(title="Region Selection")
 p8.plot(data2, pen=(255,255,255,200))
 lr = pg.LinearRegionItem([400,700])
 lr.setZValue(-10)
+
+print 'LinearregionItem.type()', lr.type()
+
 p8.addItem(lr)
 
 p9 = win.addPlot(title="Zoom on selected region")
@@ -104,7 +107,7 @@ def sigPrepareForPaintTest():
     c += 1
 
 
-win.scene().sigPrepareForPaint.connect(sigPrepareForPaintTest)
+#win.scene().sigPrepareForPaint.connect(sigPrepareForPaintTest)
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

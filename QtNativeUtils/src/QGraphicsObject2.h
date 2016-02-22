@@ -7,12 +7,15 @@
 #include "Point.h"
 #include "Interfaces.h"
 
-class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface, public MouseEventsInterface
+class QGraphicsObject2: public QGraphicsObject
 {
+
 public:
     QGraphicsObject2(QGraphicsItem* parent=nullptr) : QGraphicsObject(parent)
     {}
     ~QGraphicsObject2() {}
+
+    enum { Type = QGraphicsItem::UserType + 1 };
 
 #define ENABLE_EXTENDEDTEM_CODE     1
 #define BASE_GRAPHICSITEM_CLASS     QGraphicsObject

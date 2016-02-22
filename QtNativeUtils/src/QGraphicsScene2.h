@@ -14,11 +14,15 @@
 #include "internal/point_utils.h"
 #include "Interfaces.h"
 
+#include "QGraphicsObject2.h"
+#include "QGraphicsWidget2.h"
+
 class QGraphicsScene2: public QGraphicsScene, public ViewWidgetGetterInterface
 {
     Q_OBJECT
 public:
     explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent=nullptr);
+    virtual ~QGraphicsScene2();
 
     void setClickRadius(const double clickRadius) { mClickRadius = clickRadius; }
     void setMoveDistance(const double moveDistance) { mMoveDistance = moveDistance; }
@@ -38,58 +42,56 @@ public:
         emit sigPrepareForPaint();
     }
 
-    //virtual void mousePressEvent(QGraphicsSceneMouseEvent *ev);
-
-    //virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* ev);
-
-    //virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* ev);
-
-    //virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* ev);
-
     virtual QGraphicsView* getViewWidget() const
     {
         return views()[0];
     }
 
-signals:
-
-    void sigPrepareForPaint();
-
-    //void sigMouseMoved(const QPointF& pos);
-
-    //void sigMouseHover(const QVector<QGraphicsItem*>& hitems);
-
-    //void sigMouseClicked(const MouseClickEvent* event);
-
-protected:
-
     /*
-    void sendHoverEvents(QGraphicsSceneMouseEvent *ev, const bool exitOnly=false);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *ev);
 
-    bool sendDragEvent(QGraphicsSceneMouseEvent *ev, const bool init=false, const bool final=false);
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* ev);
 
-    bool sendClickEvent(MouseClickEvent* ev);
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* ev);
 
-    void leaveEvent(QGraphicsSceneMouseEvent *ev)
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* ev);
+
+    virtual void leaveEvent(QEvent *ev)
     {
         // inform items that mouse is gone
         if(mDragButtons.size()==0)
             sendHoverEvents(ev, true);
     }
+
+    virtual bool callMouseHover(QGraphicsItem* item, HoverEvent* ev);
+    virtual bool callMouseClick(QGraphicsItem* item, MouseClickEvent* ev);
+    virtual bool callMouseDrag(QGraphicsItem* item, MouseDragEvent* ev);
     */
 
+signals:
 
+    void sigPrepareForPaint();
+
+    void sigMouseMoved(const QPointF& pos);
+
+    void sigMouseHover(const QList<QGraphicsItem*>& hitems);
+
+    void sigMouseClicked(const MouseClickEvent* event);
+
+protected:
 
     /*
-    QVector<QGraphicsItem*> itemsNearEvent(MouseEvent* event,
+    virtual void sendHoverEvents(QEvent *ev, const bool exitOnly=false);
+
+    virtual bool sendDragEvent(QGraphicsSceneMouseEvent *ev, const bool init=false, const bool final=false);
+
+    virtual bool sendClickEvent(MouseClickEvent* ev);
+
+    QList<QGraphicsItem*> itemsNearEvent(MouseEvent* event,
                                            const Qt::ItemSelectionMode selMode=Qt::IntersectsItemShape,
                                            const Qt::SortOrder sortOrder=Qt::DescendingOrder,
                                            const bool hoverable=false);
-    */
 
-private:
-
-    /*
     MouseClickEvent* clickEventForButton(const Qt::MouseButton btn)
     {
         for(int e=0; e<mClickEvents.size(); ++e)
@@ -99,7 +101,49 @@ private:
                 return mClickEvents[e];
             }
         }
-        return NULL;
+        return nullptr;
+    }
+
+    static bool isGraphicsObject2(QGraphicsItem* item)
+    {
+        return item->type()==QGraphicsObject2::Type;
+    }
+
+    static bool isGraphicsWidget2(QGraphicsItem* item)
+    {
+        return item->type()==QGraphicsWidget2::Type;
+    }
+
+    static bool acceptsEvents(QGraphicsItem* item)
+    {
+        return isGraphicsObject2(item) || isGraphicsWidget2(item);
+    }
+
+    static bool acceptsHoverEvents(QGraphicsItem* item)
+    {
+        if(isGraphicsObject2(item))
+            return ((QGraphicsObject2*)item)->acceptCustomMouseHoverEvent();
+        else if (isGraphicsWidget2(item))
+            return ((QGraphicsWidget2*)item)->acceptCustomMouseHoverEvent();
+        return false;
+    }
+
+    static bool acceptsDragEvents(QGraphicsItem* item)
+    {
+        if(isGraphicsObject2(item))
+            return ((QGraphicsObject2*)item)->acceptCustomMouseDragEvent();
+        else if (isGraphicsWidget2(item))
+            return ((QGraphicsWidget2*)item)->acceptCustomMouseDragEvent();
+        return false;
+    }
+
+    static bool acceptsClickEvents(QGraphicsItem* item)
+    {
+        if(isGraphicsObject2(item))
+            return ((QGraphicsObject2*)item)->acceptCustomMouseClickEvent();
+        else if (isGraphicsWidget2(item))
+            return ((QGraphicsWidget2*)item)->acceptCustomMouseClickEvent();
+        return false;
     }
     */
 
@@ -109,12 +153,12 @@ protected:
     double mMoveDistance;
 
     /*
-    QVector<MouseClickEvent*> mClickEvents;
-    QVector<Qt::MouseButton> mDragButtons;
+    QList<MouseClickEvent*> mClickEvents;
+    QList<Qt::MouseButton> mDragButtons;
 
     QGraphicsItem* mDragItem;
     MouseDragEvent* mLastDrag;
-    QVector<QGraphicsItem*> mHoverItems;
+    QList<QGraphicsItem*> mHoverItems;
     HoverEvent* mLastHoverEvent;
     */
 };

@@ -3,15 +3,18 @@
 %Import QtGui/QtGuimod.sip
 
 
-class QGraphicsScene2: public QGraphicsScene, public ViewWidgetGetterInterface
+class QGraphicsScene2: public QGraphicsScene
 {
 
 %TypeHeaderCode
+#include <iostream>
 #include "QGraphicsScene2.h"
 %End
 
+
 public:
-    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent=nullptr);
+    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent /TransferThis/ =nullptr);
+    virtual ~QGraphicsScene2();
 
     void setClickRadius(const double clickRadius);
     void setMoveDistance(const double moveDistance);
@@ -24,10 +27,12 @@ public:
 
     void prepareForPaint();
 
-
     virtual QGraphicsView* getViewWidget() const;
 
 signals:
 
     void sigPrepareForPaint();
+    void sigMouseMoved(const QPointF& pos);
+    void sigMouseHover(const QList<QGraphicsItem*>& hitems);
+    void sigMouseClicked(const MouseClickEvent* event);
 };

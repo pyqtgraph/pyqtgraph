@@ -5,7 +5,7 @@
 
 
 
-class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface, public MouseEventsInterface
+class QGraphicsObject2: public QGraphicsObject
 {
 
 %TypeHeaderCode
@@ -13,12 +13,14 @@ class QGraphicsObject2: public QGraphicsObject, public ViewWidgetGetterInterface
 %End
 
 public:
-    QGraphicsObject2(QGraphicsItem* parent=nullptr);
+    QGraphicsObject2(QGraphicsItem* parent /TransferThis/ =nullptr);
     ~QGraphicsObject2();
 
     virtual QGraphicsView* getViewWidget() const;
 
     virtual void forgetViewWidget();
+
+    virtual int type() const;
 
     QTransform deviceTransform() const;
     QTransform deviceTransform(const QTransform& viewportTransform) const;
@@ -53,4 +55,9 @@ public:
     QRect mapRectFromDevice(const QRect& rect) const;
 
     double transformAngle(QGraphicsItem* relativeItem=nullptr) const;
+
+    virtual void mouseClickEvent(MouseClickEvent* event);
+    virtual void hoverEvent(HoverEvent* event);
+    virtual void mouseDragEvent(MouseDragEvent* event);
+
 };
