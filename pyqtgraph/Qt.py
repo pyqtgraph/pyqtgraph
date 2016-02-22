@@ -139,7 +139,7 @@ elif QT_LIB == PYQT5:
     
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    from PyQt5 import QtGui, QtCore, QtWidgets, Qt, uic
+    from PyQt5 import QtGui, QtCore, QtWidgets, uic
     try:
         from PyQt5 import QtSvg
     except ImportError:
