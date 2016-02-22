@@ -323,6 +323,8 @@ class InfLineLabel(TextItem):
         self.updatePosition()
     
     def updatePosition(self):
+        # update text position to relative view location along line
+        
         view = self.getViewBox()
         if not self.isVisible() or not isinstance(view, ViewBox):
             # not in a viewbox, skip update

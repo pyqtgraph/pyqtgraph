@@ -10,7 +10,7 @@ class TextItem(GraphicsObject):
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
-                 border=None, fill=None, angle=0, rotateAxis=None):
+                 border=None, fill=None, angle=0, rotateAxis=(1, 0)):
         """
         ==============  =================================================================================
         **Arguments:**
