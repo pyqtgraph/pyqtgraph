@@ -11,6 +11,8 @@ from .. GraphicsWidget import GraphicsWidget
 from ... import debug as debug
 from ... import getConfigOption
 from ...Qt import isQObjectAlive
+from ...QtNativeUtils import ViewBoxBase
+from ..GraphicsItem import GraphicsItem
 
 __all__ = ['ViewBox']
 
@@ -65,7 +67,7 @@ class ChildGroup(ItemGroup):
         return ret
 
 
-class ViewBox(GraphicsWidget):
+class ViewBox(ViewBoxBase, GraphicsItem):
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
@@ -82,8 +84,6 @@ class ViewBox(GraphicsWidget):
     * Item coordinate mapping methods
 
     """
-
-    Type = QtGui.QGraphicsItem.UserType
 
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
@@ -107,6 +107,8 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
 
+    _qtBaseClass = ViewBoxBase
+
     def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
         """
         ==============  =============================================================
@@ -128,7 +130,8 @@ class ViewBox(GraphicsWidget):
         ==============  =============================================================
         """
 
-        GraphicsWidget.__init__(self, parent)
+        ViewBoxBase.__init__(self, parent)
+        GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
         self.addedItems = []

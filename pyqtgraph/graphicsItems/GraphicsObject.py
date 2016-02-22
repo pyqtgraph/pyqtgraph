@@ -2,7 +2,7 @@ from ..Qt import QtGui, QtCore, USE_PYSIDE
 if not USE_PYSIDE:
     import sip
 from .GraphicsItem import GraphicsItem
-
+from PyQt4.QtGui import QGraphicsWidget
 from ..QtNativeUtils import QGraphicsObject2
 
 __all__ = ['GraphicsObject']
@@ -14,9 +14,9 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
     Extension of QGraphicsObject with some useful methods (provided by :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`)
     """
     _qtBaseClass = QGraphicsObject2
-    def __init__(self, *args):
+    def __init__(self, parent=None):
         self.__inform_view_on_changes = True
-        QtGui.QGraphicsObject.__init__(self, *args)
+        QtGui.QGraphicsObject.__init__(self, parent=parent)
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
         
@@ -40,4 +40,3 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
 
         return ret
-

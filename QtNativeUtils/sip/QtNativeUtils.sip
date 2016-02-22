@@ -30,3 +30,4 @@ init_package();
 
 
 %Include QGraphicsScene2.sip
+%Include ViewBoxBase.sip

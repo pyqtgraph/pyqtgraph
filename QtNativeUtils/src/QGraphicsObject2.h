@@ -13,7 +13,7 @@ class QGraphicsObject2: public QGraphicsObject
 public:
     QGraphicsObject2(QGraphicsItem* parent=nullptr) : QGraphicsObject(parent)
     {}
-    ~QGraphicsObject2() {}
+    virtual ~QGraphicsObject2() {}
 
     enum { Type = QGraphicsItem::UserType + 1 };
 

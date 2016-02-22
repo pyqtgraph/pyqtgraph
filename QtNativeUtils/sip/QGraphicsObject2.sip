@@ -14,11 +14,27 @@ class QGraphicsObject2: public QGraphicsObject
 
 public:
     QGraphicsObject2(QGraphicsItem* parent /TransferThis/ =nullptr);
-    ~QGraphicsObject2();
+    virtual ~QGraphicsObject2();
 
     virtual QGraphicsView* getViewWidget() const;
-
     virtual void forgetViewWidget();
+
+/*
+    virtual QObject* getViewBox();
+%MethodCode
+    if(sipSelfWasArg)
+        sipRes = sipCpp->QGraphicsObject2::getViewBox();
+    else
+        sipRes = sipCpp->getViewBox();
+
+    if(sipRes->isWidgetType())
+        return sipConvertFromType(sipRes, sipType_QGraphicsView, nullptr);
+    else
+        return sipConvertFromType(sipRes, sipType_QGraphicsWidget, nullptr);
+%End
+
+    virtual void forgetViewBox();
+*/
 
     virtual int type() const;
 

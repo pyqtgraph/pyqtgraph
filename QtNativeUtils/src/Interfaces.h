@@ -12,6 +12,9 @@ class ViewBoxInterface
 {
 public:
 
+
+signals:
+
 };
 
 

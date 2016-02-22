@@ -65,9 +65,9 @@ class GraphicsScene(QGraphicsScene2):
        move in a drag.
     """
     
-    sigMouseHover = QtCore.Signal(object)   ## emits a list of objects hovered over
-    sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
-    sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
+    #sigMouseHover = QtCore.Signal(object)   ## emits a list of objects hovered over
+    #sigMouseMoved = QtCore.Signal(object)   ## emits position of mouse on every move
+    #sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
     #sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
     

@@ -11,7 +11,7 @@ class QGraphicsWidget2: public QGraphicsWidget
 {
 public:
     QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
-    ~QGraphicsWidget2() {}
+    virtual ~QGraphicsWidget2() {}
 
     enum { Type = QGraphicsItem::UserType + 2 };
 

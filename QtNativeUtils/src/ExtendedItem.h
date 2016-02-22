@@ -134,8 +134,52 @@ double transformAngle(QGraphicsItem* relativeItem=nullptr) const
     return vec.angleTo(QLineF(vec.p1(), vec.p1()+QPointF(1.0, 0.0)));
 }
 
-virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
-virtual void hoverEvent(HoverEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
-virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); std::cout<<"ignoring"<<std::endl; }
+virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); }
+virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
+virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
+
+/*
+virtual QObject* getViewBox()
+{
+    if(mViewBox==nullptr)
+    {
+        QGraphicsItem* p = (QGraphicsItem*)this;
+        while(p!=nullptr)
+        {
+            p = p->parentItem();
+            if(p==nullptr)
+            {
+                QGraphicsView* view = getViewWidget();
+                if(view==nullptr)
+                    return nullptr;
+                else
+                {
+                    std::cout<<"ViewBox is View"<<std::endl;
+                    mViewBox = (QObject*)view;
+                    return mViewBox;
+                }
+            }
+            else if(p->type()==QGraphicsItem::UserType+3)
+            {
+                std::cout<<"ViewBox is Item"<<std::endl;
+                mViewBox = (QObject*)p;
+                return mViewBox;
+            }
+        }
+    }
+
+    return mViewBox;
+}
+
+virtual void forgetViewBox()
+{
+    mViewBox = nullptr;
+}
+
+protected:
+    QObject* mViewBox = nullptr;
+*/
+
 
 #endif // ENABLE_EXTENDEDTEM_CODE
+
