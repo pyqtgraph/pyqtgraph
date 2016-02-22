@@ -31,7 +31,7 @@ class InfiniteLine(GraphicsObject):
     sigPositionChanged = QtCore.Signal(object)
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
-                 hoverPen=None, text=None, textOpts=None, name=None):
+                 hoverPen=None, label=None, labelOpts=None, name=None):
         """
         =============== ==================================================================
         **Arguments:**
@@ -47,10 +47,10 @@ class InfiniteLine(GraphicsObject):
                         Default pen is red.
         bounds          Optional [min, max] bounding values. Bounds are only valid if the
                         line is vertical or horizontal.
-        text            Text to be displayed in a label attached to the line, or
+        label           Text to be displayed in a label attached to the line, or
                         None to show no label (default is None). May optionally
                         include formatting strings to display the line value.
-        textOpts        A dict of keyword arguments to use when constructing the
+        labelOpts       A dict of keyword arguments to use when constructing the
                         text label. See :class:`InfLineLabel`.
         name            Name of the item
         =============== ==================================================================
@@ -68,15 +68,9 @@ class InfiniteLine(GraphicsObject):
         self.p = [0, 0]
         self.setAngle(angle)
 
-        if text is not None:
-            textOpts = {} if textOpts is None else textOpts
-            self.textItem = InfLineLabel(self, text=text, **textOpts)
-            self.textItem.setParentItem(self)
-
-        self.anchorLeft = (1., 0.5)
-        self.anchorRight = (0., 0.5)
-        self.anchorUp = (0.5, 1.)
-        self.anchorDown = (0.5, 0.)
+        if label is not None:
+            labelOpts = {} if labelOpts is None else labelOpts
+            self.label = InfLineLabel(self, text=label, **labelOpts)
 
         if pos is None:
             pos = Point(0,0)
@@ -167,10 +161,6 @@ class InfiniteLine(GraphicsObject):
                 newPos[1] = min(newPos[1], self.maxRange[1])
 
         if self.p != newPos:
-            # Invalidate bounding rect and line
-            self._boundingRect = None
-            self._line = None
-
             self.p = newPos
             self._invalidateCache()
             GraphicsObject.setPos(self, Point(self.p))
@@ -308,6 +298,19 @@ class InfLineLabel(TextItem):
       the line and within the view box.
     * Automatically reformats text when the line value has changed.
     * Can optionally be dragged to change its location along the line.
+    * Optionally aligns to its parent line.
+
+    =============== ==================================================================
+    **Arguments:**
+    line            The InfiniteLine to which this label will be attached.
+    text            String to display in the label. May contain a {value} formatting
+                    string to display the current value of the line.
+    movable         Bool; if True, then the label can be dragged along the line.
+    position        Relative position (0.0-1.0) within the view to position the label
+                    along the line.
+    =============== ==================================================================
+    
+    All extra keyword arguments are passed to TextItem.
     """
     def __init__(self, line, text="", movable=False, position=0.5, **kwds):
         self.line = line
@@ -316,6 +319,7 @@ class InfLineLabel(TextItem):
         self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
         TextItem.__init__(self, **kwds)
+        self.setParentItem(line)
         self.valueChanged()
 
     def valueChanged(self):
@@ -361,8 +365,29 @@ class InfLineLabel(TextItem):
             self.updatePosition()
             
     def setMovable(self, m):
+        """Set whether this label is movable by dragging along the line.
+        """
         self.movable = m
         self.setAcceptHoverEvents(m)
+        
+    def setPosition(self, p):
+        """Set the relative position (0.0-1.0) of this label within the view box
+        and along the line. 
+        
+        For horizontal (angle=0) and vertical (angle=90) lines, a value of 0.0
+        places the text at the bottom or left of the view, respectively. 
+        """
+        self.orthoPos = p
+        self.updatePosition()
+        
+    def setFormat(self, text):
+        """Set the text format string for this label.
+        
+        May optionally contain "{value}" to include the lines current value
+        (the text will be reformatted whenever the line is moved).
+        """
+        self.format = format
+        self.valueChanged()
         
     def mouseDragEvent(self, ev):
         if self.movable and ev.button() == QtCore.Qt.LeftButton:

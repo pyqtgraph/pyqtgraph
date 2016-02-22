@@ -18,14 +18,12 @@ pg.setConfigOptions(antialias=True)
 
 p1 = win.addPlot(title="Plot Items example", y=np.random.normal(size=100, scale=10), pen=0.5)
 p1.setYRange(-40, 40)
-inf1 = pg.InfiniteLine(movable=True, angle=90, text='x={value:0.2f}', 
-                       textOpts={'position':0.1, 'color': (200,200,100), 'fill': (200,200,200,50), 'movable': True})
-inf2 = pg.InfiniteLine(movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), text='y={value:0.2f}mm', 
-                       textOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
-inf3 = pg.InfiniteLine(movable=True, angle=45, pen='g', text='diagonal', textOpts={'rotateAxis': [1, 0], 'fill': (0, 200, 0, 100), 'movable': True})
+inf1 = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}', 
+                       labelOpts={'position':0.1, 'color': (200,200,100), 'fill': (200,200,200,50), 'movable': True})
+inf2 = pg.InfiniteLine(movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='y={value:0.2f}mm', 
+                       labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
+inf3 = pg.InfiniteLine(movable=True, angle=45, pen='g', label='diagonal', labelOpts={'rotateAxis': [1, 0], 'fill': (0, 200, 0, 100), 'movable': True})
 inf1.setPos([2,2])
-#inf1.setTextLocation(position=0.75)
-#inf2.setTextLocation(shift=0.8)
 p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)
