@@ -172,8 +172,8 @@ elif QT_LIB == PYQT5:
         self.setContentsMargins(i, i, i, i)
     QtWidgets.QGridLayout.setMargin = setMargin
 
-    def setResizeMode(self, mode):
-        self.setSectionResizeMode(mode)
+    def setResizeMode(self, *args):
+        self.setSectionResizeMode(*args)
     QtWidgets.QHeaderView.setResizeMode = setResizeMode
 
     
