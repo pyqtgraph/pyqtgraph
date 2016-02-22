@@ -328,14 +328,25 @@ class InfLineLabel(TextItem):
             # not in a viewbox, skip update
             return
         
-        # 1. determine view extents along line axis
-        tr = view.childGroup.itemTransform(self.line)[0]
-        vr = tr.mapRect(view.viewRect())
-        pt1 = Point(vr.left(), 0)
-        pt2 = Point(vr.right(), 0)
-        
-        # 2. pick relative point between extents and set position
+        lr = self.line.boundingRect()
+        pt1 = Point(lr.left(), 0)
+        pt2 = Point(lr.right(), 0)
+        if self.line.angle % 90 != 0:
+            # more expensive to find text position for oblique lines.
+            p = QtGui.QPainterPath()
+            p.moveTo(pt1)
+            p.lineTo(pt2)
+            p = self.line.itemTransform(view)[0].map(p)
+            vr = QtGui.QPainterPath()
+            vr.addRect(view.boundingRect())
+            paths = vr.intersected(p).toSubpathPolygons()
+            if len(paths) > 0:
+                l = list(paths[0])
+                pt1 = self.line.mapFromItem(view, l[0])
+                pt2 = self.line.mapFromItem(view, l[1])
+            
         pt = pt2 * self.orthoPos + pt1 * (1-self.orthoPos)
+        
         self.setPos(pt)
         
     def setVisible(self, v):
