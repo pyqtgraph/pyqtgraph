@@ -324,7 +324,7 @@ class GraphicsScene(QGraphicsScene2):
                             if int(item.flags() & item.ItemIsFocusable) > 0:
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
-        self.sigMouseClicked.emit(ev)
+        self.sigMouseClicked.emit(ev.scenePos())
         return ev.isAccepted()
         
     def items(self, *args):

@@ -76,7 +76,7 @@ signals:
 
     void sigMouseHover(const QList<QGraphicsItem*>& hitems);
 
-    void sigMouseClicked(const MouseClickEvent* event);
+    void sigMouseClicked(const QPointF& scenePos);
 
 protected:
 
