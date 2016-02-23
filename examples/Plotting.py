@@ -109,6 +109,11 @@ def sigPrepareForPaintTest():
 
 #win.scene().sigPrepareForPaint.connect(sigPrepareForPaintTest)
 
+def onRangeChanged(arg1, arg2):
+    print arg1, arg2
+
+#p7.sigRangeChanged.connect(onRangeChanged)
+
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

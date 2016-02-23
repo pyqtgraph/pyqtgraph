@@ -88,7 +88,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
-    sigRangeChanged = QtCore.Signal(object, object)
+    #sigRangeChanged = QtCore.Signal(object, object)
     #sigActionPositionChanged = QtCore.Signal(object)
     #sigStateChanged = QtCore.Signal(object)
     #sigTransformChanged = QtCore.Signal(object)
