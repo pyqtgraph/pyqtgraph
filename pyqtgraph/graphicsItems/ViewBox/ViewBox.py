@@ -95,13 +95,13 @@ class ViewBox(ViewBoxBase, GraphicsItem):
     sigResized = QtCore.Signal(object)
 
     ## mouse modes
-    PanMode = 3
-    RectMode = 1
+    #PanMode = 3
+    #RectMode = 1
 
     ## axes
-    XAxis = 0
-    YAxis = 1
-    XYAxes = 2
+    #XAxis = 0
+    #YAxis = 1
+    #XYAxes = 2
 
     ## for linking views together
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
