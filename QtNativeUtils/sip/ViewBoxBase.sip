@@ -29,5 +29,8 @@ public:
 
 
 signals:
-
+    void sigStateChanged(ViewBoxBase* viewBox);
+    void sigTransformChanged(ViewBoxBase* viewBox);
+    void sigResized(ViewBoxBase* viewBox);
+    //void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
 };

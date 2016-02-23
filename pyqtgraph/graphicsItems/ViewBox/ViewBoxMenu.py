@@ -2,6 +2,7 @@ from ...Qt import QtCore, QtGui, QT_LIB
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
+
 if QT_LIB == 'PyQt4':
     from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
 elif QT_LIB == 'PySide':
@@ -95,7 +96,6 @@ class ViewBoxMenu(QtGui.QMenu):
         self.export.clear()
         for opt, fn in methods.items():
             self.export.addAction(opt, self.exportMethod)
-        
 
     def viewStateChanged(self):
         self.valid = False

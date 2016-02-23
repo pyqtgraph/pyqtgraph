@@ -34,6 +34,7 @@ from .. ButtonItem import ButtonItem
 from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
+from ..GraphicsItem import GraphicsItem
 
 if QT_LIB == 'PyQt4':
     from .plotConfigTemplate_pyqt import *

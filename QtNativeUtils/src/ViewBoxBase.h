@@ -2,9 +2,13 @@
 #define VIEWBOXBASE_H
 
 #include <QGraphicsWidget2.h>
+#include <QList>
+
+#include "Point.h"
 
 class ViewBoxBase: public QGraphicsWidget2
 {
+    Q_OBJECT
 public:
 
     enum MouseMode
@@ -34,6 +38,10 @@ public:
 
 signals:
 
+    void sigStateChanged(ViewBoxBase* viewBox);
+    void sigTransformChanged(ViewBoxBase* viewBox);
+    void sigResized(ViewBoxBase* viewBox);
+    //void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
 };
 
 #endif // VIEWBOXBASE_H

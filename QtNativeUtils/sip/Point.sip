@@ -233,6 +233,16 @@ public:
         }
     %End
 
+    Point __getitem__(SIP_PYSLICE) const;
+    %MethodCode
+        try {
+            sipRes = new Point(*sipCpp);
+        } catch(...) {
+            PyErr_SetString(PyExc_IndexError, "Index out of range");
+            sipIsErr = 1;
+        }
+    %End
+
     int __len__() const;
     %MethodCode
         sipRes = 2;

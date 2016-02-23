@@ -9,6 +9,7 @@
 
 class QGraphicsWidget2: public QGraphicsWidget
 {
+    Q_OBJECT
 public:
     QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
     virtual ~QGraphicsWidget2() {}

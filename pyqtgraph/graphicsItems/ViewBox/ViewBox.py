@@ -67,7 +67,7 @@ class ChildGroup(ItemGroup):
         return ret
 
 
-class ViewBox(ViewBoxBase, GraphicsItem):
+class ViewBox(GraphicsItem, ViewBoxBase):
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
@@ -90,9 +90,9 @@ class ViewBox(ViewBoxBase, GraphicsItem):
     sigRangeChangedManually = QtCore.Signal(object)
     sigRangeChanged = QtCore.Signal(object, object)
     #sigActionPositionChanged = QtCore.Signal(object)
-    sigStateChanged = QtCore.Signal(object)
-    sigTransformChanged = QtCore.Signal(object)
-    sigResized = QtCore.Signal(object)
+    #sigStateChanged = QtCore.Signal(object)
+    #sigTransformChanged = QtCore.Signal(object)
+    #sigResized = QtCore.Signal(object)
 
     ## mouse modes
     #PanMode = 3
@@ -147,7 +147,7 @@ class ViewBox(ViewBoxBase, GraphicsItem):
             ## separating targetRange and viewRange allows the view to be resized
             ## while keeping all previously viewed contents visible
             'targetRange': [[0,1], [0,1]],   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
-            'viewRange': [[0,1], [0,1]],     ## actual range viewed
+            'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
 
             'yInverted': invertY,
             'xInverted': invertX,

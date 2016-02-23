@@ -9,7 +9,7 @@
 
 class QGraphicsObject2: public QGraphicsObject
 {
-
+    Q_OBJECT
 public:
     QGraphicsObject2(QGraphicsItem* parent=nullptr) : QGraphicsObject(parent)
     {}
