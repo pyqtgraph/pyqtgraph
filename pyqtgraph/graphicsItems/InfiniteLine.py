@@ -318,6 +318,7 @@ class InfLineLabel(TextItem):
         self.orthoPos = position  # text will always be placed on the line at a position relative to view bounds
         self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
+        self._endpoints = (None, None)
         TextItem.__init__(self, **kwds)
         self.setParentItem(line)
         self.valueChanged()
@@ -328,34 +329,42 @@ class InfLineLabel(TextItem):
         value = self.line.value()
         self.setText(self.format.format(value=value))
         self.updatePosition()
+
+    def getEndpoints(self):
+        # calculate points where line intersects view box
+        # (in line coordinates)
+        if self._endpoints[0] is None:
+            view = self.getViewBox()
+            if not self.isVisible() or not isinstance(view, ViewBox):
+                # not in a viewbox, skip update
+                return (None, None)
+            
+            lr = self.line.boundingRect()
+            pt1 = Point(lr.left(), 0)
+            pt2 = Point(lr.right(), 0)
+            if self.line.angle % 90 != 0:
+                # more expensive to find text position for oblique lines.
+                p = QtGui.QPainterPath()
+                p.moveTo(pt1)
+                p.lineTo(pt2)
+                p = self.line.itemTransform(view)[0].map(p)
+                vr = QtGui.QPainterPath()
+                vr.addRect(view.boundingRect())
+                paths = vr.intersected(p).toSubpathPolygons(QtGui.QTransform())
+                if len(paths) > 0:
+                    l = list(paths[0])
+                    pt1 = self.line.mapFromItem(view, l[0])
+                    pt2 = self.line.mapFromItem(view, l[1])
+            self._endpoints = (pt1, pt2)
+        return self._endpoints
     
     def updatePosition(self):
         # update text position to relative view location along line
-        
-        view = self.getViewBox()
-        if not self.isVisible() or not isinstance(view, ViewBox):
-            # not in a viewbox, skip update
+        self._endpoints = (None, None)
+        pt1, pt2 = self.getEndpoints()
+        if pt1 is None:
             return
-        
-        lr = self.line.boundingRect()
-        pt1 = Point(lr.left(), 0)
-        pt2 = Point(lr.right(), 0)
-        if self.line.angle % 90 != 0:
-            # more expensive to find text position for oblique lines.
-            p = QtGui.QPainterPath()
-            p.moveTo(pt1)
-            p.lineTo(pt2)
-            p = self.line.itemTransform(view)[0].map(p)
-            vr = QtGui.QPainterPath()
-            vr.addRect(view.boundingRect())
-            paths = vr.intersected(p).toSubpathPolygons()
-            if len(paths) > 0:
-                l = list(paths[0])
-                pt1 = self.line.mapFromItem(view, l[0])
-                pt2 = self.line.mapFromItem(view, l[1])
-            
         pt = pt2 * self.orthoPos + pt1 * (1-self.orthoPos)
-        
         self.setPos(pt)
         
     def setVisible(self, v):
@@ -422,8 +431,9 @@ class InfLineLabel(TextItem):
 
     def _posToRel(self, pos):
         # convert local position to relative position along line between view bounds
+        pt1, pt2 = self.getEndpoints()
+        if pt1 is None:
+            return 0
         view = self.getViewBox()
-        tr = view.childGroup.itemTransform(self.line)[0]
-        vr = tr.mapRect(view.viewRect())
         pos = self.mapToParent(pos)
-        return (pos.x() - vr.left()) / vr.width()
+        return (pos.x() - pt1.x()) / (pt2.x()-pt1.x())
