@@ -33,4 +33,5 @@ signals:
     void sigTransformChanged(ViewBoxBase* viewBox);
     void sigResized(ViewBoxBase* viewBox);
     void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
+    void sigRangeChangedManually(const QVector<bool>& mouseEnabled);
 };
