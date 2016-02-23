@@ -36,6 +36,8 @@ from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 from ..GraphicsItem import GraphicsItem
 
+from ...QtNativeUtils import PlotItemBase
+
 if QT_LIB == 'PyQt4':
     from .plotConfigTemplate_pyqt import *
 elif QT_LIB == 'PySide':
@@ -54,7 +56,7 @@ except:
 
 
 
-class PlotItem(GraphicsWidget):
+class PlotItem(GraphicsItem, PlotItemBase):
     
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
@@ -101,6 +103,8 @@ class PlotItem(GraphicsWidget):
     
     
     lastFileDir = None
+
+    _qtBaseClass = PlotItemBase
     
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
@@ -126,7 +130,8 @@ class PlotItem(GraphicsWidget):
         ==============  ==========================================================================================
         """
         
-        GraphicsWidget.__init__(self, parent)
+        PlotItemBase.__init__(self, parent)
+        GraphicsItem.__init__(self)
         
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         

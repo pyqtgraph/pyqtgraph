@@ -31,3 +31,4 @@ init_package();
 
 %Include QGraphicsScene2.sip
 %Include ViewBoxBase.sip
+%Include PlotItemBase.sip

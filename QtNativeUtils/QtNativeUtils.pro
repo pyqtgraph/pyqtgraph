@@ -24,7 +24,8 @@ SOURCES += src/QtNativeUtils.cpp \
     src/QGraphicsWidget2.cpp \
     src/QGraphicsScene2.cpp \
     src/ExtendedItem.cpp \
-    src/ViewBoxBase.cpp
+    src/ViewBoxBase.cpp \
+    src/PlotItemBase.cpp
 
 
 HEADERS += src/QtNativeUtils.h \
@@ -40,7 +41,8 @@ HEADERS += src/QtNativeUtils.h \
     src/internal/point_utils.h \
     src/ExtendedItem.h \
     src/Interfaces.h \
-    src/ViewBoxBase.h
+    src/ViewBoxBase.h \
+    src/PlotItemBase.h
 
 #NUMPY_INCLUDE = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE = /usr/lib/python2.7/dist-packages/numpy/core/include
@@ -62,6 +64,7 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/QGraphicsWidget2.sip \
     sip/Interfaces.sip \
     sip/QGraphicsScene2.sip \
-    sip/ViewBoxBase.sip
+    sip/ViewBoxBase.sip \
+    sip/PlotItemBase.sip
 
 
