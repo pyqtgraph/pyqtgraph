@@ -87,7 +87,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
-    sigRangeChangedManually = QtCore.Signal(object)
+    sigRangeChangedManually = QtCore.Signal(object, object)
     #sigRangeChanged = QtCore.Signal(object, object)
     #sigActionPositionChanged = QtCore.Signal(object)
     #sigStateChanged = QtCore.Signal(object)
@@ -1222,7 +1222,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+        s = self.state['mouseEnabled']
+        self.sigRangeChangedManually.emit(s[0], s[1])
         ev.accept()
 
 
@@ -1284,7 +1285,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 self._resetTarget()
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
-                self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+                s = self.state['mouseEnabled']
+                self.sigRangeChangedManually.emit(s[0], s[1])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
@@ -1304,7 +1306,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
-            self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+            s = self.state['mouseEnabled']
+            self.sigRangeChangedManually.emit(s[0], s[1])
 
     def keyPressEvent(self, ev):
         """
@@ -1351,7 +1354,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
     def showAxRect(self, ax):
         self.setRange(ax.normalized()) # be sure w, h are correct coordinates
-        self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+        s = self.state['mouseEnabled']
+        self.sigRangeChangedManually.emit(s[0], s[1])
 
     #def mouseRect(self):
         #vs = self.viewScale()
