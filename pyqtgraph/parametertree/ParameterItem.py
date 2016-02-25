@@ -83,6 +83,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         Expansion, visibility, and column widgets must all be configured AFTER 
         the item is added to a tree, not during __init__.
         """
+        if self.treeWidget() is None:
+            return
+
         self.setHidden(not self.param.opts.get('visible', True))
         self.setExpanded(self.param.opts.get('expanded', True))
         
