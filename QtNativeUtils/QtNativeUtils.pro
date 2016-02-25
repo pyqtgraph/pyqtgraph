@@ -42,15 +42,16 @@ HEADERS += src/QtNativeUtils.h \
     src/ExtendedItem.h \
     src/Interfaces.h \
     src/ViewBoxBase.h \
-    src/PlotItemBase.h
+    src/PlotItemBase.h \
+    src/ItemDefines.h
 
-#NUMPY_INCLUDE = /usr/local/lib/python2.7/dist-packages/numpy/core/include
-NUMPY_INCLUDE = /usr/lib/python2.7/dist-packages/numpy/core/include
+NUMPY_INCLUDE_1 = /usr/local/lib/python2.7/dist-packages/numpy/core/include
+NUMPY_INCLUDE_2 = /usr/lib/python2.7/dist-packages/numpy/core/include
 PYTHON_INCLUDE = /usr/include/python2.7
 
 LIBS += python2.7
 
-INCLUDEPATH += $$NUMPY_INCLUDE
+INCLUDEPATH += $$NUMPY_INCLUDE_1 $$NUMPY_INCLUDE_2
 INCLUDEPATH += $$PYTHON_INCLUDE
 
 OTHER_FILES += sip/Exceptions.sip \

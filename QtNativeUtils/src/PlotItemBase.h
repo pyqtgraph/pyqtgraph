@@ -6,6 +6,7 @@
 #include "Point.h"
 #include "QGraphicsWidget2.h"
 #include "ViewBoxBase.h"
+#include "ItemDefines.h"
 
 class PlotItemBase: public QGraphicsWidget2
 {
@@ -14,7 +15,7 @@ public:
     PlotItemBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
     virtual ~PlotItemBase() {}
 
-    enum { Type = QGraphicsItem::UserType + 4 };
+    enum { Type = CustomItemTypes::TypePlotItem };
 
     virtual int type() const
     {

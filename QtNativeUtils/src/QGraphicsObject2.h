@@ -6,6 +6,7 @@
 
 #include "Point.h"
 #include "Interfaces.h"
+#include "ItemDefines.h"
 
 class QGraphicsObject2: public QGraphicsObject
 {
@@ -15,7 +16,7 @@ public:
     {}
     virtual ~QGraphicsObject2() {}
 
-    enum { Type = QGraphicsItem::UserType + 1 };
+    enum { Type = CustomItemTypes::TypeGraphicsObject };
 
 #define ENABLE_EXTENDEDTEM_CODE     1
 #define BASE_GRAPHICSITEM_CLASS     QGraphicsObject

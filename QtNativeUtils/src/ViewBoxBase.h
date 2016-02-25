@@ -5,6 +5,7 @@
 
 #include "QGraphicsWidget2.h"
 #include "Point.h"
+#include "ItemDefines.h"
 
 class ViewBoxBase: public QGraphicsWidget2
 {
@@ -27,7 +28,7 @@ public:
     ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
     virtual ~ViewBoxBase() {}
 
-    enum { Type = QGraphicsItem::UserType + 3 };
+    enum { Type = CustomItemTypes::TypeViewBox };
 
     virtual int type() const
     {

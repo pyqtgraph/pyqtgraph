@@ -6,6 +6,7 @@
 
 #include "Point.h"
 #include "Interfaces.h"
+#include "ItemDefines.h"
 
 class QGraphicsWidget2: public QGraphicsWidget
 {
@@ -14,7 +15,7 @@ public:
     QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
     virtual ~QGraphicsWidget2() {}
 
-    enum { Type = QGraphicsItem::UserType + 2 };
+    enum { Type = CustomItemTypes::TypeGraphicsWidget };
 
 #define ENABLE_EXTENDEDTEM_CODE     1
 #define BASE_GRAPHICSITEM_CLASS     QGraphicsWidget
