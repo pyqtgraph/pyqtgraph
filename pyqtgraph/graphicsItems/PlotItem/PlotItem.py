@@ -98,8 +98,8 @@ class PlotItem(GraphicsItem, PlotItemBase):
     """
     
     #sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
-    sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
-    sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
+    #sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
+    #sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
     
     
     lastFileDir = None

@@ -29,9 +29,11 @@ public:
 
 
 signals:
+    void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);
+    void sigXRangeChanged(ViewBoxBase* viewBox, const Point& range);
+    void sigRangeChangedManually(const bool mouseLeft, const bool mouseRight);
+    void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
     void sigStateChanged(ViewBoxBase* viewBox);
     void sigTransformChanged(ViewBoxBase* viewBox);
     void sigResized(ViewBoxBase* viewBox);
-    void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
-    void sigRangeChangedManually(const bool mouseLeft, const bool mouseRight);
 };
