@@ -7,8 +7,8 @@ except ImportError:
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
 from ..Qt import USE_PYSIDE
-from ..util import cprint  # color printing for debugging
-
+from ..util import (cprint,  # color printing for debugging
+                    six)
 
 __all__ = ['Process', 'QtProcess', 'ForkedProcess', 'ClosedError', 'NoResultError']
 
