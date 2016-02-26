@@ -30,6 +30,9 @@ public:
     bool matrixNeedsUpdate() const;
     void setMatrixNeedsUpdate(const bool on);
 
+    bool autoRangeNeedsUpdate() const;
+    void setAutoRangeNeedsUpdate(const bool on);
+
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);
     void sigXRangeChanged(ViewBoxBase* viewBox, const Point& range);

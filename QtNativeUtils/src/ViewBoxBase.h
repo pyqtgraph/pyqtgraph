@@ -40,6 +40,9 @@ public:
     bool matrixNeedsUpdate() const { return mMatrixNeedsUpdate; }
     void setMatrixNeedsUpdate(const bool on) { mMatrixNeedsUpdate = on; }
 
+    bool autoRangeNeedsUpdate() const { return mAutoRangeNeedsUpdate; }
+    void setAutoRangeNeedsUpdate(const bool on) { mAutoRangeNeedsUpdate = on; }
+
 
 signals:
 
@@ -54,6 +57,7 @@ signals:
 protected:
 
     bool mMatrixNeedsUpdate;
+    bool mAutoRangeNeedsUpdate;
 
 };
 

@@ -138,7 +138,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         #self.gView = view
         #self.showGrid = showGrid
         #self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
-        self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
+        #self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
 
         self._lastScene = None  ## stores reference to the last known scene this view was a part of.
 
@@ -301,7 +301,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
-        if self._autoRangeNeedsUpdate: # and autoRangeEnabled:
+        if self.autoRangeNeedsUpdate(): # and autoRangeEnabled:
             self.updateAutoRange()
         if self.matrixNeedsUpdate():
             self.updateMatrix()
@@ -582,10 +582,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
         if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
-            self._autoRangeNeedsUpdate = True
+            self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
         elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
-            self._autoRangeNeedsUpdate = True
+            self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()
 
         ## Update view matrix only if requested
@@ -799,7 +799,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         if axis is None:
             axis = ViewBox.XYAxes
 
-        needAutoRangeUpdate = False
+        #needAutoRangeUpdate = False
 
         if axis == ViewBox.XYAxes or axis == 'xy':
             axes = [0, 1]
@@ -814,11 +814,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             if self.state['autoRange'][ax] != enable:
                 # If we are disabling, do one last auto-range to make sure that
                 # previously scheduled auto-range changes are enacted
-                if enable is False and self._autoRangeNeedsUpdate:
+                if enable is False and self.autoRangeNeedsUpdate():
                     self.updateAutoRange()
 
                 self.state['autoRange'][ax] = enable
-                self._autoRangeNeedsUpdate |= (enable is not False)
+                self.setAutoRangeNeedsUpdate(self.autoRangeNeedsUpdate() or (enable is not False))
                 self.update()
 
 
@@ -920,7 +920,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
             self.setRange(**args)
         finally:
-            self._autoRangeNeedsUpdate = False
+            self.setAutoRangeNeedsUpdate(False)
             self._updatingRange = False
 
     def setXLink(self, view):
@@ -1070,7 +1070,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
         if (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False):
-            self._autoRangeNeedsUpdate = True
+            self.setAutoRangeNeedsUpdate(True)
             self.update()
         #self.updateAutoRange()
 
