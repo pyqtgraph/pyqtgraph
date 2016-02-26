@@ -37,6 +37,10 @@ public:
     }
 
 
+    bool matrixNeedsUpdate() const { return mMatrixNeedsUpdate; }
+    void setMatrixNeedsUpdate(const bool on) { mMatrixNeedsUpdate = on; }
+
+
 signals:
 
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);
@@ -46,6 +50,10 @@ signals:
     void sigStateChanged(ViewBoxBase* viewBox);
     void sigTransformChanged(ViewBoxBase* viewBox);
     void sigResized(ViewBoxBase* viewBox);
+
+protected:
+
+    bool mMatrixNeedsUpdate;
 
 };
 

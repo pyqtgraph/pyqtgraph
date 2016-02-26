@@ -27,6 +27,8 @@ public:
 
     virtual int type() const;
 
+    bool matrixNeedsUpdate() const;
+    void setMatrixNeedsUpdate(const bool on);
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

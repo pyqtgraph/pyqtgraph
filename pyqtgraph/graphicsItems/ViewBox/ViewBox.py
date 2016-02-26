@@ -137,7 +137,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.addedItems = []
         #self.gView = view
         #self.showGrid = showGrid
-        self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
+        #self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
         self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
 
         self._lastScene = None  ## stores reference to the last known scene this view was a part of.
@@ -303,7 +303,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         # don't check whether auto range is enabled here--only check when setting dirty flag.
         if self._autoRangeNeedsUpdate: # and autoRangeEnabled:
             self.updateAutoRange()
-        if self._matrixNeedsUpdate:
+        if self.matrixNeedsUpdate():
             self.updateMatrix()
 
     def getState(self, copy=True):
@@ -434,7 +434,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.linkedYChanged()
         self.updateAutoRange()
         self.updateViewRange()
-        self._matrixNeedsUpdate = True
+        self.setMatrixNeedsUpdate(True)
         self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
         self.sigResized.emit(self)
@@ -1082,7 +1082,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             return
 
         self.state['yInverted'] = b
-        self._matrixNeedsUpdate = True # updateViewRange won't detect this for us
+        self.setMatrixNeedsUpdate(True) # updateViewRange won't detect this for us
         self.updateViewRange()
         self.sigStateChanged.emit(self)
         self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
@@ -1142,7 +1142,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
         (This maps from inside the viewbox to outside)
         """
-        if self._matrixNeedsUpdate:
+        if self.matrixNeedsUpdate():
             self.updateMatrix()
         m = self.childGroup.transform()
         #m1 = QtGui.QTransform()
@@ -1606,7 +1606,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         if any(changed):
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             self.update()
-            self._matrixNeedsUpdate = True
+            self.setMatrixNeedsUpdate(True)
 
             # Inform linked views that the range has changed
             for ax in [0, 1]:
@@ -1642,7 +1642,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.childGroup.setTransform(m)
 
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
-        self._matrixNeedsUpdate = False
+        self.setMatrixNeedsUpdate(False)
 
     def paint(self, p, opt, widget):
         self.checkSceneChange()
