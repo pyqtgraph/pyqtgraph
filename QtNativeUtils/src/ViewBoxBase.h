@@ -25,7 +25,8 @@ public:
         XYAxes = 2
     };
 
-    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
+    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0,
+                const bool invertX=false, const bool invertY=false);
     virtual ~ViewBoxBase() {}
 
     enum { Type = CustomItemTypes::TypeViewBox };
@@ -36,12 +37,20 @@ public:
         return Type;
     }
 
+    virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
+
 
     bool matrixNeedsUpdate() const { return mMatrixNeedsUpdate; }
     void setMatrixNeedsUpdate(const bool on) { mMatrixNeedsUpdate = on; }
 
     bool autoRangeNeedsUpdate() const { return mAutoRangeNeedsUpdate; }
     void setAutoRangeNeedsUpdate(const bool on) { mAutoRangeNeedsUpdate = on; }
+
+    void invertY(const bool b=true);
+    bool yInverted() const { return mYInverted; }
+
+    void invertX(const bool b=true);
+    bool xInverted() const { return mXInverted; }
 
 
 signals:
@@ -58,6 +67,9 @@ protected:
 
     bool mMatrixNeedsUpdate;
     bool mAutoRangeNeedsUpdate;
+
+    bool mXInverted;
+    bool mYInverted;
 
 };
 

@@ -135,8 +135,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.name = None
         self.linksBlocked = False
         self.addedItems = []
-        #self.gView = view
-        #self.showGrid = showGrid
+
         #self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
         #self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
 
@@ -180,8 +179,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
 
-        self.setFlag(self.ItemClipsChildrenToShape)
-        self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
+        #self.setFlag(self.ItemClipsChildrenToShape)
+        #self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
 
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
@@ -215,8 +214,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.axHistory = [] # maintain a history of zoom locations
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
-        self.setZValue(-100)
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        #self.setZValue(-100)
+        #self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         self.setAspectLocked(lockAspect)
 
