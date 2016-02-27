@@ -13,6 +13,7 @@ from ... import getConfigOption
 from ...Qt import isQObjectAlive
 from ...QtNativeUtils import ViewBoxBase
 from ..GraphicsItem import GraphicsItem
+from PyQt4.Qt import Qt
 
 __all__ = ['ViewBox']
 
@@ -130,14 +131,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         ==============  =============================================================
         """
 
-        ViewBoxBase.__init__(self, parent)
+        ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, invertX=invertX, invertY=invertY)
         GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
         self.addedItems = []
-
-        #self._matrixNeedsUpdate = True  ## indicates that range has changed, but matrix update was deferred
-        #self._autoRangeNeedsUpdate = True ## indicates auto-range needs to be recomputed.
 
         self._lastScene = None  ## stores reference to the last known scene this view was a part of.
 
@@ -146,10 +144,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             ## separating targetRange and viewRange allows the view to be resized
             ## while keeping all previously viewed contents visible
             'targetRange': [Point(0,1), Point(0,1)],   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
-            'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
+            #'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
 
-            'yInverted': invertY,
-            'xInverted': invertX,
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled,
                                           ## otherwise float gives the fraction of data that is visible
@@ -174,13 +170,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 }
 
         }
+
         self._updatingRange = False  ## Used to break recursive loops. See updateAutoRange.
         self._itemBoundsCache = weakref.WeakKeyDictionary()
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
-
-        #self.setFlag(self.ItemClipsChildrenToShape)
-        #self.setFlag(self.ItemIsFocusable, True)  ## so we can receive key presses
 
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
@@ -213,9 +207,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         self.axHistory = [] # maintain a history of zoom locations
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
-
-        #self.setZValue(-100)
-        #self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         self.setAspectLocked(lockAspect)
 
@@ -262,21 +253,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     def implements(self, interface):
         return interface == 'ViewBox'
 
-    # removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
-    #def itemChange(self, change, value):
-        ## Note: Calling QWidget.itemChange causes segv in python 3 + PyQt
-        ##ret = QtGui.QGraphicsItem.itemChange(self, change, value)
-        #ret = GraphicsWidget.itemChange(self, change, value)
-        #if change == self.ItemSceneChange:
-            #scene = self.scene()
-            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
-                #scene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        #elif change == self.ItemSceneHasChanged:
-            #scene = self.scene()
-            #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
-                #scene.sigPrepareForPaint.connect(self.prepareForPaint)
-        #return ret
-
     def checkSceneChange(self):
         # ViewBox needs to receive sigPrepareForPaint from its scene before
         # being painted. However, we have no way of being informed when the
@@ -318,6 +294,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             else:
                 views.append(v.name)
         state['linkedViews'] = views
+        state['xInverted'] = self.xInverted()
+        state['yInverted'] = self.yInverted()
+        state['viewRange'] = self.viewRange()
         if copy:
             return deepcopy(state)
         else:
@@ -332,7 +311,15 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         del state['linkedViews']
 
         self.state.update(state)
-        #self.updateMatrix()
+        if 'xInverted' in state:
+            self.invertX(state['xInverted'])
+        if 'yInverted' in state:
+            self.invertY(state['yInverted'])
+
+        if 'viewRange' in state:
+            viewRange = state['viewRange']
+            self.setViewRange(viewRange[0], viewRange[1])
+
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
@@ -438,18 +425,15 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.background.setRect(self.rect())
         self.sigResized.emit(self)
 
-    def viewRange(self):
-        """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
-        return [x[:] for x in self.state['viewRange']]  ## return copy
-
     def viewRect(self):
         """Return a QRectF bounding the region visible within the ViewBox"""
         try:
-            vr0 = self.state['viewRange'][0]
-            vr1 = self.state['viewRange'][1]
+            viewRange = self.viewRange()
+            vr0 = viewRange[0]
+            vr1 = viewRange[1]
             return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
         except:
-            print("make qrectf failed:", self.state['viewRange'])
+            print("make qrectf failed:", self.viewRange())
             raise
 
     def targetRange(self):
@@ -474,7 +458,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
         if self.state['aspectLocked'] is False: # (interferes with aspect locking)
-            self.state['targetRange'] = [self.state['viewRange'][0][:], self.state['viewRange'][1][:]]
+            viewRange = self.viewRange()
+            self.state['targetRange'] = [viewRange[0][:], viewRange[1][:]]
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
@@ -526,7 +511,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             # If we requested 0 range, try to preserve previous scale.
             # Otherwise just pick an arbitrary scale.
             if mn == mx:
-                dy = self.state['viewRange'][ax][1] - self.state['viewRange'][ax][0]
+                dy = self.viewRange()[ax]
+                dy = dy[1] - dy[0]
                 if dy == 0:
                     dy = 1
                 mn -= dy*0.5
@@ -1077,33 +1063,27 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
         """
-        if self.state['yInverted'] == b:
+        if self.yInverted() == b:
             return
 
-        self.state['yInverted'] = b
+        ViewBoxBase.invertY(self, b)
         self.setMatrixNeedsUpdate(True) # updateViewRange won't detect this for us
         self.updateViewRange()
         self.sigStateChanged.emit(self)
-        self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
-
-    def yInverted(self):
-        return self.state['yInverted']
+        self.sigYRangeChanged.emit(self, tuple(self.viewRange()[1]))
 
     def invertX(self, b=True):
         """
         By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
         """
-        if self.state['xInverted'] == b:
+        if self.xInverted() == b:
             return
 
-        self.state['xInverted'] = b
-        #self.updateMatrix(changed=(False, True))
+        ViewBoxBase.invertX(self, b)
+        self.setMatrixNeedsUpdate(True)
         self.updateViewRange()
         self.sigStateChanged.emit(self)
-        self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
-
-    def xInverted(self):
-        return self.state['xInverted']
+        self.sigXRangeChanged.emit(self, tuple(self.viewRange()[0]))
 
     def setAspectLocked(self, lock=True, ratio=1):
         """
@@ -1129,7 +1109,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 return
             self.state['aspectLocked'] = ratio
             if ratio != currentRatio:  ## If this would change the current range, do that now
-                #self.setRange(0, self.state['viewRange'][0][0], self.state['viewRange'][0][1])
                 self.updateViewRange()
 
         self.updateAutoRange()
@@ -1355,14 +1334,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.setRange(ax.normalized()) # be sure w, h are correct coordinates
         s = self.state['mouseEnabled']
         self.sigRangeChangedManually.emit(s[0], s[1])
-
-    #def mouseRect(self):
-        #vs = self.viewScale()
-        #vr = self.state['viewRange']
-        ## Convert positions from screen (view) pixel coordinates to axis coordinates
-        #ax = QtCore.QRectF(self.pressPos[0]/vs[0]+vr[0][0], -(self.pressPos[1]/vs[1]-vr[1][1]),
-            #(self.mousePos[0]-self.pressPos[0])/vs[0], -(self.mousePos[1]-self.pressPos[1])/vs[1])
-        #return(ax)
 
     def allChildren(self, item=None):
         """Return a list of all children and grandchildren of this ViewBox"""
@@ -1593,17 +1564,18 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
             #print "after applying edge limits:", viewRange[axis]
 
-        changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
-        self.state['viewRange'] = viewRange
+        oldViewRange = self.viewRange()
+        changed = [(viewRange[i][0] != oldViewRange[i][0]) or (viewRange[i][1] != oldViewRange[i][1]) for i in (0,1)]
+        self.setViewRange(viewRange[0], viewRange[1])
 
         # emit range change signals
         if changed[0]:
-            self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+            self.sigXRangeChanged.emit(self, tuple(viewRange[0]))
         if changed[1]:
-            self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
+            self.sigYRangeChanged.emit(self, tuple(viewRange[1]))
 
         if any(changed):
-            self.sigRangeChanged.emit(self, self.state['viewRange'])
+            self.sigRangeChanged.emit(self, viewRange)
             self.update()
             self.setMatrixNeedsUpdate(True)
 
@@ -1623,9 +1595,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         if vr.height() == 0 or vr.width() == 0:
             return
         scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
-        if not self.state['yInverted']:
+        if not self.yInverted():
             scale = scale * Point(1, -1)
-        if self.state['xInverted']:
+        if self.xInverted():
             scale = scale * Point(-1, 1)
         m = QtGui.QTransform()
 

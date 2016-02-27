@@ -22,7 +22,8 @@ public:
         XYAxes = 2
     };
 
-    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
+    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0,
+                const bool invertX=false, const bool invertY=false);
     virtual ~ViewBoxBase();
 
     virtual int type() const;
@@ -32,6 +33,17 @@ public:
 
     bool autoRangeNeedsUpdate() const;
     void setAutoRangeNeedsUpdate(const bool on);
+
+    void invertY(const bool b=true);
+    bool yInverted() const;
+
+    void invertX(const bool b=true);
+    bool xInverted() const;
+
+protected:
+
+    void setViewRange(const Point& x, const Point& y);
+    const QList<Point>& viewRange();
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

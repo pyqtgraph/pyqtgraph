@@ -14,4 +14,13 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
 
     setZValue(-100);
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+
+    mViewRange.clear();
+    mViewRange << Point(0.0, 1.0) << Point(0.0, 1.0);
+}
+
+void ViewBoxBase::setViewRange(const Point& x, const Point& y)
+{
+    mViewRange[0] = x;
+    mViewRange[1] = y;
 }

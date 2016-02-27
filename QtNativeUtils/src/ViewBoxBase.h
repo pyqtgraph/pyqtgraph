@@ -46,11 +46,16 @@ public:
     bool autoRangeNeedsUpdate() const { return mAutoRangeNeedsUpdate; }
     void setAutoRangeNeedsUpdate(const bool on) { mAutoRangeNeedsUpdate = on; }
 
-    void invertY(const bool b=true);
+    void invertY(const bool b=true) { mYInverted = b; }
     bool yInverted() const { return mYInverted; }
 
-    void invertX(const bool b=true);
+    void invertX(const bool b=true) { mXInverted = b; }
     bool xInverted() const { return mXInverted; }
+
+protected:
+
+    void setViewRange(const Point& x, const Point& y);
+    const QList<Point>& viewRange() const { return mViewRange; }
 
 
 signals:
@@ -71,6 +76,7 @@ protected:
     bool mXInverted;
     bool mYInverted;
 
+    QList<Point> mViewRange;
 };
 
 #endif // VIEWBOXBASE_H
