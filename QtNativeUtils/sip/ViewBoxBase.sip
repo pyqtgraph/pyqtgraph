@@ -1,3 +1,5 @@
+%Import QtCore/QtCoremod.sip
+%Import QtGui/QtGuimod.sip
 
 
 class ViewBoxBase: public QGraphicsWidget2
@@ -36,11 +38,23 @@ public:
     bool autoRangeNeedsUpdate() const;
     void setAutoRangeNeedsUpdate(const bool on);
 
+    /*!
+     * \brief By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
+     * \param b
+     */
     void invertY(const bool b=true);
     bool yInverted() const;
 
+    /*!
+     * \brief By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
+     * \param b
+     */
     void invertX(const bool b=true);
     bool xInverted() const;
+
+    void setBackgroundColor(const QColor& color);
+    QColor backgroundColor() const;
+    void updateBackground();
 
 protected:
 

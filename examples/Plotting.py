@@ -99,6 +99,10 @@ lr.sigRegionChanged.connect(updatePlot)
 p9.sigXRangeChanged.connect(updateRegion)
 updatePlot()
 
+#p7.vb.setBackgroundColor(QtGui.QColor(255, 0, 0))
+c = QtGui.QColor(255, 0, 255)
+p7.vb.setBackgroundColor(c)
+
 
 c = 0
 def sigPrepareForPaintTest():

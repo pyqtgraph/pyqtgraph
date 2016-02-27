@@ -2,6 +2,7 @@
 #define VIEWBOXBASE_H
 
 #include <QList>
+#include <QGraphicsRectItem>
 
 #include "QGraphicsWidget2.h"
 #include "Point.h"
@@ -52,6 +53,10 @@ public:
     void invertX(const bool b=true);
     bool xInverted() const { return mXInverted; }
 
+    void setBackgroundColor(const QColor& color);
+    QColor backgroundColor() const;
+    void updateBackground();
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
@@ -77,6 +82,8 @@ protected:
     bool mYInverted;
 
     QList<Point> mViewRange;    // actual range viewed
+
+    QGraphicsRectItem* mBackground;
 };
 
 #endif // VIEWBOXBASE_H

@@ -17,6 +17,13 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
 
     mViewRange.clear();
     mViewRange << Point(0.0, 1.0) << Point(0.0, 1.0);
+
+    mBackground = new QGraphicsRectItem(rect());
+    mBackground->setParentItem(this);
+    mBackground->setZValue(-1e6);
+    mBackground->setPen(QPen(Qt::NoPen));
+    mBackground->setBrush(QBrush(QColor(Qt::transparent)));
+    updateBackground();
 }
 
 void ViewBoxBase::invertY(const bool b)
@@ -43,6 +50,28 @@ void ViewBoxBase::invertX(const bool b)
 
     emit sigStateChanged(this);
     emit sigYRangeChanged(this, mViewRange[0]);
+}
+
+void ViewBoxBase::setBackgroundColor(const QColor &color)
+{
+    mBackground->setBrush(QBrush(color));
+    updateBackground();
+}
+
+QColor ViewBoxBase::backgroundColor() const
+{
+    return mBackground->brush().color();
+}
+
+void ViewBoxBase::updateBackground()
+{
+    if(mBackground->brush().color().alpha()==0)
+        mBackground->hide();
+    else
+    {
+        mBackground->show();
+        mBackground->setRect(rect());
+    }
 }
 
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)

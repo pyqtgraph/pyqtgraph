@@ -159,8 +159,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
 
-            'background': None,
-
             # Limits
             'limits': {
                 'xLimits': [None, None],   # Maximum and minimum visible X values
@@ -182,11 +180,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.childGroup = ChildGroup(self)
         self.childGroup.itemsChangedListeners.append(self)
 
-        self.background = QtGui.QGraphicsRectItem(self.rect())
-        self.background.setParentItem(self)
-        self.background.setZValue(-1e6)
-        self.background.setPen(fn.mkPen(None))
-        self.updateBackground()
+        #self.background = QtGui.QGraphicsRectItem(self.rect())
+        #self.background.setParentItem(self)
+        #self.background.setZValue(-1e6)
+        #self.background.setPen(fn.mkPen(None))
+        #self.updateBackground()
 
         #self.useLeftButtonPan = pyqtgraph.getConfigOption('leftButtonPan') # normally use left button to pan
         # this also enables capture of keyPressEvents.
@@ -270,13 +268,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.prepareForPaint()
         self._lastScene = scene
 
-
-
-
     def prepareForPaint(self):
-        #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
-        if self.autoRangeNeedsUpdate(): # and autoRangeEnabled:
+        if self.autoRangeNeedsUpdate():  # and autoRangeEnabled:
             self.updateAutoRange()
         if self.matrixNeedsUpdate():
             self.updateMatrix()
@@ -297,6 +291,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         state['xInverted'] = self.xInverted()
         state['yInverted'] = self.yInverted()
         state['viewRange'] = self.viewRange()
+        state['background'] = self.backgroundColor()
         if copy:
             return deepcopy(state)
         else:
@@ -320,20 +315,13 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             viewRange = state['viewRange']
             self.setViewRange(viewRange[0], viewRange[1])
 
+        if 'background' in state:
+            b = state['background']
+            color = b if b is not None else QtGui.QColor(0,0,0,0)
+            self.setBackgroundColor(color)
+
         self.updateViewRange()
         self.sigStateChanged.emit(self)
-
-    def setBackgroundColor(self, color):
-        """
-        Set the background color of the ViewBox.
-
-        If color is None, then no background will be drawn.
-
-        Added in version 0.9.9
-        """
-        self.background.setVisible(color is not None)
-        self.state['background'] = color
-        self.updateBackground()
 
     def setMouseMode(self, mode):
         """
@@ -345,12 +333,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
         self.sigStateChanged.emit(self)
-
-    #def toggleLeftAction(self, act):  ## for backward compatibility
-        #if act.text() is 'pan':
-            #self.setLeftButtonAction('pan')
-        #elif act.text() is 'zoom':
-            #self.setLeftButtonAction('rect')
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         if mode.lower() == 'rect':
@@ -422,7 +404,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.updateViewRange()
         self.setMatrixNeedsUpdate(True)
         self.sigStateChanged.emit(self)
-        self.background.setRect(self.rect())
+        #self.background.setRect(self.rect())
+        self.updateBackground()
         self.sigResized.emit(self)
 
     def viewRect(self):
@@ -1059,34 +1042,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             self.update()
         #self.updateAutoRange()
 
-    '''
-    def invertY(self, b=True):
-        """
-        By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
-        """
-        if self.yInverted() == b:
-            return
-
-        ViewBoxBase.invertY(self, b)
-        self.setMatrixNeedsUpdate(True) # updateViewRange won't detect this for us
-        self.updateViewRange()
-        self.sigStateChanged.emit(self)
-        self.sigYRangeChanged.emit(self, tuple(self.viewRange()[1]))
-
-    def invertX(self, b=True):
-        """
-        By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
-        """
-        if self.xInverted() == b:
-            return
-
-        ViewBoxBase.invertX(self, b)
-        self.setMatrixNeedsUpdate(True)
-        self.updateViewRange()
-        self.sigStateChanged.emit(self)
-        self.sigXRangeChanged.emit(self, tuple(self.viewRange()[0]))
-    '''
-
     def setAspectLocked(self, lock=True, ratio=1):
         """
         If the aspect ratio is locked, view scaling must always preserve the aspect ratio.
@@ -1631,15 +1586,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         #path.addRect(self.targetRect())
         #tr = self.mapFromView(path)
         #p.drawPath(tr)
-
-    def updateBackground(self):
-        bg = self.state['background']
-        if bg is None:
-            self.background.hide()
-        else:
-            self.background.show()
-            self.background.setBrush(fn.mkBrush(bg))
-
 
     def updateViewLists(self):
         try:
