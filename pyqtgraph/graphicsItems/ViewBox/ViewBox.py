@@ -1059,6 +1059,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             self.update()
         #self.updateAutoRange()
 
+    '''
     def invertY(self, b=True):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
@@ -1084,6 +1085,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.updateViewRange()
         self.sigStateChanged.emit(self)
         self.sigXRangeChanged.emit(self, tuple(self.viewRange()[0]))
+    '''
 
     def setAspectLocked(self, lock=True, ratio=1):
         """

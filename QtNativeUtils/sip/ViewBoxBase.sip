@@ -28,6 +28,8 @@ public:
 
     virtual int type() const;
 
+    virtual void updateViewRange(const bool forceX=false, const bool forceY=false);
+
     bool matrixNeedsUpdate() const;
     void setMatrixNeedsUpdate(const bool on);
 
