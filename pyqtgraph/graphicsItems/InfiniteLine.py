@@ -8,7 +8,7 @@ import numpy as np
 import weakref
 
 
-__all__ = ['InfiniteLine']
+__all__ = ['InfiniteLine', 'InfLineLabel']
 
 
 class InfiniteLine(GraphicsObject):
@@ -310,7 +310,9 @@ class InfLineLabel(TextItem):
                     along the line.
     =============== ==================================================================
     
-    All extra keyword arguments are passed to TextItem.
+    All extra keyword arguments are passed to TextItem. A particularly useful
+    option here is to use `rotateAxis=(1, 0)`, which will cause the text to
+    be automatically rotated parallel to the line.
     """
     def __init__(self, line, text="", movable=False, position=0.5, **kwds):
         self.line = line

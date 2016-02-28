@@ -10,7 +10,7 @@ class TextItem(GraphicsObject):
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
     def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
-                 border=None, fill=None, angle=0, rotateAxis=(1, 0)):
+                 border=None, fill=None, angle=0, rotateAxis=None):
         """
         ==============  =================================================================================
         **Arguments:**
@@ -30,6 +30,15 @@ class TextItem(GraphicsObject):
                         Allows text to follow both the position and orientation of its parent while still
                         discarding any scale and shear factors.
         ==============  =================================================================================
+
+
+        The effects of the `rotateAxis` and `angle` arguments are added independently. So for example:
+
+        * rotateAxis=None, angle=0 -> normal horizontal text
+        * rotateAxis=None, angle=90 -> normal vertical text
+        * rotateAxis=(1, 0), angle=0 -> text aligned with x axis of its parent
+        * rotateAxis=(0, 1), angle=0 -> text aligned with y axis of its parent
+        * rotateAxis=(1, 0), angle=90 -> text orthogonal to x axis of its parent        
         """
                      
         self.anchor = Point(anchor)
