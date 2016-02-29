@@ -55,6 +55,10 @@ class InfiniteLine(GraphicsObject):
         name            Name of the item
         =============== ==================================================================
         """
+        self._boundingRect = None
+        self._line = None
+
+        self._name = name
 
         GraphicsObject.__init__(self)
 
@@ -67,10 +71,6 @@ class InfiniteLine(GraphicsObject):
         self.mouseHovering = False
         self.p = [0, 0]
         self.setAngle(angle)
-
-        if label is not None:
-            labelOpts = {} if labelOpts is None else labelOpts
-            self.label = InfLineLabel(self, text=label, **labelOpts)
 
         if pos is None:
             pos = Point(0,0)
@@ -85,10 +85,9 @@ class InfiniteLine(GraphicsObject):
             self.setHoverPen(hoverPen)
         self.currentPen = self.pen
         
-        self._boundingRect = None
-        self._line = None
-
-        self._name = name
+        if label is not None:
+            labelOpts = {} if labelOpts is None else labelOpts
+            self.label = InfLineLabel(self, text=label, **labelOpts)
 
     def setMovable(self, m):
         """Set whether the line is movable by the user."""
@@ -209,14 +208,17 @@ class InfiniteLine(GraphicsObject):
         if self._boundingRect is None:
             #br = UIGraphicsItem.boundingRect(self)
             br = self.viewRect()
+            if br is None:
+                return QtCore.QRectF()
+            
             ## add a 4-pixel radius around the line for mouse interaction.
-
             px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
             if px is None:
                 px = 0
             w = (max(4, self.pen.width()/2, self.hoverPen.width()/2)+1) * px
             br.setBottom(-w)
             br.setTop(w)
+            
             br = br.normalized()
             self._boundingRect = br
             self._line = QtCore.QLineF(br.right(), 0.0, br.left(), 0.0)
@@ -321,6 +323,7 @@ class InfLineLabel(TextItem):
         self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
         self._endpoints = (None, None)
+        self.anchors = [(0, 0), (1, 0)]
         TextItem.__init__(self, **kwds)
         self.setParentItem(line)
         self.valueChanged()
@@ -336,16 +339,16 @@ class InfLineLabel(TextItem):
         # calculate points where line intersects view box
         # (in line coordinates)
         if self._endpoints[0] is None:
-            view = self.getViewBox()
-            if not self.isVisible() or not isinstance(view, ViewBox):
-                # not in a viewbox, skip update
-                return (None, None)
-            
             lr = self.line.boundingRect()
             pt1 = Point(lr.left(), 0)
             pt2 = Point(lr.right(), 0)
+            
             if self.line.angle % 90 != 0:
                 # more expensive to find text position for oblique lines.
+                view = self.getViewBox()
+                if not self.isVisible() or not isinstance(view, ViewBox):
+                    # not in a viewbox, skip update
+                    return (None, None)
                 p = QtGui.QPainterPath()
                 p.moveTo(pt1)
                 p.lineTo(pt2)
