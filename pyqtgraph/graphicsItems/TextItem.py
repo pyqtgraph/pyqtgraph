@@ -60,7 +60,9 @@ class TextItem(GraphicsObject):
 
     def setText(self, text, color=(200,200,200)):
         """
-        Set the text and color of this item. 
+        Set the text of this item. 
+        
+        The color entry is deprecated and kept to avoid an API change.
         
         This method sets the plain text of the item; see also setHtml().
         """
