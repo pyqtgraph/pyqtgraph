@@ -58,6 +58,12 @@ public:
 
     const QList<Point>& viewRange() const;
     const QList<Point>& targetRange() const;
+    //SIP_PYOBJECT autoRangeEnabled() const [const QList<bool>& () const];
+    SIP_PYOBJECT autoRangeEnabled() const [const QList<bool>& ()];
+    %MethodCode
+        const QList<bool> enabled = sipCpp->autoRangeEnabled();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
 
     double aspectLocked() const;
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
@@ -66,6 +72,7 @@ protected:
 
     void setViewRange(const Point& x, const Point& y);
     void setTargetRange(const Point& x, const Point& y);
+    void setAutoRangeEnabled(const bool enableX, const bool enableY);
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

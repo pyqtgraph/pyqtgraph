@@ -59,6 +59,7 @@ public:
 
     const QList<Point>& viewRange() const { return mViewRange; }
     const QList<Point>& targetRange() const { return mTargetRange; }
+    const QList<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
 
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
@@ -66,8 +67,8 @@ public:
 protected:
 
     void setViewRange(const Point& x, const Point& y);
-
     void setTargetRange(const Point& x, const Point& y);
+    void setAutoRangeEnabled(const bool enableX, const bool enableY);
 
 
 signals:
@@ -91,6 +92,7 @@ protected:
     QList<Point> mViewRange;    // actual range viewed
     QList<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
     double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
+    QList<bool> mAutoRangeEnabled;
 
     QGraphicsRectItem* mBackground;
 };

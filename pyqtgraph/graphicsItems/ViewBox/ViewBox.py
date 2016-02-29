@@ -147,7 +147,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             #'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
 
             #'aspectLocked': 0.0, #False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
-            'autoRange': [True, True],  ## False if auto range is disabled,
+            #'autoRange': [True, True],  ## False if auto range is disabled,
                                           ## otherwise float gives the fraction of data that is visible
             'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
@@ -293,6 +293,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         state['viewRange'] = self.viewRange()
         state['background'] = self.backgroundColor()
         state['targetRange'] = self.targetRange()
+        aspectLocked = self.aspectLocked()
+        state['aspectLocked'] = aspectLocked if aspectLocked != 0.0 else False
+        state['autoRange'] = self.autoRangeEnabled()
         if copy:
             return deepcopy(state)
         else:
@@ -320,6 +323,15 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             b = state['background']
             color = b if b is not None else QtGui.QColor(0, 0, 0, 0)
             self.setBackgroundColor(color)
+
+        if 'aspectLocked' in state:
+            aspectLocked = state['aspectLocked']
+            ratio = aspectLocked if aspectLocked is not False else 1.0
+            self.setAspectLocked(locked=aspectLocked != 0.0, ratio=ratio)
+
+        if 'autoRange' in state:
+            are = state['autoRange']
+            self.setAutoRangeEnabled(are[0], are[1])
 
         self.updateViewRange()
         self.sigStateChanged.emit(self)
@@ -550,10 +562,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
-        if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
+        if changed[0] and self.state['autoVisibleOnly'][1] and (self.autoRangeEnabled()[0] is not False):
             self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
-        elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
+        elif changed[1] and self.state['autoVisibleOnly'][0] and (self.autoRangeEnabled()[1] is not False):
             self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()
 
@@ -700,7 +712,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         scale = Point(scale)
 
-        #if self.state['aspectLocked'] is not False:
         if self.aspectLocked() != 0.0:
             scale[0] = scale[1]
 
@@ -781,13 +792,15 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             raise Exception('axis argument must be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes.')
 
         for ax in axes:
-            if self.state['autoRange'][ax] != enable:
+            are = self.autoRangeEnabled()
+            if are[ax] != enable:
                 # If we are disabling, do one last auto-range to make sure that
                 # previously scheduled auto-range changes are enacted
                 if enable is False and self.autoRangeNeedsUpdate():
                     self.updateAutoRange()
 
-                self.state['autoRange'][ax] = enable
+                are[ax] = enable
+                self.setAutoRangeEnabled(are[0], are[1])
                 self.setAutoRangeNeedsUpdate(self.autoRangeNeedsUpdate() or (enable is not False))
                 self.update()
 
@@ -801,8 +814,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         """Disables auto-range. (See enableAutoRange)"""
         self.enableAutoRange(axis, enable=False)
 
-    def autoRangeEnabled(self):
-        return self.state['autoRange'][:]
+    #def autoRangeEnabled(self):
+    #    return self.state['autoRange'][:]
 
     def setAutoPan(self, x=None, y=None):
         if x is not None:
@@ -835,23 +848,23 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self._updatingRange = True
         try:
             targetRect = self.viewRange()
-            if not any(self.state['autoRange']):
+            if not any(self.autoRangeEnabled()):
                 return
 
-            fractionVisible = self.state['autoRange'][:]
-            for i in [0,1]:
+            fractionVisible = self.autoRangeEnabled()
+            for i in [0, 1]:
                 if type(fractionVisible[i]) is bool:
                     fractionVisible[i] = 1.0
 
             childRange = None
 
-            order = [0,1]
+            order = [0, 1]
             if self.state['autoVisibleOnly'][0] is True:
-                order = [1,0]
+                order = [1, 0]
 
             args = {}
             for ax in order:
-                if self.state['autoRange'][ax] is False:
+                if self.autoRangeEnabled()[ax] is False:
                     continue
                 if self.state['autoVisibleOnly'][ax]:
                     oRange = [None, None]
@@ -1039,7 +1052,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
     def itemBoundsChanged(self, item):
         self._itemBoundsCache.pop(item, None)
-        if (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False):
+        are = self.autoRangeEnabled()
+        if (are[0] is not False) or (are[1] is not False):
             self.setAutoRangeNeedsUpdate(True)
             self.update()
         #self.updateAutoRange()
@@ -1066,7 +1080,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 ratio = currentRatio
             if self.aspectLocked() == ratio: # nothing to change
                 return
-            #self.state['aspectLocked'] = ratio
             ViewBoxBase.setAspectLocked(self, True, ratio)
             if ratio != currentRatio:  ## If this would change the current range, do that now
                 self.updateViewRange()
@@ -1227,7 +1240,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 self.sigRangeChangedManually.emit(s[0], s[1])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
-            #if self.state['aspectLocked'] is not False:
             if self.aspectLocked() != 0.0:
                 mask[0] = 0
 

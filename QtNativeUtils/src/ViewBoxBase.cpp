@@ -21,6 +21,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mTargetRange.clear();
     mTargetRange << Point(0.0, 1.0) << Point(0.0, 1.0);
 
+    mAutoRangeEnabled.clear();
+    mAutoRangeEnabled << true << true;
+
     mBackground = new QGraphicsRectItem(rect());
     mBackground->setParentItem(this);
     mBackground->setZValue(-1e6);
@@ -92,4 +95,10 @@ void ViewBoxBase::setTargetRange(const Point &x, const Point &y)
 {
     mTargetRange[0] = x;
     mTargetRange[1] = y;
+}
+
+void ViewBoxBase::setAutoRangeEnabled(const bool enableX, const bool enableY)
+{
+    mAutoRangeEnabled[0] = enableX;
+    mAutoRangeEnabled[1] = enableY;
 }
