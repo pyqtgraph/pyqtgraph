@@ -310,20 +310,38 @@ class InfLineLabel(TextItem):
     movable         Bool; if True, then the label can be dragged along the line.
     position        Relative position (0.0-1.0) within the view to position the label
                     along the line.
+    anchors         List of (x,y) pairs giving the text anchor positions that should
+                    be used when the line is moved to one side of the view or the
+                    other. This allows text to switch to the opposite side of the line
+                    as it approaches the edge of the view.
     =============== ==================================================================
     
     All extra keyword arguments are passed to TextItem. A particularly useful
     option here is to use `rotateAxis=(1, 0)`, which will cause the text to
     be automatically rotated parallel to the line.
     """
-    def __init__(self, line, text="", movable=False, position=0.5, **kwds):
+    def __init__(self, line, text="", movable=False, position=0.5, anchors=None, **kwds):
         self.line = line
         self.movable = movable
         self.orthoPos = position  # text will always be placed on the line at a position relative to view bounds
         self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
         self._endpoints = (None, None)
-        self.anchors = [(0, 0), (1, 0)]
+        if anchors is None:
+            # automatically pick sensible anchors
+            rax = kwds.get('rotateAxis', None)
+            if rax is not None:
+                if tuple(rax) == (1,0):
+                    anchors = [(0.5, 0), (0.5, 1)]
+                else:
+                    anchors = [(0, 0.5), (1, 0.5)]
+            else:
+                if line.angle % 180 == 0:
+                    anchors = [(0.5, 0), (0.5, 1)]
+                else:
+                    anchors = [(0, 0.5), (1, 0.5)]
+            
+        self.anchors = anchors
         TextItem.__init__(self, **kwds)
         self.setParentItem(line)
         self.valueChanged()
@@ -371,6 +389,11 @@ class InfLineLabel(TextItem):
             return
         pt = pt2 * self.orthoPos + pt1 * (1-self.orthoPos)
         self.setPos(pt)
+        
+        # update anchor to keep text visible as it nears the view box edge
+        vr = self.line.viewRect()
+        if vr is not None:
+            self.setAnchor(self.anchors[0 if vr.center().y() < 0 else 1])
         
     def setVisible(self, v):
         TextItem.setVisible(self, v)

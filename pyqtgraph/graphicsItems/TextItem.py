@@ -56,7 +56,6 @@ class TextItem(GraphicsObject):
         self.fill = fn.mkBrush(fill)
         self.border = fn.mkPen(border)
         self.setAngle(angle)
-        #self.textItem.setFlag(self.ItemIgnoresTransformations)  ## This is required to keep the text unscaled inside the viewport
 
     def setText(self, text, color=(200,200,200)):
         """
@@ -67,14 +66,7 @@ class TextItem(GraphicsObject):
         color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
-        self.updateText()
-        #html = '<span style="color: #%s; text-align: center;">%s</span>' % (color, text)
-        #self.setHtml(html)
-        
-    def updateAnchor(self):
-        pass
-        #self.resetTransform()
-        #self.translate(0, 20)
+        self.updateTextPos()
         
     def setPlainText(self, *args):
         """
@@ -83,7 +75,7 @@ class TextItem(GraphicsObject):
         See QtGui.QGraphicsTextItem.setPlainText().
         """
         self.textItem.setPlainText(*args)
-        self.updateText()
+        self.updateTextPos()
         
     def setHtml(self, *args):
         """
@@ -92,7 +84,7 @@ class TextItem(GraphicsObject):
         See QtGui.QGraphicsTextItem.setHtml().
         """
         self.textItem.setHtml(*args)
-        self.updateText()
+        self.updateTextPos()
         
     def setTextWidth(self, *args):
         """
@@ -104,7 +96,7 @@ class TextItem(GraphicsObject):
         See QtGui.QGraphicsTextItem.setTextWidth().
         """
         self.textItem.setTextWidth(*args)
-        self.updateText()
+        self.updateTextPos()
         
     def setFont(self, *args):
         """
@@ -113,13 +105,17 @@ class TextItem(GraphicsObject):
         See QtGui.QGraphicsTextItem.setFont().
         """
         self.textItem.setFont(*args)
-        self.updateText()
+        self.updateTextPos()
         
     def setAngle(self, angle):
         self.angle = angle
         self.updateTransform()
         
-    def updateText(self):
+    def setAnchor(self, anchor):
+        self.anchor = Point(anchor)
+        self.updateTextPos()
+        
+    def updateTextPos(self):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
         tl = self.textItem.mapToParent(r.topLeft())
@@ -184,6 +180,6 @@ class TextItem(GraphicsObject):
         
         self._lastTransform = pt
         
-        self.updateText()
+        self.updateTextPos()
 
         
