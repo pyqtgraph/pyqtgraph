@@ -50,8 +50,8 @@ class TextItem(GraphicsObject):
         self._lastTransform = None
         self._bounds = QtCore.QRectF()
         if html is None:
-            self.color = color
-            self.setText(text, color)
+            self.setColor(color)
+            self.setText(text)
         else:
             self.setHtml(html)
         self.fill = fn.mkBrush(fill)
@@ -64,10 +64,6 @@ class TextItem(GraphicsObject):
         
         This method sets the plain text of the item; see also setHtml().
         """
-        if color != self.color:
-            color = self.color
-        color = fn.mkColor(color)
-        self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
         self.updateTextPos()
         
@@ -116,6 +112,16 @@ class TextItem(GraphicsObject):
         
     def setAnchor(self, anchor):
         self.anchor = Point(anchor)
+        self.updateTextPos()
+
+    def setColor(self, color):
+        """
+        Set the color for this text.
+        
+        See QtGui.QGraphicsItem.setDefaultTextColor().
+        """
+        self.color = fn.mkColor(color)
+        self.textItem.setDefaultTextColor(self.color)
         self.updateTextPos()
         
     def updateTextPos(self):
