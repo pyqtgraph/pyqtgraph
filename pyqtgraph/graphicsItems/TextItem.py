@@ -50,6 +50,7 @@ class TextItem(GraphicsObject):
         self._lastTransform = None
         self._bounds = QtCore.QRectF()
         if html is None:
+            self.color = color
             self.setText(text, color)
         else:
             self.setHtml(html)
@@ -63,6 +64,8 @@ class TextItem(GraphicsObject):
         
         This method sets the plain text of the item; see also setHtml().
         """
+        if color != self.color:
+            color = self.color
         color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(color)
         self.textItem.setPlainText(text)
