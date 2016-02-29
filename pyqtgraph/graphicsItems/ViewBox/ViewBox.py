@@ -146,7 +146,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             #'targetRange': [Point(0,1), Point(0,1)],   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
             #'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
 
-            'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
+            #'aspectLocked': 0.0, #False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled,
                                           ## otherwise float gives the fraction of data that is visible
             'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
@@ -439,7 +439,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        if self.state['aspectLocked'] is False:  # (interferes with aspect locking)
+        if self.aspectLocked() == 0.0:  # (interferes with aspect locking)
             viewRange = self.viewRange()
             self.setTargetRange(viewRange[0], viewRange[1])
 
@@ -700,7 +700,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         scale = Point(scale)
 
-        if self.state['aspectLocked'] is not False:
+        #if self.state['aspectLocked'] is not False:
+        if self.aspectLocked() != 0.0:
             scale[0] = scale[1]
 
         vr = self.targetRect()
@@ -1051,9 +1052,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         """
 
         if not lock:
-            if self.state['aspectLocked'] == False:
+            if self.aspectLocked() == 0.0:
                 return
-            self.state['aspectLocked'] = False
+            ViewBoxBase.setAspectLocked(self, False, 0.0)
         else:
             rect = self.rect()
             vr = self.viewRect()
@@ -1063,9 +1064,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 currentRatio = (rect.width()/float(rect.height())) / (vr.width()/vr.height())
             if ratio is None:
                 ratio = currentRatio
-            if self.state['aspectLocked'] == ratio: # nothing to change
+            if self.aspectLocked() == ratio: # nothing to change
                 return
-            self.state['aspectLocked'] = ratio
+            #self.state['aspectLocked'] = ratio
+            ViewBoxBase.setAspectLocked(self, True, ratio)
             if ratio != currentRatio:  ## If this would change the current range, do that now
                 self.updateViewRange()
 
@@ -1225,7 +1227,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 self.sigRangeChangedManually.emit(s[0], s[1])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
-            if self.state['aspectLocked'] is not False:
+            #if self.state['aspectLocked'] is not False:
+            if self.aspectLocked() != 0.0:
                 mask[0] = 0
 
             dif = ev.screenPos() - ev.lastScreenPos()
@@ -1435,10 +1438,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         #-------- Make correction for aspect ratio constraint ----------
 
         # aspect is (widget w/h) / (view range w/h)
-        aspect = self.state['aspectLocked']  # size ratio / view ratio
+        aspect = self.aspectLocked()  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
+        if aspect != 0.0 and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
 
             ## This is the view range aspect ratio we have requested
             targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1

@@ -60,6 +60,9 @@ public:
     const QList<Point>& viewRange() const { return mViewRange; }
     const QList<Point>& targetRange() const { return mTargetRange; }
 
+    double aspectLocked() const { return mAspectLocked; }
+    void setAspectLocked(const bool lock=true, const double ratio=1.0);
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
@@ -87,6 +90,7 @@ protected:
 
     QList<Point> mViewRange;    // actual range viewed
     QList<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
+    double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
 
     QGraphicsRectItem* mBackground;
 };

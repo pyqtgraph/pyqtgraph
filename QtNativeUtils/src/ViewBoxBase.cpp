@@ -77,6 +77,11 @@ void ViewBoxBase::updateBackground()
     }
 }
 
+void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
+{
+    mAspectLocked = lock ? ratio: 0.0;
+}
+
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = x;

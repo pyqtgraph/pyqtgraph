@@ -102,6 +102,7 @@ updatePlot()
 #p7.vb.setBackgroundColor(QtGui.QColor(255, 0, 0))
 c = QtGui.QColor(255, 0, 255)
 p7.vb.setBackgroundColor(c)
+p7.vb.setAspectLocked(lock=True, ratio=1./100.)
 
 
 c = 0

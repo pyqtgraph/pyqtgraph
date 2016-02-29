@@ -59,6 +59,9 @@ public:
     const QList<Point>& viewRange() const;
     const QList<Point>& targetRange() const;
 
+    double aspectLocked() const;
+    void setAspectLocked(const bool lock=true, const double ratio=1.0);
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
