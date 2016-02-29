@@ -9,7 +9,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import sys, re
+import sys, re, time
 
 from .python2_3 import asUnicode
 
@@ -45,6 +45,15 @@ if QT_LIB == PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
     try:
         from PySide import QtTest
+        if not hasattr(QtTest.QTest, 'qWait'):
+            @staticmethod
+            def qWait(msec):
+                start = time.time()
+                QtGui.QApplication.processEvents()
+                while time.time() < start + msec * 0.001:
+                    QtGui.QApplication.processEvents()
+            QtTest.QTest.qWait = qWait
+                
     except ImportError:
         pass
     import PySide
