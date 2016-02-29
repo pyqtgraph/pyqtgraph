@@ -104,7 +104,6 @@ class ViewBoxMenu(QtGui.QMenu):
         
     def updateState(self):
         ## Something about the viewbox has changed; update the menu GUI
-        
         state = self.view().getState(copy=False)
         if state['mouseMode'] == ViewBox.PanMode:
             self.mouseModes[0].setChecked(True)
@@ -112,7 +111,7 @@ class ViewBoxMenu(QtGui.QMenu):
             self.mouseModes[1].setChecked(True)
             
         for i in [0,1]:  # x, y
-            tr = state['targetRange'][i]
+            tr = self.view().targetRange()[i]
             self.ctrl[i].minText.setText("%0.5g" % tr[0])
             self.ctrl[i].maxText.setText("%0.5g" % tr[1])
             if state['autoRange'][i] is not False:

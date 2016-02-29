@@ -143,7 +143,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
             ## separating targetRange and viewRange allows the view to be resized
             ## while keeping all previously viewed contents visible
-            'targetRange': [Point(0,1), Point(0,1)],   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
+            #'targetRange': [Point(0,1), Point(0,1)],   ## child coord. range visible [[xmin, xmax], [ymin, ymax]]
             #'viewRange': [Point(0,1), Point(0,1)],     ## actual range viewed
 
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
@@ -292,6 +292,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         state['yInverted'] = self.yInverted()
         state['viewRange'] = self.viewRange()
         state['background'] = self.backgroundColor()
+        state['targetRange'] = self.targetRange()
         if copy:
             return deepcopy(state)
         else:
@@ -317,7 +318,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         if 'background' in state:
             b = state['background']
-            color = b if b is not None else QtGui.QColor(0,0,0,0)
+            color = b if b is not None else QtGui.QColor(0, 0, 0, 0)
             self.setBackgroundColor(color)
 
         self.updateViewRange()
@@ -419,9 +420,6 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             print("make qrectf failed:", self.viewRange())
             raise
 
-    def targetRange(self):
-        return [x[:] for x in self.state['targetRange']]  ## return copy
-
     def targetRect(self):
         """
         Return the region which has been requested to be visible.
@@ -429,20 +427,21 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         resizing and aspect ratio constraints can cause targetRect() and viewRect() to differ)
         """
         try:
-            tr0 = self.state['targetRange'][0]
-            tr1 = self.state['targetRange'][1]
+            tr = self.targetRange()
+            tr0 = tr[0]
+            tr1 = tr[1]
             return QtCore.QRectF(tr0[0], tr1[0], tr0[1]-tr0[0], tr1[1] - tr1[0])
         except:
-            print("make qrectf failed:", self.state['targetRange'])
+            print("make qrectf failed:", tr)
             raise
 
     def _resetTarget(self):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
         # behavior (because the user is unaware of targetRange).
-        if self.state['aspectLocked'] is False: # (interferes with aspect locking)
+        if self.state['aspectLocked'] is False:  # (interferes with aspect locking)
             viewRange = self.viewRange()
-            self.state['targetRange'] = [viewRange[0][:], viewRange[1][:]]
+            self.setTargetRange(viewRange[0], viewRange[1])
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
@@ -516,8 +515,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             mx += p
 
             # Set target range
-            if self.state['targetRange'][ax] != [mn, mx]:
-                self.state['targetRange'][ax] = [mn, mx]
+            curTargetRange = self.targetRange()
+            if curTargetRange[ax] != Point(mn, mx):
+                curTargetRange[ax] = Point(mn, mx)
+                self.setTargetRange(curTargetRange[0], curTargetRange[1])
                 changed[ax] = True
 
         # Update viewRange to match targetRange as closely as possible while
@@ -1428,7 +1429,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         ## Update viewRange to match targetRange as closely as possible, given
         ## aspect ratio constraints. The *force* arguments are used to indicate
         ## which axis (if any) should be unchanged when applying constraints.
-        viewRange = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
+        viewRange = self.targetRange()
         changed = [False, False]
 
         #-------- Make correction for aspect ratio constraint ----------
@@ -1461,13 +1462,15 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 dy = 0.5 * (tr.width() / viewRatio - tr.height())
                 if dy != 0:
                     changed[1] = True
-                viewRange[1] = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
+                targetRange = self.targetRange()
+                viewRange[1] = [targetRange[1][0] - dy, targetRange[1][1] + dy]
             else:
                 ## view range needs to be wider than target
                 dx = 0.5 * (tr.height() * viewRatio - tr.width())
                 if dx != 0:
                     changed[0] = True
-                viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
+                targetRange = self.targetRange()
+                viewRange[0] = [targetRange[0][0] - dx, targetRange[0][1] + dx]
 
 
         # ----------- Make corrections for view limits -----------

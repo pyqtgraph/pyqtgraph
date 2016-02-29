@@ -56,10 +56,13 @@ public:
     QColor backgroundColor() const;
     void updateBackground();
 
+    const QList<Point>& viewRange() const;
+    const QList<Point>& targetRange() const;
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
-    const QList<Point>& viewRange();
+    void setTargetRange(const Point& x, const Point& y);
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

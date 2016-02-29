@@ -18,6 +18,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mViewRange.clear();
     mViewRange << Point(0.0, 1.0) << Point(0.0, 1.0);
 
+    mTargetRange.clear();
+    mTargetRange << Point(0.0, 1.0) << Point(0.0, 1.0);
+
     mBackground = new QGraphicsRectItem(rect());
     mBackground->setParentItem(this);
     mBackground->setZValue(-1e6);
@@ -78,4 +81,10 @@ void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = x;
     mViewRange[1] = y;
+}
+
+void ViewBoxBase::setTargetRange(const Point &x, const Point &y)
+{
+    mTargetRange[0] = x;
+    mTargetRange[1] = y;
 }

@@ -57,10 +57,14 @@ public:
     QColor backgroundColor() const;
     void updateBackground();
 
+    const QList<Point>& viewRange() const { return mViewRange; }
+    const QList<Point>& targetRange() const { return mTargetRange; }
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
-    const QList<Point>& viewRange() const { return mViewRange; }
+
+    void setTargetRange(const Point& x, const Point& y);
 
 
 signals:
@@ -82,6 +86,7 @@ protected:
     bool mYInverted;
 
     QList<Point> mViewRange;    // actual range viewed
+    QList<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
 
     QGraphicsRectItem* mBackground;
 };
