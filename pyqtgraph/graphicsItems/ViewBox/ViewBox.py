@@ -296,6 +296,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         aspectLocked = self.aspectLocked()
         state['aspectLocked'] = aspectLocked if aspectLocked != 0.0 else False
         state['autoRange'] = self.autoRangeEnabled()
+        state['autoPan'] = self.autoPan()
         if copy:
             return deepcopy(state)
         else:
@@ -332,6 +333,10 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         if 'autoRange' in state:
             are = state['autoRange']
             self.setAutoRangeEnabled(are[0], are[1])
+
+        if 'autoPan' in state:
+            ap = state['autoPan']
+            self.setAutoPan(ap[0], ap[1])
 
         self.updateViewRange()
         self.sigStateChanged.emit(self)
