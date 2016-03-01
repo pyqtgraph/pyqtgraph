@@ -8,6 +8,8 @@
 #include "Interfaces.h"
 #include "ItemDefines.h"
 
+class ViewBoxBase;
+
 class QGraphicsWidget2: public QGraphicsWidget
 {
     Q_OBJECT

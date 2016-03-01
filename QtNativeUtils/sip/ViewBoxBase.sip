@@ -33,6 +33,8 @@ public:
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) /HoldGIL/;
     virtual void updateAutoRange() /HoldGIL/;
 
+    virtual void itemBoundsChanged(QGraphicsItem* item) /HoldGIL/;
+
     bool matrixNeedsUpdate() const /HoldGIL/;
     void setMatrixNeedsUpdate(const bool on) /HoldGIL/;
 

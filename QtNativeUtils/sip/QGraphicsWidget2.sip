@@ -83,4 +83,6 @@ public:
 
     virtual QRectF boundingRect() const /HoldGIL/;
     virtual QPainterPath shape() const /HoldGIL/;
+
+    void setParentItem(QGraphicsItem* newParent);
 };

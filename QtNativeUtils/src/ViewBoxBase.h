@@ -41,6 +41,8 @@ public:
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
     virtual void updateAutoRange() {}
 
+    virtual void itemBoundsChanged(QGraphicsItem* item);
+
 
     bool matrixNeedsUpdate() const { return mMatrixNeedsUpdate; }
     void setMatrixNeedsUpdate(const bool on) { mMatrixNeedsUpdate = on; }

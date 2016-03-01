@@ -35,6 +35,15 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     updateBackground();
 }
 
+void ViewBoxBase::itemBoundsChanged(QGraphicsItem *item)
+{
+    if(mAutoRangeEnabled[0] || mAutoRangeEnabled[1])
+    {
+        mAutoRangeNeedsUpdate = true;
+        update();
+    }
+}
+
 void ViewBoxBase::invertY(const bool b)
 {
     if(mYInverted==b)

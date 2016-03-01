@@ -8,6 +8,8 @@
 #include "Interfaces.h"
 #include "ItemDefines.h"
 
+class ViewBoxBase;
+
 class QGraphicsObject2: public QGraphicsObject
 {
     Q_OBJECT
@@ -23,6 +25,10 @@ public:
 #include "ExtendedItem.h"
 #undef ENABLE_EXTENDEDTEM_CODE
 #undef BASE_GRAPHICSITEM_CLASS
+
+    //QRectF viewRect() const;
+
+    //QTransform viewTransform() const;
 
 };
 

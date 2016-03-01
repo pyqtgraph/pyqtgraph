@@ -166,6 +166,7 @@ class GraphicsItem(object):
         ## PyQt bug -- some items are returned incorrectly.
         return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
 
+    '''
     def setParentItem(self, parent):
         ## Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
         if parent is not None:
@@ -173,11 +174,11 @@ class GraphicsItem(object):
             if pscene is not None and self.scene() is not pscene:
                 pscene.addItem(self)
         return self._qtBaseClass.setParentItem(self, parent)
+    '''
 
     def childItems(self):
         ## PyQt bug -- some child items are returned incorrectly.
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
-
 
     def sceneTransform(self):
         ## Qt bug: do no allow access to sceneTransform() until

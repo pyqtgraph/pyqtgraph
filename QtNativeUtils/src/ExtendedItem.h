@@ -13,19 +13,28 @@ virtual int type() const
     return Type;
 }
 
+
 virtual QGraphicsView* getViewWidget() const
 {
-    QGraphicsScene* s = scene();
-    if(s==nullptr)
-        return nullptr;
-    QList<QGraphicsView*> views = s->views();
-    if(views.size()>0)
-        return views[0];
-    return nullptr;
+    if(mView==nullptr)
+    {
+        QGraphicsScene* s = scene();
+        if(s==nullptr)
+            return nullptr;
+        QList<QGraphicsView*> views = s->views();
+        if(views.size()>0)
+            mView = views[0];
+        else
+            return nullptr;
+    }
+
+    return mView;
 }
 
 virtual void forgetViewWidget()
-{}
+{
+    mView = nullptr;
+}
 
 QTransform deviceTransform() const
 {
@@ -138,8 +147,8 @@ virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); }
 virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
 virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
 
-/*
-virtual QObject* getViewBox()
+
+virtual ViewBoxBase* getViewBox() const
 {
     if(mViewBox==nullptr)
     {
@@ -154,15 +163,13 @@ virtual QObject* getViewBox()
                     return nullptr;
                 else
                 {
-                    std::cout<<"ViewBox is View"<<std::endl;
-                    mViewBox = (QObject*)view;
-                    return mViewBox;
+                    mViewBoxIsViewWidget = true;
+                    return nullptr;
                 }
             }
-            else if(p->type()==QGraphicsItem::UserType+3)
+            else if(p->type()==CustomItemTypes::TypeViewBox)
             {
-                std::cout<<"ViewBox is Item"<<std::endl;
-                mViewBox = (QObject*)p;
+                mViewBox = (ViewBoxBase*)p;
                 return mViewBox;
             }
         }
@@ -174,11 +181,28 @@ virtual QObject* getViewBox()
 virtual void forgetViewBox()
 {
     mViewBox = nullptr;
+    mViewBoxIsViewWidget = false;
 }
 
+
+void setParentItem(QGraphicsItem* newParent)
+{
+    // Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
+    if(newParent!=nullptr)
+    {
+        QGraphicsScene* pscene = newParent->scene();
+        if(pscene!=nullptr && pscene!=scene())
+            pscene->addItem(this);
+    }
+    BASE_GRAPHICSITEM_CLASS::setParentItem(newParent);
+}
+
+
 protected:
-    QObject* mViewBox = nullptr;
-*/
+    mutable QGraphicsView* mView = nullptr;
+    mutable ViewBoxBase* mViewBox = nullptr;
+    mutable bool mViewBoxIsViewWidget = false;
+
 
 
 #endif // ENABLE_EXTENDEDTEM_CODE

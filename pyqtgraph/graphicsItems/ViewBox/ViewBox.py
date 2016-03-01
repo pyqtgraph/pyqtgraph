@@ -170,7 +170,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         }
 
         self._updatingRange = False  ## Used to break recursive loops. See updateAutoRange.
-        self._itemBoundsCache = weakref.WeakKeyDictionary()
+        #self._itemBoundsCache = weakref.WeakKeyDictionary()
 
         self.locateGroup = None  ## items displayed when using ViewBox.locate(item)
 
@@ -1059,13 +1059,13 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         ## called when items are added/removed from self.childGroup
         self.updateAutoRange()
 
-    def itemBoundsChanged(self, item):
-        self._itemBoundsCache.pop(item, None)
-        are = self.autoRangeEnabled()
-        if (are[0] is not False) or (are[1] is not False):
-            self.setAutoRangeNeedsUpdate(True)
-            self.update()
-        #self.updateAutoRange()
+    #def itemBoundsChanged(self, item):
+    #    #self._itemBoundsCache.pop(item, None)
+    #    are = self.autoRangeEnabled()
+    #    if (are[0] is not False) or (are[1] is not False):
+    #        self.setAutoRangeNeedsUpdate(True)
+    #        self.update()
+    #    #self.updateAutoRange()
 
     def setAspectLocked(self, lock=True, ratio=1):
         """

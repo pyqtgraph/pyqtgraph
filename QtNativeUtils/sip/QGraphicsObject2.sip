@@ -76,4 +76,6 @@ public:
     virtual void hoverEvent(HoverEvent* event) /HoldGIL/;
     virtual void mouseDragEvent(MouseDragEvent* event) /HoldGIL/;
 
+    void setParentItem(QGraphicsItem* newParent);
+
 };
