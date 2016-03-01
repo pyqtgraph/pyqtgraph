@@ -10,23 +10,23 @@ class HoverEvent: public MouseEvent
 %End
 
 public:
-    explicit HoverEvent(const QGraphicsSceneMouseEvent* moveEvent, const bool acceptable);
+    explicit HoverEvent(const QGraphicsSceneMouseEvent* moveEvent, const bool acceptable) /HoldGIL/;
 
-    virtual ~HoverEvent();
+    virtual ~HoverEvent() /HoldGIL/;
 
-    bool isEnter() const;
+    bool isEnter() const /HoldGIL/;
 
-    bool isExit() const;
+    bool isExit() const /HoldGIL/;
 
-    bool acceptClicks(Qt::MouseButton button);
+    bool acceptClicks(Qt::MouseButton button) /HoldGIL/;
 
-    bool acceptDrags(Qt::MouseButton button);
+    bool acceptDrags(Qt::MouseButton button) /HoldGIL/;
 
-    void setEnter(const bool enter);
+    void setEnter(const bool enter) /HoldGIL/;
 
-    void setExit(const bool isExit);
+    void setExit(const bool isExit) /HoldGIL/;
 
-    QGraphicsItem* getDragItem(const Qt::MouseButton key, QGraphicsItem* defaultValue);
+    QGraphicsItem* getDragItem(const Qt::MouseButton key, QGraphicsItem* defaultValue) /HoldGIL/;
 
-    QGraphicsItem* getClickItems(const Qt::MouseButton key, QGraphicsItem* defaultValue);
+    QGraphicsItem* getClickItems(const Qt::MouseButton key, QGraphicsItem* defaultValue) /HoldGIL/;
 };

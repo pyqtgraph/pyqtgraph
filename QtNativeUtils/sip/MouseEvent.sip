@@ -10,28 +10,28 @@ class MouseEvent
 %End
 
 public:
-    MouseEvent();
+    MouseEvent() /HoldGIL/;
 
-    virtual ~MouseEvent();
+    virtual ~MouseEvent() /HoldGIL/;
 
-    void setCurrentItem(QGraphicsItem* item);
+    void setCurrentItem(QGraphicsItem* item) /HoldGIL/;
 
-    void accept();
-    void ignore();
+    void accept() /HoldGIL/;
+    void ignore() /HoldGIL/;
 
-    bool isAccepted() const;
-    QPointF scenePos() const;
-    QPoint screenPos() const;
-    Qt::MouseButtons buttons() const;
+    bool isAccepted() const /HoldGIL/;
+    QPointF scenePos() const /HoldGIL/;
+    QPoint screenPos() const /HoldGIL/;
+    Qt::MouseButtons buttons() const /HoldGIL/;
 
-    Qt::MouseButton button() const;
+    Qt::MouseButton button() const /HoldGIL/;
 
-    QPointF pos() const;
-    QPointF lastPos() const;
-    Qt::KeyboardModifiers modifiers() const;
+    QPointF pos() const /HoldGIL/;
+    QPointF lastPos() const /HoldGIL/;
+    Qt::KeyboardModifiers modifiers() const /HoldGIL/;
 
-    virtual QPointF buttonDownScenePos() const;
+    virtual QPointF buttonDownScenePos() const /HoldGIL/;
 
-    QPoint lastScreenPos() const;
+    QPoint lastScreenPos() const /HoldGIL/;
 
 };

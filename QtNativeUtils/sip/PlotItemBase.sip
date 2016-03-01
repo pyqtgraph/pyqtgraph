@@ -8,11 +8,11 @@ class PlotItemBase: public QGraphicsWidget2
 %End
 
 public:
-    PlotItemBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
+    PlotItemBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0) /HoldGIL/;
     virtual ~PlotItemBase();
 
 
-    virtual int type() const;
+    virtual int type() const /HoldGIL/;
 
 signals:
 

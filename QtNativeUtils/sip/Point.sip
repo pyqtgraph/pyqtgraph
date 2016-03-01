@@ -168,19 +168,19 @@ class Point: public QPointF
 
 
 public:
-    Point();
+    Point() /HoldGIL/;
 
-    Point(const double xy);
+    Point(const double xy) /HoldGIL/;
 
-    Point(const double x, const double y);
+    Point(const double x, const double y) /HoldGIL/;
 
-    Point(const QPointF& p);
+    Point(const QPointF& p) /HoldGIL/;
 
-    Point(const QPoint& p);
+    Point(const QPoint& p) /HoldGIL/;
 
-    Point(const QSizeF& s);
+    Point(const QSizeF& s) /HoldGIL/;
 
-    Point(SIP_PYOBJECT) throw(std::runtime_error);
+    Point(SIP_PYOBJECT) throw(std::runtime_error) /HoldGIL/;
     %MethodCode
         try
         {
@@ -213,7 +213,7 @@ public:
         }
     %End
 
-    void __setitem__(const int i, const double value);
+    void __setitem__(const int i, const double value) /HoldGIL/;
     %MethodCode
         try {
             (*sipCpp)[a0] = a1;
@@ -223,7 +223,7 @@ public:
         }
     %End
 
-    double __getitem__(const int i) const;
+    double __getitem__(const int i) const /HoldGIL/;
     %MethodCode
         try {
             sipRes = (*sipCpp)[a0];
@@ -233,7 +233,7 @@ public:
         }
     %End
 
-    Point __getitem__(SIP_PYSLICE) const;
+    Point __getitem__(SIP_PYSLICE) const /HoldGIL/;
     %MethodCode
         try {
             sipRes = new Point(*sipCpp);
@@ -243,80 +243,80 @@ public:
         }
     %End
 
-    int __len__() const;
+    int __len__() const /HoldGIL/;
     %MethodCode
         sipRes = 2;
     %End
 
-    Point __radd__(Point p) const;
+    Point __radd__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() + sipCpp->x(), a0->y() + sipCpp->y());
     %End
 
-    Point __add__(Point p) const;
+    Point __add__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() + a1->x(), a0->y() + a1->y());
     %End
 
-    Point __rsub__(Point p) const;
+    Point __rsub__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() - sipCpp->x(), a0->y() - sipCpp->y());
     %End
 
-    Point __sub__(Point p) const;
+    Point __sub__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() - a1->x(), a0->y() - a1->y());
     %End
 
-    Point __rmul__(Point p) const;
+    Point __rmul__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() * sipCpp->x(), a0->y() * sipCpp->y());
     %End
 
-    Point __mul__(Point p) const;
+    Point __mul__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() * a1->x(), a0->y() * a1->y());
     %End
 
-    Point __rdiv__(Point p) const;
+    Point __rdiv__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() / sipCpp->x(), a0->y() / sipCpp->y());
     %End
 
-    Point __div__(Point p) const;
+    Point __div__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() / a1->x(), a0->y() / a1->y());
     %End
 
-    Point __rtruediv__(Point p) const;
+    Point __rtruediv__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() / sipCpp->x(), a0->y() / sipCpp->y());
     %End
 
-    Point __truediv__(Point p) const;
+    Point __truediv__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(a0->x() / a1->x(), a0->y() / a1->y());
     %End
 
-    Point __rpow__(Point p) const;
+    Point __rpow__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(std::pow(sipCpp->x(), a0->x()), std::pow(sipCpp->x(), a0->x()));
     %End
 
-    Point __pow__(Point p) const;
+    Point __pow__(Point p) const /HoldGIL/;
     %MethodCode
         sipRes = new Point(std::pow(sipCpp->x(), a0->x()), std::pow(sipCpp->x(), a0->x()));
     %End
 
-    double length() const;
-    Point norm() const;
-    double angle(const Point& a) const;
-    double dot(const Point& a) const;
-    double cross(const Point& a) const;
-    Point proj(const Point& b) const;
-    double min() const;
-    double max() const;
-    Point copy() const;
-    Point toQPoint() const;
+    double length() const /HoldGIL/;
+    Point norm() const /HoldGIL/;
+    double angle(const Point& a) const /HoldGIL/;
+    double dot(const Point& a) const /HoldGIL/;
+    double cross(const Point& a) const /HoldGIL/;
+    Point proj(const Point& b) const /HoldGIL/;
+    double min() const /HoldGIL/;
+    double max() const /HoldGIL/;
+    Point copy() const /HoldGIL/;
+    Point toQPoint() const /HoldGIL/;
 };
 

@@ -13,21 +13,22 @@ class QGraphicsScene2: public QGraphicsScene
 
 
 public:
-    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0, QObject *parent /TransferThis/ =nullptr);
-    virtual ~QGraphicsScene2();
+    explicit QGraphicsScene2(const double clickRadius=2.0, const double moveDistance=5.0,
+                             QObject *parent /TransferThis/ =nullptr) /HoldGIL/;
+    virtual ~QGraphicsScene2() /HoldGIL/;
 
-    void setClickRadius(const double clickRadius);
-    void setMoveDistance(const double moveDistance);
+    void setClickRadius(const double clickRadius) /HoldGIL/;
+    void setMoveDistance(const double moveDistance) /HoldGIL/;
 
-    double clickRadius() const;
-    double moveDistance() const;
+    double clickRadius() const /HoldGIL/;
+    double moveDistance() const /HoldGIL/;
 
     void render(QPainter* painter, const QRectF& target=QRectF(), const QRectF& source=QRectF(),
-                Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio);
+                Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio) /HoldGIL/;
 
-    void prepareForPaint();
+    void prepareForPaint() /HoldGIL/;
 
-    virtual QGraphicsView* getViewWidget() const;
+    virtual QGraphicsView* getViewWidget() const /HoldGIL/;
 
 signals:
 

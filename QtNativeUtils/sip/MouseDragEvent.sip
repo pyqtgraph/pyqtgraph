@@ -12,26 +12,26 @@ class MouseDragEvent: public MouseEvent
 public:
     explicit MouseDragEvent(const QGraphicsSceneMouseEvent* moveEvent,
                             const MouseClickEvent *pressEvent, const MouseDragEvent *lastEvent,
-                            const bool start=false, const bool finish=false);
+                            const bool start=false, const bool finish=false) /HoldGIL/;
 
-    virtual ~MouseDragEvent();
+    virtual ~MouseDragEvent() /HoldGIL/;
 
-    void accept();
+    void accept() /HoldGIL/;
 
-    QPointF	buttonDownPos(Qt::MouseButton button) const;
+    QPointF	buttonDownPos(Qt::MouseButton button) const /HoldGIL/;
 
-    QPointF	buttonDownPos() const;
+    QPointF	buttonDownPos() const /HoldGIL/;
 
-    QPointF buttonDownScenePos(Qt::MouseButton button) const;
+    QPointF buttonDownScenePos(Qt::MouseButton button) const /HoldGIL/;
 
-    virtual QPointF	buttonDownScenePos() const;
+    virtual QPointF	buttonDownScenePos() const /HoldGIL/;
 
-    QPoint buttonDownScreenPos(Qt::MouseButton button) const;
+    QPoint buttonDownScreenPos(Qt::MouseButton button) const /HoldGIL/;
 
-    QPoint	buttonDownScreenPos() const;
+    QPoint	buttonDownScreenPos() const /HoldGIL/;
 
-    bool isStart() const;
+    bool isStart() const /HoldGIL/;
 
-    bool isFinish() const;
+    bool isFinish() const /HoldGIL/;
 
 };

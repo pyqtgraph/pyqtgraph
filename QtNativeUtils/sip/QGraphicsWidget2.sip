@@ -12,11 +12,11 @@ class QGraphicsWidget2: public QGraphicsWidget
 %End
 
 public:
-    QGraphicsWidget2(QGraphicsItem* parent /TransferThis/ =nullptr, Qt::WindowFlags wFlags=0);
-    virtual ~QGraphicsWidget2();
+    QGraphicsWidget2(QGraphicsItem* parent /TransferThis/ =nullptr, Qt::WindowFlags wFlags=0) /HoldGIL/;
+    virtual ~QGraphicsWidget2() /HoldGIL/;
 
-    virtual QGraphicsView* getViewWidget() const;
-    virtual void forgetViewWidget();
+    virtual QGraphicsView* getViewWidget() const /HoldGIL/;
+    virtual void forgetViewWidget() /HoldGIL/;
 
 /*
     virtual QObject* getViewBox();
@@ -35,52 +35,52 @@ public:
     virtual void forgetViewBox();
 */
 
-    virtual int type() const;
+    virtual int type() const /HoldGIL/;
 
-    QTransform deviceTransform() const;
-    QTransform deviceTransform(const QTransform& viewportTransform) const;
+    QTransform deviceTransform() const /HoldGIL/;
+    QTransform deviceTransform(const QTransform& viewportTransform) const /HoldGIL/;
 
-    QList<QGraphicsItem*> getBoundingParents() const;
+    QList<QGraphicsItem*> getBoundingParents() const /HoldGIL/;
 
-    QVector<Point> pixelVectors() const;
+    QVector<Point> pixelVectors() const /HoldGIL/;
 
-    QVector<Point> pixelVectors(const QPointF& direction) const;
+    QVector<Point> pixelVectors(const QPointF& direction) const /HoldGIL/;
 
-    double pixelLength(const QPointF& direction, const bool ortho=false) const;
+    double pixelLength(const QPointF& direction, const bool ortho=false) const /HoldGIL/;
 
     // transform mapping
-    QPointF	mapFromDevice(const QPointF& point) const;
-    QPointF	mapFromDevice(const QPoint& point) const;
-    QPolygonF mapFromDevice(const QRectF& rect) const;
-    QPolygonF mapFromDevice(const QPolygonF& polygon) const;
-    QPainterPath mapFromDevice(const QPainterPath& path) const;
-    QPointF	mapFromDevice(qreal x, qreal y) const;
+    QPointF	mapFromDevice(const QPointF& point) const /HoldGIL/;
+    QPointF	mapFromDevice(const QPoint& point) const /HoldGIL/;
+    QPolygonF mapFromDevice(const QRectF& rect) const /HoldGIL/;
+    QPolygonF mapFromDevice(const QPolygonF& polygon) const /HoldGIL/;
+    QPainterPath mapFromDevice(const QPainterPath& path) const /HoldGIL/;
+    QPointF	mapFromDevice(qreal x, qreal y) const /HoldGIL/;
 
-    QPointF	mapToDevice(const QPointF& point) const;
-    QPointF	mapToDevice(const QPoint& point) const;
-    QPolygonF mapToDevice(const QRectF& rect) const;
-    QPolygonF mapToDevice(const QPolygonF& polygon) const;
-    QPainterPath mapToDevice(const QPainterPath& path) const;
-    QPointF	mapToDevice(qreal x, qreal y) const;
+    QPointF	mapToDevice(const QPointF& point) const /HoldGIL/;
+    QPointF	mapToDevice(const QPoint& point) const /HoldGIL/;
+    QPolygonF mapToDevice(const QRectF& rect) const /HoldGIL/;
+    QPolygonF mapToDevice(const QPolygonF& polygon) const /HoldGIL/;
+    QPainterPath mapToDevice(const QPainterPath& path) const /HoldGIL/;
+    QPointF	mapToDevice(qreal x, qreal y) const /HoldGIL/;
 
-    QRectF mapRectToDevice(const QRectF& rect) const;
-    QRect mapRectToDevice(const QRect& rect) const;
+    QRectF mapRectToDevice(const QRectF& rect) const /HoldGIL/;
+    QRect mapRectToDevice(const QRect& rect) const /HoldGIL/;
 
-    QRectF mapRectFromDevice(const QRectF& rect) const;
-    QRect mapRectFromDevice(const QRect& rect) const;
+    QRectF mapRectFromDevice(const QRectF& rect) const /HoldGIL/;
+    QRect mapRectFromDevice(const QRect& rect) const /HoldGIL/;
 
-    double transformAngle(QGraphicsItem* relativeItem=nullptr) const;
+    double transformAngle(QGraphicsItem* relativeItem=nullptr) const /HoldGIL/;
 
-    virtual void mouseClickEvent(MouseClickEvent* event);
-    virtual void hoverEvent(HoverEvent* event);
-    virtual void mouseDragEvent(MouseDragEvent* event);
+    virtual void mouseClickEvent(MouseClickEvent* event) /HoldGIL/;
+    virtual void hoverEvent(HoverEvent* event) /HoldGIL/;
+    virtual void mouseDragEvent(MouseDragEvent* event) /HoldGIL/;
 
-    void setFixedHeight(const double h);
-    void setFixedWidth(const double w);
+    void setFixedHeight(const double h) /HoldGIL/;
+    void setFixedWidth(const double w) /HoldGIL/;
 
-    double height() const;
-    double width() const;
+    double height() const /HoldGIL/;
+    double width() const /HoldGIL/;
 
-    virtual QRectF boundingRect() const;
-    virtual QPainterPath shape() const;
+    virtual QRectF boundingRect() const /HoldGIL/;
+    virtual QPainterPath shape() const /HoldGIL/;
 };

@@ -11,15 +11,15 @@ class MouseClickEvent: public MouseEvent
 %End
 
 public:
-    explicit MouseClickEvent(const QGraphicsSceneMouseEvent* event, const bool doubleClick=false);
+    explicit MouseClickEvent(const QGraphicsSceneMouseEvent* event, const bool doubleClick=false) /HoldGIL/;
 
-    virtual ~MouseClickEvent();
+    virtual ~MouseClickEvent() /HoldGIL/;
 
-    void accept();
+    void accept() /HoldGIL/;
 
-    bool isDoubleClick() const;
+    bool isDoubleClick() const /HoldGIL/;
 
-    double time() const;
+    double time() const /HoldGIL/;
 
-    QGraphicsItem* acceptedItem();
+    QGraphicsItem* acceptedItem() /HoldGIL/;
 };
