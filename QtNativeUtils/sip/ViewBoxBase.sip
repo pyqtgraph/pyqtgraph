@@ -31,6 +31,7 @@ public:
     virtual int type() const /HoldGIL/;
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) /HoldGIL/;
+    virtual void updateAutoRange() /HoldGIL/;
 
     bool matrixNeedsUpdate() const /HoldGIL/;
     void setMatrixNeedsUpdate(const bool on) /HoldGIL/;
@@ -71,6 +72,13 @@ public:
     SIP_PYOBJECT autoRangeEnabled() const [const QList<bool>& ()];
     %MethodCode
         const QVector<bool> enabled = sipCpp->autoRangeEnabled();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
+
+    void setAutoPan(const bool x=false, const bool y=false);
+    SIP_PYOBJECT autoPan() const [const QVector<bool>& ()];
+    %MethodCode
+        const QVector<bool> enabled = sipCpp->autoPan();
         sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
     %End
 

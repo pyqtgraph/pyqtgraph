@@ -24,6 +24,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mAutoRangeEnabled.clear();
     mAutoRangeEnabled << true << true;
 
+    mAutoPan.clear();
+    mAutoPan << false << false;
+
     mBackground = new QGraphicsRectItem(rect());
     mBackground->setParentItem(this);
     mBackground->setZValue(-1e6);
@@ -78,6 +81,14 @@ void ViewBoxBase::updateBackground()
         mBackground->show();
         mBackground->setRect(rect());
     }
+}
+
+void ViewBoxBase::setAutoPan(const bool x, const bool y)
+{
+    mAutoPan[0] = x;
+    mAutoPan[1] = y;
+
+    updateAutoRange();
 }
 
 void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)

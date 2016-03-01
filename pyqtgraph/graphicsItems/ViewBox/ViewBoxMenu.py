@@ -138,7 +138,7 @@ class ViewBoxMenu(QtGui.QMenu):
             finally:
                 c.blockSignals(False)
             
-            self.ctrl[i].autoPanCheck.setChecked(state['autoPan'][i])
+            self.ctrl[i].autoPanCheck.setChecked(self.view().autoPan()[i])
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
             xy = ['x', 'y'][i]
             self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))

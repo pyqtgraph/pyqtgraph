@@ -149,7 +149,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             #'aspectLocked': 0.0, #False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             #'autoRange': [True, True],  ## False if auto range is disabled,
                                           ## otherwise float gives the fraction of data that is visible
-            'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
+            #'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
             'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
@@ -817,13 +817,13 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     #def autoRangeEnabled(self):
     #    return self.state['autoRange'][:]
 
-    def setAutoPan(self, x=None, y=None):
-        if x is not None:
-            self.state['autoPan'][0] = x
-        if y is not None:
-            self.state['autoPan'][1] = y
-        if None not in [x,y]:
-            self.updateAutoRange()
+    #def setAutoPan(self, x=None, y=None):
+    #    if x is not None:
+    #        self.state['autoPan'][0] = x
+    #    if y is not None:
+    #        self.state['autoPan'][1] = y
+    #    if None not in [x,y]:
+    #        self.updateAutoRange()
 
     def setAutoVisible(self, x=None, y=None):
         if x is not None:
@@ -878,7 +878,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
                 ## Make corrections to range
                 xr = childRange[ax]
                 if xr is not None:
-                    if self.state['autoPan'][ax]:
+                    #if self.state['autoPan'][ax]:
+                    if self.autoPan()[ax]:
                         x = sum(xr) * 0.5
                         w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
                         childRange[ax] = [x-w2, x+w2]

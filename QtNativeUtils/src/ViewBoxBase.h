@@ -39,6 +39,7 @@ public:
     }
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
+    virtual void updateAutoRange() {}
 
 
     bool matrixNeedsUpdate() const { return mMatrixNeedsUpdate; }
@@ -61,8 +62,12 @@ public:
     const QVector<Point>& targetRange() const { return mTargetRange; }
     const QVector<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
 
+    void setAutoPan(const bool x=false, const bool y=false);
+    const QVector<bool>& autoPan() const { return mAutoPan; }
+
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
+
 
 protected:
 
@@ -93,6 +98,7 @@ protected:
     QVector<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
     double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
     QVector<bool> mAutoRangeEnabled;
+    QVector<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
 
     QGraphicsRectItem* mBackground;
 };
