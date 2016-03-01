@@ -56,11 +56,21 @@ public:
     QColor backgroundColor() const /HoldGIL/;
     void updateBackground() /HoldGIL/;
 
-    const QList<Point>& viewRange() const /HoldGIL/;
-    const QList<Point>& targetRange() const /HoldGIL/;
+    SIP_PYOBJECT viewRange() const [const QVector<Point>& ()];
+    %MethodCode
+        const QVector<Point>& p = sipCpp->viewRange();
+        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].x(), p[0].y(), p[1].x(), p[1].y());
+    %End
+
+    SIP_PYOBJECT targetRange() const [const QVector<Point>& ()];
+    %MethodCode
+        const QVector<Point>& p = sipCpp->targetRange();
+        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].x(), p[0].y(), p[1].x(), p[1].y());
+    %End
+
     SIP_PYOBJECT autoRangeEnabled() const [const QList<bool>& ()];
     %MethodCode
-        const QList<bool> enabled = sipCpp->autoRangeEnabled();
+        const QVector<bool> enabled = sipCpp->autoRangeEnabled();
         sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
     %End
 

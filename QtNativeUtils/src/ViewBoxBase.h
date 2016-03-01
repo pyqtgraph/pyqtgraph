@@ -57,9 +57,9 @@ public:
     QColor backgroundColor() const;
     void updateBackground();
 
-    const QList<Point>& viewRange() const { return mViewRange; }
-    const QList<Point>& targetRange() const { return mTargetRange; }
-    const QList<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
+    const QVector<Point>& viewRange() const { return mViewRange; }
+    const QVector<Point>& targetRange() const { return mTargetRange; }
+    const QVector<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
 
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
@@ -89,10 +89,10 @@ protected:
     bool mXInverted;
     bool mYInverted;
 
-    QList<Point> mViewRange;    // actual range viewed
-    QList<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
+    QVector<Point> mViewRange;    // actual range viewed
+    QVector<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
     double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
-    QList<bool> mAutoRangeEnabled;
+    QVector<bool> mAutoRangeEnabled;
 
     QGraphicsRectItem* mBackground;
 };
