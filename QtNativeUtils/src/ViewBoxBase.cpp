@@ -91,6 +91,18 @@ void ViewBoxBase::setAutoPan(const bool x, const bool y)
     updateAutoRange();
 }
 
+void ViewBoxBase::setAutoVisible(const bool x, const bool y)
+{
+    mAutoVisibleOnly[0] = x;
+    if(x)
+        mAutoVisibleOnly[1] = false;
+    mAutoVisibleOnly[1] = y;
+    if(y)
+        mAutoVisibleOnly[0] = false;
+
+    updateAutoRange();
+}
+
 void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
 {
     mAspectLocked = lock ? ratio: 0.0;

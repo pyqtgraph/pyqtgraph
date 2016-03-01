@@ -150,7 +150,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             #'autoRange': [True, True],  ## False if auto range is disabled,
                                           ## otherwise float gives the fraction of data that is visible
             #'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
-            'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
+            #'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
             'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
 
@@ -567,10 +567,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
-        if changed[0] and self.state['autoVisibleOnly'][1] and (self.autoRangeEnabled()[0] is not False):
+        autoVisibleOnly = self.autoVisible()
+        if changed[0] and autoVisibleOnly[1] and (self.autoRangeEnabled()[0] is not False):
             self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
-        elif changed[1] and self.state['autoVisibleOnly'][0] and (self.autoRangeEnabled()[1] is not False):
+        elif changed[1] and autoVisibleOnly[0] and (self.autoRangeEnabled()[1] is not False):
             self.setAutoRangeNeedsUpdate(True)
             #self.updateAutoRange()
 
@@ -830,18 +831,18 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     #    if None not in [x,y]:
     #        self.updateAutoRange()
 
-    def setAutoVisible(self, x=None, y=None):
-        if x is not None:
-            self.state['autoVisibleOnly'][0] = x
-            if x is True:
-                self.state['autoVisibleOnly'][1] = False
-        if y is not None:
-            self.state['autoVisibleOnly'][1] = y
-            if y is True:
-                self.state['autoVisibleOnly'][0] = False
-
-        if x is not None or y is not None:
-            self.updateAutoRange()
+    #def setAutoVisible(self, x=None, y=None):
+    #    if x is not None:
+    #        self.state['autoVisibleOnly'][0] = x
+    #        if x is True:
+    #            self.state['autoVisibleOnly'][1] = False
+    #    if y is not None:
+    #        self.state['autoVisibleOnly'][1] = y
+    #        if y is True:
+    #            self.state['autoVisibleOnly'][0] = False
+    #
+    #    if x is not None or y is not None:
+    #        self.updateAutoRange()
 
     def updateAutoRange(self):
         ## Break recursive loops when auto-ranging.
@@ -863,15 +864,17 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
             childRange = None
 
+            autoVisibleOnly = self.autoVisible()
+
             order = [0, 1]
-            if self.state['autoVisibleOnly'][0] is True:
+            if autoVisibleOnly[0] is True:
                 order = [1, 0]
 
             args = {}
             for ax in order:
                 if self.autoRangeEnabled()[ax] is False:
                     continue
-                if self.state['autoVisibleOnly'][ax]:
+                if autoVisibleOnly[ax]:
                     oRange = [None, None]
                     oRange[ax] = targetRect[1-ax]
                     childRange = self.childrenBounds(frac=fractionVisible, orthoRange=oRange)

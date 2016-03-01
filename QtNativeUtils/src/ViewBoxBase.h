@@ -65,6 +65,9 @@ public:
     void setAutoPan(const bool x=false, const bool y=false);
     const QVector<bool>& autoPan() const { return mAutoPan; }
 
+    void setAutoVisible(const bool x=false, const bool y=false);
+    const QVector<bool>& autoVisible() const { return mAutoVisibleOnly; }
+
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
 
@@ -99,6 +102,7 @@ protected:
     double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
     QVector<bool> mAutoRangeEnabled;
     QVector<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
+    QVector<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
 
     QGraphicsRectItem* mBackground;
 };

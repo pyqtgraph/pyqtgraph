@@ -75,10 +75,17 @@ public:
         sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
     %End
 
-    void setAutoPan(const bool x=false, const bool y=false);
+    void setAutoPan(const bool x=false, const bool y=false) /HoldGIL/;
     SIP_PYOBJECT autoPan() const [const QVector<bool>& ()];
     %MethodCode
         const QVector<bool> enabled = sipCpp->autoPan();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
+
+    void setAutoVisible(const bool x=false, const bool y=false) /HoldGIL/;
+    SIP_PYOBJECT autoVisible() const [const QVector<bool>& ()];
+    %MethodCode
+        const QVector<bool> enabled = sipCpp->autoVisible();
         sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
     %End
 
