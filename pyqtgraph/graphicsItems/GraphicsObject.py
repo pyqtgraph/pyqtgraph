@@ -16,12 +16,12 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
     _qtBaseClass = QGraphicsObject2
     def __init__(self, parent=None):
         self.__inform_view_on_changes = True
-        QtGui.QGraphicsObject.__init__(self, parent=parent)
+        QGraphicsObject2.__init__(self, parent=parent)
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
         
     def itemChange(self, change, value):
-        ret = QtGui.QGraphicsObject.itemChange(self, change, value)
+        ret = QGraphicsObject2.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
             self.parentChanged()
         try:
