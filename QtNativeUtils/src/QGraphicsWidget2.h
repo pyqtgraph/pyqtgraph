@@ -3,6 +3,7 @@
 
 #include <QGraphicsWidget>
 #include <QGraphicsView>
+#include <QDebug>
 
 #include "Point.h"
 #include "Interfaces.h"

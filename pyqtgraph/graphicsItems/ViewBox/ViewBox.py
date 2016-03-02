@@ -179,6 +179,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
         self.childGroup.itemsChangedListeners.append(self)
+        self.setInnerSceneItem(self.childGroup)
 
         #self.background = QtGui.QGraphicsRectItem(self.rect())
         #self.background.setParentItem(self)
@@ -360,8 +361,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         else:
             raise Exception('graphicsItems:ViewBox:setLeftButtonAction: unknown mode = %s (Options are "pan" and "rect")' % mode)
 
-    def innerSceneItem(self):
-        return self.childGroup
+    #def innerSceneItem(self):
+    #    return self.childGroup
 
     def setMouseEnabled(self, x=None, y=None):
         """

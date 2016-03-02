@@ -97,6 +97,8 @@ public:
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
 
+    QGraphicsItem* innerSceneItem() const /HoldGIL/;
+
 protected:
 
     void setViewRange(const Point& x, const Point& y) /HoldGIL/;
@@ -104,6 +106,8 @@ protected:
     void setAutoRangeEnabled(const bool enableX, const bool enableY) /HoldGIL/;
 
     void _resetTarget() /HoldGIL/;
+
+    void setInnerSceneItem(QGraphicsItem* /KeepReference/) /HoldGIL/;
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

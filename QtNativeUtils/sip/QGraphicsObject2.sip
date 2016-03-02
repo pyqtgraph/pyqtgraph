@@ -78,4 +78,7 @@ public:
 
     void setParentItem(QGraphicsItem* newParent);
 
+    virtual QTransform viewTransform() const;
+
+    virtual QRectF mapRectFromView(const QRectF& r) const;
 };

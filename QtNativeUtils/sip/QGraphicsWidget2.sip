@@ -85,4 +85,8 @@ public:
     virtual QPainterPath shape() const /HoldGIL/;
 
     void setParentItem(QGraphicsItem* newParent);
+
+    virtual QTransform viewTransform() const;
+
+    virtual QRectF mapRectFromView(const QRectF& r) const;
 };

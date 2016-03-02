@@ -76,6 +76,8 @@ public:
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
 
+    QGraphicsItem* innerSceneItem() const;
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
@@ -84,6 +86,7 @@ protected:
 
     void _resetTarget();
 
+    void setInnerSceneItem(QGraphicsItem* item);
 
 signals:
 
@@ -111,6 +114,8 @@ protected:
     QVector<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
 
     QGraphicsRectItem* mBackground;
+
+    QGraphicsItem* mInnerSceneItem;
 };
 
 #endif // VIEWBOXBASE_H

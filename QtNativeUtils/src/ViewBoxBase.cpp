@@ -134,6 +134,12 @@ QRectF ViewBoxBase::targetRect() const
     return QRectF(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
 }
 
+QGraphicsItem* ViewBoxBase::innerSceneItem() const
+{
+    qDebug()<<"innerSceneItem "<<mInnerSceneItem;
+    return mInnerSceneItem;
+}
+
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = x;
@@ -162,6 +168,12 @@ void ViewBoxBase::_resetTarget()
         mTargetRange[0] = mViewRange[0];
         mTargetRange[1] = mViewRange[1];
     }
+}
+
+void ViewBoxBase::setInnerSceneItem(QGraphicsItem *item)
+{
+    mInnerSceneItem = item;
+    qDebug()<<"setInnerSceneItem "<<item<<mInnerSceneItem;
 }
 
 

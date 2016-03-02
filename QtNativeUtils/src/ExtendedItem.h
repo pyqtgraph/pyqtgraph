@@ -150,7 +150,8 @@ virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
 
 virtual ViewBoxBase* getViewBox() const
 {
-    if(mViewBox==nullptr)
+    qDebug()<<"Getting view box";
+    if(mViewBox==nullptr && !mViewBoxIsViewWidget)
     {
         QGraphicsItem* p = (QGraphicsItem*)this;
         while(p!=nullptr)
@@ -197,6 +198,12 @@ void setParentItem(QGraphicsItem* newParent)
     BASE_GRAPHICSITEM_CLASS::setParentItem(newParent);
 }
 
+
+virtual QTransform viewTransform() const;
+
+virtual QRectF mapRectFromView(const QRectF& r) const;
+
+//virtual QRectF viewRect() const;
 
 protected:
     mutable QGraphicsView* mView = nullptr;

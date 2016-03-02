@@ -3,6 +3,7 @@
 
 #include <QGraphicsView>
 #include <QGraphicsObject>
+#include <QDebug>
 
 #include "Point.h"
 #include "Interfaces.h"
@@ -25,10 +26,6 @@ public:
 #include "ExtendedItem.h"
 #undef ENABLE_EXTENDEDTEM_CODE
 #undef BASE_GRAPHICSITEM_CLASS
-
-    //QRectF viewRect() const;
-
-    //QTransform viewTransform() const;
 
 };
 

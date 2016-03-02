@@ -75,6 +75,7 @@ class GraphicsItem(object):
     def forgetViewBox(self):
         self._viewBox = None
 
+    '''
     def viewTransform(self):
         """Return the transform that maps from local coordinates to the item's ViewBox coordinates
         If there is no ViewBox, return the scene transform.
@@ -92,6 +93,7 @@ class GraphicsItem(object):
             pass
 
         return self.sceneTransform()
+    '''
 
     def viewRect(self):
         """Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget"""
@@ -149,12 +151,14 @@ class GraphicsItem(object):
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
+    '''
     def mapRectFromView(self, obj):
         vt = self.viewTransform()
         if vt is None:
             return None
         vt = fn.invertQTransform(vt)
         return vt.mapRect(obj)
+    '''
 
     def pos(self):
         return Point(self._qtBaseClass.pos(self))
