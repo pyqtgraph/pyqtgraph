@@ -73,12 +73,16 @@ public:
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
 
+    virtual QRectF viewRect() const;
+    QRectF targetRect() const;
 
 protected:
 
     void setViewRange(const Point& x, const Point& y);
     void setTargetRange(const Point& x, const Point& y);
     void setAutoRangeEnabled(const bool enableX, const bool enableY);
+
+    void _resetTarget();
 
 
 signals:

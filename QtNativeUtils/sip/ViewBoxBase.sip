@@ -94,11 +94,16 @@ public:
     double aspectLocked() const /HoldGIL/;
     void setAspectLocked(const bool lock=true, const double ratio=1.0) /HoldGIL/;
 
+    virtual QRectF viewRect() const;
+    QRectF targetRect() const;
+
 protected:
 
     void setViewRange(const Point& x, const Point& y) /HoldGIL/;
     void setTargetRange(const Point& x, const Point& y) /HoldGIL/;
     void setAutoRangeEnabled(const bool enableX, const bool enableY) /HoldGIL/;
+
+    void _resetTarget() /HoldGIL/;
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

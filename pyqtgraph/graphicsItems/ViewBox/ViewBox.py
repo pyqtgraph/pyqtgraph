@@ -432,11 +432,13 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             viewRange = self.viewRange()
             vr0 = viewRange[0]
             vr1 = viewRange[1]
-            return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
+            r = QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
+            return r
         except:
             print("make qrectf failed:", self.viewRange())
             raise
 
+    '''
     def targetRect(self):
         """
         Return the region which has been requested to be visible.
@@ -451,7 +453,9 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         except:
             print("make qrectf failed:", tr)
             raise
+    '''
 
+    '''
     def _resetTarget(self):
         # Reset target range to exactly match current view range.
         # This is used during mouse interaction to prevent unpredictable
@@ -459,6 +463,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         if self.aspectLocked() == 0.0:  # (interferes with aspect locking)
             viewRange = self.viewRange()
             self.setTargetRange(viewRange[0], viewRange[1])
+    '''
 
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """

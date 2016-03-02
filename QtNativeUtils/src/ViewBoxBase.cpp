@@ -1,6 +1,7 @@
 #include "ViewBoxBase.h"
 
 #include <QSizePolicy>
+#include <QDebug>
 
 ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY) :
     QGraphicsWidget2(parent, wFlags),
@@ -117,6 +118,22 @@ void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
     mAspectLocked = lock ? ratio: 0.0;
 }
 
+QRectF ViewBoxBase::viewRect() const
+{
+    const Point& p1 = mViewRange[0];
+    const Point& p2 = mViewRange[1];
+    QRect r(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
+    qDebug()<<"Rect "<<r;
+    return r;
+}
+
+QRectF ViewBoxBase::targetRect() const
+{
+    const Point& p1 = mTargetRange[0];
+    const Point& p2 = mTargetRange[1];
+    return QRectF(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
+}
+
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = x;
@@ -134,3 +151,54 @@ void ViewBoxBase::setAutoRangeEnabled(const bool enableX, const bool enableY)
     mAutoRangeEnabled[0] = enableX;
     mAutoRangeEnabled[1] = enableY;
 }
+
+void ViewBoxBase::_resetTarget()
+{
+    // Reset target range to exactly match current view range.
+    // This is used during mouse interaction to prevent unpredictable
+    // behavior (because the user is unaware of targetRange).
+    if(mAspectLocked == 0.0)    // interferes with aspect locking
+    {
+        mTargetRange[0] = mViewRange[0];
+        mTargetRange[1] = mViewRange[1];
+    }
+}
+
+
+
+
+/*
+    def viewRect(self):
+        """Return a QRectF bounding the region visible within the ViewBox"""
+        try:
+            viewRange = self.viewRange()
+            vr0 = viewRange[0]
+            vr1 = viewRange[1]
+            return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
+        except:
+            print("make qrectf failed:", self.viewRange())
+            raise
+
+    def targetRect(self):
+        """
+        Return the region which has been requested to be visible.
+        (this is not necessarily the same as the region that is *actually* visible--
+        resizing and aspect ratio constraints can cause targetRect() and viewRect() to differ)
+        """
+        try:
+            tr = self.targetRange()
+            tr0 = tr[0]
+            tr1 = tr[1]
+            return QtCore.QRectF(tr0[0], tr1[0], tr0[1]-tr0[0], tr1[1] - tr1[0])
+        except:
+            print("make qrectf failed:", tr)
+            raise
+
+    def _resetTarget(self):
+        # Reset target range to exactly match current view range.
+        # This is used during mouse interaction to prevent unpredictable
+        # behavior (because the user is unaware of targetRange).
+        if self.aspectLocked() == 0.0:  # (interferes with aspect locking)
+            viewRange = self.viewRange()
+            self.setTargetRange(viewRange[0], viewRange[1])
+*/
