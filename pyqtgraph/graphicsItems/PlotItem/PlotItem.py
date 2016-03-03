@@ -1086,7 +1086,7 @@ class PlotItem(GraphicsWidget):
         self._checkScaleKey(name)
         return self.axes[name]['item']
         
-    def setLabel(self, axis, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, axis, text=None, units=None, unitPrefix=None, enableAutoSIPrefix=None, **args):
         """
         Set the label for an axis. Basic HTML formatting is allowed.
         
@@ -1100,7 +1100,7 @@ class PlotItem(GraphicsWidget):
                         (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
         ==============  =================================================================
         """
-        self.getAxis(axis).setLabel(text=text, units=units, unitPrefix=unitPrefix, **args)
+        self.getAxis(axis).setLabel(text=text, units=units, unitPrefix=unitPrefix, enableAutoSIPrefix=enableAutoSIPrefix, **args)
         self.showAxis(axis)
         
     def setLabels(self, **kwds):

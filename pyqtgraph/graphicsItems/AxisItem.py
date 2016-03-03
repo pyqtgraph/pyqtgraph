@@ -230,7 +230,7 @@ class AxisItem(GraphicsWidget):
         if self.autoSIPrefix:
             self.updateAutoSIPrefix()
         
-    def setLabel(self, text=None, units=None, unitPrefix=None, **args):
+    def setLabel(self, text=None, units=None, unitPrefix=None, enableAutoSIPrefix=None, **args):
         """Set the text displayed adjacent to the axis.
         
         ==============  =============================================================
@@ -264,6 +264,8 @@ class AxisItem(GraphicsWidget):
             self.showLabel()
         if unitPrefix is not None:
             self.labelUnitPrefix = unitPrefix
+        if enableAutoSIPrefix is not None:
+            self.enableAutoSIPrefix(enable=enableAutoSIPrefix)
         if len(args) > 0:
             self.labelStyle = args
         self.label.setHtml(self.labelString())
