@@ -134,9 +134,10 @@ QRectF ViewBoxBase::targetRect() const
     return QRectF(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
 }
 
-QGraphicsItem* ViewBoxBase::innerSceneItem() const
+QGraphicsObject2* ViewBoxBase::innerSceneItem() const
 {
-    qDebug()<<"innerSceneItem "<<mInnerSceneItem;
+    //qDebug()<<"Children"<<childItems();
+    qDebug()<<"innerSceneItem "<<mInnerSceneItem<< (mInnerSceneItem!=nullptr);
     return mInnerSceneItem;
 }
 
@@ -170,10 +171,10 @@ void ViewBoxBase::_resetTarget()
     }
 }
 
-void ViewBoxBase::setInnerSceneItem(QGraphicsItem *item)
+void ViewBoxBase::setInnerSceneItem(QGraphicsObject2* innerItem)
 {
-    mInnerSceneItem = item;
-    qDebug()<<"setInnerSceneItem "<<item<<mInnerSceneItem;
+    qDebug()<<"setInnerSceneItem "<<(mInnerSceneItem==nullptr);
+    mInnerSceneItem = innerItem;
 }
 
 

@@ -97,7 +97,7 @@ public:
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
 
-    QGraphicsItem* innerSceneItem() const /HoldGIL/;
+    QGraphicsObject2* innerSceneItem() const /HoldGIL/;
 
 protected:
 
@@ -107,7 +107,7 @@ protected:
 
     void _resetTarget() /HoldGIL/;
 
-    void setInnerSceneItem(QGraphicsItem* /KeepReference/) /HoldGIL/;
+    void setInnerSceneItem(QGraphicsObject2* innerItem);
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

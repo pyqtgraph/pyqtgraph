@@ -361,8 +361,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         else:
             raise Exception('graphicsItems:ViewBox:setLeftButtonAction: unknown mode = %s (Options are "pan" and "rect")' % mode)
 
-    #def innerSceneItem(self):
-    #    return self.childGroup
+    def innerSceneItem(self):
+        return self.childGroup
 
     def setMouseEnabled(self, x=None, y=None):
         """

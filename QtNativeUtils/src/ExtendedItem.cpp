@@ -11,6 +11,38 @@
 #endif
 
 
+ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
+{
+    if(mViewBox==nullptr && !mViewBoxIsViewWidget)
+    {
+        QGraphicsItem* p = (QGraphicsItem*)this;
+        while(p!=nullptr)
+        {
+            p = p->parentItem();
+            if(p==nullptr)
+            {
+                QGraphicsView* view = getViewWidget();
+                if(view==nullptr)
+                    return nullptr;
+                else
+                {
+                    mViewBoxIsViewWidget = true;
+                    return nullptr;
+                }
+            }
+            else if(p->type()==CustomItemTypes::TypeViewBox)
+            {
+                mViewBox = qgraphicsitem_cast<ViewBoxBase*>(p);
+                return mViewBox;
+            }
+        }
+    }
+    return mViewBox;
+}
+
+
+
+
 QRectF GRAPHICSITEM_CLASS::mapRectFromView(const QRectF& r) const
 {
     return viewTransform().inverted().mapRect(r);

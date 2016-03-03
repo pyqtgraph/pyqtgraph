@@ -25,7 +25,8 @@ SOURCES += src/QtNativeUtils.cpp \
     src/QGraphicsScene2.cpp \
     src/ExtendedItem.cpp \
     src/ViewBoxBase.cpp \
-    src/PlotItemBase.cpp
+    src/PlotItemBase.cpp \
+    src/GraphicsViewBase.cpp
 
 
 HEADERS += src/QtNativeUtils.h \
@@ -43,7 +44,8 @@ HEADERS += src/QtNativeUtils.h \
     src/Interfaces.h \
     src/ViewBoxBase.h \
     src/PlotItemBase.h \
-    src/ItemDefines.h
+    src/ItemDefines.h \
+    src/GraphicsViewBase.h
 
 NUMPY_INCLUDE_1 = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE_2 = /usr/lib/python2.7/dist-packages/numpy/core/include

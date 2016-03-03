@@ -7,6 +7,7 @@
 #include "QGraphicsWidget2.h"
 #include "Point.h"
 #include "ItemDefines.h"
+#include "QGraphicsObject2.h"
 
 class ViewBoxBase: public QGraphicsWidget2
 {
@@ -76,7 +77,7 @@ public:
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
 
-    QGraphicsItem* innerSceneItem() const;
+    QGraphicsObject2* innerSceneItem() const;
 
 protected:
 
@@ -86,7 +87,7 @@ protected:
 
     void _resetTarget();
 
-    void setInnerSceneItem(QGraphicsItem* item);
+    void setInnerSceneItem(QGraphicsObject2* innerItem);
 
 signals:
 
@@ -113,9 +114,9 @@ protected:
     QVector<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
     QVector<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
 
-    QGraphicsRectItem* mBackground;
+    QGraphicsRectItem* mBackground = nullptr;
 
-    QGraphicsItem* mInnerSceneItem;
+    QGraphicsObject2* mInnerSceneItem = nullptr;
 };
 
 #endif // VIEWBOXBASE_H

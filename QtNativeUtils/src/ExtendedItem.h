@@ -148,36 +148,7 @@ virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
 virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
 
 
-virtual ViewBoxBase* getViewBox() const
-{
-    qDebug()<<"Getting view box";
-    if(mViewBox==nullptr && !mViewBoxIsViewWidget)
-    {
-        QGraphicsItem* p = (QGraphicsItem*)this;
-        while(p!=nullptr)
-        {
-            p = p->parentItem();
-            if(p==nullptr)
-            {
-                QGraphicsView* view = getViewWidget();
-                if(view==nullptr)
-                    return nullptr;
-                else
-                {
-                    mViewBoxIsViewWidget = true;
-                    return nullptr;
-                }
-            }
-            else if(p->type()==CustomItemTypes::TypeViewBox)
-            {
-                mViewBox = (ViewBoxBase*)p;
-                return mViewBox;
-            }
-        }
-    }
-
-    return mViewBox;
-}
+virtual ViewBoxBase* getViewBox() const;
 
 virtual void forgetViewBox()
 {
