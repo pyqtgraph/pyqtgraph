@@ -94,7 +94,7 @@ class GraphicsItem(object):
 
         return self.sceneTransform()
     '''
-
+    '''
     def viewRect(self):
         """Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget"""
         view = self.getViewBox()
@@ -107,6 +107,7 @@ class GraphicsItem(object):
         bounds = bounds.normalized()
 
         return bounds
+    '''
 
     def pixelSize(self):
         vt = self.deviceTransform()

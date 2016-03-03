@@ -11,6 +11,24 @@
 #endif
 
 
+GraphicsViewBase* GRAPHICSITEM_CLASS::getViewWidget() const
+{
+    if(mView==nullptr)
+    {
+        QGraphicsScene* s = scene();
+        if(s==nullptr)
+            return nullptr;
+        QList<QGraphicsView*> views = s->views();
+        if(views.size()==0)
+            return nullptr;
+
+        mView = qobject_cast<GraphicsViewBase*>(views[0]);
+    }
+
+    return mView;
+}
+
+
 ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
 {
     if(mViewBox==nullptr && !mViewBoxIsViewWidget)
@@ -21,7 +39,7 @@ ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
             p = p->parentItem();
             if(p==nullptr)
             {
-                QGraphicsView* view = getViewWidget();
+                GraphicsViewBase* view = getViewWidget();
                 if(view==nullptr)
                     return nullptr;
                 else
@@ -41,6 +59,14 @@ ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
 }
 
 
+
+QTransform GRAPHICSITEM_CLASS::deviceTransform() const
+{
+    GraphicsViewBase* view = getViewWidget();
+    if(view==nullptr)
+        return QTransform();
+    return BASE_GRAPHICSITEM_CLASS::deviceTransform(view->viewportTransform());
+}
 
 
 QRectF GRAPHICSITEM_CLASS::mapRectFromView(const QRectF& r) const
@@ -62,13 +88,20 @@ QTransform GRAPHICSITEM_CLASS::viewTransform() const
     return itemTransform(viewBox->innerSceneItem());
 }
 
-/*
+
 QRectF GRAPHICSITEM_CLASS::viewRect() const
 {
     // Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget
+    ViewBoxBase* viewBox = getViewBox();
+    QRectF bounds;
+    if(viewBox)
+        bounds = viewBox->viewRect();
+    else
+        bounds = mView->viewRect();
 
+    return bounds.normalized();
 }
-*/
+
 
 /*
 view = self.getViewBox()

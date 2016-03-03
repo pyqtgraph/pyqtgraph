@@ -14,35 +14,14 @@ virtual int type() const
 }
 
 
-virtual QGraphicsView* getViewWidget() const
-{
-    if(mView==nullptr)
-    {
-        QGraphicsScene* s = scene();
-        if(s==nullptr)
-            return nullptr;
-        QList<QGraphicsView*> views = s->views();
-        if(views.size()>0)
-            mView = views[0];
-        else
-            return nullptr;
-    }
-
-    return mView;
-}
+virtual GraphicsViewBase* getViewWidget() const;
 
 virtual void forgetViewWidget()
 {
     mView = nullptr;
 }
 
-QTransform deviceTransform() const
-{
-    QGraphicsView* view = getViewWidget();
-    if(view==nullptr)
-        return QTransform();
-    return BASE_GRAPHICSITEM_CLASS::deviceTransform(view->viewportTransform());
-}
+QTransform deviceTransform() const;
 
 QTransform deviceTransform(const QTransform& viewportTransform) const
 {
@@ -174,10 +153,10 @@ virtual QTransform viewTransform() const;
 
 virtual QRectF mapRectFromView(const QRectF& r) const;
 
-//virtual QRectF viewRect() const;
+virtual QRectF viewRect() const;
 
 protected:
-    mutable QGraphicsView* mView = nullptr;
+    mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;
     mutable bool mViewBoxIsViewWidget = false;
 

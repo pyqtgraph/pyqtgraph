@@ -9,6 +9,11 @@ class GraphicsViewBase : public QGraphicsView
 public:
     explicit GraphicsViewBase(QWidget *parent = 0);
 
+    virtual QRectF viewRect() const;
+
+    virtual QRectF visibleRange() const { return viewRect(); }
+
+
 signals:
 
 public slots:

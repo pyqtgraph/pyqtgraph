@@ -1,6 +1,7 @@
 #include "QGraphicsWidget2.h"
 
 #include "ViewBoxBase.h"
+#include "GraphicsViewBase.h"
 
 QGraphicsWidget2::QGraphicsWidget2(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
     QGraphicsWidget(parent, wFlags)

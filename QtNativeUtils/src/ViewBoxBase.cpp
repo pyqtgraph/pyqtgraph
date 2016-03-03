@@ -136,8 +136,6 @@ QRectF ViewBoxBase::targetRect() const
 
 QGraphicsObject2* ViewBoxBase::innerSceneItem() const
 {
-    //qDebug()<<"Children"<<childItems();
-    qDebug()<<"innerSceneItem "<<mInnerSceneItem<< (mInnerSceneItem!=nullptr);
     return mInnerSceneItem;
 }
 
@@ -173,7 +171,6 @@ void ViewBoxBase::_resetTarget()
 
 void ViewBoxBase::setInnerSceneItem(QGraphicsObject2* innerItem)
 {
-    qDebug()<<"setInnerSceneItem "<<(mInnerSceneItem==nullptr);
     mInnerSceneItem = innerItem;
 }
 

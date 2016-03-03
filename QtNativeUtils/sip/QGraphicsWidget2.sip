@@ -15,25 +15,8 @@ public:
     QGraphicsWidget2(QGraphicsItem* parent /TransferThis/ =nullptr, Qt::WindowFlags wFlags=0) /HoldGIL/;
     virtual ~QGraphicsWidget2() /HoldGIL/;
 
-    virtual QGraphicsView* getViewWidget() const /HoldGIL/;
+    virtual GraphicsViewBase* getViewWidget() const /HoldGIL/;
     virtual void forgetViewWidget() /HoldGIL/;
-
-/*
-    virtual QObject* getViewBox();
-%MethodCode
-    if(sipSelfWasArg)
-        sipRes = sipCpp->QGraphicsWidget2::getViewBox();
-    else
-        sipRes = sipCpp->getViewBox();
-
-    if(sipRes->isWidgetType())
-        return sipConvertFromType(sipRes, sipType_QGraphicsView, nullptr);
-    else
-        return sipConvertFromType(sipRes, sipType_QGraphicsWidget, nullptr);
-%End
-
-    virtual void forgetViewBox();
-*/
 
     virtual int type() const /HoldGIL/;
 
@@ -89,4 +72,6 @@ public:
     virtual QTransform viewTransform() const;
 
     virtual QRectF mapRectFromView(const QRectF& r) const;
+
+    virtual QRectF viewRect() const;
 };

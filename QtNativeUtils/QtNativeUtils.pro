@@ -68,6 +68,7 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/Interfaces.sip \
     sip/QGraphicsScene2.sip \
     sip/ViewBoxBase.sip \
-    sip/PlotItemBase.sip
+    sip/PlotItemBase.sip \
+    sip/GraphicsViewBase.sip
 
 

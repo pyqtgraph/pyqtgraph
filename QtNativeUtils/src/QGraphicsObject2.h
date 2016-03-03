@@ -10,6 +10,7 @@
 #include "ItemDefines.h"
 
 class ViewBoxBase;
+class GraphicsViewBase;
 
 class QGraphicsObject2: public QGraphicsObject
 {
