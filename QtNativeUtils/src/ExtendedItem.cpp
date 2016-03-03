@@ -71,7 +71,7 @@ QTransform GRAPHICSITEM_CLASS::deviceTransform() const
 
 QRectF GRAPHICSITEM_CLASS::mapRectFromView(const QRectF& r) const
 {
-    return viewTransform().inverted().mapRect(r);
+    return viewTransform().inverted().mapRect(QRectF(r));
 }
 
 
@@ -82,8 +82,8 @@ QTransform GRAPHICSITEM_CLASS::viewTransform() const
     // Returns None if the item does not have a view.
 
     ViewBoxBase* viewBox = getViewBox();
-    qDebug()<<this<<mViewBoxIsViewWidget;
-    if(mViewBoxIsViewWidget || !viewBox)
+    //qDebug()<<"viewTransform"<<this<<mViewBoxIsViewWidget;
+    if(mViewBoxIsViewWidget || viewBox==nullptr)
         return sceneTransform();
 
     return itemTransform(viewBox->innerSceneItem());
@@ -99,37 +99,10 @@ QRectF GRAPHICSITEM_CLASS::viewRect() const
         bounds = viewBox->viewRect();
     else
         bounds = mView->viewRect();
+    bounds = mapRectFromView(bounds);
 
-    //return bounds.normalized();
-    return bounds;
+    return bounds.normalized();
 }
-
-
-/*
-view = self.getViewBox()
-if view is None:
-    return None
-bounds = self.mapRectFromView(view.viewRect())
-if bounds is None:
-    return None
-
-bounds = bounds.normalized()
-
-return bounds
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif // ENABLE_EXTENDEDTEM_CODE

@@ -3,7 +3,7 @@
 GraphicsViewBase::GraphicsViewBase(QWidget *parent) :
     QGraphicsView(parent)
 {
-    setCacheMode(CacheBackground);
+    setCacheMode(QGraphicsView::CacheBackground);
 
     // This might help, but it's probably dangerous in the general case..
     // setOptimizationFlag(DontSavePainterState, true)
@@ -14,9 +14,9 @@ GraphicsViewBase::GraphicsViewBase(QWidget *parent) :
     setFrameShape(QFrame::NoFrame);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setTransformationAnchor(NoAnchor);
-    setResizeAnchor(AnchorViewCenter);
-    setViewportUpdateMode(MinimalViewportUpdate);
+    setTransformationAnchor(QGraphicsView::NoAnchor);
+    setResizeAnchor(QGraphicsView::AnchorViewCenter);
+    setViewportUpdateMode(QGraphicsView::MinimalViewportUpdate);
 }
 
 QRectF GraphicsViewBase::viewRect() const

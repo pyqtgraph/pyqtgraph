@@ -10,7 +10,7 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mXInverted(invertX),
     mYInverted(invertY)
 {
-    setFlag(ItemClipsChildrenToShape, true);
+    setFlag(ItemClipsChildrenToShape);
     setFlag(ItemIsFocusable, true);
 
     setZValue(-100);
