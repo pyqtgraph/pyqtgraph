@@ -1100,7 +1100,7 @@ class PlotItem(GraphicsWidget):
                         (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
         ==============  =================================================================
         """
-        self.getAxis(axis).setLabel(text=text, units=units, **args)
+        self.getAxis(axis).setLabel(text=text, units=units, unitPrefix=unitPrefix, **args)
         self.showAxis(axis)
         
     def setLabels(self, **kwds):
