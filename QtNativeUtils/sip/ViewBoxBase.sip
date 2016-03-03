@@ -99,7 +99,6 @@ public:
 
     QGraphicsObject2* innerSceneItem() const /HoldGIL/;
 
-protected:
 
     void setViewRange(const Point& x, const Point& y) /HoldGIL/;
     void setTargetRange(const Point& x, const Point& y) /HoldGIL/;
@@ -108,6 +107,7 @@ protected:
     void _resetTarget() /HoldGIL/;
 
     void setInnerSceneItem(QGraphicsObject2* innerItem);
+protected:
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

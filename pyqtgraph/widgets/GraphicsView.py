@@ -235,13 +235,15 @@ class GraphicsView(GraphicsViewBase):
         if propagate:
             for v in self.lockedViewports:
                 v.setXRange(self.range, padding=0)
-    '''
+
     def viewRect(self):
         """Return the boundaries of the view in scene coordinates"""
         ## easier to just return self.range ?
         r = QtCore.QRectF(self.rect())
         return self.viewportTransform().inverted()[0].mapRect(r)
 
+
+    '''
     def visibleRange(self):
         ## for backward compatibility
         return self.viewRect()

@@ -192,11 +192,12 @@ class InfiniteLine(GraphicsObject):
                 self._pxLength = 0.0 if px is None else px
 
             w = (max(4.0, self.pen.width()/2.0, self.hoverPen.width()/2.0)+1.0) * self._pxLength
+            self._boundingRect = QtCore.QRectF(br)
             br.setBottom(-w)
             br.setTop(w)
             br = br.normalized()
-            self._boundingRect = br
             self._line = QtCore.QLineF(br.right(), 0, br.left(), 0)
+            print br
         return self._boundingRect
     
     def paint(self, p, *args):

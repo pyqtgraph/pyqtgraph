@@ -427,18 +427,21 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.updateBackground()
         self.sigResized.emit(self)
 
+    '''
     def viewRect(self):
         """Return a QRectF bounding the region visible within the ViewBox"""
         try:
             viewRange = self.viewRange()
+            print viewRange
             vr0 = viewRange[0]
             vr1 = viewRange[1]
             r = QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
+            print r
             return r
         except:
             print("make qrectf failed:", self.viewRange())
             raise
-
+    '''
     '''
     def targetRect(self):
         """

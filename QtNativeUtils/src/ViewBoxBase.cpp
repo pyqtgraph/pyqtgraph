@@ -122,8 +122,7 @@ QRectF ViewBoxBase::viewRect() const
 {
     const Point& p1 = mViewRange[0];
     const Point& p2 = mViewRange[1];
-    QRect r(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
-    qDebug()<<"Rect "<<r;
+    QRectF r(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
     return r;
 }
 
@@ -141,14 +140,14 @@ QGraphicsObject2* ViewBoxBase::innerSceneItem() const
 
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
-    mViewRange[0] = x;
-    mViewRange[1] = y;
+    mViewRange[0] = Point(x);
+    mViewRange[1] = Point(y);
 }
 
 void ViewBoxBase::setTargetRange(const Point &x, const Point &y)
 {
-    mTargetRange[0] = x;
-    mTargetRange[1] = y;
+    mTargetRange[0] = Point(x);
+    mTargetRange[1] = Point(y);
 }
 
 void ViewBoxBase::setAutoRangeEnabled(const bool enableX, const bool enableY)
@@ -164,8 +163,8 @@ void ViewBoxBase::_resetTarget()
     // behavior (because the user is unaware of targetRange).
     if(mAspectLocked == 0.0)    // interferes with aspect locking
     {
-        mTargetRange[0] = mViewRange[0];
-        mTargetRange[1] = mViewRange[1];
+        mTargetRange[0] = Point(mViewRange[0]);
+        mTargetRange[1] = Point(mViewRange[1]);
     }
 }
 

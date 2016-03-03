@@ -79,7 +79,6 @@ public:
 
     QGraphicsObject2* innerSceneItem() const;
 
-protected:
 
     void setViewRange(const Point& x, const Point& y);
     void setTargetRange(const Point& x, const Point& y);
@@ -88,6 +87,7 @@ protected:
     void _resetTarget();
 
     void setInnerSceneItem(QGraphicsObject2* innerItem);
+protected:
 
 signals:
 

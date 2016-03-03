@@ -82,6 +82,7 @@ QTransform GRAPHICSITEM_CLASS::viewTransform() const
     // Returns None if the item does not have a view.
 
     ViewBoxBase* viewBox = getViewBox();
+    qDebug()<<this<<mViewBoxIsViewWidget;
     if(mViewBoxIsViewWidget || !viewBox)
         return sceneTransform();
 
@@ -99,7 +100,8 @@ QRectF GRAPHICSITEM_CLASS::viewRect() const
     else
         bounds = mView->viewRect();
 
-    return bounds.normalized();
+    //return bounds.normalized();
+    return bounds;
 }
 
 
