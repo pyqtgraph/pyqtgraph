@@ -209,4 +209,27 @@ QPainterPath GRAPHICSITEM_CLASS::childrenShape() const
     return path;
 }
 
+
+QPointF GRAPHICSITEM_CLASS::pixelSize() const
+{
+    return deviceTransform().inverted().map(QPointF(1.0, 1.0));
+}
+
+double GRAPHICSITEM_CLASS::pixelWidth() const
+{
+    return deviceTransform().inverted().map(QLineF(0.0, 0.0, 1.0, 0.0)).length();
+}
+
+double GRAPHICSITEM_CLASS::pixelHeight() const
+{
+    return deviceTransform().inverted().map(QLineF(0.0, 0.0, 0.0, 1.0)).length();
+}
+
+QPointF GRAPHICSITEM_CLASS::viewPos() const
+{
+    return mapToView(mapFromParent(pos()));
+}
+
+
+
 #endif // ENABLE_EXTENDEDTEM_CODE

@@ -114,6 +114,12 @@ QList<QGraphicsItem*> allChildItems(QGraphicsItem* root=nullptr) const;
 
 QPainterPath childrenShape() const;
 
+QPointF pixelSize() const;
+double pixelWidth() const;
+double pixelHeight() const;
+
+QPointF viewPos() const;
+
 protected:
     mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;

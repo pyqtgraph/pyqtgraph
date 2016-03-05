@@ -98,4 +98,10 @@ public:
     QList<QGraphicsItem*> allChildItems(QGraphicsItem* root=nullptr) const /HoldGIL/;
 
     QPainterPath childrenShape() const /HoldGIL/;
+
+    QPointF pixelSize() const /HoldGIL/;
+    double pixelWidth() const /HoldGIL/;
+    double pixelHeight() const /HoldGIL/;
+
+    QPointF viewPos() const /HoldGIL/;
 };
