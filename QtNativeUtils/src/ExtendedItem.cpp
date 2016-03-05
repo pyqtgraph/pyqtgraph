@@ -241,4 +241,17 @@ void GRAPHICSITEM_CLASS::informViewBoundsChanged()
 }
 
 
+void GRAPHICSITEM_CLASS::_updateView()
+{
+
+}
+
+
+void GRAPHICSITEM_CLASS::viewChanged()
+{
+    // Called when this item's view has changed
+    // (ie, the item has been added to or removed from a ViewBox)
+}
+
+
 #endif // ENABLE_EXTENDEDTEM_CODE

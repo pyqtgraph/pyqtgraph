@@ -106,4 +106,8 @@ public:
     QPointF viewPos() const /HoldGIL/;
 
     virtual void informViewBoundsChanged() /HoldGIL/;
+
+protected:
+    virtual void _updateView() /HoldGIL/;
+    virtual void viewChanged() /HoldGIL/;
 };

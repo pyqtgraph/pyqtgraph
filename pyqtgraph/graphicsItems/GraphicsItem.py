@@ -255,12 +255,14 @@ class GraphicsItem(object):
         ## inform children that their view might have changed
         self._replaceView(oldView)
 
-        self.viewChanged(view, oldView)
+        self.viewChanged()
 
-    def viewChanged(self, view, oldView):
+    '''
+    def viewChanged(self):
         """Called when this item's view has changed
         (ie, the item has been added to or removed from a ViewBox)"""
         pass
+    '''
 
     def _replaceView(self, oldView, item=None):
         if item is None:

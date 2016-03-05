@@ -123,6 +123,12 @@ QPointF viewPos() const;
 virtual void informViewBoundsChanged();
 
 protected:
+
+    virtual void _updateView();
+
+    virtual void viewChanged();
+
+protected:
     mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;
     mutable bool mViewBoxIsViewWidget = false;
