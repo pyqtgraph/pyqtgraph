@@ -59,6 +59,13 @@ ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
 }
 
 
+QTransform GRAPHICSITEM_CLASS::sceneTransform() const
+{
+    if(scene()==nullptr)
+        return transform();
+    return BASE_GRAPHICSITEM_CLASS::sceneTransform();
+}
+
 
 QTransform GRAPHICSITEM_CLASS::deviceTransform() const
 {

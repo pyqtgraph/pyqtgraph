@@ -148,6 +148,7 @@ void setParentItem(QGraphicsItem* newParent)
     BASE_GRAPHICSITEM_CLASS::setParentItem(newParent);
 }
 
+virtual QTransform sceneTransform() const;
 
 virtual QTransform viewTransform() const;
 

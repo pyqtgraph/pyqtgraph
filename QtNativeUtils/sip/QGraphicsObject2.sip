@@ -66,4 +66,6 @@ public:
     virtual QRectF mapRectFromView(const QRectF& r) const;
 
     virtual QRectF viewRect() const;
+
+    virtual QTransform sceneTransform() const;
 };

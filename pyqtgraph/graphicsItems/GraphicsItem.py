@@ -185,6 +185,7 @@ class GraphicsItem(object):
         ## PyQt bug -- some child items are returned incorrectly.
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
 
+    '''
     def sceneTransform(self):
         ## Qt bug: do no allow access to sceneTransform() until
         ## the item has a scene.
@@ -193,6 +194,7 @@ class GraphicsItem(object):
             return self.transform()
         else:
             return self._qtBaseClass.sceneTransform(self)
+    '''
 
     def parentChanged(self):
         """Called when the item's parent has changed.
