@@ -110,6 +110,10 @@ virtual QTransform viewTransform() const;
 
 virtual QRectF viewRect() const;
 
+QList<QGraphicsItem*> allChildItems(QGraphicsItem* root=nullptr) const;
+
+QPainterPath childrenShape() const;
+
 protected:
     mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;

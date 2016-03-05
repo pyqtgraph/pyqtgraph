@@ -295,21 +295,16 @@ class GraphicsItem(object):
         if view is not None and hasattr(view, 'implements') and view.implements('ViewBox'):
             view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
 
+    '''
     def childrenShape(self):
         """Return the union of the shapes of all descendants of this item in local coordinates."""
         shapes = [self.mapFromItem(c, c.shape()) for c in self.allChildItems()]
         return reduce(operator.add, shapes)
+    '''
 
     def allChildItems(self, root=None):
         """Return list of the entire item tree descending from this item."""
-        if root is None:
-            root = self
-        tree = []
-        for ch in root.childItems():
-            tree.append(ch)
-            tree.extend(self.allChildItems(ch))
-        return tree
-
+        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.allChildItems(self, root=root)))
 
     def setExportMode(self, export, opts=None):
         """

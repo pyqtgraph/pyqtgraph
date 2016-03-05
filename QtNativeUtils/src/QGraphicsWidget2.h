@@ -4,6 +4,7 @@
 #include <QGraphicsWidget>
 #include <QGraphicsView>
 #include <QDebug>
+#include <QList>
 
 #include "Point.h"
 #include "Interfaces.h"

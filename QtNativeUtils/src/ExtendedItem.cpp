@@ -178,4 +178,35 @@ QRectF GRAPHICSITEM_CLASS::viewRect() const
 }
 
 
+QList<QGraphicsItem*> GRAPHICSITEM_CLASS::allChildItems(QGraphicsItem* root) const
+{
+    QList<QGraphicsItem*> tree;
+    if(root==nullptr)
+        tree = childItems();
+    else
+        tree = root->childItems();
+
+    int index = 0;
+    while(index<tree.size())
+    {
+        tree += tree[index]->childItems();
+        index += 1;
+    }
+    return tree;
+}
+
+
+QPainterPath GRAPHICSITEM_CLASS::childrenShape() const
+{
+    QList<QGraphicsItem*> chItems = allChildItems();
+    QPainterPath path;
+    const int size = chItems.size();
+    for(int i=0; i<size; ++i)
+    {
+        QGraphicsItem* c = chItems[i];
+        path += mapFromItem(c, c->shape());
+    }
+    return path;
+}
+
 #endif // ENABLE_EXTENDEDTEM_CODE
