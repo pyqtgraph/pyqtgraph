@@ -11,6 +11,78 @@
 #endif
 
 
+QVector<Point> GRAPHICSITEM_CLASS::pixelVectors(const QPointF& direction) const
+{
+    // Return vectors in local coordinates representing the width and height of a view pixel.
+    // If direction is specified, then return vectors parallel and orthogonal to it.
+
+    // Return (None, None) if pixel size is not yet defined (usually because the item has not yet been displayed)
+    // or if pixel size is below floating-point precision limit.
+
+    QVector<Point> result(2, Point(0.0, 0.0));
+
+    QTransform devTr = deviceTransform();
+    QTransform dt(devTr.m11(), devTr.m12(), devTr.m21(), devTr.m22(), 0.0, 0.0);
+
+    if(direction.manhattanLength()==0.0)
+        return result;
+
+    QLineF dirLine; // p1 and p2 are (0, 0)
+    dirLine.setP2(direction);
+    dirLine = dt.map(dirLine);
+    if(dirLine.length()==0.0)
+        return result; // pixel size cannot be represented on this scale
+
+    QLineF normView(dirLine.unitVector());
+    QLineF normOrtho(normView.normalVector());
+
+    QTransform dti = dt.inverted();
+    result[0] = Point(dti.map(normView).p2());
+    result[1] = Point(dti.map(normOrtho).p2());
+
+    return result;
+}
+
+QList<QGraphicsItem*> GRAPHICSITEM_CLASS::getBoundingParents() const
+{
+    // Return a list of parents to this item that have child clipping enabled.
+    QGraphicsItem* p = parentItem();
+    QList<QGraphicsItem*> parents;
+
+    while(p!=nullptr)
+    {
+        p = p->parentItem();
+        if(p==nullptr)
+            break;
+        if(p->flags() & ItemClipsChildrenToShape)
+            parents.append(p);
+    }
+
+    return parents;
+}
+
+double GRAPHICSITEM_CLASS::transformAngle(QGraphicsItem* relativeItem) const
+{
+    if(relativeItem==nullptr)
+        relativeItem = parentItem();
+
+    QTransform tr = itemTransform(relativeItem);
+    QLineF vec = tr.map(QLineF(0.0, 0.0, 1.0, 0.0));
+    return vec.angleTo(QLineF(vec.p1(), vec.p1()+QPointF(1.0, 0.0)));
+}
+
+void GRAPHICSITEM_CLASS::setParentItem(QGraphicsItem* newParent)
+{
+    // Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
+    if(newParent!=nullptr)
+    {
+        QGraphicsScene* pscene = newParent->scene();
+        if(pscene!=nullptr && pscene!=scene())
+            pscene->addItem(this);
+    }
+    BASE_GRAPHICSITEM_CLASS::setParentItem(newParent);
+}
+
 GraphicsViewBase* GRAPHICSITEM_CLASS::getViewWidget() const
 {
     if(mView==nullptr)
