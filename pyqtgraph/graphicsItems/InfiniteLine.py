@@ -260,11 +260,3 @@ class InfiniteLine(GraphicsObject):
         self._boundingRect = None
         self._line = None
         GraphicsObject.viewTransformChanged(self)
-
-    def viewChanged(self, view, oldView):
-        """Called when this item's view has changed
-        (ie, the item has been added to or removed from a ViewBox)"""
-        self._pxLength = None
-        self._boundingRect = None
-        self._line = None
-        GraphicsObject.viewChanged(self, view, oldView)
