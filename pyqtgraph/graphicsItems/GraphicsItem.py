@@ -133,6 +133,7 @@ class GraphicsItem(object):
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 0, 1)).length()
 
+    '''
     def mapToView(self, obj):
         vt = self.viewTransform()
         if vt is None:
@@ -152,7 +153,6 @@ class GraphicsItem(object):
         vt = fn.invertQTransform(vt)
         return vt.map(obj)
 
-    '''
     def mapRectFromView(self, obj):
         vt = self.viewTransform()
         if vt is None:

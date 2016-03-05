@@ -52,6 +52,26 @@ public:
     QRectF mapRectFromDevice(const QRectF& rect) const /HoldGIL/;
     QRect mapRectFromDevice(const QRect& rect) const /HoldGIL/;
 
+    QPointF	mapToView(const QPointF& point) const;
+    QPointF	mapToView(const QPoint& point) const;
+    QPolygonF mapToView(const QRectF& rect) const;
+    QPolygonF mapToView(const QPolygonF& polygon) const;
+    QPainterPath mapToView(const QPainterPath& path) const;
+    QPointF	mapToView(qreal x, qreal y) const;
+
+    QRectF mapRectToView(const QRectF& rect) const;
+    QRect mapRectToView(const QRect& rect) const;
+
+    QPointF	mapFromView(const QPointF& point) const;
+    QPointF	mapFromView(const QPoint& point) const;
+    QPolygonF mapFromView(const QRectF& rect) const;
+    QPolygonF mapFromView(const QPolygonF& polygon) const;
+    QPainterPath mapFromView(const QPainterPath& path) const;
+    QPointF	mapFromView(qreal x, qreal y) const;
+
+    QRectF mapRectFromView(const QRectF& rect) const;
+    QRect mapRectFromView(const QRect& rect) const;
+
     double transformAngle(QGraphicsItem* relativeItem=nullptr) const /HoldGIL/;
 
     virtual void mouseClickEvent(MouseClickEvent* event) /HoldGIL/;
@@ -70,8 +90,6 @@ public:
     void setParentItem(QGraphicsItem* newParent);
 
     virtual QTransform viewTransform() const;
-
-    virtual QRectF mapRectFromView(const QRectF& r) const;
 
     virtual QRectF viewRect() const;
 

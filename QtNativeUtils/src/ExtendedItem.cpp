@@ -148,12 +148,6 @@ QTransform GRAPHICSITEM_CLASS::deviceTransform() const
 }
 
 
-QRectF GRAPHICSITEM_CLASS::mapRectFromView(const QRectF& r) const
-{
-    return viewTransform().inverted().mapRect(QRectF(r));
-}
-
-
 QTransform GRAPHICSITEM_CLASS::viewTransform() const
 {
     // Return the transform that maps from local coordinates to the item's ViewBox coordinates

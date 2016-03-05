@@ -66,6 +66,26 @@ QRect mapRectToDevice(const QRect& rect) const { return deviceTransform().mapRec
 QRectF mapRectFromDevice(const QRectF& rect) const { return deviceTransform().inverted().mapRect(rect); }
 QRect mapRectFromDevice(const QRect& rect) const { return deviceTransform().inverted().mapRect(rect); }
 
+QPointF	mapToView(const QPointF& point) const { return viewTransform().map(point); }
+QPointF	mapToView(const QPoint& point) const { return viewTransform().map(QPointF(point)); }
+QPolygonF mapToView(const QRectF& rect) const { return viewTransform().map(rect); }
+QPolygonF mapToView(const QPolygonF& polygon) const { return viewTransform().map(polygon); }
+QPainterPath mapToView(const QPainterPath& path) const { return viewTransform().map(path); }
+QPointF	mapToView(qreal x, qreal y) const { return mapToView(QPointF(x, y)); }
+
+QRectF mapRectToView(const QRectF& rect) const { return viewTransform().mapRect(rect); }
+QRect mapRectToView(const QRect& rect) const { return viewTransform().mapRect(rect); }
+
+QPointF	mapFromView(const QPointF& point) const { return viewTransform().inverted().map(point); }
+QPointF	mapFromView(const QPoint& point) const { return viewTransform().inverted().map(QPointF(point)); }
+QPolygonF mapFromView(const QRectF& rect) const { return viewTransform().inverted().map(rect); }
+QPolygonF mapFromView(const QPolygonF& polygon) const { return viewTransform().inverted().map(polygon); }
+QPainterPath mapFromView(const QPainterPath& path) const { return viewTransform().inverted().map(path); }
+QPointF	mapFromView(qreal x, qreal y) const { return mapFromView(QPointF(x, y)); }
+
+QRectF mapRectFromView(const QRectF& rect) const { return viewTransform().inverted().mapRect(rect); }
+QRect mapRectFromView(const QRect& rect) const { return viewTransform().inverted().mapRect(rect); }
+
 double transformAngle(QGraphicsItem* relativeItem=nullptr) const;
 
 virtual void mouseClickEvent(MouseClickEvent* event) { event->ignore(); }
@@ -87,8 +107,6 @@ void setParentItem(QGraphicsItem* newParent);
 virtual QTransform sceneTransform() const;
 
 virtual QTransform viewTransform() const;
-
-virtual QRectF mapRectFromView(const QRectF& r) const;
 
 virtual QRectF viewRect() const;
 
