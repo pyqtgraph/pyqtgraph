@@ -94,11 +94,14 @@ public:
     double aspectLocked() const /HoldGIL/;
     void setAspectLocked(const bool lock=true, const double ratio=1.0) /HoldGIL/;
 
-    virtual QRectF viewRect() const;
-    QRectF targetRect() const;
+    virtual QRectF viewRect() const /HoldGIL/;
+    QRectF targetRect() const /HoldGIL/;
 
     QGraphicsObject2* innerSceneItem() const /HoldGIL/;
 
+    virtual void itemsChanged() /HoldGIL/;
+
+protected:
 
     void setViewRange(const Point& x, const Point& y) /HoldGIL/;
     void setTargetRange(const Point& x, const Point& y) /HoldGIL/;
@@ -106,8 +109,7 @@ public:
 
     void _resetTarget() /HoldGIL/;
 
-    void setInnerSceneItem(QGraphicsObject2* innerItem);
-protected:
+    void setInnerSceneItem(QGraphicsObject2* innerItem) /HoldGIL/;
 
 signals:
     void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);

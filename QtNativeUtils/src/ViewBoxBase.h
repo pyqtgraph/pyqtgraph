@@ -79,6 +79,10 @@ public:
 
     QGraphicsObject2* innerSceneItem() const;
 
+    // called when items are added/removed from self.childGroup
+    virtual void itemsChanged() { updateAutoRange(); }
+
+protected:
 
     void setViewRange(const Point& x, const Point& y);
     void setTargetRange(const Point& x, const Point& y);
@@ -87,7 +91,6 @@ public:
     void _resetTarget();
 
     void setInnerSceneItem(QGraphicsObject2* innerItem);
-protected:
 
 signals:
 

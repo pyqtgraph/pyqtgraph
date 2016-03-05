@@ -120,6 +120,8 @@ double pixelHeight() const;
 
 QPointF viewPos() const;
 
+virtual void informViewBoundsChanged();
+
 protected:
     mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;

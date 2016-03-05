@@ -1063,10 +1063,11 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         return wr
 
 
-
+    '''
     def itemsChanged(self):
         ## called when items are added/removed from self.childGroup
         self.updateAutoRange()
+    '''
 
     #def itemBoundsChanged(self, item):
     #    #self._itemBoundsCache.pop(item, None)

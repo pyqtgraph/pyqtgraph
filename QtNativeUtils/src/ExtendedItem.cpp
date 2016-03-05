@@ -231,5 +231,14 @@ QPointF GRAPHICSITEM_CLASS::viewPos() const
 }
 
 
+void GRAPHICSITEM_CLASS::informViewBoundsChanged()
+{
+    // Inform this item's container ViewBox that the bounds of this item have changed.
+    // This is used by ViewBox to react if auto-range is enabled.
+    ViewBoxBase* viewBox = getViewBox();
+    if(viewBox)
+        viewBox->itemBoundsChanged(this); // inform view so it can update its range if it wants
+}
+
 
 #endif // ENABLE_EXTENDEDTEM_CODE

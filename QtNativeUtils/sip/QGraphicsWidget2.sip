@@ -104,4 +104,6 @@ public:
     double pixelHeight() const /HoldGIL/;
 
     QPointF viewPos() const /HoldGIL/;
+
+    virtual void informViewBoundsChanged() /HoldGIL/;
 };

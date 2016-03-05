@@ -286,6 +286,7 @@ class GraphicsItem(object):
         """
         pass
 
+    '''
     def informViewBoundsChanged(self):
         """
         Inform this item's container ViewBox that the bounds of this item have changed.
@@ -294,6 +295,7 @@ class GraphicsItem(object):
         view = self.getViewBox()
         if view is not None and hasattr(view, 'implements') and view.implements('ViewBox'):
             view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
+    '''
 
     '''
     def childrenShape(self):
