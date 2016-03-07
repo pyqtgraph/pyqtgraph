@@ -151,6 +151,7 @@ class GraphicsView(GraphicsViewBase):
         brush = fn.mkBrush(background)
         self.setBackgroundBrush(brush)
     
+    '''
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
         return GraphicsViewBase.paintEvent(self, ev)
@@ -158,6 +159,7 @@ class GraphicsView(GraphicsViewBase):
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
         return GraphicsViewBase.render(self, *args, **kwds)
+    '''
         
     
     def close(self):

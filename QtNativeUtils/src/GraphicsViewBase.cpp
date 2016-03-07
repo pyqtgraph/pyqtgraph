@@ -1,4 +1,5 @@
 #include "GraphicsViewBase.h"
+#include "QGraphicsScene2.h"
 
 GraphicsViewBase::GraphicsViewBase(QWidget *parent) :
     QGraphicsView(parent)
@@ -25,3 +26,19 @@ QRectF GraphicsViewBase::viewRect() const
     // easier to just return self.range ?
     return viewportTransform().inverted().mapRect(QRectF(rect()));
 }
+
+void GraphicsViewBase::render(QPainter *painter, const QRectF &target,
+                              const QRect &source, Qt::AspectRatioMode aspectRatioMode)
+{
+    QGraphicsScene2* s = qobject_cast<QGraphicsScene2*>(scene());
+    s->prepareForPaint();
+    QGraphicsView::render(painter, target, source, aspectRatioMode);
+}
+
+void GraphicsViewBase::paintEvent(QPaintEvent *event)
+{
+    QGraphicsScene2* s = qobject_cast<QGraphicsScene2*>(scene());
+    s->prepareForPaint();
+    QGraphicsView::paintEvent(event);
+}
+

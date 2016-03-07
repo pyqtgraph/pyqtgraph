@@ -14,6 +14,13 @@ public:
 
     virtual QRectF visibleRange() const { return viewRect(); }
 
+    void render(QPainter* painter, const QRectF& target=QRectF(),
+                const QRect& source=QRect(),
+                Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio);
+
+protected:
+
+    virtual void paintEvent(QPaintEvent* event);
 
 signals:
 
@@ -22,8 +29,6 @@ signals:
     void sigMouseReleased(QMouseEvent& ev);
     void sigSceneMouseMoved(const QPointF& p);
     void sigScaleChanged(GraphicsViewBase* view);
-
-public slots:
 
 };
 
