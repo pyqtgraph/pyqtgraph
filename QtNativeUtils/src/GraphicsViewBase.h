@@ -2,6 +2,7 @@
 #define GRAPHICSVIEWBASE_H
 
 #include <QGraphicsView>
+#include <QMouseEvent>
 
 class GraphicsViewBase : public QGraphicsView
 {
@@ -15,6 +16,12 @@ public:
 
 
 signals:
+
+    void sigDeviceRangeChanged(GraphicsViewBase* view, const QRectF& r);
+    void sigDeviceTransformChanged(GraphicsViewBase* view);
+    void sigMouseReleased(QMouseEvent& ev);
+    void sigSceneMouseMoved(const QPointF& p);
+    void sigScaleChanged(GraphicsViewBase* view);
 
 public slots:
 

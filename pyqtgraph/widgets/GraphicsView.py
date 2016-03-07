@@ -42,12 +42,11 @@ class GraphicsView(GraphicsViewBase):
     The view can be panned using the middle mouse button and scaled using the right mouse button if
     enabled via enableMouse()  (but ordinarily, we use ViewBox for this functionality)."""
     
-    sigDeviceRangeChanged = QtCore.Signal(object, object)
-    sigDeviceTransformChanged = QtCore.Signal(object)
-    sigMouseReleased = QtCore.Signal(object)
-    sigSceneMouseMoved = QtCore.Signal(object)
-    #sigRegionChanged = QtCore.Signal(object)
-    sigScaleChanged = QtCore.Signal(object)
+    #sigDeviceRangeChanged = QtCore.Signal(object, object)
+    #sigDeviceTransformChanged = QtCore.Signal(object)
+    #sigMouseReleased = QtCore.Signal(object)
+    #sigSceneMouseMoved = QtCore.Signal(object)
+    #sigScaleChanged = QtCore.Signal(object)
     lastFileDir = None
     
     def __init__(self, parent=None, useOpenGL=None, background='default'):
