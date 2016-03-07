@@ -496,7 +496,8 @@ class AxisItem(GraphicsWidget):
             oldView.sigResized.disconnect(self.linkedViewChanged)
         view.sigResized.connect(self.linkedViewChanged)
 
-    def linkedViewChanged(self, view, newRange=None):
+    def linkedViewChanged(self, newRange=None):
+        view = self.linkedView()
         if self.orientation in ['right', 'left']:
             if newRange is None:
                 newRange = view.viewRange()[1]

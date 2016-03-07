@@ -25,9 +25,9 @@ public:
 
 signals:
 
-    void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);
-    void sigXRangeChanged(ViewBoxBase* viewBox, const Point& range);
-    void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
+    void sigYRangeChanged(const Point& range);
+    void sigXRangeChanged(const Point& range);
+    void sigRangeChanged(const QList<Point>& range);
 };
 
 #endif // PLOTITEM_H

@@ -112,11 +112,12 @@ protected:
     void setInnerSceneItem(QGraphicsObject2* innerItem) /HoldGIL/;
 
 signals:
-    void sigYRangeChanged(ViewBoxBase* viewBox, const Point& range);
-    void sigXRangeChanged(ViewBoxBase* viewBox, const Point& range);
+
+    void sigYRangeChanged(const Point& range);
+    void sigXRangeChanged(const Point& range);
     void sigRangeChangedManually(const bool mouseLeft, const bool mouseRight);
-    void sigRangeChanged(ViewBoxBase* viewBox, const QList<Point>& range);
+    void sigRangeChanged(const QList<Point>& range);
     void sigStateChanged(ViewBoxBase* viewBox);
-    void sigTransformChanged(ViewBoxBase* viewBox);
-    void sigResized(ViewBoxBase* viewBox);
+    void sigTransformChanged();
+    void sigResized();
 };

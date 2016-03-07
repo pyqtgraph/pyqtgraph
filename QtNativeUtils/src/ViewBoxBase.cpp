@@ -55,7 +55,7 @@ void ViewBoxBase::invertY(const bool b)
     updateViewRange();
 
     emit sigStateChanged(this);
-    emit sigYRangeChanged(this, mViewRange[1]);
+    emit sigYRangeChanged(mViewRange[1]);
 }
 
 void ViewBoxBase::invertX(const bool b)
@@ -68,7 +68,7 @@ void ViewBoxBase::invertX(const bool b)
     updateViewRange();
 
     emit sigStateChanged(this);
-    emit sigYRangeChanged(this, mViewRange[0]);
+    emit sigYRangeChanged(mViewRange[0]);
 }
 
 void ViewBoxBase::setBackgroundColor(const QColor &color)

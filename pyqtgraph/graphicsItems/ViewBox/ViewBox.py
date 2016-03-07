@@ -425,7 +425,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.sigStateChanged.emit(self)
         #self.background.setRect(self.rect())
         self.updateBackground()
-        self.sigResized.emit(self)
+        self.sigResized.emit()
 
     '''
     def viewRect(self):
@@ -1564,12 +1564,12 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         # emit range change signals
         if changed[0]:
-            self.sigXRangeChanged.emit(self, tuple(viewRange[0]))
+            self.sigXRangeChanged.emit(tuple(viewRange[0]))
         if changed[1]:
-            self.sigYRangeChanged.emit(self, tuple(viewRange[1]))
+            self.sigYRangeChanged.emit(tuple(viewRange[1]))
 
         if any(changed):
-            self.sigRangeChanged.emit(self, viewRange)
+            self.sigRangeChanged.emit(viewRange)
             self.update()
             self.setMatrixNeedsUpdate(True)
 
@@ -1606,7 +1606,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
 
         self.childGroup.setTransform(m)
 
-        self.sigTransformChanged.emit(self)  ## segfaults here: 1
+        self.sigTransformChanged.emit()  ## segfaults here: 1
         self.setMatrixNeedsUpdate(False)
 
     def paint(self, p, opt, widget):
