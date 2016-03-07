@@ -35,6 +35,11 @@ void GraphicsViewBase::render(QPainter *painter, const QRectF &target,
     QGraphicsView::render(painter, target, source, aspectRatioMode);
 }
 
+void GraphicsViewBase::setAntialiasing(const bool aa)
+{
+    setRenderHint(QPainter::Antialiasing, aa);
+}
+
 void GraphicsViewBase::paintEvent(QPaintEvent *event)
 {
     QGraphicsScene2* s = qobject_cast<QGraphicsScene2*>(scene());

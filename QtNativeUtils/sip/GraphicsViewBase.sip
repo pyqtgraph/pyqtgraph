@@ -19,6 +19,8 @@ public:
                 const QRect& source=QRect(),
                 Qt::AspectRatioMode aspectRatioMode=Qt::KeepAspectRatio);
 
+    void setAntialiasing(const bool aa);
+
 protected:
 
     virtual void paintEvent(QPaintEvent* event);

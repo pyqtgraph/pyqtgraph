@@ -120,6 +120,8 @@ def onRangeChanged(arg1, arg2):
 #p7.sigRangeChanged.connect(onRangeChanged)
 
 
+win.setAntialiasing(False)
+
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
