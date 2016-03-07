@@ -27,8 +27,8 @@ protected:
 
 signals:
 
-    void sigDeviceRangeChanged(GraphicsViewBase* view, const QRectF& r);
-    void sigDeviceTransformChanged(GraphicsViewBase* view);
+    void sigDeviceRangeChanged(const QRectF& r);
+    void sigDeviceTransformChanged();
     void sigMouseReleased(QMouseEvent& ev);
     void sigSceneMouseMoved(const QPointF& p);
     void sigScaleChanged(GraphicsViewBase* view);
