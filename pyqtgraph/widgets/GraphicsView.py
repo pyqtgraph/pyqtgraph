@@ -231,8 +231,10 @@ class GraphicsView(GraphicsViewBase):
                 self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
             else:
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
-            
-        self.sigDeviceRangeChanged.emit(self.range)
+        
+        r = self.range
+        r = [Point(r.left(), r.right()), Point(r.bottom(), r.top())]
+        self.sigDeviceRangeChanged.emit(r)
         self.sigDeviceTransformChanged.emit()
         
         if propagate:
@@ -386,14 +388,18 @@ class GraphicsView(GraphicsViewBase):
             delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
-            self.sigDeviceRangeChanged.emit(self.range)
+            r = self.range
+            r = [Point(r.left(), r.right()), Point(r.bottom(), r.top())]
+            self.sigDeviceRangeChanged.emit(r)
 
         elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             
             self.translate(tr[0], tr[1])
-            self.sigDeviceRangeChanged.emit(self.range)
+            r = self.range
+            r = [Point(r.left(), r.right()), Point(r.bottom(), r.top())]
+            self.sigDeviceRangeChanged.emit(r)
         
     def pixelSize(self):
         """Return vector with the length and width of one view pixel in scene coordinates"""

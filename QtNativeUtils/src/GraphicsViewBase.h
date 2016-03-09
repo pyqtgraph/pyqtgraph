@@ -3,6 +3,9 @@
 
 #include <QGraphicsView>
 #include <QMouseEvent>
+#include <QList>
+
+#include "Point.h"
 
 class GraphicsViewBase : public QGraphicsView
 {
@@ -26,7 +29,7 @@ protected:
 
 signals:
 
-    void sigDeviceRangeChanged(const QRectF& r);
+    void sigDeviceRangeChanged(const QList<Point>& range);
     void sigDeviceTransformChanged();
     void sigMouseReleased(QMouseEvent& ev);
     void sigSceneMouseMoved(const QPointF& p);
