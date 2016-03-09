@@ -254,4 +254,74 @@ void GRAPHICSITEM_CLASS::viewChanged()
 }
 
 
+void GRAPHICSITEM_CLASS::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
+{
+    if(item==nullptr)
+        item = this;
+    QList<QGraphicsItem*> children = item->childItems();
+    const int count = children.size();
+    for(int i=0; i<count; ++i)
+    {
+        if(children[i]->type()<UserType)
+        {
+            // We are dealing with standard item
+            _replaceView(oldView, children[i]);
+        }
+        else
+        {
+            if(mViewBoxIsViewWidget && mView==oldView)
+            {
+                // _updateView()
+                QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+                if(itemObject)
+                    itemObject->_updateView();
+                else
+                {
+                    QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
+                    if(itemWidget)
+                        itemWidget->_updateView();
+                    else
+                        qDebug("Error casting item");
+                }
+            }
+        }
+    }
+}
+
+void GRAPHICSITEM_CLASS::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
+{
+    if(item==nullptr)
+        item = this;
+    QList<QGraphicsItem*> children = item->childItems();
+    const int count = children.size();
+    for(int i=0; i<count; ++i)
+    {
+        if(children[i]->type()<UserType)
+        {
+            // We are dealing with standard item
+            _replaceView(oldView, children[i]);
+        }
+        else
+        {
+            if(mViewBox==oldView)
+            {
+                // _updateView()
+                QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+                if(itemObject)
+                    itemObject->_updateView();
+                else
+                {
+                    QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
+                    if(itemWidget)
+                        itemWidget->_updateView();
+                    else
+                        qDebug("Error casting item");
+                }
+            }
+        }
+    }
+}
+
+
+
 #endif // ENABLE_EXTENDEDTEM_CODE

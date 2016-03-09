@@ -122,11 +122,15 @@ QPointF viewPos() const;
 
 virtual void informViewBoundsChanged();
 
+virtual void _updateView();
+void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
+void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+
 protected:
 
-    virtual void _updateView();
 
     virtual void viewChanged();
+
 
 protected:
     mutable GraphicsViewBase* mView = nullptr;

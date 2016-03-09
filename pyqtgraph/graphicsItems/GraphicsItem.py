@@ -264,6 +264,7 @@ class GraphicsItem(object):
         pass
     '''
 
+    '''
     def _replaceView(self, oldView, item=None):
         if item is None:
             item = self
@@ -274,6 +275,7 @@ class GraphicsItem(object):
                         #self._replaceView(oldView, child)
             else:
                 self._replaceView(oldView, child)
+    '''
 
     def viewRangeChanged(self):
         """
