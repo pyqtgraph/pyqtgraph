@@ -254,6 +254,17 @@ void GRAPHICSITEM_CLASS::viewChanged()
 }
 
 
+bool GRAPHICSITEM_CLASS::isViewBox(const ViewBoxBase* vb) const
+{
+    return mViewBox == vb;
+}
+
+bool GRAPHICSITEM_CLASS::isViewBox(const GraphicsViewBase* vb) const
+{
+    return (mViewBoxIsViewWidget && mView==vb);
+}
+
+
 void GRAPHICSITEM_CLASS::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
 {
     if(item==nullptr)
@@ -269,20 +280,23 @@ void GRAPHICSITEM_CLASS::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* 
         }
         else
         {
-            if(mViewBoxIsViewWidget && mView==oldView)
+            // _updateView()
+            QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+            if(itemObject)
             {
-                // _updateView()
-                QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
-                if(itemObject)
+                //if(itemObject->isViewBox(oldView))
                     itemObject->_updateView();
-                else
+            }
+            else
+            {
+                QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
+                if(itemWidget)
                 {
-                    QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
-                    if(itemWidget)
+                    //if(itemWidget->isViewBox(oldView))
                         itemWidget->_updateView();
-                    else
-                        qDebug("Error casting item");
                 }
+                else
+                    qDebug("Error casting item");
             }
         }
     }
@@ -303,20 +317,23 @@ void GRAPHICSITEM_CLASS::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
         }
         else
         {
-            if(mViewBox==oldView)
+            // _updateView()
+            QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+            if(itemObject)
             {
-                // _updateView()
-                QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
-                if(itemObject)
+                //if(itemObject->isViewBox(oldView))
                     itemObject->_updateView();
-                else
+            }
+            else
+            {
+                QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
+                if(itemWidget)
                 {
-                    QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
-                    if(itemWidget)
+                    //if(itemWidget->isViewBox(oldView))
                         itemWidget->_updateView();
-                    else
-                        qDebug("Error casting item");
                 }
+                else
+                    qDebug("Error casting item");
             }
         }
     }
