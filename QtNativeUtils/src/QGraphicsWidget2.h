@@ -9,11 +9,12 @@
 #include "Point.h"
 #include "Interfaces.h"
 #include "ItemDefines.h"
+#include "ExtendedItem.h"
 
 class ViewBoxBase;
 class GraphicsViewBase;
 
-class QGraphicsWidget2: public QGraphicsWidget
+class QGraphicsWidget2: public QGraphicsWidget, public ExtendedItem
 {
     Q_OBJECT
 public:
@@ -22,13 +23,22 @@ public:
 
     enum { Type = CustomItemTypes::TypeGraphicsWidget };
 
-#define ENABLE_EXTENDEDTEM_CODE     1
-#define BASE_GRAPHICSITEM_CLASS     QGraphicsWidget
-#include "ExtendedItem.h"
-#undef ENABLE_EXTENDEDTEM_CODE
-#undef BASE_GRAPHICSITEM_CLASS
+    virtual int type() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    }
 
-public:
+    QTransform deviceTransform() const;
+
+    QTransform deviceTransform(const QTransform& viewportTransform) const
+    {
+        return QGraphicsObject::deviceTransform(viewportTransform);
+    }
+
+    void setParentItem(QGraphicsItem* newParent);
+
+    virtual QTransform sceneTransform() const;
 
     void setFixedHeight(const double h)
     {

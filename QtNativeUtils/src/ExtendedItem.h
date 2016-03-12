@@ -1,31 +1,31 @@
+#ifndef EXTENDED_ITEM_H
+#define EXTENDED_ITEM_H
+
+#include <QGraphicsObject>
+
+#include "GraphicsViewBase.h"
+#include "Point.h"
+#include "mouseevents/MouseClickEvent.h"
+#include "mouseevents/HoverEvent.h"
+#include "mouseevents/MouseDragEvent.h"
 
 
-#ifdef ENABLE_EXTENDEDTEM_CODE
-
-#ifndef BASE_GRAPHICSITEM_CLASS
-    #error "No QGraphicsItem base class defined with BASE_GRAPHICSITEM_CLASS"
-#endif
+class GraphicsViewBase;
+class ViewBoxBase;
 
 
-    virtual int type() const
-    {
-        // Enable the use of qgraphicsitem_cast with this item.
-        return Type;
-    }
+class ExtendedItem
+{
 
+public:
+    ExtendedItem(QGraphicsObject* impl) : mItemImpl(impl) {}
+    virtual ~ExtendedItem() {}
 
     virtual GraphicsViewBase* getViewWidget() const;
 
     virtual void forgetViewWidget()
     {
         mView = nullptr;
-    }
-
-    QTransform deviceTransform() const;
-
-    QTransform deviceTransform(const QTransform& viewportTransform) const
-    {
-        return BASE_GRAPHICSITEM_CLASS::deviceTransform(viewportTransform);
     }
 
     QList<QGraphicsItem*> getBoundingParents() const;
@@ -45,6 +45,7 @@
         return p[0].length();
     }
 
+    virtual QTransform deviceTransform() const = 0;
 
     QPointF	mapFromDevice(const QPointF& point) const { return deviceTransform().inverted().map(point); }
     QPointF	mapFromDevice(const QPoint& point) const { return deviceTransform().inverted().map(QPointF(point)); }
@@ -101,11 +102,6 @@
         mViewBoxIsViewWidget = false;
     }
 
-
-    void setParentItem(QGraphicsItem* newParent);
-
-    virtual QTransform sceneTransform() const;
-
     virtual QTransform viewTransform() const;
 
     virtual QRectF viewRect() const;
@@ -131,17 +127,21 @@
 
 protected:
 
-
     virtual void viewChanged();
 
-
 protected:
+
     mutable GraphicsViewBase* mView = nullptr;
     mutable ViewBoxBase* mViewBox = nullptr;
     mutable bool mViewBoxIsViewWidget = false;
 
 
+private:
 
+    QGraphicsObject* mItemImpl;
+
+
+};
 
 #endif // ENABLE_EXTENDEDTEM_CODE
 

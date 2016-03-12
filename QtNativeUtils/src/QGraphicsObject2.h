@@ -9,25 +9,36 @@
 #include "Point.h"
 #include "Interfaces.h"
 #include "ItemDefines.h"
+#include "ExtendedItem.h"
 
 class ViewBoxBase;
 class GraphicsViewBase;
 
-class QGraphicsObject2: public QGraphicsObject
+class QGraphicsObject2: public QGraphicsObject, public ExtendedItem
 {
     Q_OBJECT
 public:
-    QGraphicsObject2(QGraphicsItem* parent=nullptr) : QGraphicsObject(parent)
-    {}
-    virtual ~QGraphicsObject2() {}
+    QGraphicsObject2(QGraphicsItem* parent=nullptr);
+    virtual ~QGraphicsObject2();
 
     enum { Type = CustomItemTypes::TypeGraphicsObject };
 
-#define ENABLE_EXTENDEDTEM_CODE     1
-#define BASE_GRAPHICSITEM_CLASS     QGraphicsObject
-#include "ExtendedItem.h"
-#undef ENABLE_EXTENDEDTEM_CODE
-#undef BASE_GRAPHICSITEM_CLASS
+    virtual int type() const
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    }
+
+    QTransform deviceTransform() const;
+
+    QTransform deviceTransform(const QTransform& viewportTransform) const
+    {
+        return QGraphicsObject::deviceTransform(viewportTransform);
+    }
+
+    void setParentItem(QGraphicsItem* newParent);
+
+    virtual QTransform sceneTransform() const;
 
 };
 
@@ -35,23 +46,6 @@ public:
 
 
 
-/*
 
-
-    def pos(self):
-        return Point(self._qtBaseClass.pos(self))
-
-    def viewPos(self):
-        return self.mapToView(self.mapFromParent(self.pos()))
-
-    def parentItem(self):
-        ## PyQt bug -- some items are returned incorrectly.
-        return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
-
-    def childItems(self):
-        ## PyQt bug -- some child items are returned incorrectly.
-        return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
-
-*/
 
 

@@ -1,17 +1,10 @@
 
+#include "ExtendedItem.h"
 
-#ifdef ENABLE_EXTENDEDTEM_CODE
+#include "ItemDefines.h"
+#include "ViewBoxBase.h"
 
-#ifndef BASE_GRAPHICSITEM_CLASS
-    #error "No QGraphicsItem base class defined with BASE_GRAPHICSITEM_CLASS"
-#endif
-
-#ifndef GRAPHICSITEM_CLASS
-    #error "No QGraphicsItem base class defined with GRAPHICSITEM_CLASS"
-#endif
-
-
-QVector<Point> GRAPHICSITEM_CLASS::pixelVectors(const QPointF& direction) const
+QVector<Point> ExtendedItem::pixelVectors(const QPointF& direction) const
 {
     // Return vectors in local coordinates representing the width and height of a view pixel.
     // If direction is specified, then return vectors parallel and orthogonal to it.
@@ -43,10 +36,10 @@ QVector<Point> GRAPHICSITEM_CLASS::pixelVectors(const QPointF& direction) const
     return result;
 }
 
-QList<QGraphicsItem*> GRAPHICSITEM_CLASS::getBoundingParents() const
+QList<QGraphicsItem*> ExtendedItem::getBoundingParents() const
 {
     // Return a list of parents to this item that have child clipping enabled.
-    QGraphicsItem* p = parentItem();
+    QGraphicsItem* p = mItemImpl->parentItem();
     QList<QGraphicsItem*> parents;
 
     while(p!=nullptr)
@@ -54,40 +47,30 @@ QList<QGraphicsItem*> GRAPHICSITEM_CLASS::getBoundingParents() const
         p = p->parentItem();
         if(p==nullptr)
             break;
-        if(p->flags() & ItemClipsChildrenToShape)
+        if(p->flags() & QGraphicsItem::ItemClipsChildrenToShape)
             parents.append(p);
     }
 
     return parents;
 }
 
-double GRAPHICSITEM_CLASS::transformAngle(QGraphicsItem* relativeItem) const
+double ExtendedItem::transformAngle(QGraphicsItem* relativeItem) const
 {
     if(relativeItem==nullptr)
-        relativeItem = parentItem();
+        relativeItem = mItemImpl->parentItem();
 
-    QTransform tr = itemTransform(relativeItem);
+    QTransform tr = mItemImpl->itemTransform(relativeItem);
     QLineF vec = tr.map(QLineF(0.0, 0.0, 1.0, 0.0));
     return vec.angleTo(QLineF(vec.p1(), vec.p1()+QPointF(1.0, 0.0)));
 }
 
-void GRAPHICSITEM_CLASS::setParentItem(QGraphicsItem* newParent)
-{
-    // Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-    if(newParent!=nullptr)
-    {
-        QGraphicsScene* pscene = newParent->scene();
-        if(pscene!=nullptr && pscene!=scene())
-            pscene->addItem(this);
-    }
-    BASE_GRAPHICSITEM_CLASS::setParentItem(newParent);
-}
 
-GraphicsViewBase* GRAPHICSITEM_CLASS::getViewWidget() const
+
+GraphicsViewBase* ExtendedItem::getViewWidget() const
 {
     if(mView==nullptr)
     {
-        QGraphicsScene* s = scene();
+        QGraphicsScene* s = mItemImpl->scene();
         if(s==nullptr)
             return nullptr;
         QList<QGraphicsView*> views = s->views();
@@ -101,11 +84,11 @@ GraphicsViewBase* GRAPHICSITEM_CLASS::getViewWidget() const
 }
 
 
-ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
+ViewBoxBase* ExtendedItem::getViewBox() const
 {
     if(mViewBox==nullptr && !mViewBoxIsViewWidget)
     {
-        QGraphicsItem* p = (QGraphicsItem*)this;
+        QGraphicsItem* p = (QGraphicsItem*)mItemImpl;
         while(p!=nullptr)
         {
             p = p->parentItem();
@@ -131,39 +114,21 @@ ViewBoxBase* GRAPHICSITEM_CLASS::getViewBox() const
 }
 
 
-QTransform GRAPHICSITEM_CLASS::sceneTransform() const
-{
-    if(scene()==nullptr)
-        return transform();
-    return BASE_GRAPHICSITEM_CLASS::sceneTransform();
-}
-
-
-QTransform GRAPHICSITEM_CLASS::deviceTransform() const
-{
-    GraphicsViewBase* view = getViewWidget();
-    if(view==nullptr)
-        return QTransform();
-    return BASE_GRAPHICSITEM_CLASS::deviceTransform(view->viewportTransform());
-}
-
-
-QTransform GRAPHICSITEM_CLASS::viewTransform() const
+QTransform ExtendedItem::viewTransform() const
 {
     // Return the transform that maps from local coordinates to the item's ViewBox coordinates
     // If there is no ViewBox, return the scene transform.
     // Returns None if the item does not have a view.
 
     ViewBoxBase* viewBox = getViewBox();
-    //qDebug()<<"viewTransform"<<this<<mViewBoxIsViewWidget;
     if(mViewBoxIsViewWidget || viewBox==nullptr)
-        return sceneTransform();
+        return mItemImpl->sceneTransform();
 
-    return itemTransform(viewBox->innerSceneItem());
+    return mItemImpl->itemTransform(viewBox->innerSceneItem());
 }
 
 
-QRectF GRAPHICSITEM_CLASS::viewRect() const
+QRectF ExtendedItem::viewRect() const
 {
     // Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget
     ViewBoxBase* viewBox = getViewBox();
@@ -178,11 +143,11 @@ QRectF GRAPHICSITEM_CLASS::viewRect() const
 }
 
 
-QList<QGraphicsItem*> GRAPHICSITEM_CLASS::allChildItems(QGraphicsItem* root) const
+QList<QGraphicsItem*> ExtendedItem::allChildItems(QGraphicsItem* root) const
 {
     QList<QGraphicsItem*> tree;
     if(root==nullptr)
-        tree = childItems();
+        tree = mItemImpl->childItems();
     else
         tree = root->childItems();
 
@@ -196,7 +161,7 @@ QList<QGraphicsItem*> GRAPHICSITEM_CLASS::allChildItems(QGraphicsItem* root) con
 }
 
 
-QPainterPath GRAPHICSITEM_CLASS::childrenShape() const
+QPainterPath ExtendedItem::childrenShape() const
 {
     QList<QGraphicsItem*> chItems = allChildItems();
     QPainterPath path;
@@ -204,76 +169,83 @@ QPainterPath GRAPHICSITEM_CLASS::childrenShape() const
     for(int i=0; i<size; ++i)
     {
         QGraphicsItem* c = chItems[i];
-        path += mapFromItem(c, c->shape());
+        path += mItemImpl->mapFromItem(c, c->shape());
     }
     return path;
 }
 
 
-QPointF GRAPHICSITEM_CLASS::pixelSize() const
+QPointF ExtendedItem::pixelSize() const
 {
     return deviceTransform().inverted().map(QPointF(1.0, 1.0));
 }
 
-double GRAPHICSITEM_CLASS::pixelWidth() const
+double ExtendedItem::pixelWidth() const
 {
     return deviceTransform().inverted().map(QLineF(0.0, 0.0, 1.0, 0.0)).length();
 }
 
-double GRAPHICSITEM_CLASS::pixelHeight() const
+double ExtendedItem::pixelHeight() const
 {
     return deviceTransform().inverted().map(QLineF(0.0, 0.0, 0.0, 1.0)).length();
 }
 
-QPointF GRAPHICSITEM_CLASS::viewPos() const
+QPointF ExtendedItem::viewPos() const
 {
-    return mapToView(mapFromParent(pos()));
+    return mapToView(mItemImpl->mapFromParent(mItemImpl->pos()));
 }
 
 
-void GRAPHICSITEM_CLASS::informViewBoundsChanged()
+void ExtendedItem::informViewBoundsChanged()
 {
     // Inform this item's container ViewBox that the bounds of this item have changed.
     // This is used by ViewBox to react if auto-range is enabled.
     ViewBoxBase* viewBox = getViewBox();
     if(viewBox)
-        viewBox->itemBoundsChanged(this); // inform view so it can update its range if it wants
+        viewBox->itemBoundsChanged(mItemImpl); // inform view so it can update its range if it wants
 }
 
 
-void GRAPHICSITEM_CLASS::_updateView()
+void ExtendedItem::_updateView()
 {
 
 }
 
 
-void GRAPHICSITEM_CLASS::viewChanged()
+void ExtendedItem::viewChanged()
 {
     // Called when this item's view has changed
     // (ie, the item has been added to or removed from a ViewBox)
 }
 
 
-bool GRAPHICSITEM_CLASS::isViewBox(const ViewBoxBase* vb) const
+bool ExtendedItem::isViewBox(const ViewBoxBase* vb) const
 {
     return mViewBox == vb;
 }
 
-bool GRAPHICSITEM_CLASS::isViewBox(const GraphicsViewBase* vb) const
+bool ExtendedItem::isViewBox(const GraphicsViewBase* vb) const
 {
     return (mViewBoxIsViewWidget && mView==vb);
 }
 
 
-void GRAPHICSITEM_CLASS::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
+void ExtendedItem::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
 {
     if(item==nullptr)
-        item = this;
+        item = (QGraphicsItem*)mItemImpl;
     QList<QGraphicsItem*> children = item->childItems();
     const int count = children.size();
     for(int i=0; i<count; ++i)
     {
-        if(children[i]->type()<UserType)
+        ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
+        if(itemObject)
+            itemObject->_updateView();
+        else
+            _replaceView(oldView, children[i]);
+
+        /*
+        if(children[i]->type()<QGraphicsItem::UserType)
         {
             // We are dealing with standard item
             _replaceView(oldView, children[i]);
@@ -281,36 +253,32 @@ void GRAPHICSITEM_CLASS::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* 
         else
         {
             // _updateView()
-            QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+            ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
             if(itemObject)
             {
-                //if(itemObject->isViewBox(oldView))
-                    itemObject->_updateView();
-            }
-            else
-            {
-                QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
-                if(itemWidget)
-                {
-                    //if(itemWidget->isViewBox(oldView))
-                        itemWidget->_updateView();
-                }
-                else
-                    qDebug("Error casting item");
+                itemObject->_updateView();
             }
         }
+        */
     }
 }
 
-void GRAPHICSITEM_CLASS::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
+void ExtendedItem::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
 {
     if(item==nullptr)
-        item = this;
+        item = (QGraphicsItem*)mItemImpl;
     QList<QGraphicsItem*> children = item->childItems();
     const int count = children.size();
     for(int i=0; i<count; ++i)
     {
-        if(children[i]->type()<UserType)
+        ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
+        if(itemObject)
+            itemObject->_updateView();
+        else
+            _replaceView(oldView, children[i]);
+
+        /*
+        if(children[i]->type()<QGraphicsItem::UserType)
         {
             // We are dealing with standard item
             _replaceView(oldView, children[i]);
@@ -318,27 +286,14 @@ void GRAPHICSITEM_CLASS::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
         else
         {
             // _updateView()
-            QGraphicsObject2* itemObject = dynamic_cast<QGraphicsObject2*>(children[i]);
+            ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
             if(itemObject)
             {
-                //if(itemObject->isViewBox(oldView))
-                    itemObject->_updateView();
-            }
-            else
-            {
-                QGraphicsWidget2* itemWidget = dynamic_cast<QGraphicsWidget2*>(children[i]);
-                if(itemWidget)
-                {
-                    //if(itemWidget->isViewBox(oldView))
-                        itemWidget->_updateView();
-                }
-                else
-                    qDebug("Error casting item");
+                itemObject->_updateView();
             }
         }
+        */
     }
 }
 
 
-
-#endif // ENABLE_EXTENDEDTEM_CODE
