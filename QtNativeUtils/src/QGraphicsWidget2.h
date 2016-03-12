@@ -68,6 +68,11 @@ public:
         return p;
     }
 
+public slots:
+
+    virtual void viewRangeChanged(const QList<Point>& range);
+    virtual void viewTransformChanged();
+
 };
 
 #endif // QGRAPHICSWIDGET2_H

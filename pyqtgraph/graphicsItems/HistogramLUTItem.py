@@ -150,7 +150,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.imageChanged(autoLevel=True)
         #self.vb.autoRange()
         
-    def viewRangeChanged(self):
+    def viewRangeChanged(self, viewRange):
         self.update()
     
     def gradientChanged(self):

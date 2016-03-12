@@ -66,7 +66,7 @@ class Graph(pg.GraphItem):
                 return
             self.dragPoint = pts[0]
             ind = pts[0].data()[0]
-            self.dragOffset = self.data['pos'][ind] - pos
+            self.dragOffset = self.data['pos'][ind] - pg.Point(pos)
         elif ev.isFinish():
             self.dragPoint = None
             return
@@ -76,7 +76,7 @@ class Graph(pg.GraphItem):
                 return
         
         ind = self.dragPoint.data()[0]
-        self.data['pos'][ind] = ev.pos() + self.dragOffset
+        self.data['pos'][ind] = pg.Point(ev.pos()) + self.dragOffset
         self.updateGraph()
         ev.accept()
         

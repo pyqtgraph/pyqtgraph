@@ -101,6 +101,8 @@ public:
     bool isViewBox(const ViewBoxBase* vb) const;
     bool isViewBox(const GraphicsViewBase* vb) const;
 
+    void parentIsChanged();
+
 protected:
 
     virtual void viewChanged();

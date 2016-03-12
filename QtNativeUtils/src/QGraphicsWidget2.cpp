@@ -37,3 +37,15 @@ void QGraphicsWidget2::setParentItem(QGraphicsItem* newParent)
     }
     QGraphicsWidget::setParentItem(newParent);
 }
+
+
+void QGraphicsWidget2::viewRangeChanged(const QList<Point> &range)
+{
+    // Called whenever the view coordinates of the ViewBox containing this item have changed.
+}
+
+void QGraphicsWidget2::viewTransformChanged()
+{
+    // Called whenever the transformation matrix of the view has changed.
+    // (eg, the view range has changed or the view was resized)
+}

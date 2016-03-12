@@ -111,6 +111,13 @@ public:
     void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
     void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
 
+    void parentIsChanged();
+
+public slots:
+
+    virtual void viewRangeChanged(const QList<Point>& range);
+    virtual void viewTransformChanged();
+
 protected:
 
     virtual void viewChanged() /HoldGIL/;

@@ -664,7 +664,7 @@ class PlotDataItem(GraphicsObject):
         self.sigClicked.emit(self)
         self.sigPointsClicked.emit(self, points)
     
-    def viewRangeChanged(self):
+    def viewRangeChanged(self, viewRange):
         # view range has changed; re-plot if needed
         if self.opts['clipToView'] or self.opts['autoDownsample']:
             self.xDisp = self.yDisp = None

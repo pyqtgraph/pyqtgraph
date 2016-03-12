@@ -78,9 +78,9 @@ class PlotWidget(GraphicsView):
                 return m
         raise NameError(attr)
     
-    def viewRangeChanged(self, range):
+    def viewRangeChanged(self, viewRange):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
-        self.sigRangeChanged.emit(self, range)
+        self.sigRangeChanged.emit(self, viewRange)
 
     def widgetGroupInterface(self):
         return (None, PlotWidget.saveState, PlotWidget.restoreState)

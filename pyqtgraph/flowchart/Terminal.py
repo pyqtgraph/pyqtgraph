@@ -541,7 +541,7 @@ class ConnectionItem(GraphicsObject):
     def boundingRect(self):
         return self.shape().boundingRect()
 
-    def viewRangeChanged(self):
+    def viewRangeChanged(self, viewRange):
         self.shapePath = None
         self.prepareGeometryChange()
         

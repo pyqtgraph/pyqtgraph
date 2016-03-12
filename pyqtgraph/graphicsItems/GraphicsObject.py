@@ -23,7 +23,7 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
     def itemChange(self, change, value):
         ret = QGraphicsObject2.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
-            self.parentChanged()
+            self.parentIsChanged()
         try:
             inform_view_on_change = self.__inform_view_on_changes
         except AttributeError:

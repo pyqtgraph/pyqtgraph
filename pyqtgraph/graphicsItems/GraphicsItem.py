@@ -196,12 +196,15 @@ class GraphicsItem(object):
             return self._qtBaseClass.sceneTransform(self)
     '''
 
-    def parentChanged(self):
+    '''
+    def parentIsChanged(self):
+        # The function was named parentChanged() bit it was the name of a signal. So the function has been renamed.
         """Called when the item's parent has changed.
         This method handles connecting / disconnecting from ViewBox signals
         to make sure viewRangeChanged works properly. It should generally be
         extended, not overridden."""
         self._updateView()
+    '''
 
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
@@ -249,7 +252,7 @@ class GraphicsItem(object):
                 view.sigRangeChanged.connect(self.viewRangeChanged)
                 view.sigTransformChanged.connect(self.viewTransformChanged)
             self._connectedView = weakref.ref(view)
-            self.viewRangeChanged()
+            self.viewRangeChanged(view.viewRange())
             self.viewTransformChanged()
 
         ## inform children that their view might have changed
@@ -277,6 +280,7 @@ class GraphicsItem(object):
                 self._replaceView(oldView, child)
     '''
 
+    '''
     def viewRangeChanged(self):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
@@ -289,6 +293,7 @@ class GraphicsItem(object):
         (eg, the view range has changed or the view was resized)
         """
         pass
+    '''
 
     '''
     def informViewBoundsChanged(self):

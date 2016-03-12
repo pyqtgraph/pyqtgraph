@@ -130,7 +130,7 @@ class TextItem(UIGraphicsItem):
         #return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
 
 
-    def viewRangeChanged(self):
+    def viewRangeChanged(self, viewRange):
         self.updateText()
 
     def boundingRect(self):
@@ -140,7 +140,7 @@ class TextItem(UIGraphicsItem):
         tr = p.transform()
         if self.lastTransform is not None:
             if tr != self.lastTransform:
-                self.viewRangeChanged()
+                self.viewRangeChanged(None)
         self.lastTransform = tr
         
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:

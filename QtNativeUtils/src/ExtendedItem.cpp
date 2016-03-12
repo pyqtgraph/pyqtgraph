@@ -210,6 +210,62 @@ void ExtendedItem::_updateView()
 {
 
 }
+/*
+## called to see whether this item has a new view to connect to
+## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
+
+## It is possible this item has moved to a different ViewBox or widget;
+## clear out previously determined references to these.
+self.forgetViewBox()
+self.forgetViewWidget()
+
+## check for this item's current viewbox or view widget
+view = self.getViewBox()
+
+oldView = None
+if self._connectedView is not None:
+    oldView = self._connectedView()
+
+if view is oldView:
+    #print "  already have view", view
+    return
+
+## disconnect from previous view
+if oldView is not None:
+    for signal, slot in [('sigRangeChanged', self.viewRangeChanged),
+                         ('sigDeviceRangeChanged', self.viewRangeChanged),
+                         ('sigTransformChanged', self.viewTransformChanged),
+                         ('sigDeviceTransformChanged', self.viewTransformChanged)]:
+        try:
+            getattr(oldView, signal).disconnect(slot)
+        except (TypeError, AttributeError, RuntimeError):
+            # TypeError and RuntimeError are from pyqt and pyside, respectively
+            pass
+
+    self._connectedView = None
+
+## connect to new view
+if view is not None:
+    #print "connect:", self, view
+    if hasattr(view, 'sigDeviceRangeChanged'):
+        # connect signals from GraphicsView
+        view.sigDeviceRangeChanged.connect(self.viewRangeChanged)
+        view.sigDeviceTransformChanged.connect(self.viewTransformChanged)
+    else:
+        # connect signals from ViewBox
+        view.sigRangeChanged.connect(self.viewRangeChanged)
+        view.sigTransformChanged.connect(self.viewTransformChanged)
+    self._connectedView = weakref.ref(view)
+    self.viewRangeChanged()
+    self.viewTransformChanged()
+
+## inform children that their view might have changed
+self._replaceView(oldView)
+
+self.viewChanged()
+*/
+
+
 
 
 void ExtendedItem::viewChanged()
@@ -229,6 +285,15 @@ bool ExtendedItem::isViewBox(const GraphicsViewBase* vb) const
     return (mViewBoxIsViewWidget && mView==vb);
 }
 
+void ExtendedItem::parentIsChanged()
+{
+    // Called when the item's parent has changed.
+    // This method handles connecting / disconnecting from ViewBox signals
+    // to make sure viewRangeChanged works properly. It should generally be
+    // extended, not overridden.
+    _updateView();
+}
+
 
 void ExtendedItem::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
 {
@@ -243,23 +308,6 @@ void ExtendedItem::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
             itemObject->_updateView();
         else
             _replaceView(oldView, children[i]);
-
-        /*
-        if(children[i]->type()<QGraphicsItem::UserType)
-        {
-            // We are dealing with standard item
-            _replaceView(oldView, children[i]);
-        }
-        else
-        {
-            // _updateView()
-            ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
-            if(itemObject)
-            {
-                itemObject->_updateView();
-            }
-        }
-        */
     }
 }
 
@@ -276,23 +324,6 @@ void ExtendedItem::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
             itemObject->_updateView();
         else
             _replaceView(oldView, children[i]);
-
-        /*
-        if(children[i]->type()<QGraphicsItem::UserType)
-        {
-            // We are dealing with standard item
-            _replaceView(oldView, children[i]);
-        }
-        else
-        {
-            // _updateView()
-            ExtendedItem* itemObject = dynamic_cast<ExtendedItem*>(children[i]);
-            if(itemObject)
-            {
-                itemObject->_updateView();
-            }
-        }
-        */
     }
 }
 

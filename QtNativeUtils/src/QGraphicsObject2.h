@@ -40,6 +40,11 @@ public:
 
     virtual QTransform sceneTransform() const;
 
+public slots:
+
+    virtual void viewRangeChanged(const QList<Point>& range);
+    virtual void viewTransformChanged();
+
 };
 
 #endif // BASEGRAPHICSITEM2_H

@@ -96,7 +96,7 @@ class UIGraphicsItem(GraphicsObject):
         By default, UIGraphicsItems are excluded from autoRange."""
         return None
 
-    def viewRangeChanged(self):
+    def viewRangeChanged(self, viewRange):
         """Called when the view widget/viewbox is resized/rescaled"""
         self.setNewBounds()
         self.update()
