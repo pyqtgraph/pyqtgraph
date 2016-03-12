@@ -107,9 +107,9 @@ public:
 
     virtual void informViewBoundsChanged() /HoldGIL/;
 
-    virtual void _updateView();
-    void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+    //virtual void _updateView();
+    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
+    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
 
     void parentIsChanged();
 

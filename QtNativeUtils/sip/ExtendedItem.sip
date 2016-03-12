@@ -2,7 +2,7 @@
 %Import QtCore/QtCoremod.sip
 %Import QtGui/QtGuimod.sip
 
-class ExtendedItem
+class ExtendedItem /Abstract/
 {
 
 %TypeHeaderCode
@@ -94,9 +94,9 @@ public:
 
     virtual void informViewBoundsChanged();
 
-    virtual void _updateView();
-    void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+    //virtual void _updateView();
+    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
+    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
 
     bool isViewBox(const ViewBoxBase* vb) const;
     bool isViewBox(const GraphicsViewBase* vb) const;

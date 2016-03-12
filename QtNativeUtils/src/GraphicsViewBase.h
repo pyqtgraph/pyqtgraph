@@ -14,6 +14,7 @@ public:
     explicit GraphicsViewBase(QWidget *parent = 0);
 
     virtual QRectF viewRect() const;
+    QVector<Point> viewRange() const;
 
     virtual QRectF visibleRange() const { return viewRect(); }
 

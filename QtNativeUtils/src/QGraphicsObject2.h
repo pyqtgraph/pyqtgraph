@@ -45,6 +45,15 @@ public slots:
     virtual void viewRangeChanged(const QList<Point>& range);
     virtual void viewTransformChanged();
 
+
+protected:
+
+    virtual void disconnectView(ViewBoxBase* view);
+    virtual void disconnectView(GraphicsViewBase* view);
+
+    virtual void connectView(ViewBoxBase* view);
+    virtual void connectView(GraphicsViewBase* view);
+
 };
 
 #endif // BASEGRAPHICSITEM2_H

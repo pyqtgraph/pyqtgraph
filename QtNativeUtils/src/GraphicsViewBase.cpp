@@ -27,6 +27,15 @@ QRectF GraphicsViewBase::viewRect() const
     return viewportTransform().inverted().mapRect(QRectF(rect()));
 }
 
+QVector<Point> GraphicsViewBase::viewRange() const
+{
+    QRectF range = viewRect();
+    QVector<Point> p;
+    p << Point(range.left(), range.right())
+      << Point(range.bottom(), range.top());
+    return p;
+}
+
 void GraphicsViewBase::render(QPainter *painter, const QRectF &target,
                               const QRect &source, Qt::AspectRatioMode aspectRatioMode)
 {

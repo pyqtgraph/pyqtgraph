@@ -13,6 +13,8 @@ public:
 
     virtual QRectF viewRect() const;
 
+    QVector<Point> viewRange() const;
+
     virtual QRectF visibleRange() const;
 
     void render(QPainter* painter, const QRectF& target=QRectF(),

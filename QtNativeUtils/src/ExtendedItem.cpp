@@ -208,7 +208,32 @@ void ExtendedItem::informViewBoundsChanged()
 
 void ExtendedItem::_updateView()
 {
+    if(mViewBox!=nullptr)
+        disconnectView(mViewBox);
+    else if(mView!=nullptr)
+        disconnectView(mView);
 
+    forgetViewBox();
+    forgetViewWidget();
+
+    ViewBoxBase* viewbox = getViewBox();
+    GraphicsViewBase* gView = getViewWidget();
+    if(viewbox!=nullptr)
+    {
+        connectView(viewbox);
+        viewRangeChanged(viewbox->viewRange().toList());
+        viewTransformChanged();
+    }
+    else if (gView)
+    {
+        connectView(gView);
+        viewRangeChanged(gView->viewRange().toList());
+        viewTransformChanged();
+    }
+
+    _replaceView();
+
+    viewChanged();
 }
 /*
 ## called to see whether this item has a new view to connect to
@@ -295,7 +320,7 @@ void ExtendedItem::parentIsChanged()
 }
 
 
-void ExtendedItem::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
+void ExtendedItem::_replaceView(QGraphicsItem* item)
 {
     if(item==nullptr)
         item = (QGraphicsItem*)mItemImpl;
@@ -307,10 +332,11 @@ void ExtendedItem::_replaceView(GraphicsViewBase* oldView, QGraphicsItem* item)
         if(itemObject)
             itemObject->_updateView();
         else
-            _replaceView(oldView, children[i]);
+            _replaceView(children[i]);
     }
 }
 
+/*
 void ExtendedItem::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
 {
     if(item==nullptr)
@@ -326,5 +352,5 @@ void ExtendedItem::_replaceView(ViewBoxBase* oldView, QGraphicsItem* item)
             _replaceView(oldView, children[i]);
     }
 }
-
+*/
 

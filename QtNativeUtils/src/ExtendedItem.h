@@ -119,17 +119,27 @@ public:
     virtual void informViewBoundsChanged();
 
     virtual void _updateView();
-    void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
+    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+    void _replaceView(QGraphicsItem* item=nullptr);
 
     bool isViewBox(const ViewBoxBase* vb) const;
     bool isViewBox(const GraphicsViewBase* vb) const;
 
     void parentIsChanged();
 
+    virtual void viewRangeChanged(const QList<Point>& range) = 0;
+    virtual void viewTransformChanged() = 0;
+
 protected:
 
     virtual void viewChanged();
+
+    virtual void disconnectView(ViewBoxBase* view) = 0;
+    virtual void disconnectView(GraphicsViewBase* view) = 0;
+
+    virtual void connectView(ViewBoxBase* view) = 0;
+    virtual void connectView(GraphicsViewBase* view) = 0;
 
 protected:
 

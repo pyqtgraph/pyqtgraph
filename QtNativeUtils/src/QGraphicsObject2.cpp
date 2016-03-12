@@ -56,4 +56,27 @@ void QGraphicsObject2::setParentItem(QGraphicsItem* newParent)
     QGraphicsObject::setParentItem(newParent);
 }
 
+void QGraphicsObject2::disconnectView(ViewBoxBase* view)
+{
+    QObject::disconnect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::disconnect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
+}
+
+void QGraphicsObject2::disconnectView(GraphicsViewBase* view)
+{
+    QObject::disconnect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::disconnect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));
+}
+
+void QGraphicsObject2::connectView(ViewBoxBase* view)
+{
+    QObject::connect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::connect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
+}
+
+void QGraphicsObject2::connectView(GraphicsViewBase* view)
+{
+    QObject::connect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::connect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));
+}
 
