@@ -37,7 +37,7 @@ class UIGraphicsItem(GraphicsObject):
             self._bounds = bounds
             
         self._boundingRect = None
-        self._updateView()
+        self.parentIsChanged()
         
     def paint(self, *args):
         ## check for a new view object every time we paint.

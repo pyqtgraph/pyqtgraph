@@ -159,17 +159,21 @@ class GraphicsItem(object):
         return vt.mapRect(obj)
     '''
 
+    '''
     def pos(self):
         return Point(self._qtBaseClass.pos(self))
+    '''
 
     '''
     def viewPos(self):
         return self.mapToView(self.mapFromParent(self.pos()))
     '''
 
+    '''
     def parentItem(self):
         ## PyQt bug -- some items are returned incorrectly.
         return GraphicsScene.translateGraphicsItem(self._qtBaseClass.parentItem(self))
+    '''
 
     '''
     def setParentItem(self, parent):
@@ -181,9 +185,11 @@ class GraphicsItem(object):
         return self._qtBaseClass.setParentItem(self, parent)
     '''
 
+    '''
     def childItems(self):
         ## PyQt bug -- some child items are returned incorrectly.
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
+    '''
 
     '''
     def sceneTransform(self):
@@ -206,6 +212,7 @@ class GraphicsItem(object):
         self._updateView()
     '''
 
+    '''
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
         ## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
@@ -259,6 +266,7 @@ class GraphicsItem(object):
         self._replaceView(oldView)
 
         self.viewChanged()
+    '''
 
     '''
     def viewChanged(self):
@@ -313,9 +321,11 @@ class GraphicsItem(object):
         return reduce(operator.add, shapes)
     '''
 
+    '''
     def allChildItems(self, root=None):
         """Return list of the entire item tree descending from this item."""
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.allChildItems(self, root=root)))
+    '''
 
     def setExportMode(self, export, opts=None):
         """

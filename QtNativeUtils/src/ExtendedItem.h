@@ -93,7 +93,6 @@ public:
     virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
     virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
 
-
     virtual ViewBoxBase* getViewBox() const;
 
     virtual void forgetViewBox()
