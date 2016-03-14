@@ -8,17 +8,15 @@ from .GraphicsItem import GraphicsItem
 from ..QtNativeUtils import GraphicsObject
 
 __all__ = ['ItemGroup']
-class ItemGroup(GraphicsItem, GraphicsObject):
+class ItemGroup(GraphicsObject):
     """
     Replacement for QGraphicsItemGroup
     """
     
     _qtBaseClass = GraphicsObject
     def __init__(self, parent=None):
-        self.__inform_view_on_changes = True
         GraphicsObject.__init__(self, parent=parent)
-        self.setFlag(self.ItemSendsGeometryChanges)
-        GraphicsItem.__init__(self)
+        #GraphicsItem.__init__(self)
         if hasattr(self, "ItemHasNoContents"):
             self.setFlag(self.ItemHasNoContents)
     
