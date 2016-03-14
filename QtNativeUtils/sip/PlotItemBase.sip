@@ -1,6 +1,6 @@
 
 
-class PlotItemBase: public QGraphicsWidget2
+class PlotItemBase: public GraphicsWidget
 {
 
 %TypeHeaderCode

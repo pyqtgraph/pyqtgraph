@@ -4,7 +4,7 @@
 #include <QDebug>
 
 ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY) :
-    QGraphicsWidget2(parent, wFlags),
+    GraphicsWidget(parent, wFlags),
     mMatrixNeedsUpdate(true),
     mAutoRangeNeedsUpdate(true),
     mXInverted(invertX),

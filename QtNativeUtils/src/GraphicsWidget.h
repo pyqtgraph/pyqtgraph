@@ -1,5 +1,5 @@
-#ifndef QGRAPHICSWIDGET2_H
-#define QGRAPHICSWIDGET2_H
+#ifndef GRAPHICSWIDGET_H
+#define GRAPHICSWIDGET_H
 
 #include <QGraphicsWidget>
 #include <QGraphicsView>
@@ -14,12 +14,12 @@
 class ViewBoxBase;
 class GraphicsViewBase;
 
-class QGraphicsWidget2: public QGraphicsWidget, public ExtendedItem
+class GraphicsWidget: public QGraphicsWidget, public ExtendedItem
 {
     Q_OBJECT
 public:
-    QGraphicsWidget2(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
-    virtual ~QGraphicsWidget2() {}
+    GraphicsWidget(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0);
+    virtual ~GraphicsWidget() {}
 
     enum { Type = CustomItemTypes::TypeGraphicsWidget };
 
@@ -84,4 +84,4 @@ protected:
 
 };
 
-#endif // QGRAPHICSWIDGET2_H
+#endif // GRAPHICSWIDGET_H

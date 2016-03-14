@@ -4,11 +4,11 @@
 #include <QList>
 
 #include "Point.h"
-#include "QGraphicsWidget2.h"
+#include "GraphicsWidget.h"
 #include "ViewBoxBase.h"
 #include "ItemDefines.h"
 
-class PlotItemBase: public QGraphicsWidget2
+class PlotItemBase: public GraphicsWidget
 {
     Q_OBJECT
 public:

@@ -2,7 +2,7 @@
 %Import QtGui/QtGuimod.sip
 
 
-class ViewBoxBase: public QGraphicsWidget2
+class ViewBoxBase: public GraphicsWidget
 {
 
 %TypeHeaderCode

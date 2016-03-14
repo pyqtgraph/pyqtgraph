@@ -1,16 +1,16 @@
-#include "QGraphicsWidget2.h"
+#include "GraphicsWidget.h"
 
 #include "GraphicsObject.h"
 #include "ViewBoxBase.h"
 #include "GraphicsViewBase.h"
 
-QGraphicsWidget2::QGraphicsWidget2(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
+GraphicsWidget::GraphicsWidget(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
     QGraphicsWidget(parent, wFlags),
     ExtendedItem(this)
 {
 }
 
-QTransform QGraphicsWidget2::sceneTransform() const
+QTransform GraphicsWidget::sceneTransform() const
 {
     if(scene()==nullptr)
         return transform();
@@ -18,7 +18,7 @@ QTransform QGraphicsWidget2::sceneTransform() const
 }
 
 
-QTransform QGraphicsWidget2::deviceTransform() const
+QTransform GraphicsWidget::deviceTransform() const
 {
     GraphicsViewBase* view = getViewWidget();
     if(view==nullptr)
@@ -26,7 +26,7 @@ QTransform QGraphicsWidget2::deviceTransform() const
     return QGraphicsWidget::deviceTransform(view->viewportTransform());
 }
 
-void QGraphicsWidget2::setParentItem(QGraphicsItem* newParent)
+void GraphicsWidget::setParentItem(QGraphicsItem* newParent)
 {
     // Workaround for Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
     if(newParent!=nullptr)
@@ -39,37 +39,37 @@ void QGraphicsWidget2::setParentItem(QGraphicsItem* newParent)
 }
 
 
-void QGraphicsWidget2::viewRangeChanged(const QList<Point> &range)
+void GraphicsWidget::viewRangeChanged(const QList<Point> &range)
 {
     // Called whenever the view coordinates of the ViewBox containing this item have changed.
 }
 
-void QGraphicsWidget2::viewTransformChanged()
+void GraphicsWidget::viewTransformChanged()
 {
     // Called whenever the transformation matrix of the view has changed.
     // (eg, the view range has changed or the view was resized)
 }
 
 
-void QGraphicsWidget2::disconnectView(ViewBoxBase* view)
+void GraphicsWidget::disconnectView(ViewBoxBase* view)
 {
     QObject::disconnect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
     QObject::disconnect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
-void QGraphicsWidget2::disconnectView(GraphicsViewBase* view)
+void GraphicsWidget::disconnectView(GraphicsViewBase* view)
 {
     QObject::disconnect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
     QObject::disconnect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
-void QGraphicsWidget2::connectView(ViewBoxBase* view)
+void GraphicsWidget::connectView(ViewBoxBase* view)
 {
     QObject::connect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
     QObject::connect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
-void QGraphicsWidget2::connectView(GraphicsViewBase* view)
+void GraphicsWidget::connectView(GraphicsViewBase* view)
 {
     QObject::connect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
     QObject::connect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));

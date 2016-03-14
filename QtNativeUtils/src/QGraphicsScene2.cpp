@@ -179,7 +179,7 @@ bool QGraphicsScene2::callMouseHover(QGraphicsItem *item, HoverEvent *ev)
     if(isGraphicsObject2(item))
         ((GraphicsObject*)item)->hoverEvent(ev);
     else if(isGraphicsWidget2(item))
-        ((QGraphicsWidget2*)item)->hoverEvent(ev);
+        ((GraphicsWidget*)item)->hoverEvent(ev);
     else
         return false;
     return true;
@@ -191,7 +191,7 @@ bool QGraphicsScene2::callMouseClick(QGraphicsItem *item, MouseClickEvent *ev)
     if(isGraphicsObject2(item))
         ((GraphicsObject*)item)->mouseClickEvent(ev);
     else if(isGraphicsWidget2(item))
-        ((QGraphicsWidget2*)item)->mouseClickEvent(ev);
+        ((GraphicsWidget*)item)->mouseClickEvent(ev);
     else
         return false;
     return true;
@@ -203,7 +203,7 @@ bool QGraphicsScene2::callMouseDrag(QGraphicsItem *item, MouseDragEvent *ev)
     if(isGraphicsObject2(item))
         ((GraphicsObject*)item)->mouseDragEvent(ev);
     else if(isGraphicsWidget2(item))
-        ((QGraphicsWidget2*)item)->mouseDragEvent(ev);
+        ((GraphicsWidget*)item)->mouseDragEvent(ev);
     else
         return false;
     return true;

@@ -4,12 +4,12 @@
 #include <QList>
 #include <QGraphicsRectItem>
 
-#include "QGraphicsWidget2.h"
+#include "GraphicsWidget.h"
 #include "Point.h"
 #include "ItemDefines.h"
 #include "GraphicsObject.h"
 
-class ViewBoxBase: public QGraphicsWidget2
+class ViewBoxBase: public GraphicsWidget
 {
     Q_OBJECT
 public:

@@ -3,10 +3,11 @@ from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 import sip
 
-from ..QtNativeUtils import QGraphicsWidget2
+from ..QtNativeUtils import GraphicsWidget
 
 __all__ = ['GraphicsWidget']
 
+'''
 class GraphicsWidget(GraphicsItem, QGraphicsWidget2):
     
     _qtBaseClass = QGraphicsWidget2
@@ -22,3 +23,4 @@ class GraphicsWidget(GraphicsItem, QGraphicsWidget2):
         
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+'''

@@ -1,6 +1,6 @@
 #include "GraphicsObject.h"
 
-#include "QGraphicsWidget2.h"
+#include "GraphicsWidget.h"
 #include "ViewBoxBase.h"
 #include "GraphicsViewBase.h"
 

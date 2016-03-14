@@ -4,16 +4,16 @@
 
 
 
-class QGraphicsWidget2: public QGraphicsWidget, public ExtendedItem
+class GraphicsWidget: public QGraphicsWidget, public ExtendedItem
 {
 
 %TypeHeaderCode
-#include "QGraphicsWidget2.h"
+#include "GraphicsWidget.h"
 %End
 
 public:
-    QGraphicsWidget2(QGraphicsItem* parent /TransferThis/ =nullptr, Qt::WindowFlags wFlags=0) /HoldGIL/;
-    virtual ~QGraphicsWidget2() /HoldGIL/;
+    GraphicsWidget(QGraphicsItem* parent /TransferThis/ =nullptr, Qt::WindowFlags wFlags=0) /HoldGIL/;
+    virtual ~GraphicsWidget() /HoldGIL/;
 
     virtual int type() const /HoldGIL/;
 
