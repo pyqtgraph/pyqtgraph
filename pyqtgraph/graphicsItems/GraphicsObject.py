@@ -7,7 +7,7 @@ from ..QtNativeUtils import QGraphicsObject2
 
 __all__ = ['GraphicsObject']
 
-class GraphicsObject(GraphicsItem, QGraphicsObject2):
+class GraphicsObject(QGraphicsObject2):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtGui.QGraphicsObject`
 
@@ -17,9 +17,11 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
     def __init__(self, parent=None):
         self.__inform_view_on_changes = True
         QGraphicsObject2.__init__(self, parent=parent)
-        self.setFlag(self.ItemSendsGeometryChanges)
-        GraphicsItem.__init__(self)
-        
+        #self.setFlag(self.ItemSendsGeometryChanges)
+        self._exportOpts = False
+        #GraphicsItem.__init__(self)
+    
+    '''
     def itemChange(self, change, value):
         ret = QGraphicsObject2.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
@@ -40,3 +42,4 @@ class GraphicsObject(GraphicsItem, QGraphicsObject2):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
 
         return ret
+    '''

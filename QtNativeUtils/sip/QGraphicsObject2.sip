@@ -99,10 +99,6 @@ public:
 
     virtual void informViewBoundsChanged() /HoldGIL/;
 
-    //virtual void _updateView();
-    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
-
     void parentIsChanged();
 
 public slots:
@@ -111,5 +107,6 @@ public slots:
     virtual void viewTransformChanged();
 
 protected:
-    virtual void viewChanged() /HoldGIL/;
+
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
 };

@@ -9,7 +9,7 @@ QGraphicsObject2::QGraphicsObject2(QGraphicsItem *parent) :
     QGraphicsObject(parent),
     ExtendedItem(this)
 {
-
+    setFlag(ItemSendsGeometryChanges, true);
 }
 
 QGraphicsObject2::~QGraphicsObject2()
@@ -34,6 +34,41 @@ void QGraphicsObject2::viewTransformChanged()
     // Called whenever the transformation matrix of the view has changed.
     // (eg, the view range has changed or the view was resized)
 }
+
+QVariant QGraphicsObject2::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+    QVariant ret = QGraphicsObject::itemChange(change, value);
+
+    if(change==ItemParentHasChanged || change==ItemSceneHasChanged)
+        parentIsChanged();
+    else if(change==ItemPositionHasChanged || change==ItemTransformHasChanged)
+        informViewBoundsChanged();
+
+    return ret;
+}
+
+
+/*
+ret = QGraphicsObject2.itemChange(self, change, value)
+if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
+    self.parentIsChanged()
+try:
+    inform_view_on_change = self.__inform_view_on_changes
+except AttributeError:
+    # It's possible that the attribute was already collected when the itemChange happened
+    # (if it was triggered during the gc of the object).
+    pass
+else:
+    if inform_view_on_change and change in [self.ItemPositionHasChanged, self.ItemTransformHasChanged]:
+        self.informViewBoundsChanged()
+
+## workaround for pyqt bug:
+## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
+if not USE_PYSIDE and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
+    ret = sip.cast(ret, QtGui.QGraphicsItem)
+
+return ret
+*/
 
 QTransform QGraphicsObject2::deviceTransform() const
 {

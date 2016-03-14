@@ -48,6 +48,8 @@ public slots:
 
 protected:
 
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+
     virtual void disconnectView(ViewBoxBase* view);
     virtual void disconnectView(GraphicsViewBase* view);
 
