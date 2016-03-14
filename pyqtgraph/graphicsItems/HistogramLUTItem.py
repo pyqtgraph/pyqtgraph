@@ -149,7 +149,8 @@ class HistogramLUTItem(GraphicsWidget):
         self.regionChanged()
         self.imageChanged(autoLevel=True)
         #self.vb.autoRange()
-        
+    
+    @QtCore.pyqtSlot(list)
     def viewRangeChanged(self, viewRange):
         self.update()
     

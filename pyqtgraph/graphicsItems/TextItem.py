@@ -129,7 +129,7 @@ class TextItem(UIGraphicsItem):
         #tbr = self.textItem.boundingRect()
         #return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
 
-
+    @QtCore.pyqtSlot(list)
     def viewRangeChanged(self, viewRange):
         self.updateText()
 

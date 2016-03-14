@@ -73,8 +73,29 @@ public:
     virtual void hoverEvent(HoverEvent* event);
     virtual void mouseDragEvent(MouseDragEvent* event);
 
+    SIP_PYOBJECT getViewBox() const [QObject*()];
+    %MethodCode
+        QObject* obj = sipCpp->getViewBox();
 
-    virtual ViewBoxBase* getViewBox() const;
+        if(obj==nullptr)
+            sipRes = sipBuildResult(&sipIsErr, "S", Py_None);
+        else
+        {
+            ViewBoxBase* vb = qobject_cast<ViewBoxBase*>(obj);
+            if(vb!=nullptr)
+                //sipRes = sipBuildResult(&sipIsErr, "N", vb, sipType_ViewBoxBase, sipSelf);
+                sipRes = sipConvertFromType(vb, sipType_ViewBoxBase, sipSelf);
+            else
+            {
+                GraphicsViewBase* gv = qobject_cast<GraphicsViewBase*>(obj);
+                if(gv!=nullptr)
+                    //sipRes = sipBuildResult(&sipIsErr, "N", gv, sipType_GraphicsViewBase, sipSelf);
+                    sipRes = sipConvertFromType(gv, sipType_GraphicsViewBase, sipSelf);
+                else
+                    sipRes = sipBuildResult(&sipIsErr, "S", Py_None);
+            }
+        }
+    %End
 
     virtual void forgetViewBox();
 
@@ -94,14 +115,12 @@ public:
 
     virtual void informViewBoundsChanged();
 
-    //virtual void _updateView();
-    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
-
     bool isViewBox(const ViewBoxBase* vb) const;
     bool isViewBox(const GraphicsViewBase* vb) const;
 
     void parentIsChanged();
+
+    void setExportMode(const bool isExporting, const QVariantHash& opt=QVariantHash());
 
 protected:
 

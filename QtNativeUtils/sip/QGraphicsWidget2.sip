@@ -4,7 +4,7 @@
 
 
 
-class QGraphicsWidget2: public QGraphicsWidget
+class QGraphicsWidget2: public QGraphicsWidget, public ExtendedItem
 {
 
 %TypeHeaderCode

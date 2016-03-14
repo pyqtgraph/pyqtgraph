@@ -84,7 +84,7 @@ GraphicsViewBase* ExtendedItem::getViewWidget() const
 }
 
 
-ViewBoxBase* ExtendedItem::getViewBox() const
+ViewBoxBase* ExtendedItem::getNativeViewBox() const
 {
     if(mViewBox==nullptr && !mViewBoxIsViewWidget)
     {
@@ -113,14 +113,13 @@ ViewBoxBase* ExtendedItem::getViewBox() const
     return mViewBox;
 }
 
-
 QTransform ExtendedItem::viewTransform() const
 {
     // Return the transform that maps from local coordinates to the item's ViewBox coordinates
     // If there is no ViewBox, return the scene transform.
     // Returns None if the item does not have a view.
 
-    ViewBoxBase* viewBox = getViewBox();
+    ViewBoxBase* viewBox = getNativeViewBox();
     if(mViewBoxIsViewWidget || viewBox==nullptr)
         return mItemImpl->sceneTransform();
 
@@ -131,7 +130,7 @@ QTransform ExtendedItem::viewTransform() const
 QRectF ExtendedItem::viewRect() const
 {
     // Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget
-    ViewBoxBase* viewBox = getViewBox();
+    ViewBoxBase* viewBox = getNativeViewBox();
     QRectF bounds;
     if(viewBox)
         bounds = viewBox->viewRect();
@@ -200,7 +199,7 @@ void ExtendedItem::informViewBoundsChanged()
 {
     // Inform this item's container ViewBox that the bounds of this item have changed.
     // This is used by ViewBox to react if auto-range is enabled.
-    ViewBoxBase* viewBox = getViewBox();
+    ViewBoxBase* viewBox = getNativeViewBox();
     if(viewBox)
         viewBox->itemBoundsChanged(mItemImpl); // inform view so it can update its range if it wants
 }
@@ -216,7 +215,7 @@ void ExtendedItem::_updateView()
     forgetViewBox();
     forgetViewWidget();
 
-    ViewBoxBase* viewbox = getViewBox();
+    ViewBoxBase* viewbox = getNativeViewBox();
     GraphicsViewBase* gView = getViewWidget();
     if(viewbox!=nullptr)
     {
@@ -317,6 +316,18 @@ void ExtendedItem::parentIsChanged()
     // to make sure viewRangeChanged works properly. It should generally be
     // extended, not overridden.
     _updateView();
+}
+
+void ExtendedItem::setExportMode(const bool isExporting, const QVariantHash &opt)
+{
+    // This method is called by exporters to inform items that they are being drawn for export
+    // with a specific set of options. Items access these via self._exportOptions.
+    // When exporting is complete, _exportOptions is set to False.
+
+    if(isExporting)
+        mExportOptions = opt;
+    else
+        mExportOptions.clear();
 }
 
 

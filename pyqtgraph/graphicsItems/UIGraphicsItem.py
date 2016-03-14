@@ -96,6 +96,7 @@ class UIGraphicsItem(GraphicsObject):
         By default, UIGraphicsItems are excluded from autoRange."""
         return None
 
+    @QtCore.pyqtSlot(list)
     def viewRangeChanged(self, viewRange):
         """Called when the view widget/viewbox is resized/rescaled"""
         self.setNewBounds()

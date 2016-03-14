@@ -21,7 +21,7 @@ class GridItem(UIGraphicsItem):
         
         self.picture = None
         
-        
+    @QtCore.pyqtSlot(list)
     def viewRangeChanged(self, viewRange):
         UIGraphicsItem.viewRangeChanged(self, viewRange)
         self.picture = None

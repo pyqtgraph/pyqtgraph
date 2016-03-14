@@ -2,6 +2,8 @@
 #define EXTENDED_ITEM_H
 
 #include <QGraphicsObject>
+#include <QHash>
+#include <QVariant>
 
 #include "GraphicsViewBase.h"
 #include "Point.h"
@@ -93,7 +95,18 @@ public:
     virtual void hoverEvent(HoverEvent* event) { event->ignore(); }
     virtual void mouseDragEvent(MouseDragEvent* event) { event->ignore(); }
 
-    virtual ViewBoxBase* getViewBox() const;
+    virtual ViewBoxBase* getNativeViewBox() const;
+
+    QObject* getViewBox() const
+    {
+        getNativeViewBox();
+        if(mViewBox!=nullptr)
+            return (QObject*)mViewBox;
+        else if(mView!=nullptr)
+            return (QObject*)mView;
+
+        return nullptr;
+    }
 
     virtual void forgetViewBox()
     {
@@ -118,8 +131,7 @@ public:
     virtual void informViewBoundsChanged();
 
     virtual void _updateView();
-    //void _replaceView(GraphicsViewBase* oldView, QGraphicsItem* item=nullptr);
-    //void _replaceView(ViewBoxBase* oldView, QGraphicsItem* item=nullptr);
+
     void _replaceView(QGraphicsItem* item=nullptr);
 
     bool isViewBox(const ViewBoxBase* vb) const;
@@ -129,6 +141,8 @@ public:
 
     virtual void viewRangeChanged(const QList<Point>& range) = 0;
     virtual void viewTransformChanged() = 0;
+
+    void setExportMode(const bool isExporting, const QVariantHash& opt=QVariantHash());
 
 protected:
 
@@ -146,6 +160,7 @@ protected:
     mutable ViewBoxBase* mViewBox = nullptr;
     mutable bool mViewBoxIsViewWidget = false;
 
+    QVariantHash mExportOptions;
 
 private:
 

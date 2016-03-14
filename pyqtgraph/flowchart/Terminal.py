@@ -541,6 +541,7 @@ class ConnectionItem(GraphicsObject):
     def boundingRect(self):
         return self.shape().boundingRect()
 
+    @QtCore.pyqtSlot(list)
     def viewRangeChanged(self, viewRange):
         self.shapePath = None
         self.prepareGeometryChange()

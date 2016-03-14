@@ -43,9 +43,10 @@ class GraphicsItem(object):
         self._viewBox = None
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
-        if register:
-            GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
+        #if register:
+        #    GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
+    '''
     def getViewBox(self):
         """
         Return the first ViewBox or GraphicsView which bounds this item's visible space.
@@ -74,6 +75,7 @@ class GraphicsItem(object):
 
     def forgetViewBox(self):
         self._viewBox = None
+    '''
 
     '''
     def viewTransform(self):
@@ -327,6 +329,7 @@ class GraphicsItem(object):
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.allChildItems(self, root=root)))
     '''
 
+    '''
     def setExportMode(self, export, opts=None):
         """
         This method is called by exporters to inform items that they are being drawn for export
@@ -341,6 +344,7 @@ class GraphicsItem(object):
                 #self._exportOpts['antialias'] = True
         else:
             self._exportOpts = False
+    '''
 
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []
