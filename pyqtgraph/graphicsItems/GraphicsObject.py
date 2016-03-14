@@ -3,10 +3,14 @@ if not USE_PYSIDE:
     import sip
 from .GraphicsItem import GraphicsItem
 from PyQt4.QtGui import QGraphicsWidget
-from ..QtNativeUtils import QGraphicsObject2
+from ..QtNativeUtils import GraphicsObject
 
 __all__ = ['GraphicsObject']
 
+
+
+
+'''
 class GraphicsObject(QGraphicsObject2):
     """
     **Bases:** :class:`GraphicsItem <pyqtgraph.graphicsItems.GraphicsItem>`, :class:`QtGui.QGraphicsObject`
@@ -21,7 +25,7 @@ class GraphicsObject(QGraphicsObject2):
         self._exportOpts = False
         #GraphicsItem.__init__(self)
     
-    '''
+    """
     def itemChange(self, change, value):
         ret = QGraphicsObject2.itemChange(self, change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
@@ -42,4 +46,5 @@ class GraphicsObject(QGraphicsObject2):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
 
         return ret
-    '''
+    """
+'''

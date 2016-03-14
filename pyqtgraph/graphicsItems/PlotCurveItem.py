@@ -415,8 +415,9 @@ class PlotCurveItem(GraphicsObject):
 
         profiler('generate path')
 
-        if self._exportOpts is not False:
-            aa = self._exportOpts.get('antialias', True)
+        exportOpts = self.getExportMode()
+        if len(exportOpts) > 0:
+            aa = exportOpts.get('antialias', True)
         else:
             aa = self.opts['antialias']
 

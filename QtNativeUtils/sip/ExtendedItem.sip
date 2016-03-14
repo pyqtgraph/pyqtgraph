@@ -83,13 +83,11 @@ public:
         {
             ViewBoxBase* vb = qobject_cast<ViewBoxBase*>(obj);
             if(vb!=nullptr)
-                //sipRes = sipBuildResult(&sipIsErr, "N", vb, sipType_ViewBoxBase, sipSelf);
                 sipRes = sipConvertFromType(vb, sipType_ViewBoxBase, sipSelf);
             else
             {
                 GraphicsViewBase* gv = qobject_cast<GraphicsViewBase*>(obj);
                 if(gv!=nullptr)
-                    //sipRes = sipBuildResult(&sipIsErr, "N", gv, sipType_GraphicsViewBase, sipSelf);
                     sipRes = sipConvertFromType(gv, sipType_GraphicsViewBase, sipSelf);
                 else
                     sipRes = sipBuildResult(&sipIsErr, "S", Py_None);
@@ -121,6 +119,8 @@ public:
     void parentIsChanged();
 
     void setExportMode(const bool isExporting, const QVariantHash& opt=QVariantHash());
+
+    const QVariantHash& getExportMode() const;
 
 protected:
 

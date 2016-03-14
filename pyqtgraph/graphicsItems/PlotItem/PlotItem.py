@@ -1180,7 +1180,8 @@ class PlotItem(GraphicsItem, PlotItemBase):
         
     def updateButtons(self):
         try:
-            if self._exportOpts is False and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
+            exportOpts = self.getExportMode()
+            if len(exportOpts) == 0 and self.mouseHovering and not self.buttonsHidden and not all(self.vb.autoRangeEnabled()):
                 self.autoBtn.show()
             else:
                 self.autoBtn.hide()

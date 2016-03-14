@@ -14,7 +14,7 @@
 #include "internal/point_utils.h"
 #include "Interfaces.h"
 
-#include "QGraphicsObject2.h"
+#include "GraphicsObject.h"
 #include "QGraphicsWidget2.h"
 
 class QGraphicsScene2: public QGraphicsScene, public ViewWidgetGetterInterface
@@ -106,7 +106,7 @@ protected:
 
     static bool isGraphicsObject2(QGraphicsItem* item)
     {
-        return item->type()==QGraphicsObject2::Type;
+        return item->type()==GraphicsObject::Type;
     }
 
     static bool isGraphicsWidget2(QGraphicsItem* item)
@@ -122,7 +122,7 @@ protected:
     static bool acceptsHoverEvents(QGraphicsItem* item)
     {
         if(isGraphicsObject2(item))
-            return ((QGraphicsObject2*)item)->acceptCustomMouseHoverEvent();
+            return ((GraphicsObject*)item)->acceptCustomMouseHoverEvent();
         else if (isGraphicsWidget2(item))
             return ((QGraphicsWidget2*)item)->acceptCustomMouseHoverEvent();
         return false;
@@ -131,7 +131,7 @@ protected:
     static bool acceptsDragEvents(QGraphicsItem* item)
     {
         if(isGraphicsObject2(item))
-            return ((QGraphicsObject2*)item)->acceptCustomMouseDragEvent();
+            return ((GraphicsObject*)item)->acceptCustomMouseDragEvent();
         else if (isGraphicsWidget2(item))
             return ((QGraphicsWidget2*)item)->acceptCustomMouseDragEvent();
         return false;
@@ -140,7 +140,7 @@ protected:
     static bool acceptsClickEvents(QGraphicsItem* item)
     {
         if(isGraphicsObject2(item))
-            return ((QGraphicsObject2*)item)->acceptCustomMouseClickEvent();
+            return ((GraphicsObject*)item)->acceptCustomMouseClickEvent();
         else if (isGraphicsWidget2(item))
             return ((QGraphicsWidget2*)item)->acceptCustomMouseClickEvent();
         return false;

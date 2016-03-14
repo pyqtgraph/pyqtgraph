@@ -97,7 +97,7 @@ public:
     virtual QRectF viewRect() const /HoldGIL/;
     QRectF targetRect() const /HoldGIL/;
 
-    QGraphicsObject2* innerSceneItem() const /HoldGIL/;
+    GraphicsObject* innerSceneItem() const /HoldGIL/;
 
     virtual void itemsChanged() /HoldGIL/;
 
@@ -109,7 +109,7 @@ protected:
 
     void _resetTarget() /HoldGIL/;
 
-    void setInnerSceneItem(QGraphicsObject2* innerItem) /HoldGIL/;
+    void setInnerSceneItem(GraphicsObject* innerItem) /HoldGIL/;
 
 signals:
 

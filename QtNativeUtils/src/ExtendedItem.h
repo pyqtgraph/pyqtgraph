@@ -144,6 +144,8 @@ public:
 
     void setExportMode(const bool isExporting, const QVariantHash& opt=QVariantHash());
 
+    const QVariantHash& getExportMode() const;
+
 protected:
 
     virtual void viewChanged();

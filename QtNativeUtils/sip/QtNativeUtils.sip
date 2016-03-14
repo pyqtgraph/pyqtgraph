@@ -25,7 +25,7 @@ init_package();
 %Include HoverEvent.sip
 %Include MouseDragEvent.sip
 
-%Include QGraphicsObject2.sip
+%Include GraphicsObject.sip
 %Include QGraphicsWidget2.sip
 
 

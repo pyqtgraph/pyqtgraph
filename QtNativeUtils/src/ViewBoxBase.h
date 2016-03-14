@@ -7,7 +7,7 @@
 #include "QGraphicsWidget2.h"
 #include "Point.h"
 #include "ItemDefines.h"
-#include "QGraphicsObject2.h"
+#include "GraphicsObject.h"
 
 class ViewBoxBase: public QGraphicsWidget2
 {
@@ -77,7 +77,7 @@ public:
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
 
-    QGraphicsObject2* innerSceneItem() const;
+    GraphicsObject* innerSceneItem() const;
 
     // called when items are added/removed from self.childGroup
     virtual void itemsChanged() { updateAutoRange(); }
@@ -90,7 +90,7 @@ protected:
 
     void _resetTarget();
 
-    void setInnerSceneItem(QGraphicsObject2* innerItem);
+    void setInnerSceneItem(GraphicsObject* innerItem);
 
 signals:
 
@@ -119,7 +119,7 @@ protected:
 
     QGraphicsRectItem* mBackground = nullptr;
 
-    QGraphicsObject2* mInnerSceneItem = nullptr;
+    GraphicsObject* mInnerSceneItem = nullptr;
 };
 
 #endif // VIEWBOXBASE_H

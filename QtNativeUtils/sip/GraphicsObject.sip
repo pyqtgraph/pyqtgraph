@@ -5,16 +5,16 @@
 
 
 
-class QGraphicsObject2: public QGraphicsObject, public ExtendedItem
+class GraphicsObject: public QGraphicsObject, public ExtendedItem
 {
 
 %TypeHeaderCode
-#include "QGraphicsObject2.h"
+#include "GraphicsObject.h"
 %End
 
 public:
-    QGraphicsObject2(QGraphicsItem* parent /TransferThis/ =nullptr) /HoldGIL/;
-    virtual ~QGraphicsObject2() /HoldGIL/;
+    GraphicsObject(QGraphicsItem* parent /TransferThis/ =nullptr) /HoldGIL/;
+    virtual ~GraphicsObject() /HoldGIL/;
 
     virtual int type() const /HoldGIL/;
 

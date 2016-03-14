@@ -751,9 +751,10 @@ class ScatterPlotItem(GraphicsObject):
 
         opts = self.opts
 
-        if self._exportOpts is not False:
-            aa = self._exportOpts.get('antialias', True)
-            scale = self._exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
+        exportOpts = self.getExportMode()
+        if len(exportOpts) > 0:
+            aa = exportOpts.get('antialias', True)
+            scale = exportOpts.get('resolutionScale', 1.0)  ## exporting to image; pixel resolution may have changed
         else:
             aa = opts['antialias']
             scale = 1.0
@@ -772,7 +773,7 @@ class ScatterPlotItem(GraphicsObject):
             #pts = pts[:,mask]
             #data = self.data[mask]
 
-            if opts['useCache'] and self._exportOpts is False:
+            if opts['useCache'] and len(exportOpts) == 0:
                 # Draw symbols from pre-rendered atlas
                 atlas = self.fragmentAtlas.getAtlas()
 

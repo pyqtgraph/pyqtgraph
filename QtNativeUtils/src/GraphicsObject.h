@@ -14,12 +14,12 @@
 class ViewBoxBase;
 class GraphicsViewBase;
 
-class QGraphicsObject2: public QGraphicsObject, public ExtendedItem
+class GraphicsObject: public QGraphicsObject, public ExtendedItem
 {
     Q_OBJECT
 public:
-    QGraphicsObject2(QGraphicsItem* parent=nullptr);
-    virtual ~QGraphicsObject2();
+    GraphicsObject(QGraphicsItem* parent=nullptr);
+    virtual ~GraphicsObject();
 
     enum { Type = CustomItemTypes::TypeGraphicsObject };
 

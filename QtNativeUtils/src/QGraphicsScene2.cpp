@@ -177,7 +177,7 @@ bool QGraphicsScene2::callMouseHover(QGraphicsItem *item, HoverEvent *ev)
 {
     std::cout<<"Calling C++"<<std::endl;
     if(isGraphicsObject2(item))
-        ((QGraphicsObject2*)item)->hoverEvent(ev);
+        ((GraphicsObject*)item)->hoverEvent(ev);
     else if(isGraphicsWidget2(item))
         ((QGraphicsWidget2*)item)->hoverEvent(ev);
     else
@@ -189,7 +189,7 @@ bool QGraphicsScene2::callMouseClick(QGraphicsItem *item, MouseClickEvent *ev)
 {
     std::cout<<"Calling C++"<<std::endl;
     if(isGraphicsObject2(item))
-        ((QGraphicsObject2*)item)->mouseClickEvent(ev);
+        ((GraphicsObject*)item)->mouseClickEvent(ev);
     else if(isGraphicsWidget2(item))
         ((QGraphicsWidget2*)item)->mouseClickEvent(ev);
     else
@@ -201,7 +201,7 @@ bool QGraphicsScene2::callMouseDrag(QGraphicsItem *item, MouseDragEvent *ev)
 {
     std::cout<<"Calling C++"<<std::endl;
     if(isGraphicsObject2(item))
-        ((QGraphicsObject2*)item)->mouseDragEvent(ev);
+        ((GraphicsObject*)item)->mouseDragEvent(ev);
     else if(isGraphicsWidget2(item))
         ((QGraphicsWidget2*)item)->mouseDragEvent(ev);
     else

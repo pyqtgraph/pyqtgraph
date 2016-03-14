@@ -110,8 +110,9 @@ class TextItem(UIGraphicsItem):
         ## Needed to maintain font size when rendering to image with increased resolution
         self.textItem.resetTransform()
         #self.textItem.rotate(self.angle)
-        if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
-            s = self._exportOpts['resolutionScale']
+        exportOpts = self.getExportMode()
+        if len(exportOpts) > 0 and 'resolutionScale' in exportOpts:
+            s = exportOpts
             self.textItem.scale(s, s)
         
         #br = self.textItem.mapRectToParent(self.textItem.boundingRect())

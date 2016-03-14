@@ -330,6 +330,11 @@ void ExtendedItem::setExportMode(const bool isExporting, const QVariantHash &opt
         mExportOptions.clear();
 }
 
+const QVariantHash& ExtendedItem::getExportMode() const
+{
+    return mExportOptions;
+}
+
 
 void ExtendedItem::_replaceView(QGraphicsItem* item)
 {
