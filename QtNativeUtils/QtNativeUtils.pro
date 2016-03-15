@@ -26,7 +26,8 @@ SOURCES += src/QtNativeUtils.cpp \
     src/PlotItemBase.cpp \
     src/GraphicsViewBase.cpp \
     src/GraphicsObject.cpp \
-    src/GraphicsWidget.cpp
+    src/GraphicsWidget.cpp \
+    src/graphicsitems/ItemGroup.cpp
 
 
 HEADERS += src/QtNativeUtils.h \
@@ -45,9 +46,8 @@ HEADERS += src/QtNativeUtils.h \
     src/ItemDefines.h \
     src/GraphicsViewBase.h \
     src/GraphicsObject.h \
-    sip/GraphicsObject.sip \
     src/GraphicsWidget.h \
-    sip/GraphicsWidget.sip
+    src/graphicsitems/ItemGroup.h
 
 NUMPY_INCLUDE_1 = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE_2 = /usr/lib/python2.7/dist-packages/numpy/core/include
@@ -59,6 +59,7 @@ INCLUDEPATH += $$NUMPY_INCLUDE_1 $$NUMPY_INCLUDE_2
 INCLUDEPATH += $$PYTHON_INCLUDE
 
 OTHER_FILES += sip/Exceptions.sip \
+    sip/GraphicsObject.sip \
     sip/QtNativeUtils.sip \
     sip/MouseEvent.sip \
     sip/MouseClickEvent.sip \
@@ -70,6 +71,10 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/ViewBoxBase.sip \
     sip/PlotItemBase.sip \
     sip/GraphicsViewBase.sip \
-    sip/ExtendedItem.sip
+    sip/ExtendedItem.sip \
+    sip/GraphicsWidget.sip
+
+DISTFILES += \
+    sip/ItemGroup.sip
 
 

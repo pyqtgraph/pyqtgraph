@@ -25,6 +25,7 @@ command = [config.sip_bin,
            '-I', config.pyqt_sip_dir,
            '-I', 'src',
            '-I', 'src/mouseevents',
+           '-I', 'src/graphicsitems',
            qt_sip_flags,
            'sip/QtNativeUtils.sip']
 
@@ -49,6 +50,7 @@ makefile.LFLAGS.append('-L../build')
 makefile.extra_libs.append('QtNativeUtils')
 makefile.extra_include_dirs.append('../src')
 makefile.extra_include_dirs.append('../src/mouseevents')
+makefile.extra_include_dirs.append('../src/graphicsitems')
 makefile.extra_cflags.append('-std=c11')
 makefile.extra_cxxflags.append('-std=c++11')
 makefile.extra_cxxflags.append('-Wno-deprecated')

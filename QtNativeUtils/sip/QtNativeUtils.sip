@@ -28,6 +28,7 @@ init_package();
 %Include GraphicsObject.sip
 %Include GraphicsWidget.sip
 
+%Include ItemGroup.sip
 
 %Include QGraphicsScene2.sip
 %Include ViewBoxBase.sip

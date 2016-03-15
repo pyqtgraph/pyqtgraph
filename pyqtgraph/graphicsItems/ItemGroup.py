@@ -6,7 +6,10 @@ if not USE_PYSIDE:
 from .GraphicsItem import GraphicsItem
 
 from ..QtNativeUtils import GraphicsObject
+from ..QtNativeUtils import ItemGroup
 
+
+'''
 __all__ = ['ItemGroup']
 class ItemGroup(GraphicsObject):
     """
@@ -28,4 +31,4 @@ class ItemGroup(GraphicsObject):
     
     def addItem(self, item):
         item.setParentItem(self)
-
+'''
