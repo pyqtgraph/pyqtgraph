@@ -102,6 +102,8 @@ public:
 
     virtual void itemsChanged() /HoldGIL/;
 
+    ChildGroup* getChildGroup() const;
+
 public slots:
 
     void prepareForPaint();

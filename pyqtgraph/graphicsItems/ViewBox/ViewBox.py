@@ -183,10 +183,11 @@ class ViewBox(ViewBoxBase):
         ## childGroup is required so that ViewBox has local coordinates similar to device coordinates.
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
+        '''
         self.childGroup = ChildGroup(self)
-        #self.childGroup.itemsChangedListeners.append(self)
         self.childGroup.addListener(self)
         self.setInnerSceneItem(self.childGroup)
+        '''
 
         #self.background = QtGui.QGraphicsRectItem(self.rect())
         #self.background.setParentItem(self)
@@ -370,8 +371,10 @@ class ViewBox(ViewBoxBase):
         else:
             raise Exception('graphicsItems:ViewBox:setLeftButtonAction: unknown mode = %s (Options are "pan" and "rect")' % mode)
 
+    '''
     def innerSceneItem(self):
         return self.childGroup
+    '''
 
     def setMouseEnabled(self, x=None, y=None):
         """
@@ -404,7 +407,7 @@ class ViewBox(ViewBoxBase):
         scene = self.scene()
         if scene is not None and scene is not item.scene():
             scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-        item.setParentItem(self.childGroup)
+        item.setParentItem(self.getChildGroup())
         if not ignoreBounds:
             self.addedItems.append(item)
         self.updateAutoRange()
@@ -422,7 +425,7 @@ class ViewBox(ViewBoxBase):
     def clear(self):
         for i in self.addedItems[:]:
             self.removeItem(i)
-        for ch in self.childGroup.childItems():
+        for ch in self.getChildGroup().childItems():
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
@@ -581,7 +584,7 @@ class ViewBox(ViewBoxBase):
 
             # Update target rect for debugging
             if self.target.isVisible():
-                self.target.setRect(self.mapRectFromItem(self.childGroup, self.targetRect()))
+                self.target.setRect(self.mapRectFromItem(self.getChildGroup(), self.targetRect()))
 
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..
@@ -1123,7 +1126,7 @@ class ViewBox(ViewBoxBase):
         """
         if self.matrixNeedsUpdate():
             self.updateMatrix()
-        m = self.childGroup.transform()
+        m = self.getChildGroup().transform()
         #m1 = QtGui.QTransform()
         #m1.translate(self.childGroup.pos().x(), self.childGroup.pos().y())
         return m #*m1
@@ -1148,12 +1151,12 @@ class ViewBox(ViewBoxBase):
 
     def mapFromItemToView(self, item, obj):
         """Maps *obj* from the local coordinate system of *item* to the view coordinates"""
-        return self.childGroup.mapFromItem(item, obj)
+        return self.getChildGroup().mapFromItem(item, obj)
         #return self.mapSceneToView(item.mapToScene(obj))
 
     def mapFromViewToItem(self, item, obj):
         """Maps *obj* from view coordinates to the local coordinate system of *item*."""
-        return self.childGroup.mapToItem(item, obj)
+        return self.getChildGroup().mapToItem(item, obj)
         #return item.mapFromScene(self.mapViewToScene(obj))
 
     def mapViewToDevice(self, obj):
@@ -1196,7 +1199,7 @@ class ViewBox(ViewBoxBase):
             mask[axis] = mv
         s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
 
-        center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
+        center = Point(fn.invertQTransform(self.getChildGroup().transform()).map(ev.pos()))
         #center = ev.pos()
 
         self._resetTarget()
@@ -1245,7 +1248,7 @@ class ViewBox(ViewBoxBase):
                     self.rbScaleBox.hide()
                     #ax = QtCore.QRectF(Point(self.pressPos), Point(self.mousePos))
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
-                    ax = self.childGroup.mapRectFromParent(ax)
+                    ax = self.getChildGroup().mapRectFromParent(ax)
                     self.showAxRect(ax)
                     self.axHistoryPointer += 1
                     self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
@@ -1255,7 +1258,7 @@ class ViewBox(ViewBoxBase):
             else:
                 #tr = dif*mask
                 #tr = self.mapToView(tr) - self.mapToView(Point(0,0))
-                tr = self.childGroup.transform()
+                tr = self.getChildGroup().transform()
                 tr = fn.invertQTransform(tr)
                 tr = tr.map(Point(dif)*Point(mask)) - tr.map(Point(0,0))
                 x = tr.x() if mask[0] == 1 else None
@@ -1276,7 +1279,7 @@ class ViewBox(ViewBoxBase):
             dif[0] *= -1
             s = ((mask * 0.02) + 1) ** dif
 
-            tr = self.childGroup.transform()
+            tr = self.getChildGroup().transform()
             tr = fn.invertQTransform(tr)
 
             x = s[0] if mouseEnabled[0] == 1 else None
@@ -1325,7 +1328,7 @@ class ViewBox(ViewBoxBase):
 
     def updateScaleBox(self, p1, p2):
         r = QtCore.QRectF(p1, p2)
-        r = self.childGroup.mapRectFromParent(r)
+        r = self.getChildGroup().mapRectFromParent(r)
         self.rbScaleBox.setPos(r.topLeft())
         self.rbScaleBox.resetTransform()
         self.rbScaleBox.scale(r.width(), r.height())
@@ -1339,7 +1342,7 @@ class ViewBox(ViewBoxBase):
     def allChildren(self, item=None):
         """Return a list of all children and grandchildren of this ViewBox"""
         if item is None:
-            item = self.childGroup
+            item = self.getChildGroup()
 
         children = [item]
         for ch in item.childItems():
@@ -1358,7 +1361,7 @@ class ViewBox(ViewBoxBase):
             items = self.addedItems
 
         ## measure pixel dimensions in view box
-        px, py = [v.length() if v is not None else 0 for v in self.childGroup.pixelVectors()]
+        px, py = [v.length() if v is not None else 0 for v in self.getChildGroup().pixelVectors()]
 
         ## First collect all boundary information
         itemBounds = []
@@ -1590,6 +1593,7 @@ class ViewBox(ViewBoxBase):
                 if link is not None:
                     link.linkedViewChanged(self, ax)
 
+    '''
     def updateMatrix(self, changed=None):
         ## Make the childGroup's transform match the requested viewRange.
         bounds = self.rect()
@@ -1613,10 +1617,11 @@ class ViewBox(ViewBoxBase):
         st = Point(vr.center())
         m.translate(-st[0], -st[1])
 
-        self.childGroup.setTransform(m)
+        self.getChildGroup().setTransform(m)
 
         self.sigTransformChanged.emit()  ## segfaults here: 1
         self.setMatrixNeedsUpdate(False)
+    '''
 
     def paint(self, p, opt, widget):
         #self.checkSceneChange()
@@ -1720,7 +1725,7 @@ class ViewBox(ViewBoxBase):
             br = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
 
         g = ItemGroup()
-        g.setParentItem(self.childGroup)
+        g.setParentItem(self.getChildGroup())
         self.locateGroup = g
         g.box = QtGui.QGraphicsRectItem(br)
         g.box.setParentItem(g)

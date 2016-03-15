@@ -10,6 +10,8 @@
 #include "GraphicsObject.h"
 #include "Interfaces.h"
 
+class ChildGroup;
+
 class ViewBoxBase: public GraphicsWidget, public ItemChangedListener
 {
     Q_OBJECT
@@ -42,7 +44,7 @@ public:
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
     virtual void updateAutoRange() {};
-    virtual void updateMatrix() {};
+    virtual void updateMatrix();
 
     virtual void itemBoundsChanged(QGraphicsItem* item);
 
@@ -83,6 +85,8 @@ public:
 
     // called when items are added/removed from self.childGroup
     virtual void itemsChanged();
+
+    ChildGroup* getChildGroup() const;
 
 public slots:
 
@@ -128,6 +132,8 @@ protected:
     QGraphicsRectItem* mBackground = nullptr;
 
     GraphicsObject* mInnerSceneItem = nullptr;
+
+    ChildGroup* mChildGroup;
 };
 
 #endif // VIEWBOXBASE_H

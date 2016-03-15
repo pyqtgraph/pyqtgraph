@@ -4,6 +4,7 @@
 #include <QDebug>
 
 #include "QGraphicsScene2.h"
+#include "graphicsitems/ChildGroup.h"
 
 ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY) :
     GraphicsWidget(parent, wFlags),
@@ -30,6 +31,10 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mAutoPan.clear();
     mAutoPan << false << false;
 
+    mChildGroup = new ChildGroup(this);
+    mChildGroup->addListener(this);
+    setInnerSceneItem(mChildGroup);
+
     mBackground = new QGraphicsRectItem(rect());
     mBackground->setParentItem(this);
     mBackground->setZValue(-1e6);
@@ -37,6 +42,66 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mBackground->setBrush(QBrush(QColor(Qt::transparent)));
     updateBackground();
 }
+
+void ViewBoxBase::updateMatrix()
+{
+    QRectF bounds = rect();
+    QRectF vr = viewRect();
+    if(vr.height()==0 || vr.width()==0)
+        return;
+
+    QPointF scale(bounds.width()/vr.width(), bounds.height()/vr.height());
+    if(!mYInverted)
+        scale.ry() *= -1.0;
+    if(mXInverted)
+        scale.rx() *= -1.0;
+
+    QTransform m;
+
+    // First center the viewport at 0
+    QPointF center = bounds.center();
+    m.translate(center.x(), center.y());
+
+    // Now scale and translate properly
+    m.scale(scale.x(), scale.y());
+    center = vr.center();
+    m.translate(-center.x(), -center.y());
+
+    mChildGroup->setTransform(m);
+
+    emit sigTransformChanged();
+    mMatrixNeedsUpdate = false;
+}
+
+
+
+/*
+bounds = self.rect()
+
+vr = self.viewRect()
+if vr.height() == 0 or vr.width() == 0:
+    return
+scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
+if not self.yInverted():
+    scale = scale * Point(1, -1)
+if self.xInverted():
+    scale = scale * Point(-1, 1)
+m = QtGui.QTransform()
+
+## First center the viewport at 0
+center = bounds.center()
+m.translate(center.x(), center.y())
+
+## Now scale and translate properly
+m.scale(scale[0], scale[1])
+st = Point(vr.center())
+m.translate(-st[0], -st[1])
+
+self.getChildGroup().setTransform(m)
+
+self.sigTransformChanged.emit()  ## segfaults here: 1
+self.setMatrixNeedsUpdate(False)
+*/
 
 void ViewBoxBase::itemBoundsChanged(QGraphicsItem *item)
 {
@@ -143,6 +208,11 @@ GraphicsObject* ViewBoxBase::innerSceneItem() const
 void ViewBoxBase::itemsChanged()
 {
     updateAutoRange();
+}
+
+ChildGroup *ViewBoxBase::getChildGroup() const
+{
+    return mChildGroup;
 }
 
 void ViewBoxBase::prepareForPaint()
