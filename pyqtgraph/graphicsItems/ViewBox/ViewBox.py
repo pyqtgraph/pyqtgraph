@@ -17,6 +17,7 @@ from PyQt4.Qt import Qt
 
 __all__ = ['ViewBox']
 
+'''
 class WeakList(object):
 
     def __init__(self):
@@ -36,6 +37,7 @@ class WeakList(object):
             else:
                 yield d
             i -= 1
+'''
 
 '''
 class ChildGroup(ItemGroup):
@@ -72,7 +74,7 @@ class ChildGroup(ItemGroup):
 
 
 
-class ViewBox(GraphicsItem, ViewBoxBase):
+class ViewBox(ViewBoxBase):
     """
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
 
@@ -136,7 +138,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         """
 
         ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, invertX=invertX, invertY=invertY)
-        GraphicsItem.__init__(self)
+        #GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
         self.addedItems = []
@@ -257,6 +259,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
     def implements(self, interface):
         return interface == 'ViewBox'
 
+    '''
     def checkSceneChange(self):
         # ViewBox needs to receive sigPrepareForPaint from its scene before
         # being painted. However, we have no way of being informed when the
@@ -280,6 +283,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
             self.updateAutoRange()
         if self.matrixNeedsUpdate():
             self.updateMatrix()
+    '''
 
     def getState(self, copy=True):
         """Return the current state of the ViewBox.
@@ -1615,7 +1619,7 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         self.setMatrixNeedsUpdate(False)
 
     def paint(self, p, opt, widget):
-        self.checkSceneChange()
+        #self.checkSceneChange()
 
         if self.border is not None:
             bounds = self.shape()

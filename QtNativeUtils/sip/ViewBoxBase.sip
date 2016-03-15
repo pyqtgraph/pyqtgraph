@@ -31,7 +31,8 @@ public:
     virtual int type() const /HoldGIL/;
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) /HoldGIL/;
-    virtual void updateAutoRange() /HoldGIL/;
+    virtual void updateAutoRange();
+    virtual void updateMatrix();
 
     virtual void itemBoundsChanged(QGraphicsItem* item) /HoldGIL/;
 
@@ -101,6 +102,10 @@ public:
 
     virtual void itemsChanged() /HoldGIL/;
 
+public slots:
+
+    void prepareForPaint();
+
 protected:
 
     void setViewRange(const Point& x, const Point& y) /HoldGIL/;
@@ -110,6 +115,8 @@ protected:
     void _resetTarget() /HoldGIL/;
 
     void setInnerSceneItem(GraphicsObject* innerItem) /HoldGIL/;
+
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
 
 signals:
 

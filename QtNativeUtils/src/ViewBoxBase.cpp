@@ -3,6 +3,8 @@
 #include <QSizePolicy>
 #include <QDebug>
 
+#include "QGraphicsScene2.h"
+
 ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY) :
     GraphicsWidget(parent, wFlags),
     mMatrixNeedsUpdate(true),
@@ -143,6 +145,15 @@ void ViewBoxBase::itemsChanged()
     updateAutoRange();
 }
 
+void ViewBoxBase::prepareForPaint()
+{
+    // don't check whether auto range is enabled here--only check when setting dirty flag.
+    if(mAutoRangeNeedsUpdate) // and autoRangeEnabled
+        updateAutoRange();
+    if(mMatrixNeedsUpdate)
+        updateMatrix();
+}
+
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = Point(x);
@@ -178,41 +189,21 @@ void ViewBoxBase::setInnerSceneItem(GraphicsObject* innerItem)
     mInnerSceneItem = innerItem;
 }
 
+QVariant ViewBoxBase::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+    if(change == QGraphicsItem::ItemSceneChange)
+    {
+        // Disconnect from old scene
+        QGraphicsScene2* oldScene = qobject_cast<QGraphicsScene2*>(scene());
+        if(oldScene)
+            QObject::disconnect(oldScene, SIGNAL(sigPrepareForPaint()), this, SLOT(prepareForPaint()));
+    } else if (change == QGraphicsItem::ItemSceneHasChanged)
+    {
+        // Connect to a new scene
+        QGraphicsScene2* newScene = qobject_cast<QGraphicsScene2*>(scene());
+        if(newScene)
+            QObject::connect(newScene, SIGNAL(sigPrepareForPaint()), this, SLOT(prepareForPaint()));
+    }
 
-
-
-/*
-    def viewRect(self):
-        """Return a QRectF bounding the region visible within the ViewBox"""
-        try:
-            viewRange = self.viewRange()
-            vr0 = viewRange[0]
-            vr1 = viewRange[1]
-            return QtCore.QRectF(vr0[0], vr1[0], vr0[1]-vr0[0], vr1[1] - vr1[0])
-        except:
-            print("make qrectf failed:", self.viewRange())
-            raise
-
-    def targetRect(self):
-        """
-        Return the region which has been requested to be visible.
-        (this is not necessarily the same as the region that is *actually* visible--
-        resizing and aspect ratio constraints can cause targetRect() and viewRect() to differ)
-        """
-        try:
-            tr = self.targetRange()
-            tr0 = tr[0]
-            tr1 = tr[1]
-            return QtCore.QRectF(tr0[0], tr1[0], tr0[1]-tr0[0], tr1[1] - tr1[0])
-        except:
-            print("make qrectf failed:", tr)
-            raise
-
-    def _resetTarget(self):
-        # Reset target range to exactly match current view range.
-        # This is used during mouse interaction to prevent unpredictable
-        # behavior (because the user is unaware of targetRange).
-        if self.aspectLocked() == 0.0:  # (interferes with aspect locking)
-            viewRange = self.viewRange()
-            self.setTargetRange(viewRange[0], viewRange[1])
-*/
+    return GraphicsWidget::itemChange(change, value);
+}

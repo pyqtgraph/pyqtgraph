@@ -41,7 +41,8 @@ public:
     }
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
-    virtual void updateAutoRange() {}
+    virtual void updateAutoRange() {};
+    virtual void updateMatrix() {};
 
     virtual void itemBoundsChanged(QGraphicsItem* item);
 
@@ -83,6 +84,10 @@ public:
     // called when items are added/removed from self.childGroup
     virtual void itemsChanged();
 
+public slots:
+
+    void prepareForPaint();
+
 protected:
 
     void setViewRange(const Point& x, const Point& y);
@@ -92,6 +97,8 @@ protected:
     void _resetTarget();
 
     void setInnerSceneItem(GraphicsObject* innerItem);
+
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
 
 signals:
 
