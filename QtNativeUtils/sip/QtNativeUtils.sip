@@ -18,6 +18,7 @@ init_package();
 %Include Exceptions.sip
 
 %Include ExtendedItem.sip
+%Include Interfaces.sip
 
 %Include Point.sip
 %Include MouseEvent.sip
@@ -29,6 +30,7 @@ init_package();
 %Include GraphicsWidget.sip
 
 %Include ItemGroup.sip
+%Include ChildGroup.sip
 
 %Include QGraphicsScene2.sip
 %Include ViewBoxBase.sip

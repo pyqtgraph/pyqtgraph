@@ -138,6 +138,11 @@ GraphicsObject* ViewBoxBase::innerSceneItem() const
     return mInnerSceneItem;
 }
 
+void ViewBoxBase::itemsChanged()
+{
+    updateAutoRange();
+}
+
 void ViewBoxBase::setViewRange(const Point& x, const Point& y)
 {
     mViewRange[0] = Point(x);

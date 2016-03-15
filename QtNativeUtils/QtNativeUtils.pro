@@ -27,7 +27,8 @@ SOURCES += src/QtNativeUtils.cpp \
     src/GraphicsViewBase.cpp \
     src/GraphicsObject.cpp \
     src/GraphicsWidget.cpp \
-    src/graphicsitems/ItemGroup.cpp
+    src/graphicsitems/ItemGroup.cpp \
+    src/graphicsitems/ChildGroup.cpp
 
 
 HEADERS += src/QtNativeUtils.h \
@@ -47,7 +48,8 @@ HEADERS += src/QtNativeUtils.h \
     src/GraphicsViewBase.h \
     src/GraphicsObject.h \
     src/GraphicsWidget.h \
-    src/graphicsitems/ItemGroup.h
+    src/graphicsitems/ItemGroup.h \
+    src/graphicsitems/ChildGroup.h
 
 NUMPY_INCLUDE_1 = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE_2 = /usr/lib/python2.7/dist-packages/numpy/core/include
@@ -72,7 +74,8 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/PlotItemBase.sip \
     sip/GraphicsViewBase.sip \
     sip/ExtendedItem.sip \
-    sip/GraphicsWidget.sip
+    sip/GraphicsWidget.sip \
+    sip/ChildGroup.sip
 
 DISTFILES += \
     sip/ItemGroup.sip

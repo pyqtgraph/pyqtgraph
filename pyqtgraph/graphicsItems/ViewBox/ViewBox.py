@@ -11,7 +11,7 @@ from .. GraphicsWidget import GraphicsWidget
 from ... import debug as debug
 from ... import getConfigOption
 from ...Qt import isQObjectAlive
-from ...QtNativeUtils import ViewBoxBase
+from ...QtNativeUtils import ViewBoxBase, ChildGroup
 from ..GraphicsItem import GraphicsItem
 from PyQt4.Qt import Qt
 
@@ -37,6 +37,7 @@ class WeakList(object):
                 yield d
             i -= 1
 
+'''
 class ChildGroup(ItemGroup):
 
     def __init__(self, parent):
@@ -66,6 +67,9 @@ class ChildGroup(ItemGroup):
                 for listener in itemsChangedListeners:
                     listener.itemsChanged()
         return ret
+'''
+
+
 
 
 class ViewBox(GraphicsItem, ViewBoxBase):
@@ -178,7 +182,8 @@ class ViewBox(GraphicsItem, ViewBoxBase):
         ## this is a workaround for a Qt + OpenGL bug that causes improper clipping
         ## https://bugreports.qt.nokia.com/browse/QTBUG-23723
         self.childGroup = ChildGroup(self)
-        self.childGroup.itemsChangedListeners.append(self)
+        #self.childGroup.itemsChangedListeners.append(self)
+        self.childGroup.addListener(self)
         self.setInnerSceneItem(self.childGroup)
 
         #self.background = QtGui.QGraphicsRectItem(self.rect())

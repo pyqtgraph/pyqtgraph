@@ -2,7 +2,7 @@
 %Import QtGui/QtGuimod.sip
 
 
-class ViewBoxBase: public GraphicsWidget
+class ViewBoxBase: public GraphicsWidget, public ItemChangedListener
 {
 
 %TypeHeaderCode

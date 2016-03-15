@@ -4,7 +4,8 @@
 
 
 
-class ViewBoxInterface
+
+class ItemChangedListener /Abstract/
 {
 
 %TypeHeaderCode
@@ -12,42 +13,13 @@ class ViewBoxInterface
 %End
 
 public:
+    virtual ~ItemChangedListener();
 
+    virtual void itemsChanged() = 0;
 };
 
 
 
-
-class ViewBoxGetterInterface
-{
-
-%TypeHeaderCode
-#include "Interfaces.h"
-%End
-
-public:
-    virtual ~ViewBoxGetterInterface();
-    virtual ViewBoxInterface* getViewBox() const;
-    virtual void forgetViewBox();
-
-};
-
-
-
-
-
-class ViewWidgetGetterInterface
-{
-
-%TypeHeaderCode
-#include "Interfaces.h"
-%End
-
-public:
-    virtual ~ViewWidgetGetterInterface();
-    virtual QGraphicsView* getViewWidget() const;
-    virtual void forgetViewWidget();
-};
 
 
 class MouseEventsInterface

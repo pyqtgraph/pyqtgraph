@@ -8,8 +8,9 @@
 #include "Point.h"
 #include "ItemDefines.h"
 #include "GraphicsObject.h"
+#include "Interfaces.h"
 
-class ViewBoxBase: public GraphicsWidget
+class ViewBoxBase: public GraphicsWidget, public ItemChangedListener
 {
     Q_OBJECT
 public:
@@ -80,7 +81,7 @@ public:
     GraphicsObject* innerSceneItem() const;
 
     // called when items are added/removed from self.childGroup
-    virtual void itemsChanged() { updateAutoRange(); }
+    virtual void itemsChanged();
 
 protected:
 

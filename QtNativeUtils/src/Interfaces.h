@@ -19,46 +19,17 @@ signals:
 
 
 
-
-class ViewBoxGetterInterface
+class ItemChangedListener
 {
 public:
 
-    virtual ~ViewBoxGetterInterface() {}
+    virtual ~ItemChangedListener() {}
 
-    virtual ViewBoxInterface* getViewBox() const
-    {
-        return nullptr;
-    }
-
-    virtual void forgetViewBox()
-    {
-        mViewBox = nullptr;
-    }
-
-protected:
-
-    ViewBoxInterface* mViewBox;
-
+    virtual void itemsChanged() = 0;
 };
 
 
 
-
-
-class ViewWidgetGetterInterface
-{
-
-public:
-    virtual ~ViewWidgetGetterInterface() {}
-
-    virtual QGraphicsView* getViewWidget() const
-    {
-        return nullptr;
-    }
-
-    virtual void forgetViewWidget() {}
-};
 
 
 

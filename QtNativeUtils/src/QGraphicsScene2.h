@@ -17,7 +17,7 @@
 #include "GraphicsObject.h"
 #include "GraphicsWidget.h"
 
-class QGraphicsScene2: public QGraphicsScene, public ViewWidgetGetterInterface
+class QGraphicsScene2: public QGraphicsScene
 {
     Q_OBJECT
 public:
