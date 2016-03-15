@@ -88,6 +88,8 @@ public:
 
     ChildGroup* getChildGroup() const;
 
+    QTransform childTransform();
+
 public slots:
 
     void prepareForPaint();

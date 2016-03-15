@@ -1119,6 +1119,7 @@ class ViewBox(ViewBoxBase):
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
+    '''
     def childTransform(self):
         """
         Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
@@ -1130,6 +1131,7 @@ class ViewBox(ViewBoxBase):
         #m1 = QtGui.QTransform()
         #m1.translate(self.childGroup.pos().x(), self.childGroup.pos().y())
         return m #*m1
+    '''
 
     def mapToView(self, obj):
         """Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox"""

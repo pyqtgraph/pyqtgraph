@@ -45,10 +45,11 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
 
 void ViewBoxBase::updateMatrix()
 {
-    QRectF bounds = rect();
     QRectF vr = viewRect();
-    if(vr.height()==0 || vr.width()==0)
+    if(vr.height()==0.0 || vr.width()==0.0)
         return;
+
+    QRectF bounds = rect();
 
     QPointF scale(bounds.width()/vr.width(), bounds.height()/vr.height());
     if(!mYInverted)
@@ -73,35 +74,6 @@ void ViewBoxBase::updateMatrix()
     mMatrixNeedsUpdate = false;
 }
 
-
-
-/*
-bounds = self.rect()
-
-vr = self.viewRect()
-if vr.height() == 0 or vr.width() == 0:
-    return
-scale = Point(bounds.width()/vr.width(), bounds.height()/vr.height())
-if not self.yInverted():
-    scale = scale * Point(1, -1)
-if self.xInverted():
-    scale = scale * Point(-1, 1)
-m = QtGui.QTransform()
-
-## First center the viewport at 0
-center = bounds.center()
-m.translate(center.x(), center.y())
-
-## Now scale and translate properly
-m.scale(scale[0], scale[1])
-st = Point(vr.center())
-m.translate(-st[0], -st[1])
-
-self.getChildGroup().setTransform(m)
-
-self.sigTransformChanged.emit()  ## segfaults here: 1
-self.setMatrixNeedsUpdate(False)
-*/
 
 void ViewBoxBase::itemBoundsChanged(QGraphicsItem *item)
 {
@@ -213,6 +185,24 @@ void ViewBoxBase::itemsChanged()
 ChildGroup *ViewBoxBase::getChildGroup() const
 {
     return mChildGroup;
+}
+
+QTransform ViewBoxBase::childTransform()
+{
+    // Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
+    // (This maps from inside the viewbox to outside)
+
+    if(mMatrixNeedsUpdate)
+        updateMatrix();
+
+    return mChildGroup->transform();
+
+    /*
+    if self.matrixNeedsUpdate():
+        self.updateMatrix()
+    m = self.getChildGroup().transform()
+    return m
+    */
 }
 
 void ViewBoxBase::prepareForPaint()
