@@ -43,7 +43,7 @@ public:
     }
 
     virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
-    virtual void updateAutoRange() {};
+    virtual void updateAutoRange() {}
     virtual void updateMatrix();
 
     virtual void itemBoundsChanged(QGraphicsItem* item);
@@ -89,6 +89,14 @@ public:
     ChildGroup* getChildGroup() const;
 
     QTransform childTransform();
+
+    const QList<QGraphicsItem*>& addedItems() const;
+
+    void addItem(QGraphicsItem* item, const bool ignoreBounds=false);
+
+    void removeItem(QGraphicsItem* item);
+
+    void clear();
 
 public slots:
 
@@ -136,6 +144,8 @@ protected:
     GraphicsObject* mInnerSceneItem = nullptr;
 
     ChildGroup* mChildGroup;
+
+    QList<QGraphicsItem*> mAddedItems;
 };
 
 #endif // VIEWBOXBASE_H

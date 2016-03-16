@@ -141,7 +141,7 @@ class ViewBox(ViewBoxBase):
         #GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
-        self.addedItems = []
+        #self.addedItems = []
 
         self._lastScene = None  ## stores reference to the last known scene this view was a part of.
 
@@ -364,6 +364,7 @@ class ViewBox(ViewBoxBase):
         self.sigStateChanged.emit(self)
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
+        raise RuntimeWarning('ViewBox.setLeftButtonAction is deprecated')
         if mode.lower() == 'rect':
             self.setMouseMode(ViewBox.RectMode)
         elif mode.lower() == 'pan':
@@ -397,6 +398,7 @@ class ViewBox(ViewBoxBase):
     def menuEnabled(self):
         return self.state.get('enableMenu', True)
 
+    '''
     def addItem(self, item, ignoreBounds=False):
         """
         Add a QGraphicsItem to this view. The view will include this item when determining how to set its range
@@ -427,6 +429,7 @@ class ViewBox(ViewBoxBase):
             self.removeItem(i)
         for ch in self.getChildGroup().childItems():
             ch.setParentItem(None)
+    '''
 
     def resizeEvent(self, ev):
         self.linkedXChanged()
@@ -1360,7 +1363,7 @@ class ViewBox(ViewBoxBase):
         """
         profiler = debug.Profiler()
         if items is None:
-            items = self.addedItems
+            items = self.addedItems()
 
         ## measure pixel dimensions in view box
         px, py = [v.length() if v is not None else 0 for v in self.getChildGroup().pixelVectors()]

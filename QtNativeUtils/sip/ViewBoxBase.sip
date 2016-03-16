@@ -106,6 +106,14 @@ public:
 
     QTransform childTransform();
 
+    const QList<QGraphicsItem*>& addedItems() const;
+
+    void addItem(QGraphicsItem* item, const bool ignoreBounds=false);
+
+    void removeItem(QGraphicsItem* item);
+
+    void clear();
+
 public slots:
 
     void prepareForPaint();

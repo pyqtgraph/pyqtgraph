@@ -196,14 +196,86 @@ QTransform ViewBoxBase::childTransform()
         updateMatrix();
 
     return mChildGroup->transform();
-
-    /*
-    if self.matrixNeedsUpdate():
-        self.updateMatrix()
-    m = self.getChildGroup().transform()
-    return m
-    */
 }
+
+const QList<QGraphicsItem *> &ViewBoxBase::addedItems() const
+{
+    return mAddedItems;
+}
+
+void ViewBoxBase::addItem(QGraphicsItem *item, const bool ignoreBounds)
+{
+    // Add a QGraphicsItem to this view. The view will include this item when determining how to set its range
+    // automatically unless *ignoreBounds* is True.
+
+    if(item->zValue() < zValue())
+        item->setZValue(zValue()+1.0);
+
+    QGraphicsScene* gScene = scene();
+    if(gScene!=nullptr && gScene!=item->scene())
+        gScene->addItem(item);
+    item->setParentItem(mChildGroup);
+    if(!ignoreBounds)
+        mAddedItems.append(item);
+    updateAutoRange();
+}
+
+/*
+"""
+Add a QGraphicsItem to this view. The view will include this item when determining how to set its range
+automatically unless *ignoreBounds* is True.
+"""
+if item.zValue() < self.zValue():
+    item.setZValue(self.zValue()+1)
+scene = self.scene()
+if scene is not None and scene is not item.scene():
+    scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
+item.setParentItem(self.getChildGroup())
+if not ignoreBounds:
+    self.addedItems.append(item)
+self.updateAutoRange()
+*/
+
+void ViewBoxBase::removeItem(QGraphicsItem* item)
+{
+    // Remove an item from this view.
+    mAddedItems.removeOne(item);
+    scene()->removeItem(item);
+    updateAutoRange();
+}
+
+/*
+"""Remove an item from this view."""
+try:
+    self.addedItems.remove(item)
+except:
+    pass
+self.scene().removeItem(item)
+self.updateAutoRange()
+
+*/
+
+void ViewBoxBase::clear()
+{
+    int count = mAddedItems.size();
+    for(int i=0; i<count; ++i)
+        scene()->removeItem(mAddedItems[i]);
+
+    QList<QGraphicsItem*> cItems = mChildGroup->childItems();
+    count = cItems.size();
+    for(int i=0; i<count; ++i)
+        cItems[i]->setParentItem(nullptr);
+
+    mAddedItems.clear();
+}
+
+/*
+for i in self.addedItems[:]:
+    self.removeItem(i)
+for ch in self.getChildGroup().childItems():
+    ch.setParentItem(None)
+*/
+
 
 void ViewBoxBase::prepareForPaint()
 {
