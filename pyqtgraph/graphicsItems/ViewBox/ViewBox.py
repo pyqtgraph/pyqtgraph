@@ -143,7 +143,7 @@ class ViewBox(ViewBoxBase):
         self.linksBlocked = False
         #self.addedItems = []
 
-        self._lastScene = None  ## stores reference to the last known scene this view was a part of.
+        #self._lastScene = None  ## stores reference to the last known scene this view was a part of.
 
         self.state = {
 
@@ -484,6 +484,7 @@ class ViewBox(ViewBoxBase):
             self.setTargetRange(viewRange[0], viewRange[1])
     '''
 
+    # setRange(const QPoint& xRange=QPointF(), const QPoint& yRange=QPointF(), const double padding=std::numeric_limits::quiet_NaN(), const bool update=true, const bool disableAutoRange=true)
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
@@ -504,9 +505,6 @@ class ViewBox(ViewBoxBase):
         ================== =====================================================================
 
         """
-        #print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
-        #import traceback
-        #traceback.print_stack()
 
         changes = {}   # axes
         setRequested = [False, False]
@@ -572,21 +570,14 @@ class ViewBox(ViewBoxBase):
 
         # Disable auto-range for each axis that was requested to be set
         if disableAutoRange:
-            #xyOff = self.autoRangeEnabled()
-            #xOff = False if setRequested[0] else xyOff[0]
-            #yOff = False if setRequested[1] else xyOff[1]
             if setRequested[0]:
                 self.enableAutoRange(ViewBox.XAxis, enable=False)
             if setRequested[1]:
                 self.enableAutoRange(ViewBox.YAxis, enable=False)
-            #self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
 
         # If nothing has changed, we are done.
         if any(changed):
-            #if update and self.matrixNeedsUpdate:
-                #self.updateMatrix(changed)
-            #return
 
             self.sigStateChanged.emit(self)
 
@@ -599,25 +590,8 @@ class ViewBox(ViewBoxBase):
         autoVisibleOnly = self.autoVisible()
         if changed[0] and autoVisibleOnly[1] and (self.autoRangeEnabled()[0] is not False):
             self.setAutoRangeNeedsUpdate(True)
-            #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
         elif changed[1] and autoVisibleOnly[0] and (self.autoRangeEnabled()[1] is not False):
             self.setAutoRangeNeedsUpdate(True)
-            #self.updateAutoRange()
-
-        ## Update view matrix only if requested
-        #if update:
-            #self.updateMatrix(changed)
-        ## Otherwise, indicate that the matrix needs to be updated
-        #else:
-            #self.matrixNeedsUpdate = True
-
-        ## Inform linked views that the range has changed <<This should be moved>>
-        #for ax, range in changes.items():
-            #link = self.linkedView(ax)
-            #if link is not None:
-                #link.linkedViewChanged(self, ax)
-
-
 
     def setYRange(self, min, max, padding=None, update=True):
         """
