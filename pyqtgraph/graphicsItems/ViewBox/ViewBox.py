@@ -1144,6 +1144,7 @@ class ViewBox(ViewBoxBase):
         return m #*m1
     '''
 
+    '''
     def mapToView(self, obj):
         """Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox"""
         m = fn.invertQTransform(self.childTransform())
@@ -1177,6 +1178,7 @@ class ViewBox(ViewBoxBase):
 
     def mapDeviceToView(self, obj):
         return self.mapToView(self.mapFromDevice(obj))
+    '''
 
     def viewPixelSize(self):
         """Return the (width, height) of a screen pixel in view coordinates."""
@@ -1184,10 +1186,11 @@ class ViewBox(ViewBoxBase):
         px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
         return (px.length(), py.length())
 
-
+    '''
     def itemBoundingRect(self, item):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
+    '''
 
     #def viewScale(self):
         #vr = self.viewRect()

@@ -187,13 +187,13 @@ ChildGroup *ViewBoxBase::getChildGroup() const
     return mChildGroup;
 }
 
-QTransform ViewBoxBase::childTransform()
+QTransform ViewBoxBase::childTransform() const
 {
     // Return the transform that maps from child(item in the childGroup) coordinates to local coordinates.
     // (This maps from inside the viewbox to outside)
 
     if(mMatrixNeedsUpdate)
-        updateMatrix();
+        const_cast<ViewBoxBase*>(this)->updateMatrix();
 
     return mChildGroup->transform();
 }
@@ -333,6 +333,12 @@ void ViewBoxBase::enableAutoRange(const QString& axis, const bool enable)
         enableAutoRange(XAxis, enable);
     else if(axis=="y")
         enableAutoRange(YAxis, enable);
+}
+
+QRectF ViewBoxBase::itemBoundingRect(const QGraphicsItem *item) const
+{
+    // Return the bounding rect of the item in view coordinates
+    return mapSceneToView(item->sceneBoundingRect()).boundingRect();
 }
 
 void ViewBoxBase::prepareForPaint()

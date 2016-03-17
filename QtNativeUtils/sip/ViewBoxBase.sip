@@ -104,7 +104,7 @@ public:
 
     ChildGroup* getChildGroup() const;
 
-    QTransform childTransform();
+    QTransform childTransform() const;
 
     const QList<QGraphicsItem*>& addedItems() const;
 
@@ -117,6 +117,68 @@ public:
     double suggestPadding(const Axis ax) const;
 
     void enableAutoRange(const Axis axis=XYAxes, const bool enable=true);
+
+    QPointF	mapToView(const QPointF& point) const;
+    QPointF	mapToView(const QPoint& point) const;
+    QPolygonF mapToView(const QRectF& rect) const;
+    QPolygonF mapToView(const QPolygonF& polygon) const;
+    QPainterPath mapToView(const QPainterPath& path) const;
+    QPointF	mapToView(qreal x, qreal y) const;
+
+    QPointF	mapFromView(const QPointF& point) const;
+    QPointF	mapFromView(const QPoint& point) const;
+    QPolygonF mapFromView(const QRectF& rect) const;
+    QPolygonF mapFromView(const QPolygonF& polygon) const;
+    QPainterPath mapFromView(const QPainterPath& path) const;
+    QPointF	mapFromView(qreal x, qreal y) const;
+
+    QPointF	mapSceneToView(const QPointF& point) const;
+    QPointF	mapSceneToView(const QPoint& point) const;
+    QPolygonF mapSceneToView(const QRectF& rect) const;
+    QPolygonF mapSceneToView(const QPolygonF& polygon) const;
+    QPainterPath mapSceneToView(const QPainterPath& path) const;
+    QPointF	mapSceneToView(qreal x, qreal y) const;
+
+    QPointF	mapViewToScene(const QPointF& point) const;
+    QPointF	mapViewToScene(const QPoint& point) const;
+    QPolygonF mapViewToScene(const QRectF& rect) const;
+    QPolygonF mapViewToScene(const QPolygonF& polygon) const;
+    QPainterPath mapViewToScene(const QPainterPath& path) const;
+    QPointF	mapViewToScene(qreal x, qreal y) const;
+
+    QPointF	mapFromItemToView(const QGraphicsItem* item, const QPointF& point) const;
+    QPointF	mapFromItemToView(const QGraphicsItem* item, const QPoint& point) const;
+    QPolygonF mapFromItemToView(const QGraphicsItem* item, const QRectF& rect) const;
+    QPolygonF mapFromItemToView(const QGraphicsItem* item, const QPolygonF& polygon) const;
+    QPainterPath mapFromItemToView(const QGraphicsItem* item, const QPainterPath& path) const;
+    QPolygonF mapFromItemToView(const QGraphicsItem* item, qreal x, qreal y, qreal w, qreal h ) const;
+    QPointF	mapFromItemToView(const QGraphicsItem* item, qreal x, qreal y) const;
+
+    QPointF	mapFromViewToItem(const QGraphicsItem* item, const QPointF& point) const;
+    QPointF	mapFromViewToItem(const QGraphicsItem* item, const QPoint& point) const;
+    QPolygonF mapFromViewToItem(const QGraphicsItem* item, const QRectF& rect) const;
+    QPolygonF mapFromViewToItem(const QGraphicsItem* item, const QPolygonF& polygon) const;
+    QPainterPath mapFromViewToItem(const QGraphicsItem* item, const QPainterPath& path) const;
+    QPolygonF mapFromViewToItem(const QGraphicsItem* item, qreal x, qreal y, qreal w, qreal h ) const;
+    QPointF	mapFromViewToItem(const QGraphicsItem* item, qreal x, qreal y) const;
+
+    QPointF	mapViewToDevice(const QPointF& point) const;
+    QPointF	mapViewToDevice(const QPoint& point) const;
+    QPolygonF mapViewToDevice(const QRectF& rect) const;
+    QPolygonF mapViewToDevice(const QPolygonF& polygon) const;
+    QPainterPath mapViewToDevice(const QPainterPath& path) const;
+    QPointF	mapViewToDevice(qreal x, qreal y) const;
+
+    QPointF	mapDeviceToView(const QPointF& point) const;
+    QPointF	mapDeviceToView(const QPoint& point) const;
+    QPolygonF mapDeviceToView(const QRectF& rect) const;
+    QPolygonF mapDeviceToView(const QPolygonF& polygon) const;
+    QPainterPath mapDeviceToView(const QPainterPath& path) const;
+    QPointF	mapDeviceToView(qreal x, qreal y) const;
+
+
+    QRectF itemBoundingRect(const QGraphicsItem* item) const;
+
 
 public slots:
 
