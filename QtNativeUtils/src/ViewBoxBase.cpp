@@ -220,22 +220,6 @@ void ViewBoxBase::addItem(QGraphicsItem *item, const bool ignoreBounds)
     updateAutoRange();
 }
 
-/*
-"""
-Add a QGraphicsItem to this view. The view will include this item when determining how to set its range
-automatically unless *ignoreBounds* is True.
-"""
-if item.zValue() < self.zValue():
-    item.setZValue(self.zValue()+1)
-scene = self.scene()
-if scene is not None and scene is not item.scene():
-    scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
-item.setParentItem(self.getChildGroup())
-if not ignoreBounds:
-    self.addedItems.append(item)
-self.updateAutoRange()
-*/
-
 void ViewBoxBase::removeItem(QGraphicsItem* item)
 {
     // Remove an item from this view.
@@ -243,17 +227,6 @@ void ViewBoxBase::removeItem(QGraphicsItem* item)
     scene()->removeItem(item);
     updateAutoRange();
 }
-
-/*
-"""Remove an item from this view."""
-try:
-    self.addedItems.remove(item)
-except:
-    pass
-self.scene().removeItem(item)
-self.updateAutoRange()
-
-*/
 
 void ViewBoxBase::clear()
 {
@@ -269,13 +242,98 @@ void ViewBoxBase::clear()
     mAddedItems.clear();
 }
 
-/*
-for i in self.addedItems[:]:
-    self.removeItem(i)
-for ch in self.getChildGroup().childItems():
-    ch.setParentItem(None)
-*/
+double ViewBoxBase::suggestPadding(const ViewBoxBase::Axis ax) const
+{
+    const double l = ax==Axis::XAxis ? width() : height();
+    if(l>0.0)
+        return std::min(std::max(1.0/std::sqrt(l), 0.02), 0.1);
+    return 0.02;
+}
 
+void ViewBoxBase::enableAutoRange(const ViewBoxBase::Axis axis, const bool enable)
+{
+    // Enable (or disable) auto-range for *axis*, which may be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes for both
+    // (if *axis* is omitted, both axes will be changed).
+    // When enabled, the axis will automatically rescale when items are added/removed or change their shape.
+    // The argument *enable* may optionally be a float (0.0-1.0) which indicates the fraction of the data that should
+    // be visible (this only works with items implementing a dataRange method, such as PlotDataItem).
+
+
+    if(axis==XYAxes || axis==XAxis)
+    {
+        if(mAutoRangeEnabled[0] != enable)
+        {
+            // If we are disabling, do one last auto-range to make sure that
+            // previously scheduled auto-range changes are enacted
+            if(!enable && mAutoRangeNeedsUpdate)
+                updateAutoRange();
+
+           mAutoRangeEnabled[0] = enable;
+           mAutoRangeNeedsUpdate |= enable;
+           update();
+        }
+    }
+
+    if(axis==XYAxes || axis==YAxis)
+    {
+        if(mAutoRangeEnabled[1] != enable)
+        {
+            // If we are disabling, do one last auto-range to make sure that
+            // previously scheduled auto-range changes are enacted
+            if(!enable && mAutoRangeNeedsUpdate)
+                updateAutoRange();
+
+           mAutoRangeEnabled[1] = enable;
+           mAutoRangeNeedsUpdate |= enable;
+           update();
+        }
+    }
+
+    if(mAutoRangeNeedsUpdate)
+        updateAutoRange();
+
+    emit sigStateChanged(this);
+
+    /*
+    if axis == ViewBox.XYAxes or axis == 'xy':
+        axes = [0, 1]
+    elif axis == ViewBox.XAxis or axis == 'x':
+        axes = [0]
+    elif axis == ViewBox.YAxis or axis == 'y':
+        axes = [1]
+    else:
+        raise Exception('axis argument must be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes.')
+
+    for ax in axes:
+        are = self.autoRangeEnabled()
+        if are[ax] != enable:
+            # If we are disabling, do one last auto-range to make sure that
+            # previously scheduled auto-range changes are enacted
+            if enable is False and self.autoRangeNeedsUpdate():
+                self.updateAutoRange()
+
+            are[ax] = enable
+            self.setAutoRangeEnabled(are[0], are[1])
+            self.setAutoRangeNeedsUpdate(self.autoRangeNeedsUpdate() or (enable is not False))
+            self.update()
+
+
+    if self.autoRangeNeedsUpdate():
+        self.updateAutoRange()
+
+    self.sigStateChanged.emit(self)
+    */
+}
+
+void ViewBoxBase::enableAutoRange(const QString& axis, const bool enable)
+{
+    if(axis=="xy")
+        enableAutoRange(XYAxes, enable);
+    else if(axis=="x")
+        enableAutoRange(XAxis, enable);
+    else if(axis=="y")
+        enableAutoRange(YAxis, enable);
+}
 
 void ViewBoxBase::prepareForPaint()
 {

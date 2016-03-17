@@ -572,9 +572,14 @@ class ViewBox(ViewBoxBase):
 
         # Disable auto-range for each axis that was requested to be set
         if disableAutoRange:
-            xOff = False if setRequested[0] else None
-            yOff = False if setRequested[1] else None
-            self.enableAutoRange(x=xOff, y=yOff)
+            #xyOff = self.autoRangeEnabled()
+            #xOff = False if setRequested[0] else xyOff[0]
+            #yOff = False if setRequested[1] else xyOff[1]
+            if setRequested[0]:
+                self.enableAutoRange(ViewBox.XAxis, enable=False)
+            if setRequested[1]:
+                self.enableAutoRange(ViewBox.YAxis, enable=False)
+            #self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
 
         # If nothing has changed, we are done.
@@ -654,6 +659,7 @@ class ViewBox(ViewBoxBase):
         if bounds is not None:
             self.setRange(bounds, padding=padding)
 
+    '''
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
         if l > 0:
@@ -661,6 +667,7 @@ class ViewBox(ViewBoxBase):
         else:
             padding = 0.02
         return padding
+    '''
 
     def setLimits(self, **kwds):
         """
@@ -781,8 +788,7 @@ class ViewBox(ViewBoxBase):
             if x is not None or y is not None:
                 self.setRange(xRange=x, yRange=y, padding=0)
 
-
-
+    '''
     def enableAutoRange(self, axis=None, enable=True, x=None, y=None):
         """
         Enable (or disable) auto-range for *axis*, which may be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes for both
@@ -834,14 +840,16 @@ class ViewBox(ViewBoxBase):
                 self.setAutoRangeNeedsUpdate(self.autoRangeNeedsUpdate() or (enable is not False))
                 self.update()
 
-
-        #if needAutoRangeUpdate:
-        #    self.updateAutoRange()
+        if self.autoRangeNeedsUpdate():
+            self.updateAutoRange()
 
         self.sigStateChanged.emit(self)
+    '''
 
     def disableAutoRange(self, axis=None):
         """Disables auto-range. (See enableAutoRange)"""
+        if axis is None:
+            axis = ViewBox.XYAxes
         self.enableAutoRange(axis, enable=False)
 
     #def autoRangeEnabled(self):

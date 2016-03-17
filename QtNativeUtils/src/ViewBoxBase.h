@@ -98,6 +98,11 @@ public:
 
     void clear();
 
+    double suggestPadding(const Axis ax) const;
+
+    void enableAutoRange(const Axis axis=XYAxes, const bool enable=true);
+    void enableAutoRange(const QString& axis="xy", const bool enable=true);
+
 public slots:
 
     void prepareForPaint();
