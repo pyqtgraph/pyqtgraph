@@ -58,14 +58,14 @@ class TextItem(GraphicsObject):
         self.border = fn.mkPen(border)
         self.setAngle(angle)
 
-    def setText(self, text, color=(200,200,200)):
+    def setText(self, text, color=None):
         """
         Set the text of this item. 
         
-        The color entry is deprecated and kept to avoid an API change.
-        
         This method sets the plain text of the item; see also setHtml().
         """
+        if color is not None:
+            self.setColor(color)
         self.textItem.setPlainText(text)
         self.updateTextPos()
         
