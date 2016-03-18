@@ -1090,15 +1090,16 @@ class PlotItem(GraphicsWidget):
         """
         Set the label for an axis. Basic HTML formatting is allowed.
         
-        ==============  =================================================================
+        ==================  =================================================================
         **Arguments:**
-        axis            must be one of 'left', 'bottom', 'right', or 'top'
-        text            text to display along the axis. HTML allowed.
-        units           units to display after the title. If units are given,
-                        then an SI prefix will be automatically appended
-                        and the axis values will be scaled accordingly.
-                        (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
-        ==============  =================================================================
+        axis                must be one of 'left', 'bottom', 'right', or 'top'
+        text                text to display along the axis. HTML allowed.
+        units               units to display after the title. If units are given,
+                            then an SI prefix will be automatically appended
+                            and the axis values will be scaled accordingly.
+                            (ie, use 'V' instead of 'mV'; 'm' will be added automatically)
+        enableAutoSIPrefix  Enable (or disable) automatic SI prefix scaling on this axis.
+        ==================  =================================================================
         """
         self.getAxis(axis).setLabel(text=text, units=units, unitPrefix=unitPrefix, enableAutoSIPrefix=enableAutoSIPrefix, **args)
         self.showAxis(axis)

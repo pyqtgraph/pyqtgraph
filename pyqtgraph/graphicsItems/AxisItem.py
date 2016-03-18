@@ -233,17 +233,18 @@ class AxisItem(GraphicsWidget):
     def setLabel(self, text=None, units=None, unitPrefix=None, enableAutoSIPrefix=None, **args):
         """Set the text displayed adjacent to the axis.
         
-        ==============  =============================================================
+        ==================  =============================================================
         **Arguments:**
-        text            The text (excluding units) to display on the label for this
-                        axis.
-        units           The units for this axis. Units should generally be given
-                        without any scaling prefix (eg, 'V' instead of 'mV'). The
-                        scaling prefix will be automatically prepended based on the
-                        range of data displayed.
-        **args          All extra keyword arguments become CSS style options for
-                        the <span> tag which will surround the axis label and units.
-        ==============  =============================================================
+        text                The text (excluding units) to display on the label for this
+                            axis.
+        units               The units for this axis. Units should generally be given
+                            without any scaling prefix (eg, 'V' instead of 'mV'). The
+                            scaling prefix will be automatically prepended based on the
+                            range of data displayed.
+        enableAutoSIPrefix  Enable (or disable) automatic SI prefix scaling on this axis.
+        **args              All extra keyword arguments become CSS style options for
+                            the <span> tag which will surround the axis label and units.
+        ==================  =============================================================
         
         The final text generated for the label will look like::
         
