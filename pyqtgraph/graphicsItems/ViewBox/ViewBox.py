@@ -484,7 +484,12 @@ class ViewBox(ViewBoxBase):
             self.setTargetRange(viewRange[0], viewRange[1])
     '''
 
-    # setRange(const QPoint& xRange=QPointF(), const QPoint& yRange=QPointF(), const double padding=std::numeric_limits::quiet_NaN(), const bool update=true, const bool disableAutoRange=true)
+    # setRange(const QPointF& xRange=QPointF(), const QPointF& yRange=QPointF(), const double padding=std::numeric_limits::quiet_NaN(), const bool disableAutoRange=true)
+    # setRange(const QRectF& rect=QPointF(), const double padding=std::numeric_limits::quiet_NaN(), const bool disableAutoRange=true)
+
+    # setRange(const QPointF& xRange=QPointF(), const QPoint& yRange=QPointF(), const bool disableAutoRange=true)
+    # setRange(const QRectF& rect=QPointF(), const bool disableAutoRange=true)
+
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
@@ -500,11 +505,13 @@ class ViewBox(ViewBoxBase):
                            the size of the ViewBox.
         *update*           (bool) If True, update the range of the ViewBox immediately.
                            Otherwise, the update is deferred until before the next render.
-        *disableAutoRange* (bool) If True, auto-ranging is diabled. Otherwise, it is left
+        *disableAutoRange* (bool) If True, auto-ranging is disabled. Otherwise, it is left
                            unchanged.
         ================== =====================================================================
 
         """
+
+        # Update is ignored
 
         changes = {}   # axes
         setRequested = [False, False]

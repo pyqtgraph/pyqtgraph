@@ -28,7 +28,8 @@ SOURCES += src/QtNativeUtils.cpp \
     src/GraphicsObject.cpp \
     src/GraphicsWidget.cpp \
     src/graphicsitems/ItemGroup.cpp \
-    src/graphicsitems/ChildGroup.cpp
+    src/graphicsitems/ChildGroup.cpp \
+    src/Range.cpp
 
 
 HEADERS += src/QtNativeUtils.h \
@@ -49,7 +50,8 @@ HEADERS += src/QtNativeUtils.h \
     src/GraphicsObject.h \
     src/GraphicsWidget.h \
     src/graphicsitems/ItemGroup.h \
-    src/graphicsitems/ChildGroup.h
+    src/graphicsitems/ChildGroup.h \
+    src/Range.h
 
 NUMPY_INCLUDE_1 = /usr/local/lib/python2.7/dist-packages/numpy/core/include
 NUMPY_INCLUDE_2 = /usr/lib/python2.7/dist-packages/numpy/core/include

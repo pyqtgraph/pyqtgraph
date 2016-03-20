@@ -11,6 +11,29 @@
 #include "Interfaces.h"
 #include "graphicsitems/ChildGroup.h"
 
+class Limits
+{
+public:
+    Limits()
+    {
+
+    }
+
+
+protected:
+
+    double mMinX;
+    double mMaxX;
+    double mMinY;
+    double mMaxY;
+    QPointF mRangeX;
+    QPointF mRangeY;
+
+};
+
+
+
+
 class ViewBoxBase: public GraphicsWidget, public ItemChangedListener
 {
     Q_OBJECT
