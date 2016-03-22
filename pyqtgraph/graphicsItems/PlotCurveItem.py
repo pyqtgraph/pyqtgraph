@@ -126,10 +126,18 @@ class PlotCurveItem(GraphicsObject):
 
         ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
+            # include complete data range
+            # first try faster nanmin/max function, then cut out infs if needed.
             b = (np.nanmin(d), np.nanmax(d))
+            if any(np.isinf(b)):
+                mask = np.isfinite(d)
+                d = d[mask]
+                b = (d.min(), d.max())
+                
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
+            # include a percentile of data range
             mask = np.isfinite(d)
             d = d[mask]
             b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
