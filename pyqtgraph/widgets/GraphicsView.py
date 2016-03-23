@@ -165,7 +165,8 @@ class GraphicsView(QtGui.QGraphicsView):
         self.sceneObj = None
         self.closed = True
         self.setViewport(None)
-        
+        super(GraphicsView, self).close()
+
     def useOpenGL(self, b=True):
         if b:
             if not HAVE_OPENGL:
