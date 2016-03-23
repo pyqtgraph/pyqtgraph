@@ -124,7 +124,6 @@ class TextItem(GraphicsObject):
         """
         self.color = fn.mkColor(color)
         self.textItem.setDefaultTextColor(self.color)
-        self.updateTextPos()
         
     def updateTextPos(self):
         # update text position to obey anchor
