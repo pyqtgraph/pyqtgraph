@@ -55,6 +55,8 @@ Please use the following guidelines when preparing changes:
     Tests for a module should ideally cover all code in that module,
     i.e., statement coverage should be at 100%.
 
-    To measure the test coverage, install py.test, pytest-cov and pytest-xdist.
-    Then run 'py.test --cov -n 4' to run the test suite with coverage on 4 cores.
-
+    To measure the test coverage, install py.test and coverage.
+    Then run 'coverage run run_tests.py' to run the test suite with coverage
+    stats.  Then view the coverage stats with `coverage report` for a summary
+    and `coverage report -m` for a breakdown of the lines that are missed by
+    the test suite.
