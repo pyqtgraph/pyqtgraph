@@ -136,7 +136,7 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
-      coverage run run_tests.py
+      coverage run run_tests.py;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
