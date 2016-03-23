@@ -62,7 +62,6 @@ install:
     - if [ "${QT}" == "pyside" ]; then
           conda install pyside --yes;
       fi;
-    - pip install pytest-xdist # multi-thread py.test
     - pip install pytest-cov # add coverage stats
 
     # required for example testing on python 2.6
@@ -137,7 +136,7 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. py.test --cov pyqtgraph -sv;
+      coverage run run_tests.py
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
