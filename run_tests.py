@@ -10,7 +10,7 @@ if __name__ == '__main__':
     args.append('-rxs')
     if len(sys.argv) > 1:
         args.extend(sys.argv[1:])
-    print('pytest arguments: {}'.format(args))
+    print('pytest arguments:', args)
     # call pytest and exit with the return code from pytest so that
     # travis will fail correctly if tests fail
     sys.exit(pytest.main(args))
