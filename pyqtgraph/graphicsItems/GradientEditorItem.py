@@ -25,8 +25,7 @@ Gradients = OrderedDict([
 ])
 
 def addGradientListToDocstring():
-    ### create a decorator so that we can add construct a list of the gradients defined above in a docstring
-    ### Adds the list of gradients to the end of the functions docstring
+    """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
     def dec(fn):
         fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
         return fn
@@ -482,7 +481,6 @@ class GradientEditorItem(TickSliderItem):
     def loadPreset(self, name):
         """
         Load a predefined gradient. Currently defined gradients are: 
-    
         """## TODO: provide image with names of defined gradients
         
         #global Gradients
