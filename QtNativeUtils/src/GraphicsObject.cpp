@@ -9,6 +9,8 @@ GraphicsObject::GraphicsObject(QGraphicsItem *parent) :
     QGraphicsObject(parent),
     ExtendedItem(this)
 {
+    Range::registerMetatype();
+
     setFlag(ItemSendsGeometryChanges, true);
 }
 
@@ -24,7 +26,7 @@ QTransform GraphicsObject::sceneTransform() const
     return QGraphicsObject::sceneTransform();
 }
 
-void GraphicsObject::viewRangeChanged(const QList<Point> &range)
+void GraphicsObject::viewRangeChanged(const Range& xRange, const Range& yRange)
 {
     // Called whenever the view coordinates of the ViewBox containing this item have changed.
 }
@@ -71,25 +73,25 @@ void GraphicsObject::setParentItem(QGraphicsItem* newParent)
 
 void GraphicsObject::disconnectView(ViewBoxBase* view)
 {
-    QObject::disconnect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::disconnect(view, SIGNAL(sigRangeChanged(Range, Range)), this, SLOT(viewRangeChanged(Range, Range)));
     QObject::disconnect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
 void GraphicsObject::disconnectView(GraphicsViewBase* view)
 {
-    QObject::disconnect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::disconnect(view, SIGNAL(sigDeviceRangeChanged(Range, Range)), this, SLOT(viewRangeChanged(Range, Range)));
     QObject::disconnect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
 void GraphicsObject::connectView(ViewBoxBase* view)
 {
-    QObject::connect(view, SIGNAL(sigRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::connect(view, SIGNAL(sigRangeChanged(Range, Range)), this, SLOT(viewRangeChanged(Range, Range)));
     QObject::connect(view, SIGNAL(sigTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 
 void GraphicsObject::connectView(GraphicsViewBase* view)
 {
-    QObject::connect(view, SIGNAL(sigDeviceRangeChanged(QList<Point>)), this, SLOT(viewRangeChanged(QList<Point>)));
+    QObject::connect(view, SIGNAL(sigDeviceRangeChanged(Range, Range)), this, SLOT(viewRangeChanged(Range, Range)));
     QObject::connect(view, SIGNAL(sigDeviceTransformChanged()), this, SLOT(viewTransformChanged()));
 }
 

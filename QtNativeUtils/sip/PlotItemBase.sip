@@ -16,7 +16,7 @@ public:
 
 signals:
 
-    void sigYRangeChanged(const Point& range);
-    void sigXRangeChanged(const Point& range);
-    void sigRangeChanged(const QList<Point>& range);
+    void sigYRangeChanged(const Range& range);
+    void sigXRangeChanged(const Range& range);
+    void sigRangeChanged(const Range& xRange, const Range& yRange);
 };

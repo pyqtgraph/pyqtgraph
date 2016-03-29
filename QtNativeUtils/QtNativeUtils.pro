@@ -77,7 +77,8 @@ OTHER_FILES += sip/Exceptions.sip \
     sip/GraphicsViewBase.sip \
     sip/ExtendedItem.sip \
     sip/GraphicsWidget.sip \
-    sip/ChildGroup.sip
+    sip/ChildGroup.sip \
+    sip/Range.sip
 
 DISTFILES += \
     sip/ItemGroup.sip

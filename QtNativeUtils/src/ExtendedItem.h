@@ -10,6 +10,7 @@
 #include "mouseevents/MouseClickEvent.h"
 #include "mouseevents/HoverEvent.h"
 #include "mouseevents/MouseDragEvent.h"
+#include "Range.h"
 
 
 class GraphicsViewBase;
@@ -139,7 +140,7 @@ public:
 
     void parentIsChanged();
 
-    virtual void viewRangeChanged(const QList<Point>& range) = 0;
+    virtual void viewRangeChanged(const Range& xRange, const Range& yRange) = 0;
     virtual void viewTransformChanged() = 0;
 
     void setExportMode(const bool isExporting, const QVariantHash& opt=QVariantHash());

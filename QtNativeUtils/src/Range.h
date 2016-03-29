@@ -2,12 +2,14 @@
 #define RANGE_H
 
 #include <limits>
+#include <stdexcept>
 
 #include <QObject>
 #include <QMetaType>
 #include <QPointF>
 #include <QList>
 #include <QVector>
+#include <QPointF>
 
 
 class Range
@@ -23,6 +25,7 @@ public:
         mMax(maxVal)
     {}
 
+    /*
     Range(const QList<double>& l) :
         mMin(l[0]),
         mMax(l[1])
@@ -31,6 +34,12 @@ public:
     Range(const QVector<double>& l) :
         mMin(l[0]),
         mMax(l[1])
+    {}
+    */
+
+    Range(const QPointF& other) :
+        mMin(other.x()),
+        mMax(other.y())
     {}
 
     Range(const Range& other) :
@@ -65,27 +74,31 @@ public:
 
     bool isValid() const { return mMin <= mMax; }
     bool isNull() const { return (!isValid() || mMin==mMax); }
+    bool isFinite() const { return std::isfinite(mMin) && std::isfinite(mMax); }
 
-    bool operator==(const Range& other)
+    double& operator[](const int index) throw(std::runtime_error)
     {
-        if(other.mMin==mMin && other.mMax==mMax)
-            return true;
-
-        if(!std::isfinite(mMin) && !std::isfinite(mMax)
-           && !std::isfinite(other.mMin) && !std::isfinite(other.mMax))
-            return true;
-
-        return false;
+        if(index==0)
+            return mMin;
+        else if(index==1)
+            return mMax;
+        throw std::runtime_error("Index not valid for Range: "+std::to_string(index));
     }
 
-    bool operator!=(const Range& other)
+    double operator[](const int index) const throw(std::runtime_error)
     {
-        return !(*this==other);
+        if(index==0)
+            return mMin;
+        else if(index==1)
+            return mMax;
+        throw std::runtime_error("Index not valid for Range: "+std::to_string(index));
     }
 
+    static void registerMetatype();
 
 public:
     static constexpr double NO_LIMIT = std::numeric_limits<double>::quiet_NaN();
+    static int metatypeId;
 
 protected:
 
@@ -94,6 +107,23 @@ protected:
 };
 
 
-Q_DECLARE_METATYPE(Range);
+static bool operator==(const Range& r1, const Range& r2)
+{
+    if(r1.min()==r2.min() && r1.max()==r2.max())
+        return true;
+
+    if(!r1.isFinite() && !r2.isFinite())
+        return true;
+
+    return false;
+}
+
+static bool operator!=(const Range& r1, const Range& r2)
+{
+    return !(r1==r2);
+}
+
+
+Q_DECLARE_METATYPE(Range)
 
 #endif // RANGE_H

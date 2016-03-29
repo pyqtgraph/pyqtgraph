@@ -10,6 +10,7 @@
 #include "Interfaces.h"
 #include "ItemDefines.h"
 #include "ExtendedItem.h"
+#include "Range.h"
 
 class ViewBoxBase;
 class GraphicsViewBase;
@@ -42,7 +43,7 @@ public:
 
 public slots:
 
-    virtual void viewRangeChanged(const QList<Point>& range);
+    virtual void viewRangeChanged(const Range& xRange, const Range& yRange);
     virtual void viewTransformChanged();
 
 

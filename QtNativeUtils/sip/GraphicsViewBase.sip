@@ -13,7 +13,7 @@ public:
 
     virtual QRectF viewRect() const;
 
-    QVector<Point> viewRange() const;
+    QList<Range> viewRange() const;
 
     virtual QRectF visibleRange() const;
 
@@ -29,7 +29,7 @@ protected:
 
 signals:
 
-    void sigDeviceRangeChanged(const QList<Point>& range);
+    void sigDeviceRangeChanged(const Range& xRange, const Range& yRange);
     void sigDeviceTransformChanged();
     void sigMouseReleased(QMouseEvent& ev);
     void sigSceneMouseMoved(const QPointF& p);

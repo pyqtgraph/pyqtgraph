@@ -220,13 +220,15 @@ void ExtendedItem::_updateView()
     if(viewbox!=nullptr)
     {
         connectView(viewbox);
-        viewRangeChanged(viewbox->viewRange().toList());
+        const QList<Range>& r = viewbox->viewRange();
+        viewRangeChanged(r[0], r[1]);
         viewTransformChanged();
     }
     else if (gView)
     {
         connectView(gView);
-        viewRangeChanged(gView->viewRange().toList());
+        const QList<Range>& r = gView->viewRange();
+        viewRangeChanged(r[0], r[1]);
         viewTransformChanged();
     }
 
@@ -234,63 +236,6 @@ void ExtendedItem::_updateView()
 
     viewChanged();
 }
-/*
-## called to see whether this item has a new view to connect to
-## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
-
-## It is possible this item has moved to a different ViewBox or widget;
-## clear out previously determined references to these.
-self.forgetViewBox()
-self.forgetViewWidget()
-
-## check for this item's current viewbox or view widget
-view = self.getViewBox()
-
-oldView = None
-if self._connectedView is not None:
-    oldView = self._connectedView()
-
-if view is oldView:
-    #print "  already have view", view
-    return
-
-## disconnect from previous view
-if oldView is not None:
-    for signal, slot in [('sigRangeChanged', self.viewRangeChanged),
-                         ('sigDeviceRangeChanged', self.viewRangeChanged),
-                         ('sigTransformChanged', self.viewTransformChanged),
-                         ('sigDeviceTransformChanged', self.viewTransformChanged)]:
-        try:
-            getattr(oldView, signal).disconnect(slot)
-        except (TypeError, AttributeError, RuntimeError):
-            # TypeError and RuntimeError are from pyqt and pyside, respectively
-            pass
-
-    self._connectedView = None
-
-## connect to new view
-if view is not None:
-    #print "connect:", self, view
-    if hasattr(view, 'sigDeviceRangeChanged'):
-        # connect signals from GraphicsView
-        view.sigDeviceRangeChanged.connect(self.viewRangeChanged)
-        view.sigDeviceTransformChanged.connect(self.viewTransformChanged)
-    else:
-        # connect signals from ViewBox
-        view.sigRangeChanged.connect(self.viewRangeChanged)
-        view.sigTransformChanged.connect(self.viewTransformChanged)
-    self._connectedView = weakref.ref(view)
-    self.viewRangeChanged()
-    self.viewTransformChanged()
-
-## inform children that their view might have changed
-self._replaceView(oldView)
-
-self.viewChanged()
-*/
-
-
-
 
 void ExtendedItem::viewChanged()
 {

@@ -3,6 +3,7 @@ from .UIGraphicsItem import *
 import numpy as np
 from ..Point import Point
 from .. import functions as fn
+from ..QtNativeUtils import Range
 
 __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):
@@ -21,9 +22,9 @@ class GridItem(UIGraphicsItem):
         
         self.picture = None
         
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
-        UIGraphicsItem.viewRangeChanged(self, viewRange)
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
+        UIGraphicsItem.viewRangeChanged(self, xRange, yRange)
         self.picture = None
         #UIGraphicsItem.viewRangeChanged(self)
         #self.update()

@@ -18,13 +18,21 @@ app = QtGui.QApplication([])
 #mw.resize(800,800)
 
 win = pg.GraphicsWindow(title="Basic plotting examples")
+
+print 'pg.GraphicsWindow'
+
 win.resize(1000,600)
+
+print 'resize'
+
+
 win.setWindowTitle('pyqtgraph example: Plotting')
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
 
 p1 = win.addPlot(title="Basic array plotting", y=np.random.normal(size=100))
+print 'addPlot'
 
 p2 = win.addPlot(title="Multiple curves")
 p2.plot(np.random.normal(size=100), pen=(255,0,0), name="Red curve")

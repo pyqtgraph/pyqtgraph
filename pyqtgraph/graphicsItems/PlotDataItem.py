@@ -7,6 +7,7 @@ from .ScatterPlotItem import ScatterPlotItem
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
+from ..QtNativeUtils import Range
 
 
 class PlotDataItem(GraphicsObject):
@@ -664,8 +665,8 @@ class PlotDataItem(GraphicsObject):
         self.sigClicked.emit(self)
         self.sigPointsClicked.emit(self, points)
     
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         # view range has changed; re-plot if needed
         if self.opts['clipToView'] or self.opts['autoDownsample']:
             self.xDisp = self.yDisp = None

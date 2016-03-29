@@ -11,7 +11,7 @@ from .. GraphicsWidget import GraphicsWidget
 from ... import debug as debug
 from ... import getConfigOption
 from ...Qt import isQObjectAlive
-from ...QtNativeUtils import ViewBoxBase, ChildGroup
+from ...QtNativeUtils import ViewBoxBase, ChildGroup, Range
 from ..GraphicsItem import GraphicsItem
 from PyQt4.Qt import Qt
 
@@ -138,6 +138,9 @@ class ViewBox(ViewBoxBase):
         """
 
         ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, invertX=invertX, invertY=invertY)
+
+        print('init viewbox')
+
         #GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
@@ -216,13 +219,22 @@ class ViewBox(ViewBoxBase):
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
         self.setAspectLocked(lockAspect)
+        print('init viewbox 1')
 
         self.border = fn.mkPen(border)
-        self.menu = ViewBoxMenu(self)
+
+        print('init viewbox border')
+
+        self.menu = QtGui.QMenu() #ViewBoxMenu(self)
+
+        print('init viewbox menu')
 
         self.register(name)
         if name is None:
             self.updateViewLists()
+
+        print('init viewbox end')
+
 
     def register(self, name):
         """
@@ -562,9 +574,9 @@ class ViewBox(ViewBoxBase):
 
             # Set target range
             curTargetRange = self.targetRange()
-            if curTargetRange[ax] != Point(mn, mx):
-                curTargetRange[ax] = Point(mn, mx)
-                self.setTargetRange(curTargetRange[0], curTargetRange[1])
+            if curTargetRange[ax] != Range(mn, mx):
+                curTargetRange[ax] = Range(mn, mx)
+                self.setTargetRange(Range(curTargetRange[0]), Range(curTargetRange[1]))
                 changed[ax] = True
 
         # Update viewRange to match targetRange as closely as possible while
@@ -1506,14 +1518,14 @@ class ViewBox(ViewBoxBase):
                 if dy != 0:
                     changed[1] = True
                 targetRange = self.targetRange()
-                viewRange[1] = [targetRange[1][0] - dy, targetRange[1][1] + dy]
+                viewRange[1] = Range(targetRange[1][0] - dy, targetRange[1][1] + dy)
             else:
                 ## view range needs to be wider than target
                 dx = 0.5 * (tr.height() * viewRatio - tr.width())
                 if dx != 0:
                     changed[0] = True
                 targetRange = self.targetRange()
-                viewRange[0] = [targetRange[0][0] - dx, targetRange[0][1] + dx]
+                viewRange[0] = Range(targetRange[0][0] - dx, targetRange[0][1] + dx)
 
 
         # ----------- Make corrections for view limits -----------
@@ -1569,16 +1581,16 @@ class ViewBox(ViewBoxBase):
 
         oldViewRange = self.viewRange()
         changed = [(viewRange[i][0] != oldViewRange[i][0]) or (viewRange[i][1] != oldViewRange[i][1]) for i in (0,1)]
-        self.setViewRange(viewRange[0], viewRange[1])
+        self.setViewRange(Range(viewRange[0]), Range(viewRange[1]))
 
         # emit range change signals
         if changed[0]:
-            self.sigXRangeChanged.emit(tuple(viewRange[0]))
+            self.sigXRangeChanged.emit(Range(viewRange[0]))
         if changed[1]:
-            self.sigYRangeChanged.emit(tuple(viewRange[1]))
+            self.sigYRangeChanged.emit(Range(viewRange[1]))
 
         if any(changed):
-            self.sigRangeChanged.emit(viewRange)
+            self.sigRangeChanged.emit(Range(viewRange[0]), Range(viewRange[1]))
             self.update()
             self.setMatrixNeedsUpdate(True)
 
@@ -1654,7 +1666,7 @@ class ViewBox(ViewBoxBase):
         if self in nv:
             nv.remove(self)
 
-        self.menu.setViewList(nv)
+        ###self.menu.setViewList(nv)
 
         for ax in [0,1]:
             link = self.state['linkedViews'][ax]

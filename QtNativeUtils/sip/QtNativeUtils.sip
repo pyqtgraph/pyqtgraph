@@ -21,6 +21,7 @@ init_package();
 %Include Interfaces.sip
 
 %Include Point.sip
+%Include Range.sip
 %Include MouseEvent.sip
 %Include MouseClickEvent.sip
 %Include HoverEvent.sip

@@ -8,12 +8,13 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 from ..Qt import QtCore, QtGui
 from .GraphicsView import *
 from ..graphicsItems.PlotItem import *
+from ..QtNativeUtils import Range
 
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
     
     # signals wrapped from PlotItem / ViewBox
-    sigRangeChanged = QtCore.Signal(object, object)
+    sigRangeChanged = QtCore.Signal(Range, Range)
     sigTransformChanged = QtCore.Signal(object)
     
     """
@@ -78,10 +79,10 @@ class PlotWidget(GraphicsView):
                 return m
         raise NameError(attr)
     
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
-        self.sigRangeChanged.emit(self, viewRange)
+        self.sigRangeChanged.emit(xRange, yRange)
 
     def widgetGroupInterface(self):
         return (None, PlotWidget.saveState, PlotWidget.restoreState)

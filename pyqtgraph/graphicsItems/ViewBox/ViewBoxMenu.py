@@ -142,7 +142,6 @@ class ViewBoxMenu(QtGui.QMenu):
             self.ctrl[i].visibleOnlyCheck.setChecked(self.view().autoVisible()[i])
             xy = ['x', 'y'][i]
             self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
-            #self.ctrl[i].invertCheck.setChecked(getattr(self.view(), xy+'Inverted')())
         
         self.valid = True
         

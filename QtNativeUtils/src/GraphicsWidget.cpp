@@ -8,6 +8,7 @@ GraphicsWidget::GraphicsWidget(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
     QGraphicsWidget(parent, wFlags),
     ExtendedItem(this)
 {
+    Range::registerMetatype();
 }
 
 QTransform GraphicsWidget::sceneTransform() const
@@ -39,7 +40,7 @@ void GraphicsWidget::setParentItem(QGraphicsItem* newParent)
 }
 
 
-void GraphicsWidget::viewRangeChanged(const QList<Point> &range)
+void GraphicsWidget::viewRangeChanged(const Range& xRange, const Range& yRange)
 {
     // Called whenever the view coordinates of the ViewBox containing this item have changed.
 }

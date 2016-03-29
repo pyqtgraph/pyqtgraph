@@ -62,35 +62,38 @@ public:
 
     SIP_PYOBJECT viewRange() const [const QVector<Point>& ()];
     %MethodCode
-        const QVector<Point>& p = sipCpp->viewRange();
-        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].x(), p[0].y(), p[1].x(), p[1].y());
+        const QList<Range>& p = sipCpp->viewRange();
+        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].min(), p[0].max(), p[1].min(), p[1].max());
     %End
 
     SIP_PYOBJECT targetRange() const [const QVector<Point>& ()];
     %MethodCode
-        const QVector<Point>& p = sipCpp->targetRange();
-        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].x(), p[0].y(), p[1].x(), p[1].y());
+        const QList<Range>& p = sipCpp->targetRange();
+        sipRes = Py_BuildValue("[[dd],[dd]]", p[0].min(), p[0].max(), p[1].min(), p[1].max());
     %End
 
     SIP_PYOBJECT autoRangeEnabled() const [const QList<bool>& ()];
     %MethodCode
-        const QVector<bool> enabled = sipCpp->autoRangeEnabled();
+        const QList<bool> enabled = sipCpp->autoRangeEnabled();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
+
+
+    SIP_PYOBJECT autoPan() const [const QList<bool>& ()];
+    %MethodCode
+        const QList<bool> enabled = sipCpp->autoPan();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
+
+
+    SIP_PYOBJECT autoVisible() const [const QList<bool>& ()];
+    %MethodCode
+        const QList<bool> enabled = sipCpp->autoVisible();
         sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
     %End
 
     void setAutoPan(const bool x=false, const bool y=false) /HoldGIL/;
-    SIP_PYOBJECT autoPan() const [const QVector<bool>& ()];
-    %MethodCode
-        const QVector<bool> enabled = sipCpp->autoPan();
-        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
-    %End
-
     void setAutoVisible(const bool x=false, const bool y=false) /HoldGIL/;
-    SIP_PYOBJECT autoVisible() const [const QVector<bool>& ()];
-    %MethodCode
-        const QVector<bool> enabled = sipCpp->autoVisible();
-        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
-    %End
 
     double aspectLocked() const /HoldGIL/;
     void setAspectLocked(const bool lock=true, const double ratio=1.0) /HoldGIL/;
@@ -186,8 +189,8 @@ public slots:
 
 protected:
 
-    void setViewRange(const Point& x, const Point& y) /HoldGIL/;
-    void setTargetRange(const Point& x, const Point& y) /HoldGIL/;
+    void setViewRange(const Range& x, const Range& y) /HoldGIL/;
+    void setTargetRange(const Range& x, const Range& y) /HoldGIL/;
     void setAutoRangeEnabled(const bool enableX, const bool enableY) /HoldGIL/;
 
     void _resetTarget() /HoldGIL/;
@@ -198,10 +201,10 @@ protected:
 
 signals:
 
-    void sigYRangeChanged(const Point& range);
-    void sigXRangeChanged(const Point& range);
+    void sigYRangeChanged(const Range& range);
+    void sigXRangeChanged(const Range& range);
     void sigRangeChangedManually(const bool mouseLeft, const bool mouseRight);
-    void sigRangeChanged(const QList<Point>& range);
+    void sigRangeChanged(const Range& xRange, const Range& yRange);
     void sigStateChanged(ViewBoxBase* viewBox);
     void sigTransformChanged();
     void sigResized();

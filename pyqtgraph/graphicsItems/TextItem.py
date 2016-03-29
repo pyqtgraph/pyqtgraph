@@ -2,6 +2,7 @@ from ..Qt import QtCore, QtGui
 from ..Point import Point
 from .UIGraphicsItem import *
 from .. import functions as fn
+from ..QtNativeUtils import Range
 
 class TextItem(UIGraphicsItem):
     """
@@ -130,8 +131,8 @@ class TextItem(UIGraphicsItem):
         #tbr = self.textItem.boundingRect()
         #return QtCore.QRectF(pos.x() - tbr.width()*self.anchor.x(), pos.y() - tbr.height()*self.anchor.y(), tbr.width(), tbr.height())
 
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         self.updateText()
 
     def boundingRect(self):
@@ -141,7 +142,7 @@ class TextItem(UIGraphicsItem):
         tr = p.transform()
         if self.lastTransform is not None:
             if tr != self.lastTransform:
-                self.viewRangeChanged(None)
+                self.viewRangeChanged(Range(), Range())
         self.lastTransform = tr
         
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:

@@ -4,6 +4,8 @@
 GraphicsViewBase::GraphicsViewBase(QWidget *parent) :
     QGraphicsView(parent)
 {
+    Range::registerMetatype();
+
     setCacheMode(QGraphicsView::CacheBackground);
 
     // This might help, but it's probably dangerous in the general case..
@@ -27,12 +29,12 @@ QRectF GraphicsViewBase::viewRect() const
     return viewportTransform().inverted().mapRect(QRectF(rect()));
 }
 
-QVector<Point> GraphicsViewBase::viewRange() const
+QList<Range> GraphicsViewBase::viewRange() const
 {
     QRectF range = viewRect();
-    QVector<Point> p;
-    p << Point(range.left(), range.right())
-      << Point(range.bottom(), range.top());
+    QList<Range> p;
+    p << Range(range.left(), range.right())
+      << Range(range.bottom(), range.top());
     return p;
 }
 

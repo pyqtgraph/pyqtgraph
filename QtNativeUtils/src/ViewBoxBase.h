@@ -10,6 +10,7 @@
 #include "GraphicsObject.h"
 #include "Interfaces.h"
 #include "graphicsitems/ChildGroup.h"
+#include "Range.h"
 
 class Limits
 {
@@ -87,15 +88,15 @@ public:
     QColor backgroundColor() const;
     void updateBackground();
 
-    const QVector<Point>& viewRange() const { return mViewRange; }
-    const QVector<Point>& targetRange() const { return mTargetRange; }
-    const QVector<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
+    const QList<Range>& viewRange() const { return mViewRange; }
+    const QList<Range>& targetRange() const { return mTargetRange; }
+    const QList<bool>& autoRangeEnabled() const { return mAutoRangeEnabled; }
 
     void setAutoPan(const bool x=false, const bool y=false);
-    const QVector<bool>& autoPan() const { return mAutoPan; }
+    const QList<bool>& autoPan() const { return mAutoPan; }
 
     void setAutoVisible(const bool x=false, const bool y=false);
-    const QVector<bool>& autoVisible() const { return mAutoVisibleOnly; }
+    const QList<bool>& autoVisible() const { return mAutoVisibleOnly; }
 
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
@@ -198,8 +199,8 @@ public slots:
 
 protected:
 
-    void setViewRange(const Point& x, const Point& y);
-    void setTargetRange(const Point& x, const Point& y);
+    void setViewRange(const Range& x, const Range& y);
+    void setTargetRange(const Range& x, const Range& y);
     void setAutoRangeEnabled(const bool enableX, const bool enableY);
 
     void _resetTarget();
@@ -210,10 +211,10 @@ protected:
 
 signals:
 
-    void sigYRangeChanged(const Point& range);
-    void sigXRangeChanged(const Point& range);
+    void sigYRangeChanged(const Range& range);
+    void sigXRangeChanged(const Range& range);
     void sigRangeChangedManually(const bool mouseLeft, const bool mouseRight);
-    void sigRangeChanged(const QList<Point>& range);
+    void sigRangeChanged(const Range& xRange, const Range& yRange);
     void sigStateChanged(ViewBoxBase* viewBox);
     void sigTransformChanged();
     void sigResized();
@@ -226,12 +227,12 @@ protected:
     bool mXInverted;
     bool mYInverted;
 
-    QVector<Point> mViewRange;    // actual range viewed
-    QVector<Point> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
+    QList<Range> mViewRange;    // actual range viewed
+    QList<Range> mTargetRange;  // child coord. range visible [[xmin, xmax], [ymin, ymax]]
     double mAspectLocked;   // 0.0: aspect unlocked, double for the aspect ratio
-    QVector<bool> mAutoRangeEnabled;
-    QVector<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
-    QVector<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
+    QList<bool> mAutoRangeEnabled;
+    QList<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
+    QList<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
 
     QGraphicsRectItem* mBackground = nullptr;
 

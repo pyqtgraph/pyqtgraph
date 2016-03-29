@@ -4,6 +4,7 @@ import weakref
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from ..Point import Point
+from ..QtNativeUtils import Range
 
 
 class Terminal(object):
@@ -541,8 +542,8 @@ class ConnectionItem(GraphicsObject):
     def boundingRect(self):
         return self.shape().boundingRect()
 
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         self.shapePath = None
         self.prepareGeometryChange()
         

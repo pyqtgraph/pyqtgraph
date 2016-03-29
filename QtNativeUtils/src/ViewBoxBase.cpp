@@ -13,6 +13,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mXInverted(invertX),
     mYInverted(invertY)
 {
+    Range::registerMetatype();
+
     setFlag(ItemClipsChildrenToShape);
     setFlag(ItemIsFocusable, true);
 
@@ -20,10 +22,10 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     mViewRange.clear();
-    mViewRange << Point(0.0, 1.0) << Point(0.0, 1.0);
+    mViewRange << Range(0.0, 1.0) << Range(0.0, 1.0);
 
     mTargetRange.clear();
-    mTargetRange << Point(0.0, 1.0) << Point(0.0, 1.0);
+    mTargetRange << Range(0.0, 1.0) << Range(0.0, 1.0);
 
     mAutoRangeEnabled.clear();
     mAutoRangeEnabled << true << true;
@@ -159,17 +161,17 @@ void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
 
 QRectF ViewBoxBase::viewRect() const
 {
-    const Point& p1 = mViewRange[0];
-    const Point& p2 = mViewRange[1];
-    QRectF r(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
+    const Range& p1 = mViewRange[0];
+    const Range& p2 = mViewRange[1];
+    QRectF r(p1.min(), p2.min(), p1.max()-p1.min(), p2.max()-p2.min());
     return r;
 }
 
 QRectF ViewBoxBase::targetRect() const
 {
-    const Point& p1 = mTargetRange[0];
-    const Point& p2 = mTargetRange[1];
-    return QRectF(p1.x(), p2.x(), p1.y()-p1.x(), p2.y()-p2.x());
+    const Range& p1 = mTargetRange[0];
+    const Range& p2 = mTargetRange[1];
+    return QRectF(p1.min(), p2.min(), p1.max()-p1.min(), p2.max()-p2.min());
 }
 
 GraphicsObject* ViewBoxBase::innerSceneItem() const
@@ -350,16 +352,16 @@ void ViewBoxBase::prepareForPaint()
         updateMatrix();
 }
 
-void ViewBoxBase::setViewRange(const Point& x, const Point& y)
+void ViewBoxBase::setViewRange(const Range& x, const Range& y)
 {
-    mViewRange[0] = Point(x);
-    mViewRange[1] = Point(y);
+    mViewRange[0] = Range(x);
+    mViewRange[1] = Range(y);
 }
 
-void ViewBoxBase::setTargetRange(const Point &x, const Point &y)
+void ViewBoxBase::setTargetRange(const Range &x, const Range &y)
 {
-    mTargetRange[0] = Point(x);
-    mTargetRange[1] = Point(y);
+    mTargetRange[0] = Range(x);
+    mTargetRange[1] = Range(y);
 }
 
 void ViewBoxBase::setAutoRangeEnabled(const bool enableX, const bool enableY)
@@ -375,8 +377,8 @@ void ViewBoxBase::_resetTarget()
     // behavior (because the user is unaware of targetRange).
     if(mAspectLocked == 0.0)    // interferes with aspect locking
     {
-        mTargetRange[0] = Point(mViewRange[0]);
-        mTargetRange[1] = Point(mViewRange[1]);
+        mTargetRange[0] = Range(mViewRange[0]);
+        mTargetRange[1] = Range(mViewRange[1]);
     }
 }
 

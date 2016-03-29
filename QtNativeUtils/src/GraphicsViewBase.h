@@ -6,6 +6,7 @@
 #include <QList>
 
 #include "Point.h"
+#include "Range.h"
 
 class GraphicsViewBase : public QGraphicsView
 {
@@ -14,7 +15,7 @@ public:
     explicit GraphicsViewBase(QWidget *parent = 0);
 
     virtual QRectF viewRect() const;
-    QVector<Point> viewRange() const;
+    QList<Range> viewRange() const;
 
     virtual QRectF visibleRange() const { return viewRect(); }
 
@@ -30,7 +31,7 @@ protected:
 
 signals:
 
-    void sigDeviceRangeChanged(const QList<Point>& range);
+    void sigDeviceRangeChanged(const Range& xRange, const Range& yRange);
     void sigDeviceTransformChanged();
     void sigMouseReleased(QMouseEvent& ev);
     void sigSceneMouseMoved(const QPointF& p);

@@ -1,6 +1,7 @@
 from ..Qt import QtGui, QtCore, USE_PYSIDE
 import weakref
 from .GraphicsObject import GraphicsObject
+from ..QtNativeUtils import Range
 if not USE_PYSIDE:
     import sip
 
@@ -96,8 +97,8 @@ class UIGraphicsItem(GraphicsObject):
         By default, UIGraphicsItems are excluded from autoRange."""
         return None
 
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         """Called when the view widget/viewbox is resized/rescaled"""
         self.setNewBounds()
         self.update()

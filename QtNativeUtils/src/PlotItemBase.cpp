@@ -3,4 +3,5 @@
 PlotItemBase::PlotItemBase(QGraphicsItem* parent, Qt::WindowFlags wFlags) :
     GraphicsWidget(parent, wFlags)
 {
+    Range::registerMetatype();
 }

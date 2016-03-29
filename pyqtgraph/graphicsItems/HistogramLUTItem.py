@@ -150,8 +150,8 @@ class HistogramLUTItem(GraphicsWidget):
         self.imageChanged(autoLevel=True)
         #self.vb.autoRange()
     
-    @QtCore.pyqtSlot(list)
-    def viewRangeChanged(self, viewRange):
+    @QtCore.pyqtSlot(Range, Range)
+    def viewRangeChanged(self, xRange, yRange):
         self.update()
     
     def gradientChanged(self):

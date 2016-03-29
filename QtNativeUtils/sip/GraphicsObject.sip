@@ -27,7 +27,7 @@ public:
 
 public slots:
 
-    virtual void viewRangeChanged(const QList<Point>& range);
+    virtual void viewRangeChanged(const Range& xRange, const Range& yRange);
     virtual void viewTransformChanged();
 
 protected:
