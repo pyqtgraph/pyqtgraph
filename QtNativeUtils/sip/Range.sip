@@ -28,7 +28,7 @@ class Range /Supertype=sip.simplewrapper/
         if(sipCanConvertToType(sipPy, sipType_QPointF, SIP_NOT_NONE))
             return 1;
 
-        /*if(PyList_Check(sipPy))
+        if(PyList_Check(sipPy))
         {
             int listIsOk = 1;
             for (int i = 0; i < 2; ++i)
@@ -50,7 +50,7 @@ class Range /Supertype=sip.simplewrapper/
                     tupleIsOk = 0;
             }
             return tupleIsOk;
-        }*/
+        }
 
         if(PyObject_HasAttrString(sipPy, "__getitem__")!=0)
         {
@@ -138,7 +138,7 @@ class Range /Supertype=sip.simplewrapper/
 
         sipReleaseType(point, sipType_QPointF, state);
     }
-    /*else if(PyList_Check(sipPy))
+    else if(PyList_Check(sipPy))
     {
         x = PyFloat_AsDouble(PyList_GetItem(sipPy, 0));
         y = PyFloat_AsDouble(PyList_GetItem(sipPy, 1));
@@ -147,7 +147,7 @@ class Range /Supertype=sip.simplewrapper/
     {
         x = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 0));
         y = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 1));
-    }*/
+    }
     else if(PyObject_HasAttrString(sipPy, "__getitem__")!=0)
     {
         PyObject* key = PyInt_FromLong(0);

@@ -697,18 +697,49 @@ class ViewBox(ViewBoxBase):
             #if kwd in kwds and self.state['limits'][kwd] != kwds[kwd]:
                 #self.state['limits'][kwd] = kwds[kwd]
                 #update = True
-        for axis in [0,1]:
-            for mnmx in [0,1]:
-                kwd = [['xMin', 'xMax'], ['yMin', 'yMax']][axis][mnmx]
-                lname = ['xLimits', 'yLimits'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
-                    update = True
-                kwd = [['minXRange', 'maxXRange'], ['minYRange', 'maxYRange']][axis][mnmx]
-                lname = ['xRange', 'yRange'][axis]
-                if kwd in kwds and self.state['limits'][lname][mnmx] != kwds[kwd]:
-                    self.state['limits'][lname][mnmx] = kwds[kwd]
-                    update = True
+
+        limits = self.state['limits']
+
+        if 'xMin' in kwds:
+            val = kwds['xMin']
+            if val != limits['xLimits'][0]:
+                limits['xLimits'][0] = val
+                update = True
+        if 'xMax' in kwds:
+            val = kwds['xMax']
+            if val != limits['xLimits'][1]:
+                limits['xLimits'][1] = val
+                update = True
+        if 'yMin' in kwds:
+            val = kwds['yMin']
+            if val != limits['yLimits'][0]:
+                limits['yLimits'][0] = val
+                update = True
+        if 'yMax' in kwds:
+            val = kwds['yMax']
+            if val != limits['yLimits'][1]:
+                limits['yLimits'][1] = val
+                update = True
+        if 'minXRange' in kwds:
+            val = kwds['minXRange']
+            if val != limits['xRange'][0]:
+                limits['xRange'][0] = val
+                update = True
+        if 'maxXRange' in kwds:
+            val = kwds['maxXRange']
+            if val != limits['xRange'][1]:
+                limits['xRange'][1] = val
+                update = True
+        if 'minYRange' in kwds:
+            val = kwds['minYRange']
+            if val != limits['yRange'][0]:
+                limits['yRange'][0] = val
+                update = True
+        if 'maxYRange' in kwds:
+            val = kwds['maxYRange']
+            if val != limits['yRange'][1]:
+                limits['yRange'][1] = val
+                update = True
 
         if update:
             self.updateViewRange()
@@ -1430,18 +1461,18 @@ class ViewBox(ViewBoxBase):
         #print itemBounds
 
         ## determine tentative new range
-        range = [None, None]
+        rng = [None, None]
         for bounds, useX, useY, px in itemBounds:
             if useY:
-                if range[1] is not None:
-                    range[1] = [min(bounds.top(), range[1][0]), max(bounds.bottom(), range[1][1])]
+                if rng[1] is not None:
+                    rng[1] = [min(bounds.top(), rng[1][0]), max(bounds.bottom(), rng[1][1])]
                 else:
-                    range[1] = [bounds.top(), bounds.bottom()]
+                    rng[1] = [bounds.top(), bounds.bottom()]
             if useX:
-                if range[0] is not None:
-                    range[0] = [min(bounds.left(), range[0][0]), max(bounds.right(), range[0][1])]
+                if rng[0] is not None:
+                    rng[0] = [min(bounds.left(), rng[0][0]), max(bounds.right(), rng[0][1])]
                 else:
-                    range[0] = [bounds.left(), bounds.right()]
+                    rng[0] = [bounds.left(), bounds.right()]
             profiler()
 
         #print "range", range
@@ -1452,32 +1483,32 @@ class ViewBox(ViewBoxBase):
         w = self.width()
         h = self.height()
         #print "w:", w, "h:", h
-        if w > 0 and range[0] is not None:
-            pxSize = (range[0][1] - range[0][0]) / w
+        if w > 0 and rng[0] is not None:
+            pxSize = (rng[0][1] - rng[0][0]) / w
             for bounds, useX, useY, px in itemBounds:
                 if px == 0 or not useX:
                     continue
-                range[0][0] = min(range[0][0], bounds.left() - px*pxSize)
-                range[0][1] = max(range[0][1], bounds.right() + px*pxSize)
-        if h > 0 and range[1] is not None:
-            pxSize = (range[1][1] - range[1][0]) / h
+                rng[0][0] = min(rng[0][0], bounds.left() - px*pxSize)
+                rng[0][1] = max(rng[0][1], bounds.right() + px*pxSize)
+        if h > 0 and rng[1] is not None:
+            pxSize = (rng[1][1] - rng[1][0]) / h
             for bounds, useX, useY, px in itemBounds:
                 if px == 0 or not useY:
                     continue
-                range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
-                range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
+                rng[1][0] = min(rng[1][0], bounds.top() - px*pxSize)
+                rng[1][1] = max(rng[1][1], bounds.bottom() + px*pxSize)
 
-        return range
+        return rng
 
     def childrenBoundingRect(self, *args, **kwds):
-        range = self.childrenBounds(*args, **kwds)
+        rng = self.childrenBounds(*args, **kwds)
         tr = self.targetRange()
-        if range[0] is None:
-            range[0] = tr[0]
-        if range[1] is None:
-            range[1] = tr[1]
+        if rng[0] is None:
+            rng[0] = tr[0]
+        if rng[1] is None:
+            rng[1] = tr[1]
 
-        bounds = QtCore.QRectF(range[0][0], range[1][0], range[0][1]-range[0][0], range[1][1]-range[1][0])
+        bounds = QtCore.QRectF(rng[0][0], rng[1][0], rng[0][1]-rng[0][0], rng[1][1]-rng[1][0])
         return bounds
 
     def updateViewRange(self, forceX=False, forceY=False):
@@ -1535,25 +1566,22 @@ class ViewBox(ViewBoxBase):
         maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
 
         for axis in [0, 1]:
-            if limits[axis][0] is None and limits[axis][1] is None and minRng[axis] is None and maxRng[axis] is None:
+            if fn.isnan(limits[axis][0]) and fn.isnan(limits[axis][1]) and fn.isnan(minRng[axis]) and fn.isnan(maxRng[axis]):
                 continue
 
             # max range cannot be larger than bounds, if they are given
-            if limits[axis][0] is not None and limits[axis][1] is not None:
-                if maxRng[axis] is not None:
+            if fn.isfinite(limits[axis][0]) and fn.isfinite(limits[axis][1]):
+                if fn.isfinite(maxRng[axis]):
                     maxRng[axis] = min(maxRng[axis], limits[axis][1]-limits[axis][0])
                 else:
                     maxRng[axis] = limits[axis][1]-limits[axis][0]
 
-            #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, limits[axis], minRng[axis], maxRng[axis])
-            #print "Starting range:", viewRange[axis]
-
             # Apply xRange, yRange
             diff = viewRange[axis][1] - viewRange[axis][0]
-            if maxRng[axis] is not None and diff > maxRng[axis]:
+            if fn.isfinite(maxRng[axis]) and diff > maxRng[axis]:
                 delta = maxRng[axis] - diff
                 changed[axis] = True
-            elif minRng[axis] is not None and diff < minRng[axis]:
+            elif fn.isfinite(minRng[axis]) and diff < minRng[axis]:
                 delta = minRng[axis] - diff
                 changed[axis] = True
             else:
@@ -1566,12 +1594,12 @@ class ViewBox(ViewBoxBase):
 
             # Apply xLimits, yLimits
             mn, mx = limits[axis]
-            if mn is not None and viewRange[axis][0] < mn:
+            if fn.isfinite(mn) and viewRange[axis][0] < mn:
                 delta = mn - viewRange[axis][0]
                 viewRange[axis][0] += delta
                 viewRange[axis][1] += delta
                 changed[axis] = True
-            elif mx is not None and viewRange[axis][1] > mx:
+            elif fn.isfinite(mx) and viewRange[axis][1] > mx:
                 delta = mx - viewRange[axis][1]
                 viewRange[axis][0] += delta
                 viewRange[axis][1] += delta

@@ -16,22 +16,45 @@ class Limits
 {
 public:
     Limits()
-    {
+    {}
 
-    }
+    const Range& xLimits() const { return mXLimits; }
+    const Range& yLimits() const { return mYLimits; }
+    const Range& xRange() const { return mXRange; }
+    const Range& yRange() const { return mYRange; }
 
+    double xMin() const { return mXLimits.min(); }
+    double xMax() const { return mXLimits.max(); }
+    double yMin() const { return mYLimits.min(); }
+    double yMax() const { return mYLimits.max(); }
+    double minXRange() const { return mXRange.min(); }
+    double maxXRange() const { return mXRange.max(); }
+    double minYRange() const { return mYRange.min(); }
+    double maxYRange() const { return mYRange.max(); }
+
+    void setXLimits(const double xMin, const double xMax) { mXLimits.setRange(xMin, xMax); }
+    void setYLimits(const double yMin, const double yMax) { mYLimits.setRange(yMin, yMax); }
+
+    void setXRange(const double xMin, const double xMax) { mXRange.setRange(xMin, xMax); }
+    void setYRange(const double yMin, const double yMax) { mYRange.setRange(yMin, yMax); }
+
+    void setXMin(const double val) { mXLimits.setMin(val); }
+    void setXMax(const double val) { mXLimits.setMax(val); }
+    void setYMin(const double val) { mYLimits.setMin(val); }
+    void setYMax(const double val) { mYLimits.setMax(val); }
+    void setMinXRange(const double val) { mXRange.setMin(val); }
+    void setMaxXRange(const double val) { mXRange.setMax(val); }
+    void setMinYRange(const double val) { mYRange.setMin(val); }
+    void setMaxYRange(const double val) { mYRange.setMax(val); }
 
 protected:
 
-    double mMinX;
-    double mMaxX;
-    double mMinY;
-    double mMaxY;
-    QPointF mRangeX;
-    QPointF mRangeY;
+    Range mXLimits; // Maximum and minimum visible X values
+    Range mYLimits; // Maximum and minimum visible Y values
+    Range mXRange;  // Maximum and minimum X range
+    Range mYRange;  // Maximum and minimum Y range
 
 };
-
 
 
 

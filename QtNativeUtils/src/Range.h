@@ -68,6 +68,7 @@ public:
 
     void setMin(const double minVal) { mMin = minVal; }
     void setMax(const double maxVal) { mMax = maxVal; }
+    void setRange(const double minVal, const double maxVal) { mMin = minVal; mMax = maxVal; }
 
     bool hasMin() const { return std::isfinite(mMin); }
     bool hasMax() const { return std::isfinite(mMax); }

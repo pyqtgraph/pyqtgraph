@@ -36,6 +36,16 @@ SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
+def isnan(val):
+    if val is None:
+        return True
+    return np.isnan(val)
+
+
+def isfinite(val):
+    if val is None:
+        return False
+    return np.isfinite(val)
 
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
