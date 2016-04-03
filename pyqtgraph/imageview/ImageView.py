@@ -26,6 +26,7 @@ from ..graphicsItems.ROI import *
 from ..graphicsItems.LinearRegionItem import *
 from ..graphicsItems.InfiniteLine import *
 from ..graphicsItems.ViewBox import *
+from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from .. import ptime as ptime
 from .. import debug as debug
 from ..SignalProxy import SignalProxy
@@ -717,4 +718,21 @@ class ImageView(QtGui.QWidget):
         if self.menu is None:
             self.buildMenu()
         self.menu.popup(QtGui.QCursor.pos())
-        
+
+    def setColorMap(self, colormap):
+        """Set the color map. 
+
+        ============= =========================================================
+        **Arguments**
+        colormap      (A ColorMap() instance) The ColorMap to use for coloring 
+                      images.
+        ============= =========================================================
+        """
+        self.ui.histogram.gradient.setColorMap(colormap)
+
+    @addGradientListToDocstring()
+    def setPredefinedGradient(self, name):
+        """Set one of the gradients defined in :class:`GradientEditorItem <pyqtgraph.graphicsItems.GradientEditorItem>`.
+        Currently available gradients are:   
+        """
+        self.ui.histogram.gradient.loadPreset(name)

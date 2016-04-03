@@ -13,7 +13,6 @@ from ..python2_3 import cmp
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
 
-
 Gradients = OrderedDict([
     ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
     ('flame', {'ticks': [(0.2, (7, 0, 220, 255)), (0.5, (236, 0, 134, 255)), (0.8, (246, 246, 0, 255)), (1.0, (255, 255, 255, 255)), (0.0, (0, 0, 0, 255))], 'mode': 'rgb'}),
@@ -24,6 +23,13 @@ Gradients = OrderedDict([
     ('greyclip', {'ticks': [(0.0, (0, 0, 0, 255)), (0.99, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}),
     ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
 ])
+
+def addGradientListToDocstring():
+    """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
+    def dec(fn):
+        fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
+        return fn
+    return dec
 
 
 
@@ -471,11 +477,12 @@ class GradientEditorItem(TickSliderItem):
         act = self.sender()
         self.loadPreset(act.name)
         
+    @addGradientListToDocstring()
     def loadPreset(self, name):
         """
-        Load a predefined gradient. 
-    
-        """ ## TODO: provide image with names of defined gradients
+        Load a predefined gradient. Currently defined gradients are: 
+        """## TODO: provide image with names of defined gradients
+        
         #global Gradients
         self.restoreState(Gradients[name])
     
