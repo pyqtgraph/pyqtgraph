@@ -179,9 +179,9 @@ public:
     QPainterPath mapDeviceToView(const QPainterPath& path) const;
     QPointF	mapDeviceToView(qreal x, qreal y) const;
 
-
     QRectF itemBoundingRect(const QGraphicsItem* item) const;
 
+    void setRange(const Range& xRange=Range(), const Range& yRange=Range(), const double padding=AutoPadding, const bool disableAutoRange=true);
 
 public slots:
 

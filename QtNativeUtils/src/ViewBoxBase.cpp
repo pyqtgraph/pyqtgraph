@@ -343,6 +343,85 @@ QRectF ViewBoxBase::itemBoundingRect(const QGraphicsItem *item) const
     return mapSceneToView(item->sceneBoundingRect()).boundingRect();
 }
 
+void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const double padding, const bool disableAutoRange)
+{
+    const Range range[2] {xRange, yRange};
+    const bool changes[2] {xRange.isValid(), yRange.isValid()};
+
+    // Update axes one at a time
+    bool changed[2] {false, false};
+    for(int i=0; i<2; ++i)
+    {
+        if(range[i].isValid())
+            continue;
+
+        double mn = range[i].min();
+        double mx = range[i].max();
+        double xpad = padding;
+
+        // If we requested 0 range, try to preserve previous scale.
+        // Otherwise just pick an arbitrary scale.
+        if(mn==mx)
+        {
+            double dy = mViewRange[i].max() - mViewRange[i].min();
+            dy = (dy==0.0) ? 1.0 : dy;
+            mn -= dy*0.5;
+            mx += dy*0.5;
+            xpad = 0.0;
+        }
+
+        if(!std::isfinite(xpad))
+            xpad = suggestPadding(i);
+
+        double p = (mx-mn) * xpad;
+        mn -= p;
+        mx += p;
+
+        // Set target range
+        Range tr(mn, mx);
+        if(!tr.finiteEqual(mTargetRange[i]))
+        {
+            mTargetRange[i] = tr;
+            changed[i] = true;
+        }
+    }
+
+    // Update viewRange to match targetRange as closely as possible while
+    // accounting for aspect ratio constraint
+    if(changes[0] && changes[1])
+        updateViewRange(false, false);
+    else
+        updateViewRange(changes[0], changes[1]);
+
+    if(disableAutoRange)
+    {
+        if(changed[0])
+            enableAutoRange(XAxis, false);
+        if(changed[1])
+            enableAutoRange(YAxis, false);
+    }
+
+    if(changed[0] || changed[1])
+        emit sigStateChanged(this);
+
+    if(changed[0] && mAutoVisibleOnly[0] && mAutoRangeEnabled[0])
+        setAutoRangeNeedsUpdate(true);
+    else if(changed[1] && mAutoVisibleOnly[1] && mAutoRangeEnabled[1])
+        setAutoRangeNeedsUpdate(true);
+}
+
+void ViewBoxBase::setRange(const QRectF &rect, const double padding, const bool disableAutoRange)
+{
+    Range xRange;
+    if(rect.width()>0)
+        xRange.setRange(rect.left(), rect.right());
+    Range yRange;
+    if(rect.height()>0)
+        xRange.setRange(rect.bottom(), rect.top());
+
+    setRange(xRange, yRange, padding, disableAutoRange);
+}
+
 void ViewBoxBase::prepareForPaint()
 {
     // don't check whether auto range is enabled here--only check when setting dirty flag.

@@ -600,9 +600,9 @@ class ViewBox(ViewBoxBase):
 
             self.sigStateChanged.emit(self)
 
-            # Update target rect for debugging
-            if self.target.isVisible():
-                self.target.setRect(self.mapRectFromItem(self.getChildGroup(), self.targetRect()))
+            # Update target rect for debugging -- Ignored during porting
+            # if self.target.isVisible():
+            #     self.target.setRect(self.mapRectFromItem(self.getChildGroup(), self.targetRect()))
 
         # If ortho axes have auto-visible-only, update them now
         # Note that aspect ratio constraints and auto-visible probably do not work together..

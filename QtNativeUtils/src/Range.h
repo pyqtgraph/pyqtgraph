@@ -76,6 +76,9 @@ public:
     bool isValid() const { return mMin <= mMax; }
     bool isNull() const { return (!isValid() || mMin==mMax); }
     bool isFinite() const { return std::isfinite(mMin) && std::isfinite(mMax); }
+    bool isAnyFinite() const { return std::isfinite(mMin) || std::isfinite(mMax); }
+
+    bool finiteEqual(const Range& other) const { return (mMin==other.mMin && mMax==other.mMax); }
 
     double& operator[](const int index) throw(std::runtime_error)
     {

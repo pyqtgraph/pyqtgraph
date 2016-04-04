@@ -215,6 +215,8 @@ public:
 
     QRectF itemBoundingRect(const QGraphicsItem* item) const;
 
+    void setRange(const Range& xRange=Range(), const Range& yRange=Range(), const double padding=AutoPadding, const bool disableAutoRange=true);
+    void setRange(const QRectF& rect, const double padding=AutoPadding, const bool disableAutoRange=true);
 
 public slots:
 
@@ -241,6 +243,10 @@ signals:
     void sigStateChanged(ViewBoxBase* viewBox);
     void sigTransformChanged();
     void sigResized();
+
+public:
+
+    static constexpr double AutoPadding = std::numeric_limits<double>::quiet_NaN();
 
 protected:
 
