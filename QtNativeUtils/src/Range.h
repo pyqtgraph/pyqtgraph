@@ -10,6 +10,7 @@
 #include <QList>
 #include <QVector>
 #include <QPointF>
+#include <QDebug>
 
 
 class Range
@@ -125,6 +126,12 @@ static bool operator==(const Range& r1, const Range& r2)
 static bool operator!=(const Range& r1, const Range& r2)
 {
     return !(r1==r2);
+}
+
+static QDebug operator<<(QDebug dbg, const Range& r)
+{
+     dbg.nospace() << "Range(" << r.min() << ", " << r.max() << ")";
+     return dbg.space();
 }
 
 

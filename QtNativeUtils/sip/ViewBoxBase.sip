@@ -181,7 +181,97 @@ public:
 
     QRectF itemBoundingRect(const QGraphicsItem* item) const;
 
-    void setRange(const Range& xRange=Range(), const Range& yRange=Range(), const double padding=AutoPadding, const bool disableAutoRange=true);
+    void setRange() /NoArgParser/;
+    %MethodCode
+        // rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True
+        // PyObject *sipSelf, PyObject *sipArgs, PyObject *sipKwds
+        char* keywords[] = {"rect", "xRange", "yRange", "padding", "update", "disableAutoRange", nullptr};
+        PyObject* pyRect = Py_None;
+        PyObject* pyXRange = Py_None;
+        PyObject* pyYRange = Py_None;
+        PyObject* pyPadding = Py_None;
+        PyObject* pyUpdate = Py_True;
+        PyObject* pyDisableAutoRange = Py_True;
+
+        bool sipSelfWasArg = (!sipSelf || sipIsDerived((sipSimpleWrapper *)sipSelf));
+
+        qDebug()<<"sipSelfWasArg "<<sipSelfWasArg;
+        qDebug()<<"len(sipArgs)"<<PyTuple_Size(sipArgs);
+
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+
+        qDebug()<<"sipKwds: ";
+        while(PyDict_Next(sipKwds, &pos, &key, &value))
+        {
+            qDebug()<<PyString_AS_STRING(key);
+        }
+
+
+        if(!sipSelfWasArg)
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "O|OOOOOO", keywords, &sipSelf, &pyRect, &pyXRange, &pyYRange, &pyPadding, &pyUpdate, &pyDisableAutoRange))
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "|OOOOOO", keywords, &pyRect, &pyXRange, &pyYRange, &pyPadding, &pyUpdate, &pyDisableAutoRange))
+            {
+                return NULL;
+            }
+        }
+
+        if(!sipCanConvertToType(sipSelf, sipType_ViewBoxBase, SIP_NOT_NONE))
+        {
+            return NULL;
+        }
+
+        int vbstate = 0, sipIsErr = 0;
+        qDebug()<<"Coverting to ViewBoxBase";
+        ViewBoxBase* viewBox = reinterpret_cast<ViewBoxBase*>(sipConvertToType(sipSelf, sipType_ViewBoxBase, 0, 0, &vbstate, &sipIsErr));
+        qDebug()<<"Coverting to ViewBoxBase: Done"<<sipIsErr;
+
+        double padding = ViewBoxBase::AutoPadding;
+        if(pyPadding!=Py_None)
+            padding = PyFloat_AS_DOUBLE(pyPadding);
+        bool disableAutoRange = PyObject_IsTrue(pyDisableAutoRange);
+
+        qDebug()<<"Converting arguments";
+        // try to call with rect
+        if(sipCanConvertToType(pyRect, sipType_QRectF, SIP_NOT_NONE))
+        {
+            qDebug()<<"Converting to rect"<<(pyRect!=nullptr);
+            int state = 0;
+            QRectF* rect = reinterpret_cast<QRectF*>(sipConvertToType(pyRect, sipType_QRectF, 0, SIP_NOT_NONE, &state, &sipIsErr));
+
+            qDebug()<<"Calling with rect"<<(*rect);
+            viewBox->setRange(*rect, padding, disableAutoRange);
+
+            sipReleaseType(rect, sipType_QRectF, state);
+        }
+        else if(sipCanConvertToType(pyXRange, sipType_Range, 0) && sipCanConvertToType(pyYRange, sipType_Range, 0))
+        {
+            qDebug()<<"Converting to range";
+            int xstate = 0, ystate = 0;
+            Range* xRange = reinterpret_cast<Range*>(sipConvertToType(pyXRange, sipType_Range, 0, 0, &xstate, &sipIsErr));
+            Range* yRange = reinterpret_cast<Range*>(sipConvertToType(pyYRange, sipType_Range, 0, 0, &ystate, &sipIsErr));
+
+            qDebug()<<"Calling with range"<<(xRange!=nullptr)<<(yRange!=nullptr);
+            viewBox->setRange(*xRange, *yRange, padding, disableAutoRange);
+
+            sipReleaseType(xRange, sipType_Range, xstate);
+            sipReleaseType(yRange, sipType_Range, ystate);
+        }
+        else
+            qDebug()<<"Call error";
+
+        sipReleaseType(viewBox, sipType_ViewBoxBase, vbstate);
+
+        Py_RETURN_NONE;
+
+    %End
 
 public slots:
 

@@ -502,6 +502,7 @@ class ViewBox(ViewBoxBase):
     # setRange(const QPointF& xRange=QPointF(), const QPoint& yRange=QPointF(), const bool disableAutoRange=true)
     # setRange(const QRectF& rect=QPointF(), const bool disableAutoRange=true)
 
+    '''
     def setRange(self, rect=None, xRange=None, yRange=None, padding=None, update=True, disableAutoRange=True):
         """
         Set the visible range of the ViewBox.
@@ -522,7 +523,6 @@ class ViewBox(ViewBoxBase):
         ================== =====================================================================
 
         """
-
         # Update is ignored
 
         changes = {}   # axes
@@ -611,6 +611,7 @@ class ViewBox(ViewBoxBase):
             self.setAutoRangeNeedsUpdate(True)
         elif changed[1] and autoVisibleOnly[0] and (self.autoRangeEnabled()[1] is not False):
             self.setAutoRangeNeedsUpdate(True)
+    '''
 
     def setYRange(self, min, max, padding=None, update=True):
         """

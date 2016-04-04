@@ -345,6 +345,8 @@ QRectF ViewBoxBase::itemBoundingRect(const QGraphicsItem *item) const
 
 void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const double padding, const bool disableAutoRange)
 {
+    qDebug()<<"setRange with ranges"<<xRange<<yRange;
+
     const Range range[2] {xRange, yRange};
     const bool changes[2] {xRange.isValid(), yRange.isValid()};
 
@@ -371,7 +373,7 @@ void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const doubl
         }
 
         if(!std::isfinite(xpad))
-            xpad = suggestPadding(i);
+            xpad = suggestPadding(i==0 ? XAxis : YAxis);
 
         double p = (mx-mn) * xpad;
         mn -= p;
@@ -410,8 +412,10 @@ void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const doubl
         setAutoRangeNeedsUpdate(true);
 }
 
-void ViewBoxBase::setRange(const QRectF &rect, const double padding, const bool disableAutoRange)
+void ViewBoxBase::setRange(const QRectF& rect, const double padding, const bool disableAutoRange)
 {
+    qDebug()<<"setRange"<<rect;
+
     Range xRange;
     if(rect.width()>0)
         xRange.setRange(rect.left(), rect.right());

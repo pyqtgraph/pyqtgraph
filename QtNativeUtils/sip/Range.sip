@@ -19,6 +19,9 @@ class Range /Supertype=sip.simplewrapper/
     // object.
     if (!sipIsErr)
     {
+        if(sipPy==Py_None)
+            return 1;
+
         if(sipCanConvertToType(sipPy, sipType_Range, SIP_NO_CONVERTORS))
             return 1;
 
@@ -107,7 +110,11 @@ class Range /Supertype=sip.simplewrapper/
     double y = 0.0;
     int state;
 
-    // Convert Python object to Point
+    if(sipPy==Py_None)
+    {
+        x = Range::NO_LIMIT;
+        y = Range::NO_LIMIT;
+    }
     if(sipCanConvertToType(sipPy, sipType_QPoint, SIP_NOT_NONE))
     {
         QPoint* point = reinterpret_cast<QPoint*>(sipConvertToType(sipPy, sipType_QPoint, 0, 0, &state, sipIsErr));
