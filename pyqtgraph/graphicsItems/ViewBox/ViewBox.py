@@ -525,6 +525,13 @@ class ViewBox(ViewBoxBase):
         """
         # Update is ignored
 
+        print 'setRange', rect, xRange, yRange, padding, update, disableAutoRange
+        print
+        print
+
+        super(ViewBox, self).setRange(rect=rect, xRange=xRange, yRange=yRange, padding=padding, update=update, disableAutoRange=disableAutoRange)
+        return
+
         changes = {}   # axes
         setRequested = [False, False]
 

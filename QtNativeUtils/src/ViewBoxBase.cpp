@@ -33,6 +33,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mAutoPan.clear();
     mAutoPan << false << false;
 
+    mAutoVisibleOnly.clear();
+    mAutoVisibleOnly << false << false;
+
     mChildGroup = new ChildGroup(this);
     mChildGroup->addListener(this);
     setInnerSceneItem(mChildGroup);
@@ -295,36 +298,6 @@ void ViewBoxBase::enableAutoRange(const ViewBoxBase::Axis axis, const bool enabl
         updateAutoRange();
 
     emit sigStateChanged(this);
-
-    /*
-    if axis == ViewBox.XYAxes or axis == 'xy':
-        axes = [0, 1]
-    elif axis == ViewBox.XAxis or axis == 'x':
-        axes = [0]
-    elif axis == ViewBox.YAxis or axis == 'y':
-        axes = [1]
-    else:
-        raise Exception('axis argument must be ViewBox.XAxis, ViewBox.YAxis, or ViewBox.XYAxes.')
-
-    for ax in axes:
-        are = self.autoRangeEnabled()
-        if are[ax] != enable:
-            # If we are disabling, do one last auto-range to make sure that
-            # previously scheduled auto-range changes are enacted
-            if enable is False and self.autoRangeNeedsUpdate():
-                self.updateAutoRange()
-
-            are[ax] = enable
-            self.setAutoRangeEnabled(are[0], are[1])
-            self.setAutoRangeNeedsUpdate(self.autoRangeNeedsUpdate() or (enable is not False))
-            self.update()
-
-
-    if self.autoRangeNeedsUpdate():
-        self.updateAutoRange()
-
-    self.sigStateChanged.emit(self)
-    */
 }
 
 void ViewBoxBase::enableAutoRange(const QString& axis, const bool enable)
@@ -345,8 +318,6 @@ QRectF ViewBoxBase::itemBoundingRect(const QGraphicsItem *item) const
 
 void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const double padding, const bool disableAutoRange)
 {
-    qDebug()<<"setRange with ranges"<<xRange<<yRange;
-
     const Range range[2] {xRange, yRange};
     const bool changes[2] {xRange.isValid(), yRange.isValid()};
 
@@ -354,7 +325,7 @@ void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const doubl
     bool changed[2] {false, false};
     for(int i=0; i<2; ++i)
     {
-        if(range[i].isValid())
+        if(!range[i].isValid())
             continue;
 
         double mn = range[i].min();
@@ -414,14 +385,12 @@ void ViewBoxBase::setRange(const Range& xRange, const Range& yRange, const doubl
 
 void ViewBoxBase::setRange(const QRectF& rect, const double padding, const bool disableAutoRange)
 {
-    qDebug()<<"setRange"<<rect;
-
     Range xRange;
     if(rect.width()>0)
         xRange.setRange(rect.left(), rect.right());
     Range yRange;
     if(rect.height()>0)
-        xRange.setRange(rect.bottom(), rect.top());
+        yRange.setRange(rect.top(), rect.bottom());
 
     setRange(xRange, yRange, padding, disableAutoRange);
 }
