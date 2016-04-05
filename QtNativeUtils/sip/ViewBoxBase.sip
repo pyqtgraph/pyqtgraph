@@ -263,6 +263,9 @@ public:
 
     %End
 
+    void setXRange(const double minR, const double maxR, const double padding=ViewBoxBase::AutoPadding);
+    void setYRange(const double minR, const double maxR, const double padding=ViewBoxBase::AutoPadding);
+
 public slots:
 
     void prepareForPaint();

@@ -220,6 +220,9 @@ public:
     void setRange(const Range& xRange=Range(), const Range& yRange=Range(), const double padding=AutoPadding, const bool disableAutoRange=true);
     void setRange(const QRectF& rect, const double padding=AutoPadding, const bool disableAutoRange=true);
 
+    void setXRange(const double minR, const double maxR, const double padding=AutoPadding);
+    void setYRange(const double minR, const double maxR, const double padding=AutoPadding);
+
 public slots:
 
     void prepareForPaint();

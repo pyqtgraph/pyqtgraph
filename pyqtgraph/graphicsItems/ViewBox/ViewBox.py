@@ -620,6 +620,7 @@ class ViewBox(ViewBoxBase):
             self.setAutoRangeNeedsUpdate(True)
     '''
 
+    '''
     def setYRange(self, min, max, padding=None, update=True):
         """
         Set the visible Y range of the view to [*min*, *max*].
@@ -635,6 +636,7 @@ class ViewBox(ViewBoxBase):
         (by default, this value is between 0.02 and 0.1 depending on the size of the ViewBox)
         """
         self.setRange(xRange=[min, max], update=update, padding=padding)
+    '''
 
     def autoRange(self, padding=None, items=None, item=None):
         """

@@ -7,6 +7,8 @@ import numpy as np
 plt = pg.plot(np.random.normal(size=100), title="View limit example")
 plt.centralWidget.vb.setLimits(xMin=-20, xMax=120, minXRange=5, maxXRange=100)
 
+plt.centralWidget.vb.setXRange(10, 40, 0)
+
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

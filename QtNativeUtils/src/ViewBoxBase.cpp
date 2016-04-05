@@ -395,6 +395,16 @@ void ViewBoxBase::setRange(const QRectF& rect, const double padding, const bool 
     setRange(xRange, yRange, padding, disableAutoRange);
 }
 
+void ViewBoxBase::setXRange(const double minR, const double maxR, const double padding)
+{
+    setRange(Range(minR, maxR), Range(), padding);
+}
+
+void ViewBoxBase::setYRange(const double minR, const double maxR, const double padding)
+{
+    setRange(Range(), Range(minR, maxR), padding);
+}
+
 void ViewBoxBase::prepareForPaint()
 {
     // don't check whether auto range is enabled here--only check when setting dirty flag.
