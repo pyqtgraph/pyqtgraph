@@ -20,10 +20,10 @@ public:
     Limits()
     {}
 
-    const Range& xLimits() const { return mXLimits; }
-    const Range& yLimits() const { return mYLimits; }
-    const Range& xRange() const { return mXRange; }
-    const Range& yRange() const { return mYRange; }
+    Range xLimits() const { return mXLimits; }
+    Range yLimits() const { return mYLimits; }
+    Range xRange() const { return mXRange; }
+    Range yRange() const { return mYRange; }
 
     double xMin() const { return mXLimits.min(); }
     double xMax() const { return mXLimits.max(); }
@@ -232,6 +232,24 @@ public:
     void translateBy(const QPointF& t);
     void translateBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
 
+    void setXLimits(const double xMin, const double xMax) { mLimits.setXLimits(xMin, xMax); }
+    void setXLimits(const Range& rng) { mLimits.setXLimits(rng.min(), rng.max()); }
+
+    void setYLimits(const double yMin, const double yMax) { mLimits.setYLimits(yMin, yMax); }
+    void setYLimits(const Range& rng) { mLimits.setYLimits(rng.min(), rng.max()); }
+
+    void setXRangeLimits(const double xMin, const double xMax) { mLimits.setXRange(xMin, xMax); }
+    void setXRangeLimits(const Range& rng) { mLimits.setXRange(rng.min(), rng.max()); }
+
+    void setYRangeLimits(const double yMin, const double yMax) { mLimits.setYRange(yMin, yMax); }
+    void setYRangeLimits(const Range& rng) { mLimits.setYRange(rng.min(), rng.max()); }
+
+    Range xLimits() const { return mLimits.xLimits(); }
+    Range yLimits() const { return mLimits.yLimits(); }
+
+    Range xRangeLimits() const { return mLimits.xRange(); }
+    Range yRangeLimits() const { return mLimits.yRange(); }
+
 public slots:
 
     void prepareForPaint();
@@ -284,6 +302,8 @@ protected:
     ChildGroup* mChildGroup;
 
     QList<QGraphicsItem*> mAddedItems;
+
+    Limits mLimits;
 };
 
 #endif // VIEWBOXBASE_H

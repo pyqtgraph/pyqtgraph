@@ -139,8 +139,6 @@ class ViewBox(ViewBoxBase):
 
         ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, invertX=invertX, invertY=invertY)
 
-        print('init viewbox')
-
         #GraphicsItem.__init__(self)
         self.name = None
         self.linksBlocked = False
@@ -169,12 +167,12 @@ class ViewBox(ViewBoxBase):
             'wheelScaleFactor': -1.0 / 8.0,
 
             # Limits
-            'limits': {
-                'xLimits': [None, None],   # Maximum and minimum visible X values
-                'yLimits': [None, None],   # Maximum and minimum visible Y values
-                'xRange': [None, None],   # Maximum and minimum X range
-                'yRange': [None, None],   # Maximum and minimum Y range
-                }
+            #'limits': {
+            #    'xLimits': [None, None],   # Maximum and minimum visible X values
+            #    'yLimits': [None, None],   # Maximum and minimum visible Y values
+            #    'xRange': [None, None],   # Maximum and minimum X range
+            #    'yRange': [None, None],   # Maximum and minimum Y range
+            #    }
 
         }
 
@@ -219,22 +217,14 @@ class ViewBox(ViewBoxBase):
         self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
         self.setAspectLocked(lockAspect)
-        print('init viewbox 1')
 
         self.border = fn.mkPen(border)
 
-        print('init viewbox border')
-
         self.menu = QtGui.QMenu() #ViewBoxMenu(self)
-
-        print('init viewbox menu')
 
         self.register(name)
         if name is None:
             self.updateViewLists()
-
-        print('init viewbox end')
-
 
     def register(self, name):
         """
@@ -672,6 +662,7 @@ class ViewBox(ViewBoxBase):
         return padding
     '''
 
+    '''
     def setLimits(self, **kwds):
         """
         Set limits that constrain the possible view ranges.
@@ -753,9 +744,8 @@ class ViewBox(ViewBoxBase):
 
         if update:
             self.updateViewRange()
+    '''
 
-
-    # Next to implement: scaleBy, translateBy
     '''
     def scaleBy(self, s=None, center=None, x=None, y=None):
         """
@@ -1570,9 +1560,14 @@ class ViewBox(ViewBoxBase):
 
         # ----------- Make corrections for view limits -----------
 
-        limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
-        minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
-        maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
+        #limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
+        #minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
+        #maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
+        limits = (list(self.xLimits()), list(self.yLimits()))
+        xRangeLimits = self.xRangeLimits()
+        yRangeLimits = self.yRangeLimits()
+        minRng = [xRangeLimits[0], yRangeLimits[0]]
+        maxRng = [xRangeLimits[1], yRangeLimits[1]]
 
         for axis in [0, 1]:
             if fn.isnan(limits[axis][0]) and fn.isnan(limits[axis][1]) and fn.isnan(minRng[axis]) and fn.isnan(maxRng[axis]):

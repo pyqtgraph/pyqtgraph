@@ -327,9 +327,9 @@ public:
         else
         {
             if(PyInt_Check(pyX) || PyFloat_Check(pyX))
-                scale.setX(PyFloat_AS_DOUBLE(pyX));
+                scale.setX(pyAsDouble(pyX));
             if(PyInt_Check(pyY) || PyFloat_Check(pyY))
-                scale.setY(PyFloat_AS_DOUBLE(pyY));
+                scale.setY(pyAsDouble(pyY));
         }
 
         viewBox->scaleBy(scale, center);
@@ -386,12 +386,107 @@ public:
         else
         {
             if(PyInt_Check(pyX) || PyFloat_Check(pyX))
-                dt.setX(PyFloat_AS_DOUBLE(pyX));
+                dt.setX(pyAsDouble(pyX));
             if(PyInt_Check(pyY) || PyFloat_Check(pyY))
-                dt.setY(PyFloat_AS_DOUBLE(pyY));
+                dt.setY(pyAsDouble(pyY));
         }
 
         viewBox->translateBy(dt);
+
+        sipReleaseType(viewBox, sipType_ViewBoxBase, vbstate);
+
+        Py_RETURN_NONE;
+    %End
+
+    void setXLimits(const Range& rng);
+    void setYLimits(const Range& rng);
+    void setXRangeLimits(const Range& rng);
+    void setYRangeLimits(const Range& rng);
+
+    SIP_PYOBJECT xLimits() const [Range ()];
+    %MethodCode
+        Range rng = sipCpp->xLimits();
+        sipRes = Py_BuildValue("[dd]", rng.min(), rng.max());
+    %End
+
+    SIP_PYOBJECT yLimits() const [Range ()];
+    %MethodCode
+        Range rng = sipCpp->yLimits();
+        sipRes = Py_BuildValue("[dd]", rng.min(), rng.max());
+    %End
+
+    SIP_PYOBJECT xRangeLimits() const [Range ()];
+    %MethodCode
+        Range rng = sipCpp->xRangeLimits();
+        sipRes = Py_BuildValue("[dd]", rng.min(), rng.max());
+    %End
+
+    SIP_PYOBJECT yRangeLimits() const [Range ()];
+    %MethodCode
+        Range rng = sipCpp->yRangeLimits();
+        sipRes = Py_BuildValue("[dd]", rng.min(), rng.max());
+    %End
+
+    void setLimits() /NoArgParser/;
+    %MethodCode
+        // "xMin", "xMax", "yMin", "yMax", "minXRange", "maxXRange", "minYRange", "maxYRange"
+        // PyObject *sipSelf, PyObject *sipArgs, PyObject *sipKwds
+
+        bool sipSelfWasArg = (!sipSelf || sipIsDerived((sipSimpleWrapper *)sipSelf));
+
+        if(!sipSelfWasArg)
+        {
+            if(!PyTuple_Size(sipArgs)==1)
+                return NULL;
+
+            sipSelf = PyTuple_GetItem(sipArgs, 0);
+        }
+
+        if(!sipCanConvertToType(sipSelf, sipType_ViewBoxBase, SIP_NOT_NONE))
+        {
+            return NULL;
+        }
+
+        int vbstate = 0, sipIsErr = 0;
+        ViewBoxBase* viewBox = reinterpret_cast<ViewBoxBase*>(sipConvertToType(sipSelf, sipType_ViewBoxBase, 0, 0, &vbstate, &sipIsErr));
+
+        Range rng = viewBox->xLimits();
+        PyObject* val = PyDict_GetItemString(sipKwds, "xMin");
+        if(val!=nullptr)
+            rng.setMin((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        val = PyDict_GetItemString(sipKwds, "xMax");
+        if(val!=nullptr)
+            rng.setMax((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        viewBox->setXLimits(rng);
+
+        rng = viewBox->yLimits();
+        val = PyDict_GetItemString(sipKwds, "yMin");
+        if(val!=nullptr)
+            rng.setMin((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        val = PyDict_GetItemString(sipKwds, "yMax");
+        if(val!=nullptr)
+            rng.setMax((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        viewBox->setYLimits(rng);
+
+        rng = viewBox->xRangeLimits();
+        val = PyDict_GetItemString(sipKwds, "minXRange");
+        if(val!=nullptr)
+            rng.setMin((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        val = PyDict_GetItemString(sipKwds, "maxXRange");
+        if(val!=nullptr)
+            rng.setMax((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        viewBox->setXRangeLimits(rng);
+
+        rng = viewBox->yRangeLimits();
+        val = PyDict_GetItemString(sipKwds, "minYRange");
+        if(val!=nullptr)
+            rng.setMin((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        val = PyDict_GetItemString(sipKwds, "maxYRange");
+        if(val!=nullptr)
+            rng.setMax((val==Py_None) ? Range::NO_LIMIT : pyAsDouble(val));
+        viewBox->setYRangeLimits(rng);
+
+        viewBox->updateViewRange();
 
         sipReleaseType(viewBox, sipType_ViewBoxBase, vbstate);
 
