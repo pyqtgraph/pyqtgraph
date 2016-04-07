@@ -802,7 +802,7 @@ class ViewBox(ViewBoxBase):
         else:
             self.setRange(QtCore.QRectF(tl, br), padding=0)
     '''
-
+    '''
     def translateBy(self, t=None, x=None, y=None):
         """
         Translate the view by *t*, which may be a Point or tuple (x, y).
@@ -814,15 +814,13 @@ class ViewBox(ViewBoxBase):
         vr = self.targetRect()
         if t is not None:
             t = Point(t)
-            self.setRange(vr.translated(t), padding=0)
         else:
-            if x is not None:
-                x = vr.left()+x, vr.right()+x
-            if y is not None:
-                y = vr.top()+y, vr.bottom()+y
-            if x is not None or y is not None:
-                self.setRange(xRange=x, yRange=y, padding=0)
+            x = x if x else 0.0
+            y = y if y else 0.0
+            t = Point(x, y)
 
+        self.setRange(vr.translated(t), padding=0)
+    '''
     '''
     def enableAutoRange(self, axis=None, enable=True, x=None, y=None):
         """

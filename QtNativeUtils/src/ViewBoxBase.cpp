@@ -435,43 +435,11 @@ void ViewBoxBase::scaleBy(const QPointF& s)
     QPointF center = targetRect().center();
     scaleBy(s, center);
 }
-/*
-if s is not None:
-    scale = Point(s)
-else:
-    scale = [x, y]
 
-affect = [True, True]
-if scale[0] is None and scale[1] is None:
-    return
-elif scale[0] is None:
-    affect[0] = False
-    scale[0] = 1.0
-elif scale[1] is None:
-    affect[1] = False
-    scale[1] = 1.0
-
-scale = Point(scale)
-
-if self.aspectLocked() != 0.0:
-    scale[0] = scale[1]
-
-vr = self.targetRect()
-if center is None:
-    center = Point(vr.center())
-else:
-    center = Point(center)
-
-tl = center + (vr.topLeft()-center) * scale
-br = center + (vr.bottomRight()-center) * scale
-
-if not affect[0]:
-    self.setYRange(tl.y(), br.y(), padding=0)
-elif not affect[1]:
-    self.setXRange(tl.x(), br.x(), padding=0)
-else:
-    self.setRange(QtCore.QRectF(tl, br), padding=0)
-*/
+void ViewBoxBase::translateBy(const QPointF& t)
+{
+    setRange(targetRect().translated(t), 0.0);
+}
 
 void ViewBoxBase::prepareForPaint()
 {

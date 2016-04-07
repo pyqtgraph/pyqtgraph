@@ -339,6 +339,65 @@ public:
         Py_RETURN_NONE;
     %End
 
+    void translateBy()  /NoArgParser/;
+    %MethodCode
+        // t=None, x=None, y=None, y=None
+        // PyObject *sipSelf, PyObject *sipArgs, PyObject *sipKwds
+
+        char* keywords[] = {"t", "x", "y", nullptr};
+        PyObject* pyT = Py_None;
+        PyObject* pyX = Py_None;
+        PyObject* pyY = Py_None;
+
+        bool sipSelfWasArg = (!sipSelf || sipIsDerived((sipSimpleWrapper *)sipSelf));
+
+        if(!sipSelfWasArg)
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "O|OOO", keywords, &sipSelf, &pyT, &pyX, &pyY))
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "|OOO", keywords, &pyT, &pyX, &pyY))
+            {
+                return NULL;
+            }
+        }
+
+        if(!sipCanConvertToType(sipSelf, sipType_ViewBoxBase, SIP_NOT_NONE))
+        {
+            return NULL;
+        }
+
+        int vbstate = 0, sipIsErr = 0;
+        ViewBoxBase* viewBox = reinterpret_cast<ViewBoxBase*>(sipConvertToType(sipSelf, sipType_ViewBoxBase, 0, 0, &vbstate, &sipIsErr));
+
+        QPointF dt(0.0, 0.0);
+        if(sipCanConvertToType(pyT, sipType_Point, SIP_NOT_NONE))
+        {
+            int state = 0;
+            Point* t = reinterpret_cast<Point*>(sipConvertToType(pyT, sipType_Point, 0, SIP_NOT_NONE, &state, &sipIsErr));
+            dt.setX(t->x());
+            dt.setY(t->y());
+            sipReleaseType(t, sipType_Point, state);
+        }
+        else
+        {
+            if(PyInt_Check(pyX) || PyFloat_Check(pyX))
+                dt.setX(PyFloat_AS_DOUBLE(pyX));
+            if(PyInt_Check(pyY) || PyFloat_Check(pyY))
+                dt.setY(PyFloat_AS_DOUBLE(pyY));
+        }
+
+        viewBox->translateBy(dt);
+
+        sipReleaseType(viewBox, sipType_ViewBoxBase, vbstate);
+
+        Py_RETURN_NONE;
+    %End
+
 public slots:
 
     void prepareForPaint();

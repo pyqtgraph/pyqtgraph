@@ -229,6 +229,9 @@ public:
     void scaleBy(const QPointF& s);
     void scaleBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
 
+    void translateBy(const QPointF& t);
+    void translateBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
+
 public slots:
 
     void prepareForPaint();
