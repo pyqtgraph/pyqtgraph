@@ -755,8 +755,8 @@ class ViewBox(ViewBoxBase):
             self.updateViewRange()
 
 
-
-
+    # Next to implement: scaleBy, translateBy
+    '''
     def scaleBy(self, s=None, center=None, x=None, y=None):
         """
         Scale by *s* around given center point (or center of view).
@@ -801,6 +801,7 @@ class ViewBox(ViewBoxBase):
             self.setXRange(tl.x(), br.x(), padding=0)
         else:
             self.setRange(QtCore.QRectF(tl, br), padding=0)
+    '''
 
     def translateBy(self, t=None, x=None, y=None):
         """

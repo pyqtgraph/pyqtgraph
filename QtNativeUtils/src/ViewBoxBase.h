@@ -223,6 +223,12 @@ public:
     void setXRange(const double minR, const double maxR, const double padding=AutoPadding);
     void setYRange(const double minR, const double maxR, const double padding=AutoPadding);
 
+    void scaleBy(const QPointF& s, const QPointF& center);
+    void scaleBy(const double x, const double y, const QPointF& center) { scaleBy(QPointF(x, y), center); }
+
+    void scaleBy(const QPointF& s);
+    void scaleBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
+
 public slots:
 
     void prepareForPaint();

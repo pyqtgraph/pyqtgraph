@@ -266,6 +266,79 @@ public:
     void setXRange(const double minR, const double maxR, const double padding=ViewBoxBase::AutoPadding);
     void setYRange(const double minR, const double maxR, const double padding=ViewBoxBase::AutoPadding);
 
+    void scaleBy()  /NoArgParser/;
+    %MethodCode
+        // s=None, center=None, x=None, y=None
+        // PyObject *sipSelf, PyObject *sipArgs, PyObject *sipKwds
+
+        char* keywords[] = {"s", "center", "x", "y", nullptr};
+        PyObject* pyS = Py_None;
+        PyObject* pyCenter = Py_None;
+        PyObject* pyX = Py_None;
+        PyObject* pyY = Py_None;
+
+        bool sipSelfWasArg = (!sipSelf || sipIsDerived((sipSimpleWrapper *)sipSelf));
+
+        if(!sipSelfWasArg)
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "O|OOOO", keywords, &sipSelf, &pyS, &pyCenter, &pyX, &pyY))
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if(!PyArg_ParseTupleAndKeywords(sipArgs, sipKwds, "|OOOO", keywords, &pyS, &pyCenter, &pyX, &pyY))
+            {
+                return NULL;
+            }
+        }
+
+        if(!sipCanConvertToType(sipSelf, sipType_ViewBoxBase, SIP_NOT_NONE))
+        {
+            return NULL;
+        }
+
+        int vbstate = 0, sipIsErr = 0;
+        ViewBoxBase* viewBox = reinterpret_cast<ViewBoxBase*>(sipConvertToType(sipSelf, sipType_ViewBoxBase, 0, 0, &vbstate, &sipIsErr));
+
+        QPointF center;
+        QPointF scale(1.0, 1.0);
+
+        if(sipCanConvertToType(pyCenter, sipType_Point, SIP_NOT_NONE))
+        {
+            int state;
+            Point* c = reinterpret_cast<Point*>(sipConvertToType(pyCenter, sipType_Point, 0, SIP_NOT_NONE, &state, &sipIsErr));
+            center.setX(c->x());
+            center.setY(c->y());
+            sipReleaseType(c, sipType_Point, state);
+        }
+        else
+            center = viewBox->targetRect().center();
+
+        if(sipCanConvertToType(pyS, sipType_Point, SIP_NOT_NONE))
+        {
+            int state = 0;
+            Point* s = reinterpret_cast<Point*>(sipConvertToType(pyS, sipType_Point, 0, SIP_NOT_NONE, &state, &sipIsErr));
+            scale.setX(s->x());
+            scale.setY(s->y());
+            sipReleaseType(s, sipType_Point, state);
+        }
+        else
+        {
+            if(PyInt_Check(pyX) || PyFloat_Check(pyX))
+                scale.setX(PyFloat_AS_DOUBLE(pyX));
+            if(PyInt_Check(pyY) || PyFloat_Check(pyY))
+                scale.setY(PyFloat_AS_DOUBLE(pyY));
+        }
+
+        viewBox->scaleBy(scale, center);
+
+        sipReleaseType(viewBox, sipType_ViewBoxBase, vbstate);
+
+        Py_RETURN_NONE;
+    %End
+
 public slots:
 
     void prepareForPaint();
