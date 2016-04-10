@@ -6,6 +6,8 @@ from .. import functions as fn
 from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
+import time
+get_millis = lambda: int(round(time.time() * 1000))
 
 
 if hasattr(QtCore, 'PYQT_VERSION'):
@@ -104,7 +106,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.contextMenu[0].triggered.connect(self.showExportDialog)
         
         self.exportDialog = None
-        
+
+        self._last_move_event_time = 0
+
     def render(self, *args):
         self.prepareForPaint()
         return QtGui.QGraphicsScene.render(self, *args)
@@ -154,35 +158,40 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     break
         
     def mouseMoveEvent(self, ev):
-        self.sigMouseMoved.emit(ev.scenePos())
-        
-        ## First allow QGraphicsScene to deliver hoverEnter/Move/ExitEvents
-        QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-        
-        ## Next deliver our own HoverEvents
-        self.sendHoverEvents(ev)
-        
-        if int(ev.buttons()) != 0:  ## button is pressed; send mouseMoveEvents and mouseDragEvents
+        cur_move_event_time = get_millis()
+        # ignore high frequency events
+        if cur_move_event_time - self._last_move_event_time > 15:
+            self._last_move_event_time = cur_move_event_time
+
+            self.sigMouseMoved.emit(ev.scenePos())
+
+            ## First allow QGraphicsScene to deliver hoverEnter/Move/ExitEvents
             QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-            if self.mouseGrabberItem() is None:
-                now = ptime.time()
-                init = False
-                ## keep track of which buttons are involved in dragging
-                for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
-                    if int(ev.buttons() & btn) == 0:
-                        continue
-                    if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
-                        cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
-                        dist = Point(ev.screenPos() - cev.screenPos())
-                        if dist.length() < self._moveDistance and now - cev.time() < self.minDragTime:
+
+            ## Next deliver our own HoverEvents
+            self.sendHoverEvents(ev)
+
+            if int(ev.buttons()) != 0:  ## button is pressed; send mouseMoveEvents and mouseDragEvents
+                QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+                if self.mouseGrabberItem() is None:
+                    now = ptime.time()
+                    init = False
+                    ## keep track of which buttons are involved in dragging
+                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
+                        if int(ev.buttons() & btn) == 0:
                             continue
-                        init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
-                        self.dragButtons.append(int(btn))
-                        
-                ## If we have dragged buttons, deliver a drag event
-                if len(self.dragButtons) > 0:
-                    if self.sendDragEvent(ev, init=init):
-                        ev.accept()
+                        if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
+                            cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
+                            dist = Point(ev.screenPos() - cev.screenPos())
+                            if dist.length() < self._moveDistance and now - cev.time() < self.minDragTime:
+                                continue
+                            init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
+                            self.dragButtons.append(int(btn))
+
+                    ## If we have dragged buttons, deliver a drag event
+                    if len(self.dragButtons) > 0:
+                        if self.sendDragEvent(ev, init=init):
+                            ev.accept()
                 
     def leaveEvent(self, ev):  ## inform items that mouse is gone
         if len(self.dragButtons) == 0:
