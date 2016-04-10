@@ -253,6 +253,10 @@ public:
     Range xRangeLimits() const { return mLimits.xRange(); }
     Range yRangeLimits() const { return mLimits.yRange(); }
 
+    MouseMode mouseMode() const { return mMouseMode; }
+    void setMouseMode(const MouseMode mode);
+
+
 public slots:
 
     void prepareForPaint();
@@ -298,6 +302,8 @@ protected:
     QList<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
     QList<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
     QVector<bool> mMouseEnabled;    //
+
+    MouseMode mMouseMode;
 
     QGraphicsRectItem* mBackground = nullptr;
 

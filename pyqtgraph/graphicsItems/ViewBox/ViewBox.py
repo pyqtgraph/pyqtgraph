@@ -162,7 +162,7 @@ class ViewBox(ViewBoxBase):
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
 
             'mouseEnabled': [enableMouse, enableMouse],
-            'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,
+            #'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,
             'enableMenu': enableMenu,
             'wheelScaleFactor': -1.0 / 8.0,
 
@@ -354,6 +354,7 @@ class ViewBox(ViewBoxBase):
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
+    '''
     def setMouseMode(self, mode):
         """
         Set the mouse interaction mode. *mode* must be either ViewBox.PanMode or ViewBox.RectMode.
@@ -364,6 +365,7 @@ class ViewBox(ViewBoxBase):
             raise Exception("Mode must be ViewBox.PanMode or ViewBox.RectMode")
         self.state['mouseMode'] = mode
         self.sigStateChanged.emit(self)
+    '''
 
     def setLeftButtonAction(self, mode='rect'):  ## for backward compatibility
         raise RuntimeWarning('ViewBox.setLeftButtonAction is deprecated')
@@ -1283,7 +1285,7 @@ class ViewBox(ViewBoxBase):
 
         ## Scale or translate based on mouse button
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
-            if self.state['mouseMode'] == ViewBox.RectMode:
+            if self.mouseMode() == ViewBox.RectMode:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
                     self.rbScaleBox.hide()

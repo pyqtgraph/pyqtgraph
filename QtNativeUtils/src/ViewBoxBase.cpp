@@ -11,7 +11,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mMatrixNeedsUpdate(true),
     mAutoRangeNeedsUpdate(true),
     mXInverted(invertX),
-    mYInverted(invertY)
+    mYInverted(invertY),
+    mMouseMode(PanMode)
 {
     Range::registerMetatype();
 
@@ -449,6 +450,13 @@ void ViewBoxBase::scaleBy(const QPointF& s)
 void ViewBoxBase::translateBy(const QPointF& t)
 {
     setRange(targetRect().translated(t), 0.0);
+}
+
+void ViewBoxBase::setMouseMode(const ViewBoxBase::MouseMode mode)
+{
+    mMouseMode = mode;
+
+    emit sigStateChanged(this);
 }
 
 void ViewBoxBase::prepareForPaint()

@@ -500,6 +500,9 @@ public:
         Py_RETURN_NONE;
     %End
 
+    ViewBoxBase::MouseMode mouseMode() const;
+    void setMouseMode(const ViewBoxBase::MouseMode mode);
+
 public slots:
 
     void prepareForPaint();
