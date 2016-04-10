@@ -98,6 +98,13 @@ public:
     double aspectLocked() const /HoldGIL/;
     void setAspectLocked(const bool lock=true, const double ratio=1.0) /HoldGIL/;
 
+    SIP_PYOBJECT mouseEnabled() const [const QVector<bool>& ()];
+    %MethodCode
+        const QVector<bool> enabled = sipCpp->mouseEnabled();
+        sipRes = Py_BuildValue("[OO]", enabled[0] ? Py_True : Py_False, enabled[1] ? Py_True : Py_False);
+    %End
+    void setMouseEnabled(const bool enabledOnX=true, const bool enabledOnY=true);
+
     virtual QRectF viewRect() const /HoldGIL/;
     QRectF targetRect() const /HoldGIL/;
 

@@ -79,7 +79,7 @@ public:
     };
 
     ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0,
-                const bool invertX=false, const bool invertY=false);
+                const bool invertX=false, const bool invertY=false, const bool enableMouse=true);
     virtual ~ViewBoxBase() {}
 
     enum { Type = CustomItemTypes::TypeViewBox };
@@ -125,6 +125,9 @@ public:
 
     double aspectLocked() const { return mAspectLocked; }
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
+
+    const QVector<bool>& mouseEnabled() const { return mMouseEnabled; }
+    void setMouseEnabled(const bool enabledOnX=true, const bool enabledOnY=true);
 
     virtual QRectF viewRect() const;
     QRectF targetRect() const;
@@ -294,6 +297,7 @@ protected:
     QList<bool> mAutoRangeEnabled;
     QList<bool> mAutoPan;  // whether to only pan (do not change scaling) when auto-range is enabled
     QList<bool> mAutoVisibleOnly;  // whether to auto-range only to the visible portion of a plot
+    QVector<bool> mMouseEnabled;    //
 
     QGraphicsRectItem* mBackground = nullptr;
 

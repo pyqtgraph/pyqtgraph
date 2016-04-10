@@ -6,7 +6,7 @@
 #include "QGraphicsScene2.h"
 #include "graphicsitems/ChildGroup.h"
 
-ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY) :
+ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY, const bool enableMouse) :
     GraphicsWidget(parent, wFlags),
     mMatrixNeedsUpdate(true),
     mAutoRangeNeedsUpdate(true),
@@ -35,6 +35,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
 
     mAutoVisibleOnly.clear();
     mAutoVisibleOnly << false << false;
+
+    mMouseEnabled << enableMouse << enableMouse;
 
     mChildGroup = new ChildGroup(this);
     mChildGroup->addListener(this);
@@ -160,6 +162,14 @@ void ViewBoxBase::setAutoVisible(const bool x, const bool y)
 void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
 {
     mAspectLocked = lock ? ratio: 0.0;
+}
+
+void ViewBoxBase::setMouseEnabled(const bool enabledOnX, const bool enabledOnY)
+{
+    mMouseEnabled[0] = enabledOnX;
+    mMouseEnabled[1] = enabledOnY;
+
+    emit sigStateChanged(this);
 }
 
 QRectF ViewBoxBase::viewRect() const

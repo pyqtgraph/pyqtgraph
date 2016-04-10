@@ -379,6 +379,7 @@ class ViewBox(ViewBoxBase):
         return self.childGroup
     '''
 
+    '''
     def setMouseEnabled(self, x=None, y=None):
         """
         Set whether each axis is enabled for mouse interaction. *x*, *y* arguments must be True or False.
@@ -392,6 +393,7 @@ class ViewBox(ViewBoxBase):
 
     def mouseEnabled(self):
         return self.state['mouseEnabled'][:]
+    '''
 
     def setMenuEnabled(self, enableMenu=True):
         self.state['enableMenu'] = enableMenu
@@ -1231,7 +1233,7 @@ class ViewBox(ViewBoxBase):
         #return scale
 
     def wheelEvent(self, ev, axis=None):
-        mask = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mask = np.array(self.mouseEnabled(), dtype=np.float)
         if axis is not None and axis >= 0 and axis < len(mask):
             mv = mask[axis]
             mask[:] = 0
@@ -1243,7 +1245,7 @@ class ViewBox(ViewBoxBase):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        s = self.state['mouseEnabled']
+        s = self.mouseEnabled()
         self.sigRangeChangedManually.emit(s[0], s[1])
         ev.accept()
 
@@ -1274,7 +1276,7 @@ class ViewBox(ViewBoxBase):
         dif = dif * -1.0
 
         ## Ignore axes if mouse is disabled
-        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mouseEnabled = np.array(self.mouseEnabled(), dtype=np.float)
         mask = mouseEnabled.copy()
         if axis is not None:
             mask[1-axis] = 0.0
@@ -1306,7 +1308,7 @@ class ViewBox(ViewBoxBase):
                 self._resetTarget()
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
-                s = self.state['mouseEnabled']
+                s = self.mouseEnabled()
                 self.sigRangeChangedManually.emit(s[0], s[1])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
@@ -1327,7 +1329,7 @@ class ViewBox(ViewBoxBase):
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
-            s = self.state['mouseEnabled']
+            s = self.mouseEnabled()
             self.sigRangeChangedManually.emit(s[0], s[1])
 
     def keyPressEvent(self, ev):
@@ -1375,7 +1377,7 @@ class ViewBox(ViewBoxBase):
 
     def showAxRect(self, ax):
         self.setRange(ax.normalized()) # be sure w, h are correct coordinates
-        s = self.state['mouseEnabled']
+        s = self.mouseEnabled()
         self.sigRangeChangedManually.emit(s[0], s[1])
 
     def allChildren(self, item=None):
