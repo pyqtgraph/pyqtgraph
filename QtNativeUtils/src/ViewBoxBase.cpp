@@ -57,6 +57,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mRbScaleBox->setZValue(1e9);
     mRbScaleBox->hide();
     addItem(mRbScaleBox, true);
+
+    mAxHistory.clear();
+    mAxHistoryPointer = -1;
 }
 
 void ViewBoxBase::updateMatrix()
@@ -476,6 +479,25 @@ void ViewBoxBase::prepareForPaint()
         updateMatrix();
 }
 
+void ViewBoxBase::showAxRect(const QRectF& axRect)
+{
+    setRange(axRect.normalized(), 0.0);
+    emit sigRangeChangedManually(mMouseEnabled[0], mMouseEnabled[1]);
+}
+
+void ViewBoxBase::scaleHistory(const int d)
+{
+    if(mAxHistory.isEmpty())
+        return;
+
+    int ptr = std::max(0, std::min(mAxHistory.size()-1, mAxHistoryPointer+d));
+    if(ptr!=mAxHistoryPointer)
+    {
+        mAxHistoryPointer = ptr;
+        showAxRect(mAxHistory[ptr]);
+    }
+}
+
 void ViewBoxBase::setViewRange(const Range& x, const Range& y)
 {
     mViewRange[0] = Range(x);
@@ -560,8 +582,12 @@ void ViewBoxBase::updateScaleBox(const QPointF& p1, const QPointF& p2)
     QRectF r = mChildGroup->mapRectFromParent(QRectF(p1, p2));
     mRbScaleBox->resetTransform();
     mRbScaleBox->setRect(r);
-    //mRbScaleBox->setPos(r.topLeft());
-    //mRbScaleBox->scale(r.width(), r.height());
     mRbScaleBox->show();
+}
+
+void ViewBoxBase::addToHistory(const QRectF &r)
+{
+    mAxHistory.append(QRectF(r));
+    mAxHistoryPointer += 1;
 }
 

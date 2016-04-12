@@ -512,6 +512,10 @@ public slots:
 
     void prepareForPaint();
 
+    void showAxRect(const QRectF& axRect);
+
+    void scaleHistory(const int d);
+
 protected:
 
     void setViewRange(const Range& x, const Range& y) /HoldGIL/;
@@ -527,6 +531,8 @@ protected:
     virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
 
     void updateScaleBox(const QPointF& p1, const QPointF& p2);
+
+    void addToHistory(const QRectF& r);
 
 signals:
 

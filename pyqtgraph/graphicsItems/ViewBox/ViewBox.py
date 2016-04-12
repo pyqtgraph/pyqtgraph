@@ -1273,6 +1273,7 @@ class ViewBox(ViewBoxBase):
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
+        print 'mouseDragEvent', ev
 
         pos = ev.pos()
         lastPos = ev.lastPos()
@@ -1293,8 +1294,9 @@ class ViewBox(ViewBoxBase):
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.getChildGroup().mapRectFromParent(ax)
                     self.showAxRect(ax)
-                    self.axHistoryPointer += 1
-                    self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
+                    #self.axHistoryPointer += 1
+                    #self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
+                    self.addToHistory(ax)
                 else:
                     ## update shape of scale box
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
@@ -1341,6 +1343,8 @@ class ViewBox(ViewBoxBase):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
+        print 'key:', ev.text()
+
         ev.accept()
         if ev.text() == '-':
             self.scaleHistory(-1)
@@ -1351,6 +1355,7 @@ class ViewBox(ViewBoxBase):
         else:
             ev.ignore()
 
+    '''
     def scaleHistory(self, d):
         if len(self.axHistory) == 0:
             return
@@ -1358,6 +1363,7 @@ class ViewBox(ViewBoxBase):
         if ptr != self.axHistoryPointer:
             self.axHistoryPointer = ptr
             self.showAxRect(self.axHistory[ptr])
+    '''
 
     '''
     def updateScaleBox(self, p1, p2):
@@ -1368,11 +1374,12 @@ class ViewBox(ViewBoxBase):
         self.rbScaleBox.scale(r.width(), r.height())
         self.rbScaleBox.show()
     '''
-
+    '''
     def showAxRect(self, ax):
         self.setRange(ax.normalized()) # be sure w, h are correct coordinates
         s = self.mouseEnabled()
         self.sigRangeChangedManually.emit(s[0], s[1])
+    '''
 
     def allChildren(self, item=None):
         """Return a list of all children and grandchildren of this ViewBox"""
