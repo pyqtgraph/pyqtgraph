@@ -503,6 +503,11 @@ public:
     ViewBoxBase::MouseMode mouseMode() const;
     void setMouseMode(const ViewBoxBase::MouseMode mode);
 
+    void setWheelScaleFactor(const double factor);
+    double wheelScaleFactor() const;
+
+    void linkedWheelEvent(QGraphicsSceneWheelEvent* event, const Axis axis=XYAxes);
+
 public slots:
 
     void prepareForPaint();
@@ -518,6 +523,8 @@ protected:
     void setInnerSceneItem(GraphicsObject* innerItem) /HoldGIL/;
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+
+    virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
 
 signals:
 

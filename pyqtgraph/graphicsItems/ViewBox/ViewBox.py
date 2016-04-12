@@ -1233,24 +1233,24 @@ class ViewBox(ViewBoxBase):
         #scale = np.array([cs.width() / xd, cs.height() / yd])
         ##print "view scale:", scale
         #return scale
-
+    '''
     def wheelEvent(self, ev, axis=None):
         mask = np.array(self.mouseEnabled(), dtype=np.float)
         if axis is not None and axis >= 0 and axis < len(mask):
             mv = mask[axis]
             mask[:] = 0
             mask[axis] = mv
-        s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+        s = ((mask * 0.02) + 1) ** (ev.delta() * self.wheelScaleFactor()) # actual scaling factor
+        s = Point(s)
 
         center = Point(fn.invertQTransform(self.getChildGroup().transform()).map(ev.pos()))
-        #center = ev.pos()
 
         self._resetTarget()
         self.scaleBy(s, center)
         s = self.mouseEnabled()
         self.sigRangeChangedManually.emit(s[0], s[1])
         ev.accept()
-
+    '''
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():

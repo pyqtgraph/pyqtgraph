@@ -256,6 +256,10 @@ public:
     MouseMode mouseMode() const { return mMouseMode; }
     void setMouseMode(const MouseMode mode);
 
+    void setWheelScaleFactor(const double factor) { mWheelScaleFactor = factor; }
+    double wheelScaleFactor() const { return mWheelScaleFactor; }
+
+    void linkedWheelEvent(QGraphicsSceneWheelEvent* event, const Axis axis=XYAxes);
 
 public slots:
 
@@ -272,6 +276,8 @@ protected:
     void setInnerSceneItem(GraphicsObject* innerItem);
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+
+    virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
 
 signals:
 
@@ -314,6 +320,8 @@ protected:
     QList<QGraphicsItem*> mAddedItems;
 
     Limits mLimits;
+
+    double mWheelScaleFactor;
 };
 
 #endif // VIEWBOXBASE_H

@@ -12,7 +12,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mAutoRangeNeedsUpdate(true),
     mXInverted(invertX),
     mYInverted(invertY),
-    mMouseMode(PanMode)
+    mMouseMode(PanMode),
+    mWheelScaleFactor(-1.0/8.0)
 {
     Range::registerMetatype();
 
@@ -521,3 +522,46 @@ QVariant ViewBoxBase::itemChange(QGraphicsItem::GraphicsItemChange change, const
 
     return GraphicsWidget::itemChange(change, value);
 }
+
+void ViewBoxBase::linkedWheelEvent(QGraphicsSceneWheelEvent *event, const ViewBoxBase::Axis axis)
+{
+    double sx = std::pow(0.02 + 1.0, event->delta() * mWheelScaleFactor);
+    double sy = std::pow(0.02 + 1.0, event->delta() * mWheelScaleFactor);
+
+    if((axis!=XAxis && axis!= XYAxes) || !mMouseEnabled[0])
+        sx = 1.0;
+    if((axis!=YAxis && axis!= XYAxes) || !mMouseEnabled[1])
+        sy = 1.0;
+
+    QPointF center = mChildGroup->transform().inverted().map(event->pos());
+
+    _resetTarget();
+    scaleBy(QPointF(sx, sy), center);
+
+    emit sigRangeChangedManually(mMouseEnabled[0], mMouseEnabled[1]);
+
+    event->accept();
+}
+
+void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
+{
+    linkedWheelEvent(event, XYAxes);
+}
+
+/*
+mask = np.array(self.mouseEnabled(), dtype=np.float)
+if axis is not None and axis >= 0 and axis < len(mask):
+    mv = mask[axis]
+    mask[:] = 0
+    mask[axis] = mv
+s = ((mask * 0.02) + 1) ** (ev.delta() * self.wheelScaleFactor()) # actual scaling factor
+s = Point(s)
+
+center = Point(fn.invertQTransform(self.getChildGroup().transform()).map(ev.pos()))
+
+self._resetTarget()
+self.scaleBy(s, center)
+s = self.mouseEnabled()
+self.sigRangeChangedManually.emit(s[0], s[1])
+ev.accept()
+*/

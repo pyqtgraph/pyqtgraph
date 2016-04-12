@@ -22,10 +22,10 @@ static double pyAsDouble(PyObject* obj)
 {
     if(obj==Py_None)
         return std::numeric_limits<double>::quiet_NaN();
-    if(PyInt_Check(obj))
-        return (double)PyInt_AsLong(obj);
     if(PyFloat_Check(obj))
         return PyFloat_AsDouble(obj);
+    if(PyInt_Check(obj))
+        return (double)PyInt_AsLong(obj);
     PyObject* num = PyNumber_Float(obj);
     if(num!=nullptr)
     {

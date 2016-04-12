@@ -86,6 +86,21 @@ class Point: public QPointF
         x = PyFloat_AsDouble(sipPy);
         y = x;
     }
+    if(sipCanConvertToType(sipPy, sipType_QPointF, SIP_NOT_NONE))
+    {
+        QPointF* point = reinterpret_cast<QPointF*>(sipConvertToType(sipPy, sipType_QPointF, 0, 0, &state, sipIsErr));
+
+        if(*sipIsErr)
+        {
+            sipReleaseType(point, sipType_QPointF, state);
+            return 0;
+        }
+
+        x = point->x();
+        y = point->y();
+
+        sipReleaseType(point, sipType_QPointF, state);
+    }
     else if(sipCanConvertToType(sipPy, sipType_QPoint, SIP_NOT_NONE))
     {
         QPoint* point = reinterpret_cast<QPoint*>(sipConvertToType(sipPy, sipType_QPoint, 0, 0, &state, sipIsErr));
@@ -101,22 +116,7 @@ class Point: public QPointF
 
         sipReleaseType(point, sipType_QPoint, state);
     }
-    else if(sipCanConvertToType(sipPy, sipType_QPointF, SIP_NOT_NONE))
-    {
-        QPointF* point = reinterpret_cast<QPointF*>(sipConvertToType(sipPy, sipType_QPointF, 0, 0, &state, sipIsErr));
-
-        if(*sipIsErr)
-        {
-            sipReleaseType(point, sipType_QPointF, state);
-            return 0;
-        }
-
-        x = point->x();
-        y = point->y();
-
-        sipReleaseType(point, sipType_QPointF, state);
-    }
-    else if(sipCanConvertToType(sipPy, sipType_QSizeF, SIP_NOT_NONE))
+    else  if(sipCanConvertToType(sipPy, sipType_QSizeF, SIP_NOT_NONE))
     {
         QSizeF* sf = reinterpret_cast<QSizeF*>(sipConvertToType(sipPy, sipType_QSizeF, 0, 0, &state, sipIsErr));
 
@@ -133,19 +133,19 @@ class Point: public QPointF
     }
     else if(PyList_Check(sipPy))
     {
-        x = PyFloat_AsDouble(PyList_GetItem(sipPy, 0));
-        y = PyFloat_AsDouble(PyList_GetItem(sipPy, 1));
+        x = pyAsDouble(PyList_GetItem(sipPy, 0));
+        y = pyAsDouble(PyList_GetItem(sipPy, 1));
     }
     else if(PyTuple_Check(sipPy))
     {
-        x = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 0));
-        y = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 1));
+        x = pyAsDouble(PyTuple_GetItem(sipPy, 0));
+        y = pyAsDouble(PyTuple_GetItem(sipPy, 1));
     }
     else if(PyObject_HasAttrString(sipPy, "__getitem__")!=0)
     {
         PyObject* key = PyInt_FromLong(0);
         PyObject* value = PyObject_GetItem(sipPy, key);
-        x = PyFloat_AsDouble(value);
+        x = pyAsDouble(value);
         Py_XDECREF(key);
         Py_XDECREF(value);
         if(x==-1.0 && PyErr_Occurred())
@@ -153,7 +153,7 @@ class Point: public QPointF
 
         key = PyInt_FromLong(1);
         value = PyObject_GetItem(sipPy, key);
-        y = PyFloat_AsDouble(value);
+        y = pyAsDouble(value);
         Py_XDECREF(key);
         Py_XDECREF(value);
         if(y==-1.0 && PyErr_Occurred())

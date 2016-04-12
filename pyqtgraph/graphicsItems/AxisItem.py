@@ -1076,9 +1076,9 @@ class AxisItem(GraphicsWidget):
         if self.linkedView() is None:
             return
         if self.orientation in ['left', 'right']:
-            self.linkedView().wheelEvent(ev, axis=1)
+            self.linkedView().linkedWheelEvent(ev, axis=1)
         else:
-            self.linkedView().wheelEvent(ev, axis=0)
+            self.linkedView().linkedWheelEvent(ev, axis=0)
         ev.accept()
 
     def mouseDragEvent(self, event):
