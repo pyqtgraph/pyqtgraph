@@ -114,6 +114,8 @@ p7.vb.setAspectLocked(lock=True, ratio=1./100.)
 
 print 'wheelScaleFactor:', p7.vb.wheelScaleFactor()
 
+p6.vb.setMouseMode(pg.ViewBox.RectMode)
+
 c = 0
 def sigPrepareForPaintTest():
     global c

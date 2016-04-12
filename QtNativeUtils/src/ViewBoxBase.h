@@ -279,6 +279,8 @@ protected:
 
     virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
 
+    void updateScaleBox(const QPointF& p1, const QPointF& p2);
+
 signals:
 
     void sigYRangeChanged(const Range& range);
@@ -314,6 +316,8 @@ protected:
     QGraphicsRectItem* mBackground = nullptr;
 
     GraphicsObject* mInnerSceneItem = nullptr;
+
+    QGraphicsRectItem* mRbScaleBox = nullptr;
 
     ChildGroup* mChildGroup;
 

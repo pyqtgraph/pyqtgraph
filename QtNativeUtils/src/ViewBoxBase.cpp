@@ -50,6 +50,13 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bo
     mBackground->setPen(QPen(Qt::NoPen));
     mBackground->setBrush(QBrush(QColor(Qt::transparent)));
     updateBackground();
+
+    mRbScaleBox = new QGraphicsRectItem(0.0, 0.0, 1.0, 1.0);
+    mRbScaleBox->setPen(QPen(QBrush(QColor(255,255,100)), 0.0));
+    mRbScaleBox->setBrush(QBrush(QColor(255,255,0,100)));
+    mRbScaleBox->setZValue(1e9);
+    mRbScaleBox->hide();
+    addItem(mRbScaleBox, true);
 }
 
 void ViewBoxBase::updateMatrix()
@@ -548,20 +555,13 @@ void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
     linkedWheelEvent(event, XYAxes);
 }
 
-/*
-mask = np.array(self.mouseEnabled(), dtype=np.float)
-if axis is not None and axis >= 0 and axis < len(mask):
-    mv = mask[axis]
-    mask[:] = 0
-    mask[axis] = mv
-s = ((mask * 0.02) + 1) ** (ev.delta() * self.wheelScaleFactor()) # actual scaling factor
-s = Point(s)
+void ViewBoxBase::updateScaleBox(const QPointF& p1, const QPointF& p2)
+{
+    QRectF r = mChildGroup->mapRectFromParent(QRectF(p1, p2));
+    mRbScaleBox->resetTransform();
+    mRbScaleBox->setRect(r);
+    //mRbScaleBox->setPos(r.topLeft());
+    //mRbScaleBox->scale(r.width(), r.height());
+    mRbScaleBox->show();
+}
 
-center = Point(fn.invertQTransform(self.getChildGroup().transform()).map(ev.pos()))
-
-self._resetTarget()
-self.scaleBy(s, center)
-s = self.mouseEnabled()
-self.sigRangeChangedManually.emit(s[0], s[1])
-ev.accept()
-*/

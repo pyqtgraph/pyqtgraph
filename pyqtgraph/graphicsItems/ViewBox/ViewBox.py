@@ -161,10 +161,10 @@ class ViewBox(ViewBoxBase):
             'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
 
-            'mouseEnabled': [enableMouse, enableMouse],
+            #'mouseEnabled': [enableMouse, enableMouse],
             #'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,
             'enableMenu': enableMenu,
-            'wheelScaleFactor': -1.0 / 8.0,
+            #'wheelScaleFactor': -1.0 / 8.0,
 
             # Limits
             #'limits': {
@@ -200,12 +200,14 @@ class ViewBox(ViewBoxBase):
         # this also enables capture of keyPressEvents.
 
         ## Make scale box that is shown when dragging on the view
+        '''
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
         self.rbScaleBox.setPen(fn.mkPen((255,255,100), width=1))
         self.rbScaleBox.setBrush(fn.mkBrush(255,255,0,100))
         self.rbScaleBox.setZValue(1e9)
         self.rbScaleBox.hide()
         self.addItem(self.rbScaleBox, ignoreBounds=True)
+        '''
 
         ## show target rect for debugging
         self.target = QtGui.QGraphicsRectItem(0, 0, 1, 1)
@@ -1287,9 +1289,7 @@ class ViewBox(ViewBoxBase):
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
             if self.mouseMode() == ViewBox.RectMode:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
-                    #print "finish"
-                    self.rbScaleBox.hide()
-                    #ax = QtCore.QRectF(Point(self.pressPos), Point(self.mousePos))
+                    #self.rbScaleBox.hide()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.getChildGroup().mapRectFromParent(ax)
                     self.showAxRect(ax)
@@ -1299,21 +1299,18 @@ class ViewBox(ViewBoxBase):
                     ## update shape of scale box
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
-                #tr = dif*mask
-                #tr = self.mapToView(tr) - self.mapToView(Point(0,0))
                 tr = self.getChildGroup().transform()
                 tr = fn.invertQTransform(tr)
-                tr = tr.map(Point(dif)*Point(mask)) - tr.map(Point(0,0))
-                x = tr.x() if mask[0] == 1 else None
-                y = tr.y() if mask[1] == 1 else None
+                tr = tr.map(Point(dif)*Point(mask)) - tr.map(Point(0, 0))
+                x = tr.x() if mask[0] == 1 else 0.0
+                y = tr.y() if mask[1] == 1 else 0.0
 
                 self._resetTarget()
-                if x is not None or y is not None:
+                if x != 0.0 or y != 0.0:
                     self.translateBy(x=x, y=y)
                 s = self.mouseEnabled()
                 self.sigRangeChangedManually.emit(s[0], s[1])
         elif ev.button() & QtCore.Qt.RightButton:
-            #print "vb.rightDrag"
             if self.aspectLocked() != 0.0:
                 mask[0] = 0
 
@@ -1325,8 +1322,8 @@ class ViewBox(ViewBoxBase):
             tr = self.getChildGroup().transform()
             tr = fn.invertQTransform(tr)
 
-            x = s[0] if mouseEnabled[0] == 1 else None
-            y = s[1] if mouseEnabled[1] == 1 else None
+            x = s[0] if mouseEnabled[0] == 1 else 0.0
+            y = s[1] if mouseEnabled[1] == 1 else 0.0
 
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self._resetTarget()
@@ -1344,12 +1341,6 @@ class ViewBox(ViewBoxBase):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
-        #print ev.key()
-        #print 'I intercepted a key press, but did not accept it'
-
-        ## not implemented yet ?
-        #self.keypress.sigkeyPressEvent.emit()
-
         ev.accept()
         if ev.text() == '-':
             self.scaleHistory(-1)
@@ -1368,14 +1359,15 @@ class ViewBox(ViewBoxBase):
             self.axHistoryPointer = ptr
             self.showAxRect(self.axHistory[ptr])
 
-
+    '''
     def updateScaleBox(self, p1, p2):
         r = QtCore.QRectF(p1, p2)
         r = self.getChildGroup().mapRectFromParent(r)
-        self.rbScaleBox.setPos(r.topLeft())
         self.rbScaleBox.resetTransform()
+        self.rbScaleBox.setPos(r.topLeft())
         self.rbScaleBox.scale(r.width(), r.height())
         self.rbScaleBox.show()
+    '''
 
     def showAxRect(self, ax):
         self.setRange(ax.normalized()) # be sure w, h are correct coordinates
@@ -1423,10 +1415,12 @@ class ViewBox(ViewBoxBase):
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
+                fn.isnan
+                #if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
+                if xr is None or not fn.isfinite(xr[0]) or not fn.isfinite(xr[1]):
                     useX = False
                     xr = (0,0)
-                if yr is None or (yr[0] is None and yr[1] is None) or np.isnan(yr).any() or np.isinf(yr).any():
+                if yr is None or not fn.isfinite(yr[0]) or not fn.isfinite(yr[1]):
                     useY = False
                     yr = (0,0)
 
