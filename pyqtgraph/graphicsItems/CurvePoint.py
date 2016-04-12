@@ -91,6 +91,9 @@ class CurvePoint(GraphicsObject):
         pass
     
     def makeAnimation(self, prop='position', start=0.0, end=1.0, duration=10000, loop=1):
+        # automatic encoding when QByteString expected was removed in PyQt v5.5
+        if not isinstance(prop, bytes):
+            prop = prop.encode('latin-1')
         anim = QtCore.QPropertyAnimation(self, prop)
         anim.setDuration(duration)
         anim.setStartValue(start)
