@@ -540,20 +540,28 @@ class ImageView(QtGui.QWidget):
             axes = (0, 1)
         elif image.ndim == 3:
             axes = (1, 2)
+        elif image.ndim == 4:
+            axes = (1, 2)
         else:
             return
         data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
         if data is not None:
-            while data.ndim > 1:
-                data = data.mean(axis=1)
-            if image.ndim == 3:
-                self.roiCurve.setData(y=data, x=self.tVals)
+            if image.ndim==4:
+                data = data.mean(axis=1).mean(axis=1)
+                for roiCurveInd, roiCurve in enumerate(self.roiCurves):
+                    roiCurve.setData(y=data[:, roiCurveInd], x=self.tVals)
+            elif image.ndim == 3:
+                while data.ndim > 1:
+                    data = data.mean(axis=1)
+                self.roiCurves[0].setData(y=data, x=self.tVals)
             else:
+                while data.ndim > 1:
+                    data = data.mean(axis=1)
                 while coords.ndim > 2:
                     coords = coords[:,:,0]
                 coords = coords - coords[:,0,np.newaxis]
                 xvals = (coords**2).sum(axis=0) ** 0.5
-                self.roiCurve.setData(y=data, x=xvals)
+                self.roiCurves[0].setData(y=data, x=xvals)
 
     def quickMinMax(self, data):
         """
