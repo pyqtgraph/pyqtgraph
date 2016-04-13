@@ -166,3 +166,10 @@ class BarGraphItem(GraphicsObject):
         if self.picture is None:
             self.drawPicture()
         return self._shape
+        
+    def setData(self, **opts):
+        self.opts.update(opts)
+        self.picture = None
+        self._shape = None
+        self.update()
+        self.informViewBoundsChanged()
