@@ -1333,6 +1333,7 @@ class ViewBox(ViewBoxBase):
             s = self.mouseEnabled()
             self.sigRangeChangedManually.emit(s[0], s[1])
 
+    '''
     def keyPressEvent(self, ev):
         """
         This routine should capture key presses in the current view box.
@@ -1343,7 +1344,6 @@ class ViewBox(ViewBoxBase):
         ctrl-- : moves backward in the zooming stack (if it exists)
 
         """
-        print 'key:', ev.text()
 
         ev.accept()
         if ev.text() == '-':
@@ -1354,6 +1354,7 @@ class ViewBox(ViewBoxBase):
             self.scaleHistory(len(self.axHistory))
         else:
             ev.ignore()
+    '''
 
     '''
     def scaleHistory(self, d):

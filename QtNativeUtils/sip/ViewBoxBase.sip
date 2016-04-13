@@ -529,6 +529,7 @@ protected:
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
 
     virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
+    virtual void keyPressEvent(QKeyEvent *event);
 
     void updateScaleBox(const QPointF& p1, const QPointF& p2);
 

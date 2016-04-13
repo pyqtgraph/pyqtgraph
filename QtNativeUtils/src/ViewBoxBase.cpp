@@ -577,6 +577,27 @@ void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
     linkedWheelEvent(event, XYAxes);
 }
 
+void ViewBoxBase::keyPressEvent(QKeyEvent *event)
+{
+    event->accept();
+
+    switch (event->key()) {
+    case Qt::Key_Minus:
+        scaleHistory(-1);
+        break;
+    case Qt::Key_Plus:
+    case Qt::Key_Equal:
+        scaleHistory(1);
+        break;
+    case Qt::Key_Backspace:
+        scaleHistory(mAxHistory.size());
+        break;
+    default:
+        event->ignore();
+        break;
+    }
+}
+
 void ViewBoxBase::updateScaleBox(const QPointF& p1, const QPointF& p2)
 {
     QRectF r = mChildGroup->mapRectFromParent(QRectF(p1, p2));
