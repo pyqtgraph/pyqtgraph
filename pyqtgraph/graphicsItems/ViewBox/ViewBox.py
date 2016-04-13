@@ -1270,15 +1270,14 @@ class ViewBox(ViewBoxBase):
     def getContextMenus(self, event):
         return self.menu.actions() if self.menuEnabled() else []
 
+    '''
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
-        print 'mouseDragEvent', ev
 
         pos = ev.pos()
         lastPos = ev.lastPos()
-        dif = pos - lastPos
-        dif = dif * -1.0
+        dif = lastPos - pos
 
         ## Ignore axes if mouse is disabled
         mouseEnabled = np.array(self.mouseEnabled(), dtype=np.float)
@@ -1290,7 +1289,6 @@ class ViewBox(ViewBoxBase):
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
             if self.mouseMode() == ViewBox.RectMode:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
-                    #self.rbScaleBox.hide()
                     self.hideScaleBox()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.getChildGroup().mapRectFromParent(ax)
@@ -1331,7 +1329,7 @@ class ViewBox(ViewBoxBase):
             self.scaleBy(x=x, y=y, center=center)
             s = self.mouseEnabled()
             self.sigRangeChangedManually.emit(s[0], s[1])
-
+    '''
     '''
     def keyPressEvent(self, ev):
         """

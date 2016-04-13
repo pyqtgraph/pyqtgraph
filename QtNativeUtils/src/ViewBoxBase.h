@@ -233,7 +233,7 @@ public:
     void scaleBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
 
     void translateBy(const QPointF& t);
-    void translateBy(const double x, const double y) { scaleBy(QPointF(x, y)); }
+    void translateBy(const double x, const double y) { translateBy(QPointF(x, y)); }
 
     void setXLimits(const double xMin, const double xMax) { mLimits.setXLimits(xMin, xMax); }
     void setXLimits(const Range& rng) { mLimits.setXLimits(rng.min(), rng.max()); }
@@ -260,6 +260,9 @@ public:
     double wheelScaleFactor() const { return mWheelScaleFactor; }
 
     void linkedWheelEvent(QGraphicsSceneWheelEvent* event, const Axis axis=XYAxes);
+
+    virtual void mouseDragEvent(MouseDragEvent* event);
+    virtual void mouseDragEvent(MouseDragEvent* event, const Axis axis);
 
 public slots:
 

@@ -508,6 +508,9 @@ public:
 
     void linkedWheelEvent(QGraphicsSceneWheelEvent* event, const Axis axis=XYAxes);
 
+    //virtual void mouseDragEvent(MouseDragEvent* event);
+    virtual void mouseDragEvent(MouseDragEvent* event, const Axis axis=XYAxes);
+
 public slots:
 
     void prepareForPaint();

@@ -572,6 +572,82 @@ void ViewBoxBase::linkedWheelEvent(QGraphicsSceneWheelEvent *event, const ViewBo
     event->accept();
 }
 
+void ViewBoxBase::mouseDragEvent(MouseDragEvent *event)
+{
+    mouseDragEvent(event, XYAxes);
+}
+
+void ViewBoxBase::mouseDragEvent(MouseDragEvent *event, const ViewBoxBase::Axis axis)
+{
+    event->accept();
+
+    const QPointF pos = event->pos();
+    const QPointF lastPos = event->lastPos();
+
+    QPointF mask;
+    mask.setX((mMouseEnabled[0] && (axis==XAxis || axis==XYAxes)) ? 1.0 : 0.0);
+    mask.setY((mMouseEnabled[1] && (axis==YAxis || axis==XYAxes)) ? 1.0 : 0.0);
+
+    // Scale or translate based on mouse button
+    if(event->button() & (Qt::LeftButton | Qt::MidButton))
+    {
+        if(mMouseMode==RectMode)
+        {
+            if(event->isFinish())
+            {
+                // This is the final move in the drag; change the view scale now
+                hideScaleBox();
+                QRectF ax(event->buttonDownPos(event->button()), pos);
+                ax = mChildGroup->mapRectFromParent(ax);
+                showAxRect(ax);
+                addToHistory(ax);
+            }
+            else
+            {
+                updateScaleBox(event->buttonDownPos(), pos);
+            }
+        }
+        else
+        {
+            QTransform tr = mChildGroup->transform().inverted();
+            QPointF dif = lastPos - pos;
+            QPointF p = tr.map(QPointF(dif.x()*mask.x(), dif.y()*mask.y())) - tr.map(QPointF(0.0, 0.0));
+            double x = (mask.x() == 1.0) ? p.x() : 0.0;
+            double y = (mask.y() == 1.0) ? p.y() : 0.0;
+
+            _resetTarget();
+            if(x!=0.0 || y!=0.0)
+                translateBy(x, y);
+
+            emit sigRangeChangedManually(mMouseEnabled[0], mMouseEnabled[1]);
+        }
+    }
+    else if(event->button() & Qt::RightButton)
+    {
+        if(mAspectLocked!=0.0)
+            mask.setX(0.0);
+
+        QPointF dif = QPointF(event->screenPos()) - QPointF(event->lastScreenPos());
+        dif.setX(dif.x() * -1.0);
+
+        QPointF s = mask * 0.02 + QPointF(1.0, 1.0);
+        s.setX(std::pow(s.x(), dif.x()));
+        s.setY(std::pow(s.y(), dif.y()));
+
+        QTransform tr = mChildGroup->transform().inverted();
+        QPointF center = tr.map(event->buttonDownPos(Qt::RightButton));
+
+        double x = s.x() * mask.x();
+        double y = s.y() * mask.y();
+
+        _resetTarget();
+        scaleBy(x, y, center);
+
+        emit sigRangeChangedManually(mMouseEnabled[0], mMouseEnabled[1]);
+    }
+}
+
+
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {
     linkedWheelEvent(event, XYAxes);
