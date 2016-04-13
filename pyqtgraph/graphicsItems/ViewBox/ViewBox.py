@@ -1291,11 +1291,10 @@ class ViewBox(ViewBoxBase):
             if self.mouseMode() == ViewBox.RectMode:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #self.rbScaleBox.hide()
+                    self.hideScaleBox()
                     ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
                     ax = self.getChildGroup().mapRectFromParent(ax)
                     self.showAxRect(ax)
-                    #self.axHistoryPointer += 1
-                    #self.axHistory = self.axHistory[:self.axHistoryPointer] + [ax]
                     self.addToHistory(ax)
                 else:
                     ## update shape of scale box

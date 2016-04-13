@@ -285,6 +285,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event);
 
     void updateScaleBox(const QPointF& p1, const QPointF& p2);
+    void hideScaleBox();
 
     void addToHistory(const QRectF& r);
 

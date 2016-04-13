@@ -606,6 +606,11 @@ void ViewBoxBase::updateScaleBox(const QPointF& p1, const QPointF& p2)
     mRbScaleBox->show();
 }
 
+void ViewBoxBase::hideScaleBox()
+{
+    mRbScaleBox->hide();
+}
+
 void ViewBoxBase::addToHistory(const QRectF &r)
 {
     mAxHistory.append(QRectF(r));
