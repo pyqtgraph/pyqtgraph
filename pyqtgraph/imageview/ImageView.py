@@ -150,7 +150,10 @@ class ImageView(QtGui.QWidget):
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
-        self.roiCurve = self.ui.roiPlot.plot()
+        self.roiCurves = []
+        for colorInd in range(2):
+            self.roiCurves.append(self.ui.roiPlot.plot())
+            self.roiCurves[colorInd].setPen(color=QtGui.QColor(255*(colorInd==0), 255*(colorInd==1), 255*(colorInd==2), 255))
         self.timeLine = InfiniteLine(0, movable=True)
         self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
@@ -506,13 +509,15 @@ class ImageView(QtGui.QWidget):
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
-            self.roiCurve.show()
+            for roiCurve in self.roiCurves:
+                roiCurve.show()
             self.roiChanged()
             self.ui.roiPlot.showAxis('left')
         else:
             self.roi.hide()
             self.ui.roiPlot.setMouseEnabled(False, False)
-            self.roiCurve.hide()
+            for roiCurve in self.roiCurves:
+                roiCurve.hide()
             self.ui.roiPlot.hideAxis('left')
             
         if self.hasTimeAxis():
