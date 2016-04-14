@@ -184,6 +184,7 @@ script:
       check_output "import test";
 
 after_success:
+  - coverage report -m
   - cd /home/travis/build/pyqtgraph/pyqtgraph
   - pip install codecov --upgrade  # add coverage integration service
   - codecov
