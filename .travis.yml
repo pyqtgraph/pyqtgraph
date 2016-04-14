@@ -136,8 +136,10 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
+      pushd /home/travis/build/pyqtgraph/pyqtgraph;
       coverage run run_tests.py;
       check_output "unit tests";
+      popd;
     - echo "test script finished. Current directory:"
     - pwd
 
@@ -184,8 +186,8 @@ script:
       check_output "import test";
 
 after_success:
-  - coverage report -m
   - cd /home/travis/build/pyqtgraph/pyqtgraph
+  - coverage report -m
   - pip install codecov --upgrade  # add coverage integration service
   - codecov
   - pip install coveralls --upgrade  # add another coverage integration service
