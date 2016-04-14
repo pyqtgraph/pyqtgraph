@@ -1102,7 +1102,7 @@ class ViewBox(ViewBoxBase):
         finally:
             view.blockLink(False)
 
-
+    '''
     def screenGeometry(self):
         """return the screen geometry of the viewbox"""
         v = self.getViewWidget()
@@ -1113,7 +1113,7 @@ class ViewBox(ViewBoxBase):
         pos = v.mapToGlobal(v.pos())
         wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
         return wr
-
+    '''
 
     '''
     def itemsChanged(self):

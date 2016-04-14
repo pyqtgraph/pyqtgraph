@@ -724,6 +724,31 @@ void ViewBoxBase::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     }
 }
 
+QRectF ViewBoxBase::screenGeometry() const
+{
+    // Return the screen geometry of the viewbox
+    QGraphicsView* v = getViewWidget();
+    if(v==nullptr)
+        return QRectF();
+
+    QRectF b = sceneBoundingRect();
+    b = v->mapFromScene(b).boundingRect();
+    QPointF p = v->mapFromGlobal(v->pos());
+    return b.adjusted(p.x(), p.y(), p.x(), p.y());
+
+
+    /*
+    v = self.getViewWidget()
+    if v is None:
+        return None
+    b = self.sceneBoundingRect()
+    wr = v.mapFromScene(b).boundingRect()
+    pos = v.mapToGlobal(v.pos())
+    wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
+    return wr
+    */
+}
+
 
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {

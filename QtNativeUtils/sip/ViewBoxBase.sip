@@ -513,6 +513,10 @@ public:
 
     QList<QGraphicsItem*> allChildren(QGraphicsItem* item=nullptr) const;
 
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget=nullptr);
+
+    QRectF screenGeometry() const;
+
 public slots:
 
     void prepareForPaint();
