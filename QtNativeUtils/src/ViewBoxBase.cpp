@@ -174,7 +174,59 @@ void ViewBoxBase::setAutoVisible(const bool x, const bool y)
 
 void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
 {
-    mAspectLocked = lock ? ratio: 0.0;
+    //mAspectLocked = lock ? ratio: 0.0;
+
+    if(lock==false)
+    {
+        if(mAspectLocked==0.0)
+            return;
+        else
+            mAspectLocked = 0.0;
+    }
+    else
+    {
+        double newRatio = ratio;
+        QRectF r = rect();
+        QRectF vr = viewRect();
+        double currentRatio = 1.0;
+        if(r.height()!=0.0 && vr.width()!=0.0 && vr.height()!=0.0)
+            currentRatio = (r.width()/r.height()) / (vr.width()/vr.height());
+        if(newRatio==0.0)
+            newRatio = currentRatio;
+        if(mAspectLocked==newRatio) // nothing to change
+            return;
+        mAspectLocked = newRatio;
+    }
+
+    updateAutoRange();
+    updateViewRange();
+    emit sigStateChanged(this);
+
+/*
+    if not lock:
+        if self.aspectLocked() == 0.0:
+            return
+        ViewBoxBase.setAspectLocked(self, False, 0.0)
+    else:
+        rect = self.rect()
+        vr = self.viewRect()
+        if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
+            currentRatio = 1.0
+        else:
+            currentRatio = (rect.width()/float(rect.height())) / (vr.width()/vr.height())
+        if ratio is None:
+            ratio = currentRatio
+        if self.aspectLocked() == ratio: # nothing to change
+            return
+        ViewBoxBase.setAspectLocked(self, True, ratio)
+        #if ratio != currentRatio:  ## If this would change the current range, do that now
+        #    self.updateViewRange()
+
+    self.updateAutoRange()
+    self.updateViewRange()
+    self.sigStateChanged.emit(self)
+*/
+
 }
 
 void ViewBoxBase::setMouseEnabled(const bool enabledOnX, const bool enabledOnY)

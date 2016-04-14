@@ -215,8 +215,8 @@ class ViewBox(ViewBoxBase):
         self.target.setParentItem(self)
         self.target.hide()
 
-        self.axHistory = [] # maintain a history of zoom locations
-        self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
+        #self.axHistory = [] # maintain a history of zoom locations
+        #self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
         self.setAspectLocked(lockAspect)
 
@@ -1128,7 +1128,7 @@ class ViewBox(ViewBoxBase):
     #        self.setAutoRangeNeedsUpdate(True)
     #        self.update()
     #    #self.updateAutoRange()
-
+    '''
     def setAspectLocked(self, lock=True, ratio=1):
         """
         If the aspect ratio is locked, view scaling must always preserve the aspect ratio.
@@ -1152,13 +1152,13 @@ class ViewBox(ViewBoxBase):
             if self.aspectLocked() == ratio: # nothing to change
                 return
             ViewBoxBase.setAspectLocked(self, True, ratio)
-            if ratio != currentRatio:  ## If this would change the current range, do that now
-                self.updateViewRange()
+            #if ratio != currentRatio:  ## If this would change the current range, do that now
+            #    self.updateViewRange()
 
         self.updateAutoRange()
         self.updateViewRange()
         self.sigStateChanged.emit(self)
-
+    '''
     '''
     def childTransform(self):
         """
