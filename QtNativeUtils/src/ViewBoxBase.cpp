@@ -735,17 +735,22 @@ QRectF ViewBoxBase::screenGeometry() const
     b = v->mapFromScene(b).boundingRect();
     QPointF p = v->mapFromGlobal(v->pos());
     return b.adjusted(p.x(), p.y(), p.x(), p.y());
+}
 
+Point ViewBoxBase::viewPixelSize() const
+{
+    // Return the (width, height) of a screen pixel in view coordinates.
+
+    QPointF o = mapToView(0.0, 0.0);
+    QVector<Point> pp = pixelVectors();
+    Point px(mapToView(pp[0]) - o);
+    Point py(mapToView(pp[1]) - o);
+    return Point(px.length(), py.length());
 
     /*
-    v = self.getViewWidget()
-    if v is None:
-        return None
-    b = self.sceneBoundingRect()
-    wr = v.mapFromScene(b).boundingRect()
-    pos = v.mapToGlobal(v.pos())
-    wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
-    return wr
+    o = self.mapToView(Point(0,0))
+    px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
+    return (px.length(), py.length())
     */
 }
 

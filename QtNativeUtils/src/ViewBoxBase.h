@@ -271,6 +271,8 @@ public:
 
     QRectF screenGeometry() const;
 
+    Point viewPixelSize() const;
+
 public slots:
 
     void prepareForPaint();
