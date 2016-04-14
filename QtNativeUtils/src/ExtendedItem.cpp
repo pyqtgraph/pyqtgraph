@@ -134,8 +134,11 @@ QRectF ExtendedItem::viewRect() const
     QRectF bounds;
     if(viewBox)
         bounds = viewBox->viewRect();
-    else
+    else if(mView)
         bounds = mView->viewRect();
+    else
+        return QRectF();
+
     bounds = mapRectFromView(bounds);
 
     return bounds.normalized();

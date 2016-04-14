@@ -57,6 +57,7 @@ static double pyAsDouble(PyObject* obj)
 
 %Include ItemGroup.sip
 %Include ChildGroup.sip
+%Include UIGraphicsItem.sip
 
 %Include QGraphicsScene2.sip
 %Include ViewBoxBase.sip

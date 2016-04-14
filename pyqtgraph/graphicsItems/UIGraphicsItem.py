@@ -1,13 +1,15 @@
 from ..Qt import QtGui, QtCore, USE_PYSIDE
 import weakref
 from .GraphicsObject import GraphicsObject
-from ..QtNativeUtils import Range
+from ..QtNativeUtils import Range, UIGraphicsItem
 if not USE_PYSIDE:
     import sip
 
 __all__ = ['UIGraphicsItem']
-class UIGraphicsItem(GraphicsObject):
-    """
+
+"""
+class UIGraphicsItem(UIGraphicsItemBase):
+    '''
     Base class for graphics items with boundaries relative to a GraphicsView or ViewBox.
     The purpose of this class is to allow the creation of GraphicsItems which live inside 
     a scalable view, but whose boundaries will always stay fixed relative to the view's boundaries.
@@ -17,19 +19,19 @@ class UIGraphicsItem(GraphicsObject):
     
     NOTE: Only the item's boundingRect is affected; the item is not transformed in any way. Use viewRangeChanged
     to respond to changes in the view.
-    """
+    '''
     
     #sigViewChanged = QtCore.Signal(object)  ## emitted whenever the viewport coords have changed
     
-    def __init__(self, bounds=None, parent=None):
-        """
+    def __init__(self, bounds=QtCore.QRectF(0,0,1,1), parent=None):
+        '''
         ============== =============================================================================
         **Arguments:**
         bounds         QRectF with coordinates relative to view box. The default is QRectF(0,0,1,1),
                        which means the item will have the same bounds as the view.
         ============== =============================================================================
-        """
-        GraphicsObject.__init__(self, parent)
+        '''
+        UIGraphicsItemBase.__init__(self, parent=parent)
         self.setFlag(self.ItemSendsScenePositionChanges)
             
         if bounds is None:
@@ -40,11 +42,11 @@ class UIGraphicsItem(GraphicsObject):
         self._boundingRect = None
         self.parentIsChanged()
         
-    def paint(self, *args):
-        ## check for a new view object every time we paint.
-        #self.updateView()
-        pass
-    
+    #def paint(self, *args):
+    #    ## check for a new view object every time we paint.
+    #    #self.updateView()
+    #    pass
+    '''
     def itemChange(self, change, value):
         ret = GraphicsObject.itemChange(self, change, value)
             
@@ -56,6 +58,7 @@ class UIGraphicsItem(GraphicsObject):
         if change == self.ItemScenePositionHasChanged:
             self.setNewBounds()
         return ret
+    '''
     
     #def updateView(self):
         ### called to see whether this item has a new view to connect to
@@ -83,6 +86,7 @@ class UIGraphicsItem(GraphicsObject):
         #self._connectedView = weakref.ref(view)
         #self.setNewBounds()
 
+    '''
     def boundingRect(self):
         if self._boundingRect is None:
             br = self.viewRect()
@@ -91,36 +95,35 @@ class UIGraphicsItem(GraphicsObject):
             else:
                 self._boundingRect = br
         return QtCore.QRectF(self._boundingRect)
+    '''
     
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
-        """Called by ViewBox for determining the auto-range bounds.
-        By default, UIGraphicsItems are excluded from autoRange."""
+        '''Called by ViewBox for determining the auto-range bounds.
+        By default, UIGraphicsItems are excluded from autoRange.'''
         return None
 
     @QtCore.pyqtSlot(Range, Range)
     def viewRangeChanged(self, xRange, yRange):
-        """Called when the view widget/viewbox is resized/rescaled"""
+        '''Called when the view widget/viewbox is resized/rescaled'''
         self.setNewBounds()
         self.update()
-        
+
     def setNewBounds(self):
-        """Update the item's bounding rect to match the viewport"""
+        '''Update the item's bounding rect to match the viewport'''
         self._boundingRect = None  ## invalidate bounding rect, regenerate later if needed.
         self.prepareGeometryChange()
-
 
     def setPos(self, *args):
         GraphicsObject.setPos(self, *args)
         self.setNewBounds()
-        
+
     def mouseShape(self):
-        """Return the shape of this item after expanding by 2 pixels"""
+        '''Return the shape of this item after expanding by 2 pixels'''
         shape = self.shape()
         ds = self.mapToDevice(shape)
         stroker = QtGui.QPainterPathStroker()
         stroker.setWidh(2)
         ds2 = stroker.createStroke(ds).united(ds)
         return self.mapFromDevice(ds2)
-        
-        
-        
+
+"""
