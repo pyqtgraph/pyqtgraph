@@ -116,7 +116,7 @@ class ViewBox(ViewBoxBase):
 
     _qtBaseClass = ViewBoxBase
 
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
+    def __init__(self, parent=None, border=QtGui.QPen(Qt.NoPen), lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
         """
         ==============  =============================================================
         **Arguments:**
@@ -137,7 +137,7 @@ class ViewBox(ViewBoxBase):
         ==============  =============================================================
         """
 
-        ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, invertX=invertX, invertY=invertY)
+        ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, border=border, invertX=invertX, invertY=invertY, enableMouse=enableMouse)
 
         #GraphicsItem.__init__(self)
         self.name = None
@@ -220,7 +220,7 @@ class ViewBox(ViewBoxBase):
 
         self.setAspectLocked(lockAspect)
 
-        self.border = fn.mkPen(border)
+        #self.border = fn.mkPen(border)
 
         self.menu = QtGui.QMenu() #ViewBoxMenu(self)
 
@@ -1378,7 +1378,7 @@ class ViewBox(ViewBoxBase):
         s = self.mouseEnabled()
         self.sigRangeChangedManually.emit(s[0], s[1])
     '''
-
+    '''
     def allChildren(self, item=None):
         """Return a list of all children and grandchildren of this ViewBox"""
         if item is None:
@@ -1388,8 +1388,7 @@ class ViewBox(ViewBoxBase):
         for ch in item.childItems():
             children.extend(self.allChildren(ch))
         return children
-
-
+    '''
 
     def childrenBounds(self, frac=None, orthoRange=(None,None), items=None):
         """Return the bounding range of all children.
@@ -1666,14 +1665,13 @@ class ViewBox(ViewBoxBase):
         self.sigTransformChanged.emit()  ## segfaults here: 1
         self.setMatrixNeedsUpdate(False)
     '''
-
+    '''
     def paint(self, p, opt, widget):
         #self.checkSceneChange()
 
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)
-            #p.fillRect(bounds, QtGui.QColor(0, 0, 0))
             p.drawPath(bounds)
 
         #p.setPen(fn.mkPen('r'))
@@ -1681,6 +1679,7 @@ class ViewBox(ViewBoxBase):
         #path.addRect(self.targetRect())
         #tr = self.mapFromView(path)
         #p.drawPath(tr)
+    '''
 
     def updateViewLists(self):
         try:

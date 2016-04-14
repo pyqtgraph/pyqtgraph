@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QGraphicsRectItem>
+#include <QWidget>
 
 #include "GraphicsWidget.h"
 #include "Point.h"
@@ -78,7 +79,7 @@ public:
         XYAxes = 2
     };
 
-    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0,
+    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0, const QPen& border=QPen(Qt::NoPen),
                 const bool invertX=false, const bool invertY=false, const bool enableMouse=true);
     virtual ~ViewBoxBase() {}
 
@@ -264,6 +265,10 @@ public:
     virtual void mouseDragEvent(MouseDragEvent* event);
     virtual void mouseDragEvent(MouseDragEvent* event, const Axis axis);
 
+    QList<QGraphicsItem*> allChildren(QGraphicsItem* item=nullptr) const;
+
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget=nullptr);
+
 public slots:
 
     void prepareForPaint();
@@ -333,6 +338,8 @@ protected:
     ChildGroup* mChildGroup;
 
     QList<QGraphicsItem*> mAddedItems;
+
+    QPen mBorder;
 
     Limits mLimits;
 

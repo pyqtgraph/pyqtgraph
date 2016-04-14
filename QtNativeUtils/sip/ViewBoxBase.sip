@@ -24,8 +24,8 @@ public:
         XYAxes = 2
     };
 
-    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0,
-                const bool invertX=false, const bool invertY=false) /HoldGIL/;
+    ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0, const QPen& border=QPen(Qt::NoPen),
+                const bool invertX=false, const bool invertY=false, const bool enableMouse=true) /HoldGIL/;
     virtual ~ViewBoxBase() /HoldGIL/;
 
     virtual int type() const /HoldGIL/;
@@ -510,6 +510,8 @@ public:
 
     //virtual void mouseDragEvent(MouseDragEvent* event);
     virtual void mouseDragEvent(MouseDragEvent* event, const Axis axis=XYAxes);
+
+    QList<QGraphicsItem*> allChildren(QGraphicsItem* item=nullptr) const;
 
 public slots:
 

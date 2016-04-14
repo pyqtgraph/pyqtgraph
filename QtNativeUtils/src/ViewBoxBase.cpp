@@ -6,13 +6,14 @@
 #include "QGraphicsScene2.h"
 #include "graphicsitems/ChildGroup.h"
 
-ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const bool invertX, const bool invertY, const bool enableMouse) :
+ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QPen& border, const bool invertX, const bool invertY, const bool enableMouse) :
     GraphicsWidget(parent, wFlags),
     mMatrixNeedsUpdate(true),
     mAutoRangeNeedsUpdate(true),
     mXInverted(invertX),
     mYInverted(invertY),
     mMouseMode(PanMode),
+    mBorder(border),
     mWheelScaleFactor(-1.0/8.0)
 {
     Range::registerMetatype();
@@ -644,6 +645,30 @@ void ViewBoxBase::mouseDragEvent(MouseDragEvent *event, const ViewBoxBase::Axis 
         scaleBy(x, y, center);
 
         emit sigRangeChangedManually(mMouseEnabled[0], mMouseEnabled[1]);
+    }
+}
+
+QList<QGraphicsItem *> ViewBoxBase::allChildren(QGraphicsItem *item) const
+{
+    // Return a list of all children and grandchildren of this ViewBox
+    if(item==nullptr)
+        item = mChildGroup;
+
+    QList<QGraphicsItem *> children;
+    children << item;
+    QList<QGraphicsItem *> chItems = item->childItems();
+    const int size = chItems.size();
+    for(int i=0; i<size; ++i)
+        children << allChildren(chItems[i]);
+    return children;
+}
+
+void ViewBoxBase::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    if(mBorder.style()!=Qt::NoPen)
+    {
+        painter->setPen(mBorder);
+        painter->drawPath(shape());
     }
 }
 
