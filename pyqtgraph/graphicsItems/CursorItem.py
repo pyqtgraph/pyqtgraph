@@ -54,8 +54,6 @@ class CursorItem(UIGraphicsItem):
         hoverBrush      Brush to use to fill the cursor when hovering over it. Can be any
                         arguments that is valid for :func:`mkBrush<pyqtgraph.mkBrush>`.
                         Default is transparent blue.
-        bounds          Optional [min, max] bounding values. Bounds are only valid if the
-                        line is vertical or horizontal.
         label           Text to be displayed in a label attached to the cursor, or
                         None to show no label (default is None). May optionally
                         include formatting strings to display the cursor value.

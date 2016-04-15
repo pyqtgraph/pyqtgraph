@@ -41,6 +41,7 @@ label = pg.InfLineLabel(lr.lines[1], "region 1", position=0.95, rotateAxis=(1,0)
 cursor = pg.CursorItem(pos=[50, 20])
 p1.addItem(cursor)
 
+# Add a cursor (with label)
 cursorLabel = pg.CursorItem(pos=[20,-20], radius=3, cursor='c', pen=(0, 0, 255), label='x={:.3f}\ny={:.3f}',
                             labelOpts={'color': (200, 200, 200), 'fill': (20, 20, 20, 20)})
 p1.addItem(cursorLabel)
