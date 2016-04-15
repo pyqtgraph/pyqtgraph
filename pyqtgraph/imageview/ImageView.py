@@ -151,7 +151,7 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        for colorInd in range(2):
+        for colorInd in range(3):
             self.roiCurves.append(self.ui.roiPlot.plot())
             self.roiCurves[colorInd].setPen(color=QtGui.QColor(255*(colorInd==0), 255*(colorInd==1), 255*(colorInd==2), 255))
         self.timeLine = InfiniteLine(0, movable=True)
