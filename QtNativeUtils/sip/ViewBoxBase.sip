@@ -530,6 +530,8 @@ public slots:
 
     void scaleHistory(const int d);
 
+    void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+
 protected:
 
     void setViewRange(const Range& x, const Range& y) /HoldGIL/;

@@ -554,6 +554,116 @@ void ViewBoxBase::scaleHistory(const int d)
     }
 }
 
+void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis axis)
+{
+    if(mLinksBlocked || view==nullptr)
+        return;
+
+    QRectF vg = view->screenGeometry();
+    QRectF sg = screenGeometry();
+    if(vg.isNull() || sg.isNull())
+        return;
+
+    QRectF vr = view->viewRect();
+    view->blockLink(true);
+    if(axis==XAxis)
+    {
+        double overlap = std::min(sg.right(), vg.right() - std::max(sg.left(), vg.left()));
+        double x1, x2;
+        if(overlap < std::min(vg.width()/3.0, sg.width()/3.0))
+        {
+            // if less than 1/3 of views overlap, then just replicate the view
+            x1 = vr.left();
+            x2 = vr.right();
+        }
+        else
+        {
+            // views overlap; line them up
+            double upp = vr.width() / vg.width();
+            if(xInverted())
+                x1 = vr.left() + (sg.right()-vg.right()) * upp;
+            else
+                x1 = vr.left() + (sg.x()-vg.x()) * upp;
+            x2 = x1 + sg.width() * upp;
+        }
+        enableAutoRange(XAxis, false);
+        setXRange(x1, x2, 0.0);
+    }
+    else //if(axis==YAxis)
+    {
+        double overlap = std::min(sg.bottom(), vg.bottom()) - std::max(sg.top(), vg.top());
+        double y1, y2;
+        if (overlap < std::min(vg.height()/3.0, sg.height()/3.0))
+        {
+            // if less than 1/3 of views overlap, then just replicate the view
+            y1 = vr.top();
+            y2 = vr.bottom();
+        }
+        else
+        {
+            // views overlap; line them up
+            double upp = vr.height() / vg.height();
+            if(yInverted())
+                y2 = vr.bottom() + (sg.bottom()-vg.bottom()) * upp;
+            else
+                y2 = vr.bottom() + (sg.top()-vg.top()) * upp;
+            y1 = y2 - sg.height() * upp;
+        }
+        enableAutoRange(YAxis, false);
+        setYRange(y1, y2, 0.0);
+    }
+
+    view->blockLink(false);
+}
+
+/*
+if self.linksBlocked() or view is None:
+    return
+
+#print self.name, "ViewBox.linkedViewChanged", axis, view.viewRange()[axis]
+vr = view.viewRect()
+vg = view.screenGeometry()
+sg = self.screenGeometry()
+if vg is None or sg is None:
+    return
+
+view.blockLink(True)
+try:
+    if axis == ViewBox.XAxis:
+        overlap = min(sg.right(), vg.right()) - max(sg.left(), vg.left())
+        if overlap < min(vg.width()/3, sg.width()/3):  ## if less than 1/3 of views overlap,
+                                                       ## then just replicate the view
+            x1 = vr.left()
+            x2 = vr.right()
+        else:  ## views overlap; line them up
+            upp = float(vr.width()) / vg.width()
+            if self.xInverted():
+                x1 = vr.left()   + (sg.right()-vg.right()) * upp
+            else:
+                x1 = vr.left()   + (sg.x()-vg.x()) * upp
+            x2 = x1 + sg.width() * upp
+        self.enableAutoRange(ViewBox.XAxis, False)
+        self.setXRange(x1, x2, padding=0)
+    else:
+        overlap = min(sg.bottom(), vg.bottom()) - max(sg.top(), vg.top())
+        if overlap < min(vg.height()/3, sg.height()/3):  ## if less than 1/3 of views overlap,
+                                                         ## then just replicate the view
+            y1 = vr.top()
+            y2 = vr.bottom()
+        else:  ## views overlap; line them up
+            upp = float(vr.height()) / vg.height()
+            if self.yInverted():
+                y2 = vr.bottom() + (sg.bottom()-vg.bottom()) * upp
+            else:
+                y2 = vr.bottom() + (sg.top()-vg.top()) * upp
+            y1 = y2 - sg.height() * upp
+        self.enableAutoRange(ViewBox.YAxis, False)
+        self.setYRange(y1, y2, padding=0)
+finally:
+    view.blockLink(False)
+*/
+
+
 void ViewBoxBase::setViewRange(const Range& x, const Range& y)
 {
     mViewRange[0] = Range(x);

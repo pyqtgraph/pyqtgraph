@@ -1056,6 +1056,7 @@ class ViewBox(ViewBoxBase):
         else:
             return v()  ## dereference weakref pointer. If the reference is dead, this returns None
 
+    '''
     def linkedViewChanged(self, view, axis):
         if self.linksBlocked() or view is None:
             return
@@ -1101,6 +1102,7 @@ class ViewBox(ViewBoxBase):
                 self.setYRange(y1, y2, padding=0)
         finally:
             view.blockLink(False)
+    '''
 
     '''
     def screenGeometry(self):
