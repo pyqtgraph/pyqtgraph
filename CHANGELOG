@@ -21,6 +21,7 @@ pyqtgraph-0.9.11  [unreleased]
 	- Dock titles can be changed after creation
         - Added Dock.sigClosed
     - Added TextItem.setColor()
+    - Added the CursorItem class
 
   Maintenance:
     - Add examples to unit tests
