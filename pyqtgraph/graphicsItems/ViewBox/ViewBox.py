@@ -116,7 +116,7 @@ class ViewBox(ViewBoxBase):
 
     _qtBaseClass = ViewBoxBase
 
-    def __init__(self, parent=None, border=QtGui.QPen(Qt.NoPen), lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
+    def __init__(self, parent=None, border=QtGui.QPen(Qt.NoPen), lockAspect=0.0, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
         """
         ==============  =============================================================
         **Arguments:**
@@ -137,11 +137,11 @@ class ViewBox(ViewBoxBase):
         ==============  =============================================================
         """
 
-        ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, border=border, invertX=invertX, invertY=invertY, enableMouse=enableMouse)
+        ViewBoxBase.__init__(self, parent=parent, wFlags=Qt.Widget, border=border, lockAspect=lockAspect, invertX=invertX, invertY=invertY, enableMouse=enableMouse)
 
         #GraphicsItem.__init__(self)
         self.name = None
-        self.linksBlocked = False
+        #self.linksBlocked = False
         #self.addedItems = []
 
         #self._lastScene = None  ## stores reference to the last known scene this view was a part of.
@@ -210,15 +210,15 @@ class ViewBox(ViewBoxBase):
         '''
 
         ## show target rect for debugging
-        self.target = QtGui.QGraphicsRectItem(0, 0, 1, 1)
-        self.target.setPen(fn.mkPen('r'))
-        self.target.setParentItem(self)
-        self.target.hide()
+        #self.target = QtGui.QGraphicsRectItem(0, 0, 1, 1)
+        #self.target.setPen(fn.mkPen('r'))
+        #self.target.setParentItem(self)
+        #self.target.hide()
 
         #self.axHistory = [] # maintain a history of zoom locations
         #self.axHistoryPointer = -1 # pointer into the history. Allows forward/backward movement, not just "undo"
 
-        self.setAspectLocked(lockAspect)
+        #self.setAspectLocked(lockAspect)
 
         #self.border = fn.mkPen(border)
 
@@ -1034,8 +1034,8 @@ class ViewBox(ViewBoxBase):
 
         self.sigStateChanged.emit(self)
 
-    def blockLink(self, b):
-        self.linksBlocked = b  ## prevents recursive plot-change propagation
+    #def blockLink(self, b):
+    #    self.linksBlocked = b  ## prevents recursive plot-change propagation
 
     def linkedXChanged(self):
         ## called when x range of linked view has changed
@@ -1057,7 +1057,7 @@ class ViewBox(ViewBoxBase):
             return v()  ## dereference weakref pointer. If the reference is dead, this returns None
 
     def linkedViewChanged(self, view, axis):
-        if self.linksBlocked or view is None:
+        if self.linksBlocked() or view is None:
             return
 
         #print self.name, "ViewBox.linkedViewChanged", axis, view.viewRange()[axis]

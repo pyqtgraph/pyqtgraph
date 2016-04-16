@@ -80,6 +80,7 @@ public:
     };
 
     ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0, const QPen& border=QPen(Qt::NoPen),
+                const double lockAspect=0.0,
                 const bool invertX=false, const bool invertY=false, const bool enableMouse=true);
     virtual ~ViewBoxBase() {}
 
@@ -273,6 +274,9 @@ public:
 
     Point viewPixelSize() const;
 
+    void blockLink(const bool block) { mLinksBlocked = block; }
+    bool linksBlocked() const { return mLinksBlocked; }
+
 public slots:
 
     void prepareForPaint();
@@ -351,6 +355,8 @@ protected:
 
     QVector<QRectF> mAxHistory;
     int mAxHistoryPointer;
+
+    bool mLinksBlocked;
 };
 
 #endif // VIEWBOXBASE_H

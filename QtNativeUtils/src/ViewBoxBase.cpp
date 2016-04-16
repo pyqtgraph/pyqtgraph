@@ -6,7 +6,7 @@
 #include "QGraphicsScene2.h"
 #include "graphicsitems/ChildGroup.h"
 
-ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QPen& border, const bool invertX, const bool invertY, const bool enableMouse) :
+ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QPen& border, const double lockAspect, const bool invertX, const bool invertY, const bool enableMouse) :
     GraphicsWidget(parent, wFlags),
     mMatrixNeedsUpdate(true),
     mAutoRangeNeedsUpdate(true),
@@ -14,7 +14,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QP
     mYInverted(invertY),
     mMouseMode(PanMode),
     mBorder(border),
-    mWheelScaleFactor(-1.0/8.0)
+    mWheelScaleFactor(-1.0/8.0),
+    mLinksBlocked(false)
 {
     Range::registerMetatype();
 
@@ -61,6 +62,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QP
 
     mAxHistory.clear();
     mAxHistoryPointer = -1;
+
+    setAspectLocked(lockAspect!=0.0, lockAspect);
 }
 
 void ViewBoxBase::updateMatrix()
