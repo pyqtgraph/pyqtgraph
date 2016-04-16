@@ -29,15 +29,16 @@ win.nextRow()
 p1 = win.addPlot(x=x, y=y, name="Plot1", title="Plot1")
 p2 = win.addPlot(x=x, y=y, name="Plot2", title="Plot2: Y linked with Plot1")
 p2.setLabel('bottom', "Label to test offset")
-p2.setYLink('Plot1')  ## test linking by name
+p2.setYLink(p1.vb)
+p1.setYLink(p2.vb)
 
 
 ## create plots 3 and 4 out of order
 p4 = win.addPlot(x=x, y=y, name="Plot4", title="Plot4: X -> Plot3 (deferred), Y -> Plot1", row=2, col=1)
-p4.setXLink('Plot3')  ## Plot3 has not been created yet, but this should still work anyway.
-p4.setYLink(p1)
+p4.setYLink(p1.vb)
 p3 = win.addPlot(x=x, y=y, name="Plot3", title="Plot3: X linked with Plot1", row=2, col=0)
-p3.setXLink(p1)
+p4.setXLink(p3.vb)  ## Plot3 has been created 
+p3.setXLink(p1.vb)
 p3.setLabel('left', "Label to test offset")
 #QtGui.QApplication.processEvents()
 

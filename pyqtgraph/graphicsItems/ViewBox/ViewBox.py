@@ -976,6 +976,7 @@ class ViewBox(ViewBoxBase):
             self.setAutoRangeNeedsUpdate(False)
             self._updatingRange = False
 
+    '''
     def setXLink(self, view):
         """Link this view's X axis to another view. (see LinkView)"""
         self.linkView(self.XAxis, view)
@@ -983,8 +984,9 @@ class ViewBox(ViewBoxBase):
     def setYLink(self, view):
         """Link this view's Y axis to another view. (see LinkView)"""
         self.linkView(self.YAxis, view)
+    '''
 
-
+    '''
     def linkView(self, axis, view):
         """
         Link X or Y axes of two views and unlink any previously connected axes. *axis* must be ViewBox.XAxis or ViewBox.YAxis.
@@ -1033,10 +1035,12 @@ class ViewBox(ViewBoxBase):
 
 
         self.sigStateChanged.emit(self)
+    '''
 
     #def blockLink(self, b):
     #    self.linksBlocked = b  ## prevents recursive plot-change propagation
 
+    '''
     def linkedXChanged(self):
         ## called when x range of linked view has changed
         view = self.linkedView(0)
@@ -1046,6 +1050,7 @@ class ViewBox(ViewBoxBase):
         ## called when y range of linked view has changed
         view = self.linkedView(1)
         self.linkedViewChanged(view, ViewBox.YAxis)
+    '''
 
     def linkedView(self, ax):
         ## Return the linked view for axis *ax*.

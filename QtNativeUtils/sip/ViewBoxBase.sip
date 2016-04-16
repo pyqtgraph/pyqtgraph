@@ -522,6 +522,13 @@ public:
     void blockLink(const bool block);
     bool linksBlocked();
 
+    void linkView(const Axis axis, ViewBoxBase* view);
+
+    void setXLink(ViewBoxBase* view);
+    void setYLink(ViewBoxBase* view);
+
+    ViewBoxBase* linkedView(const Axis axis) const;
+
 public slots:
 
     void prepareForPaint();
@@ -531,6 +538,9 @@ public slots:
     void scaleHistory(const int d);
 
     void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+
+    void linkedXChanged();
+    void linkedYChanged();
 
 protected:
 

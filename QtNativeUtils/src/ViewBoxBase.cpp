@@ -64,6 +64,9 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QP
     mAxHistoryPointer = -1;
 
     setAspectLocked(lockAspect!=0.0, lockAspect);
+
+    mLinkedViews.clear();
+    mLinkedViews << QWeakPointer<ViewBoxBase>() << QWeakPointer<ViewBoxBase>();
 }
 
 void ViewBoxBase::updateMatrix()
@@ -616,52 +619,19 @@ void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis a
     view->blockLink(false);
 }
 
-/*
-if self.linksBlocked() or view is None:
-    return
+void ViewBoxBase::linkedXChanged()
+{
+    ViewBoxBase* view = mLinkedViews[0].data();
+    if(view!=nullptr)
+        linkedViewChanged(view, XAxis);
+}
 
-#print self.name, "ViewBox.linkedViewChanged", axis, view.viewRange()[axis]
-vr = view.viewRect()
-vg = view.screenGeometry()
-sg = self.screenGeometry()
-if vg is None or sg is None:
-    return
-
-view.blockLink(True)
-try:
-    if axis == ViewBox.XAxis:
-        overlap = min(sg.right(), vg.right()) - max(sg.left(), vg.left())
-        if overlap < min(vg.width()/3, sg.width()/3):  ## if less than 1/3 of views overlap,
-                                                       ## then just replicate the view
-            x1 = vr.left()
-            x2 = vr.right()
-        else:  ## views overlap; line them up
-            upp = float(vr.width()) / vg.width()
-            if self.xInverted():
-                x1 = vr.left()   + (sg.right()-vg.right()) * upp
-            else:
-                x1 = vr.left()   + (sg.x()-vg.x()) * upp
-            x2 = x1 + sg.width() * upp
-        self.enableAutoRange(ViewBox.XAxis, False)
-        self.setXRange(x1, x2, padding=0)
-    else:
-        overlap = min(sg.bottom(), vg.bottom()) - max(sg.top(), vg.top())
-        if overlap < min(vg.height()/3, sg.height()/3):  ## if less than 1/3 of views overlap,
-                                                         ## then just replicate the view
-            y1 = vr.top()
-            y2 = vr.bottom()
-        else:  ## views overlap; line them up
-            upp = float(vr.height()) / vg.height()
-            if self.yInverted():
-                y2 = vr.bottom() + (sg.bottom()-vg.bottom()) * upp
-            else:
-                y2 = vr.bottom() + (sg.top()-vg.top()) * upp
-            y1 = y2 - sg.height() * upp
-        self.enableAutoRange(ViewBox.YAxis, False)
-        self.setYRange(y1, y2, padding=0)
-finally:
-    view.blockLink(False)
-*/
+void ViewBoxBase::linkedYChanged()
+{
+    ViewBoxBase* view = mLinkedViews[1].data();
+    if(view!=nullptr)
+        linkedViewChanged(view, YAxis);
+}
 
 
 void ViewBoxBase::setViewRange(const Range& x, const Range& y)
@@ -859,14 +829,130 @@ Point ViewBoxBase::viewPixelSize() const
     Point px(mapToView(pp[0]) - o);
     Point py(mapToView(pp[1]) - o);
     return Point(px.length(), py.length());
-
-    /*
-    o = self.mapToView(Point(0,0))
-    px, py = [Point(self.mapToView(v) - o) for v in self.pixelVectors()]
-    return (px.length(), py.length())
-    */
 }
 
+void ViewBoxBase::linkView(const ViewBoxBase::Axis axis, ViewBoxBase *view)
+{
+    switch (axis)
+    {
+    case XAxis:
+        setXLink(view);
+        break;
+    case YAxis:
+        setYLink(view);
+        break;
+    default:
+        break;
+    }
+}
+
+void ViewBoxBase::setXLink(ViewBoxBase* view)
+{
+    ViewBoxBase* oldView = mLinkedViews[0].data();
+    if(oldView!=nullptr)
+    {
+        disconnect(oldView, SIGNAL(sigXRangeChanged(Range)), this, SLOT(linkedXChanged()));
+        disconnect(oldView, SIGNAL(sigResized()), this, SLOT(linkedXChanged()));
+    }
+
+    mLinkedViews[0] = view;
+    if(view!=nullptr)
+    {
+        connect(view, SIGNAL(sigXRangeChanged(Range)), this, SLOT(linkedXChanged()));
+        connect(view, SIGNAL(sigResized()), this, SLOT(linkedXChanged()));
+
+        if(view->mAutoRangeEnabled[0])
+        {
+            enableAutoRange(XAxis, false);
+            linkedXChanged();
+        }
+        else if(mAutoRangeEnabled[0]==false)
+        {
+            linkedXChanged();
+        }
+    }
+
+    emit sigStateChanged(this);
+}
+
+void ViewBoxBase::setYLink(ViewBoxBase *view)
+{
+    ViewBoxBase* oldView = mLinkedViews[1].data();
+    if(oldView!=nullptr)
+    {
+        disconnect(oldView, SIGNAL(sigYRangeChanged(Range)), this, SLOT(linkedYChanged()));
+        disconnect(oldView, SIGNAL(sigResized()), this, SLOT(linkedYChanged()));
+    }
+
+    mLinkedViews[1] = view;
+    if(view!=nullptr)
+    {
+        connect(view, SIGNAL(sigYRangeChanged(Range)), this, SLOT(linkedYChanged()));
+        connect(view, SIGNAL(sigResized()), this, SLOT(linkedYChanged()));
+
+        if(view->mAutoRangeEnabled[1])
+        {
+            enableAutoRange(YAxis, false);
+            linkedYChanged();
+        }
+        else if(mAutoRangeEnabled[1]==false)
+        {
+            linkedYChanged();
+        }
+    }
+
+    emit sigStateChanged(this);
+}
+
+ViewBoxBase* ViewBoxBase::linkedView(const ViewBoxBase::Axis axis) const
+{
+    switch (axis)
+    {
+    case XAxis:
+        return mLinkedViews[0].data();
+    case YAxis:
+        return mLinkedViews[1].data();
+    default:
+        return nullptr;
+    }
+}
+
+/*
+## used to connect/disconnect signals between a pair of views
+if axis == ViewBox.XAxis:
+    signal = 'sigXRangeChanged'
+    slot = self.linkedXChanged
+else:
+    signal = 'sigYRangeChanged'
+    slot = self.linkedYChanged
+
+
+oldLink = self.linkedView(axis)
+if oldLink is not None:
+    try:
+        getattr(oldLink, signal).disconnect(slot)
+        oldLink.sigResized.disconnect(slot)
+    except (TypeError, RuntimeError):
+        ## This can occur if the view has been deleted already
+        pass
+
+
+if view is None or isinstance(view, basestring):
+    self.state['linkedViews'][axis] = view
+else:
+    self.state['linkedViews'][axis] = weakref.ref(view)
+    getattr(view, signal).connect(slot)
+    view.sigResized.connect(slot)
+    if view.autoRangeEnabled()[axis] is not False:
+        self.enableAutoRange(axis, False)
+        slot()
+    else:
+        if self.autoRangeEnabled()[axis] is False:
+            slot()
+
+
+self.sigStateChanged.emit(self)
+*/
 
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {

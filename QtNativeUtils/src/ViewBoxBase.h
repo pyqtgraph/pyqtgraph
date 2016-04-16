@@ -4,6 +4,7 @@
 #include <QList>
 #include <QGraphicsRectItem>
 #include <QWidget>
+#include <QWeakPointer>
 
 #include "GraphicsWidget.h"
 #include "Point.h"
@@ -13,7 +14,7 @@
 #include "graphicsitems/ChildGroup.h"
 #include "Range.h"
 
-//#include <sip.h>
+
 
 class Limits
 {
@@ -277,6 +278,17 @@ public:
     void blockLink(const bool block) { mLinksBlocked = block; }
     bool linksBlocked() const { return mLinksBlocked; }
 
+    void linkView(const Axis axis, ViewBoxBase* view);
+    void setXLink(ViewBoxBase* view);
+    void setYLink(ViewBoxBase* view);
+
+    // TODO: create a overload for the PlotItem that is a container of a ViewBox.
+    //void linkView(const Axis axis, PlotItem* view);
+    //void setXLink(PlotItem* view);
+    //void setYLink(PlotItem* view);
+
+    ViewBoxBase* linkedView(const Axis axis) const;
+
 public slots:
 
     void prepareForPaint();
@@ -286,6 +298,9 @@ public slots:
     void scaleHistory(const int d);
 
     void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+
+    void linkedXChanged();
+    void linkedYChanged();
 
 protected:
 
@@ -359,6 +374,8 @@ protected:
     int mAxHistoryPointer;
 
     bool mLinksBlocked;
+
+    QVector<QWeakPointer<ViewBoxBase> > mLinkedViews;
 };
 
 #endif // VIEWBOXBASE_H
