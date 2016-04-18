@@ -1050,7 +1050,6 @@ class ViewBox(ViewBoxBase):
         ## called when y range of linked view has changed
         view = self.linkedView(1)
         self.linkedViewChanged(view, ViewBox.YAxis)
-    '''
 
     def linkedView(self, ax):
         ## Return the linked view for axis *ax*.
@@ -1060,7 +1059,7 @@ class ViewBox(ViewBoxBase):
             return None
         else:
             return v()  ## dereference weakref pointer. If the reference is dead, this returns None
-
+    '''
     '''
     def linkedViewChanged(self, view, axis):
         if self.linksBlocked() or view is None:

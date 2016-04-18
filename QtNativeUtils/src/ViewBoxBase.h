@@ -297,7 +297,7 @@ public slots:
 
     void scaleHistory(const int d);
 
-    void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+    virtual void linkedViewChanged(ViewBoxBase* view, const Axis axis);
 
     void linkedXChanged();
     void linkedYChanged();

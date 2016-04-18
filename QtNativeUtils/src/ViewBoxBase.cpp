@@ -562,16 +562,16 @@ void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis a
     if(mLinksBlocked || view==nullptr)
         return;
 
-    QRectF vg = view->screenGeometry();
-    QRectF sg = screenGeometry();
+    const QRectF vg = view->screenGeometry();
+    const QRectF sg = screenGeometry();
     if(vg.isNull() || sg.isNull())
         return;
 
-    QRectF vr = view->viewRect();
+    const QRectF vr = view->viewRect();
     view->blockLink(true);
     if(axis==XAxis)
     {
-        double overlap = std::min(sg.right(), vg.right() - std::max(sg.left(), vg.left()));
+        const double overlap = std::min(sg.right(), vg.right()) - std::max(sg.left(), vg.left());
         double x1, x2;
         if(overlap < std::min(vg.width()/3.0, sg.width()/3.0))
         {
@@ -582,7 +582,7 @@ void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis a
         else
         {
             // views overlap; line them up
-            double upp = vr.width() / vg.width();
+            const double upp = vr.width() / vg.width();
             if(xInverted())
                 x1 = vr.left() + (sg.right()-vg.right()) * upp;
             else
@@ -594,7 +594,7 @@ void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis a
     }
     else //if(axis==YAxis)
     {
-        double overlap = std::min(sg.bottom(), vg.bottom()) - std::max(sg.top(), vg.top());
+        const double overlap = std::min(sg.bottom(), vg.bottom()) - std::max(sg.top(), vg.top());
         double y1, y2;
         if (overlap < std::min(vg.height()/3.0, sg.height()/3.0))
         {
@@ -605,7 +605,7 @@ void ViewBoxBase::linkedViewChanged(ViewBoxBase* view, const ViewBoxBase::Axis a
         else
         {
             // views overlap; line them up
-            double upp = vr.height() / vg.height();
+            const double upp = vr.height() / vg.height();
             if(yInverted())
                 y2 = vr.bottom() + (sg.bottom()-vg.bottom()) * upp;
             else

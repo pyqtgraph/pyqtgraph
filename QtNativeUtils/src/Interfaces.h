@@ -8,6 +8,8 @@
 #include "mouseevents/MouseDragEvent.h"
 #include "mouseevents/HoverEvent.h"
 
+#include "Range.h"
+
 class ViewBoxInterface
 {
 public:
@@ -29,7 +31,12 @@ public:
 };
 
 
+class DataBoundsInterface
+{
+public:
 
+
+};
 
 
 

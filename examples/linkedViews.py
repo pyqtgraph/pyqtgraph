@@ -30,7 +30,7 @@ p1 = win.addPlot(x=x, y=y, name="Plot1", title="Plot1")
 p2 = win.addPlot(x=x, y=y, name="Plot2", title="Plot2: Y linked with Plot1")
 p2.setLabel('bottom', "Label to test offset")
 p2.setYLink(p1.vb)
-p1.setYLink(p2.vb)
+
 
 
 ## create plots 3 and 4 out of order
