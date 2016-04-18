@@ -10,6 +10,15 @@ class ExtendedItem /Abstract/
 %End
 
 public:
+
+    enum Axis
+    {
+        XAxis = 0,
+        YAxis = 1,
+        XYAxes = 2
+    };
+
+public:
     ExtendedItem(QGraphicsObject* impl);
     virtual ~ExtendedItem();
 

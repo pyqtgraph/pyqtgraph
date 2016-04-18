@@ -37,11 +37,6 @@ void UIGraphicsItem::setPos(double x, double y)
     setNewBounds();
 }
 
-Range UIGraphicsItem::dataBounds(const ViewBoxBase::Axis ax, const double frac, const Range orthoRange) const
-{
-    return Range();  // Empty Range
-}
-
 QPainterPath UIGraphicsItem::mouseShape() const
 {
     // Return the shape of this item after expanding by 2 pixels

@@ -12,6 +12,7 @@
 #include "ExtendedItem.h"
 #include "Range.h"
 
+
 class ViewBoxBase;
 class GraphicsViewBase;
 
@@ -40,6 +41,8 @@ public:
     void setParentItem(QGraphicsItem* newParent);
 
     virtual QTransform sceneTransform() const;
+
+    virtual Range dataBounds(const Axis ax, const double frac=1.0, const Range orthoRange=Range()) const;
 
 public slots:
 

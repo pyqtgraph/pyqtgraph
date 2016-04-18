@@ -19,8 +19,6 @@ public:
     void setPos(const QPointF & pos);
     void setPos(double x, double y);
 
-    Range dataBounds(const ViewBoxBase::Axis ax, const double frac=1.0, const Range orthoRange=Range()) const;
-
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget=nullptr);
 
     virtual QPainterPath mouseShape() const;

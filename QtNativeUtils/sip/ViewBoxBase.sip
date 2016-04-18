@@ -17,13 +17,6 @@ public:
         RectMode = 1
     };
 
-    enum Axis
-    {
-        XAxis = 0,
-        YAxis = 1,
-        XYAxes = 2
-    };
-
     ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0, const QPen& border=QPen(Qt::NoPen),
                 const double lockAspect=0.0, const bool invertX=false, const bool invertY=false, const bool enableMouse=true) /HoldGIL/;
     virtual ~ViewBoxBase() /HoldGIL/;

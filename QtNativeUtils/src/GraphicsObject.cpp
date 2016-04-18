@@ -26,6 +26,12 @@ QTransform GraphicsObject::sceneTransform() const
     return QGraphicsObject::sceneTransform();
 }
 
+Range GraphicsObject::dataBounds(const ExtendedItem::Axis ax, const double frac, const Range orthoRange) const
+{
+    return Range();  // Empty Range
+}
+
+
 void GraphicsObject::viewRangeChanged(const Range& xRange, const Range& yRange)
 {
     // Called whenever the view coordinates of the ViewBox containing this item have changed.
