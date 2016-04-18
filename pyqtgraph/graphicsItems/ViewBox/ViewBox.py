@@ -158,7 +158,7 @@ class ViewBox(ViewBoxBase):
                                           ## otherwise float gives the fraction of data that is visible
             #'autoPan': [False, False],         ## whether to only pan (do not change scaling) when auto-range is enabled
             #'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
-            'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
+            #'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
 
             #'mouseEnabled': [enableMouse, enableMouse],
@@ -438,7 +438,7 @@ class ViewBox(ViewBoxBase):
         for ch in self.getChildGroup().childItems():
             ch.setParentItem(None)
     '''
-
+    '''
     def resizeEvent(self, ev):
         self.linkedXChanged()
         self.linkedYChanged()
@@ -446,10 +446,9 @@ class ViewBox(ViewBoxBase):
         self.updateViewRange()
         self.setMatrixNeedsUpdate(True)
         self.sigStateChanged.emit(self)
-        #self.background.setRect(self.rect())
         self.updateBackground()
         self.sigResized.emit()
-
+    '''
     '''
     def viewRect(self):
         """Return a QRectF bounding the region visible within the ViewBox"""
@@ -1518,6 +1517,7 @@ class ViewBox(ViewBoxBase):
         bounds = QtCore.QRectF(rng[0][0], rng[1][0], rng[0][1]-rng[0][0], rng[1][1]-rng[1][0])
         return bounds
 
+    '''
     def updateViewRange(self, forceX=False, forceY=False):
         ## Update viewRange to match targetRange as closely as possible, given
         ## aspect ratio constraints. The *force* arguments are used to indicate
@@ -1641,6 +1641,7 @@ class ViewBox(ViewBoxBase):
                 link = self.linkedView(ax)
                 if link is not None:
                     link.linkedViewChanged(self, ax)
+    '''
 
     '''
     def updateMatrix(self, changed=None):
@@ -1709,7 +1710,7 @@ class ViewBox(ViewBoxBase):
         ###self.menu.setViewList(nv)
 
         for ax in [0,1]:
-            link = self.state['linkedViews'][ax]
+            link = self.linkedView(ax)
             if isinstance(link, basestring):     ## axis has not been linked yet; see if it's possible now
                 for v in nv:
                     if link == v.name:

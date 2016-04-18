@@ -15,7 +15,8 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QP
     mMouseMode(PanMode),
     mBorder(border),
     mWheelScaleFactor(-1.0/8.0),
-    mLinksBlocked(false)
+    mLinksBlocked(false),
+    mUpdatingRange(false)
 {
     Range::registerMetatype();
 
@@ -67,6 +68,150 @@ ViewBoxBase::ViewBoxBase(QGraphicsItem *parent, Qt::WindowFlags wFlags, const QP
 
     mLinkedViews.clear();
     mLinkedViews << QWeakPointer<ViewBoxBase>() << QWeakPointer<ViewBoxBase>();
+}
+
+void ViewBoxBase::updateViewRange(const bool forceX, const bool forceY)
+{
+    // Update viewRange to match targetRange as closely as possible, given
+    // aspect ratio constraints. The *force* arguments are used to indicate
+    // which axis (if any) should be unchanged when applying constraints.
+
+    QList<Range> viewTargetRange(mTargetRange);
+    bool changed[] {false, false};
+
+    //-------- Make correction for aspect ratio constraint ----------
+    // aspect is (widget w/h) / (view range w/h)
+    const double aspect = mAspectLocked;
+    const QRectF tr = targetRect();
+    const QRectF bounds = rect();
+
+    if(aspect!=0.0 && tr.height()!=0.0 && bounds.height()!=0.0 && bounds.width()!=0.0)
+    {
+        // This is the view range aspect ratio we have requested
+        double targetRatio = tr.height() != 0 ? tr.width() / tr.height() : 1.0;
+        double viewRatio = (bounds.height() != 0 ? bounds.width() / bounds.height() : 1.0) / aspect;
+        viewRatio = viewRatio == 0 ? 1.0 : viewRatio;
+        Axis ax = XAxis;
+        if(forceX)
+            ax = XAxis;
+        else if(forceY)
+            ax = YAxis;
+        else
+            ax = targetRatio > viewRatio ? XAxis : YAxis;
+
+        if(ax == XAxis)
+        {
+            // view range needs to be taller than target
+            double dy = 0.5 * (tr.width() / viewRatio - tr.height());
+            if(dy != 0.0)
+                changed[1] = true;
+
+            Range vr = Range(viewTargetRange[1]);
+            viewTargetRange[1].setRange(vr.min()-dy, vr.max()+dy);
+        }
+        else
+        {
+            // view range needs to be wider than target
+            double dx = 0.5 * (tr.height() * viewRatio - tr.width());
+            if(dx != 0)
+                changed[0] = true;
+            Range vr = Range(viewTargetRange[0]);
+            viewTargetRange[0].setRange(vr.min()-dx, vr.max()+dx);
+        }
+    }
+
+    // ----------- Make corrections for view limits -----------
+
+    const Range limits[] {mLimits.xLimits(), mLimits.yLimits()};
+    const Range xRangeLimits = mLimits.xRange();
+    const Range yRangeLimits = mLimits.yRange();
+    double minRng[] {xRangeLimits[0], yRangeLimits[0]};
+    double maxRng[] {xRangeLimits[1], yRangeLimits[1]};
+
+    for(int axis=0; axis<2; ++axis)
+    {
+        if(!limits[axis].isFinite() && std::isnan(minRng[axis]) && std::isnan(maxRng[axis]))
+            continue;
+
+        Range viewRangeAxis = viewTargetRange[axis];
+
+        // max range cannot be larger than bounds, if they are given
+        if(limits[axis].isFinite())
+        {
+            if(std::isfinite(maxRng[axis]))
+                maxRng[axis] = std::min(maxRng[axis], limits[axis].max()-limits[axis].min());
+            else
+                maxRng[axis] = limits[axis].max()-limits[axis].min();
+        }
+
+        // Apply xRange, yRange
+        const double diff = viewRangeAxis.max() - viewRangeAxis.min();
+        double delta = 0;
+        if(std::isfinite(maxRng[axis]) && diff > maxRng[axis])
+        {
+            delta = maxRng[axis] - diff;
+            changed[axis] = true;
+        }
+        else if(std::isfinite(minRng[axis]) && diff < minRng[axis])
+        {
+            delta = minRng[axis] - diff;
+            changed[axis] = true;
+        }
+
+        viewRangeAxis.setMin(viewRangeAxis.min() - delta/2.0);
+        viewRangeAxis.setMax(viewRangeAxis.max() + delta/2.0);
+
+        // Apply xLimits, yLimits
+        const double mn = limits[axis].min();
+        const double mx = limits[axis].max();
+        if(std::isfinite(mn) && viewRangeAxis.min() < mn)
+        {
+            double delta = mn - viewRangeAxis.min();
+            viewRangeAxis.setMin(viewRangeAxis.min() + delta);
+            viewRangeAxis.setMax(viewRangeAxis.max() + delta);
+            changed[axis] = true;
+        }
+        else if(std::isfinite(mx) && viewTargetRange[axis].max() > mx)
+        {
+            double delta = mx - viewRangeAxis.max();
+            viewRangeAxis.setMin(viewRangeAxis.min() + delta);
+            viewRangeAxis.setMax(viewRangeAxis.max() + delta);
+            changed[axis] = true;
+        }
+
+        viewTargetRange[axis] = viewRangeAxis;
+    }
+
+    changed[0] = !mViewRange[0].finiteEqual(viewTargetRange[0]);
+    changed[1] = !mViewRange[1].finiteEqual(viewTargetRange[1]);
+    setViewRange(viewTargetRange[0], viewTargetRange[1]);
+
+    // emit range change signals
+    if(changed[0])
+        emit sigXRangeChanged(viewTargetRange[0]);
+    if(changed[1])
+        emit sigYRangeChanged(viewTargetRange[1]);
+
+    if(changed[0] || changed[1])
+    {
+        emit sigRangeChanged(viewTargetRange[0], viewTargetRange[1]);
+        update();
+        setMatrixNeedsUpdate(true);
+    }
+/*
+    if any(changed):
+        self.sigRangeChanged.emit(Range(viewRange[0]), Range(viewRange[1]))
+        self.update()
+        self.setMatrixNeedsUpdate(True)
+
+        # Inform linked views that the range has changed
+        for ax in [0, 1]:
+            if not changed[ax]:
+                continue
+            link = self.linkedView(ax)
+            if link is not None:
+                link.linkedViewChanged(self, ax)
+*/
 }
 
 void ViewBoxBase::updateMatrix()
@@ -207,32 +352,6 @@ void ViewBoxBase::setAspectLocked(const bool lock, const double ratio)
     updateAutoRange();
     updateViewRange();
     emit sigStateChanged(this);
-
-/*
-    if not lock:
-        if self.aspectLocked() == 0.0:
-            return
-        ViewBoxBase.setAspectLocked(self, False, 0.0)
-    else:
-        rect = self.rect()
-        vr = self.viewRect()
-        if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
-            currentRatio = 1.0
-        else:
-            currentRatio = (rect.width()/float(rect.height())) / (vr.width()/vr.height())
-        if ratio is None:
-            ratio = currentRatio
-        if self.aspectLocked() == ratio: # nothing to change
-            return
-        ViewBoxBase.setAspectLocked(self, True, ratio)
-        #if ratio != currentRatio:  ## If this would change the current range, do that now
-        #    self.updateViewRange()
-
-    self.updateAutoRange()
-    self.updateViewRange()
-    self.sigStateChanged.emit(self)
-*/
-
 }
 
 void ViewBoxBase::setMouseEnabled(const bool enabledOnX, const bool enabledOnY)
@@ -917,43 +1036,6 @@ ViewBoxBase* ViewBoxBase::linkedView(const ViewBoxBase::Axis axis) const
     }
 }
 
-/*
-## used to connect/disconnect signals between a pair of views
-if axis == ViewBox.XAxis:
-    signal = 'sigXRangeChanged'
-    slot = self.linkedXChanged
-else:
-    signal = 'sigYRangeChanged'
-    slot = self.linkedYChanged
-
-
-oldLink = self.linkedView(axis)
-if oldLink is not None:
-    try:
-        getattr(oldLink, signal).disconnect(slot)
-        oldLink.sigResized.disconnect(slot)
-    except (TypeError, RuntimeError):
-        ## This can occur if the view has been deleted already
-        pass
-
-
-if view is None or isinstance(view, basestring):
-    self.state['linkedViews'][axis] = view
-else:
-    self.state['linkedViews'][axis] = weakref.ref(view)
-    getattr(view, signal).connect(slot)
-    view.sigResized.connect(slot)
-    if view.autoRangeEnabled()[axis] is not False:
-        self.enableAutoRange(axis, False)
-        slot()
-    else:
-        if self.autoRangeEnabled()[axis] is False:
-            slot()
-
-
-self.sigStateChanged.emit(self)
-*/
-
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {
     linkedWheelEvent(event, XYAxes);
@@ -997,5 +1079,17 @@ void ViewBoxBase::addToHistory(const QRectF &r)
 {
     mAxHistory.append(QRectF(r));
     mAxHistoryPointer += 1;
+}
+
+void ViewBoxBase::resizeEvent(QGraphicsSceneResizeEvent *event)
+{
+    linkedXChanged();
+    linkedYChanged();
+    updateAutoRange();
+    updateViewRange();
+    setMatrixNeedsUpdate(true);
+    emit sigStateChanged(this);
+    updateBackground();
+    emit sigResized();
 }
 

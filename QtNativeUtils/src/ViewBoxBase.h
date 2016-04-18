@@ -93,7 +93,7 @@ public:
         return Type;
     }
 
-    virtual void updateViewRange(const bool forceX=false, const bool forceY=false) {}
+    virtual void updateViewRange(const bool forceX=false, const bool forceY=false);
     virtual void updateAutoRange() {}
     virtual void updateMatrix();
 
@@ -297,7 +297,7 @@ public slots:
 
     void scaleHistory(const int d);
 
-    virtual void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+    void linkedViewChanged(ViewBoxBase* view, const Axis axis);
 
     void linkedXChanged();
     void linkedYChanged();
@@ -321,6 +321,8 @@ protected:
     void hideScaleBox();
 
     void addToHistory(const QRectF& r);
+
+    virtual void resizeEvent(QGraphicsSceneResizeEvent* event);
 
 signals:
 
@@ -376,6 +378,8 @@ protected:
     bool mLinksBlocked;
 
     QVector<QWeakPointer<ViewBoxBase> > mLinkedViews;
+
+    bool mUpdatingRange;
 };
 
 #endif // VIEWBOXBASE_H

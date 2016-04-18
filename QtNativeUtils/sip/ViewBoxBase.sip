@@ -537,7 +537,7 @@ public slots:
 
     void scaleHistory(const int d);
 
-    virtual void linkedViewChanged(ViewBoxBase* view, const Axis axis);
+    void linkedViewChanged(ViewBoxBase* view, const Axis axis);
 
     void linkedXChanged();
     void linkedYChanged();
@@ -561,6 +561,8 @@ protected:
     void hideScaleBox();
 
     void addToHistory(const QRectF& r);
+
+    virtual void resizeEvent(QGraphicsSceneResizeEvent* event);
 
 signals:
 
