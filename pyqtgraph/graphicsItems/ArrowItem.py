@@ -1,9 +1,10 @@
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..QtNativeUtils import UIGraphicsItem
 import numpy as np
 __all__ = ['ArrowItem']
 
-class ArrowItem(QtGui.QGraphicsPathItem):
+class ArrowItem(UIGraphicsItem):
     """
     For displaying scale-invariant arrows.
     For arrows pointing to a location on a curve, see CurveArrow
@@ -17,7 +18,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
+        UIGraphicsItem.__init__(self, opts.get('parent', None))
+
+        self.pathItem = QtGui.QGraphicsPathItem(self)
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
@@ -85,7 +88,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
-        QtGui.QGraphicsPathItem.paint(self, p, *args)
+        #self.pathItem.paint(p, *args)
         
         #p.setPen(fn.mkPen('r'))
         #p.setBrush(fn.mkBrush(None))
@@ -95,6 +98,21 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         #if not self.opts['pxMode']:
             #return QtGui.QGraphicsPathItem.shape(self)
         return self.path
+
+    def setPen(self, p):
+        self.pathItem.setPen(p)
+
+    def setBrush(self, b):
+        self.pathItem.setBrush(b)
+
+    def pen(self):
+        return self.pathItem.pen()
+
+    def brush(self):
+        return self.pathItem.brush()
+
+    def setPath(self, p):
+        self.pathItem.setPath(p)
     
     ## dataBounds and pixelPadding methods are provided to ensure ViewBox can
     ## properly auto-range 
