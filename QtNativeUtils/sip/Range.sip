@@ -57,41 +57,7 @@ class Range /Supertype=sip.simplewrapper/
 
         if(PyObject_HasAttrString(sipPy, "__getitem__")!=0)
         {
-            int ok = 0;
-            PyObject* key = PyInt_FromLong(0);
-            PyObject* value = PyObject_GetItem(sipPy, key);
-            if(value==Py_None)
-                ok = 1;
-            else
-            {
-                double x = PyFloat_AsDouble(value);
-                if(x==-1.0 && PyErr_Occurred())
-                    ok = 0;
-                else
-                    ok = 1;
-            }
-            Py_XDECREF(key);
-            Py_XDECREF(value);
-            if(ok==0)
-                return 0;
-
-
-            key = PyInt_FromLong(1);
-            value = PyObject_GetItem(sipPy, key);
-            if(value==Py_None)
-                ok = 1;
-            else
-            {
-                double x = PyFloat_AsDouble(value);
-                if(x==-1.0 && PyErr_Occurred())
-                    ok = 0;
-                else
-                    ok = 1;
-            }
-            Py_XDECREF(key);
-            Py_XDECREF(value);
-            if(ok==0)
-                return 0;
+            return 1;
         }
 
         // The type is not valid.
@@ -147,37 +113,27 @@ class Range /Supertype=sip.simplewrapper/
     }
     else if(PyList_Check(sipPy))
     {
-        x = PyFloat_AsDouble(PyList_GetItem(sipPy, 0));
-        y = PyFloat_AsDouble(PyList_GetItem(sipPy, 1));
+        x = pyAsDouble(PyList_GetItem(sipPy, 0));
+        y = pyAsDouble(PyList_GetItem(sipPy, 1));
     }
     else if(PyTuple_Check(sipPy))
     {
-        x = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 0));
-        y = PyFloat_AsDouble(PyTuple_GetItem(sipPy, 1));
+        x = pyAsDouble(PyTuple_GetItem(sipPy, 0));
+        y = pyAsDouble(PyTuple_GetItem(sipPy, 1));
     }
     else if(PyObject_HasAttrString(sipPy, "__getitem__")!=0)
     {
         PyObject* key = PyInt_FromLong(0);
         PyObject* value = PyObject_GetItem(sipPy, key);
-        if(value==Py_None)
-            x = Range::NO_LIMIT;
-        else
-            x = PyFloat_AsDouble(value);
+        x = pyAsDouble(value);
         Py_XDECREF(key);
         Py_XDECREF(value);
-        if(x==-1.0 && PyErr_Occurred())
-            return 0;
 
         key = PyInt_FromLong(1);
         value = PyObject_GetItem(sipPy, key);
-        if(value==Py_None)
-            y = Range::NO_LIMIT;
-        else
-            y = PyFloat_AsDouble(value);
+        y = pyAsDouble(value);
         Py_XDECREF(key);
         Py_XDECREF(value);
-        if(y==-1.0 && PyErr_Occurred())
-            return 0;
     }
 
     *sipCppPtr = new Range(x, y);

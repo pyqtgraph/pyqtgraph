@@ -137,7 +137,7 @@ public:
 
     QTransform childTransform() const;
 
-    const QList<QGraphicsItem*>& addedItems() const;
+    QList<QGraphicsItem*> addedItems() const;
 
     void addItem(QGraphicsItem* item, const bool ignoreBounds=false);
 
@@ -281,6 +281,11 @@ public:
     //void setYLink(PlotItem* view);
 
     ViewBoxBase* linkedView(const Axis axis) const;
+
+    QVector<Range> childrenBounds(const QPointF& frac, const Range& orthoRange, const QList<QGraphicsItem*>& items) const;
+    QVector<Range> childrenBounds(const QPointF& frac, const Range& orthoRange) const { return childrenBounds(frac, orthoRange, mAddedItems); }
+    QVector<Range> childrenBounds(const QPointF& frac) const { return childrenBounds(frac, Range(), mAddedItems); }
+    QVector<Range> childrenBounds() const { return childrenBounds(QPointF(1.0, 1.0), Range(), mAddedItems); }
 
 public slots:
 

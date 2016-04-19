@@ -4,6 +4,7 @@ from .GraphicsObject import GraphicsObject
 from .. import functions as fn
 import numpy as np
 import weakref
+from ..QtNativeUtils import Range
 
 
 __all__ = ['InfiniteLine']
@@ -205,9 +206,9 @@ class InfiniteLine(GraphicsObject):
         
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == 0:
-            return None   ## x axis should never be auto-scaled
+            return Range()   ## x axis should never be auto-scaled
         else:
-            return (0,0)
+            return Range(0,0)
 
     def mouseDragEvent(self, ev):
         if self.movable and ev.button() == QtCore.Qt.LeftButton:

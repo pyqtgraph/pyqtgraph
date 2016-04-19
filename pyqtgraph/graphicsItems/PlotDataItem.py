@@ -621,11 +621,13 @@ class PlotDataItem(GraphicsObject):
             range = self.curve.dataBounds(ax, frac, orthoRange)
         elif self.scatter.isVisible():
             r2 = self.scatter.dataBounds(ax, frac, orthoRange)
-            range = [
-                r2[0] if range[0] is None else (range[0] if r2[0] is None else min(r2[0], range[0])),
-                r2[1] if range[1] is None else (range[1] if r2[1] is None else min(r2[1], range[1]))
-                ]
-        return range
+            range = [r2[0] if range[0] is None else (range[0] if r2[0] is None else min(r2[0], range[0])),
+                     r2[1] if range[1] is None else (range[1] if r2[1] is None else min(r2[1], range[1]))]
+
+        range = list(range)
+        range[0] = range[0] if range[0] is not None else np.nan
+        range[1] = range[1] if range[1] is not None else np.nan
+        return Range(range)
     
     def pixelPadding(self):
         """

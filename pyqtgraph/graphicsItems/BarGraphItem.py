@@ -3,6 +3,7 @@ from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from .. import functions as fn
 import numpy as np
+from ..QtNativeUtils import Range
 
 
 __all__ = ['BarGraphItem']
@@ -166,3 +167,10 @@ class BarGraphItem(GraphicsObject):
         if self.picture is None:
             self.drawPicture()
         return self._shape
+
+    #def dataBounds(self, axis, frac=1.0, orthoRange=None):
+    #    br = self.boundingRect()
+    #    if axis == 0:
+    #        return Range(br.left(), br.right())
+    #    else:
+    #        return Range(br.bottom(), br.top())

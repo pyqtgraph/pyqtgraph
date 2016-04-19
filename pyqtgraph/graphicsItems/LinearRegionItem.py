@@ -3,6 +3,7 @@ from .UIGraphicsItem import UIGraphicsItem
 from .InfiniteLine import InfiniteLine
 from .. import functions as fn
 from .. import debug as debug
+from ..QtNativeUtils import Range
 
 __all__ = ['LinearRegionItem']
 
@@ -148,9 +149,9 @@ class LinearRegionItem(UIGraphicsItem):
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
         if axis == self.orientation:
-            return self.getRegion()
+            return Range(self.getRegion())
         else:
-            return None
+            return Range()
 
     def lineMoved(self):
         if self.blockLineSignal:

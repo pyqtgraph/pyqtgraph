@@ -11,7 +11,7 @@ from .. GraphicsWidget import GraphicsWidget
 from ... import debug as debug
 from ... import getConfigOption
 from ...Qt import isQObjectAlive
-from ...QtNativeUtils import ViewBoxBase, ChildGroup, Range
+from ...QtNativeUtils import ViewBoxBase, ChildGroup, Range, Point
 from ..GraphicsItem import GraphicsItem
 from PyQt4.Qt import Qt
 
@@ -922,6 +922,8 @@ class ViewBox(ViewBoxBase):
                 if type(fractionVisible[i]) is bool:
                     fractionVisible[i] = 1.0
 
+            fractionVisible = Point(fractionVisible[0], fractionVisible[1])
+
             childRange = None
 
             autoVisibleOnly = self.autoVisible()
@@ -936,7 +938,7 @@ class ViewBox(ViewBoxBase):
                     continue
                 if autoVisibleOnly[ax]:
                     oRange = [None, None]
-                    oRange[ax] = targetRect[1-ax]
+                    oRange[ax] = targetRect[1 - ax]
                     childRange = self.childrenBounds(frac=fractionVisible, orthoRange=oRange)
 
                 else:
@@ -946,11 +948,10 @@ class ViewBox(ViewBoxBase):
                 ## Make corrections to range
                 xr = childRange[ax]
                 if xr is not None:
-                    #if self.state['autoPan'][ax]:
                     if self.autoPan()[ax]:
                         x = sum(xr) * 0.5
-                        w2 = (targetRect[ax][1]-targetRect[ax][0]) / 2.
-                        childRange[ax] = [x-w2, x+w2]
+                        w2 = (targetRect[ax][1] - targetRect[ax][0]) / 2.
+                        childRange[ax] = [x - w2, x + w2]
                     else:
                         padding = self.suggestPadding(ax)
                         wp = (xr[1] - xr[0]) * padding
@@ -963,14 +964,15 @@ class ViewBox(ViewBoxBase):
             args['padding'] = 0
             args['disableAutoRange'] = False
 
-             # check for and ignore bad ranges
-            for k in ['xRange', 'yRange']:
-                if k in args:
-                    if not np.all(np.isfinite(args[k])):
-                        r = args.pop(k)
-                        #print("Warning: %s is invalid: %s" % (k, str(r))
+            xRange = Range(args.get('xRange', (np.nan, np.nan)))
+            yRange = Range(args.get('yRange', (np.nan, np.nan)))
+            padding = 0
+            disableAutoRange = False
 
-            self.setRange(**args)
+            self.setRange(xRange=xRange, yRange=yRange, padding=padding, disableAutoRange=disableAutoRange)
+        except:
+            import traceback
+            traceback.print_exc()
         finally:
             self.setAutoRangeNeedsUpdate(False)
             self._updatingRange = False
@@ -1394,14 +1396,15 @@ class ViewBox(ViewBoxBase):
             children.extend(self.allChildren(ch))
         return children
     '''
-
-    def childrenBounds(self, frac=None, orthoRange=(None,None), items=None):
+    '''
+    def childrenBounds(self, frac=(1.0, 1.0), orthoRange=(None, None), items=tuple()):
         """Return the bounding range of all children.
         [[xmin, xmax], [ymin, ymax]]
         Values may be None if there are no specific bounds for an axis.
+        orthoRange is the orthogonal (perpendicular) range
         """
         profiler = debug.Profiler()
-        if items is None:
+        if len(items) == 0:
             items = self.addedItems()
 
         ## measure pixel dimensions in view box
@@ -1417,23 +1420,19 @@ class ViewBox(ViewBoxBase):
             useY = True
 
             if hasattr(item, 'dataBounds'):
-                #bounds = self._itemBoundsCache.get(item, None)
-                #if bounds is None:
                 if frac is None:
                     frac = (1.0, 1.0)
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                fn.isnan
-                #if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
                 if xr is None or not fn.isfinite(xr[0]) or not fn.isfinite(xr[1]):
                     useX = False
-                    xr = (0,0)
+                    xr = (0, 0)
                 if yr is None or not fn.isfinite(yr[0]) or not fn.isfinite(yr[1]):
                     useY = False
-                    yr = (0,0)
+                    yr = (0, 0)
 
-                bounds = QtCore.QRectF(xr[0], yr[0], xr[1]-xr[0], yr[1]-yr[0])
+                bounds = QtCore.QRectF(xr[0], yr[0], xr[1] - xr[0], yr[1] - yr[0])
                 bounds = self.mapFromItemToView(item, bounds).boundingRect()
 
                 if not any([useX, useY]):
@@ -1451,11 +1450,8 @@ class ViewBox(ViewBoxBase):
                         ## Not really sure what is the expected behavior in this case.
                         continue  ## need to check for item rotations and decide how best to apply this boundary.
 
-
                 itemBounds.append((bounds, useX, useY, pxPad))
-                    #self._itemBoundsCache[item] = (bounds, useX, useY)
-                #else:
-                    #bounds, useX, useY = bounds
+
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
                     continue
@@ -1463,8 +1459,6 @@ class ViewBox(ViewBoxBase):
                     bounds = item.boundingRect()
                 bounds = self.mapFromItemToView(item, bounds).boundingRect()
                 itemBounds.append((bounds, True, True, 0))
-
-        #print itemBounds
 
         ## determine tentative new range
         rng = [None, None]
@@ -1481,40 +1475,38 @@ class ViewBox(ViewBoxBase):
                     rng[0] = [bounds.left(), bounds.right()]
             profiler()
 
-        #print "range", range
-
         ## Now expand any bounds that have a pixel margin
         ## This must be done _after_ we have a good estimate of the new range
         ## to ensure that the pixel size is roughly accurate.
         w = self.width()
         h = self.height()
-        #print "w:", w, "h:", h
         if w > 0 and rng[0] is not None:
             pxSize = (rng[0][1] - rng[0][0]) / w
             for bounds, useX, useY, px in itemBounds:
                 if px == 0 or not useX:
                     continue
-                rng[0][0] = min(rng[0][0], bounds.left() - px*pxSize)
-                rng[0][1] = max(rng[0][1], bounds.right() + px*pxSize)
+                rng[0][0] = min(rng[0][0], bounds.left() - px * pxSize)
+                rng[0][1] = max(rng[0][1], bounds.right() + px * pxSize)
         if h > 0 and rng[1] is not None:
             pxSize = (rng[1][1] - rng[1][0]) / h
             for bounds, useX, useY, px in itemBounds:
                 if px == 0 or not useY:
                     continue
-                rng[1][0] = min(rng[1][0], bounds.top() - px*pxSize)
-                rng[1][1] = max(rng[1][1], bounds.bottom() + px*pxSize)
+                rng[1][0] = min(rng[1][0], bounds.top() - px * pxSize)
+                rng[1][1] = max(rng[1][1], bounds.bottom() + px * pxSize)
 
         return rng
+    '''
 
-    def childrenBoundingRect(self, *args, **kwds):
-        rng = self.childrenBounds(*args, **kwds)
+    def childrenBoundingRect(self, frac=Point(1.0, 1.0), orthoRange=(None, None), items=list()):
+        rng = self.childrenBounds(frac=frac, orthoRange=orthoRange, items=items)
         tr = self.targetRange()
         if rng[0] is None:
             rng[0] = tr[0]
         if rng[1] is None:
             rng[1] = tr[1]
 
-        bounds = QtCore.QRectF(rng[0][0], rng[1][0], rng[0][1]-rng[0][0], rng[1][1]-rng[1][0])
+        bounds = QtCore.QRectF(rng[0][0], rng[1][0], rng[0][1] - rng[0][0], rng[1][1] - rng[1][0])
         return bounds
 
     '''

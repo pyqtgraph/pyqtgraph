@@ -27,6 +27,8 @@ public:
 
     virtual Range dataBounds(const Axis ax, const double frac=1.0, const Range orthoRange=Range()) const;
 
+    virtual double pixelPadding() const;
+
 public slots:
 
     virtual void viewRangeChanged(const Range& xRange, const Range& yRange);

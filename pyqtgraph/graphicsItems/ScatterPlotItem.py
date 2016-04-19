@@ -14,6 +14,7 @@ from .. import getConfigOption
 from ..pgcollections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
+from ..QtNativeUtils import Range
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -644,9 +645,8 @@ class ScatterPlotItem(GraphicsObject):
         if frac >= 1.0 and orthoRange is None and self.bounds[ax] is not None:
             return self.bounds[ax]
 
-        #self.prepareGeometryChange()
         if self.data is None or len(self.data) == 0:
-            return (None, None)
+            return Range()
 
         if ax == 0:
             d = self.data['x']
@@ -655,23 +655,25 @@ class ScatterPlotItem(GraphicsObject):
             d = self.data['y']
             d2 = self.data['x']
 
-        if orthoRange is not None:
+        if fn.isfinite(orthoRange):
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
             d2 = d2[mask]
 
         if frac >= 1.0:
-            self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
+            b = (np.nanmin(d) - self._maxSpotWidth * 0.7072, np.nanmax(d) + self._maxSpotWidth * 0.7072)
+            self.bounds[ax] = Range(b)
             return self.bounds[ax]
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
             mask = np.isfinite(d)
             d = d[mask]
-            return np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+            b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
+            return Range(list(b))
 
     def pixelPadding(self):
-        return self._maxSpotPxWidth*0.7072
+        return self._maxSpotPxWidth * 0.7072
 
     def boundingRect(self):
         (xmn, xmx) = self.dataBounds(ax=0)

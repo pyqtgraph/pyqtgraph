@@ -28,7 +28,16 @@ QTransform GraphicsObject::sceneTransform() const
 
 Range GraphicsObject::dataBounds(const ExtendedItem::Axis ax, const double frac, const Range orthoRange) const
 {
-    return Range();  // Empty Range
+    QRectF br = boundingRect();
+    if(ax==XAxis)
+        return Range(br.left(), br.right());
+    else
+        return Range(br.bottom(), br.top());
+}
+
+double GraphicsObject::pixelPadding() const
+{
+    return 0.0;
 }
 
 

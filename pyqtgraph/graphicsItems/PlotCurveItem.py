@@ -12,6 +12,7 @@ from ..Point import Point
 import struct, sys
 from .. import getConfigOption
 from .. import debug
+from ..QtNativeUtils import Range
 
 __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
@@ -108,7 +109,7 @@ class PlotCurveItem(GraphicsObject):
 
         (x, y) = self.getData()
         if x is None or len(x) == 0:
-            return (None, None)
+            return Range()
 
         if ax == 0:
             d = x
@@ -118,13 +119,14 @@ class PlotCurveItem(GraphicsObject):
             d2 = x
 
         ## If an orthogonal range is specified, mask the data now
-        if orthoRange is not None:
+        orthoRange = Range(orthoRange)
+        if orthoRange.isValid():
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
             d = d[mask]
             #d2 = d2[mask]
 
         if len(d) == 0:
-            return (None, None)
+            return Range()
 
         ## Get min/max (or percentiles) of the requested data range
         if frac >= 1.0:
@@ -148,8 +150,10 @@ class PlotCurveItem(GraphicsObject):
         if spen is not None and not spen.isCosmetic() and spen.style() != QtCore.Qt.NoPen:
             b = (b[0] - spen.widthF()*0.7072, b[1] + spen.widthF()*0.7072)
 
-        self._boundsCache[ax] = [(frac, orthoRange), b]
-        return b
+        assert len(b) == 2
+
+        self._boundsCache[ax] = [(frac, orthoRange), Range(b)]
+        return Range(b)
 
     def pixelPadding(self):
         if self._pixelPadding is None:

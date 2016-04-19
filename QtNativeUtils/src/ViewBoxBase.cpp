@@ -1,5 +1,7 @@
 #include "ViewBoxBase.h"
 
+#include <vector>
+
 #include <QSizePolicy>
 #include <QDebug>
 
@@ -403,7 +405,7 @@ QTransform ViewBoxBase::childTransform() const
     return mChildGroup->transform();
 }
 
-const QList<QGraphicsItem *> &ViewBoxBase::addedItems() const
+QList<QGraphicsItem*> ViewBoxBase::addedItems() const
 {
     return mAddedItems;
 }
@@ -1034,6 +1036,149 @@ ViewBoxBase* ViewBoxBase::linkedView(const ViewBoxBase::Axis axis) const
     default:
         return nullptr;
     }
+}
+
+
+struct Bounds
+{
+    Bounds() {}
+    Bounds(const QRectF& r, const bool x, const bool y, const double p):
+        bounds(r), useX(x), useY(y), pxPad(p)
+    {}
+
+    QRectF bounds;
+    bool useX, useY;
+    double pxPad;
+};
+
+QVector<Range> ViewBoxBase::childrenBounds(const QPointF& frac, const Range &orthoRange, const QList<QGraphicsItem*>& items) const
+{
+    const int itemCount = items.size();
+    if(itemCount==0)
+    {
+        QVector<Range> rng {Range(0.0, 1.0), Range(0.0, 1.0)};
+        return rng;
+    }
+
+    std::vector<struct Bounds> itemBounds;
+    itemBounds.reserve(itemCount);
+
+    for(int i=0; i<itemCount; ++i)
+    {
+        QGraphicsItem* currItem = items[i];
+
+        bool useX = true;
+        bool useY = true;
+        GraphicsObject* goItem = qgraphicsitem_cast<GraphicsObject*>(currItem);
+        if(goItem!=nullptr)
+        {
+            Range xr = goItem->dataBounds(XAxis, frac.x(), orthoRange);
+            Range yr = goItem->dataBounds(YAxis, frac.x(), orthoRange);
+            const double pxPad = goItem->pixelPadding();
+            if(!xr.isValid())
+            {
+                xr.setRange(0.0, 0.0);
+                useX = false;
+            }
+            if(!yr.isValid())
+            {
+                yr.setRange(0.0, 0.0);
+                useY = false;
+            }
+
+            if(!useX && !useY)
+                continue;
+
+            // If we are ignoring only one axis, we need to check for rotations
+            if(useX!=useY)
+            {
+                const int ang = std::round(goItem->transformAngle());
+                if(ang==0 || ang==180)
+                {
+                    // nothing to do
+                }
+                else if(ang==90 || ang==270)
+                {
+                    bool tmp = useX;
+                    useX = useY;
+                    useY = tmp;
+                }
+                else
+                {
+                    // Item is rotated at non-orthogonal angle, ignore bounds entirely.
+                    // Not really sure what is the expected behavior in this case.
+                    // need to check for item rotations and decide how best to apply this boundary.
+                    continue;
+                }
+            }
+
+            QRectF bounds(xr.min(), yr.min(), xr.max()-xr.min(), yr.max()-yr.min());
+            bounds = mapFromItemToView(goItem, bounds).boundingRect();
+
+            itemBounds.emplace_back(bounds, useX, useY, pxPad);
+        }
+        else
+        {
+            if(currItem->flags() & ItemHasNoContents)
+                continue;
+
+            QRectF bounds = mapFromItemToView(goItem, currItem->boundingRect()).boundingRect();
+            itemBounds.emplace_back(bounds, true, true, 0.0);
+        }
+    }
+
+    // Determine tentative new range
+    const int boundCount = itemBounds.size();
+    Range xrange(std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity());
+    Range yrange(std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity());
+    for(int i=0; i<boundCount; ++i)
+    {
+        const struct Bounds& bounds = itemBounds[i];
+        if(bounds.useY)
+        {
+            yrange.setMin(std::min(yrange.min(), bounds.bounds.top()));
+            yrange.setMax(std::max(yrange.max(), bounds.bounds.bottom()));
+        }
+        if(bounds.useX)
+        {
+            xrange.setMin(std::min(xrange.min(), bounds.bounds.left()));
+            xrange.setMax(std::max(xrange.max(), bounds.bounds.right()));
+        }
+    }
+
+
+    // Now expand any bounds that have a pixel margin
+    // This must be done _after_ we have a good estimate of the new range
+    // to ensure that the pixel size is roughly accurate.
+    const double w = width();
+    const double h = height();
+    if(w>0 && xrange.isValid())
+    {
+        const double pxSize = (xrange.max() - xrange.min()) / w;
+        for(int i=0; i<boundCount; ++i)
+        {
+            const struct Bounds& bounds = itemBounds[i];
+            if(!bounds.useX || bounds.pxPad==0.0)
+                continue;
+            xrange.setMin(std::min(xrange.min(), bounds.bounds.left()-bounds.pxPad*pxSize));
+            xrange.setMax(std::max(xrange.max(), bounds.bounds.right()+bounds.pxPad*pxSize));
+        }
+    }
+    if(h>0 && yrange.isValid())
+    {
+        const double pxSize = (yrange.max() - yrange.min()) / h;
+        for(int i=0; i<boundCount; ++i)
+        {
+            const struct Bounds& bounds = itemBounds[i];
+            if(!bounds.useY || bounds.pxPad==0.0)
+                continue;
+            yrange.setMin(std::min(yrange.min(), bounds.bounds.top()-bounds.pxPad*pxSize));
+            yrange.setMax(std::max(yrange.max(), bounds.bounds.bottom()+bounds.pxPad*pxSize));
+        }
+    }
+
+    QVector<Range> rng {xrange, yrange};
+    return rng;
 }
 
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)

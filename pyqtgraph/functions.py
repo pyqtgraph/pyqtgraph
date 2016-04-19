@@ -15,6 +15,7 @@ from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
 from . import getConfigOption, setConfigOptions
 from . import debug
+from .QtNativeUtils import Point, Range
 
 
 
@@ -45,6 +46,8 @@ def isnan(val):
 def isfinite(val):
     if val is None:
         return False
+    if type(val) in [tuple, list, Point, Range]:
+        return isfinite(val[0]) and isfinite(val[1])
     return np.isfinite(val)
 
 
