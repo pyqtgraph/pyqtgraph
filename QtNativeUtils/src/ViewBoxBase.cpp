@@ -754,6 +754,70 @@ void ViewBoxBase::linkedYChanged()
         linkedViewChanged(view, YAxis);
 }
 
+void ViewBoxBase::updateAutoRange()
+{
+    if(mUpdatingRange)
+        return;
+
+    mUpdatingRange = true;
+
+    const QPointF fractionVisible(1.0, 1.0);
+
+    int order[] {0, 1};
+    if(mAutoVisibleOnly[0])
+    {
+        order[0] = 1;
+        order[1] = 0;
+    }
+
+    QVector<Range> childRange;
+
+    QVector<Range> targetRect = QVector<Range>::fromList(mViewRange);
+
+    for(int i=0; i<2; ++i)
+    {
+        int ax = order[i];
+        if(mAutoRangeEnabled[ax]==false)
+            continue;
+
+        if(mAutoVisibleOnly[ax])
+        {
+            Range oRange = targetRect[1-ax];
+            //oRange[ax] = targetRect[1-ax];
+            childRange = childrenBounds(fractionVisible, oRange);
+        }
+        else if(childRange.isEmpty())
+        {
+            childRange = childrenBounds(fractionVisible);
+        }
+
+        // Make corrections to range
+        Range xr = childRange[ax];
+        if(xr.isValid())
+        {
+            if(mAutoPan[ax])
+            {
+                const double x = (xr.min() + xr.max()) * 0.5;
+                const double w2 = (targetRect[ax].max() - targetRect[ax].min()) / 2.0;
+                childRange[ax].setRange(x-w2, x+w2);
+            }
+            else
+            {
+                const double pad = suggestPadding(ax==0 ? XAxis : YAxis);
+                const double wp = (xr.max() - xr.min()) * pad;
+                xr.setMin(xr.min()-wp);
+                xr.setMax(xr.max()+wp);
+                childRange[ax] = xr;
+            }
+            targetRect[ax] = childRange[ax];
+        }
+    }
+
+    setRange(targetRect[0], targetRect[1], 0.0, false);
+    setAutoRangeNeedsUpdate(false);
+    mUpdatingRange = false;
+}
+
 
 void ViewBoxBase::setViewRange(const Range& x, const Range& y)
 {
@@ -1201,6 +1265,11 @@ void ViewBoxBase::autoRange(const QList<QGraphicsItem *>& items, const double pa
 {
     QRectF bounds = childrenBoundingRect(QPointF(1.0, 1.0), Range(), items);
     setRange(bounds, padding);
+}
+
+void ViewBoxBase::disableAutoRange(const ExtendedItem::Axis ax)
+{
+    enableAutoRange(ax, false);
 }
 
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)

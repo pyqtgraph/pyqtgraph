@@ -873,12 +873,13 @@ class ViewBox(ViewBoxBase):
 
         self.sigStateChanged.emit(self)
     '''
-
+    '''
     def disableAutoRange(self, axis=None):
         """Disables auto-range. (See enableAutoRange)"""
         if axis is None:
             axis = ViewBox.XYAxes
         self.enableAutoRange(axis, enable=False)
+    '''
 
     #def autoRangeEnabled(self):
     #    return self.state['autoRange'][:]
@@ -903,7 +904,7 @@ class ViewBox(ViewBoxBase):
     #
     #    if x is not None or y is not None:
     #        self.updateAutoRange()
-
+    '''
     def updateAutoRange(self):
         ## Break recursive loops when auto-ranging.
         ## This is needed because some items change their size in response
@@ -976,6 +977,7 @@ class ViewBox(ViewBoxBase):
         finally:
             self.setAutoRangeNeedsUpdate(False)
             self._updatingRange = False
+    '''
 
     '''
     def setXLink(self, view):

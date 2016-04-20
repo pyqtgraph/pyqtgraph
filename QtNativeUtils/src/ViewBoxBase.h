@@ -86,9 +86,8 @@ public:
         return Type;
     }
 
-    virtual void updateViewRange(const bool forceX=false, const bool forceY=false);
-    virtual void updateAutoRange() {}
-    virtual void updateMatrix();
+    void updateViewRange(const bool forceX=false, const bool forceY=false);
+    void updateMatrix();
 
     virtual void itemBoundsChanged(QGraphicsItem* item);
 
@@ -295,6 +294,8 @@ public:
     void autoRange(const double padding=AutoPadding);
     void autoRange(const QList<QGraphicsItem*>& items, const double padding=AutoPadding);
 
+    void disableAutoRange(const Axis ax=XYAxes);
+
 public slots:
 
     void prepareForPaint();
@@ -307,6 +308,8 @@ public slots:
 
     void linkedXChanged();
     void linkedYChanged();
+
+    void updateAutoRange();
 
 protected:
 
