@@ -671,7 +671,7 @@ class ImageView(QtGui.QWidget):
             if len(xv) < 2:
                 return (0,0)
             totTime = xv[-1] + (xv[-1]-xv[-2])
-            inds = np.argwhere(xv < t)
+            inds = np.argwhere(xv <= t)
             if len(inds) < 1:
                 return (0,t)
             ind = inds[-1,0]
