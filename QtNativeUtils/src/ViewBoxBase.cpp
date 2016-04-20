@@ -1192,6 +1192,17 @@ QRectF ViewBoxBase::childrenBoundingRect(const QPointF &frac, const Range &ortho
     return QRectF(rng[0].min(), rng[1].min(), rng[0].max() - rng[0].min(), rng[1].max() - rng[1].min());
 }
 
+void ViewBoxBase::autoRange(const double padding)
+{
+    autoRange(mAddedItems, padding);
+}
+
+void ViewBoxBase::autoRange(const QList<QGraphicsItem *>& items, const double padding)
+{
+    QRectF bounds = childrenBoundingRect(QPointF(1.0, 1.0), Range(), items);
+    setRange(bounds, padding);
+}
+
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {
     linkedWheelEvent(event, XYAxes);

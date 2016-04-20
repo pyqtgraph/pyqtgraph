@@ -632,8 +632,8 @@ class ViewBox(ViewBoxBase):
         """
         self.setRange(xRange=[min, max], update=update, padding=padding)
     '''
-
-    def autoRange(self, padding=None, items=list(), item=None):
+    '''
+    def autoRange(self, padding=np.nan, items=list(), item=None):
         """
         Set the range of the view box to make all children visible.
         Note that this is not the same as enableAutoRange, which causes the view to
@@ -656,7 +656,7 @@ class ViewBox(ViewBoxBase):
 
         if bounds is not None:
             self.setRange(bounds, padding=padding)
-
+    '''
     '''
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()

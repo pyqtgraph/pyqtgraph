@@ -292,6 +292,9 @@ public:
     QRectF childrenBoundingRect(const QPointF& frac) const { return childrenBoundingRect(frac, Range(), mAddedItems); }
     QRectF childrenBoundingRect() const { return childrenBoundingRect(QPointF(1.0, 1.0), Range(), mAddedItems); }
 
+    void autoRange(const double padding=AutoPadding);
+    void autoRange(const QList<QGraphicsItem*>& items, const double padding=AutoPadding);
+
 public slots:
 
     void prepareForPaint();

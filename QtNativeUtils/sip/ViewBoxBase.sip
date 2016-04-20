@@ -542,6 +542,9 @@ public:
         sipRes = new QRectF(rect);
     %End
 
+    void autoRange(const double padding=ViewBoxBase::AutoPadding);
+    void autoRange(const QList<QGraphicsItem*>& items, const double padding=ViewBoxBase::AutoPadding);
+
 public slots:
 
     void prepareForPaint();
