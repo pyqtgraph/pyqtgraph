@@ -1181,6 +1181,17 @@ QVector<Range> ViewBoxBase::childrenBounds(const QPointF& frac, const Range &ort
     return rng;
 }
 
+QRectF ViewBoxBase::childrenBoundingRect(const QPointF &frac, const Range &orthoRange, const QList<QGraphicsItem *> &items) const
+{
+    QVector<Range> rng = childrenBounds(frac, orthoRange, items);
+    if(!rng[0].isValid())
+        rng[0] = Range(mTargetRange[0]);
+    if(!rng[1].isValid())
+        rng[1] = Range(mTargetRange[1]);
+
+    return QRectF(rng[0].min(), rng[1].min(), rng[0].max() - rng[0].min(), rng[1].max() - rng[1].min());
+}
+
 void ViewBoxBase::wheelEvent(QGraphicsSceneWheelEvent* event)
 {
     linkedWheelEvent(event, XYAxes);

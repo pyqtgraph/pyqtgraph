@@ -633,7 +633,7 @@ class ViewBox(ViewBoxBase):
         self.setRange(xRange=[min, max], update=update, padding=padding)
     '''
 
-    def autoRange(self, padding=None, items=None, item=None):
+    def autoRange(self, padding=None, items=list(), item=None):
         """
         Set the range of the view box to make all children visible.
         Note that this is not the same as enableAutoRange, which causes the view to
@@ -1498,6 +1498,7 @@ class ViewBox(ViewBoxBase):
         return rng
     '''
 
+    '''
     def childrenBoundingRect(self, frac=Point(1.0, 1.0), orthoRange=(None, None), items=list()):
         rng = self.childrenBounds(frac=frac, orthoRange=orthoRange, items=items)
         tr = self.targetRange()
@@ -1508,6 +1509,7 @@ class ViewBox(ViewBoxBase):
 
         bounds = QtCore.QRectF(rng[0][0], rng[1][0], rng[0][1] - rng[0][0], rng[1][1] - rng[1][0])
         return bounds
+    '''
 
     '''
     def updateViewRange(self, forceX=False, forceY=False):

@@ -287,6 +287,11 @@ public:
     QVector<Range> childrenBounds(const QPointF& frac) const { return childrenBounds(frac, Range(), mAddedItems); }
     QVector<Range> childrenBounds() const { return childrenBounds(QPointF(1.0, 1.0), Range(), mAddedItems); }
 
+    QRectF childrenBoundingRect(const QPointF& frac, const Range& orthoRange, const QList<QGraphicsItem*>& items) const;
+    QRectF childrenBoundingRect(const QPointF& frac, const Range& orthoRange) const { return childrenBoundingRect(frac, orthoRange, mAddedItems); }
+    QRectF childrenBoundingRect(const QPointF& frac) const { return childrenBoundingRect(frac, Range(), mAddedItems); }
+    QRectF childrenBoundingRect() const { return childrenBoundingRect(QPointF(1.0, 1.0), Range(), mAddedItems); }
+
 public slots:
 
     void prepareForPaint();

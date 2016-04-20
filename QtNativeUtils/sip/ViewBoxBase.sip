@@ -522,40 +522,6 @@ public:
 
     ViewBoxBase* linkedView(const Axis axis) const;
 
-    /*
-    //QVector<Range> childrenBounds(const QPointF& frac, const Range& orthoRange, const QList<QGraphicsItem*>& items) const;
-    SIP_PYLIST childrenBounds(SIP_PYOBJECT frac=nullptr, SIP_PYOBJECT orthoRange=nullptr, SIP_PYLIST items=nullptr) const [QVector<Range>(const QPointF& frac, const Range& orthoRange, const QList<QGraphicsItem*>& items) const];
-    %MethodCode
-
-    %End
-    */
-
-    /*
-    SIP_PYLIST childrenBounds(const QPointF& frac, const Range& orthoRange, const QList<QGraphicsItem*>& items) const;
-    %MethodCode
-        QVector<Range> rng = sipCpp->childrenBounds(*a0, *a1, *a2);
-        sipRes = Py_BuildValue("[[dd],[dd]]", rng[0].min(), rng[0].max(), rng[1].min(), rng[1].max());
-    %End
-
-    SIP_PYLIST childrenBounds(const QPointF& frac, const Range& orthoRange) const;
-    %MethodCode
-        QVector<Range> rng = sipCpp->childrenBounds(*a0, *a1);
-        sipRes = Py_BuildValue("[[dd],[dd]]", rng[0].min(), rng[0].max(), rng[1].min(), rng[1].max());
-    %End
-
-    SIP_PYLIST childrenBounds(const QPointF& frac) const;
-    %MethodCode
-        QVector<Range> rng = sipCpp->childrenBounds(*a0);
-        sipRes = Py_BuildValue("[[dd],[dd]]", rng[0].min(), rng[0].max(), rng[1].min(), rng[1].max());
-    %End
-
-    SIP_PYLIST childrenBounds() const;
-    %MethodCode
-        QVector<Range> rng = sipCpp->childrenBounds();
-        sipRes = Py_BuildValue("[[dd],[dd]]", rng[0].min(), rng[0].max(), rng[1].min(), rng[1].max());
-    %End
-    */
-
     SIP_PYLIST childrenBounds(const QPointF& frac=QPointF(1.0,1.0), const Range& orthoRange=Range(), const QList<QGraphicsItem*>& items=QList<QGraphicsItem*>()) const;
     %MethodCode
         QVector<Range> rng;
@@ -564,6 +530,16 @@ public:
         else
             rng = sipCpp->childrenBounds(*a0, *a1, *a2);
         sipRes = Py_BuildValue("[[dd],[dd]]", rng[0].min(), rng[0].max(), rng[1].min(), rng[1].max());
+    %End
+
+    QRectF childrenBoundingRect(const QPointF& frac=QPointF(1.0,1.0), const Range& orthoRange=Range(), const QList<QGraphicsItem*>& items=QList<QGraphicsItem*>()) const;
+    %MethodCode
+        QRectF rect;
+        if(a2->size()==0)
+            rect = sipCpp->childrenBoundingRect(*a0, *a1);
+        else
+            rect = sipCpp->childrenBoundingRect(*a0, *a1, *a2);
+        sipRes = new QRectF(rect);
     %End
 
 public slots:

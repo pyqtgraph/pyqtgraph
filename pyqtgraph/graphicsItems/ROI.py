@@ -2023,7 +2023,7 @@ class LineSegmentROI(ROI):
     
         h1 = self.handles[0]['item'].pos()
         h2 = self.handles[1]['item'].pos()
-        dh = h2-h1
+        dh = Point(h2-h1)
         if dh.length() == 0:
             return p
         pxv = self.pixelVectors(dh)[1]
