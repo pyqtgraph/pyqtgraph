@@ -13,6 +13,11 @@
 
 #include "GraphicsObject.h"
 
+/*!
+ * \brief The ItemGroup class
+ *
+ * Replacement for QGraphicsItemGroup
+ */
 class ItemGroup: public GraphicsObject
 {
     Q_OBJECT

@@ -7,6 +7,12 @@
 #include "ItemGroup.h"
 #include "Interfaces.h"
 
+/*!
+ * \brief The ChildGroup class
+ *
+ * Used as callback to inform ViewBox when items are added/removed from
+ * the group.
+ */
 class ChildGroup : public ItemGroup
 {
     Q_OBJECT

@@ -62,6 +62,21 @@ protected:
 
 
 
+/*!
+ * \brief The ViewBoxBase class
+ *
+ * Box that allows internal scaling/panning of children by mouse drag.
+ * This class is usually created automatically as part of a
+ * :class:`PlotItem <pyqtgraph.PlotItem>` or :class:`Canvas <pyqtgraph.canvas.Canvas>`
+ * or with :func:`GraphicsLayout.addViewBox() <pyqtgraph.GraphicsLayout.addViewBox>`.
+ *
+ * Features:
+ *
+ * - Scaling contents by mouse or auto-scale when contents change
+ * - View linking--multiple views display the same data ranges
+ * - Configurable by context menu
+ * - Item coordinate mapping methods
+ */
 class ViewBoxBase: public GraphicsWidget, public ItemChangedListener
 {
     Q_OBJECT
@@ -73,9 +88,20 @@ public:
         RectMode = 1
     };
 
+    /*!
+     * \brief ViewBoxBase
+     *
+     * \param parent Optional parent widget
+     * \param wFlags
+     * \param border Draw a border around the view
+     * \param lockAspect The aspect ratio to lock the view coorinates to or 0.0 to allow the ratio to change
+     * \param invertX Invert x axis
+     * \param invertY Invert y axis
+     * \param enableMouse Whether mouse can be used to scale/pan the view
+     */
     ViewBoxBase(QGraphicsItem* parent=nullptr, Qt::WindowFlags wFlags=0, const QPen& border=QPen(Qt::NoPen),
-                const double lockAspect=0.0,
-                const bool invertX=false, const bool invertY=false, const bool enableMouse=true);
+                const double lockAspect=0.0,const bool invertX=false, const bool invertY=false,
+                const bool enableMouse=true);
     virtual ~ViewBoxBase() {}
 
     enum { Type = CustomItemTypes::TypeViewBox };
@@ -122,9 +148,31 @@ public:
     void setAspectLocked(const bool lock=true, const double ratio=1.0);
 
     const QVector<bool>& mouseEnabled() const { return mMouseEnabled; }
+
+    /*!
+     * \brief Set whether each axis is enabled for mouse interaction
+     *
+     * This allows the user to pan/scale one axis of the view while leaving the other axis unchanged.
+     *
+     * \param enabledOnX true to eneble mouse interacion on x axis
+     * \param enabledOnY true to eneble mouse interacion on y axis
+     */
     void setMouseEnabled(const bool enabledOnX=true, const bool enabledOnY=true);
 
+    /*!
+     * \brief Bounding of the region visible within the ViewBox
+     * \return The bounding of the region visible within the ViewBox
+     */
     virtual QRectF viewRect() const;
+
+    /*!
+     * \brief Region which has been requested to be visible.
+     *
+     * This is not necessarily the same as the region that is *actually* visible.
+     * Resizing and aspect ratio constraints can cause targetRect() and viewRect() to differ.
+     *
+     * \return The regiorn that hsa to be visible
+     */
     QRectF targetRect() const;
 
     GraphicsObject* innerSceneItem() const;
@@ -138,8 +186,21 @@ public:
 
     QList<QGraphicsItem*> addedItems() const;
 
+    /*!
+     * \brief Add a QGraphicsItem to this view.
+     *
+     *  The view will include this item when determining how to set its range
+     *  automatically unless ignoreBounds is True.
+     *
+     * \param item Item to add to teh view
+     * \param ignoreBounds true to ignore the bounds of the item during autoscaling
+     */
     void addItem(QGraphicsItem* item, const bool ignoreBounds=false);
 
+    /*!
+     * \brief Remove an item from this view.
+     * \param item Item to remove
+     */
     void removeItem(QGraphicsItem* item);
 
     void clear();
@@ -215,10 +276,48 @@ public:
 
     QRectF itemBoundingRect(const QGraphicsItem* item) const;
 
+    /*!
+     * \brief Set the visible range of the ViewBox.
+     *
+     *
+     * \param xRange The range that should be visible along the x-axis
+     * \param yRange The range that should be visible along the y-axis
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     * \param disableAutoRange If True, auto-ranging is disabled. Otherwise, it is left unchanged
+     */
     void setRange(const Range& xRange=Range(), const Range& yRange=Range(), const double padding=AutoPadding, const bool disableAutoRange=true);
+
+    /*!
+     * \brief Set the visible range of the ViewBox.
+     *
+     * \param rect The full range that should be visible in the view box.
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     * \param disableAutoRange If True, auto-ranging is disabled. Otherwise, it is left unchanged
+     */
     void setRange(const QRectF& rect, const double padding=AutoPadding, const bool disableAutoRange=true);
 
+    /*!
+     * \brief Set the visible X range of the view to [*min*, *max*].
+     * \param minR Minimum value of the range
+     * \param maxR Maximum value of the range
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     */
     void setXRange(const double minR, const double maxR, const double padding=AutoPadding);
+
+    /*!
+     * \brief Set the visible Y range of the view to [*min*, *max*].
+     * \param minR Minimum value of the range
+     * \param maxR Maximum value of the range
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     */
     void setYRange(const double minR, const double maxR, const double padding=AutoPadding);
 
     void scaleBy(const QPointF& s, const QPointF& center);
@@ -230,16 +329,56 @@ public:
     void translateBy(const QPointF& t);
     void translateBy(const double x, const double y) { translateBy(QPointF(x, y)); }
 
+    /*!
+     * \brief Set the padding limits that constrain the possible view ranges.
+     * \param xMin Minumum value in the x range
+     * \param xMax Maximum value in the x range
+     */
     void setXLimits(const double xMin, const double xMax) { mLimits.setXLimits(xMin, xMax); }
+
+    /*!
+     * \brief Set the padding limits that constrain the possible view ranges.
+     * \param rng Allowed X range
+     */
     void setXLimits(const Range& rng) { mLimits.setXLimits(rng.min(), rng.max()); }
 
+    /*!
+     * \brief Set the padding limits that constrain the possible view ranges.
+     * \param yMin Minumum value in the y range
+     * \param yMax Maximum value in the y range
+     */
     void setYLimits(const double yMin, const double yMax) { mLimits.setYLimits(yMin, yMax); }
+
+    /*!
+     * \brief Set the padding limits that constrain the possible view ranges.
+     * \param rng Allowed Y range
+     */
     void setYLimits(const Range& rng) { mLimits.setYLimits(rng.min(), rng.max()); }
 
+    /*!
+     * \brief Set the scaling limits that constrain the possible view ranges.
+     * \param xMin Minimum allowed left-to-right span across the view.
+     * \param xMax Maximum allowed left-to-right span across the view.
+     */
     void setXRangeLimits(const double xMin, const double xMax) { mLimits.setXRange(xMin, xMax); }
+
+    /*!
+     * \brief Set the scaling limits that constrain the possible view ranges.
+     * \param rng Range allowed left-to-right span across the view.
+     */
     void setXRangeLimits(const Range& rng) { mLimits.setXRange(rng.min(), rng.max()); }
 
+    /*!
+     * \brief Set the scaling limits that constrain the possible view ranges.
+     * \param yMin Minimum allowed top-to-bottom span across the view.
+     * \param yMax Maximum allowed top-to-bottom span across the view.
+     */
     void setYRangeLimits(const double yMin, const double yMax) { mLimits.setYRange(yMin, yMax); }
+
+    /*!
+     * \brief Set the scaling limits that constrain the possible view ranges.
+     * \param rng Range allowed left-to-right span across the view.
+     */
     void setYRangeLimits(const Range& rng) { mLimits.setYRange(rng.min(), rng.max()); }
 
     Range xLimits() const { return mLimits.xLimits(); }
@@ -249,6 +388,17 @@ public:
     Range yRangeLimits() const { return mLimits.yRange(); }
 
     MouseMode mouseMode() const { return mMouseMode; }
+
+    /*!
+     * \brief Set the mouse behavior for zooming an panning
+     *
+     * Set the mouse interaction mode. *mode* must be either ViewBox::PanMode or ViewBox::RectMode.
+     * In PanMode, the left mouse button pans the view and the right button scales.
+     * In RectMode, the left button draws a rectangle which updates the visible region
+     * (this mode is more suitable for single-button mice)
+     *
+     * \param mode Mouse mode for zooming and panning
+     */
     void setMouseMode(const MouseMode mode);
 
     void setWheelScaleFactor(const double factor) { mWheelScaleFactor = factor; }
@@ -291,7 +441,29 @@ public:
     QRectF childrenBoundingRect(const QPointF& frac) const { return childrenBoundingRect(frac, Range(), mAddedItems); }
     QRectF childrenBoundingRect() const { return childrenBoundingRect(QPointF(1.0, 1.0), Range(), mAddedItems); }
 
+    /*!
+     * \brief Set the range of the view box to make all children visible.
+     *
+     * Note that this is not the same as enableAutoRange, which causes the view to
+     * automatically auto-range whenever its contents are changed.
+     *
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     */
     void autoRange(const double padding=AutoPadding);
+
+    /*!
+     * \brief Set the range of the view box to make all children visible.
+     *
+     * Note that this is not the same as enableAutoRange, which causes the view to
+     * automatically auto-range whenever its contents are changed.
+     *
+     * \param items List of items to consider when determining the visible range.
+     * \param padding Expand the view by a fraction of the requested range.
+     *                By default (AutoPadding), this value is set between 0.02 and 0.1 depending on
+     *                the size of the ViewBox.
+     */
     void autoRange(const QList<QGraphicsItem*>& items, const double padding=AutoPadding);
 
     void disableAutoRange(const Axis ax=XYAxes);
@@ -317,6 +489,12 @@ protected:
     void setTargetRange(const Range& x, const Range& y);
     void setAutoRangeEnabled(const bool enableX, const bool enableY);
 
+    /*!
+     * \brief Reset target range to exactly match current view range.
+     *
+     * This is used during mouse interaction to prevent unpredictable
+     * behavior (because the user is unaware of targetRange).
+     */
     void _resetTarget();
 
     void setInnerSceneItem(GraphicsObject* innerItem);
