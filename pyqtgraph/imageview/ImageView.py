@@ -373,6 +373,7 @@ class ImageView(QtGui.QWidget):
         self.scene.clear()
         del self.image
         del self.imageDisp
+        super(ImageView, self).close()
         self.setParent(None)
         
     def keyPressEvent(self, ev):
