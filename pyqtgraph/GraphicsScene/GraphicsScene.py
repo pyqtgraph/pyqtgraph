@@ -192,6 +192,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if len(self.dragButtons) > 0:
                         if self.sendDragEvent(ev, init=init):
                             ev.accept()
+
+        else:
+            QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+            # if you do not accept event then cursor will disappear
+            ev.accept()
                 
     def leaveEvent(self, ev):  ## inform items that mouse is gone
         if len(self.dragButtons) == 0:
