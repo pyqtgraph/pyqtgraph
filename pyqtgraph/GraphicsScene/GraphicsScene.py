@@ -6,6 +6,7 @@ from .. import functions as fn
 from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
+from pyqtgraph import getConfigOption
 import time
 get_millis = lambda: int(round(time.time() * 1000))
 
@@ -85,8 +86,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         """
         if HAVE_SIP and isinstance(obj, sip.wrapper):
             cls._addressCache[sip.unwrapinstance(sip.cast(obj, QtGui.QGraphicsItem))] = obj
-            
-            
+
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
@@ -159,8 +159,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
     def mouseMoveEvent(self, ev):
         cur_move_event_time = get_millis()
+        delay = getConfigOption('millisecondsBetweenUpdates')
         # ignore high frequency events
-        if cur_move_event_time - self._last_move_event_time > 15:
+        if cur_move_event_time - self._last_move_event_time > delay:
             self._last_move_event_time = cur_move_event_time
 
             self.sigMouseMoved.emit(ev.scenePos())
@@ -195,7 +196,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
         else:
             QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-            # if you do not accept event then cursor will disappear
+            # if you do not accept event (which is ignored) then cursor will disappear
             ev.accept()
                 
     def leaveEvent(self, ev):  ## inform items that mouse is gone
