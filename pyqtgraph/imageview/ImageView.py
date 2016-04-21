@@ -712,7 +712,7 @@ class ImageView(QtGui.QWidget):
             self.imageItem.save(fileName)
             
     def exportClicked(self):
-        fileName = QtGui.QFileDialog.getSaveFileName()
+        fileName = str(QtGui.QFileDialog.getSaveFileName())
         if fileName == '':
             return
         self.export(fileName)
