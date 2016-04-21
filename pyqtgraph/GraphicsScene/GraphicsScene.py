@@ -161,7 +161,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         cur_move_event_time = get_millis()
         delay = getConfigOption('millisecondsBetweenUpdates')
         # ignore high frequency events
-        if cur_move_event_time - self._last_move_event_time > delay:
+        if cur_move_event_time - self._last_move_event_time >= delay:
             self._last_move_event_time = cur_move_event_time
 
             self.sigMouseMoved.emit(ev.scenePos())
