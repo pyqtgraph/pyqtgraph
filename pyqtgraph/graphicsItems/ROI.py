@@ -2018,7 +2018,7 @@ class LineSegmentROI(ROI):
         p1 = state['points'][0]
         p2 = state['points'][1]
         self.movePoint(self.handles[0], p1)
-        self.movePoint(self.handles[0], p2)
+        self.movePoint(self.handles[1], p2)
 
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
