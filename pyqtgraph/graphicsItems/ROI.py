@@ -1897,7 +1897,9 @@ class PolyLineROI(ROI):
             return
         segments = handle.rois[:]
         
-        if len(segments) == 1:
+        if len(segments) == 0:
+            return
+        elif len(segments) == 1:
             self.removeSegment(segments[0])
         else:
             handles = [h['item'] for h in segments[1].handles]
