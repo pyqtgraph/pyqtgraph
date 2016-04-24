@@ -47,59 +47,53 @@ def test_InfiniteLine():
     
 
 def test_mouseInteraction():
-    moveEventDelay = pg.getConfigOption('millisecondsBetweenUpdates')
-    # setup delay of mouse move events to 0 because
+    # disable delay of mouse move events because
     # events is called immediately in test.
-    pg.setConfigOption('millisecondsBetweenUpdates', 0)
+    pg.setConfigOption('mouseRateLimit', -1)
 
-    try:
-        plt = pg.plot()
-        plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
-        vline = plt.addLine(x=0, movable=True)
-        plt.addItem(vline)
-        hline = plt.addLine(y=0, movable=True)
-        hline2 = plt.addLine(y=-1, movable=False)
-        plt.setXRange(-10, 10)
-        plt.setYRange(-10, 10)
+    plt = pg.plot()
+    plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
+    vline = plt.addLine(x=0, movable=True)
+    plt.addItem(vline)
+    hline = plt.addLine(y=0, movable=True)
+    hline2 = plt.addLine(y=-1, movable=False)
+    plt.setXRange(-10, 10)
+    plt.setYRange(-10, 10)
 
-        # test horizontal drag
-        pos = plt.plotItem.vb.mapViewToScene(pg.Point(0,5)).toPoint()
-        pos2 = pos - QtCore.QPoint(200, 200)
-        mouseMove(plt, pos)
-        assert vline.mouseHovering is True and hline.mouseHovering is False
-        mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
-        px = vline.pixelLength(pg.Point(1, 0), ortho=True)
-        assert abs(vline.value() - plt.plotItem.vb.mapSceneToView(pos2).x()) <= px
+    # test horizontal drag
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(0,5)).toPoint()
+    pos2 = pos - QtCore.QPoint(200, 200)
+    mouseMove(plt, pos)
+    assert vline.mouseHovering is True and hline.mouseHovering is False
+    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    px = vline.pixelLength(pg.Point(1, 0), ortho=True)
+    assert abs(vline.value() - plt.plotItem.vb.mapSceneToView(pos2).x()) <= px
 
-        # test missed drag
-        pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
-        pos = pos + QtCore.QPoint(0, 6)
-        pos2 = pos + QtCore.QPoint(-20, -20)
-        mouseMove(plt, pos)
-        assert vline.mouseHovering is False and hline.mouseHovering is False
-        mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
-        assert hline.value() == 0
+    # test missed drag
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
+    pos = pos + QtCore.QPoint(0, 6)
+    pos2 = pos + QtCore.QPoint(-20, -20)
+    mouseMove(plt, pos)
+    assert vline.mouseHovering is False and hline.mouseHovering is False
+    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    assert hline.value() == 0
 
-        # test vertical drag
-        pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
-        pos2 = pos - QtCore.QPoint(50, 50)
-        mouseMove(plt, pos)
-        assert vline.mouseHovering is False and hline.mouseHovering is True
-        mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
-        px = hline.pixelLength(pg.Point(1, 0), ortho=True)
-        assert abs(hline.value() - plt.plotItem.vb.mapSceneToView(pos2).y()) <= px
+    # test vertical drag
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
+    pos2 = pos - QtCore.QPoint(50, 50)
+    mouseMove(plt, pos)
+    assert vline.mouseHovering is False and hline.mouseHovering is True
+    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    px = hline.pixelLength(pg.Point(1, 0), ortho=True)
+    assert abs(hline.value() - plt.plotItem.vb.mapSceneToView(pos2).y()) <= px
 
-        # test non-interactive line
-        pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,-1)).toPoint()
-        pos2 = pos - QtCore.QPoint(50, 50)
-        mouseMove(plt, pos)
-        assert hline2.mouseHovering == False
-        mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
-        assert hline2.value() == -1
-
-    finally:
-        # restore delay of mouse move events
-        pg.setConfigOption('millisecondsBetweenUpdates', moveEventDelay)
+    # test non-interactive line
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,-1)).toPoint()
+    pos2 = pos - QtCore.QPoint(50, 50)
+    mouseMove(plt, pos)
+    assert hline2.mouseHovering == False
+    mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
+    assert hline2.value() == -1
 
 
 if __name__ == '__main__':
