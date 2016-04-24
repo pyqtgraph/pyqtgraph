@@ -47,7 +47,7 @@ def test_InfiniteLine():
     
 
 def test_mouseInteraction():
-    move_event_delay = pg.getConfigOption('millisecondsBetweenUpdates')
+    moveEventDelay = pg.getConfigOption('millisecondsBetweenUpdates')
     # setup delay of mouse move events to 0 because
     # events is called immediately in test.
     pg.setConfigOption('millisecondsBetweenUpdates', 0)
@@ -99,7 +99,7 @@ def test_mouseInteraction():
 
     finally:
         # restore delay of mouse move events
-        pg.setConfigOption('millisecondsBetweenUpdates', move_event_delay)
+        pg.setConfigOption('millisecondsBetweenUpdates', moveEventDelay)
 
 
 if __name__ == '__main__':

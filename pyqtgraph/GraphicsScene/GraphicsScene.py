@@ -8,7 +8,7 @@ from .mouseEvents import *
 from .. import debug as debug
 from pyqtgraph import getConfigOption
 import time
-get_millis = lambda: int(round(time.time() * 1000))
+getMillis = lambda: int(round(time.time() * 1000))
 
 
 if hasattr(QtCore, 'PYQT_VERSION'):
@@ -107,7 +107,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         
         self.exportDialog = None
 
-        self._last_move_event_time = 0
+        self._lastMoveEventTime = 0
 
     def render(self, *args):
         self.prepareForPaint()
@@ -158,11 +158,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     break
         
     def mouseMoveEvent(self, ev):
-        cur_move_event_time = get_millis()
+        curMoveEventTime = getMillis()
         delay = getConfigOption('millisecondsBetweenUpdates')
         # ignore high frequency events
-        if cur_move_event_time - self._last_move_event_time >= delay:
-            self._last_move_event_time = cur_move_event_time
+        if curMoveEventTime - self._lastMoveEventTime >= delay:
+            self._lastMoveEventTime = curMoveEventTime
 
             self.sigMouseMoved.emit(ev.scenePos())
 
