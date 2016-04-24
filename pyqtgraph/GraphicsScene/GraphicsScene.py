@@ -156,13 +156,27 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 if i.isEnabled() and i.isVisible() and int(i.flags() & i.ItemIsFocusable) > 0:
                     i.setFocus(QtCore.Qt.MouseFocusReason)
                     break
-        
+
+    def _moveEventIsAllowed(self):
+        # For ignoring events that are too close.
+
+        # Max number of events per second.
+        rateLimit = getConfigOption('mouseRateLimit')
+        if rateLimit <= 0:
+            return True
+
+        # Delay between events (in millis).
+        delay = 1000.0 / getConfigOption('mouseRateLimit')
+
+        if getMillis() - self._lastMoveEventTime >= delay:
+            return True
+
+        return False
+
     def mouseMoveEvent(self, ev):
-        curMoveEventTime = getMillis()
-        delay = getConfigOption('millisecondsBetweenUpdates')
         # ignore high frequency events
-        if curMoveEventTime - self._lastMoveEventTime >= delay:
-            self._lastMoveEventTime = curMoveEventTime
+        if self._moveEventIsAllowed():
+            self._lastMoveEventTime = getMillis()
 
             self.sigMouseMoved.emit(ev.scenePos())
 

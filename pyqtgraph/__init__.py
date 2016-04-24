@@ -59,7 +59,7 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
-    'millisecondsBetweenUpdates': 10,  # For ignoring frequent mouse event.
+    'mouseRateLimit': 100,  # For ignoring frequent mouse event, max number of mouse move events per second. if limit <= 0 then it is switched off.
 } 
 
 
