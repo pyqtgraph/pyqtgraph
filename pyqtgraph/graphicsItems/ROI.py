@@ -110,7 +110,9 @@ class ROI(GraphicsObject):
     sigClicked = QtCore.Signal(object, object)
     sigRemoveRequested = QtCore.Signal(object)
     
-    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, movable=True, removable=False):
+    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None,
+                 snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False,
+                 parent=None, pen=None, movable=True, removable=False, name=None):
         #QObjectWorkaround.__init__(self)
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
@@ -147,6 +149,8 @@ class ROI(GraphicsObject):
         self.rotateSnap = rotateSnap
         self.scaleSnap = scaleSnap
         #self.setFlag(self.ItemIsSelectable, True)
+        
+        self._name = name
     
     def getState(self):
         return self.stateCopy()
@@ -1163,6 +1167,12 @@ class ROI(GraphicsObject):
         st = (st * tr).saveState()
         st['size'] = st['scale']
         self.setState(st)
+        
+    def setName(self, name):
+        self._name = name
+
+    def name(self):
+        return self._name
 
 
 class Handle(UIGraphicsItem):
