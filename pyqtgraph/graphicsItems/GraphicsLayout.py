@@ -23,6 +23,7 @@ class GraphicsLayout(GraphicsWidget):
         self.setLayout(self.layout)
         self.items = {}  ## item: [(row, col), (row, col), ...]  lists all cells occupied by the item
         self.rows = {}   ## row: {col1: item1, col2: item2, ...}    maps cell location to item
+        self.itemBorders = {}  ## {item1: QtGui.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
@@ -39,8 +40,10 @@ class GraphicsLayout(GraphicsWidget):
         See :func:`mkPen <pyqtgraph.mkPen>` for arguments.        
         """
         self.border = fn.mkPen(*args, **kwds)
-        self.update()
-    
+
+        for borderRect in self.itemBorders.values():
+            borderRect.setPen(self.border)
+
     def nextRow(self):
         """Advance to next row for automatic item placement"""
         self.currentRow += 1
@@ -119,7 +122,17 @@ class GraphicsLayout(GraphicsWidget):
                     self.rows[row2] = {}
                 self.rows[row2][col2] = item
                 self.items[item].append((row2, col2))
-        
+
+        borderRect = QtGui.QGraphicsRectItem()
+
+        borderRect.setParentItem(self)
+        borderRect.setZValue(1e3)
+        borderRect.setPen(fn.mkPen(self.border))
+
+        self.itemBorders[item] = borderRect
+
+        item.geometryChanged.connect(self._updateItemBorder)
+
         self.layout.addItem(item, row, col, rowspan, colspan)
         self.nextColumn()
 
@@ -129,15 +142,7 @@ class GraphicsLayout(GraphicsWidget):
 
     def boundingRect(self):
         return self.rect()
-        
-    def paint(self, p, *args):
-        if self.border is None:
-            return
-        p.setPen(fn.mkPen(self.border))
-        for i in self.items:
-            r = i.mapRectToParent(i.boundingRect())
-            p.drawRect(r)
-    
+
     def itemIndex(self, item):
         for i in range(self.layout.count()):
             if self.layout.itemAt(i).graphicsItem() is item:
@@ -150,13 +155,16 @@ class GraphicsLayout(GraphicsWidget):
         self.layout.removeAt(ind)
         self.scene().removeItem(item)
         
-        for r,c in self.items[item]:
+        for r, c in self.items[item]:
             del self.rows[r][c]
         del self.items[item]
+
+        item.geometryChanged.disconnect(self._updateItemBorder)
+        del self.itemBorders[item]
+
         self.update()
     
     def clear(self):
-        items = []
         for i in list(self.items.keys()):
             self.removeItem(i)
 
@@ -168,4 +176,14 @@ class GraphicsLayout(GraphicsWidget):
 
     def setSpacing(self, *args):
         self.layout.setSpacing(*args)
-    
+
+    def _updateItemBorder(self):
+        if self.border is None:
+            return
+
+        item = self.sender()
+        if item is None:
+            return
+
+        r = item.mapRectToParent(item.boundingRect())
+        self.itemBorders[item].setRect(r)
