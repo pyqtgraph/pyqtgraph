@@ -14,6 +14,7 @@ from ...Qt import isQObjectAlive
 
 __all__ = ['ViewBox']
 
+
 class WeakList(object):
 
     def __init__(self):
@@ -34,10 +35,12 @@ class WeakList(object):
                 yield d
             i -= 1
 
+
 class ChildGroup(ItemGroup):
 
     def __init__(self, parent):
         ItemGroup.__init__(self, parent)
+        self.setFlag(self.ItemClipsChildrenToShape)
 
         # Used as callback to inform ViewBox when items are added/removed from
         # the group.
@@ -63,6 +66,12 @@ class ChildGroup(ItemGroup):
                 for listener in itemsChangedListeners:
                     listener.itemsChanged()
         return ret
+
+    def shape(self):
+        return self.mapFromParent(self.parentItem().shape())
+
+    def boundingRect(self):
+        return self.mapRectFromParent(self.parentItem().boundingRect())
 
 
 class ViewBox(GraphicsWidget):
@@ -184,6 +193,11 @@ class ViewBox(GraphicsWidget):
         self.background.setZValue(-1e6)
         self.background.setPen(fn.mkPen(None))
         self.updateBackground()
+
+        self.borderRect = QtGui.QGraphicsRectItem(self.rect())
+        self.borderRect.setParentItem(self)
+        self.borderRect.setZValue(1e3)
+        self.borderRect.setPen(self.border)
 
         ## Make scale box that is shown when dragging on the view
         self.rbScaleBox = QtGui.QGraphicsRectItem(0, 0, 1, 1)
@@ -428,8 +442,10 @@ class ViewBox(GraphicsWidget):
         self.updateViewRange()
         self._matrixNeedsUpdate = True
         self.background.setRect(self.rect())
+        self.borderRect.setRect(self.rect())
         self.sigStateChanged.emit(self)
         self.sigResized.emit(self)
+        self.childGroup.prepareGeometryChange()
 
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -571,7 +587,7 @@ class ViewBox(GraphicsWidget):
                 self._autoRangeNeedsUpdate = True
             elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
                 self._autoRangeNeedsUpdate = True
-                
+
             self.sigStateChanged.emit(self)
 
     def setYRange(self, min, max, padding=None, update=True):
@@ -1054,6 +1070,19 @@ class ViewBox(GraphicsWidget):
     def xInverted(self):
         return self.state['xInverted']
 
+    def setBorder(self, *args, **kwds):
+        """
+        Set the pen used to draw border around the view
+
+        If border is None, then no border will be drawn.
+
+        Added in version 0.9.10
+
+        See :func:`mkPen <pyqtgraph.mkPen>` for arguments.
+        """
+        self.border = fn.mkPen(*args, **kwds)
+        self.borderRect.setPen(self.border)
+
     def setAspectLocked(self, lock=True, ratio=1):
         """
         If the aspect ratio is locked, view scaling must always preserve the aspect ratio.
@@ -1499,7 +1528,7 @@ class ViewBox(GraphicsWidget):
         if any(changed):
             self._matrixNeedsUpdate = True
             self.update()
-            
+
             # Inform linked views that the range has changed
             for ax in [0, 1]:
                 if not changed[ax]:
