@@ -21,6 +21,7 @@ from math import cos, sin
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
+from .. import getConfigOption
 
 __all__ = [
     'ROI', 
@@ -1074,7 +1075,11 @@ class ROI(GraphicsObject):
                             Used to determine the relationship between the 
                             ROI and the boundaries of *data*.
         axes                (length-2 tuple) Specifies the axes in *data* that
-                            correspond to the x and y axes of *img*.
+                            correspond to the (x, y) axes of *img*. If the
+                            global configuration variable
+                            :ref:`imageAxisOrder <apiref_config>` is set to
+                            'normal', then the axes are instead specified in
+                            (y, x) order.
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
                             used to extract data from the original array.
@@ -1143,6 +1148,12 @@ class ROI(GraphicsObject):
             origin = (origin.x(), origin.y())
         
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
+        origin = (origin.x(), origin.y())
+        
+        if getConfigOption('imageAxisOrder') == 'normal':
+            vectors = [vectors[1][::-1], vectors[0][::-1]]
+            shape = shape[::-1]
+            origin = origin[::-1]
         
         return shape, vectors, origin
 

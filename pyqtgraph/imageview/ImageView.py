@@ -30,6 +30,7 @@ from ..graphicsItems.GradientEditorItem import addGradientListToDocstring
 from .. import ptime as ptime
 from .. import debug as debug
 from ..SignalProxy import SignalProxy
+from .. import getConfigOption
 
 try:
     from bottleneck import nanmin, nanmax
@@ -203,9 +204,10 @@ class ImageView(QtGui.QWidget):
         """
         Set the image to be displayed in the widget.
         
-        ================== =======================================================================
+        ================== ===========================================================================
         **Arguments:**
-        img                (numpy array) the image to be displayed.
+        img                (numpy array) the image to be displayed. See :func:`ImageItem.setImage` and
+                           *notes* below.
         xvals              (numpy array) 1D array of z-axis values corresponding to the third axis
                            in a 3D image. For video, this array should contain the time of each frame.
         autoRange          (bool) whether to scale/pan the view to fit the image.
@@ -222,7 +224,19 @@ class ImageView(QtGui.QWidget):
                            and *scale*.
         autoHistogramRange If True, the histogram y-range is automatically scaled to fit the
                            image data.
-        ================== =======================================================================
+        ================== ===========================================================================
+
+        **Notes:**        
+        
+        For backward compatibility, image data is assumed to be in column-major order (column, row).
+        However, most image data is stored in row-major order (row, column) and will need to be
+        transposed before calling setImage()::
+        
+            imageview.setImage(imagedata.T)
+            
+        This requirement can be changed by the ``imageAxisOrder``
+        :ref:`global configuration option <apiref_config>`.
+        
         """
         profiler = debug.Profiler()
         
@@ -252,15 +266,17 @@ class ImageView(QtGui.QWidget):
         profiler()
         
         if axes is None:
+            xy = (0, 1) if getConfigOption('imageAxisOrder') == 'legacy' else (1, 0)
+            
             if img.ndim == 2:
-                self.axes = {'t': None, 'x': 0, 'y': 1, 'c': None}
+                self.axes = {'t': None, 'x': xy[0], 'y': xy[1], 'c': None}
             elif img.ndim == 3:
                 if img.shape[2] <= 4:
-                    self.axes = {'t': None, 'x': 0, 'y': 1, 'c': 2}
+                    self.axes = {'t': None, 'x': xy[0], 'y': xy[1], 'c': 2}
                 else:
-                    self.axes = {'t': 0, 'x': 1, 'y': 2, 'c': None}
+                    self.axes = {'t': 0, 'x': xy[0]+1, 'y': xy[1]+1, 'c': None}
             elif img.ndim == 4:
-                self.axes = {'t': 0, 'x': 1, 'y': 2, 'c': 3}
+                self.axes = {'t': 0, 'x': xy[0]+1, 'y': xy[1]+1, 'c': 3}
             else:
                 raise Exception("Can not interpret image with dimensions %s" % (str(img.shape)))
         elif isinstance(axes, dict):
@@ -542,6 +558,7 @@ class ImageView(QtGui.QWidget):
             axes = (1, 2)
         else:
             return
+        
         data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
         if data is not None:
             while data.ndim > 1:

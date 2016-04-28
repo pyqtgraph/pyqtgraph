@@ -12,6 +12,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+pg.setConfigOptions(imageAxisOrder='normal')
 pg.mkQApp()
 
 win = pg.GraphicsLayoutWidget()

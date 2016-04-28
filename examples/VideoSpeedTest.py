@@ -103,6 +103,9 @@ def mkData():
             if dtype[0] != 'float':
                 data = np.clip(data, 0, mx)
             data = data.astype(dt)
+            data[:, 10, 10:50] = mx
+            data[:, 9:12, 48] = mx
+            data[:, 8:13, 47] = mx
             cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
             
         data = cache[dtype]

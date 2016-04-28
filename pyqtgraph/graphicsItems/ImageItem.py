@@ -7,6 +7,8 @@ from .. import functions as fn
 from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 from ..Point import Point
+from .. import getConfigOption
+
 
 __all__ = ['ImageItem']
 
@@ -27,7 +29,6 @@ class ImageItem(GraphicsObject):
     :class:`HistogramLUTWidget <pyqtgraph.HistogramLUTWidget>` to provide a GUI
     for controlling the levels and lookup table used to display the image.
     """
-    
     
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
@@ -86,12 +87,14 @@ class ImageItem(GraphicsObject):
     def width(self):
         if self.image is None:
             return None
-        return self.image.shape[0]
+        axis = 0 if getConfigOption('imageAxisOrder') == 'legacy' else 1
+        return self.image.shape[axis]
         
     def height(self):
         if self.image is None:
             return None
-        return self.image.shape[1]
+        axis = 1 if getConfigOption('imageAxisOrder') == 'legacy' else 0
+        return self.image.shape[axis]
 
     def boundingRect(self):
         if self.image is None:
@@ -190,7 +193,7 @@ class ImageItem(GraphicsObject):
         image              (numpy array) Specifies the image data. May be 2D (width, height) or 
                            3D (width, height, RGBa). The array dtype must be integer or floating
                            point of any bit depth. For 3D arrays, the third dimension must
-                           be of length 3 (RGB) or 4 (RGBA).
+                           be of length 3 (RGB) or 4 (RGBA). See *notes* below.
         autoLevels         (bool) If True, this forces the image to automatically select 
                            levels based on the maximum and minimum values in the data.
                            By default, this argument is true unless the levels argument is
@@ -201,12 +204,26 @@ class ImageItem(GraphicsObject):
                            data. By default, this will be set to the minimum and maximum values 
                            in the image. If the image array has dtype uint8, no rescaling is necessary.
         opacity            (float 0.0-1.0)
-        compositionMode    see :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
+        compositionMode    See :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
         border             Sets the pen used when drawing the image border. Default is None.
         autoDownsample     (bool) If True, the image is automatically downsampled to match the
                            screen resolution. This improves performance for large images and 
                            reduces aliasing.
         =================  =========================================================================
+        
+        
+        **Notes:**        
+        
+        For backward compatibility, image data is assumed to be in column-major order (column, row).
+        However, most image data is stored in row-major order (row, column) and will need to be
+        transposed before calling setImage()::
+        
+            imageitem.setImage(imagedata.T)
+            
+        This requirement can be changed by the ``imageAxisOrder``
+        :ref:`global configuration option <apiref_config>`.
+        
+        
         """
         profile = debug.Profiler()
 
@@ -330,8 +347,14 @@ class ImageItem(GraphicsObject):
                 self._effectiveLut = efflut
             lut = self._effectiveLut
             levels = None
-
-        argb, alpha = fn.makeARGB(image.transpose((1, 0, 2)[:image.ndim]), lut=lut, levels=levels)
+        
+        # Assume images are in column-major order for backward compatibility
+        # (most images are in row-major order)
+        
+        if getConfigOption('imageAxisOrder') == 'legacy':
+            image = image.transpose((1, 0, 2)[:image.ndim])
+        
+        argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
@@ -347,7 +370,8 @@ class ImageItem(GraphicsObject):
             p.setCompositionMode(self.paintMode)
             profile('set comp mode')
 
-        p.drawImage(QtCore.QRectF(0,0,self.image.shape[0],self.image.shape[1]), self.qimage)
+        shape = self.image.shape[:2] if getConfigOption('imageAxisOrder') == 'legacy' else self.image.shape[:2][::-1]
+        p.drawImage(QtCore.QRectF(0,0,*shape), self.qimage)
         profile('p.drawImage')
         if self.border is not None:
             p.setPen(self.border)

@@ -8,23 +8,15 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
 
+pg.setConfigOptions(imageAxisOrder='normal')
+
 ## create GUI
 app = QtGui.QApplication([])
 
 w = pg.GraphicsWindow(size=(800,800), border=True)
-
 v = w.addViewBox(colspan=2)
-
-#w = QtGui.QMainWindow()
-#w.resize(800,800)
-#v = pg.GraphicsView()
 v.invertY(True)  ## Images usually have their Y-axis pointing downward
 v.setAspectLocked(True)
-#v.enableMouse(True)
-#v.autoPixelScale = False
-#w.setCentralWidget(v)
-#s = v.scene()
-#v.setRange(QtCore.QRectF(-2, -2, 220, 220))
 
 
 ## Create image to display
@@ -37,6 +29,11 @@ arr[:, 75] = 5
 arr[50, :] = 10
 arr[:, 50] = 10
 
+# add an arrow for asymmetry
+arr[10, :50] = 10
+arr[9:12, 44:48] = 10
+arr[8:13, 44:46] = 10
+
 ## Create image items, add to scene and set position 
 im1 = pg.ImageItem(arr)
 im2 = pg.ImageItem(arr)
@@ -44,6 +41,7 @@ v.addItem(im1)
 v.addItem(im2)
 im2.moveBy(110, 20)
 v.setRange(QtCore.QRectF(0, 0, 200, 120))
+im1.scale(0.8, 0.5)
 
 im3 = pg.ImageItem()
 v2 = w.addViewBox(1,0)
