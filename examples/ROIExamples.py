@@ -11,6 +11,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+pg.setConfigOptions(imageAxisOrder='normal')
 
 ## Create image to display
 arr = np.ones((100, 100), dtype=float)
@@ -23,6 +24,11 @@ arr[50, :] = 10
 arr[:, 50] = 10
 arr += np.sin(np.linspace(0, 20, 100)).reshape(1, 100)
 arr += np.random.normal(size=(100,100))
+
+# add an arrow for asymmetry
+arr[10, :50] = 10
+arr[9:12, 44:48] = 10
+arr[8:13, 44:46] = 10
 
 
 ## create GUI

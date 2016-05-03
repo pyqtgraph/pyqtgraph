@@ -1020,11 +1020,8 @@ class ROI(GraphicsObject):
         If the slice can not be computed (usually because the scene/transforms are not properly
         constructed yet), then the method returns None.
         """
-        #print "getArraySlice"
-        
         ## Determine shape of array along ROI axes
         dShape = (data.shape[axes[0]], data.shape[axes[1]])
-        #print "  dshape", dShape
         
         ## Determine transform that maps ROI bounding box to image coordinates
         try:
@@ -1033,25 +1030,28 @@ class ROI(GraphicsObject):
             return None
             
         ## Modify transform to scale from image coords to data coords
-        #m = QtGui.QTransform()
-        tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
-        #tr = tr * m
+        axisOrder = getConfigOption('imageAxisOrder')
+        if axisOrder == 'normal':
+            tr.scale(float(dShape[1]) / img.width(), float(dShape[0]) / img.height())
+        else:
+            tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
         
         ## Transform ROI bounds into data bounds
         dataBounds = tr.mapRect(self.boundingRect())
-        #print "  boundingRect:", self.boundingRect()
-        #print "  dataBounds:", dataBounds
         
         ## Intersect transformed ROI bounds with data bounds
-        intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
-        #print "  intBounds:", intBounds
+        if axisOrder == 'normal':
+            intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[1], dShape[0]))
+        else:
+            intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
         
         ## Determine index values to use when referencing the array. 
         bounds = (
             (int(min(intBounds.left(), intBounds.right())), int(1+max(intBounds.left(), intBounds.right()))),
             (int(min(intBounds.bottom(), intBounds.top())), int(1+max(intBounds.bottom(), intBounds.top())))
         )
-        #print "  bounds:", bounds
+        if axisOrder == 'normal':
+            bounds = bounds[::-1]
         
         if returnSlice:
             ## Create slice objects
@@ -1650,6 +1650,8 @@ class MultiRectROI(QtGui.QGraphicsObject):
             
         ## make sure orthogonal axis is the same size
         ## (sometimes fp errors cause differences)
+        if getConfigOption('imageAxisOrder') == 'normal':
+            axes = axes[::-1]
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim
         sl[axes[1]] = slice(0,ms)
