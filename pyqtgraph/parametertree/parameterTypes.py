@@ -277,11 +277,12 @@ class WidgetParameterItem(ParameterItem):
             if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
                 self.widget.setEnabled(not opts['readonly'])
         
-        ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
+            spinOpts = opts.copy()
+            spinOpts.pop('visible', None)
             if 'units' in opts and 'suffix' not in opts:
-                opts['suffix'] = opts['units']
-            self.widget.setOpts(**opts)
+                spinOpts['suffix'] = opts['units']
+            self.widget.setOpts(**spinOpts)
             self.updateDisplayLabel()
         
         
