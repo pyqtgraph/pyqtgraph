@@ -174,15 +174,14 @@ class Parameter(QtCore.QObject):
         
         if 'value' not in self.opts:
             self.opts['value'] = None
+        elif 'default' not in self.opts:
+            self.opts['default'] = self.opts['value']
         
         if 'name' not in self.opts or not isinstance(self.opts['name'], basestring):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(opts['name'])
         
         self.addChildren(self.opts.get('children', []))
-            
-        if 'value' in self.opts and 'default' not in self.opts:
-            self.opts['default'] = self.opts['value']
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
@@ -401,7 +400,8 @@ class Parameter(QtCore.QObject):
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
-        return self.value() == self.defaultValue()
+        if self.hasDefault():
+            return self.value() == self.defaultValue()
         
     def setLimits(self, limits):
         """Set limits on the acceptable values for this parameter. 
