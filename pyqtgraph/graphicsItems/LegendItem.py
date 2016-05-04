@@ -128,6 +128,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
+            ev.accept()
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
         
