@@ -23,8 +23,8 @@ class InfiniteLine(GraphicsObject):
     sigDragged(self)
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
-    sigRightClicked = QtCore.Signal(object)
-    sigLeftClicked = QtCore.Signal(object)
+    sigRightClicked(self)
+    sigLeftClicked(self)
 
     =============================== ===================================================
     """
@@ -32,6 +32,8 @@ class InfiniteLine(GraphicsObject):
     sigDragged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
     sigPositionChanged = QtCore.Signal(object)
+    sigRightClicked = QtCore.Signal(object)
+    sigLeftClicked = QtCore.Signal(object)
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=None, labelOpts=None, name=None):
