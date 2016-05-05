@@ -23,6 +23,9 @@ class InfiniteLine(GraphicsObject):
     sigDragged(self)
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
+    sigRightClicked = QtCore.Signal(object)
+    sigLeftClicked = QtCore.Signal(object)
+
     =============================== ===================================================
     """
 
@@ -252,6 +255,16 @@ class InfiniteLine(GraphicsObject):
                 self.sigPositionChangeFinished.emit(self)
 
     def mouseClickEvent(self, ev):
+        ## Right click
+        if ev.button() == QtCore.Qt.RightButton:
+            ev.accept()
+            self.sigRightClicked.emit(self)
+
+        ## Left Click
+        if ev.button() == QtCore.Qt.LeftButton:
+            ev.accept()
+            self.sigLeftClicked.emit(self)
+
         if self.moving and ev.button() == QtCore.Qt.RightButton:
             ev.accept()
             self.setPos(self.startPosition)
