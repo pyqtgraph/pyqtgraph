@@ -426,7 +426,7 @@ class InfLineLabel(TextItem):
         May optionally contain "{value}" to include the lines current value
         (the text will be reformatted whenever the line is moved).
         """
-        self.format = format
+        self.format = text
         self.valueChanged()
         
     def mouseDragEvent(self, ev):
