@@ -771,6 +771,10 @@ class AxisItem(GraphicsWidget):
         """
         profiler = debug.Profiler()
 
+        # painter should have the same font as tickFont, otherwise it calculates tick text boundaries incorreclty
+        if self.tickFont is not None:
+            p.setFont(self.tickFont)
+
         #bounds = self.boundingRect()
         bounds = self.mapRectFromParent(self.geometry())
         
