@@ -225,7 +225,9 @@ class ROI(GraphicsObject):
         multiple change functions to be called sequentially while minimizing processing overhead
         and repeated signals. Setting update=False also forces finish=False.
         """
-        
+        # This avoids the temptation to do setPos(x, y)
+        if not isinstance(update, bool):
+            raise TypeError("update argument must be bool.")
         pos = Point(pos)
         self.state['pos'] = pos
         QtGui.QGraphicsItem.setPos(self, pos)
@@ -944,6 +946,7 @@ class ROI(GraphicsObject):
             
         if finish:
             self.stateChangeFinished()
+            self.informViewBoundsChanged()
     
     def stateChangeFinished(self):
         self.sigRegionChangeFinished.emit(self)
