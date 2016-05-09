@@ -110,6 +110,9 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
+        
+        # transpose BGRA to RGBA
+        image = image[..., [2, 1, 0, 3]]
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
@@ -144,7 +147,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                     " different than standard image shape %s." %
                                 (ims1, ims2))
             sr = np.round(sr).astype(int)
-            image = downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
+            image = fn.downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
 
         assertImageMatch(image, stdImage, **kwargs)
     except Exception:
@@ -159,7 +162,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             print('Saving new standard image to "%s"' % stdFileName)
             if not os.path.isdir(stdPath):
                 os.makedirs(stdPath)
-            img = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+            img = fn.makeQImage(image, alpha=True, transpose=False)
             img.save(stdFileName)
         else:
             if stdImage is None:
