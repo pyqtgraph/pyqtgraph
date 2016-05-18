@@ -213,7 +213,7 @@ class ROI(GraphicsObject):
         """Return the angle of the ROI in degrees."""
         return self.getState()['angle']
         
-    def setPos(self, pos, update=True, finish=True):
+    def setPos(self, pos, y=None, update=True, finish=True):
         """Set the position of the ROI (in the parent's coordinate system).
         By default, this will cause both sigRegionChanged and sigRegionChangeFinished to be emitted.
         
@@ -225,10 +225,13 @@ class ROI(GraphicsObject):
         multiple change functions to be called sequentially while minimizing processing overhead
         and repeated signals. Setting update=False also forces finish=False.
         """
-        # This avoids the temptation to do setPos(x, y)
-        if not isinstance(update, bool):
-            raise TypeError("update argument must be bool.")
-        pos = Point(pos)
+        if y is None:
+            pos = Point(pos)
+        else:
+            # avoid ambiguity where update is provided as a positional argument
+            if isinstance(y, bool):
+                raise TypeError("Positional arguments to setPos() must be numerical.")
+            pos = Point(pos, y)
         self.state['pos'] = pos
         QtGui.QGraphicsItem.setPos(self, pos)
         if update:
@@ -921,8 +924,9 @@ class ROI(GraphicsObject):
         if self.lastState is None:
             changed = True
         else:
-            for k in list(self.state.keys()):
-                if self.state[k] != self.lastState[k]:
+            state = self.getState()
+            for k in list(state.keys()):
+                if state[k] != self.lastState[k]:
                     changed = True
         
         self.prepareGeometryChange()
@@ -942,7 +946,7 @@ class ROI(GraphicsObject):
             self.sigRegionChanged.emit(self)
             
         self.freeHandleMoved = False
-        self.lastState = self.stateCopy()
+        self.lastState = self.getState()
             
         if finish:
             self.stateChangeFinished()
@@ -1133,6 +1137,9 @@ class ROI(GraphicsObject):
         
         This can be used to mask array selections.
         """
+        if width == 0 or height == 0:
+            return np.empty((width, height), dtype=float)
+        
         # QImage(width, height, format)
         im = QtGui.QImage(width, height, QtGui.QImage.Format_ARGB32)
         im.fill(0x0)
@@ -1864,6 +1871,8 @@ class PolyLineROI(ROI):
         if closed is not None:
             self.closed = closed
         
+        self.clearPoints()
+        
         for p in points:
             self.addFreeHandle(p)
         
@@ -1877,7 +1886,14 @@ class PolyLineROI(ROI):
         Remove all handles and segments.
         """
         while len(self.handles) > 0:
-            self.removeHandle(self.handles[0]['item'])
+            update = len(self.handles) == 1
+            self.removeHandle(self.handles[0]['item'], updateSegments=update)
+    
+    def getState(self):
+        state = ROI.getState(self)
+        state['closed'] = self.closed
+        state['points'] = [Point(h.pos()) for h in self.getHandles()]
+        return state
 
     def saveState(self):
         state = ROI.saveState(self)
@@ -1887,7 +1903,6 @@ class PolyLineROI(ROI):
 
     def setState(self, state):
         ROI.setState(self, state)
-        self.clearPoints()
         self.setPoints(state['points'], closed=state['closed'])
         
     def addSegment(self, h1, h2, index=None):
@@ -1912,6 +1927,7 @@ class PolyLineROI(ROI):
     def addHandle(self, info, index=None):
         h = ROI.addHandle(self, info, index=index)
         h.sigRemoveRequested.connect(self.removeHandle)
+        self.stateChanged(finish=True)
         return h
         
     def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
@@ -1944,6 +1960,7 @@ class PolyLineROI(ROI):
             handles.remove(handle)
             segments[0].replaceHandle(handle, handles[0])
             self.removeSegment(segments[1])
+        self.stateChanged(finish=True)
         
     def removeSegment(self, seg):
         for handle in seg.handles[:]:
@@ -1973,19 +1990,23 @@ class PolyLineROI(ROI):
         for i in range(len(self.handles)):
             p.lineTo(self.handles[i]['item'].pos())
         p.lineTo(self.handles[0]['item'].pos())
-        return p        
+        return p
 
     def getArrayRegion(self, data, img, axes=(0,1)):
         """
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
         """
+        br = self.boundingRect()
+        if br.width() > 1000:
+            raise Exception()
         sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True)
         mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
         shape = [1] * data.ndim
         shape[axes[0]] = sliced.shape[axes[0]]
         shape[axes[1]] = sliced.shape[axes[1]]
         mask = mask.reshape(shape)
+
         return sliced * mask
 
     def setPen(self, *args, **kwds):

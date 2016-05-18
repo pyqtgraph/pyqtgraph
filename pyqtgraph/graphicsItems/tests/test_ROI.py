@@ -8,17 +8,24 @@ app = pg.mkQApp()
 
 
 def test_getArrayRegion():
+    pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
+    pr.setPos(1, 1)
     rois = [
         (pg.ROI([1, 1], [27, 28], pen='y'), 'baseroi'),
         (pg.RectROI([1, 1], [27, 28], pen='y'), 'rectroi'),
         (pg.EllipseROI([1, 1], [27, 28], pen='y'), 'ellipseroi'),
-        (pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True), 'polylineroi'),
+        (pr, 'polylineroi'),
     ]
     for roi, name in rois:
-        check_getArrayRegion(roi, name)
+        # For some ROIs, resize should not be used.
+        testResize = not isinstance(roi, pg.PolyLineROI)
+        
+        check_getArrayRegion(roi, 'roi/'+name, testResize)
     
     
-def check_getArrayRegion(roi, name):
+def check_getArrayRegion(roi, name, testResize=True):
+    initState = roi.getState()
+    
     win = pg.GraphicsLayoutWidget()
     win.show()
     win.resize(200, 400)
@@ -46,7 +53,7 @@ def check_getArrayRegion(roi, name):
     vb1.addItem(roi)
 
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
-    #assert np.all((rgn == data[:, 1:-2, 1:-2, :]) | (rgn == 0))
+    assert np.all((rgn == data[:, 1:-2, 1:-2, :]) | (rgn == 0))
     img2.setImage(rgn[0, ..., 0])
     vb2.setAspectLocked()
     vb2.enableAutoRange(True, True)
@@ -56,7 +63,7 @@ def check_getArrayRegion(roi, name):
     assertImageApproved(win, name+'/roi_getarrayregion', 'Simple ROI region selection.')
 
     with pytest.raises(TypeError):
-        roi.setPos(0, 0)
+        roi.setPos(0, False)
 
     roi.setPos([0.5, 1.5])
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
@@ -71,11 +78,12 @@ def check_getArrayRegion(roi, name):
     app.processEvents()
     assertImageApproved(win, name+'/roi_getarrayregion_rotate', 'Simple ROI region selection, rotation.')
 
-    roi.setSize([60, 60])
-    rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
-    img2.setImage(rgn[0, ..., 0])
-    app.processEvents()
-    assertImageApproved(win, name+'/roi_getarrayregion_resize', 'Simple ROI region selection, resized.')
+    if testResize:
+        roi.setSize([60, 60])
+        rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
+        img2.setImage(rgn[0, ..., 0])
+        app.processEvents()
+        assertImageApproved(win, name+'/roi_getarrayregion_resize', 'Simple ROI region selection, resized.')
 
     img1.scale(1, -1)
     img1.setPos(0, img1.height())
@@ -91,13 +99,10 @@ def check_getArrayRegion(roi, name):
     app.processEvents()
     assertImageApproved(win, name+'/roi_getarrayregion_inverty', 'Simple ROI region selection, view inverted.')
 
-    roi.setAngle(0)
-    roi.setSize(30, 30)
-    roi.setPos([0, 0])
+    roi.setState(initState)
     img1.resetTransform()
     img1.setPos(0, 0)
     img1.scale(1, 0.5)
-    #img1.scale(0.5, 1)
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
