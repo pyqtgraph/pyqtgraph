@@ -6,7 +6,11 @@ if not USE_PYQT5:
         matplotlib.rcParams['backend.qt4']='PySide'
 
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    # NavigationToolbar2QTAgg doesn't exist in matplotlib >= 1.4.0. Import NavigationToolbar2QT instead
+    try:
+        from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    except:
+        from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 else:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
