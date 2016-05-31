@@ -234,7 +234,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
 def saveFailedTest(data, expect, filename):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit, error = runSubprocess(['git', 'rev-parse',  'HEAD'])
+    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
     name = filename.split('/')
     name.insert(-1, commit.strip())
     filename = '/'.join(name)
