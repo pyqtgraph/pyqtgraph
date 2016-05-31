@@ -135,7 +135,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self._moveDistance = d
 
     def mousePressEvent(self, ev):
-        #print 'scenePress'
         QtGui.QGraphicsScene.mousePressEvent(self, ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             if self.lastHoverEvent is not None:
@@ -173,8 +172,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
                         continue
                     if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
                         cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
-                        dist = Point(ev.screenPos() - cev.screenPos())
-                        if dist.length() < self._moveDistance and now - cev.time() < self.minDragTime:
+                        dist = Point(ev.scenePos() - cev.scenePos()).length()
+                        if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
                             continue
                         init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
                         self.dragButtons.append(int(btn))
@@ -231,8 +230,6 @@ class GraphicsScene(QtGui.QGraphicsScene):
             
         prevItems = list(self.hoverItems.keys())
             
-        #print "hover prev items:", prevItems
-        #print "hover test items:", items
         for item in items:
             if hasattr(item, 'hoverEvent'):
                 event.currentItem = item
@@ -247,7 +244,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     item.hoverEvent(event)
                 except:
                     debug.printExc("Error sending hover event:")
-                    
+        
         event.enter = False
         event.exit = True
         #print "hover exit items:", prevItems

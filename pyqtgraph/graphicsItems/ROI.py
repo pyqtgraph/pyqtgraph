@@ -531,7 +531,7 @@ class ROI(GraphicsObject):
         if isinstance(handle, Handle):
             index = [i for i, info in enumerate(self.handles) if info['item'] is handle]    
             if len(index) == 0:
-                raise Exception("Cannot remove handle; it is not attached to this ROI")
+                raise Exception("Cannot return handle index; not attached to this ROI")
             return index[0]
         else:
             return handle
@@ -641,11 +641,20 @@ class ROI(GraphicsObject):
         if self.mouseHovering == hover:
             return
         self.mouseHovering = hover
-        if hover:
-            self.currentPen = fn.mkPen(255, 255, 0)
+        self._updateHoverColor()
+        
+    def _updateHoverColor(self):
+        pen = self._makePen()
+        if self.currentPen != pen:
+            self.currentPen = pen
+            self.update()
+        
+    def _makePen(self):
+        # Generate the pen color for this ROI based on its current state.
+        if self.mouseHovering:
+            return fn.mkPen(255, 255, 0)
         else:
-            self.currentPen = self.pen
-        self.update()
+            return self.pen
 
     def contextMenuEnabled(self):
         return self.removable
@@ -1818,7 +1827,7 @@ class PolygonROI(ROI):
         #sc['handles'] = self.handles
         return sc
 
-
+    
 class PolyLineROI(ROI):
     """
     Container class for multiple connected LineSegmentROIs.
@@ -1848,12 +1857,6 @@ class PolyLineROI(ROI):
         ROI.__init__(self, pos, size=[1,1], **args)
         
         self.setPoints(positions)
-        #for p in positions:
-            #self.addFreeHandle(p)
-         
-        #start = -1 if self.closed else 0
-        #for i in range(start, len(self.handles)-1):
-            #self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
 
     def setPoints(self, points, closed=None):
         """
@@ -1880,14 +1883,12 @@ class PolyLineROI(ROI):
         for i in range(start, len(self.handles)-1):
             self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
         
-        
     def clearPoints(self):
         """
         Remove all handles and segments.
         """
         while len(self.handles) > 0:
-            update = len(self.handles) == 1
-            self.removeHandle(self.handles[0]['item'], updateSegments=update)
+            self.removeHandle(self.handles[0]['item'])
     
     def getState(self):
         state = ROI.getState(self)
@@ -1906,7 +1907,7 @@ class PolyLineROI(ROI):
         self.setPoints(state['points'], closed=state['closed'])
         
     def addSegment(self, h1, h2, index=None):
-        seg = LineSegmentROI(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
+        seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
         if index is None:
             self.segments.append(seg)
         else:
@@ -1922,7 +1923,7 @@ class PolyLineROI(ROI):
         ## Inform all the ROI's segments that the mouse is(not) hovering over it
         ROI.setMouseHover(self, hover)
         for s in self.segments:
-            s.setMouseHover(hover)
+            s.setParentHover(hover)
           
     def addHandle(self, info, index=None):
         h = ROI.addHandle(self, info, index=index)
@@ -1955,7 +1956,7 @@ class PolyLineROI(ROI):
         
         if len(segments) == 1:
             self.removeSegment(segments[0])
-        else:
+        elif len(segments) > 1:
             handles = [h['item'] for h in segments[1].handles]
             handles.remove(handle)
             segments[0].replaceHandle(handle, handles[0])
@@ -2100,6 +2101,32 @@ class LineSegmentROI(ROI):
             
         return np.concatenate(rgns, axis=axes[0])
         
+
+class _PolyLineSegment(LineSegmentROI):
+    # Used internally by PolyLineROI
+    def __init__(self, *args, **kwds):
+        self._parentHovering = False
+        LineSegmentROI.__init__(self, *args, **kwds)
+        
+    def setParentHover(self, hover):
+        # set independently of own hover state
+        if self._parentHovering != hover:
+            self._parentHovering = hover
+            self._updateHoverColor()
+        
+    def _makePen(self):
+        if self.mouseHovering or self._parentHovering:
+            return fn.mkPen(255, 255, 0)
+        else:
+            return self.pen
+        
+    def hoverEvent(self, ev):
+        # accept drags even though we discard them to prevent competition with parent ROI
+        # (unless parent ROI is not movable)
+        if self.parentItem().translatable:
+            ev.acceptDrags(QtCore.Qt.LeftButton)
+        return LineSegmentROI.hoverEvent(self, ev)
+
 
 class SpiralROI(ROI):
     def __init__(self, pos=None, size=None, **args):

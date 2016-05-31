@@ -41,7 +41,7 @@ Procedure for unit-testing with images:
 # This is the name of a tag in the test-data repository that this version of
 # pyqtgraph should be tested against. When adding or changing test images,
 # create and push a new tag and update this variable.
-testDataTag = 'test-data-3'
+testDataTag = 'test-data-4'
 
 
 import time
@@ -306,7 +306,7 @@ class ImageTester(QtGui.QWidget):
         
         QtGui.QWidget.__init__(self)
         self.resize(1200, 800)
-        self.showFullScreen()
+        #self.showFullScreen()
         
         self.layout = QtGui.QGridLayout()
         self.setLayout(self.layout)
@@ -324,6 +324,8 @@ class ImageTester(QtGui.QWidget):
         self.failBtn = QtGui.QPushButton('Fail')
         self.layout.addWidget(self.passBtn, 2, 0)
         self.layout.addWidget(self.failBtn, 2, 1)
+        self.passBtn.clicked.connect(self.passTest)
+        self.failBtn.clicked.connect(self.failTest)
 
         self.views = (self.view.addViewBox(row=0, col=0),
                       self.view.addViewBox(row=0, col=1),
@@ -385,6 +387,12 @@ class ImageTester(QtGui.QWidget):
             self.lastKey = 'esc'
         else:
             self.lastKey = str(event.text()).lower()
+
+    def passTest(self):
+        self.lastKey = 'p'
+
+    def failTest(self):
+        self.lastKey = 'f'
 
 
 def getTestDataRepo():

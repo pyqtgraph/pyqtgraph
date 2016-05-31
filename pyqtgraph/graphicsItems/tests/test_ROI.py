@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 import pyqtgraph as pg
-from pyqtgraph.tests import assertImageApproved
+from pyqtgraph.Qt import QtCore, QtTest
+from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick
 
 
 app = pg.mkQApp()
@@ -108,29 +109,68 @@ def check_getArrayRegion(roi, name, testResize=True):
     app.processEvents()
     assertImageApproved(win, name+'/roi_getarrayregion_anisotropic', 'Simple ROI region selection, image scaled anisotropically.')
 
-    # test features:
-    #   pen / hoverpen
-    #   handle pen / hoverpen
-    #   handle types + mouse interaction
-    #   getstate
-    #   savestate
-    #   restore state
-    #   getarrayregion
-    #   getarrayslice
-    #   returnMappedCoords
-    #   getAffineSliceParams
-    #   getGlobalTransform
-    #   
-    # test conditions:
-    #   y inverted
-    #   extra array axes
-    #   imageAxisOrder
-    #   roi classes
-    #   image transforms--rotation, scaling, flip
-    #   view transforms--anisotropic scaling
-    #   ROI transforms
-    #   ROI parent transforms
 
+def test_PolyLineROI():
+    rois = [
+        (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=True, pen=0.3), 'closed'),
+        (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=False, pen=0.3), 'open')
+    ]
+    plt = pg.plot()
+    plt.resize(200, 200)
 
+    plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
+
+    # seemingly arbitrary requirements; might need longer wait time for some platforms..
+    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWait(100)
     
+    for r, name in rois:
+        plt.clear()
+        plt.addItem(r)
+        plt.autoRange()
+        app.processEvents()
+        
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_init', 'Init %s polyline.' % name)
+        initState = r.getState()
+        assert len(r.getState()['points']) == 3
+        
+        # hover over center
+        center = r.mapToScene(pg.Point(3, 3))
+        mouseMove(plt, center)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_hover_roi', 'Hover mouse over center of ROI.')
+        
+        # drag ROI
+        mouseDrag(plt, center, center + pg.Point(10, -10), QtCore.Qt.LeftButton)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_drag_roi', 'Drag mouse over center of ROI.')
+        
+        # hover over handle
+        pt = r.mapToScene(pg.Point(r.getState()['points'][2]))
+        mouseMove(plt, pt)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_hover_handle', 'Hover mouse over handle.')
+        
+        # drag handle
+        mouseDrag(plt, pt, pt + pg.Point(5, 20), QtCore.Qt.LeftButton)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_drag_handle', 'Drag mouse over handle.')
+        
+        # hover over segment 
+        pt = r.mapToScene((pg.Point(r.getState()['points'][2]) + pg.Point(r.getState()['points'][1])) * 0.5)
+        mouseMove(plt, pt+pg.Point(0, 2))
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_hover_segment', 'Hover mouse over diagonal segment.')
+        
+        # click segment
+        mouseClick(plt, pt, QtCore.Qt.LeftButton)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_click_segment', 'Click mouse over segment.')
+        
+        r.clearPoints()
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_clear', 'All points cleared.')
+        assert len(r.getState()['points']) == 0
+        
+        r.setPoints(initState['points'])
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_setpoints', 'Reset points to initial state.')
+        assert len(r.getState()['points']) == 3
+        
+        r.setState(initState)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_setstate', 'Reset ROI to initial state.')
+        assert len(r.getState()['points']) == 3
+        
     
