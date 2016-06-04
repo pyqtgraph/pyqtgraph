@@ -1,15 +1,15 @@
 import pyqtgraph as pg
 import numpy as np
 app = pg.mkQApp()
-plot = pg.plot()
 app.processEvents()
 
-# set view range equal to its bounding rect. 
-# This causes plots to look the same regardless of pxMode.
-plot.setRange(rect=plot.boundingRect())
 
 
 def test_scatterplotitem():
+    plot = pg.PlotWidget()
+    # set view range equal to its bounding rect. 
+    # This causes plots to look the same regardless of pxMode.
+    plot.setRange(rect=plot.boundingRect())
     for i, pxMode in enumerate([True, False]):
         for j, useCache in enumerate([True, False]):
             s = pg.ScatterPlotItem()
@@ -54,6 +54,10 @@ def test_scatterplotitem():
 
 
 def test_init_spots():
+    plot = pg.PlotWidget()
+    # set view range equal to its bounding rect. 
+    # This causes plots to look the same regardless of pxMode.
+    plot.setRange(rect=plot.boundingRect())
     spots = [
         {'x': 0, 'y': 1},
         {'pos': (1, 2), 'pen': None, 'brush': None, 'data': 'zzz'},
