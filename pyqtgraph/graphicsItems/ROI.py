@@ -1148,7 +1148,6 @@ class ROI(GraphicsObject):
             origin = (origin.x(), origin.y())
         
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
-        origin = (origin.x(), origin.y())
         
         if getConfigOption('imageAxisOrder') == 'normal':
             vectors = [vectors[1][::-1], vectors[0][::-1]]
