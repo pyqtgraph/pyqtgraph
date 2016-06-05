@@ -276,8 +276,8 @@ def makePng(img):
     """
     io = QtCore.QBuffer()
     qim = fn.makeQImage(img, alpha=False)
-    qim.save(io, format='png')
-    png = io.data().data().encode()
+    qim.save(io, 'PNG')
+    png = bytes(io.data().data())
     return png
 
 
