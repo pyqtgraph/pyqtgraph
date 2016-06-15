@@ -40,7 +40,8 @@ Procedure for unit-testing with images:
 
 # This is the name of a tag in the test-data repository that this version of
 # pyqtgraph should be tested against. When adding or changing test images,
-# create and push a new tag and update this variable.
+# create and push a new tag and update this variable. To test locally, begin
+# by creating the tag in your ~/.pyqtgraph/test-data repository.
 testDataTag = 'test-data-4'
 
 
@@ -105,6 +106,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     """
     if isinstance(image, QtGui.QWidget):
         w = image
+        graphstate = scenegraphState(w, standardFile)
         image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
         qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
         painter = QtGui.QPainter(qimg)
@@ -150,6 +152,9 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             image = fn.downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
 
         assertImageMatch(image, stdImage, **kwargs)
+        
+        if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
+            print graphstate
     except Exception:
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
@@ -171,6 +176,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             else:
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile)
+                print graphstate
                 raise
 
 
@@ -542,3 +548,35 @@ def runSubprocess(command, return_code=False, **kwargs):
             raise sp.CalledProcessError(p.returncode, command)
     
     return output
+
+
+def scenegraphState(view, name):
+    """Return information about the scenegraph for debugging test failures.
+    """
+    state = "====== Scenegraph state for %s ======\n" % name
+    state += "view size: %dx%d\n" % (view.width(), view.height())
+    state += "view transform:\n" + indent(transformStr(view.transform()), "  ")
+    for item in view.scene().items():
+        if item.parentItem() is None:
+            state += itemState(item) + '\n'
+    return state
+
+    
+def itemState(root):
+    state = str(root) + '\n'
+    from .. import ViewBox
+    state += 'bounding rect: ' + str(root.boundingRect()) + '\n'
+    if isinstance(root, ViewBox):
+        state += "view range: " + str(root.viewRange()) + '\n'
+    state += "transform:\n" + indent(transformStr(root.transform()).strip(), "  ") + '\n'
+    for item in root.childItems():
+        state += indent(itemState(item).strip(), "    ") + '\n'
+    return state
+
+    
+def transformStr(t):
+    return ("[%0.2f %0.2f %0.2f]\n"*3) % (t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), t.m31(), t.m32(), t.m33())
+
+
+def indent(s, pfx):
+    return '\n'.join([pfx+line for line in s.split('\n')])
