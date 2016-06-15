@@ -215,15 +215,20 @@ class ROI(GraphicsObject):
         
     def setPos(self, pos, y=None, update=True, finish=True):
         """Set the position of the ROI (in the parent's coordinate system).
-        By default, this will cause both sigRegionChanged and sigRegionChangeFinished to be emitted.
         
-        If finish is False, then sigRegionChangeFinished will not be emitted. You can then use 
-        stateChangeFinished() to cause the signal to be emitted after a series of state changes.
+        Accepts either separate (x, y) arguments or a single :class:`Point` or
+        ``QPointF`` argument. 
         
-        If update is False, the state change will be remembered but not processed and no signals 
+        By default, this method causes both ``sigRegionChanged`` and
+        ``sigRegionChangeFinished`` to be emitted. If *finish* is False, then
+        ``sigRegionChangeFinished`` will not be emitted. You can then use 
+        stateChangeFinished() to cause the signal to be emitted after a series
+        of state changes.
+        
+        If *update* is False, the state change will be remembered but not processed and no signals 
         will be emitted. You can then use stateChanged() to complete the state change. This allows
         multiple change functions to be called sequentially while minimizing processing overhead
-        and repeated signals. Setting update=False also forces finish=False.
+        and repeated signals. Setting ``update=False`` also forces ``finish=False``.
         """
         if y is None:
             pos = Point(pos)
