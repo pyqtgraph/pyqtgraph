@@ -344,7 +344,7 @@ class ImageTester(QtGui.QWidget):
         for i, v in enumerate(self.views):
             v.setAspectLocked(1)
             v.invertY()
-            v.image = ImageItem()
+            v.image = ImageItem(axisOrder='row-major')
             v.image.setAutoDownsample(True)
             v.addItem(v.image)
             v.label = TextItem(labelText[i])
@@ -371,9 +371,9 @@ class ImageTester(QtGui.QWidget):
             message += '\nImage1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
         self.label.setText(message)
         
-        self.views[0].image.setImage(im1.transpose(1, 0, 2))
-        self.views[1].image.setImage(im2.transpose(1, 0, 2))
-        diff = makeDiffImage(im1, im2).transpose(1, 0, 2)
+        self.views[0].image.setImage(im1)
+        self.views[1].image.setImage(im2)
+        diff = makeDiffImage(im1, im2)
 
         self.views[2].image.setImage(diff)
         self.views[0].autoRange()

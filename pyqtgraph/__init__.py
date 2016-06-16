@@ -59,9 +59,9 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
-    'imageAxisOrder': 'legacy',  # For 'normal', image data is expected in the standard (row, col) order.
-                                 # For 'legacy', image data is expected in reversed (col, row) order.
-                                 # The default is 'legacy' for backward compatibility, but this will
+    'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.
+                                 # For 'col-major', image data is expected in reversed (col, row) order.
+                                 # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
 } 
 

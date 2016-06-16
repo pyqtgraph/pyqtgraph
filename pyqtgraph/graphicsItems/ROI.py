@@ -1031,7 +1031,7 @@ class ROI(GraphicsObject):
             
         ## Modify transform to scale from image coords to data coords
         axisOrder = getConfigOption('imageAxisOrder')
-        if axisOrder == 'normal':
+        if axisOrder == 'row-major':
             tr.scale(float(dShape[1]) / img.width(), float(dShape[0]) / img.height())
         else:
             tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
@@ -1040,7 +1040,7 @@ class ROI(GraphicsObject):
         dataBounds = tr.mapRect(self.boundingRect())
         
         ## Intersect transformed ROI bounds with data bounds
-        if axisOrder == 'normal':
+        if axisOrder == 'row-major':
             intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[1], dShape[0]))
         else:
             intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
@@ -1050,7 +1050,7 @@ class ROI(GraphicsObject):
             (int(min(intBounds.left(), intBounds.right())), int(1+max(intBounds.left(), intBounds.right()))),
             (int(min(intBounds.bottom(), intBounds.top())), int(1+max(intBounds.bottom(), intBounds.top())))
         )
-        if axisOrder == 'normal':
+        if axisOrder == 'row-major':
             bounds = bounds[::-1]
         
         if returnSlice:
@@ -1078,7 +1078,7 @@ class ROI(GraphicsObject):
                             correspond to the (x, y) axes of *img*. If the
                             global configuration variable
                             :ref:`imageAxisOrder <apiref_config>` is set to
-                            'normal', then the axes are instead specified in
+                            'row-major', then the axes are instead specified in
                             (y, x) order.
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
@@ -1149,7 +1149,7 @@ class ROI(GraphicsObject):
         
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
         
-        if getConfigOption('imageAxisOrder') == 'normal':
+        if getConfigOption('imageAxisOrder') == 'row-major':
             vectors = [vectors[1][::-1], vectors[0][::-1]]
             shape = shape[::-1]
             origin = origin[::-1]
@@ -1649,7 +1649,7 @@ class MultiRectROI(QtGui.QGraphicsObject):
             
         ## make sure orthogonal axis is the same size
         ## (sometimes fp errors cause differences)
-        if getConfigOption('imageAxisOrder') == 'normal':
+        if getConfigOption('imageAxisOrder') == 'row-major':
             axes = axes[::-1]
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim

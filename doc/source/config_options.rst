@@ -19,9 +19,10 @@ foreground         See :func:`mkColor` 'd'                Default foreground col
 background         See :func:`mkColor` 'k'                Default background for :class:`GraphicsView`.
 antialias          bool                False              Enabling antialiasing causes lines to be drawn with 
                                                           smooth edges at the cost of reduced performance.
-imageAxisOrder     str                 'legacy'           For 'normal', image data is expected in the standard row-major (row, col) order.
-                                                          For 'legacy', image data is expected in reversed column-major (col, row) order.
-                                                          The default is 'legacy' for backward compatibility, but this may
+imageAxisOrder     str                 'legacy'           For 'row-major', image data is expected in the standard row-major 
+                                                          (row, col) order. For 'col-major', image data is expected in
+                                                          reversed column-major (col, row) order.
+                                                          The default is 'col-major' for backward compatibility, but this may
                                                           change in the future.
 editorCommand      str or None         None               Command used to invoke code editor from ConsoleWidget.
 exitCleanup        bool                True               Attempt to work around some exit crash bugs in PyQt and PySide.

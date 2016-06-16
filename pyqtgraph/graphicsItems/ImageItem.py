@@ -48,6 +48,8 @@ class ImageItem(GraphicsObject):
         self.lut = None
         self.autoDownsample = False
         
+        self.axisOrder = getConfigOption('imageAxisOrder')
+        
         # In some cases, we use a modified lookup table to handle both rescaling
         # and LUT more efficiently
         self._effectiveLut = None
@@ -87,13 +89,13 @@ class ImageItem(GraphicsObject):
     def width(self):
         if self.image is None:
             return None
-        axis = 0 if getConfigOption('imageAxisOrder') == 'legacy' else 1
+        axis = 0 if self.axisOrder == 'col-major' else 1
         return self.image.shape[axis]
         
     def height(self):
         if self.image is None:
             return None
-        axis = 1 if getConfigOption('imageAxisOrder') == 'legacy' else 0
+        axis = 1 if self.axisOrder == 'col-major' else 0
         return self.image.shape[axis]
 
     def boundingRect(self):
@@ -150,7 +152,8 @@ class ImageItem(GraphicsObject):
         self.update()
 
     def setOpts(self, update=True, **kargs):
-        
+        if 'axisOrder' in kargs:
+            self.axisOrder = kargs['axisOrder']
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
@@ -220,8 +223,8 @@ class ImageItem(GraphicsObject):
         
             imageitem.setImage(imagedata.T)
             
-        This requirement can be changed by the ``imageAxisOrder``
-        :ref:`global configuration option <apiref_config>`.
+        This requirement can be changed by calling ``image.setOpts(axisOrder='row-major')`` or
+        by changing the ``imageAxisOrder`` :ref:`global configuration option <apiref_config>`.
         
         
         """
@@ -320,10 +323,12 @@ class ImageItem(GraphicsObject):
             if w == 0 or h == 0:
                 self.qimage = None
                 return
-            xds = int(1.0/w)
-            yds = int(1.0/h)
-            image = fn.downsample(self.image, xds, axis=0)
-            image = fn.downsample(image, yds, axis=1)
+            xds = max(1, int(1.0 / w))
+            yds = max(1, int(1.0 / h))
+            axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
+            image = fn.downsample(self.image, xds, axis=axes[0])
+            image = fn.downsample(image, yds, axis=axes[1])
+            self._lastDownsample = (xds, yds)
         else:
             image = self.image
 
@@ -351,7 +356,7 @@ class ImageItem(GraphicsObject):
         # Assume images are in column-major order for backward compatibility
         # (most images are in row-major order)
         
-        if getConfigOption('imageAxisOrder') == 'legacy':
+        if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
         
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
@@ -370,7 +375,7 @@ class ImageItem(GraphicsObject):
             p.setCompositionMode(self.paintMode)
             profile('set comp mode')
 
-        shape = self.image.shape[:2] if getConfigOption('imageAxisOrder') == 'legacy' else self.image.shape[:2][::-1]
+        shape = self.image.shape[:2] if self.axisOrder == 'col-major' else self.image.shape[:2][::-1]
         p.drawImage(QtCore.QRectF(0,0,*shape), self.qimage)
         profile('p.drawImage')
         if self.border is not None:

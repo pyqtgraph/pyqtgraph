@@ -7,15 +7,24 @@ from pyqtgraph.tests import assertImageApproved
 
 app = pg.mkQApp()
 
+class TransposedImageItem(pg.ImageItem):
+    def setImage(self, image=None, **kwds):
+        if image is not None:
+            image = np.swapaxes(image, 0, 1)
+        return pg.ImageItem.setImage(self, image, **kwds)
 
-def test_ImageItem():
+
+def test_ImageItem(transpose=False):
     
     w = pg.GraphicsWindow()    
     view = pg.ViewBox()
     w.setCentralWidget(view)
     w.resize(200, 200)
     w.show()
-    img = pg.ImageItem(border=0.5)
+    if transpose:
+        img = TransposedImageItem(border=0.5)
+    else:
+        img = pg.ImageItem(border=0.5)
     view.addItem(img)
     
     
@@ -77,7 +86,10 @@ def test_ImageItem():
     assertImageApproved(w, 'imageitem/gradient_rgba_float', 'RGBA float gradient.')
 
     # checkerboard to test alpha
-    img2 = pg.ImageItem()
+    if transpose:
+        img2 = TransposedImageItem()
+    else:
+        img2 = pg.ImageItem()
     img2.setImage(np.fromfunction(lambda x,y: (x+y)%2, (10, 10)), levels=[-1,2])
     view.addItem(img2)
     img2.scale(10, 10)
@@ -103,9 +115,23 @@ def test_ImageItem():
     
     img.setAutoDownsample(True)
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_x', 'Resolution test with downsampling axross x axis.')
+    assert img._lastDownsample == (5, 1)
     
     img.setImage(data.T, levels=[-1, 1])
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_y', 'Resolution test with downsampling across y axis.')
+    assert img._lastDownsample == (1, 5)
+    
+    view.hide()
+
+def test_ImageItem_axisorder():
+    # All image tests pass again using the opposite axis order
+    origMode = pg.getConfigOption('imageAxisOrder')
+    altMode = 'row-major' if origMode == 'col-major' else 'col-major'
+    pg.setConfigOptions(imageAxisOrder=altMode)
+    try:
+        test_ImageItem(transpose=True)
+    finally:
+        pg.setConfigOptions(imageAxisOrder=origMode)
 
 
 @pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qWait")
