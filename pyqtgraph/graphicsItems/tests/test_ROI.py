@@ -27,13 +27,27 @@ def test_getArrayRegion():
 def check_getArrayRegion(roi, name, testResize=True):
     initState = roi.getState()
     
-    win = pg.GraphicsLayoutWidget()
+    #win = pg.GraphicsLayoutWidget()
+    win = pg.GraphicsView()
     win.show()
     win.resize(200, 400)
     
-    vb1 = win.addViewBox()
-    win.nextRow()
-    vb2 = win.addViewBox()
+    # Don't use Qt's layouts for testing--these generate unpredictable results.
+    #vb1 = win.addViewBox()
+    #win.nextRow()
+    #vb2 = win.addViewBox()
+    
+    # Instead, place the viewboxes manually 
+    vb1 = pg.ViewBox()
+    win.scene().addItem(vb1)
+    vb1.setPos(6, 6)
+    vb1.resize(188, 191)
+
+    vb2 = pg.ViewBox()
+    win.scene().addItem(vb2)
+    vb2.setPos(6, 203)
+    vb2.resize(188, 191)
+    
     img1 = pg.ImageItem(border='w')
     img2 = pg.ImageItem(border='w')
     vb1.addItem(img1)
@@ -115,8 +129,14 @@ def test_PolyLineROI():
         (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=True, pen=0.3), 'closed'),
         (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=False, pen=0.3), 'open')
     ]
-    plt = pg.plot()
+    
+    #plt = pg.plot()
+    plt = pg.GraphicsView()
+    plt.show()
     plt.resize(200, 200)
+    plt.plotItem = pg.PlotItem()
+    plt.scene().addItem(plt.plotItem)
+    plt.plotItem.resize(200, 200)
 
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
@@ -125,9 +145,9 @@ def test_PolyLineROI():
     QtTest.QTest.qWait(100)
     
     for r, name in rois:
-        plt.clear()
-        plt.addItem(r)
-        plt.autoRange()
+        plt.plotItem.clear()
+        plt.plotItem.addItem(r)
+        plt.plotItem.autoRange()
         app.processEvents()
         
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_init', 'Init %s polyline.' % name)
