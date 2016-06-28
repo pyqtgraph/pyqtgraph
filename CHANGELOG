@@ -11,11 +11,16 @@ pyqtgraph-0.9.11  [unreleased]
     - Remove all modifications to builtins
     - Fix SpinBox decimals
 
+  API / behavior changes:
+    - Change the defaut color kwarg to None in TextItem.setText() to avoid changing
+      the color everytime the text is changed.
+
   New Features:
     - Preliminary PyQt5 support
     - DockArea:
 	- Dock titles can be changed after creation
         - Added Dock.sigClosed
+    - Added TextItem.setColor()
 
   Maintenance:
     - Add examples to unit tests

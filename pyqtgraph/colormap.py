@@ -66,7 +66,9 @@ class ColorMap(object):
         ===============     ==============================================================
         """
         self.pos = np.array(pos)
-        self.color = np.array(color)
+        order = np.argsort(self.pos)
+        self.pos = self.pos[order]
+        self.color = np.array(color)[order]
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode

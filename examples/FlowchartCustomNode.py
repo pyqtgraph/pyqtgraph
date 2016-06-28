@@ -92,8 +92,8 @@ class UnsharpMaskNode(CtrlNode):
     """Return the input data passed through an unsharp mask."""
     nodeName = "UnsharpMask"
     uiTemplate = [
-        ('sigma',  'spin', {'value': 1.0, 'step': 1.0, 'range': [0.0, None]}),
-        ('strength', 'spin', {'value': 1.0, 'dec': True, 'step': 0.5, 'minStep': 0.01, 'range': [0.0, None]}),
+        ('sigma',  'spin', {'value': 1.0, 'step': 1.0, 'bounds': [0.0, None]}),
+        ('strength', 'spin', {'value': 1.0, 'dec': True, 'step': 0.5, 'minStep': 0.01, 'bounds': [0.0, None]}),
     ]
     def __init__(self, name):
         ## Define the input / output terminals available on this node

@@ -98,6 +98,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.lastDrag = None
         self.hoverItems = weakref.WeakKeyDictionary()
         self.lastHoverEvent = None
+        self.minDragTime = 0.5  # drags shorter than 0.5 sec are interpreted as clicks
         
         self.contextMenu = [QtGui.QAction("Export...", self)]
         self.contextMenu[0].triggered.connect(self.showExportDialog)
@@ -173,7 +174,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
                         cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
                         dist = Point(ev.screenPos() - cev.screenPos())
-                        if dist.length() < self._moveDistance and now - cev.time() < 0.5:
+                        if dist.length() < self._moveDistance and now - cev.time() < self.minDragTime:
                             continue
                         init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
                         self.dragButtons.append(int(btn))
@@ -186,10 +187,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
     def leaveEvent(self, ev):  ## inform items that mouse is gone
         if len(self.dragButtons) == 0:
             self.sendHoverEvents(ev, exitOnly=True)
-        
                 
     def mouseReleaseEvent(self, ev):
-        #print 'sceneRelease'
         if self.mouseGrabberItem() is None:
             if ev.button() in self.dragButtons:
                 if self.sendDragEvent(ev, final=True):

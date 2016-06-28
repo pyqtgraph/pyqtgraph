@@ -9,7 +9,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import sys, re
+import sys, re, time
 
 from .python2_3 import asUnicode
 
@@ -45,6 +45,15 @@ if QT_LIB == PYSIDE:
     from PySide import QtGui, QtCore, QtOpenGL, QtSvg
     try:
         from PySide import QtTest
+        if not hasattr(QtTest.QTest, 'qWait'):
+            @staticmethod
+            def qWait(msec):
+                start = time.time()
+                QtGui.QApplication.processEvents()
+                while time.time() < start + msec * 0.001:
+                    QtGui.QApplication.processEvents()
+            QtTest.QTest.qWait = qWait
+                
     except ImportError:
         pass
     import PySide
@@ -139,7 +148,7 @@ elif QT_LIB == PYQT5:
     
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    from PyQt5 import QtGui, QtCore, QtWidgets, Qt, uic
+    from PyQt5 import QtGui, QtCore, QtWidgets, uic
     try:
         from PyQt5 import QtSvg
     except ImportError:
@@ -150,10 +159,18 @@ elif QT_LIB == PYQT5:
         pass
 
     # Re-implement deprecated APIs
-    def scale(self, sx, sy):
-        tr = self.transform()
-        tr.scale(sx, sy)
-        self.setTransform(tr)
+
+    __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
+
+    def scale(self, *args):
+        if args:
+            sx, sy = args
+            tr = self.transform()
+            tr.scale(sx, sy)
+            self.setTransform(tr)
+        else:
+            return __QGraphicsItem_scale(self)
+
     QtWidgets.QGraphicsItem.scale = scale
 
     def rotate(self, angle):
@@ -172,8 +189,8 @@ elif QT_LIB == PYQT5:
         self.setContentsMargins(i, i, i, i)
     QtWidgets.QGridLayout.setMargin = setMargin
 
-    def setResizeMode(self, mode):
-        self.setSectionResizeMode(mode)
+    def setResizeMode(self, *args):
+        self.setSectionResizeMode(*args)
     QtWidgets.QHeaderView.setResizeMode = setResizeMode
 
     
