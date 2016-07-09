@@ -741,7 +741,7 @@ class MetaArray(object):
         ## decide which read function to use
         with open(filename, 'rb') as fd:
             magic = fd.read(8)
-            if magic == '\x89HDF\r\n\x1a\n':
+            if magic == b'\x89HDF\r\n\x1a\n':
                 fd.close()
                 self._readHDF5(filename, **kwargs)
                 self._isHDF = True
@@ -767,11 +767,11 @@ class MetaArray(object):
         """Read meta array from the top of a file. Read lines until a blank line is reached.
         This function should ideally work for ALL versions of MetaArray.
         """
-        meta = ''
+        meta = b''
         ## Read meta information until the first blank line
         while True:
             line = fd.readline().strip()
-            if line == '':
+            if line == b'':
                 break
             meta += line
         ret = eval(meta)
@@ -1224,7 +1224,7 @@ class MetaArray(object):
 
         with open(fileName, mode) as fd:
             if appendAxis is None or newFile:
-                fd.write(str(meta) + '\n\n')
+                fd.write(str(meta).encode('utf-8') + b'\n\n')
                 for ax in axstrs:
                     fd.write(ax)
 
@@ -1233,7 +1233,7 @@ class MetaArray(object):
                              'numFrames': self.shape[appendAxis]}
                 if dynXVals is not None:
                     frameInfo['xVals'] = list(dynXVals)
-                fd.write('\n' + str(frameInfo) + '\n')
+                fd.write(b'\n' + str(frameInfo).encode('utf-8') + b'\n')
 
             fd.write(dataStr)
 
