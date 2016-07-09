@@ -240,7 +240,7 @@ class Tasker(object):
         self.proc = process
         self.par = parallelizer
         self.tasks = tasks
-        for k, v in kwds.iteritems():
+        for k, v in kwds.items():
             setattr(self, k, v)
         
     def __iter__(self):
