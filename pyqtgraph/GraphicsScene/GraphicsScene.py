@@ -1,6 +1,5 @@
 import weakref
 from ..Qt import QtCore, QtGui
-from ..python2_3 import sortList, cmp
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
@@ -439,7 +438,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 return 0
             return item.zValue() + absZValue(item.parentItem())
         
-        sortList(items2, lambda a,b: cmp(absZValue(b), absZValue(a)))
+        items2.sort(key=absZValue, reverse=True)
         
         return items2
         
