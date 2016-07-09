@@ -33,8 +33,9 @@ def test_CSVExporter():
     ex = pg.exporters.CSVExporter(plt.plotItem)
     ex.export(fileName=tempfilename)
 
-    r = csv.reader(open(tempfilename, 'r'))
-    lines = [line for line in r]
+    with open(tempfilename, 'r') as fd:
+        r = csv.reader(fd)
+        lines = [line for line in r]
     header = lines.pop(0)
     assert header == ['myPlot_x', 'myPlot_y', 'x0001', 'y0001', 'x0002', 'y0002']
     

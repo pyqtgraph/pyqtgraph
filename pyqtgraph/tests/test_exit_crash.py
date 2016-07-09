@@ -35,7 +35,8 @@ def test_exit_crash():
 
         print(name)
         argstr = initArgs.get(name, "")
-        open(tmp, 'w').write(code.format(path=path, classname=name, args=argstr))
+        with open(tmp, 'w') as f:
+            f.write(code.format(path=path, classname=name, args=argstr))
         proc = subprocess.Popen([sys.executable, tmp])
         assert proc.wait() == 0
 

@@ -10,6 +10,7 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
+import io
 import types, copy, threading, os, re
 import pickle
 import numpy as np
@@ -1210,52 +1211,49 @@ class MetaArray(object):
             ## If the file does not exist or its size is 0, then we must write the header
             newFile = (not os.path.exists(fileName))  or  (os.stat(fileName).st_size == 0)
         
-        ## write data to file
-        if appendAxis is None or newFile:
-            fd = open(fileName, 'wb')
-            fd.write(str(meta) + '\n\n')
-            for ax in axstrs:
-                fd.write(ax)
-        else:
-            fd = open(fileName, 'ab')
-        
         if self.dtype != object:
             dataStr = self.view(np.ndarray).tostring()
         else:
             dataStr = pickle.dumps(self.view(np.ndarray))
-        #print self.size, len(dataStr), self.dtype
-        if appendAxis is not None:
-            frameInfo = {'len':len(dataStr), 'numFrames':self.shape[appendAxis]}
-            if dynXVals is not None:
-                frameInfo['xVals'] = list(dynXVals)
-            fd.write('\n'+str(frameInfo)+'\n')
-        fd.write(dataStr)
-        fd.close()
-        
+
+        ## write data to file
+        if appendAxis is None or newFile:
+            mode = 'wb'
+        else:
+            mode = 'ab'
+
+        with open(fileName, mode) as fd:
+            if appendAxis is None or newFile:
+                fd.write(str(meta) + '\n\n')
+                for ax in axstrs:
+                    fd.write(ax)
+
+            if appendAxis is not None:
+                frameInfo = {'len': len(dataStr),
+                             'numFrames': self.shape[appendAxis]}
+                if dynXVals is not None:
+                    frameInfo['xVals'] = list(dynXVals)
+                fd.write('\n' + str(frameInfo) + '\n')
+
+            fd.write(dataStr)
+
     def writeCsv(self, fileName=None):
         """Write 2D array to CSV file or return the string if no filename is given"""
         if self.ndim > 2:
             raise Exception("CSV Export is only for 2D arrays")
         if fileName is not None:
-            file = open(fileName, 'w')
-        ret = ''
-        if 'cols' in self._info[0]:
-            s = ','.join([x['name'] for x in self._info[0]['cols']]) + '\n'
-            if fileName is not None:
-                file.write(s)
-            else:
-                ret += s
-        for row in range(0, self.shape[1]):
-            s = ','.join(["%g" % x for x in self[:, row]]) + '\n'
-            if fileName is not None:
-                file.write(s)
-            else:
-                ret += s
-        if fileName is not None:
-            file.close()
+            fd = open(fileName, 'w')
         else:
-            return ret
-        
+            fd = io.StringIO()
+        with fd:
+            if 'cols' in self._info[0]:
+                s = ','.join([x['name'] for x in self._info[0]['cols']]) + '\n'
+                fd.write(s)
+            for row in range(0, self.shape[1]):
+                s = ','.join(["%g" % x for x in self[:, row]]) + '\n'
+                fd.write(s)
+            if fileName is None:
+                return fd.getvalue()
 
 
 #class H5MetaList():

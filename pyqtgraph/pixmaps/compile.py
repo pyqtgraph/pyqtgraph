@@ -14,6 +14,5 @@ for f in os.listdir(path):
     arr = np.asarray(ptr).reshape(img.height(), img.width(), 4).transpose(1,0,2)
     pixmaps[f] = pickle.dumps(arr)
 ver = sys.version_info[0]
-fh = open(os.path.join(path, 'pixmapData_%d.py' %ver), 'w')
-fh.write("import numpy as np; pixmapData=%s" % repr(pixmaps))
-    
+with open(os.path.join(path, 'pixmapData_%d.py' % (ver, )), 'w') as fh:
+    fh.write("import numpy as np; pixmapData=%s" % (repr(pixmaps), ))
