@@ -12,7 +12,6 @@ More info at http://www.scipy.org/Cookbook/MetaArray
 
 import types, copy, threading, os, re
 import pickle
-from functools import reduce
 import numpy as np
 from ..python2_3 import basestring
 #import traceback
@@ -845,7 +844,7 @@ class MetaArray(object):
             frames = []
             frameShape = list(meta['shape'])
             frameShape[dynAxis] = 1
-            frameSize = reduce(lambda a,b: a*b, frameShape)
+            frameSize = np.prod(frameShape)
             n = 0
             while True:
                 ## Extract one non-blank line
@@ -1294,7 +1293,7 @@ class MetaArray(object):
             #frames = []
             #frameShape = list(meta['shape'])
             #frameShape[dynAxis] = 1
-            #frameSize = reduce(lambda a,b: a*b, frameShape)
+            #frameSize = np.prod(frameShape)
             #n = 0
             #while True:
                 ### Extract one non-blank line
