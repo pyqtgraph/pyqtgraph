@@ -281,7 +281,7 @@ def makePng(img):
     """Given an array like (H, W, 4), return a PNG-encoded byte string.
     """
     io = QtCore.QBuffer()
-    qim = fn.makeQImage(img, alpha=False)
+    qim = fn.makeQImage(img.transpose(1, 0, 2), alpha=False)
     qim.save(io, 'PNG')
     png = bytes(io.data().data())
     return png

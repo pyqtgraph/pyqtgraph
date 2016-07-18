@@ -134,9 +134,13 @@ def test_PolyLineROI():
     plt = pg.GraphicsView()
     plt.show()
     plt.resize(200, 200)
-    plt.plotItem = pg.PlotItem()
-    plt.scene().addItem(plt.plotItem)
-    plt.plotItem.resize(200, 200)
+    vb = pg.ViewBox()
+    plt.scene().addItem(vb)
+    vb.resize(200, 200)
+    #plt.plotItem = pg.PlotItem()
+    #plt.scene().addItem(plt.plotItem)
+    #plt.plotItem.resize(200, 200)
+    
 
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
@@ -145,9 +149,9 @@ def test_PolyLineROI():
     QtTest.QTest.qWait(100)
     
     for r, name in rois:
-        plt.plotItem.clear()
-        plt.plotItem.addItem(r)
-        plt.plotItem.autoRange()
+        vb.clear()
+        vb.addItem(r)
+        vb.autoRange()
         app.processEvents()
         
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_init', 'Init %s polyline.' % name)
