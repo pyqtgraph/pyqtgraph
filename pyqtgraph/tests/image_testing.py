@@ -59,7 +59,7 @@ if sys.version[0] >= '3':
 else:
     import httplib
     import urllib
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QtTest
 from .. import functions as fn
 from .. import GraphicsLayoutWidget
 from .. import ImageItem, TextItem
@@ -106,6 +106,10 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     """
     if isinstance(image, QtGui.QWidget):
         w = image
+        
+            # just to be sure the widget size is correct (new window may be resized):
+        QtGui.QApplication.processEvents()
+
         graphstate = scenegraphState(w, standardFile)
         image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
         qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
@@ -154,7 +158,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         assertImageMatch(image, stdImage, **kwargs)
         
         if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
-            print graphstate
+            print(graphstate)
     except Exception:
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
@@ -176,7 +180,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             else:
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile)
-                print graphstate
+                print(graphstate)
                 raise
 
 
