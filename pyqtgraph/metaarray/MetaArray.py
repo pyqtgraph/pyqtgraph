@@ -358,7 +358,7 @@ class MetaArray(object):
         else:
             return np.array(self._data)
             
-    def __array__(self):
+    def __array__(self, dtype=None):
         ## supports np.array(metaarray_instance) 
         return self.asarray()
             
