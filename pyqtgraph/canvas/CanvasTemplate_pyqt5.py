@@ -93,4 +93,4 @@ class Ui_Form(object):
 
 from ..widgets.GraphicsView import GraphicsView
 from ..widgets.TreeWidget import TreeWidget
-from CanvasManager import CanvasCombo
+from .CanvasManager import CanvasCombo
