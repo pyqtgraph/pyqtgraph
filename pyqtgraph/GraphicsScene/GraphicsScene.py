@@ -197,10 +197,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 self.dragButtons.remove(ev.button())
             else:
                 cev = [e for e in self.clickEvents if int(e.button()) == int(ev.button())]
-                if self.sendClickEvent(cev[0]):
-                    #print "sent click event"
-                    ev.accept()
-                self.clickEvents.remove(cev[0])
+                if cev:
+                    if self.sendClickEvent(cev[0]):
+                        #print "sent click event"
+                        ev.accept()
+                    self.clickEvents.remove(cev[0])
                 
         if int(ev.buttons()) == 0:
             self.dragItem = None
