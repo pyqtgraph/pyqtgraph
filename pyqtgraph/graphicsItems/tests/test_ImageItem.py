@@ -3,15 +3,9 @@ import pytest
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.tests import assertImageApproved
+from pyqtgraph.tests import assertImageApproved, TransposedImageItem
 
 app = pg.mkQApp()
-
-class TransposedImageItem(pg.ImageItem):
-    def setImage(self, image=None, **kwds):
-        if image is not None:
-            image = np.swapaxes(image, 0, 1)
-        return pg.ImageItem.setImage(self, image, **kwds)
 
 
 def test_ImageItem(transpose=False):
@@ -21,12 +15,9 @@ def test_ImageItem(transpose=False):
     w.setCentralWidget(view)
     w.resize(200, 200)
     w.show()
-    if transpose:
-        img = TransposedImageItem(border=0.5)
-    else:
-        img = pg.ImageItem(border=0.5)
+    img = TransposedImageItem(border=0.5, transpose=transpose)
+
     view.addItem(img)
-    
     
     # test mono float
     np.random.seed(0)
@@ -86,10 +77,7 @@ def test_ImageItem(transpose=False):
     assertImageApproved(w, 'imageitem/gradient_rgba_float', 'RGBA float gradient.')
 
     # checkerboard to test alpha
-    if transpose:
-        img2 = TransposedImageItem()
-    else:
-        img2 = pg.ImageItem()
+    img2 = TransposedImageItem(transpose=transpose)
     img2.setImage(np.fromfunction(lambda x,y: (x+y)%2, (10, 10)), levels=[-1,2])
     view.addItem(img2)
     img2.scale(10, 10)

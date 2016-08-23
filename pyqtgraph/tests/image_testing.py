@@ -584,3 +584,15 @@ def transformStr(t):
 
 def indent(s, pfx):
     return '\n'.join([pfx+line for line in s.split('\n')])
+
+
+class TransposedImageItem(ImageItem):
+    # used for testing image axis order; we can test row-major and col-major using
+    # the same test images
+    def __init__(self, *args, **kwds):
+        self.__transpose = kwds.pop('transpose', False)
+        ImageItem.__init__(self, *args, **kwds)
+    def setImage(self, image=None, **kwds):
+        if image is not None and self.__transpose is True:
+            image = np.swapaxes(image, 0, 1)
+        return ImageItem.setImage(self, image, **kwds)
