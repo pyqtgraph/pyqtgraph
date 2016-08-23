@@ -25,8 +25,8 @@ def test_getArrayRegion():
         try:
             pg.setConfigOptions(imageAxisOrder='col-major')
             check_getArrayRegion(roi, 'roi/'+name, testResize)
-            #pg.setConfigOptions(imageAxisOrder='row-major')
-            #check_getArrayRegion(roi, 'roi/'+name, testResize, transpose=True)
+            pg.setConfigOptions(imageAxisOrder='row-major')
+            check_getArrayRegion(roi, 'roi/'+name, testResize, transpose=True)
         finally:
             pg.setConfigOptions(imageAxisOrder=origMode)
     

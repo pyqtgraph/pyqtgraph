@@ -103,11 +103,11 @@ def test_ImageItem(transpose=False):
     
     img.setAutoDownsample(True)
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_x', 'Resolution test with downsampling axross x axis.')
-    assert img._lastDownsample == (5, 1)
+    assert img._lastDownsample == (4, 1)
     
     img.setImage(data.T, levels=[-1, 1])
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_y', 'Resolution test with downsampling across y axis.')
-    assert img._lastDownsample == (1, 5)
+    assert img._lastDownsample == (1, 4)
     
     view.hide()
 
