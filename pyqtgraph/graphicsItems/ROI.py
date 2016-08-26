@@ -1017,7 +1017,7 @@ class ROI(GraphicsObject):
         If returnSlice is set to False, the function returns a pair of tuples with the values that would have 
         been used to generate the slice objects. ((ax0Start, ax0Stop), (ax1Start, ax1Stop))
         
-        If the slice can not be computed (usually because the scene/transforms are not properly
+        If the slice cannot be computed (usually because the scene/transforms are not properly
         constructed yet), then the method returns None.
         """
         ## Determine shape of array along ROI axes
@@ -1104,7 +1104,8 @@ class ROI(GraphicsObject):
         
         shape, vectors, origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         if not returnMappedCoords:
-            return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            return rgn
         else:
             kwds['returnCoords'] = True
             result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
@@ -1119,29 +1120,34 @@ class ROI(GraphicsObject):
         (shape, vectors, origin) to extract a subset of *data* using this ROI 
         and *img* to specify the subset.
         
+        If *fromBoundingRect* is True, then the ROI's bounding rectangle is used
+        rather than the shape of the ROI.
+        
         See :func:`getArrayRegion <pyqtgraph.ROI.getArrayRegion>` for more information.
         """
         if self.scene() is not img.scene():
             raise Exception("ROI and target item must be members of the same scene.")
         
-        origin = self.mapToItem(img, QtCore.QPointF(0, 0))
+        origin = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 0)))
         
         ## vx and vy point in the directions of the slice axes, but must be scaled properly
-        vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
-        vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
+        vx = img.mapToData(self.mapToItem(img, QtCore.QPointF(1, 0))) - origin
+        vy = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 1))) - origin
         
         lvx = np.sqrt(vx.x()**2 + vx.y()**2)
         lvy = np.sqrt(vy.x()**2 + vy.y()**2)
-        pxLen = img.width() / float(data.shape[axes[0]])
-        #img.width is number of pixels, not width of item.
-        #need pxWidth and pxHeight instead of pxLen ?
-        sx =  pxLen / lvx
-        sy =  pxLen / lvy
+        #pxLen = img.width() / float(data.shape[axes[0]])
+        ##img.width is number of pixels, not width of item.
+        ##need pxWidth and pxHeight instead of pxLen ?
+        #sx =  pxLen / lvx
+        #sy =  pxLen / lvy
+        sx = 1.0 / lvx
+        sy = 1.0 / lvy
         
         vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
         if fromBoundingRect is True:
             shape = self.boundingRect().width(), self.boundingRect().height()
-            origin = self.mapToItem(img, self.boundingRect().topLeft())
+            origin = img.mapToData(self.mapToItem(img, self.boundingRect().topLeft()))
             origin = (origin.x(), origin.y())
         else:
             shape = self.state['size']
@@ -1150,10 +1156,10 @@ class ROI(GraphicsObject):
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
         
         if getConfigOption('imageAxisOrder') == 'row-major':
-            vectors = [vectors[1][::-1], vectors[0][::-1]]
+            # transpose output
+            vectors = vectors[::-1]
             shape = shape[::-1]
-            origin = origin[::-1]
-        
+
         return shape, vectors, origin
 
     def renderShapeMask(self, width, height):

@@ -8,7 +8,7 @@ from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClic
 app = pg.mkQApp()
 
 
-def test_getArrayRegion():
+def test_getArrayRegion(transpose=False):
     pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
     pr.setPos(1, 1)
     rois = [
@@ -23,13 +23,19 @@ def test_getArrayRegion():
         
         origMode = pg.getConfigOption('imageAxisOrder')
         try:
-            pg.setConfigOptions(imageAxisOrder='col-major')
-            check_getArrayRegion(roi, 'roi/'+name, testResize)
-            pg.setConfigOptions(imageAxisOrder='row-major')
-            check_getArrayRegion(roi, 'roi/'+name, testResize, transpose=True)
+            if transpose:
+                pg.setConfigOptions(imageAxisOrder='row-major')
+                check_getArrayRegion(roi, 'roi/'+name, testResize, transpose=True)
+            else:
+                pg.setConfigOptions(imageAxisOrder='col-major')
+                check_getArrayRegion(roi, 'roi/'+name, testResize)
         finally:
             pg.setConfigOptions(imageAxisOrder=origMode)
     
+
+def test_getArrayRegion_axisorder():
+    test_getArrayRegion(transpose=True)
+
     
 def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     initState = roi.getState()
@@ -55,8 +61,8 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     vb2.setPos(6, 203)
     vb2.resize(188, 191)
     
-    img1 = TransposedImageItem(border='w', transpose=transpose)
-    img2 = TransposedImageItem(border='w', transpose=transpose)
+    img1 = pg.ImageItem(border='w')
+    img2 = pg.ImageItem(border='w')
 
     vb1.addItem(img1)
     vb2.addItem(img2)
@@ -68,12 +74,21 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     data[:, :, 2, :] += 10
     data[:, :, :, 3] += 10
     
+    if transpose:
+        data = data.transpose(0, 2, 1, 3)
+    
     img1.setImage(data[0, ..., 0])
     vb1.setAspectLocked()
     vb1.enableAutoRange(True, True)
     
     roi.setZValue(10)
     vb1.addItem(roi)
+
+    if isinstance(roi, pg.RectROI):
+        if transpose:
+            assert roi.getAffineSliceParams(data, img1, axes=(1, 2)) == ([28.0, 27.0], ((1.0, 0.0), (0.0, 1.0)), (1.0, 1.0))
+        else:
+            assert roi.getAffineSliceParams(data, img1, axes=(1, 2)) == ([27.0, 28.0], ((1.0, 0.0), (0.0, 1.0)), (1.0, 1.0))
 
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     #assert np.all((rgn == data[:, 1:-2, 1:-2, :]) | (rgn == 0))

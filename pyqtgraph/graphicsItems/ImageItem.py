@@ -279,6 +279,42 @@ class ImageItem(GraphicsObject):
         if gotNewData:
             self.sigImageChanged.emit()
 
+    def dataTransform(self):
+        """Return the transform that maps from this image's input array to its
+        local coordinate system.
+        
+        This transform corrects for the transposition that occurs when image data
+        is interpreted in row-major order.
+        """
+        # Might eventually need to account for downsampling / clipping here
+        tr = QtGui.QTransform()
+        if self.axisOrder == 'row-major':
+            # transpose
+            tr.scale(1, -1)
+            tr.rotate(-90)
+        return tr
+
+    def inverseDataTransform(self):
+        """Return the transform that maps from this image's local coordinate
+        system to its input array.
+        
+        See dataTransform() for more information.
+        """
+        tr = QtGui.QTransform()
+        if self.axisOrder == 'row-major':
+            # transpose
+            tr.scale(1, -1)
+            tr.rotate(-90)
+        return tr
+
+    def mapToData(self, obj):
+        tr = self.inverseDataTransform()
+        return tr.map(obj)
+
+    def mapFromData(self, obj):
+        tr = self.dataTransform()
+        return tr.map(obj)
+
     def quickMinMax(self, targetSize=1e6):
         """
         Estimate the min/max values of the image data by subsampling.
