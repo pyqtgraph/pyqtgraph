@@ -1030,7 +1030,7 @@ class ROI(GraphicsObject):
             return None
             
         ## Modify transform to scale from image coords to data coords
-        axisOrder = getConfigOption('imageAxisOrder')
+        axisOrder = img.axisOrder
         if axisOrder == 'row-major':
             tr.scale(float(dShape[1]) / img.width(), float(dShape[0]) / img.height())
         else:
@@ -1076,8 +1076,7 @@ class ROI(GraphicsObject):
                             ROI and the boundaries of *data*.
         axes                (length-2 tuple) Specifies the axes in *data* that
                             correspond to the (x, y) axes of *img*. If the
-                            global configuration variable
-                            :ref:`imageAxisOrder <apiref_config>` is set to
+                            image's axis order is set to
                             'row-major', then the axes are instead specified in
                             (y, x) order.
         returnMappedCoords  (bool) If True, the array slice is returned along
@@ -1155,7 +1154,7 @@ class ROI(GraphicsObject):
         
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
         
-        if getConfigOption('imageAxisOrder') == 'row-major':
+        if img.axisOrder == 'row-major':
             # transpose output
             vectors = vectors[::-1]
             shape = shape[::-1]
@@ -1182,7 +1181,7 @@ class ROI(GraphicsObject):
         p.translate(-bounds.topLeft())
         p.drawPath(shape)
         p.end()
-        mask = fn.imageToArray(im)[:,:,0].astype(float) / 255.
+        mask = fn.imageToArray(im, transpose=True)[:,:,0].astype(float) / 255.
         return mask
         
     def getGlobalTransform(self, relativeTo=None):
@@ -1655,7 +1654,7 @@ class MultiRectROI(QtGui.QGraphicsObject):
             
         ## make sure orthogonal axis is the same size
         ## (sometimes fp errors cause differences)
-        if getConfigOption('imageAxisOrder') == 'row-major':
+        if img.axisOrder == 'row-major':
             axes = axes[::-1]
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim
@@ -2025,7 +2024,14 @@ class PolyLineROI(ROI):
         if br.width() > 1000:
             raise Exception()
         sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True)
-        mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
+        
+        if img.axisOrder == 'col-major':
+            mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
+        else:
+            mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
+            mask = mask.T
+            
+        # reshape mask to ensure it is applied to the correct data axes
         shape = [1] * data.ndim
         shape[axes[0]] = sliced.shape[axes[0]]
         shape[axes[1]] = sliced.shape[axes[1]]

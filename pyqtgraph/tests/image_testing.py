@@ -159,12 +159,15 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         
         if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
             print(graphstate)
+            
+        if os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
+            raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL evnironment variable.")
     except Exception:
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
                   "image %s.\nTo revert this file, run `cd %s; git checkout "
                   "%s`\n" % (stdFileName, dataPath, standardFile))
-        if os.getenv('PYQTGRAPH_AUDIT') == '1':
+        if os.getenv('PYQTGRAPH_AUDIT') == '1' or os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
             sys.excepthook(*sys.exc_info())
             getTester().test(image, stdImage, message)
             stdPath = os.path.dirname(stdFileName)
