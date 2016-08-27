@@ -1042,7 +1042,6 @@ class ViewBox(GraphicsWidget):
         finally:
             view.blockLink(False)
         
-        
     def screenGeometry(self):
         """return the screen geometry of the viewbox"""
         v = self.getViewWidget()
@@ -1053,8 +1052,6 @@ class ViewBox(GraphicsWidget):
         pos = v.mapToGlobal(v.pos())
         wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
         return wr
-        
-    
 
     def itemsChanged(self):
         ## called when items are added/removed from self.childGroup
@@ -1067,18 +1064,23 @@ class ViewBox(GraphicsWidget):
             self.update()
         #self.updateAutoRange()
 
+    def _invertAxis(self, ax, inv):
+        key = 'xy'[ax] + 'Inverted'
+        if self.state[key] == inv:
+            return
+        
+        self.state[key] = inv
+        self._matrixNeedsUpdate = True # updateViewRange won't detect this for us
+        self.updateViewRange()
+        self.update()
+        self.sigStateChanged.emit(self)
+        self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][ax]))
+
     def invertY(self, b=True):
         """
         By default, the positive y-axis points upward on the screen. Use invertY(True) to reverse the y-axis.
         """
-        if self.state['yInverted'] == b:
-            return
-        
-        self.state['yInverted'] = b
-        self._matrixNeedsUpdate = True # updateViewRange won't detect this for us
-        self.updateViewRange()
-        self.sigStateChanged.emit(self)
-        self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
+        self._invertAxis(1, b)
 
     def yInverted(self):
         return self.state['yInverted']
@@ -1087,14 +1089,7 @@ class ViewBox(GraphicsWidget):
         """
         By default, the positive x-axis points rightward on the screen. Use invertX(True) to reverse the x-axis.
         """
-        if self.state['xInverted'] == b:
-            return
-        
-        self.state['xInverted'] = b
-        #self.updateMatrix(changed=(False, True))
-        self.updateViewRange()
-        self.sigStateChanged.emit(self)
-        self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+        self._invertAxis(0, b)
 
     def xInverted(self):
         return self.state['xInverted']

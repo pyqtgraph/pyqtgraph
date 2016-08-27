@@ -9,7 +9,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import sys, re, time
+import os, sys, re, time
 
 from .python2_3 import asUnicode
 
@@ -17,17 +17,19 @@ PYSIDE = 'PySide'
 PYQT4 = 'PyQt4'
 PYQT5 = 'PyQt5'
 
-QT_LIB = None
+QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 
-## Automatically determine whether to use PyQt or PySide.
+## Automatically determine whether to use PyQt or PySide (unless specified by
+## environment variable).
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
-libOrder = [PYQT4, PYSIDE, PYQT5]
+if QT_LIB is None:
+    libOrder = [PYQT4, PYSIDE, PYQT5]
 
-for lib in libOrder:
-    if lib in sys.modules:
-        QT_LIB = lib
-        break
+    for lib in libOrder:
+        if lib in sys.modules:
+            QT_LIB = lib
+            break
 
 if QT_LIB is None:
     for lib in libOrder:
@@ -38,7 +40,7 @@ if QT_LIB is None:
         except ImportError:
             pass
 
-if QT_LIB == None:
+if QT_LIB is None:
     raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
 
 if QT_LIB == PYSIDE:
@@ -157,6 +159,11 @@ elif QT_LIB == PYQT5:
         from PyQt5 import QtOpenGL
     except ImportError:
         pass
+    try:
+        from PyQt5 import QtTest
+        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
+    except ImportError:
+        pass
 
     # Re-implement deprecated APIs
 
@@ -207,6 +214,9 @@ elif QT_LIB == PYQT5:
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
+
+else:
+    raise ValueError("Invalid Qt lib '%s'" % QT_LIB)
 
 # Common to PyQt4 and 5
 if QT_LIB.startswith('PyQt'):

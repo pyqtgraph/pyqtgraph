@@ -213,20 +213,30 @@ class ROI(GraphicsObject):
         """Return the angle of the ROI in degrees."""
         return self.getState()['angle']
         
-    def setPos(self, pos, update=True, finish=True):
+    def setPos(self, pos, y=None, update=True, finish=True):
         """Set the position of the ROI (in the parent's coordinate system).
-        By default, this will cause both sigRegionChanged and sigRegionChangeFinished to be emitted.
         
-        If finish is False, then sigRegionChangeFinished will not be emitted. You can then use 
-        stateChangeFinished() to cause the signal to be emitted after a series of state changes.
+        Accepts either separate (x, y) arguments or a single :class:`Point` or
+        ``QPointF`` argument. 
         
-        If update is False, the state change will be remembered but not processed and no signals 
+        By default, this method causes both ``sigRegionChanged`` and
+        ``sigRegionChangeFinished`` to be emitted. If *finish* is False, then
+        ``sigRegionChangeFinished`` will not be emitted. You can then use 
+        stateChangeFinished() to cause the signal to be emitted after a series
+        of state changes.
+        
+        If *update* is False, the state change will be remembered but not processed and no signals 
         will be emitted. You can then use stateChanged() to complete the state change. This allows
         multiple change functions to be called sequentially while minimizing processing overhead
-        and repeated signals. Setting update=False also forces finish=False.
+        and repeated signals. Setting ``update=False`` also forces ``finish=False``.
         """
-        
-        pos = Point(pos)
+        if y is None:
+            pos = Point(pos)
+        else:
+            # avoid ambiguity where update is provided as a positional argument
+            if isinstance(y, bool):
+                raise TypeError("Positional arguments to setPos() must be numerical.")
+            pos = Point(pos, y)
         self.state['pos'] = pos
         QtGui.QGraphicsItem.setPos(self, pos)
         if update:
@@ -526,7 +536,7 @@ class ROI(GraphicsObject):
         if isinstance(handle, Handle):
             index = [i for i, info in enumerate(self.handles) if info['item'] is handle]    
             if len(index) == 0:
-                raise Exception("Cannot remove handle; it is not attached to this ROI")
+                raise Exception("Cannot return handle index; not attached to this ROI")
             return index[0]
         else:
             return handle
@@ -636,11 +646,20 @@ class ROI(GraphicsObject):
         if self.mouseHovering == hover:
             return
         self.mouseHovering = hover
-        if hover:
-            self.currentPen = fn.mkPen(255, 255, 0)
+        self._updateHoverColor()
+        
+    def _updateHoverColor(self):
+        pen = self._makePen()
+        if self.currentPen != pen:
+            self.currentPen = pen
+            self.update()
+        
+    def _makePen(self):
+        # Generate the pen color for this ROI based on its current state.
+        if self.mouseHovering:
+            return fn.mkPen(255, 255, 0)
         else:
-            self.currentPen = self.pen
-        self.update()
+            return self.pen
 
     def contextMenuEnabled(self):
         return self.removable
@@ -919,8 +938,9 @@ class ROI(GraphicsObject):
         if self.lastState is None:
             changed = True
         else:
-            for k in list(self.state.keys()):
-                if self.state[k] != self.lastState[k]:
+            state = self.getState()
+            for k in list(state.keys()):
+                if state[k] != self.lastState[k]:
                     changed = True
         
         self.prepareGeometryChange()
@@ -940,10 +960,11 @@ class ROI(GraphicsObject):
             self.sigRegionChanged.emit(self)
             
         self.freeHandleMoved = False
-        self.lastState = self.stateCopy()
+        self.lastState = self.getState()
             
         if finish:
             self.stateChangeFinished()
+            self.informViewBoundsChanged()
     
     def stateChangeFinished(self):
         self.sigRegionChangeFinished.emit(self)
@@ -988,8 +1009,9 @@ class ROI(GraphicsObject):
         # p.restore()
 
     def getArraySlice(self, data, img, axes=(0,1), returnSlice=True):
-        """Return a tuple of slice objects that can be used to slice the region from data covered by this ROI.
-        Also returns the transform which maps the ROI into data coordinates.
+        """Return a tuple of slice objects that can be used to slice the region
+        from *data* that is covered by the bounding rectangle of this ROI.
+        Also returns the transform that maps the ROI into data coordinates.
         
         If returnSlice is set to False, the function returns a pair of tuples with the values that would have 
         been used to generate the slice objects. ((ax0Start, ax0Stop), (ax1Start, ax1Stop))
@@ -1072,8 +1094,10 @@ class ROI(GraphicsObject):
         
         All extra keyword arguments are passed to :func:`affineSlice <pyqtgraph.affineSlice>`.
         """
+        # this is a hidden argument for internal use
+        fromBR = kwds.pop('fromBoundingRect', False)
         
-        shape, vectors, origin = self.getAffineSliceParams(data, img, axes)
+        shape, vectors, origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         if not returnMappedCoords:
             return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
         else:
@@ -1084,7 +1108,7 @@ class ROI(GraphicsObject):
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
-    def getAffineSliceParams(self, data, img, axes=(0,1)):
+    def getAffineSliceParams(self, data, img, axes=(0,1), fromBoundingRect=False):
         """
         Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>`
         (shape, vectors, origin) to extract a subset of *data* using this ROI 
@@ -1095,8 +1119,6 @@ class ROI(GraphicsObject):
         if self.scene() is not img.scene():
             raise Exception("ROI and target item must be members of the same scene.")
         
-        shape = self.state['size']
-        
         origin = self.mapToItem(img, QtCore.QPointF(0, 0))
         
         ## vx and vy point in the directions of the slice axes, but must be scaled properly
@@ -1106,17 +1128,46 @@ class ROI(GraphicsObject):
         lvx = np.sqrt(vx.x()**2 + vx.y()**2)
         lvy = np.sqrt(vy.x()**2 + vy.y()**2)
         pxLen = img.width() / float(data.shape[axes[0]])
-        #img.width is number of pixels or width of item?
+        #img.width is number of pixels, not width of item.
         #need pxWidth and pxHeight instead of pxLen ?
         sx =  pxLen / lvx
         sy =  pxLen / lvy
         
         vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
-        shape = self.state['size']
+        if fromBoundingRect is True:
+            shape = self.boundingRect().width(), self.boundingRect().height()
+            origin = self.mapToItem(img, self.boundingRect().topLeft())
+            origin = (origin.x(), origin.y())
+        else:
+            shape = self.state['size']
+            origin = (origin.x(), origin.y())
+        
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
         
-        origin = (origin.x(), origin.y())
         return shape, vectors, origin
+
+    def renderShapeMask(self, width, height):
+        """Return an array of 0.0-1.0 into which the shape of the item has been drawn.
+        
+        This can be used to mask array selections.
+        """
+        if width == 0 or height == 0:
+            return np.empty((width, height), dtype=float)
+        
+        # QImage(width, height, format)
+        im = QtGui.QImage(width, height, QtGui.QImage.Format_ARGB32)
+        im.fill(0x0)
+        p = QtGui.QPainter(im)
+        p.setPen(fn.mkPen(None))
+        p.setBrush(fn.mkBrush('w'))
+        shape = self.shape()
+        bounds = shape.boundingRect()
+        p.scale(im.width() / bounds.width(), im.height() / bounds.height())
+        p.translate(-bounds.topLeft())
+        p.drawPath(shape)
+        p.end()
+        mask = fn.imageToArray(im)[:,:,0].astype(float) / 255.
+        return mask
         
     def getGlobalTransform(self, relativeTo=None):
         """Return global transformation (rotation angle+translation) required to move 
@@ -1576,10 +1627,10 @@ class MultiRectROI(QtGui.QGraphicsObject):
             pos.append(self.mapFromScene(l.getHandles()[1].scenePos()))
         return pos
         
-    def getArrayRegion(self, arr, img=None, axes=(0,1)):
+    def getArrayRegion(self, arr, img=None, axes=(0,1), **kwds):
         rgns = []
         for l in self.lines:
-            rgn = l.getArrayRegion(arr, img, axes=axes)
+            rgn = l.getArrayRegion(arr, img, axes=axes, **kwds)
             if rgn is None:
                 continue
                 #return None
@@ -1649,6 +1700,7 @@ class MultiLineROI(MultiRectROI):
     def __init__(self, *args, **kwds):
         MultiRectROI.__init__(self, *args, **kwds)
         print("Warning: MultiLineROI has been renamed to MultiRectROI. (and MultiLineROI may be redefined in the future)")
+
         
 class EllipseROI(ROI):
     """
@@ -1679,19 +1731,27 @@ class EllipseROI(ROI):
         
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None):
+    def getArrayRegion(self, arr, img=None, axes=(0, 1), **kwds):
         """
         Return the result of ROI.getArrayRegion() masked by the elliptical shape
         of the ROI. Regions outside the ellipse are set to 0.
         """
-        arr = ROI.getArrayRegion(self, arr, img)
-        if arr is None or arr.shape[0] == 0 or arr.shape[1] == 0:
-            return None
-        w = arr.shape[0]
-        h = arr.shape[1]
+        # Note: we could use the same method as used by PolyLineROI, but this
+        # implementation produces a nicer mask.
+        arr = ROI.getArrayRegion(self, arr, img, axes, **kwds)
+        if arr is None or arr.shape[axes[0]] == 0 or arr.shape[axes[1]] == 0:
+            return arr
+        w = arr.shape[axes[0]]
+        h = arr.shape[axes[1]]
         ## generate an ellipsoidal mask
         mask = np.fromfunction(lambda x,y: (((x+0.5)/(w/2.)-1)**2+ ((y+0.5)/(h/2.)-1)**2)**0.5 < 1, (w, h))
-    
+        
+        # reshape to match array axes
+        if axes[0] > axes[1]:
+            mask = mask.T
+        shape = [(n if i in axes else 1) for i,n in enumerate(arr.shape)]
+        mask = mask.reshape(shape)
+        
         return arr * mask
     
     def shape(self):
@@ -1772,6 +1832,7 @@ class PolygonROI(ROI):
         #sc['handles'] = self.handles
         return sc
 
+    
 class PolyLineROI(ROI):
     """
     Container class for multiple connected LineSegmentROIs.
@@ -1801,12 +1862,6 @@ class PolyLineROI(ROI):
         ROI.__init__(self, pos, size=[1,1], **args)
         
         self.setPoints(positions)
-        #for p in positions:
-            #self.addFreeHandle(p)
-         
-        #start = -1 if self.closed else 0
-        #for i in range(start, len(self.handles)-1):
-            #self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
 
     def setPoints(self, points, closed=None):
         """
@@ -1824,6 +1879,8 @@ class PolyLineROI(ROI):
         if closed is not None:
             self.closed = closed
         
+        self.clearPoints()
+        
         for p in points:
             self.addFreeHandle(p)
         
@@ -1831,13 +1888,18 @@ class PolyLineROI(ROI):
         for i in range(start, len(self.handles)-1):
             self.addSegment(self.handles[i]['item'], self.handles[i+1]['item'])
         
-        
     def clearPoints(self):
         """
         Remove all handles and segments.
         """
         while len(self.handles) > 0:
             self.removeHandle(self.handles[0]['item'])
+    
+    def getState(self):
+        state = ROI.getState(self)
+        state['closed'] = self.closed
+        state['points'] = [Point(h.pos()) for h in self.getHandles()]
+        return state
 
     def saveState(self):
         state = ROI.saveState(self)
@@ -1847,11 +1909,10 @@ class PolyLineROI(ROI):
 
     def setState(self, state):
         ROI.setState(self, state)
-        self.clearPoints()
         self.setPoints(state['points'], closed=state['closed'])
         
     def addSegment(self, h1, h2, index=None):
-        seg = LineSegmentROI(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
+        seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
         if index is None:
             self.segments.append(seg)
         else:
@@ -1867,11 +1928,12 @@ class PolyLineROI(ROI):
         ## Inform all the ROI's segments that the mouse is(not) hovering over it
         ROI.setMouseHover(self, hover)
         for s in self.segments:
-            s.setMouseHover(hover)
+            s.setParentHover(hover)
           
     def addHandle(self, info, index=None):
         h = ROI.addHandle(self, info, index=index)
         h.sigRemoveRequested.connect(self.removeHandle)
+        self.stateChanged(finish=True)
         return h
         
     def segmentClicked(self, segment, ev=None, pos=None): ## pos should be in this item's coordinate system
@@ -1899,11 +1961,12 @@ class PolyLineROI(ROI):
         
         if len(segments) == 1:
             self.removeSegment(segments[0])
-        else:
+        elif len(segments) > 1:
             handles = [h['item'] for h in segments[1].handles]
             handles.remove(handle)
             segments[0].replaceHandle(handle, handles[0])
             self.removeSegment(segments[1])
+        self.stateChanged(finish=True)
         
     def removeSegment(self, seg):
         for handle in seg.handles[:]:
@@ -1920,20 +1983,10 @@ class PolyLineROI(ROI):
             return len(self.handles) > 2
         
     def paint(self, p, *args):
-        #for s in self.segments:
-            #s.update()
-        #p.setPen(self.currentPen)
-        #p.setPen(fn.mkPen('w'))
-        #p.drawRect(self.boundingRect())
-        #p.drawPath(self.shape())
         pass
     
     def boundingRect(self):
         return self.shape().boundingRect()
-        #r = QtCore.QRectF()
-        #for h in self.handles:
-            #r |= self.mapFromItem(h['item'], h['item'].boundingRect()).boundingRect()   ## |= gives the union of the two QRectFs
-        #return r 
 
     def shape(self):
         p = QtGui.QPainterPath()
@@ -1943,32 +1996,24 @@ class PolyLineROI(ROI):
         for i in range(len(self.handles)):
             p.lineTo(self.handles[i]['item'].pos())
         p.lineTo(self.handles[0]['item'].pos())
-        return p        
+        return p
 
-    def getArrayRegion(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1)):
         """
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
         """
-        sl = self.getArraySlice(data, img, axes=(0,1))
-        if sl is None:
-            return None
-        sliced = data[sl[0]]
-        im = QtGui.QImage(sliced.shape[axes[0]], sliced.shape[axes[1]], QtGui.QImage.Format_ARGB32)
-        im.fill(0x0)
-        p = QtGui.QPainter(im)
-        p.setPen(fn.mkPen(None))
-        p.setBrush(fn.mkBrush('w'))
-        p.setTransform(self.itemTransform(img)[0])
-        bounds = self.mapRectToItem(img, self.boundingRect())
-        p.translate(-bounds.left(), -bounds.top()) 
-        p.drawPath(self.shape())
-        p.end()
-        mask = fn.imageToArray(im)[:,:,0].astype(float) / 255.
+        br = self.boundingRect()
+        if br.width() > 1000:
+            raise Exception()
+        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True)
+        mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
         shape = [1] * data.ndim
         shape[axes[0]] = sliced.shape[axes[0]]
         shape[axes[1]] = sliced.shape[axes[1]]
-        return sliced * mask.reshape(shape)
+        mask = mask.reshape(shape)
+
+        return sliced * mask
 
     def setPen(self, *args, **kwds):
         ROI.setPen(self, *args, **kwds)
@@ -2061,6 +2106,32 @@ class LineSegmentROI(ROI):
             
         return np.concatenate(rgns, axis=axes[0])
         
+
+class _PolyLineSegment(LineSegmentROI):
+    # Used internally by PolyLineROI
+    def __init__(self, *args, **kwds):
+        self._parentHovering = False
+        LineSegmentROI.__init__(self, *args, **kwds)
+        
+    def setParentHover(self, hover):
+        # set independently of own hover state
+        if self._parentHovering != hover:
+            self._parentHovering = hover
+            self._updateHoverColor()
+        
+    def _makePen(self):
+        if self.mouseHovering or self._parentHovering:
+            return fn.mkPen(255, 255, 0)
+        else:
+            return self.pen
+        
+    def hoverEvent(self, ev):
+        # accept drags even though we discard them to prevent competition with parent ROI
+        # (unless parent ROI is not movable)
+        if self.parentItem().translatable:
+            ev.acceptDrags(QtCore.Qt.LeftButton)
+        return LineSegmentROI.hoverEvent(self, ev)
+
 
 class SpiralROI(ROI):
     def __init__(self, pos=None, size=None, **args):

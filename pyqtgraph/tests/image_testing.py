@@ -40,8 +40,9 @@ Procedure for unit-testing with images:
 
 # This is the name of a tag in the test-data repository that this version of
 # pyqtgraph should be tested against. When adding or changing test images,
-# create and push a new tag and update this variable.
-testDataTag = 'test-data-3'
+# create and push a new tag and update this variable. To test locally, begin
+# by creating the tag in your ~/.pyqtgraph/test-data repository.
+testDataTag = 'test-data-4'
 
 
 import time
@@ -58,7 +59,7 @@ if sys.version[0] >= '3':
 else:
     import httplib
     import urllib
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QtTest
 from .. import functions as fn
 from .. import GraphicsLayoutWidget
 from .. import ImageItem, TextItem
@@ -105,11 +106,19 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     """
     if isinstance(image, QtGui.QWidget):
         w = image
+        
+            # just to be sure the widget size is correct (new window may be resized):
+        QtGui.QApplication.processEvents()
+
+        graphstate = scenegraphState(w, standardFile)
         image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
         qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
+        
+        # transpose BGRA to RGBA
+        image = image[..., [2, 1, 0, 3]]
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
@@ -144,9 +153,12 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                     " different than standard image shape %s." %
                                 (ims1, ims2))
             sr = np.round(sr).astype(int)
-            image = downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
+            image = fn.downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
 
         assertImageMatch(image, stdImage, **kwargs)
+        
+        if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
+            print(graphstate)
     except Exception:
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
@@ -159,7 +171,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             print('Saving new standard image to "%s"' % stdFileName)
             if not os.path.isdir(stdPath):
                 os.makedirs(stdPath)
-            img = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+            img = fn.makeQImage(image, alpha=True, transpose=False)
             img.save(stdFileName)
         else:
             if stdImage is None:
@@ -168,6 +180,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             else:
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile)
+                print(graphstate)
                 raise
 
 
@@ -231,7 +244,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
 def saveFailedTest(data, expect, filename):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit, error = runSubprocess(['git', 'rev-parse',  'HEAD'])
+    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
     name = filename.split('/')
     name.insert(-1, commit.strip())
     filename = '/'.join(name)
@@ -272,9 +285,9 @@ def makePng(img):
     """Given an array like (H, W, 4), return a PNG-encoded byte string.
     """
     io = QtCore.QBuffer()
-    qim = fn.makeQImage(img, alpha=False)
-    qim.save(io, format='png')
-    png = io.data().data().encode()
+    qim = fn.makeQImage(img.transpose(1, 0, 2), alpha=False)
+    qim.save(io, 'PNG')
+    png = bytes(io.data().data())
     return png
 
 
@@ -303,7 +316,7 @@ class ImageTester(QtGui.QWidget):
         
         QtGui.QWidget.__init__(self)
         self.resize(1200, 800)
-        self.showFullScreen()
+        #self.showFullScreen()
         
         self.layout = QtGui.QGridLayout()
         self.setLayout(self.layout)
@@ -321,6 +334,8 @@ class ImageTester(QtGui.QWidget):
         self.failBtn = QtGui.QPushButton('Fail')
         self.layout.addWidget(self.passBtn, 2, 0)
         self.layout.addWidget(self.failBtn, 2, 1)
+        self.passBtn.clicked.connect(self.passTest)
+        self.failBtn.clicked.connect(self.failTest)
 
         self.views = (self.view.addViewBox(row=0, col=0),
                       self.view.addViewBox(row=0, col=1),
@@ -382,6 +397,12 @@ class ImageTester(QtGui.QWidget):
             self.lastKey = 'esc'
         else:
             self.lastKey = str(event.text()).lower()
+
+    def passTest(self):
+        self.lastKey = 'p'
+
+    def failTest(self):
+        self.lastKey = 'f'
 
 
 def getTestDataRepo():
@@ -531,3 +552,35 @@ def runSubprocess(command, return_code=False, **kwargs):
             raise sp.CalledProcessError(p.returncode, command)
     
     return output
+
+
+def scenegraphState(view, name):
+    """Return information about the scenegraph for debugging test failures.
+    """
+    state = "====== Scenegraph state for %s ======\n" % name
+    state += "view size: %dx%d\n" % (view.width(), view.height())
+    state += "view transform:\n" + indent(transformStr(view.transform()), "  ")
+    for item in view.scene().items():
+        if item.parentItem() is None:
+            state += itemState(item) + '\n'
+    return state
+
+    
+def itemState(root):
+    state = str(root) + '\n'
+    from .. import ViewBox
+    state += 'bounding rect: ' + str(root.boundingRect()) + '\n'
+    if isinstance(root, ViewBox):
+        state += "view range: " + str(root.viewRange()) + '\n'
+    state += "transform:\n" + indent(transformStr(root.transform()).strip(), "  ") + '\n'
+    for item in root.childItems():
+        state += indent(itemState(item).strip(), "    ") + '\n'
+    return state
+
+    
+def transformStr(t):
+    return ("[%0.2f %0.2f %0.2f]\n"*3) % (t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), t.m31(), t.m32(), t.m33())
+
+
+def indent(s, pfx):
+    return '\n'.join([pfx+line for line in s.split('\n')])
