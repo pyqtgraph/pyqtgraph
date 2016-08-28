@@ -12,9 +12,11 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-pg.setConfigOptions(imageAxisOrder='normal')
-pg.mkQApp()
 
+# Interpret image data as row-major instead of col-major
+pg.setConfigOptions(imageAxisOrder='row-major')
+
+pg.mkQApp()
 win = pg.GraphicsLayoutWidget()
 win.setWindowTitle('pyqtgraph example: Image Analysis')
 
