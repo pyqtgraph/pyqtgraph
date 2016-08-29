@@ -2008,17 +2008,22 @@ class LineSegmentROI(ROI):
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
 
+    def getState(self):
+        state = ROI.getState(self)
+        state['points'] = [Point(h.pos()) for h in self.getHandles()]
+        return state
+
     def saveState(self):
         state = ROI.saveState(self)
-        state['points'] =[tuple(h.pos()) for h in self.getHandles()]
+        state['points'] = [tuple(h.pos()) for h in self.getHandles()]
         return state
 
     def setState(self, state):
         ROI.setState(self, state)
-        p1 = state['points'][0]
-        p2 = state['points'][1]
-        self.movePoint(self.handles[0], p1)
-        self.movePoint(self.handles[1], p2)
+        p1 = [state['points'][0][0]+state['pos'][0], state['points'][0][1]+state['pos'][1]]
+        p2 = [state['points'][1][0]+state['pos'][0], state['points'][1][1]+state['pos'][1]]
+        self.movePoint(self.getHandles()[0], p1, finish=False)
+        self.movePoint(self.getHandles()[1], p2)
 
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
