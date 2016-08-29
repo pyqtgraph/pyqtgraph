@@ -10,6 +10,7 @@ pyqtgraph-0.9.11  [unreleased]
     - Properly remove select box when export dialog is closed using window decorations
     - Remove all modifications to builtins
     - Fix SpinBox decimals
+    - Fixed removeHandle method of the PolyLineROI class
 
   API / behavior changes:
     - Change the defaut color kwarg to None in TextItem.setText() to avoid changing
