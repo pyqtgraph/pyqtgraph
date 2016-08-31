@@ -67,6 +67,30 @@ from .. import ImageItem, TextItem
 
 tester = None
 
+# Convenient stamp used for ensuring image orientation is correct
+axisImg = [
+"            1         1 1        ",
+"          1 1         1 1 1 1    ",
+"            1   1 1 1 1 1 1 1 1 1",
+"            1         1 1 1 1    ",
+"    1     1 1 1       1 1        ",
+"  1   1                          ",
+"  1   1                          ",
+"    1                            ",
+"                                 ",
+"    1                            ",
+"    1                            ",
+"    1                            ",
+"1 1 1 1 1                        ",
+"1 1 1 1 1                        ",
+"  1 1 1                          ",
+"  1 1 1                          ",
+"    1                            ",
+"    1                            ",
+]
+axisImg = np.array([map(int, row[::2].replace(' ', '0')) for row in axisImg])
+
+
 
 def getTester():
     global tester

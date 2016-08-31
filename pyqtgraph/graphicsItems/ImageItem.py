@@ -153,7 +153,10 @@ class ImageItem(GraphicsObject):
 
     def setOpts(self, update=True, **kargs):
         if 'axisOrder' in kargs:
-            self.axisOrder = kargs['axisOrder']
+            val = kargs['axisOrder']
+            if val not in ('row-major', 'col-major'):
+                raise ValueError('axisOrder must be either "row-major" or "col-major"')
+            self.axisOrder = val
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
@@ -463,6 +466,7 @@ class ImageItem(GraphicsObject):
                 bins = 500
 
         kwds['bins'] = bins
+        stepData = stepData[np.isfinite(stepData)]
         hist = np.histogram(stepData, **kwds)
         
         return hist[1][:-1], hist[0]

@@ -253,30 +253,22 @@ class ImageView(QtGui.QWidget):
         self.image = img
         self.imageDisp = None
         
-        if xvals is not None:
-            self.tVals = xvals
-        elif hasattr(img, 'xvals'):
-            try:
-                self.tVals = img.xvals(0)
-            except:
-                self.tVals = np.arange(img.shape[0])
-        else:
-            self.tVals = np.arange(img.shape[0])
-        
         profiler()
         
         if axes is None:
-            xy = (0, 1) if getConfigOption('imageAxisOrder') == 'legacy' else (1, 0)
+            x,y = (0, 1) if self.imageItem.axisOrder == 'col-major' else (1, 0)
             
             if img.ndim == 2:
-                self.axes = {'t': None, 'x': xy[0], 'y': xy[1], 'c': None}
+                self.axes = {'t': None, 'x': x, 'y': y, 'c': None}
             elif img.ndim == 3:
+                # Ambiguous case; make a guess
                 if img.shape[2] <= 4:
-                    self.axes = {'t': None, 'x': xy[0], 'y': xy[1], 'c': 2}
+                    self.axes = {'t': None, 'x': x, 'y': y, 'c': 2}
                 else:
-                    self.axes = {'t': 0, 'x': xy[0]+1, 'y': xy[1]+1, 'c': None}
+                    self.axes = {'t': 0, 'x': x+1, 'y': y+1, 'c': None}
             elif img.ndim == 4:
-                self.axes = {'t': 0, 'x': xy[0]+1, 'y': xy[1]+1, 'c': 3}
+                # Even more ambiguous; just assume the default
+                self.axes = {'t': 0, 'x': x+1, 'y': y+1, 'c': 3}
             else:
                 raise Exception("Can not interpret image with dimensions %s" % (str(img.shape)))
         elif isinstance(axes, dict):
@@ -290,6 +282,18 @@ class ImageView(QtGui.QWidget):
             
         for x in ['t', 'x', 'y', 'c']:
             self.axes[x] = self.axes.get(x, None)
+        axes = self.axes
+
+        if xvals is not None:
+            self.tVals = xvals
+        elif axes['t'] is not None:
+            if hasattr(img, 'xvals'):
+                try:
+                    self.tVals = img.xvals(axes['t'])
+                except:
+                    self.tVals = np.arange(img.shape[axes['t']])
+            else:
+                self.tVals = np.arange(img.shape[axes['t']])
 
         profiler()
 
@@ -470,7 +474,7 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        self.currentIndex = np.clip(ind, 0, self.getProcessedImage().shape[0]-1)
+        self.currentIndex = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
         self.updateImage()
         self.ignoreTimeLine = True
         self.timeLine.setValue(self.tVals[self.currentIndex])
@@ -654,11 +658,21 @@ class ImageView(QtGui.QWidget):
         
         if autoHistogramRange:
             self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
-        if self.axes['t'] is None:
-            self.imageItem.updateImage(image)
+        
+        # Transpose image into order expected by ImageItem
+        if self.imageItem.axisOrder == 'col-major':
+            axorder = ['t', 'x', 'y', 'c']
         else:
+            axorder = ['t', 'y', 'x', 'c']
+        axorder = [self.axes[ax] for ax in axorder if self.axes[ax] is not None]
+        image = image.transpose(axorder)
+            
+        # Select time index
+        if self.axes['t'] is not None:
             self.ui.roiPlot.show()
-            self.imageItem.updateImage(image[self.currentIndex])
+            image = image[self.currentIndex]
+            
+        self.imageItem.updateImage(image)
             
             
     def timeIndex(self, slider):
