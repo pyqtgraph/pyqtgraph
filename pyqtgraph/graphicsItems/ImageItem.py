@@ -388,8 +388,8 @@ class ImageItem(GraphicsObject):
         
         if bins == 'auto':
             if stepData.dtype.kind in "ui":
-                mn = stepData.min()
-                mx = stepData.max()
+                mn = np.nanmin(stepData)
+                mx = np.nanmax(stepData)
                 step = np.ceil((mx-mn) / 500.)
                 bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
                 if len(bins) == 0:
@@ -398,7 +398,7 @@ class ImageItem(GraphicsObject):
                 bins = 500
 
         kwds['bins'] = bins
-        hist = np.histogram(stepData, **kwds)
+        hist = np.histogram(stepData[~np.isnan(stepData)], **kwds)
         
         return hist[1][:-1], hist[0]
 
