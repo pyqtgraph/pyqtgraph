@@ -19,7 +19,7 @@ foreground         See :func:`mkColor` 'd'                Default foreground col
 background         See :func:`mkColor` 'k'                Default background for :class:`GraphicsView`.
 antialias          bool                False              Enabling antialiasing causes lines to be drawn with 
                                                           smooth edges at the cost of reduced performance.
-imageAxisOrder     str                 'legacy'           For 'row-major', image data is expected in the standard row-major 
+imageAxisOrder     str                 'col-major'        For 'row-major', image data is expected in the standard row-major 
                                                           (row, col) order. For 'col-major', image data is expected in
                                                           reversed column-major (col, row) order.
                                                           The default is 'col-major' for backward compatibility, but this may

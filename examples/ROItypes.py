@@ -8,7 +8,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
 
-pg.setConfigOptions(imageAxisOrder='normal')
+pg.setConfigOptions(imageAxisOrder='row-major')
 
 ## create GUI
 app = QtGui.QApplication([])
