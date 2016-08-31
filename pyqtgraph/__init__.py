@@ -67,6 +67,11 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
+    global CONFIG_OPTIONS
+    if opt not in CONFIG_OPTIONS:
+        raise KeyError('Unknown configuration option "%s"' % opt)
+    if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
+        raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
@@ -74,7 +79,8 @@ def setConfigOptions(**opts):
     
     Each keyword argument sets one global option. 
     """
-    CONFIG_OPTIONS.update(opts)
+    for k,v in opts.items():
+        setConfigOption(k, v)
 
 def getConfigOption(opt):
     """Return the value of a single global configuration option.
