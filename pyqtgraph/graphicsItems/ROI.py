@@ -2015,7 +2015,7 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(self, data, img, axes=(0,1)):
+    def getArrayRegion(self, data, img, axes=(0,1), **kwds):
         """
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
@@ -2023,7 +2023,7 @@ class PolyLineROI(ROI):
         br = self.boundingRect()
         if br.width() > 1000:
             raise Exception()
-        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True)
+        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
         
         if img.axisOrder == 'col-major':
             mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
@@ -2109,7 +2109,7 @@ class LineSegmentROI(ROI):
       
         return p
     
-    def getArrayRegion(self, data, img, axes=(0,1)):
+    def getArrayRegion(self, data, img, axes=(0,1), order=1, **kwds):
         """
         Use the position of this ROI relative to an imageItem to pull a slice 
         from an array.
@@ -2125,7 +2125,7 @@ class LineSegmentROI(ROI):
         for i in range(len(imgPts)-1):
             d = Point(imgPts[i+1] - imgPts[i])
             o = Point(imgPts[i])
-            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=1)
+            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, **kwds)
             rgns.append(r)
             
         return np.concatenate(rgns, axis=axes[0])
