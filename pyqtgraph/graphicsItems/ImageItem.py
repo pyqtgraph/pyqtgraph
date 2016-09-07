@@ -502,21 +502,6 @@ class ImageItem(GraphicsObject):
             self.qimage = None
             self.update()
 
-    #def mousePressEvent(self, ev):
-        #if self.drawKernel is not None and ev.button() == QtCore.Qt.LeftButton:
-            #self.drawAt(ev.pos(), ev)
-            #ev.accept()
-        #else:
-            #ev.ignore()
-        
-    #def mouseMoveEvent(self, ev):
-        ##print "mouse move", ev.pos()
-        #if self.drawKernel is not None:
-            #self.drawAt(ev.pos(), ev)
-    
-    #def mouseReleaseEvent(self, ev):
-        #pass
-
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
@@ -553,24 +538,18 @@ class ImageItem(GraphicsObject):
             self.menu.remAct = remAct
         return self.menu
         
-        
     def hoverEvent(self, ev):
         if not ev.isExit() and self.drawKernel is not None and ev.acceptDrags(QtCore.Qt.LeftButton):
             ev.acceptClicks(QtCore.Qt.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
             ev.acceptClicks(QtCore.Qt.RightButton)
-            #self.box.setBrush(fn.mkBrush('w'))
         elif not ev.isExit() and self.removable:
             ev.acceptClicks(QtCore.Qt.RightButton)  ## accept context menu clicks
-        #else:
-            #self.box.setBrush(self.brush)
-        #self.update()
 
-
-        
     def tabletEvent(self, ev):
-        print(ev.device())
-        print(ev.pointerType())
-        print(ev.pressure())
+        pass
+        #print(ev.device())
+        #print(ev.pointerType())
+        #print(ev.pressure())
     
     def drawAt(self, pos, ev=None):
         pos = [int(pos.x()), int(pos.y())]

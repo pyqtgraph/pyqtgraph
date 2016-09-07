@@ -1727,7 +1727,7 @@ def isosurface(data, level):
     See Paul Bourke, "Polygonising a Scalar Field"  
     (http://paulbourke.net/geometry/polygonise/)
     
-    *data*   3D numpy array of scalar values
+    *data*   3D numpy array of scalar values. Must be contiguous.
     *level*  The level at which to generate an isosurface
     
     Returns an array of vertex coordinates (Nv, 3) and an array of 
@@ -2079,7 +2079,10 @@ def isosurface(data, level):
     else:
         faceShiftTables, edgeShifts, edgeTable, nTableFaces = IsosurfaceDataCache
 
-
+    # We use strides below, which means we need contiguous array input.
+    # Ideally we can fix this just by removing the dependency on strides.
+    if not data.flags['C_CONTIGUOUS']:
+        raise TypeError("isosurface input data must be c-contiguous.")
     
     ## mark everything below the isosurface level
     mask = data < level
