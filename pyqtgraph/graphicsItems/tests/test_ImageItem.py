@@ -60,6 +60,18 @@ def test_ImageItem(transpose=False):
     img.setLevels([127, 128])
     assertImageApproved(w, 'imageitem/gradient_mono_byte_levels', 'Mono byte gradient w/ levels to isolate diagonal.')
 
+    # test monochrome image
+    data = np.zeros((10, 10), dtype='uint8')
+    data[:5,:5] = 1
+    data[5:,5:] = 1
+    img.setImage(data)
+    assertImageApproved(w, 'imageitem/monochrome', 'Ubyte image with only 0,1 values.')
+    
+    # test bool
+    data = data.astype(bool)
+    img.setImage(data)
+    assertImageApproved(w, 'imageitem/bool', 'Boolean mask.')
+
     # test RGBA byte
     data = np.zeros((100, 100, 4), dtype='ubyte')
     data[..., 0] = np.linspace(0, 255, 100).reshape(100, 1)

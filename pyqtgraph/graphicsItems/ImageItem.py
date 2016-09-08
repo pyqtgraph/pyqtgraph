@@ -379,12 +379,14 @@ class ImageItem(GraphicsObject):
                 eflsize = 2**(image.itemsize*8)
                 ind = np.arange(eflsize)
                 minlev, maxlev = levels
+                levdiff = maxlev - minlev
+                levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
                 if lut is None:
-                    efflut = fn.rescaleData(ind, scale=255./(maxlev-minlev), 
+                    efflut = fn.rescaleData(ind, scale=255./levdiff, 
                                             offset=minlev, dtype=np.ubyte)
                 else:
                     lutdtype = np.min_scalar_type(lut.shape[0]-1)
-                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/(maxlev-minlev),
+                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
                                             offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
                     efflut = lut[efflut]
                 

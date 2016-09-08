@@ -959,6 +959,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         elif data.dtype.kind == 'i':
             s = 2**(data.itemsize*8 - 1)
             levels = np.array([-s, s-1])
+        elif data.dtype.kind == 'b':
+            levels = np.array([0,1])
         else:
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
