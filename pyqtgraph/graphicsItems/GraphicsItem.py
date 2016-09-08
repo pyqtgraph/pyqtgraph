@@ -37,9 +37,6 @@ class GraphicsItem(object):
         if register:
             GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
                     
-
-                    
-                    
     def getViewWidget(self):
         """
         Return the view widget for this item. 
@@ -94,7 +91,6 @@ class GraphicsItem(object):
 
     def forgetViewBox(self):
         self._viewBox = None
-        
         
     def deviceTransform(self, viewportTransform=None):
         """

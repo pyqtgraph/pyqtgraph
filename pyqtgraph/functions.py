@@ -959,6 +959,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         elif data.dtype.kind == 'i':
             s = 2**(data.itemsize*8 - 1)
             levels = np.array([-s, s-1])
+        elif data.dtype.kind == 'b':
+            levels = np.array([0,1])
         else:
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
@@ -1727,7 +1729,7 @@ def isosurface(data, level):
     See Paul Bourke, "Polygonising a Scalar Field"  
     (http://paulbourke.net/geometry/polygonise/)
     
-    *data*   3D numpy array of scalar values
+    *data*   3D numpy array of scalar values. Must be contiguous.
     *level*  The level at which to generate an isosurface
     
     Returns an array of vertex coordinates (Nv, 3) and an array of 
@@ -2079,7 +2081,10 @@ def isosurface(data, level):
     else:
         faceShiftTables, edgeShifts, edgeTable, nTableFaces = IsosurfaceDataCache
 
-
+    # We use strides below, which means we need contiguous array input.
+    # Ideally we can fix this just by removing the dependency on strides.
+    if not data.flags['C_CONTIGUOUS']:
+        raise TypeError("isosurface input data must be c-contiguous.")
     
     ## mark everything below the isosurface level
     mask = data < level

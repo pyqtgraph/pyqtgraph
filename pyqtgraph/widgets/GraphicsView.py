@@ -63,7 +63,7 @@ class GraphicsView(QtGui.QGraphicsView):
                         :func:`mkColor <pyqtgraph.mkColor>`. By 
                         default, the background color is determined using the
                         'backgroundColor' configuration option (see 
-                        :func:`setConfigOption <pyqtgraph.setConfigOption>`.
+                        :func:`setConfigOptions <pyqtgraph.setConfigOptions>`).
         ==============  ============================================================
         """
         

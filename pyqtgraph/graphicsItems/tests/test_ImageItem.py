@@ -3,21 +3,21 @@ import pytest
 from pyqtgraph.Qt import QtCore, QtGui, QtTest
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.tests import assertImageApproved
+from pyqtgraph.tests import assertImageApproved, TransposedImageItem
 
 app = pg.mkQApp()
 
 
-def test_ImageItem():
+def test_ImageItem(transpose=False):
     
     w = pg.GraphicsWindow()    
     view = pg.ViewBox()
     w.setCentralWidget(view)
     w.resize(200, 200)
     w.show()
-    img = pg.ImageItem(border=0.5)
+    img = TransposedImageItem(border=0.5, transpose=transpose)
+
     view.addItem(img)
-    
     
     # test mono float
     np.random.seed(0)
@@ -60,6 +60,18 @@ def test_ImageItem():
     img.setLevels([127, 128])
     assertImageApproved(w, 'imageitem/gradient_mono_byte_levels', 'Mono byte gradient w/ levels to isolate diagonal.')
 
+    # test monochrome image
+    data = np.zeros((10, 10), dtype='uint8')
+    data[:5,:5] = 1
+    data[5:,5:] = 1
+    img.setImage(data)
+    assertImageApproved(w, 'imageitem/monochrome', 'Ubyte image with only 0,1 values.')
+    
+    # test bool
+    data = data.astype(bool)
+    img.setImage(data)
+    assertImageApproved(w, 'imageitem/bool', 'Boolean mask.')
+
     # test RGBA byte
     data = np.zeros((100, 100, 4), dtype='ubyte')
     data[..., 0] = np.linspace(0, 255, 100).reshape(100, 1)
@@ -77,7 +89,7 @@ def test_ImageItem():
     assertImageApproved(w, 'imageitem/gradient_rgba_float', 'RGBA float gradient.')
 
     # checkerboard to test alpha
-    img2 = pg.ImageItem()
+    img2 = TransposedImageItem(transpose=transpose)
     img2.setImage(np.fromfunction(lambda x,y: (x+y)%2, (10, 10)), levels=[-1,2])
     view.addItem(img2)
     img2.scale(10, 10)
@@ -103,9 +115,23 @@ def test_ImageItem():
     
     img.setAutoDownsample(True)
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_x', 'Resolution test with downsampling axross x axis.')
+    assert img._lastDownsample == (4, 1)
     
     img.setImage(data.T, levels=[-1, 1])
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_y', 'Resolution test with downsampling across y axis.')
+    assert img._lastDownsample == (1, 4)
+    
+    view.hide()
+
+def test_ImageItem_axisorder():
+    # All image tests pass again using the opposite axis order
+    origMode = pg.getConfigOption('imageAxisOrder')
+    altMode = 'row-major' if origMode == 'col-major' else 'col-major'
+    pg.setConfigOptions(imageAxisOrder=altMode)
+    try:
+        test_ImageItem(transpose=True)
+    finally:
+        pg.setConfigOptions(imageAxisOrder=origMode)
 
 
 @pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qWait")

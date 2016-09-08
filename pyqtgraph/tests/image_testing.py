@@ -42,7 +42,7 @@ Procedure for unit-testing with images:
 # pyqtgraph should be tested against. When adding or changing test images,
 # create and push a new tag and update this variable. To test locally, begin
 # by creating the tag in your ~/.pyqtgraph/test-data repository.
-testDataTag = 'test-data-5'
+testDataTag = 'test-data-6'
 
 
 import time
@@ -66,6 +66,30 @@ from .. import ImageItem, TextItem
 
 
 tester = None
+
+# Convenient stamp used for ensuring image orientation is correct
+axisImg = [
+    "            1         1 1        ",
+    "          1 1         1 1 1 1    ",
+    "            1   1 1 1 1 1 1 1 1 1",
+    "            1         1 1 1 1    ",
+    "    1     1 1 1       1 1        ",
+    "  1   1                          ",
+    "  1   1                          ",
+    "    1                            ",
+    "                                 ",
+    "    1                            ",
+    "    1                            ",
+    "    1                            ",
+    "1 1 1 1 1                        ",
+    "1 1 1 1 1                        ",
+    "  1 1 1                          ",
+    "  1 1 1                          ",
+    "    1                            ",
+    "    1                            ",
+]
+axisImg = np.array([map(int, row[::2].replace(' ', '0')) for row in axisImg])
+
 
 
 def getTester():
@@ -159,12 +183,15 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         
         if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
             print(graphstate)
+            
+        if os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
+            raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL evnironment variable.")
     except Exception:
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
                   "image %s.\nTo revert this file, run `cd %s; git checkout "
                   "%s`\n" % (stdFileName, dataPath, standardFile))
-        if os.getenv('PYQTGRAPH_AUDIT') == '1':
+        if os.getenv('PYQTGRAPH_AUDIT') == '1' or os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
             sys.excepthook(*sys.exc_info())
             getTester().test(image, stdImage, message)
             stdPath = os.path.dirname(stdFileName)
@@ -344,7 +371,7 @@ class ImageTester(QtGui.QWidget):
         for i, v in enumerate(self.views):
             v.setAspectLocked(1)
             v.invertY()
-            v.image = ImageItem()
+            v.image = ImageItem(axisOrder='row-major')
             v.image.setAutoDownsample(True)
             v.addItem(v.image)
             v.label = TextItem(labelText[i])
@@ -371,9 +398,9 @@ class ImageTester(QtGui.QWidget):
             message += '\nImage1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
         self.label.setText(message)
         
-        self.views[0].image.setImage(im1.transpose(1, 0, 2))
-        self.views[1].image.setImage(im2.transpose(1, 0, 2))
-        diff = makeDiffImage(im1, im2).transpose(1, 0, 2)
+        self.views[0].image.setImage(im1)
+        self.views[1].image.setImage(im2)
+        diff = makeDiffImage(im1, im2)
 
         self.views[2].image.setImage(diff)
         self.views[0].autoRange()
@@ -584,3 +611,15 @@ def transformStr(t):
 
 def indent(s, pfx):
     return '\n'.join([pfx+line for line in s.split('\n')])
+
+
+class TransposedImageItem(ImageItem):
+    # used for testing image axis order; we can test row-major and col-major using
+    # the same test images
+    def __init__(self, *args, **kwds):
+        self.__transpose = kwds.pop('transpose', False)
+        ImageItem.__init__(self, *args, **kwds)
+    def setImage(self, image=None, **kwds):
+        if image is not None and self.__transpose is True:
+            image = np.swapaxes(image, 0, 1)
+        return ImageItem.setImage(self, image, **kwds)

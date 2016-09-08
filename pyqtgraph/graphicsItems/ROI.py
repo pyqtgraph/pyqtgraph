@@ -21,6 +21,7 @@ from math import cos, sin
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
+from .. import getConfigOption
 
 __all__ = [
     'ROI', 
@@ -1016,14 +1017,11 @@ class ROI(GraphicsObject):
         If returnSlice is set to False, the function returns a pair of tuples with the values that would have 
         been used to generate the slice objects. ((ax0Start, ax0Stop), (ax1Start, ax1Stop))
         
-        If the slice can not be computed (usually because the scene/transforms are not properly
+        If the slice cannot be computed (usually because the scene/transforms are not properly
         constructed yet), then the method returns None.
         """
-        #print "getArraySlice"
-        
         ## Determine shape of array along ROI axes
         dShape = (data.shape[axes[0]], data.shape[axes[1]])
-        #print "  dshape", dShape
         
         ## Determine transform that maps ROI bounding box to image coordinates
         try:
@@ -1032,25 +1030,28 @@ class ROI(GraphicsObject):
             return None
             
         ## Modify transform to scale from image coords to data coords
-        #m = QtGui.QTransform()
-        tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
-        #tr = tr * m
+        axisOrder = img.axisOrder
+        if axisOrder == 'row-major':
+            tr.scale(float(dShape[1]) / img.width(), float(dShape[0]) / img.height())
+        else:
+            tr.scale(float(dShape[0]) / img.width(), float(dShape[1]) / img.height())
         
         ## Transform ROI bounds into data bounds
         dataBounds = tr.mapRect(self.boundingRect())
-        #print "  boundingRect:", self.boundingRect()
-        #print "  dataBounds:", dataBounds
         
         ## Intersect transformed ROI bounds with data bounds
-        intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
-        #print "  intBounds:", intBounds
+        if axisOrder == 'row-major':
+            intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[1], dShape[0]))
+        else:
+            intBounds = dataBounds.intersected(QtCore.QRectF(0, 0, dShape[0], dShape[1]))
         
         ## Determine index values to use when referencing the array. 
         bounds = (
             (int(min(intBounds.left(), intBounds.right())), int(1+max(intBounds.left(), intBounds.right()))),
             (int(min(intBounds.bottom(), intBounds.top())), int(1+max(intBounds.bottom(), intBounds.top())))
         )
-        #print "  bounds:", bounds
+        if axisOrder == 'row-major':
+            bounds = bounds[::-1]
         
         if returnSlice:
             ## Create slice objects
@@ -1074,7 +1075,10 @@ class ROI(GraphicsObject):
                             Used to determine the relationship between the 
                             ROI and the boundaries of *data*.
         axes                (length-2 tuple) Specifies the axes in *data* that
-                            correspond to the x and y axes of *img*.
+                            correspond to the (x, y) axes of *img*. If the
+                            image's axis order is set to
+                            'row-major', then the axes are instead specified in
+                            (y, x) order.
         returnMappedCoords  (bool) If True, the array slice is returned along
                             with a corresponding array of coordinates that were
                             used to extract data from the original array.
@@ -1099,7 +1103,8 @@ class ROI(GraphicsObject):
         
         shape, vectors, origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
         if not returnMappedCoords:
-            return fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
+            return rgn
         else:
             kwds['returnCoords'] = True
             result, coords = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
@@ -1114,29 +1119,34 @@ class ROI(GraphicsObject):
         (shape, vectors, origin) to extract a subset of *data* using this ROI 
         and *img* to specify the subset.
         
+        If *fromBoundingRect* is True, then the ROI's bounding rectangle is used
+        rather than the shape of the ROI.
+        
         See :func:`getArrayRegion <pyqtgraph.ROI.getArrayRegion>` for more information.
         """
         if self.scene() is not img.scene():
             raise Exception("ROI and target item must be members of the same scene.")
         
-        origin = self.mapToItem(img, QtCore.QPointF(0, 0))
+        origin = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 0)))
         
         ## vx and vy point in the directions of the slice axes, but must be scaled properly
-        vx = self.mapToItem(img, QtCore.QPointF(1, 0)) - origin
-        vy = self.mapToItem(img, QtCore.QPointF(0, 1)) - origin
+        vx = img.mapToData(self.mapToItem(img, QtCore.QPointF(1, 0))) - origin
+        vy = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 1))) - origin
         
         lvx = np.sqrt(vx.x()**2 + vx.y()**2)
         lvy = np.sqrt(vy.x()**2 + vy.y()**2)
-        pxLen = img.width() / float(data.shape[axes[0]])
-        #img.width is number of pixels, not width of item.
-        #need pxWidth and pxHeight instead of pxLen ?
-        sx =  pxLen / lvx
-        sy =  pxLen / lvy
+        #pxLen = img.width() / float(data.shape[axes[0]])
+        ##img.width is number of pixels, not width of item.
+        ##need pxWidth and pxHeight instead of pxLen ?
+        #sx =  pxLen / lvx
+        #sy =  pxLen / lvy
+        sx = 1.0 / lvx
+        sy = 1.0 / lvy
         
         vectors = ((vx.x()*sx, vx.y()*sx), (vy.x()*sy, vy.y()*sy))
         if fromBoundingRect is True:
             shape = self.boundingRect().width(), self.boundingRect().height()
-            origin = self.mapToItem(img, self.boundingRect().topLeft())
+            origin = img.mapToData(self.mapToItem(img, self.boundingRect().topLeft()))
             origin = (origin.x(), origin.y())
         else:
             shape = self.state['size']
@@ -1144,6 +1154,11 @@ class ROI(GraphicsObject):
         
         shape = [abs(shape[0]/sx), abs(shape[1]/sy)]
         
+        if img.axisOrder == 'row-major':
+            # transpose output
+            vectors = vectors[::-1]
+            shape = shape[::-1]
+
         return shape, vectors, origin
 
     def renderShapeMask(self, width, height):
@@ -1166,7 +1181,7 @@ class ROI(GraphicsObject):
         p.translate(-bounds.topLeft())
         p.drawPath(shape)
         p.end()
-        mask = fn.imageToArray(im)[:,:,0].astype(float) / 255.
+        mask = fn.imageToArray(im, transpose=True)[:,:,0].astype(float) / 255.
         return mask
         
     def getGlobalTransform(self, relativeTo=None):
@@ -1639,6 +1654,8 @@ class MultiRectROI(QtGui.QGraphicsObject):
             
         ## make sure orthogonal axis is the same size
         ## (sometimes fp errors cause differences)
+        if img.axisOrder == 'row-major':
+            axes = axes[::-1]
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim
         sl[axes[1]] = slice(0,ms)
@@ -1998,7 +2015,7 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(self, data, img, axes=(0,1)):
+    def getArrayRegion(self, data, img, axes=(0,1), **kwds):
         """
         Return the result of ROI.getArrayRegion(), masked by the shape of the 
         ROI. Values outside the ROI shape are set to 0.
@@ -2006,8 +2023,15 @@ class PolyLineROI(ROI):
         br = self.boundingRect()
         if br.width() > 1000:
             raise Exception()
-        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True)
-        mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
+        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
+        
+        if img.axisOrder == 'col-major':
+            mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
+        else:
+            mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
+            mask = mask.T
+            
+        # reshape mask to ensure it is applied to the correct data axes
         shape = [1] * data.ndim
         shape[axes[0]] = sliced.shape[axes[0]]
         shape[axes[1]] = sliced.shape[axes[1]]
@@ -2085,7 +2109,7 @@ class LineSegmentROI(ROI):
       
         return p
     
-    def getArrayRegion(self, data, img, axes=(0,1)):
+    def getArrayRegion(self, data, img, axes=(0,1), order=1, **kwds):
         """
         Use the position of this ROI relative to an imageItem to pull a slice 
         from an array.
@@ -2101,7 +2125,7 @@ class LineSegmentROI(ROI):
         for i in range(len(imgPts)-1):
             d = Point(imgPts[i+1] - imgPts[i])
             o = Point(imgPts[i])
-            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=1)
+            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, **kwds)
             rgns.append(r)
             
         return np.concatenate(rgns, axis=axes[0])
