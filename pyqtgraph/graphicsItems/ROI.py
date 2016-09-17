@@ -2070,9 +2070,9 @@ class LineSegmentROI(ROI):
         if len(positions) > 2:
             raise Exception("LineSegmentROI must be defined by exactly 2 positions. For more points, use PolyLineROI.")
         
+        self.endpoints = []
         for i, p in enumerate(positions):
-            self.addFreeHandle(p, item=handles[i])
-                
+            self.endpoints.append(self.addFreeHandle(p, item=handles[i]))
         
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
@@ -2080,8 +2080,8 @@ class LineSegmentROI(ROI):
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         p.setPen(self.currentPen)
-        h1 = self.handles[0]['item'].pos()
-        h2 = self.handles[1]['item'].pos()
+        h1 = self.endpoints[0].pos()
+        h2 = self.endpoints[1].pos()
         p.drawLine(h1, h2)
         
     def boundingRect(self):
@@ -2090,8 +2090,8 @@ class LineSegmentROI(ROI):
     def shape(self):
         p = QtGui.QPainterPath()
     
-        h1 = self.handles[0]['item'].pos()
-        h2 = self.handles[1]['item'].pos()
+        h1 = self.endpoints[0].pos()
+        h2 = self.endpoints[1].pos()
         dh = h2-h1
         if dh.length() == 0:
             return p
@@ -2109,7 +2109,7 @@ class LineSegmentROI(ROI):
       
         return p
     
-    def getArrayRegion(self, data, img, axes=(0,1), order=1, **kwds):
+    def getArrayRegion(self, data, img, axes=(0,1), order=1, returnMappedCoords=False, **kwds):
         """
         Use the position of this ROI relative to an imageItem to pull a slice 
         from an array.
@@ -2120,15 +2120,15 @@ class LineSegmentROI(ROI):
         See ROI.getArrayRegion() for a description of the arguments.
         """
         
-        imgPts = [self.mapToItem(img, h['item'].pos()) for h in self.handles]
+        imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
         rgns = []
-        for i in range(len(imgPts)-1):
-            d = Point(imgPts[i+1] - imgPts[i])
-            o = Point(imgPts[i])
-            r = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, **kwds)
-            rgns.append(r)
-            
-        return np.concatenate(rgns, axis=axes[0])
+        coords = []
+
+        d = Point(imgPts[1] - imgPts[0])
+        o = Point(imgPts[0])
+        rgn = fn.affineSlice(data, shape=(int(d.length()),), vectors=[Point(d.norm())], origin=o, axes=axes, order=order, returnCoords=returnMappedCoords, **kwds)
+
+        return rgn
         
 
 class _PolyLineSegment(LineSegmentROI):
