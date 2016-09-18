@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/GraphicsScene/exportDialogTemplate.ui'
+# Form implementation generated from reading ui file 'exportDialogTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:29 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created: Sun Sep 18 19:19:58 2016
+#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -52,13 +52,12 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Export"))
-        self.label.setText(_translate("Form", "Item to export:"))
-        self.label_2.setText(_translate("Form", "Export format"))
-        self.exportBtn.setText(_translate("Form", "Export"))
-        self.closeBtn.setText(_translate("Form", "Close"))
-        self.label_3.setText(_translate("Form", "Export options"))
-        self.copyBtn.setText(_translate("Form", "Copy"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Export", None, -1))
+        self.label.setText(QtWidgets.QApplication.translate("Form", "Item to export:", None, -1))
+        self.label_2.setText(QtWidgets.QApplication.translate("Form", "Export format", None, -1))
+        self.exportBtn.setText(QtWidgets.QApplication.translate("Form", "Export", None, -1))
+        self.closeBtn.setText(QtWidgets.QApplication.translate("Form", "Close", None, -1))
+        self.label_3.setText(QtWidgets.QApplication.translate("Form", "Export options", None, -1))
+        self.copyBtn.setText(QtWidgets.QApplication.translate("Form", "Copy", None, -1))
 
 from ..parametertree import ParameterTree

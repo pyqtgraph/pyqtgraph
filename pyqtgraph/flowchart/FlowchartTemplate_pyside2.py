@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/flowchart/FlowchartTemplate.ui'
+# Form implementation generated from reading ui file 'FlowchartTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created: Sun Sep 18 19:16:03 2016
+#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -27,8 +27,8 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.selDescLabel, 0, 0, 1, 1)
         self.selNameLabel = QtWidgets.QLabel(self.selInfoWidget)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.selNameLabel.setFont(font)
         self.selNameLabel.setText("")
         self.selNameLabel.setObjectName("selNameLabel")
@@ -48,8 +48,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
 
-from ..widgets.DataTreeWidget import DataTreeWidget
 from ..flowchart.FlowchartGraphicsView import FlowchartGraphicsView
+from ..widgets.DataTreeWidget import DataTreeWidget
