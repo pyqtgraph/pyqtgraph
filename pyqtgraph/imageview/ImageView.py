@@ -15,9 +15,13 @@ Widget used for displaying 2D or 3D data. Features:
 import os
 import numpy as np
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
 if USE_PYSIDE:
     from .ImageViewTemplate_pyside import *
+elif USE_PYSIDE2:
+    from .ImageViewTemplate_pyside2 import *
+elif USE_PYQT5:
+    from .ImageViewTemplate_pyqt5 import *
 else:
     from .ImageViewTemplate_pyqt import *
     

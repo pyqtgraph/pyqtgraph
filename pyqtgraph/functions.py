@@ -12,7 +12,7 @@ import decimal, re
 import ctypes
 import sys, struct
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore, USE_PYSIDE, USE_PYSIDE2
 from . import getConfigOption, setConfigOptions
 from . import debug
 
@@ -1126,7 +1126,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE:
+    if USE_PYSIDE or USE_PYSIDE2:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
@@ -1171,7 +1171,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE:
+    if USE_PYSIDE or USE_PYSIDE2:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())

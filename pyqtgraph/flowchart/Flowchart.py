@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
 from .Node import *
 from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *
@@ -9,6 +9,9 @@ from .. import FileDialog, DataTreeWidget
 if USE_PYSIDE:
     from . import FlowchartTemplate_pyside as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyside as FlowchartCtrlTemplate
+elif USE_PYSIDE2:
+    from . import FlowchartTemplate_pyside2 as FlowchartTemplate
+    from . import FlowchartCtrlTemplate_pyside2 as FlowchartCtrlTemplate
 elif USE_PYQT5:
     from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
