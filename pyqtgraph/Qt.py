@@ -14,6 +14,7 @@ import os, sys, re, time
 from .python2_3 import asUnicode
 
 PYSIDE = 'PySide'
+PYSIDE2 = 'PySide2'
 PYQT4 = 'PyQt4'
 PYQT5 = 'PyQt5'
 
@@ -24,7 +25,7 @@ QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
 if QT_LIB is None:
-    libOrder = [PYQT4, PYSIDE, PYQT5]
+    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2]
 
     for lib in libOrder:
         if lib in sys.modules:
@@ -41,67 +42,155 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
+    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PySide or PySide2; none of these packages could be imported.")
 
+if QT_LIB == PYSIDE or QT_LIB == PYSIDE2:
+    if QT_LIB == PYSIDE:
+        from PySide import QtGui, QtCore
 
-class FailedImport(object):
-    """Used to defer ImportErrors until we are sure the module is needed.
-    """
-    def __init__(self, err):
-        self.err = err
-        
-    def __getattr__(self, attr):
-        raise self.err
+        try:
+            from PySide import QtOpenGL
+        except ImportError as err:
+            QtOpenGL = FailedImport(err)
+        try:
+            from PySide import QtSvg
+        except ImportError as err:
+            QtSvg = FailedImport(err)
 
-
-if QT_LIB == PYSIDE:
-    from PySide import QtGui, QtCore
-
-    try:
-        from PySide import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
-    try:
-        from PySide import QtSvg
-    except ImportError as err:
-        QtSvg = FailedImport(err)
-
-    try:
-        from PySide import QtTest
-        if not hasattr(QtTest.QTest, 'qWait'):
-            @staticmethod
-            def qWait(msec):
-                start = time.time()
-                QtGui.QApplication.processEvents()
-                while time.time() < start + msec * 0.001:
+        try:
+            from PySide import QtTest
+            if not hasattr(QtTest.QTest, 'qWait'):
+                @staticmethod
+                def qWait(msec):
+                    start = time.time()
                     QtGui.QApplication.processEvents()
-            QtTest.QTest.qWait = qWait
-    except ImportError as err:
-        QtTest = FailedImport(err)
-        
-    import PySide
-    try:
-        from PySide import shiboken
-        isQObjectAlive = shiboken.isValid
-    except ImportError:
-        def isQObjectAlive(obj):
-            try:
-                if hasattr(obj, 'parent'):
-                    obj.parent()
-                elif hasattr(obj, 'parentItem'):
-                    obj.parentItem()
+                    while time.time() < start + msec * 0.001:
+                        QtGui.QApplication.processEvents()
+                QtTest.QTest.qWait = qWait
+
+        except ImportError:
+            pass
+        import PySide
+        try:
+            from PySide import shiboken
+            isQObjectAlive = shiboken.isValid
+        except ImportError:
+            def isQObjectAlive(obj):
+                try:
+                    if hasattr(obj, 'parent'):
+                        obj.parent()
+                    elif hasattr(obj, 'parentItem'):
+                        obj.parentItem()
+                    else:
+                        raise Exception("Cannot determine whether Qt object %s is still alive." % obj)
+                except RuntimeError:
+                    return False
                 else:
-                    raise Exception("Cannot determine whether Qt object %s is still alive." % obj)
-            except RuntimeError:
-                return False
+                    return True
+
+        VERSION_INFO = 'PySide ' + PySide.__version__
+
+    elif QT_LIB == PYSIDE2:
+        # QtOpenGL, QtSvg is not working for PySide2, see https://wiki.qt.io/PySide2
+        #from PySide2 import QtGui, QtCore, QtOpenGL, QtSvg, QtWidgets
+        from PySide2 import QtGui, QtCore, QtWidgets
+
+        try:
+            from PySide2 import QtSvg
+        except ImportError:
+            pass
+
+        try:
+            from PySide2 import QtOpenGL
+        except ImportError:
+            pass
+
+        try:
+            from PySide2 import QtTest
+            if not hasattr(QtTest.QTest, 'qWait'):
+                @staticmethod
+                def qWait(msec):
+                    start = time.time()
+                    QtWidgets.QApplication.processEvents()
+                    while time.time() < start + msec * 0.001:
+                        QtWidgets.QApplication.processEvents()
+                QtTest.QTest.qWait = qWait
+        except ImportError:
+            pass
+
+        import PySide2
+        try:
+            from PySide2 import shiboken2
+            isQObjectAlive = shiboken2.isValid
+        except ImportError:
+            def isQObjectAlive(obj):
+                try:
+                    if hasattr(obj, 'parent'):
+                        obj.parent()
+                    elif hasattr(obj, 'parentItem'):
+                        obj.parentItem()
+                    else:
+                        raise Exception("Cannot determine whether Qt object %s is still alive." % obj)
+                except RuntimeError:
+                    return False
+                else:
+                    return True
+
+        # Re-implement deprecated APIs
+        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
+        def scale(self, *args):
+            if args:
+                sx, sy = args
+                tr = self.transform()
+                tr.scale(sx, sy)
+                self.setTransform(tr)
             else:
-                return True
-    
-    VERSION_INFO = 'PySide ' + PySide.__version__
-    
+                return __QGraphicsItem_scale(self)
+
+        QtWidgets.QGraphicsItem.scale = scale
+
+        def rotate(self, angle):
+            tr = self.transform()
+            tr.rotate(angle)
+            self.setTransform(tr)
+        QtWidgets.QGraphicsItem.rotate = rotate
+
+        def translate(self, dx, dy):
+            tr = self.transform()
+            tr.translate(dx, dy)
+            self.setTransform(tr)
+        QtWidgets.QGraphicsItem.translate = translate
+
+        def setMargin(self, i):
+            self.setContentsMargins(i, i, i, i)
+        QtWidgets.QGridLayout.setMargin = setMargin
+
+        def setResizeMode(self, *args):
+            self.setSectionResizeMode(*args)
+        QtWidgets.QHeaderView.setResizeMode = setResizeMode
+
+
+        QtGui.QApplication = QtWidgets.QApplication
+        QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
+        QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
+        QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
+
+        QtGui.QApplication.setGraphicsSystem = None
+
+        # Import all QtWidgets objects into QtGui
+        for o in dir(QtWidgets):
+            if o.startswith('Q'):
+                setattr(QtGui, o, getattr(QtWidgets,o) )
+
+        VERSION_INFO = 'PySide2 ' + PySide2.__version__
+
+    #
+    # Commons to PySide and PySide2
+    #
+
     # Make a loadUiType function like PyQt has
-    
     # Credit:
+
     # http://stackoverflow.com/questions/4442286/python-code-genration-with-pyside-uic/14195313#14195313
 
     class StringIO(object):
@@ -265,9 +354,16 @@ if QT_LIB.startswith('PyQt'):
 ## Make sure we have Qt >= 4.7
 versionReq = [4, 7]
 USE_PYSIDE = QT_LIB == PYSIDE
+USE_PYSIDE2 = QT_LIB == PYSIDE2
 USE_PYQT4 = QT_LIB == PYQT4
 USE_PYQT5 = QT_LIB == PYQT5
-QtVersion = PySide.QtCore.__version__ if QT_LIB == PYSIDE else QtCore.QT_VERSION_STR
+if QT_LIB == PYSIDE:
+    QtVersion = PySide.QtCore.__version__
+elif QT_LIB == PYSIDE2:
+    QtVersion = PySide2.QtCore.__version__
+else:
+    QtVersion = QtCore.QT_VERSION_STR
+
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
