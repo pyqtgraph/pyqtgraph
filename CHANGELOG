@@ -16,6 +16,8 @@ pyqtgraph-0.10.0  [unreleased]
       the color every time the text is changed.
     - FFT plots skip first sample if x-axis uses log scaling 
     - Multiprocessing system adds bytes and unicode to the default list of no-proxy data types
+    - Version number scheme changed to be PEP440-compliant (only affects installations from non-
+      release git commits) 
 
   Bugfixes:
     - Fix for numpy API change that caused casting errors for inplace operations
