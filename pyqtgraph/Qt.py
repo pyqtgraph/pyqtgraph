@@ -42,7 +42,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
+    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PySide or PySide2; none of these packages could be imported.")
 
 if QT_LIB == PYSIDE or QT_LIB == PYSIDE2 :
     if QT_LIB == PYSIDE:
