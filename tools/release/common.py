@@ -1,14 +1,5 @@
-import os, sys, getopt, re
+import os
 import subprocess as sp
-
-try:
-    from release_config import *
-except ImportError:
-    print "Error: could not import release_config! See the README..\n\n"
-    raise
-
-
-vars = dict(ver=version, src=sourcedir, bld=builddir, win=winhost, self=selfhost)    
 
 
 def shell(cmd):

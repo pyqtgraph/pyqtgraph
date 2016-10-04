@@ -1,31 +1,89 @@
 #!/usr/bin/python
-from common import *
+import os, sys, argparse, random
+from common import shell, ssh
 
 
-usage = """
-Usage: build_pg_release.py x.y.z
 
-    * Will attempt to clone branch release-x.y.z from %s.
-    * Will attempt to contact windows host at %s (suggest running bitvise ssh server).
-""" % (sourcedir, winhost)
+description="Build release packages for pyqtgraph."
 
+epilog = """
+Package build is done in several steps:
 
-if len(sys.argv) != 2:
-    print usage
+    * Attempt to clone branch release-x.y.z from %s
+    * Merge release branch into master
+    * Write new version numbers into the source
+    * Roll over unreleased CHANGELOG entries
+    * Commit and tag new release
+    * Build HTML documentation
+    * Build source package
+    * Build deb packages (if running on Linux)
+    * Build exe packages (if running on Windows, or if a Windows
+      server is configured)
+
+Building source packages requires:
+
+    * 
+    * 
+    * python-sphinx
+
+Building deb packages requires several dependencies:
+
+    * build-essential
+    * python-all, python3-all
+    * python-stdeb, python3-stdeb
+    
+"""
+
+path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+build_dir = os.path.join(path, 'release-build')
+pkg_dir = os.path.join(path, 'release-packages')
+
+ap = argparse.ArgumentParser(description=description, epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+ap.add_argument('version', help='The x.y.z version to generate release packages for. '
+                                'There must be a corresponding pyqtgraph-x.y.z branch in the source repository.')
+ap.add_argument('--source-repo', metavar='', help='Repository from which release and master branches will be cloned. Default is the repo containing this script.', default=path)
+ap.add_argument('--build-dir', metavar='', help='Directory where packages will be staged and built. Default is source_root/release-build.', default=build_dir)
+ap.add_argument('--pkg-dir', metavar='', help='Directory where packages will be stored. Default is source_root/release-packages.', default=pkg_dir)
+ap.add_argument('--skip-pip-test', metavar='', help='Skip testing pip install.', action='store_const', const=True, default=False)
+ap.add_argument('--no-deb', metavar='', help='Skip building Debian packages.', action='store_const', const=True, default=False)
+ap.add_argument('--no-exe', metavar='', help='Skip building Windows exe installers.', action='store_const', const=True, default=False)
+ap.add_argument('--win-host', metavar='', help='user@hostname to build .exe installers via Windows SSH server.', default=None)
+ap.add_argument('--self-host', metavar='', help='user@hostname for Windows server to access localhost (for git clone).', default=None)
+
+args = ap.parse_args()
+
+if os.path.exists(args.build_dir):
+    sys.stderr.write("Please remove the build directory %s before proceeding, or specify a different path with --build-dir.\n" % args.build_dir)
     sys.exit(-1)
-version = sys.argv[1]
-if re.match(r'\d+\.\d+.*', version) is None:
-    print 'Invalid version number "%s".' % version
-    sys.exit(-1)
+    
+    
+
+#if len(sys.argv) < 2:
+    #print usage
+    #sys.exit(-1)
+version = args.version
+#if re.match(r'\d+\.\d+.*', version) is None:
+    #print 'Invalid version number "%s".' % version
+    #sys.exit(-1)
+
+vars = {
+    'ver': args.version,
+    'bld': args.build_dir,
+    'src': args.source_repo,
+    'pkgdir': args.pkg_dir,
+    'win': args.win_host,
+    'self': args.self_host,
+}
 
 
 # Clone source repository and tag the release branch
 shell('''
-    # Clone and merge release branch
+    # Clone and merge release branch into previous master
+    mkdir -p {bld}
     cd {bld}
     rm -rf pyqtgraph
-    git clone --depth 1 -b master http://github.com/pyqtgraph/pyqtgraph
-    cd {bld}/pyqtgraph
+    git clone --depth 1 -b master {src} pyqtgraph
+    cd pyqtgraph
     git checkout -b release-{ver}
     git pull {src} release-{ver}
     git checkout master
@@ -33,7 +91,6 @@ shell('''
     
     # Write new version number into the source
     sed -i "s/__version__ = .*/__version__ = '{ver}'/" pyqtgraph/__init__.py
-    #sed -i "s/    version=.*,/    version='{ver}',/" setup.py  # now automated
     sed -i "s/version = .*/version = '{ver}'/" doc/source/conf.py
     sed -i "s/release = .*/release = '{ver}'/" doc/source/conf.py
     
@@ -54,55 +111,94 @@ shell('''
 
     # package source distribution
     python setup.py sdist
-    
-    # test pip install source distribution
-    rm -rf release-{ver}-virtenv
-    virtualenv --system-site-packages release-{ver}-virtenv
-    . release-{ver}-virtenv/bin/activate
-    echo "PATH: $PATH"
-    echo "ENV: $VIRTUAL_ENV" 
-    pip install --no-index dist/pyqtgraph-{ver}.tar.gz
-    deactivate
 
-    # build deb packages
-    #python setup.py --command-packages=stdeb.command bdist_deb
-    python setup.py --command-packages=stdeb.command sdist_dsc
-    cd deb_dist/pyqtgraph-{ver}
-    sed -i "s/^Depends:.*/Depends: python (>= 2.6), python-qt4 | python-pyside, python-numpy/" debian/control    
-    dpkg-buildpackage
-    cd ../../
-    mv deb_dist dist/pyqtgraph-{ver}-deb
+    mkdir -p {pkgdir}
+    cp dist/*.tar.gz {pkgdir}
+
+    # source package build complete.
 '''.format(**vars))
 
-
-# build windows installers
-if winhost is not None:
-    shell("# Build windows executables")
-    ssh(winhost, '''
-        rmdir /s/q pyqtgraph-build
-        git clone {self}:{bld}/pyqtgraph pyqtgraph-build
-        cd pyqtgraph-build
-        python setup.py build --plat-name=win32 bdist_wininst
-        python setup.py build --plat-name=win-amd64 bdist_wininst
-        exit
-    '''.format(**vars))
-
+    
+if args.skip_pip_test:
+    vars['pip_test'] = 'skipped'
+else:
     shell('''
-        scp {win}:pyqtgraph-build/dist/*.exe {bld}/pyqtgraph/dist/
+        # test pip install source distribution
+        rm -rf release-{ver}-virtenv
+        virtualenv --system-site-packages release-{ver}-virtenv
+        . release-{ver}-virtenv/bin/activate
+        echo "PATH: $PATH"
+        echo "ENV: $VIRTUAL_ENV" 
+        pip install --no-index --no-deps dist/pyqtgraph-{ver}.tar.gz
+        deactivate
+        
+        # pip install test passed
     '''.format(**vars))
+    vars['pip_test'] = 'passed'
 
 
-print """
+if 'linux' in sys.platform and not args.no_deb: 
+    shell('''
+        # build deb packages
+        cd {bld}
+        python setup.py --command-packages=stdeb.command sdist_dsc
+        cd deb_dist/pyqtgraph-{ver}
+        sed -i "s/^Depends:.*/Depends: python (>= 2.6), python-qt4 | python-pyside, python-numpy/" debian/control    
+        dpkg-buildpackage
+        cd ../../
+        mv deb_dist {pkgdir}/pyqtgraph-{ver}-deb
+        
+        # deb package build complete.
+    '''.format(**vars))
+    vars['deb_status'] = 'built'
+else:
+    vars['deb_status'] = 'skipped'
+    
+
+# build windows installers locally if possible, otherwise try configured windows server
+vars['winpath'] = None
+if (sys.platform == 'win32' or winhost is not None) and not args.no_exe:
+    shell("# Build windows executables")
+    if sys.platform == 'win32':
+        shell("""
+            cd {bld}
+            python setup.py build --plat-name=win32 bdist_wininst
+            python setup.py build --plat-name=win-amd64 bdist_wininst
+            cp dist/*.exe {pkgdir}
+        """.format(**vars))
+        vars['exe_status'] = 'built'
+    else:
+        vars['winpath'] = 'pyqtgraph-build_%x' % random.randint(0, 1e12)
+        ssh(winhost, '''
+            git clone {self}:{bld}/pyqtgraph {winpath}
+            cd {winpath}
+            python setup.py build --plat-name=win32 bdist_wininst
+            python setup.py build --plat-name=win-amd64 bdist_wininst
+            exit
+        '''.format(**vars))
+
+        shell('''
+            scp {win}:{winpath}/dist/*.exe {pkgdir}
+        '''.format(**vars))
+        vars['exe_status'] = 'built'
+else:
+    vars['exe_status'] = 'skipped'
+
+
+print("""
 
 ======== Build complete. =========
 
-* Dist files in {bld}/pyqtgraph/dist
-""".format(**vars)
+* Source package:     built
+* Pip install test:   {pip_test}
+* Debian packages:    {deb_status}
+* Windows installers: {exe_status}
+* Package files in    {pkgdir}
+""".format(**vars))
 
 
-if winhost is not None:
-    print """    * Dist files on windows host at {win}:pyqtgraph-build/dist
-    """.format(**vars)
+if vars['winpath'] is not None:
+    print("""    * Dist files on windows host at {win}:{winpath}""".format(**vars))
 
 
 
