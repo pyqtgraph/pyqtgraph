@@ -17,8 +17,7 @@ Package build is done in several steps:
     * Build HTML documentation
     * Build source package
     * Build deb packages (if running on Linux)
-    * Build exe packages (if running on Windows, or if a Windows
-      server is configured)
+    * Build Windows exe installers
 
 Building source packages requires:
 
@@ -47,34 +46,27 @@ ap.add_argument('--pkg-dir', metavar='', help='Directory where packages will be 
 ap.add_argument('--skip-pip-test', metavar='', help='Skip testing pip install.', action='store_const', const=True, default=False)
 ap.add_argument('--no-deb', metavar='', help='Skip building Debian packages.', action='store_const', const=True, default=False)
 ap.add_argument('--no-exe', metavar='', help='Skip building Windows exe installers.', action='store_const', const=True, default=False)
-ap.add_argument('--win-host', metavar='', help='user@hostname to build .exe installers via Windows SSH server.', default=None)
-ap.add_argument('--self-host', metavar='', help='user@hostname for Windows server to access localhost (for git clone).', default=None)
 
 args = ap.parse_args()
 args.build_dir = os.path.abspath(args.build_dir)
-args.pkg_dir = os.path.abspath(args.pkg_dir)
+args.pkg_dir = os.path.join(os.path.abspath(args.pkg_dir), args.version)
+
 
 if os.path.exists(args.build_dir):
     sys.stderr.write("Please remove the build directory %s before proceeding, or specify a different path with --build-dir.\n" % args.build_dir)
     sys.exit(-1)
+if os.path.exists(args.pkg_dir):
+    sys.stderr.write("Please remove the package directory %s before proceeding, or specify a different path with --pkg-dir.\n" % args.pkg_dir)
+    sys.exit(-1)
     
     
-
-#if len(sys.argv) < 2:
-    #print usage
-    #sys.exit(-1)
 version = args.version
-#if re.match(r'\d+\.\d+.*', version) is None:
-    #print 'Invalid version number "%s".' % version
-    #sys.exit(-1)
 
 vars = {
     'ver': args.version,
     'bld': args.build_dir,
     'src': args.source_repo,
     'pkgdir': args.pkg_dir,
-    'win': args.win_host,
-    'self': args.self_host,
 }
 
 
@@ -157,32 +149,15 @@ else:
     vars['deb_status'] = 'skipped'
     
 
-# build windows installers locally if possible, otherwise try configured windows server
-vars['winpath'] = None
-if (sys.platform == 'win32' or args.win_host is not None) and not args.no_exe:
-    shell("# Build windows executables")
-    if sys.platform == 'win32':
-        shell("""
-            cd {bld}
-            python setup.py build --plat-name=win32 bdist_wininst
-            python setup.py build --plat-name=win-amd64 bdist_wininst
-            cp dist/*.exe {pkgdir}
-        """.format(**vars))
-        vars['exe_status'] = 'built'
-    else:
-        vars['winpath'] = 'pyqtgraph-build_%x' % random.randint(0, 1e12)
-        ssh(args.win_host, '''
-            git clone {self}:{bld}/pyqtgraph {winpath}
-            cd {winpath}
-            python setup.py build --plat-name=win32 bdist_wininst
-            python setup.py build --plat-name=win-amd64 bdist_wininst
-            exit
-        '''.format(**vars))
-
-        shell('''
-            scp {win}:{winpath}/dist/*.exe {pkgdir}
-        '''.format(**vars))
-        vars['exe_status'] = 'built'
+if not args.no_exe:
+    shell("""
+        # Build windows executables
+        cd {bld}/pyqtgraph
+        python setup.py build bdist_wininst --plat-name=win32
+        python setup.py build bdist_wininst
+        cp dist/*.exe {pkgdir}
+    """.format(**vars))
+    vars['exe_status'] = 'built'    
 else:
     vars['exe_status'] = 'skipped'
 
@@ -197,10 +172,3 @@ print("""
 * Windows installers: {exe_status}
 * Package files in    {pkgdir}
 """.format(**vars))
-
-
-if vars['winpath'] is not None:
-    print("""    * Dist files on windows host at {win}:{winpath}""".format(**vars))
-
-
-

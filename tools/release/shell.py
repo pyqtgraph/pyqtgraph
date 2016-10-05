@@ -7,7 +7,7 @@ def shell(cmd):
     a nonzero value.
     """
     pin, pout = os.pipe()
-    proc = sp.Popen('/bin/sh', stdin=sp.PIPE)
+    proc = sp.Popen('/bin/bash', stdin=sp.PIPE)
     for line in cmd.split('\n'):
         line = line.strip()
         if line.startswith('#'):
