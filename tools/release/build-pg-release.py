@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import os, sys, argparse, random
-from common import shell, ssh
+from shell import shell, ssh
 
 
 
@@ -51,6 +51,8 @@ ap.add_argument('--win-host', metavar='', help='user@hostname to build .exe inst
 ap.add_argument('--self-host', metavar='', help='user@hostname for Windows server to access localhost (for git clone).', default=None)
 
 args = ap.parse_args()
+args.build_dir = os.path.abspath(args.build_dir)
+args.pkg_dir = os.path.abspath(args.pkg_dir)
 
 if os.path.exists(args.build_dir):
     sys.stderr.write("Please remove the build directory %s before proceeding, or specify a different path with --build-dir.\n" % args.build_dir)
@@ -140,7 +142,7 @@ else:
 if 'linux' in sys.platform and not args.no_deb: 
     shell('''
         # build deb packages
-        cd {bld}
+        cd {bld}/pyqtgraph
         python setup.py --command-packages=stdeb.command sdist_dsc
         cd deb_dist/pyqtgraph-{ver}
         sed -i "s/^Depends:.*/Depends: python (>= 2.6), python-qt4 | python-pyside, python-numpy/" debian/control    
@@ -157,7 +159,7 @@ else:
 
 # build windows installers locally if possible, otherwise try configured windows server
 vars['winpath'] = None
-if (sys.platform == 'win32' or winhost is not None) and not args.no_exe:
+if (sys.platform == 'win32' or args.win_host is not None) and not args.no_exe:
     shell("# Build windows executables")
     if sys.platform == 'win32':
         shell("""
@@ -169,7 +171,7 @@ if (sys.platform == 'win32' or winhost is not None) and not args.no_exe:
         vars['exe_status'] = 'built'
     else:
         vars['winpath'] = 'pyqtgraph-build_%x' % random.randint(0, 1e12)
-        ssh(winhost, '''
+        ssh(args.win_host, '''
             git clone {self}:{bld}/pyqtgraph {winpath}
             cd {winpath}
             python setup.py build --plat-name=win32 bdist_wininst
