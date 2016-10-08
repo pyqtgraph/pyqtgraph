@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, bkgnd=None):
+    def __init__(self, size=None, offset=None, bkgnd=None, frame=None):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -32,6 +32,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
         bkgnd           Specifies the background color (red, green, blue, alpha) of 
+                        the legend.
+        frame           Specifies the frame color (red, green, blue, alpha) of 
                         the legend.
         ==============  ===============================================================
         
@@ -47,6 +49,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.size = size
         self.offset = offset
         self.bkgnd = bkgnd
+        self.frame = frame
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
         
@@ -124,11 +127,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     def paint(self, p, *args):
         if self.bkgnd is not None:
             bkgnd = self.bkgnd
-            p.setPen(fn.mkPen(*bkgnd))
             p.setBrush(fn.mkBrush(*bkgnd))
         else:
-            p.setPen(fn.mkPen(255,255,255,50))
             p.setBrush(fn.mkBrush(100,100,100,50))
+        if self.frame is not None:
+            frame = self.frame
+            p.setPen(fn.mkPen(*frame))
+        else:
+            p.setPen(fn.mkPen(255,255,255,50))    
         p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev):
