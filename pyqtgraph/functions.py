@@ -602,37 +602,44 @@ def interpolateArray(data, x, default=0.0, order=1):
     if md > nd:
         raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
-    # First we generate arrays of indexes that are needed to 
-    # extract the data surrounding each point
-    fields = np.mgrid[(slice(0,order+1),) * md]
-    xmin = np.floor(x).astype(int)
-    xmax = xmin + 1
-    indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
-    fieldInds = []
     totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
-    for ax in range(md):
-        mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
-        # keep track of points that need to be set to default
-        totalMask &= mask
-        
-        # ..and keep track of indexes that are out of bounds 
-        # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
-        #  of bounds, but the interpolation will work anyway)
-        mask &= (xmax[...,ax] < data.shape[ax])
-        axisIndex = indexes[...,ax][fields[ax]]
-        axisIndex[axisIndex < 0] = 0
-        axisIndex[axisIndex >= data.shape[ax]] = 0
-        fieldInds.append(axisIndex)
-    prof()
-
-    # Get data values surrounding each requested point
-    fieldData = data[tuple(fieldInds)]
-    prof()
-    
-    ## Interpolate
     if order == 0:
-        result = fieldData[0,0]
-    else:
+        xinds = np.round(x).astype(int)  # NOTE: for 0.5 this rounds to the nearest *even* number
+        for ax in range(md):
+            mask = (xinds[...,ax] >= 0) & (xinds[...,ax] <= data.shape[ax]-1) 
+            xinds[...,ax][~mask] = 0
+            # keep track of points that need to be set to default
+            totalMask &= mask
+        result = data[tuple([xinds[...,i] for i in range(xinds.shape[-1])])]
+        
+    elif order == 1:
+        # First we generate arrays of indexes that are needed to 
+        # extract the data surrounding each point
+        fields = np.mgrid[(slice(0,order+1),) * md]
+        xmin = np.floor(x).astype(int)
+        xmax = xmin + 1
+        indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
+        fieldInds = []
+        for ax in range(md):
+            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+            # keep track of points that need to be set to default
+            totalMask &= mask
+            
+            # ..and keep track of indexes that are out of bounds 
+            # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
+            #  of bounds, but the interpolation will work anyway)
+            mask &= (xmax[...,ax] < data.shape[ax])
+            axisIndex = indexes[...,ax][fields[ax]]
+            axisIndex[axisIndex < 0] = 0
+            axisIndex[axisIndex >= data.shape[ax]] = 0
+            fieldInds.append(axisIndex)
+        prof()
+
+        # Get data values surrounding each requested point
+        fieldData = data[tuple(fieldInds)]
+        prof()
+    
+        ## Interpolate
         s = np.empty((md,) + fieldData.shape, dtype=float)
         dx = x - xmin
         # reshape fields for arithmetic against dx

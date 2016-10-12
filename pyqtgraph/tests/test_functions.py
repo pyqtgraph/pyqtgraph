@@ -58,8 +58,8 @@ def check_interpolateArray(order):
     
     x = np.array([[  0.3,   0.6],
                   [  1. ,   1. ],
-                  [  0.5,   1. ],
-                  [  0.5,   2.5],
+                  [  0.501,   1. ],   # NOTE: testing at exactly 0.5 can yield different results from map_coordinates
+                  [  0.501,   2.501],  # due to differences in rounding
                   [ 10. ,  10. ]])
     
     result = interpolateArray(data, x)
@@ -82,8 +82,8 @@ def check_interpolateArray(order):
     
     
     # test mapping 2D array of locations
-    x = np.array([[[0.5, 0.5], [0.5, 1.0], [0.5, 1.5]],
-                  [[1.5, 0.5], [1.5, 1.0], [1.5, 1.5]]])
+    x = np.array([[[0.501, 0.501], [0.501, 1.0], [0.501, 1.501]],
+                  [[1.501, 0.501], [1.501, 1.0], [1.501, 1.501]]])
     
     r1 = interpolateArray(data, x)
     r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=order)
