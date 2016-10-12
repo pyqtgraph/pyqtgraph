@@ -536,12 +536,15 @@ def interpolateArray(data, x, default=0.0, order=1):
     N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
     
     This function returns linearly-interpolated values sampled from a regular
-    grid of data. 
+    grid of data. It differs from `ndimage.map_coordinates` by allowing broadcasting
+    within the input array.
     
     ==============  ===========================================================================================
     **Arguments:**
     *data*          Array of any shape containing the values to be interpolated.
-    *x*             Array with (shape[-1] <= data.ndim) containing the locations within *data* to interpolate. 
+    *x*             Array with (shape[-1] <= data.ndim) containing the locations within *data* to interpolate.
+                    (note: the axes for this argument are transposed relative to the same argument for
+                    `ndimage.map_coordinates`).
     *default*       Value to return for locations in *x* that are outside the bounds of *data*.
     *order*         Order of interpolation: 0=nearest, 1=linear.
     ==============  ===========================================================================================
