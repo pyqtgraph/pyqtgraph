@@ -41,6 +41,7 @@ pyqtgraph-0.10.0  [unreleased]
     - ColorMap forces color inputs to be sorted
     - Fixed memory mapping for RemoteGraphicsView in OSX
     - Fixed QPropertyAnimation str/bytes handling
+    - Fixed __version__ string update when using `setup.py install` with newer setuptools
 
   Maintenance:
     - Image comparison system for unit testing plus tests for several graphics items

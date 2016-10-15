@@ -46,6 +46,17 @@ except ImportError:
     from distutils.command import install
 
 
+# Work around mbcs bug in distutils.
+# http://bugs.python.org/issue10945
+import codecs
+try:
+    codecs.lookup('mbcs')
+except LookupError:
+    ascii = codecs.lookup('ascii')
+    func = lambda name, enc=ascii: {True: enc}.get(name=='mbcs')
+    codecs.register(func)
+
+
 path = os.path.split(__file__)[0]
 sys.path.insert(0, os.path.join(path, 'tools'))
 import setupHelpers as helpers
@@ -62,11 +73,9 @@ version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg=
 class Build(build.build):
     """
     * Clear build path before building
-    * Set version string in __init__ after building
     """
     def run(self):
-        global path, version, initVersion, forcedVersion
-        global buildVersion
+        global path
 
         ## Make sure build directory is clean
         buildPath = os.path.join(path, self.build_lib)
@@ -75,43 +84,49 @@ class Build(build.build):
     
         ret = build.build.run(self)
         
+
+class Install(install.install):
+    """
+    * Check for previously-installed version before installing
+    * Set version string in __init__ after building. This helps to ensure that we
+      know when an installation came from a non-release code base.
+    """
+    def run(self):
+        global path, version, initVersion, forcedVersion, installVersion
+        
+        name = self.config_vars['dist_name']
+        path = os.path.join(self.install_libbase, 'pyqtgraph')
+        if os.path.exists(path):
+            raise Exception("It appears another version of %s is already "
+                            "installed at %s; remove this before installing." 
+                            % (name, path))
+        print("Installing to %s" % path)
+        rval = install.install.run(self)
+
+        
         # If the version in __init__ is different from the automatically-generated
         # version string, then we will update __init__ in the build directory
         if initVersion == version:
             return ret
         
         try:
-            initfile = os.path.join(buildPath, 'pyqtgraph', '__init__.py')
+            initfile = os.path.join(path, '__init__.py')
             data = open(initfile, 'r').read()
             open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
-            buildVersion = version
+            installVersion = version
         except:
-            if forcedVersion:
-                raise
-            buildVersion = initVersion
             sys.stderr.write("Warning: Error occurred while setting version string in build path. "
                              "Installation will use the original version string "
                              "%s instead.\n" % (initVersion)
                              )
+            if forcedVersion:
+                raise
+            installVersion = initVersion
             sys.excepthook(*sys.exc_info())
-        return ret
-        
+    
+        return rval
 
-class Install(install.install):
-    """
-    * Check for previously-installed version before installing
-    """
-    def run(self):
-        name = self.config_vars['dist_name']
-        path = self.install_libbase
-        if os.path.exists(path) and name in os.listdir(path):
-            raise Exception("It appears another version of %s is already "
-                            "installed at %s; remove this before installing." 
-                            % (name, path))
-        print("Installing to %s" % path)
-        return install.install.run(self)
 
-        
 setup(
     version=version,
     cmdclass={'build': Build, 
