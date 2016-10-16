@@ -1047,8 +1047,8 @@ class ROI(GraphicsObject):
         
         ## Determine index values to use when referencing the array. 
         bounds = (
-            (int(min(intBounds.left(), intBounds.right())), int(1+max(intBounds.left(), intBounds.right()))),
-            (int(min(intBounds.bottom(), intBounds.top())), int(1+max(intBounds.bottom(), intBounds.top())))
+            (int(min(intBounds.left(), intBounds.right())), int(np.ceil(max(intBounds.left()), np.ceil(intBounds.right())))),
+            (int(min(intBounds.bottom(), intBounds.top())), int(max(np.ceil(intBounds.bottom()), np.ceil(intBounds.top()))))
         )
         if axisOrder == 'row-major':
             bounds = bounds[::-1]
