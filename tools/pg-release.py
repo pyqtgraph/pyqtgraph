@@ -9,7 +9,7 @@ description="Build release packages for pyqtgraph."
 epilog = """
 Package build is done in several steps:
 
-    * Attempt to clone branch release-x.y.z from %s
+    * Attempt to clone branch release-x.y.z from source-repo
     * Merge release branch into master
     * Write new version numbers into the source
     * Roll over unreleased CHANGELOG entries
@@ -37,9 +37,12 @@ Building deb packages requires several dependencies:
     * python-all, python3-all
     * python-stdeb, python3-stdeb
     
-Building windows .exe files should be possible on any OS. Note, however, that
+Note: building windows .exe files should be possible on any OS. However, 
 Debian/Ubuntu systems do not include the necessary wininst*.exe files; these
-must be manually copied from the Python source.
+must be manually copied from the Python source to the distutils/command 
+submodule path (/usr/lib/pythonX.X/distutils/command). Additionally, it may be
+necessary to rename (or copy / link) wininst-9.0-amd64.exe to 
+wininst-6.0-amd64.exe.
 
 """
 
@@ -152,7 +155,7 @@ def build(args):
             # Build windows executables
             cd {build_dir}/pyqtgraph
             python setup.py build bdist_wininst --plat-name=win32
-            python setup.py build bdist_wininst
+            python setup.py build bdist_wininst --plat-name=win-amd64
             cp dist/*.exe {pkg_dir}
         """.format(**args.__dict__))
         args.exe_status = 'built'    

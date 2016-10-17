@@ -11,19 +11,19 @@ def shell(cmd):
     for line in cmd.split('\n'):
         line = line.strip()
         if line.startswith('#'):
-            print '\033[33m> ' + line + '\033[0m'
+            print('\033[33m> ' + line + '\033[0m')
         else:
-            print '\033[32m> ' + line + '\033[0m'
+            print('\033[32m> ' + line + '\033[0m')
         if line.startswith('cd '):
             os.chdir(line[3:])
-        proc.stdin.write(line + '\n')
-        proc.stdin.write('echo $? 1>&%d\n' % pout)
+        proc.stdin.write((line + '\n').encode('utf-8'))
+        proc.stdin.write(('echo $? 1>&%d\n' % pout).encode('utf-8'))
         ret = ""
         while not ret.endswith('\n'):
             ret += os.read(pin, 1)
         ret = int(ret.strip())
         if ret != 0:
-            print "Error, bailing out."
+            print("\033[31mLast command returned %d; bailing out.\033[0m" % ret)
             sys.exit(-1)
     proc.stdin.close()
     proc.wait()
