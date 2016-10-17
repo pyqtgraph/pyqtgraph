@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, bkgnd=None, frame=None):
+    def __init__(self, size=None, offset=None, background=None, frame=None):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -31,7 +31,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         offset from the right or bottom. If offset is None, the
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
-        bkgnd           Specifies the background color (red, green, blue, alpha) of 
+        background      Specifies the background color (red, green, blue, alpha) of 
                         the legend.
         frame           Specifies the frame color (red, green, blue, alpha) of 
                         the legend.
@@ -48,7 +48,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.items = []
         self.size = size
         self.offset = offset
-        self.bkgnd = bkgnd
+        self.background = background
         self.frame = frame
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
@@ -125,9 +125,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         return QtCore.QRectF(0, 0, self.width(), self.height())
     
     def paint(self, p, *args):
-        if self.bkgnd is not None:
-            bkgnd = self.bkgnd
-            p.setBrush(fn.mkBrush(*bkgnd))
+        if self.background is not None:
+            background = self.background
+            p.setBrush(fn.mkBrush(*background))
         else:
             p.setBrush(fn.mkBrush(100,100,100,50))
         if self.frame is not None:
