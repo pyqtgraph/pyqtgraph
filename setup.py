@@ -105,9 +105,9 @@ class Install(install.install):
 
         
         # If the version in __init__ is different from the automatically-generated
-        # version string, then we will update __init__ in the build directory
+        # version string, then we will update __init__ in the install directory
         if initVersion == version:
-            return ret
+            return rval
         
         try:
             initfile = os.path.join(path, '__init__.py')
