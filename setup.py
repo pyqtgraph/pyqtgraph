@@ -42,6 +42,7 @@ try:
     from setuptools import setup
     from setuptools.command import install
 except ImportError:
+    sys.stderr.write("Warning: could not import setuptools; falling back to distutils.\n")
     from distutils.core import setup
     from distutils.command import install
 

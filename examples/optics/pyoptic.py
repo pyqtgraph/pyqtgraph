@@ -89,7 +89,7 @@ def wlPen(wl):
     return pen
 
 
-class ParamObj:
+class ParamObj(object):
     # Just a helper for tracking parameters and responding to changes
     def __init__(self):
         self.__params = {}
