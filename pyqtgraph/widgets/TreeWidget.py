@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from weakref import *
 from ..Qt import QtGui, QtCore
-from ..python2_3 import xrange
-
+from weakref import *
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
 
@@ -13,6 +11,9 @@ class TreeWidget(QtGui.QTreeWidget):
     This class demonstrates the absurd lengths one must go to to make drag/drop work."""
     
     sigItemMoved = QtCore.Signal(object, object, object) # (item, parent, index)
+    sigItemCheckStateChanged = QtCore.Signal(object, object)
+    sigItemTextChanged = QtCore.Signal(object, object)
+    sigColumnCountChanged = QtCore.Signal(object, object)  # self, count
     
     def __init__(self, parent=None):
         QtGui.QTreeWidget.__init__(self, parent)
@@ -42,7 +43,7 @@ class TreeWidget(QtGui.QTreeWidget):
 
     def itemWidget(self, item, col):
         w = QtGui.QTreeWidget.itemWidget(self, item, col)
-        if w is not None:
+        if w is not None and hasattr(w, 'realChild'):
             w = w.realChild
         return w
 
@@ -140,7 +141,6 @@ class TreeWidget(QtGui.QTreeWidget):
     def dropEvent(self, ev):
         QtGui.QTreeWidget.dropEvent(self, ev)
         self.updateDropFlags()
-
     
     def updateDropFlags(self):
         ### intended to put a limit on how deep nests of children can go.
@@ -165,9 +165,8 @@ class TreeWidget(QtGui.QTreeWidget):
     def informTreeWidgetChange(item):
         if hasattr(item, 'treeWidgetChanged'):
             item.treeWidgetChanged()
-        else:
-            for i in xrange(item.childCount()):
-                TreeWidget.informTreeWidgetChange(item.child(i))
+        for i in xrange(item.childCount()):
+            TreeWidget.informTreeWidgetChange(item.child(i))
         
         
     def addTopLevelItem(self, item):
@@ -210,20 +209,51 @@ class TreeWidget(QtGui.QTreeWidget):
         #for item in items:
             #self.informTreeWidgetChange(item)
         
-            
+    def itemFromIndex(self, index):
+        """Return the item and column corresponding to a QModelIndex.
+        """
+        col = index.column()
+        rows = []
+        while index.row() >= 0:
+            rows.insert(0, index.row())
+            index = index.parent()
+        item = self.topLevelItem(rows[0])
+        for row in rows[1:]:
+            item = item.child(row)
+        return item, col
+
+    def setColumnCount(self, c):
+        QtGui.QTreeWidget.setColumnCount(self, c)
+        self.sigColumnCountChanged.emit(self, c)
+
+                
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
     """
-    TreeWidgetItem that keeps track of its own widgets.
-    Widgets may be added to columns before the item is added to a tree.
+    TreeWidgetItem that keeps track of its own widgets and expansion state.
+    
+    * Widgets may be added to columns before the item is added to a tree.
+    * Expanded state may be set before item is added to a tree.
+    * Adds setCheked and isChecked methods.
+    * Adds addChildren, insertChildren, and takeChildren methods.
     """
     def __init__(self, *args):
         QtGui.QTreeWidgetItem.__init__(self, *args)
         self._widgets = {}  # col: widget
         self._tree = None
-        
+        self._expanded = False
         
     def setChecked(self, column, checked):
         self.setCheckState(column, QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
+
+    def isChecked(self, col):
+        return self.checkState(col) == QtCore.Qt.Checked
+        
+    def setExpanded(self, exp):
+        self._expanded = exp
+        QtGui.QTreeWidgetItem.setExpanded(self, exp)
+        
+    def isExpanded(self):
+        return self._expanded
         
     def setWidget(self, column, widget):
         if column in self._widgets:
@@ -251,7 +281,11 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             return
         for col, widget in self._widgets.items():
             tree.setItemWidget(self, col, widget)
-            
+        QtGui.QTreeWidgetItem.setExpanded(self, self._expanded)
+    
+    def childItems(self):
+        return [self.child(i) for i in range(self.childCount())]
+    
     def addChild(self, child):
         QtGui.QTreeWidgetItem.addChild(self, child)
         TreeWidget.informTreeWidgetChange(child)
@@ -285,4 +319,18 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             TreeWidget.informTreeWidgetChange(child)
         return childs
         
+    def setData(self, column, role, value):
+        # credit: ekhumoro
+        #   http://stackoverflow.com/questions/13662020/how-to-implement-itemchecked-and-itemunchecked-signals-for-qtreewidget-in-pyqt4
+        checkstate = self.checkState(column)
+        text = self.text(column)
+        QtGui.QTreeWidgetItem.setData(self, column, role, value)
         
+        treewidget = self.treeWidget()
+        if treewidget is None:
+            return
+        if (role == QtCore.Qt.CheckStateRole and checkstate != self.checkState(column)):
+            treewidget.sigItemCheckStateChanged.emit(self, column)
+        elif (role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole) and text != self.text(column)):
+            treewidget.sigItemTextChanged.emit(self, column)
+            
