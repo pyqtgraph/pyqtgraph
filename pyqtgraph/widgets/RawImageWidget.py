@@ -3,7 +3,9 @@ try:
     from ..Qt import QtOpenGL
     from OpenGL.GL import *
     HAVE_OPENGL = True
-except ImportError:
+except Exception:
+    # Would prefer `except ImportError` here, but some versions of pyopengl generate
+    # AttributeError upon import
     HAVE_OPENGL = False
 
 from .. import functions as fn
