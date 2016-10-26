@@ -19,7 +19,7 @@ usage = """Compile .ui files to .py for all supported pyqt/pyside versions.
 
 args = sys.argv[1:]
 if len(args) == 0:
-    print usage
+    print(usage)
     sys.exit(-1)
     
 uifiles = []
