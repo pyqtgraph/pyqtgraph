@@ -25,14 +25,22 @@ else:
 
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
-#mw = QtGui.QMainWindow()
-#mw.resize(800,800)
 
 win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
 ui = VideoTemplate.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
+
+try:
+    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
+except ImportError:
+    ui.rawGLRadio.setEnabled(False)
+    ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
+else:
+    ui.rawGLImg = RawImageGLWidget()
+    ui.stack.addWidget(ui.rawGLImg)
+
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
 

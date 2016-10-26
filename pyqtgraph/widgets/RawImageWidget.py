@@ -61,6 +61,7 @@ class RawImageWidget(QtGui.QWidget):
         #p.drawPixmap(self.rect(), self.pixmap)
         p.end()
 
+
 if HAVE_OPENGL:
     class RawImageGLWidget(QtOpenGL.QGLWidget):
         """
