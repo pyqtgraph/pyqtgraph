@@ -134,6 +134,9 @@ before_script:
 script:
 
     - source activate test_env
+    
+    # Check system info
+    - python -c "import pyqtgraph as pg; pg.systemInfo()"
 
     # Run unit tests
     - start_test "unit tests";
