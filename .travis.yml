@@ -17,10 +17,10 @@ env:
     # Enable python 2 and python 3 builds
     # Note that the 2.6 build doesn't get flake8, and runs old versions of
     # Pyglet and GLFW to make sure we deal with those correctly
-    - PYTHON=2.6 QT=pyqt TEST=standard
-    - PYTHON=2.7 QT=pyqt TEST=extra
+    - PYTHON=2.6 QT=pyqt4 TEST=standard
+    - PYTHON=2.7 QT=pyqt4 TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
-    - PYTHON=3.4 QT=pyqt TEST=standard
+    - PYTHON=3.4 QT=pyqt5 TEST=standard
     # - PYTHON=3.4 QT=pyside TEST=standard # pyside isn't available for 3.4 with conda
     #- PYTHON=3.2 QT=pyqt5 TEST=standard
 
@@ -56,8 +56,11 @@ install:
     - echo ${TEST}
     - echo ${PYTHON}
 
-    - if [ "${QT}" == "pyqt" ]; then
+    - if [ "${QT}" == "pyqt5" ]; then
           conda install pyqt --yes;
+      fi;
+    - if [ "${QT}" == "pyqt4" ]; then
+          conda install pyqt=4 --yes;
       fi;
     - if [ "${QT}" == "pyside" ]; then
           conda install pyside --yes;
