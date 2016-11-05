@@ -42,7 +42,7 @@ class movableRect(QtGui.QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
     def hoverEnterEvent(self, ev):
         self.savedPen = self.pen()
-        self.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
+        self.setPen(pg.mkPen(255, 255, 255))
         ev.ignore()
     def hoverLeaveEvent(self, ev):
         self.setPen(self.savedPen)
@@ -57,7 +57,7 @@ class movableRect(QtGui.QGraphicsRectItem):
         self.setPos(self.mapToParent(ev.pos()) - self.pressDelta)
         
 rect = movableRect(QtCore.QRectF(0, 0, 1, 1))
-rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
+rect.setPen(pg.mkPen(100, 200, 100))
 vb.addItem(rect)
 
 l.addItem(vb, 0, 1)

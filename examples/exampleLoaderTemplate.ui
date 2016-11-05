@@ -6,28 +6,22 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>623</width>
-    <height>380</height>
+    <width>846</width>
+    <height>552</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <property name="margin">
-    <number>0</number>
-   </property>
-   <property name="spacing">
-    <number>0</number>
-   </property>
+  <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="QWidget" name="">
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0" colspan="2">
         <widget class="QTreeWidget" name="exampleTree">
          <attribute name="headerVisible">
           <bool>false</bool>
@@ -39,55 +33,69 @@
          </column>
         </widget>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+       <item row="2" column="1">
+        <widget class="QComboBox" name="graphicsSystemCombo">
          <item>
-          <widget class="QCheckBox" name="pyqtCheck">
-           <property name="text">
-            <string>Force PyQt</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>default</string>
+          </property>
          </item>
          <item>
-          <widget class="QCheckBox" name="pysideCheck">
-           <property name="text">
-            <string>Force PySide</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>native</string>
+          </property>
          </item>
-        </layout>
+         <item>
+          <property name="text">
+           <string>raster</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>opengl</string>
+          </property>
+         </item>
+        </widget>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item row="1" column="1">
+        <widget class="QComboBox" name="qtLibCombo">
          <item>
-          <widget class="QCheckBox" name="forceGraphicsCheck">
-           <property name="text">
-            <string>Force Graphics System:</string>
-           </property>
-          </widget>
+          <property name="text">
+           <string>default</string>
+          </property>
          </item>
          <item>
-          <widget class="QComboBox" name="forceGraphicsCombo">
-           <item>
-            <property name="text">
-             <string>native</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>raster</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>opengl</string>
-            </property>
-           </item>
-          </widget>
+          <property name="text">
+           <string>PyQt4</string>
+          </property>
          </item>
-        </layout>
+         <item>
+          <property name="text">
+           <string>PySide</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PyQt5</string>
+          </property>
+         </item>
+        </widget>
        </item>
-       <item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Graphics System:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Qt Library:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
         <widget class="QPushButton" name="loadBtn">
          <property name="text">
           <string>Run Example</string>
@@ -97,7 +105,7 @@
       </layout>
      </widget>
      <widget class="QWidget" name="">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QLabel" name="loadedFileLabel">
          <property name="font">

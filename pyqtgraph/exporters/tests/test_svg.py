@@ -1,11 +1,18 @@
 """
 SVG export test
 """
+from __future__ import division, print_function, absolute_import
 import pyqtgraph as pg
-import pyqtgraph.exporters
+import tempfile
+import os
+
+
 app = pg.mkQApp()
 
+
 def test_plotscene():
+    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
+    print("using %s as a temporary file" % tempfilename)
     pg.setConfigOption('foreground', (0,0,0))
     w = pg.GraphicsWindow()
     w.show()        
@@ -18,10 +25,13 @@ def test_plotscene():
     app.processEvents()
     
     ex = pg.exporters.SVGExporter(w.scene())
-    ex.export(fileName='test.svg')
-
+    ex.export(fileName=tempfilename)
+    # clean up after the test is done
+    os.unlink(tempfilename)
 
 def test_simple():
+    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
+    print("using %s as a temporary file" % tempfilename)
     scene = pg.QtGui.QGraphicsScene()
     #rect = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
     #scene.addItem(rect)
@@ -51,17 +61,17 @@ def test_simple():
     #el = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 50)
     #el.translate(10,-5)
     #el.scale(0.5,2)
+
     #el.setParentItem(rect2)
-    
+
     grp2 = pg.ItemGroup()
     scene.addItem(grp2)
     grp2.scale(100,100)
-    
+
     rect3 = pg.QtGui.QGraphicsRectItem(0,0,2,2)
     rect3.setPen(pg.mkPen(width=1, cosmetic=False))
     grp2.addItem(rect3)
-    
-    ex = pg.exporters.SVGExporter(scene)
-    ex.export(fileName='test.svg')
-        
 
+    ex = pg.exporters.SVGExporter(scene)
+    ex.export(fileName=tempfilename)
+    os.unlink(tempfilename)

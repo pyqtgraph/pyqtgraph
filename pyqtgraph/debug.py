@@ -83,8 +83,9 @@ class Tracer(object):
                     funcname = cls.__name__ + "." + funcname
         return "%s: %s %s: %s" % (callline, filename, lineno, funcname)
 
+
 def warnOnException(func):
-    """Decorator which catches/ignores exceptions and prints a stack trace."""
+    """Decorator that catches/ignores exceptions and prints a stack trace."""
     def w(*args, **kwds):
         try:
             func(*args, **kwds)
@@ -92,11 +93,9 @@ def warnOnException(func):
             printExc('Ignored exception:')
     return w
 
+
 def getExc(indent=4, prefix='|  ', skip=1):
-    lines = (traceback.format_stack()[:-skip] 
-            + ["  ---- exception caught ---->\n"] 
-            + traceback.format_tb(sys.exc_info()[2])
-            + traceback.format_exception_only(*sys.exc_info()[:2]))
+    lines = formatException(*sys.exc_info(), skip=skip)
     lines2 = []
     for l in lines:
         lines2.extend(l.strip('\n').split('\n'))
@@ -112,6 +111,7 @@ def printExc(msg='', indent=4, prefix='|'):
     print(" "*indent + prefix + '='*30 + '>>')
     print(exc)
     print(" "*indent + prefix + '='*30 + '<<')
+
     
 def printTrace(msg='', indent=4, prefix='|'):
     """Print an error message followed by an indented stack trace"""
@@ -126,7 +126,30 @@ def printTrace(msg='', indent=4, prefix='|'):
 
 def backtrace(skip=0):
     return ''.join(traceback.format_stack()[:-(skip+1)])    
+
+
+def formatException(exctype, value, tb, skip=0):
+    """Return a list of formatted exception strings.
     
+    Similar to traceback.format_exception, but displays the entire stack trace
+    rather than just the portion downstream of the point where the exception is
+    caught. In particular, unhandled exceptions that occur during Qt signal
+    handling do not usually show the portion of the stack that emitted the
+    signal.
+    """
+    lines = traceback.format_exception(exctype, value, tb)
+    lines = [lines[0]] + traceback.format_stack()[:-(skip+1)] + ['  --- exception caught here ---\n'] + lines[1:]
+    return lines
+
+
+def printException(exctype, value, traceback):
+    """Print an exception with its full traceback.
+    
+    Set `sys.excepthook = printException` to ensure that exceptions caught
+    inside Qt signal handlers are printed with their full stack trace.
+    """
+    print(''.join(formatException(exctype, value, traceback, skip=1)))
+
     
 def listObjs(regex='Q', typ=None):
     """List all objects managed by python gc with class name matching regex.
@@ -723,7 +746,6 @@ class ObjTracker(object):
         for k in self.startCount:
             c1[k] = c1.get(k, 0) - self.startCount[k]
         typs = list(c1.keys())
-        #typs.sort(lambda a,b: cmp(c1[a], c1[b]))
         typs.sort(key=lambda a: c1[a])
         for t in typs:
             if c1[t] == 0:
@@ -824,7 +846,6 @@ class ObjTracker(object):
             c = count.get(typ, [0,0])
             count[typ] =  [c[0]+1, c[1]+objectSize(obj)]
         typs = list(count.keys())
-        #typs.sort(lambda a,b: cmp(count[a][1], count[b][1]))
         typs.sort(key=lambda a: count[a][1])
         
         for t in typs:
@@ -1097,46 +1118,44 @@ def pretty(data, indent=''):
     return ret
 
 
-class PeriodicTrace(object):
+class ThreadTrace(object):
     """ 
     Used to debug freezing by starting a new thread that reports on the 
-    location of the main thread periodically.
+    location of other threads periodically.
     """
-    class ReportThread(QtCore.QThread):
-        def __init__(self):
-            self.frame = None
-            self.ind = 0
-            self.lastInd = None
-            self.lock = Mutex()
-            QtCore.QThread.__init__(self)
+    def __init__(self, interval=10.0):
+        self.interval = interval
+        self.lock = Mutex()
+        self._stop = False
+        self.start()
 
-        def notify(self, frame):
-            with self.lock:
-                self.frame = frame
-                self.ind += 1
+    def stop(self):
+        with self.lock:
+            self._stop = True
 
-        def run(self):
-            while True:
-                time.sleep(1)
-                with self.lock:
-                    if self.lastInd != self.ind:
-                        print("== Trace %d: ==" % self.ind)
-                        traceback.print_stack(self.frame)
-                        self.lastInd = self.ind
-
-    def __init__(self):
-        self.mainThread = threading.current_thread()
-        self.thread = PeriodicTrace.ReportThread()
+    def start(self, interval=None):
+        if interval is not None:
+            self.interval = interval
+        self._stop = False
+        self.thread = threading.Thread(target=self.run)
+        self.thread.daemon = True
         self.thread.start()
-        sys.settrace(self.trace)
 
-    def trace(self, frame, event, arg):
-        if threading.current_thread() is self.mainThread: # and 'threading' not in frame.f_code.co_filename:
-            self.thread.notify(frame)
-            # print("== Trace ==", event, arg)
-            # traceback.print_stack(frame)
-        return self.trace
-
+    def run(self):
+        while True:
+            with self.lock:
+                if self._stop is True:
+                    return
+                    
+            print("\n=============  THREAD FRAMES:  ================")
+            for id, frame in sys._current_frames().items():
+                if id == threading.current_thread().ident:
+                    continue
+                print("<< thread %d >>" % id)
+                traceback.print_stack(frame)
+            print("===============================================\n")
+            
+            time.sleep(self.interval)
 
 
 class ThreadColor(object):

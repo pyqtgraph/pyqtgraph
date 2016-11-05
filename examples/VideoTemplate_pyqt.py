@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './examples/VideoTemplate.ui'
+# Form implementation generated from reading ui file 'examples/VideoTemplate.ui'
 #
-# Created: Mon Feb 17 20:39:30 2014
-#      by: PyQt4 UI code generator 4.10.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -69,14 +68,6 @@ class Ui_MainWindow(object):
         self.rawImg.setObjectName(_fromUtf8("rawImg"))
         self.gridLayout_4.addWidget(self.rawImg, 0, 0, 1, 1)
         self.stack.addWidget(self.page_2)
-        self.page_3 = QtGui.QWidget()
-        self.page_3.setObjectName(_fromUtf8("page_3"))
-        self.gridLayout_5 = QtGui.QGridLayout(self.page_3)
-        self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
-        self.rawGLImg = RawImageGLWidget(self.page_3)
-        self.rawGLImg.setObjectName(_fromUtf8("rawGLImg"))
-        self.gridLayout_5.addWidget(self.rawGLImg, 0, 0, 1, 1)
-        self.stack.addWidget(self.page_3)
         self.gridLayout.addWidget(self.stack, 0, 0, 1, 1)
         self.rawGLRadio = QtGui.QRadioButton(self.centralwidget)
         self.rawGLRadio.setObjectName(_fromUtf8("rawGLRadio"))
@@ -193,7 +184,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.stack.setCurrentIndex(2)
+        self.stack.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -217,5 +208,5 @@ class Ui_MainWindow(object):
         self.rgbCheck.setText(_translate("MainWindow", "RGB", None))
         self.label_5.setText(_translate("MainWindow", "Image size", None))
 
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
-from pyqtgraph import GradientWidget, SpinBox, GraphicsView
+from pyqtgraph import GradientWidget, GraphicsView, SpinBox
+from pyqtgraph.widgets.RawImageWidget import RawImageWidget

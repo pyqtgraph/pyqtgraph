@@ -6,8 +6,18 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from __future__ import division
-from .python2_3 import asUnicode
+import warnings
+import numpy as np
+import decimal, re
+import ctypes
+import sys, struct
+from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
+from . import getConfigOption, setConfigOptions
+from . import debug
+
+
+
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),
@@ -27,14 +37,6 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
 
-from .Qt import QtGui, QtCore, USE_PYSIDE
-from . import getConfigOption, setConfigOptions
-import numpy as np
-import decimal, re
-import ctypes
-import sys, struct
-
-from . import debug
 
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
@@ -243,6 +245,7 @@ def mkBrush(*args, **kwds):
         color = args
     return QtGui.QBrush(mkColor(color))
 
+
 def mkPen(*args, **kargs):
     """
     Convenience function for constructing QPen. 
@@ -292,6 +295,7 @@ def mkPen(*args, **kargs):
         pen.setDashPattern(dash)
     return pen
 
+
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     """Generate a QColor from HSVa values. (all arguments are float 0.0-1.0)"""
     c = QtGui.QColor()
@@ -303,9 +307,11 @@ def colorTuple(c):
     """Return a tuple (R,G,B,A) from a QColor"""
     return (c.red(), c.green(), c.blue(), c.alpha())
 
+
 def colorStr(c):
     """Generate a hex string code from a QColor"""
     return ('%02x'*4) % colorTuple(c)
+
 
 def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
     """
@@ -330,6 +336,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     c.setHsv(h, sat, v)
     c.setAlpha(alpha)
     return c
+
 
 def glColor(*args, **kargs):
     """
@@ -367,6 +374,41 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     return path
     
     
+def eq(a, b):
+    """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
+    if a is b:
+        return True
+        
+    try:
+        with warnings.catch_warnings(module=np):  # ignore numpy futurewarning (numpy v. 1.10)
+            e = a==b
+    except ValueError:
+        return False
+    except AttributeError: 
+        return False
+    except:
+        print('failed to evaluate equivalence for:')
+        print("  a:", str(type(a)), str(a))
+        print("  b:", str(type(b)), str(b))
+        raise
+    t = type(e)
+    if t is bool:
+        return e
+    elif t is np.bool_:
+        return bool(e)
+    elif isinstance(e, np.ndarray) or (hasattr(e, 'implements') and e.implements('MetaArray')):
+        try:   ## disaster: if a is an empty array and b is not, then e.all() is True
+            if a.shape != b.shape:
+                return False
+        except:
+            return False
+        if (hasattr(e, 'implements') and e.implements('MetaArray')):
+            return e.asarray().all()
+        else:
+            return e.all()
+    else:
+        raise Exception("== operator returned type %s" % str(type(e)))
+
     
 def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
     """
@@ -447,11 +489,9 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     
     ## Build array of sample locations. 
     grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
-    #print shape, grid.shape
     x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
     x += origin
-    #print "X values:"
-    #print x
+
     ## iterate manually over unused axes since map_coordinates won't do it for us
     if have_scipy:
         extraShape = data.shape[len(axes):]
@@ -464,7 +504,6 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         # interpolateArray expects indexes at the last axis. 
         tr = tuple(range(1,x.ndim)) + (0,)
         output = interpolateArray(data, x.transpose(tr))
-        
     
     tr = list(range(output.ndim))
     trb = []
@@ -483,7 +522,7 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
 
 def interpolateArray(data, x, default=0.0):
     """
-    N-dimensional interpolation similar scipy.ndimage.map_coordinates.
+    N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
     
     This function returns linearly-interpolated values sampled from a regular
     grid of data. 
@@ -492,7 +531,7 @@ def interpolateArray(data, x, default=0.0):
     *x* is an array with (shape[-1] <= data.ndim) containing the locations
         within *data* to interpolate. 
     
-    Returns array of shape (x.shape[:-1] + data.shape)
+    Returns array of shape (x.shape[:-1] + data.shape[x.shape[-1]:])
     
     For example, assume we have the following 2D image data::
     
@@ -535,11 +574,12 @@ def interpolateArray(data, x, default=0.0):
 
     This is useful for interpolating from arrays of colors, vertexes, etc.
     """
-    
     prof = debug.Profiler()
     
     nd = data.ndim
     md = x.shape[-1]
+    if md > nd:
+        raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
     # First we generate arrays of indexes that are needed to 
     # extract the data surrounding each point
@@ -552,21 +592,19 @@ def interpolateArray(data, x, default=0.0):
     for ax in range(md):
         mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
         # keep track of points that need to be set to default
-        totalMask &= mask  
+        totalMask &= mask
         
         # ..and keep track of indexes that are out of bounds 
         # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
         #  of bounds, but the interpolation will work anyway)
         mask &= (xmax[...,ax] < data.shape[ax])
         axisIndex = indexes[...,ax][fields[ax]]
-        #axisMask = mask.astype(np.ubyte).reshape((1,)*(fields.ndim-1) + mask.shape)
         axisIndex[axisIndex < 0] = 0
         axisIndex[axisIndex >= data.shape[ax]] = 0
         fieldInds.append(axisIndex)
     prof()
-    
+
     # Get data values surrounding each requested point
-    # fieldData[..., i] contains all 2**nd values needed to interpolate x[i]
     fieldData = data[tuple(fieldInds)]
     prof()
     
@@ -585,8 +623,13 @@ def interpolateArray(data, x, default=0.0):
         result = result.sum(axis=0)
 
     prof()
-    totalMask.shape = totalMask.shape + (1,) * (nd - md)
-    result[~totalMask] = default
+
+    if totalMask.ndim > 0:
+        result[~totalMask] = default
+    else:
+        if totalMask is False:
+            result[:] = default
+
     prof()
     return result
 
@@ -773,12 +816,11 @@ def solveBilinearTransform(points1, points2):
     
     return matrix
     
-def rescaleData(data, scale, offset, dtype=None):
+def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype::
     
         data => (data-offset) * scale
         
-    Uses scipy.weave (if available) to improve performance.
     """
     if dtype is None:
         dtype = data.dtype
@@ -823,9 +865,21 @@ def rescaleData(data, scale, offset, dtype=None):
             setConfigOptions(useWeave=False)
         
         #p = np.poly1d([scale, -offset*scale])
-        #data = p(data).astype(dtype)
-        d2 = data-offset
+        #d2 = p(data)
+        d2 = data - float(offset)
         d2 *= scale
+        
+        # Clip before converting dtype to avoid overflow
+        if dtype.kind in 'ui':
+            lim = np.iinfo(dtype)
+            if clip is None:
+                # don't let rescale cause integer overflow
+                d2 = np.clip(d2, lim.min, lim.max)
+            else:
+                d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+        else:
+            if clip is not None:
+                d2 = np.clip(d2, *clip)
         data = d2.astype(dtype)
     return data
     
@@ -847,15 +901,18 @@ def makeRGBA(*args, **kwds):
     kwds['useRGBA'] = True
     return makeARGB(*args, **kwds)
 
+
 def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False): 
     """ 
-    Convert an array of values into an ARGB array suitable for building QImages, OpenGL textures, etc.
+    Convert an array of values into an ARGB array suitable for building QImages,
+    OpenGL textures, etc.
     
-    Returns the ARGB array (values 0-255) and a boolean indicating whether there is alpha channel data.
-    This is a two stage process:
+    Returns the ARGB array (unsigned byte) and a boolean indicating whether
+    there is alpha channel data. This is a two stage process:
     
         1) Rescale the data based on the values in the *levels* argument (min, max).
-        2) Determine the final output by passing the rescaled values through a lookup table.
+        2) Determine the final output by passing the rescaled values through a
+           lookup table.
    
     Both stages are optional.
     
@@ -874,55 +931,70 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                    channel). The use of this feature requires that levels.shape[0] == data.shape[-1].
     scale          The maximum value to which data will be rescaled before being passed through the 
                    lookup table (or returned if there is no lookup table). By default this will
-                   be set to the length of the lookup table, or 256 is no lookup table is provided.
-                   For OpenGL color specifications (as in GLColor4f) use scale=1.0
+                   be set to the length of the lookup table, or 255 if no lookup table is provided.
     lut            Optional lookup table (array with dtype=ubyte).
                    Values in data will be converted to color by indexing directly from lut.
                    The output data shape will be input.shape + lut.shape[1:].
-                   
-                   Note: the output of makeARGB will have the same dtype as the lookup table, so
-                   for conversion to QImage, the dtype must be ubyte.
-                   
-                   Lookup tables can be built using GradientWidget.
+                   Lookup tables can be built using ColorMap or GradientWidget.
     useRGBA        If True, the data is returned in RGBA order (useful for building OpenGL textures). 
                    The default is False, which returns in ARGB order for use with QImage 
-                   (Note that 'ARGB' is a term used by the Qt documentation; the _actual_ order 
+                   (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
     ============== ==================================================================================
     """
     profile = debug.Profiler()
+
+    if data.ndim not in (2, 3):
+        raise TypeError("data must be 2D or 3D")
+    if data.ndim == 3 and data.shape[2] > 4:
+        raise TypeError("data.shape[2] must be <= 4")
     
     if lut is not None and not isinstance(lut, np.ndarray):
         lut = np.array(lut)
-    if levels is not None and not isinstance(levels, np.ndarray):
-        levels = np.array(levels)
     
-    if levels is not None:
-        if levels.ndim == 1:
-            if len(levels) != 2:
-                raise Exception('levels argument must have length 2')
-        elif levels.ndim == 2:
-            if lut is not None and lut.ndim > 1:
-                raise Exception('Cannot make ARGB data when bot levels and lut have ndim > 2')
-            if levels.shape != (data.shape[-1], 2):
-                raise Exception('levels must have shape (data.shape[-1], 2)')
+    if levels is None:
+        # automatically decide levels based on data dtype
+        if data.dtype.kind == 'u':
+            levels = np.array([0, 2**(data.itemsize*8)-1])
+        elif data.dtype.kind == 'i':
+            s = 2**(data.itemsize*8 - 1)
+            levels = np.array([-s, s-1])
+        elif data.dtype.kind == 'b':
+            levels = np.array([0,1])
         else:
-            print(levels)
-            raise Exception("levels argument must be 1D or 2D.")
+            raise Exception('levels argument is required for float input types')
+    if not isinstance(levels, np.ndarray):
+        levels = np.array(levels)
+    if levels.ndim == 1:
+        if levels.shape[0] != 2:
+            raise Exception('levels argument must have length 2')
+    elif levels.ndim == 2:
+        if lut is not None and lut.ndim > 1:
+            raise Exception('Cannot make ARGB data when both levels and lut have ndim > 2')
+        if levels.shape != (data.shape[-1], 2):
+            raise Exception('levels must have shape (data.shape[-1], 2)')
+    else:
+        raise Exception("levels argument must be 1D or 2D (got shape=%s)." % repr(levels.shape))
 
     profile()
 
+    # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0]
+            scale = lut.shape[0] - 1
         else:
             scale = 255.
 
-    ## Apply levels if given
+    # Decide on the dtype we want after scaling
+    if lut is None:
+        dtype = np.ubyte
+    else:
+        dtype = np.min_scalar_type(lut.shape[0]-1)
+            
+    # Apply levels if given
     if levels is not None:
-        
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
-            ## we are going to rescale each channel independently
+            # we are going to rescale each channel independently
             if levels.shape[0] != data.shape[-1]:
                 raise Exception("When rescaling multi-channel data, there must be the same number of levels as channels (data.shape[-1] == levels.shape[0])")
             newData = np.empty(data.shape, dtype=int)
@@ -930,20 +1002,20 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
                     maxVal += 1e-16
-                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=int)
+                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
             data = newData
         else:
+            # Apply level scaling unless it would have no effect on the data
             minVal, maxVal = levels
-            if minVal == maxVal:
-                maxVal += 1e-16
-            if maxVal == minVal:
-                data = rescaleData(data, 1, minVal, dtype=int)
-            else:
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=int)
+            if minVal != 0 or maxVal != scale:
+                if minVal == maxVal:
+                    maxVal += 1e-16
+                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+            
 
     profile()
 
-    ## apply LUT if given
+    # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
     else:
@@ -952,16 +1024,18 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
 
     profile()
 
-    ## copy data into ARGB ordered array
+    # this will be the final image array
     imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
 
     profile()
 
+    # decide channel order
     if useRGBA:
-        order = [0,1,2,3] ## array comes out RGBA
+        order = [0,1,2,3] # array comes out RGBA
     else:
-        order = [2,1,0,3] ## for some reason, the colors line up as BGR in the final image.
+        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
         
+    # copy data into image array
     if data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., np.newaxis]
@@ -976,7 +1050,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             imgData[..., i] = data[..., order[i]] 
         
     profile()
-        
+    
+    # add opaque alpha channel if needed
     if data.ndim == 2 or data.shape[2] == 3:
         alpha = False
         imgData[..., 3] = 255
@@ -1106,10 +1181,9 @@ def imageToArray(img, copy=False, transpose=True):
             # If this works on all platforms, then there is no need to use np.asarray..
             arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
     
+    arr = arr.reshape(img.height(), img.width(), 4)
     if fmt == img.Format_RGB32:
-        arr = arr.reshape(img.height(), img.width(), 3)
-    elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
-        arr = arr.reshape(img.height(), img.width(), 4)
+        arr[...,3] = 255
     
     if copy:
         arr = arr.copy()
@@ -1304,22 +1378,17 @@ def arrayToQPath(x, y, connect='all'):
     arr[1:-1]['y'] = y
 
     # decide which points are connected by lines
-    if connect == 'pairs':
-        connect = np.empty((n/2,2), dtype=np.int32)
-        if connect.size != n:
-            raise Exception("x,y array lengths must be multiple of 2 to use connect='pairs'")
-        connect[:,0] = 1
-        connect[:,1] = 0
-        connect = connect.flatten()
-    if connect == 'finite':
-        connect = np.isfinite(x) & np.isfinite(y)
-        arr[1:-1]['c'] = connect
-    if connect == 'all':
+    if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
+    elif eq(connect, 'pairs'):
+        arr[1:-1]['c'][::2] = 1
+        arr[1:-1]['c'][1::2] = 0
+    elif eq(connect, 'finite'):
+        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
-        raise Exception('connect argument must be "all", "pairs", or array')
+        raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
     #profiler('fill array')
     # write last 0
@@ -1510,7 +1579,7 @@ def isocurve(data, level, connected=False, extendToEdge=False, path=False):
             #vertIndex = i - 2*j*i + 3*j + 4*k  ## this is just to match Bourk's vertex numbering scheme
             vertIndex = i+2*j
             #print i,j,k," : ", fields[i,j,k], 2**vertIndex
-            index += fields[i,j] * 2**vertIndex
+            np.add(index, fields[i,j] * 2**vertIndex, out=index, casting='unsafe')
             #print index
     #print index
     
@@ -1660,7 +1729,7 @@ def isosurface(data, level):
     See Paul Bourke, "Polygonising a Scalar Field"  
     (http://paulbourke.net/geometry/polygonise/)
     
-    *data*   3D numpy array of scalar values
+    *data*   3D numpy array of scalar values. Must be contiguous.
     *level*  The level at which to generate an isosurface
     
     Returns an array of vertex coordinates (Nv, 3) and an array of 
@@ -2012,7 +2081,10 @@ def isosurface(data, level):
     else:
         faceShiftTables, edgeShifts, edgeTable, nTableFaces = IsosurfaceDataCache
 
-
+    # We use strides below, which means we need contiguous array input.
+    # Ideally we can fix this just by removing the dependency on strides.
+    if not data.flags['C_CONTIGUOUS']:
+        raise TypeError("isosurface input data must be c-contiguous.")
     
     ## mark everything below the isosurface level
     mask = data < level
@@ -2026,7 +2098,7 @@ def isosurface(data, level):
             for k in [0,1]:
                 fields[i,j,k] = mask[slices[i], slices[j], slices[k]]
                 vertIndex = i - 2*j*i + 3*j + 4*k  ## this is just to match Bourk's vertex numbering scheme
-                index += fields[i,j,k] * 2**vertIndex
+                np.add(index, fields[i,j,k] * 2**vertIndex, out=index, casting='unsafe')
     
     ### Generate table of edges that have been cut
     cutEdges = np.zeros([x+1 for x in index.shape]+[3], dtype=np.uint32)
@@ -2095,7 +2167,7 @@ def isosurface(data, level):
         ### expensive:
         verts = faceShiftTables[i][cellInds]
         #profiler()
-        verts[...,:3] += cells[:,np.newaxis,np.newaxis,:]  ## we now have indexes into cutEdges
+        np.add(verts[...,:3], cells[:,np.newaxis,np.newaxis,:], out=verts[...,:3], casting='unsafe')  ## we now have indexes into cutEdges
         verts = verts.reshape((verts.shape[0]*i,)+verts.shape[2:])
         #profiler()
         

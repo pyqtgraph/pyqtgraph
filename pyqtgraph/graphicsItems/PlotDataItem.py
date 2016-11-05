@@ -1,12 +1,13 @@
+import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
 from .GraphicsObject import GraphicsObject
 from .PlotCurveItem import PlotCurveItem
 from .ScatterPlotItem import ScatterPlotItem
-import numpy as np
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
+
 
 class PlotDataItem(GraphicsObject):
     """
@@ -522,6 +523,10 @@ class PlotDataItem(GraphicsObject):
                 #y = y[::ds]
             if self.opts['fftMode']:
                 x,y = self._fourierTransform(x, y)
+                # Ignore the first bin for fft data if we have a logx scale
+                if self.opts['logMode'][0]:
+                    x=x[1:]
+                    y=y[1:]                
             if self.opts['logMode'][0]:
                 x = np.log10(x)
             if self.opts['logMode'][1]:
@@ -569,11 +574,11 @@ class PlotDataItem(GraphicsObject):
                     x = x[::ds]
                     y = y[::ds]
                 elif self.opts['downsampleMethod'] == 'mean':
-                    n = len(x) / ds
+                    n = len(x) // ds
                     x = x[:n*ds:ds]
                     y = y[:n*ds].reshape(n,ds).mean(axis=1)
                 elif self.opts['downsampleMethod'] == 'peak':
-                    n = len(x) / ds
+                    n = len(x) // ds
                     x1 = np.empty((n,2))
                     x1[:] = x[:n*ds:ds,np.newaxis]
                     x = x1.reshape(n*2)

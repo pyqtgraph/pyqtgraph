@@ -1,3 +1,59 @@
+pyqtgraph-0.10.0
+
+  New Features:
+    - PyQt5 support
+    - Options for interpreting image data as either row-major or col-major
+    - InfiniteLine and LinearRegionItem can have attached labels
+    - DockArea:
+        - Dock titles can be changed after creation
+        - Added Dock.sigClosed
+    - Added TextItem.setColor()
+    - FillBetweenItem supports finite-connected curves (those that exclude nan/inf)
+
+  API / behavior changes:
+    - Improved ImageItem performance for some data types by scaling LUT instead of image
+    - Change the defaut color kwarg to None in TextItem.setText() to avoid changing
+      the color every time the text is changed.
+    - FFT plots skip first sample if x-axis uses log scaling 
+    - Multiprocessing system adds bytes and unicode to the default list of no-proxy data types
+    - Version number scheme changed to be PEP440-compliant (only affects installations from non-
+      release git commits) 
+
+  Bugfixes:
+    - Fix for numpy API change that caused casting errors for inplace operations
+    - Fixed git version string generation on python3
+    - Fixed setting default values for out-of-bound points in pg.interpolateArray
+    - Fixed plot downsampling bug on python 3
+    - Fixed invalid slice in ImageItem.getHistogram
+    - DockArea:
+        - Fixed adding Docks to DockArea after all Docks have been removed
+        - Fixed DockArea save/restoreState when area is empty
+    - Properly remove select box when export dialog is closed using window decorations
+    - Remove all modifications to python builtins
+    - Better Python 2.6 compatibility
+    - Fix SpinBox decimals
+    - Fixed numerous issues with ImageItem automatic downsampling
+    - Fixed PlotItem average curves using incorrect stepMode
+    - Fixed TableWidget eating key events
+    - Prevent redundant updating of flowchart nodes with multiple inputs
+    - Ignore wheel events in GraphicsView if mouse interaction is disabled
+    - Correctly pass calls to QWidget.close() up the inheritance chain
+    - ColorMap forces color inputs to be sorted
+    - Fixed memory mapping for RemoteGraphicsView in OSX
+    - Fixed QPropertyAnimation str/bytes handling
+    - Fixed __version__ string update when using `setup.py install` with newer setuptools
+
+  Maintenance:
+    - Image comparison system for unit testing plus tests for several graphics items
+    - Travis CI and coveralls/codecov support
+    - Add examples to unit tests
+    
+
+
+pyqtgraph-0.9.10
+
+  Fixed installation issues with more recent pip versions.
+
 pyqtgraph-0.9.9
 
   API / behavior changes:

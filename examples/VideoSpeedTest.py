@@ -10,27 +10,37 @@ is used by the view widget
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE
+from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
 import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 
 if USE_PYSIDE:
     import VideoTemplate_pyside as VideoTemplate
+elif USE_PYQT5:
+    import VideoTemplate_pyqt5 as VideoTemplate
 else:
     import VideoTemplate_pyqt as VideoTemplate
     
 
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
-#mw = QtGui.QMainWindow()
-#mw.resize(800,800)
 
 win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
 ui = VideoTemplate.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
+
+try:
+    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
+except ImportError:
+    ui.rawGLRadio.setEnabled(False)
+    ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
+else:
+    ui.rawGLImg = RawImageGLWidget()
+    ui.stack.addWidget(ui.rawGLImg)
+
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
 
@@ -101,6 +111,9 @@ def mkData():
             if dtype[0] != 'float':
                 data = np.clip(data, 0, mx)
             data = data.astype(dt)
+            data[:, 10, 10:50] = mx
+            data[:, 9:12, 48] = mx
+            data[:, 8:13, 47] = mx
             cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
             
         data = cache[dtype]

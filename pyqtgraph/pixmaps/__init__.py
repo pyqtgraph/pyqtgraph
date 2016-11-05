@@ -6,6 +6,7 @@ Provides support for frozen environments as well.
 import os, sys, pickle
 from ..functions import makeQImage
 from ..Qt import QtGui
+from ..python2_3 import basestring
 if sys.version_info[0] == 2:
     from . import pixmapData_2 as pixmapData
 else:

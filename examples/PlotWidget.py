@@ -37,7 +37,7 @@ p1.setPen((200,200,100))
 
 ## Add in some extra graphics
 rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 5e-11))
-rect.setPen(QtGui.QPen(QtGui.QColor(100, 200, 100)))
+rect.setPen(pg.mkPen(100, 200, 100))
 pw.addItem(rect)
 
 pw.setLabel('left', 'Value', units='V')

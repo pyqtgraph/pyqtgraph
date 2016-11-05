@@ -12,7 +12,7 @@ def test_opts():
     tree = pt.ParameterTree()
     tree.setParameters(param)
 
-    assert param.param('bool').items.keys()[0].widget.isEnabled() is False
-    assert param.param('color').items.keys()[0].widget.isEnabled() is False
+    assert list(param.param('bool').items.keys())[0].widget.isEnabled() is False
+    assert list(param.param('color').items.keys())[0].widget.isEnabled() is False
 
 

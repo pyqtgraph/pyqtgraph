@@ -276,8 +276,6 @@ class HoverEvent(object):
             self._modifiers = moveEvent.modifiers()
         else:
             self.exit = True
-            
-        
         
     def isEnter(self):
         """Returns True if the mouse has just entered the item's shape"""

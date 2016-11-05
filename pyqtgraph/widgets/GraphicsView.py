@@ -63,7 +63,7 @@ class GraphicsView(QtGui.QGraphicsView):
                         :func:`mkColor <pyqtgraph.mkColor>`. By 
                         default, the background color is determined using the
                         'backgroundColor' configuration option (see 
-                        :func:`setConfigOption <pyqtgraph.setConfigOption>`.
+                        :func:`setConfigOptions <pyqtgraph.setConfigOptions>`).
         ==============  ============================================================
         """
         
@@ -165,7 +165,8 @@ class GraphicsView(QtGui.QGraphicsView):
         self.sceneObj = None
         self.closed = True
         self.setViewport(None)
-        
+        super(GraphicsView, self).close()
+
     def useOpenGL(self, b=True):
         if b:
             if not HAVE_OPENGL:
@@ -324,6 +325,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, ev):
         QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
+            ev.ignore()
             return
         sc = 1.001 ** ev.delta()
         #self.scale *= sc

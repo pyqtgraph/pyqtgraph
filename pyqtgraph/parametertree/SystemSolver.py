@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from ..pgcollections import OrderedDict
 import numpy as np
 
 class SystemSolver(object):

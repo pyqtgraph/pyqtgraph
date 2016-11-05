@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './examples/VideoTemplate.ui'
+# Form implementation generated from reading ui file 'examples/VideoTemplate.ui'
 #
-# Created: Mon Feb 17 20:39:30 2014
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Wed Oct 26 09:21:01 2016
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -55,14 +55,6 @@ class Ui_MainWindow(object):
         self.rawImg.setObjectName("rawImg")
         self.gridLayout_4.addWidget(self.rawImg, 0, 0, 1, 1)
         self.stack.addWidget(self.page_2)
-        self.page_3 = QtGui.QWidget()
-        self.page_3.setObjectName("page_3")
-        self.gridLayout_5 = QtGui.QGridLayout(self.page_3)
-        self.gridLayout_5.setObjectName("gridLayout_5")
-        self.rawGLImg = RawImageGLWidget(self.page_3)
-        self.rawGLImg.setObjectName("rawGLImg")
-        self.gridLayout_5.addWidget(self.rawGLImg, 0, 0, 1, 1)
-        self.stack.addWidget(self.page_3)
         self.gridLayout.addWidget(self.stack, 0, 0, 1, 1)
         self.rawGLRadio = QtGui.QRadioButton(self.centralwidget)
         self.rawGLRadio.setObjectName("rawGLRadio")
@@ -179,7 +171,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.stack.setCurrentIndex(2)
+        self.stack.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -203,5 +195,5 @@ class Ui_MainWindow(object):
         self.rgbCheck.setText(QtGui.QApplication.translate("MainWindow", "RGB", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("MainWindow", "Image size", None, QtGui.QApplication.UnicodeUTF8))
 
-from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget, RawImageWidget
-from pyqtgraph import GradientWidget, SpinBox, GraphicsView
+from pyqtgraph.widgets.RawImageWidget import RawImageWidget
+from pyqtgraph import SpinBox, GradientWidget, GraphicsView

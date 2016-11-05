@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 
 PARAM_TYPES = {}
@@ -312,7 +312,8 @@ class Parameter(QtCore.QObject):
         If blockSignals is True, no signals will be emitted until the tree has been completely restored. 
         This prevents signal handlers from responding to a partially-rebuilt network.
         """
-        childState = state.get('children', [])
+        state = state.copy()
+        childState = state.pop('children', [])
         
         ## list of children may be stored either as list or dict.
         if isinstance(childState, dict):

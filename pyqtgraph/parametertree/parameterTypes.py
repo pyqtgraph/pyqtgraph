@@ -95,26 +95,18 @@ class WidgetParameterItem(ParameterItem):
         """
         opts = self.param.opts
         t = opts['type']
-        if t == 'int':
+        if t in ('int', 'float'):
             defs = {
-                'value': 0, 'min': None, 'max': None, 'int': True, 
-                'step': 1.0, 'minStep': 1.0, 'dec': False, 
-                'siPrefix': False, 'suffix': ''
-            } 
-            defs.update(opts)
-            if 'limits' in opts:
-                defs['bounds'] = opts['limits']
-            w = SpinBox()
-            w.setOpts(**defs)
-            w.sigChanged = w.sigValueChanged
-            w.sigChanging = w.sigValueChanging
-        elif t == 'float':
-            defs = {
-                'value': 0, 'min': None, 'max': None, 
+                'value': 0, 'min': None, 'max': None,
                 'step': 1.0, 'dec': False, 
-                'siPrefix': False, 'suffix': ''
+                'siPrefix': False, 'suffix': '', 'decimals': 3,
             }
-            defs.update(opts)
+            if t == 'int':
+                defs['int'] = True
+                defs['minStep'] = 1.0
+            for k in defs:
+                if k in opts:
+                    defs[k] = opts[k]
             if 'limits' in opts:
                 defs['bounds'] = opts['limits']
             w = SpinBox()
@@ -292,8 +284,6 @@ class WidgetParameterItem(ParameterItem):
             self.widget.setOpts(**opts)
             self.updateDisplayLabel()
         
-        
-        
             
 class EventProxy(QtCore.QObject):
     def __init__(self, qobj, callback):
@@ -303,8 +293,6 @@ class EventProxy(QtCore.QObject):
         
     def eventFilter(self, obj, ev):
         return self.callback(obj, ev)
-
-        
 
 
 class SimpleParameter(Parameter):

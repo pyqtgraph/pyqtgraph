@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.ViewBox import ViewBox
@@ -6,6 +6,8 @@ from ..graphicsItems.PlotItem import PlotItem
 
 if USE_PYSIDE:
     from . import exportDialogTemplate_pyside as exportDialogTemplate
+elif USE_PYQT5:
+    from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
 else:
     from . import exportDialogTemplate_pyqt as exportDialogTemplate
 
@@ -137,5 +139,6 @@ class ExportDialog(QtGui.QWidget):
         self.selectBox.setVisible(False)
         self.setVisible(False)
 
-
-    
+    def closeEvent(self, event):
+        self.close()
+        QtGui.QWidget.closeEvent(self, event)
