@@ -109,7 +109,8 @@ class ParamObj(object):
         pass
 
     def __getitem__(self, item):
-        return self.getParam(item)
+        # bug in pyside 1.2.2 causes getitem to be called inside QGraphicsObject.parentItem:
+        return self.getParam(item)  # PySide bug: https://bugreports.qt.io/browse/PYSIDE-441
 
     def getParam(self, param):
         return self.__params[param]
