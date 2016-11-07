@@ -454,7 +454,7 @@ class ImageItem(GraphicsObject):
                     int(np.ceil(self.image.shape[1] / targetImageSize)))
         if np.isscalar(step):
             step = (step, step)
-        stepData = self.image[::step[0], ::step[1]]
+        stepData = self.image[::int(step[0]), ::int(step[1])]
         
         if bins == 'auto':
             if stepData.dtype.kind in "ui":
