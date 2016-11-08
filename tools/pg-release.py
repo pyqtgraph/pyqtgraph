@@ -77,7 +77,7 @@ def build(args):
         mkdir -p {build_dir}
         cd {build_dir}
         rm -rf pyqtgraph
-        git clone --depth 1 -b master {source_repo} pyqtgraph
+        git clone --depth 1 --branch master --single-branch {source_repo} pyqtgraph
         cd pyqtgraph
         git checkout -b release-{version}
         git pull {source_repo} release-{version}
@@ -202,15 +202,19 @@ def publish(args):
 
     ### Upload everything to server
     shell("""
-        # Uploading documentation..
         cd {build_dir}/pyqtgraph
-        rsync -rv doc/build/* pyqtgraph.org:/www/code/pyqtgraph/pyqtgraph/documentation/build/
+        
+        # Uploading documentation..  (disabled; now hosted by readthedocs.io)
+        #rsync -rv doc/build/* pyqtgraph.org:/www/code/pyqtgraph/pyqtgraph/documentation/build/
 
         # Uploading release packages to website
-        rsync -v {pkg_dir}/{version} pyqtgraph.org:/www/code/pyqtgraph/downloads/
+        rsync -v {pkg_dir} pyqtgraph.org:/www/code/pyqtgraph/downloads/
 
-        # Push to github
-        git push --tags https://github.com/pyqtgraph/pyqtgraph master:master
+        # Push master to github
+        git push https://github.com/pyqtgraph/pyqtgraph master:master
+        
+        # Push tag to github
+        git push https://github.com/pyqtgraph/pyqtgraph pyqtgraph-{version}
 
         # Upload to pypi..
         python setup.py sdist upload
