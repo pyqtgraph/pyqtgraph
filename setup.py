@@ -9,7 +9,7 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 """
 
 setupOpts = dict(
-    name='pyqtgraph',
+    name='pyqtgraph_karl',
     description='Scientific Graphics and GUI Library for Python',
     long_description=DESCRIPTION,
     license='MIT',
@@ -47,9 +47,14 @@ path = os.path.split(__file__)[0]
 sys.path.insert(0, os.path.join(path, 'tools'))
 import setupHelpers as helpers
 
+##################
+### distribute this fork as pyqtgraph_karl using the added hard link 
+### (mklink /J) 'pyqtgraph_karl' linking to 'pyqtgraph'
 ## generate list of all sub-packages
-allPackages = helpers.listAllPackages(pkgroot='pyqtgraph') + ['pyqtgraph.examples']
-
+## this allows to download pyqtgraph_karl from pypi
+#and have this form and the vanilly pyqtgraph installed at the same time
+allPackages = helpers.listAllPackages(pkgroot='pyqtgraph_karl')
+##################
 ## Decide what version string to use in the build
 version, forcedVersion, gitVersion, initVersion = helpers.getVersionStrings(pkg='pyqtgraph')
 

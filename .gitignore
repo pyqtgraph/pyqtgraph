@@ -7,3 +7,8 @@ deb_build
 dist
 .idea
 rtr.cvs
+
+/.pydevproject
+/.project
+/.settings/
+/pyqtgraph_karl/
