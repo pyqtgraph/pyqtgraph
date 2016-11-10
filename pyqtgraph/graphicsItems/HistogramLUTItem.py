@@ -36,10 +36,12 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, image=None, fillHistogram=True):
+    def __init__(self, image=None, fillHistogram=True, gradientPosition='left'):
         """
         If *image* (ImageItem) is provided, then the control will be automatically linked to the image and changes to the control will be immediately reflected in the image's appearance.
         By default, the histogram is rendered with a fill. For performance, set *fillHistogram* = False.
+        
+        gradientPosition -> 'left' OR 'right' / set to left to have a matplotlib-like layout
         """
         GraphicsWidget.__init__(self)
         self.lut = None
@@ -54,15 +56,18 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
         self.gradient = GradientEditorItem()
-        self.gradient.setOrientation('right')
+        o = 'left' if gradientPosition == 'right' else 'right'
+        self.gradient.setOrientation(o)
         self.gradient.loadPreset('grey')
         self.region = LinearRegionItem([0, 1], LinearRegionItem.Horizontal)
         self.region.setZValue(1000)
         self.vb.addItem(self.region)
-        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
-        self.layout.addItem(self.axis, 0, 0)
+        self.axis = AxisItem('right', linkView=self.vb, maxTickLength=-10, parent=self)
         self.layout.addItem(self.vb, 0, 1)
-        self.layout.addItem(self.gradient, 0, 2)
+        pos = (0,2) if gradientPosition == 'right' else (2,0)
+        self.layout.addItem(self.axis, 0, pos[0])
+        self.layout.addItem(self.gradient, 0, pos[1])
+        self.linkedHistograms = {}
         self.range = None
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
@@ -96,20 +101,32 @@ class HistogramLUTItem(GraphicsWidget):
         #return QtCore.QSizeF(115, 200)
         
     def paint(self, p, *args):
-        pen = self.region.lines[0].pen
-        rgn = self.getLevels()
-        p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
-        p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
-        gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
-        for pen in [fn.mkPen('k', width=3), pen]:
-            p.setPen(pen)
-            p.drawLine(p1, gradRect.bottomLeft())
-            p.drawLine(p2, gradRect.topLeft())
-            p.drawLine(gradRect.topLeft(), gradRect.topRight())
-            p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
+        if self.region.isVisible():
+            pen = self.region.lines[0].pen
+            rgn = self.getLevels()
+            p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
+            p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
+            gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+            for pen in [fn.mkPen('k', width=3), pen]:
+                p.setPen(pen)
+                p.drawLine(p1, gradRect.bottomLeft())
+                p.drawLine(p2, gradRect.topLeft())
+                p.drawLine(gradRect.topLeft(), gradRect.topRight())
+                p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
         #p.drawRect(self.boundingRect())
         
-        
+    def linkHistogram(self, slaveHistogram, connect=True):
+        if connect:
+            fn = lambda h, slave=slaveHistogram:slave.setLevels(*h.getLevels())
+            self.linkedHistograms[id(slaveHistogram)] = fn
+            self.sigLevelsChanged.connect(fn)
+            self.sigLevelsChanged.emit(self)
+            #self.vb.setYLink(slaveHistogram.vb)
+        else:
+            fn = self.linkedHistograms.get(id(slaveHistogram), None)
+            if fn:
+                self.sigLevelsChanged.disconnect(fn)
+   
     def setHistogramRange(self, mn, mx, padding=0.1):
         """Set the Y range on the histogram plot. This disables auto-scaling."""
         self.vb.enableAutoRange(self.vb.YAxis, False)
