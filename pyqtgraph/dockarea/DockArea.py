@@ -1,15 +1,40 @@
 # -*- coding: utf-8 -*-
-import weakref
 from ..Qt import QtCore, QtGui
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
 from .. import debug as debug
-from ..python2_3 import basestring
+import weakref
+
+## TODO:
+# - containers should be drop areas, not docks. (but every slot within a container must have its own drop areas?)
+# - drop between tabs
+# - nest splitters inside tab boxes, etc.
+
+
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):
-    def __init__(self, temporary=False, home=None):
+    def __init__(self, 
+                 ##<<ADDED
+                 max_docks_xy=(),
+                 ##>>
+                 temporary=False, home=None):
+        ##<<ADDED
+        '''
+        ============== =================================================================
+        **Arguments:**
+        max_docks_xy   len2-tuple like (2,2) or (3,4)
+                       if Docks are added with DockArea.addDock without specified
+                       arguments 'position' and 'relativeTo' docks are placed like:
+                       e.g. max_docks_xy=(2,2): 
+                       [1] ->  [1]  ->  [1,2]  ->  [1,3]
+                               [2]      [3  ]      [2,4]
+                       all following Docks are tabbed in [4] 
+        ============== =================================================================
+        '''
+        self.max_docks_xy = max_docks_xy
+        ##>>
         Container.__init__(self, self)
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self, allowedAreas=['left', 'right', 'top', 'bottom'])
@@ -23,7 +48,45 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         self.temporary = temporary
         self.tempAreas = []
         self.home = home
-        
+
+    #ADDED
+    def _findGridPosition(self, position, relativeTo):
+        '''
+        place added Docks if 'position' and 'relativeTo' are unspecified
+        see __init__-doc for more information
+        '''        
+        if ( (position == None and relativeTo == None) #position in DockArea not specified
+            and (self.max_docks_xy  and len(self.max_docks_xy) == 2) # max grid number is defined
+            and self.topContainer): # at least one Dock is already there 
+            
+            y = self.topContainer.count()
+            if y == self.max_docks_xy[1]:
+                #max grid number of docks in y direction is reached
+                found_space = False
+                for iy in range(y):
+                    c = self.topContainer.widget(iy)
+                    is_container = isinstance(c,Container)
+                    #max number of docks in x direction not reached yet: add dock there
+                    if not is_container or c.count() < self.max_docks_xy[0]:
+                        position = 'right'
+                        found_space = True
+                        break
+                # every space is used: add dock below the last dock down-right
+                if not found_space:
+                    position = 'below'
+                w = c
+                if is_container:
+                    #get widget from container
+                    w = c.widget(c.count()-1)
+                    if isinstance(w,Container):
+                        # last container (down,right) is TContainer, not a Dock:
+                        # take first widget, because docks can only moved relative to docks and not containers
+                        w = w.widget(w.count()-1)
+                relativeTo = w 
+        if position == None:
+            position = 'bottom'
+        return position, relativeTo
+
     def type(self):
         return "top"
         
@@ -44,6 +107,9 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         All extra keyword arguments are passed to Dock.__init__() if *dock* is
         None.        
         """
+        ##<<ADDED
+        (position, relativeTo) = self._findGridPosition(position, relativeTo)
+        ##>>
         if dock is None:
             dock = Dock(**kwds)
         
@@ -96,23 +162,28 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
             'below': 'after'
         }[position]
         #print "request insert", dock, insertPos, neighbor
-        old = dock.container()
         container.insert(dock, insertPos, neighbor)
         dock.area = self
         self.docks[dock.name()] = dock
-        if old is not None:
-            old.apoptose()
-        
+        ##<<ADDED
+        dock.checkShowControls()
+        #adding a new dock means to restore a ramaining mazmized dock:
+        maxDock = getattr(self, 'maximized_dock', None) 
+        if maxDock:
+            maxDock.label.toggleMaximize()
+        ##>>
         return dock
         
     def moveDock(self, dock, position, neighbor):
         """
         Move an existing Dock to a new location. 
         """
+        old = dock.container()
         ## Moving to the edge of a tabbed dock causes a drop outside the tab box
         if position in ['left', 'right', 'top', 'bottom'] and neighbor is not None and neighbor.container() is not None and neighbor.container().type() == 'tab':
             neighbor = neighbor.container()
         self.addDock(dock, position, neighbor)
+        old.apoptose()
         
     def getContainer(self, obj):
         if obj is None:
@@ -166,7 +237,8 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         if self.home is None:
             area = DockArea(temporary=True, home=self)
             self.tempAreas.append(area)
-            win = TempAreaWindow(area)
+            win = QtGui.QMainWindow()
+            win.setCentralWidget(area)
             area.win = win
             win.show()
         else:
@@ -190,13 +262,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """
         Return a serialized (storable) representation of the state of
         all Docks in this DockArea."""
-
-        if self.topContainer is None:
-            main = None
-        else:
-            main = self.childState(self.topContainer)
-
-        state = {'main': main, 'float': []}
+        state = {'main': self.childState(self.topContainer), 'float': []}
         for a in self.tempAreas:
             geo = a.win.geometry()
             geo = (geo.x(), geo.y(), geo.width(), geo.height())
@@ -228,8 +294,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         #print "found docks:", docks
         
         ## 2) create container structure, move docks into new containers
-        if state['main'] is not None:
-            self.buildFromState(state['main'], docks, self)
+        self.buildFromState(state['main'], docks, self)
         
         ## 3) create floating areas, populate
         for s in state['float']:
@@ -297,16 +362,10 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
 
     def apoptose(self):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
-        if self.topContainer.count() == 0:
+        if self.temporary and self.topContainer.count() == 0:
             self.topContainer = None
-            if self.temporary:
-                self.home.removeTempArea(self)
-                #self.close()
-
-    def clear(self):
-        docks = self.findAll()[1]
-        for dock in docks.values():
-            dock.close()
+            self.home.removeTempArea(self)
+            #self.close()
             
     ## PySide bug: We need to explicitly redefine these methods
     ## or else drag/drop events will not be delivered.
@@ -321,13 +380,3 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
 
     def dropEvent(self, *args):
         DockDrop.dropEvent(self, *args)
-
-
-class TempAreaWindow(QtGui.QMainWindow):
-    def __init__(self, area, **kwargs):
-        QtGui.QMainWindow.__init__(self, **kwargs)
-        self.setCentralWidget(area)
-
-    def closeEvent(self, *args, **kwargs):
-        self.centralWidget().clear()
-        QtGui.QMainWindow.closeEvent(self, *args, **kwargs)
