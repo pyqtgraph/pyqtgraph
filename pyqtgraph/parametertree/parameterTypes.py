@@ -654,7 +654,16 @@ class TextParameterItem(WidgetParameterItem):
         self.textBox.setValue = self.textBox.setPlainText
         self.textBox.sigChanged = self.textBox.textChanged
         return self.textBox
-        
+
+    def selected(self, value):
+        #this dummymethod prevent the following error:
+            #Traceback (most recent call last):
+            #File "/usr/lib/pymodules/python2.7/pyqtgraph/parametertree/ParameterTree.py", line 107, in selectionChanged
+            #self.lastSel.selected(False)
+            #AttributeError: 'QTreeWidgetItem' object has no attribute 'selected'
+        pass
+
+   
 class TextParameter(Parameter):
     """Editable string; displayed as large text box in the tree."""
     itemClass = TextParameterItem
@@ -662,3 +671,57 @@ class TextParameter(Parameter):
     
     
 registerParameterType('text', TextParameter, override=True)
+
+
+
+class EmptyParameter(Parameter):
+    """
+    A name parameter without any value
+    """
+    itemClass = ParameterItem
+registerParameterType('empty', EmptyParameter, override=True)
+
+
+
+class MenuParameterItem(WidgetParameterItem):
+    """
+    Group parameters are used mainly as a generic parent item that holds (and groups!) a set
+    of child parameters. It also provides a simple mechanism for displaying a button or combo
+    that can be used to add new parameters to the group.
+    """
+
+    def __init__(self, param, depth):
+        WidgetParameterItem.__init__(self, param, depth)
+        self.hideWidget = False
+
+    def makeWidget(self):
+        v = self.param.opts.get(
+            'value', self.param.opts.get(
+                'limits', [''])[0])
+        w = QtGui.QMenuBar()
+        w.menu = w.addMenu(v)
+        
+        class _DummySignal:
+            @staticmethod
+            def disconnect(x): pass
+            @staticmethod
+            def connect(x): pass
+        
+        w.sigChanged = _DummySignal
+        w.value = lambda: ''
+        w.setValue = lambda x:None
+        w.menu.aboutToShow.connect(
+            lambda menu=w.menu: self.param.aboutToShow.emit(menu))
+        return w
+
+
+class MenuParameter(Parameter):
+    itemClass = MenuParameterItem
+    aboutToShow = QtCore.Signal(object)  # qmenu
+
+    def value(self):
+        return self.items.keyrefs()[0]().widget.menu.title()
+
+
+registerParameterType('menu', MenuParameter, override=True)
+
