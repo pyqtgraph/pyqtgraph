@@ -15,7 +15,26 @@ import weakref
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):
-    def __init__(self, temporary=False, home=None):
+    def __init__(self, 
+                 ##<<ADDED
+                 max_docks_xy=(),
+                 ##>>
+                 temporary=False, home=None):
+        ##<<ADDED
+        '''
+        ============== =================================================================
+        **Arguments:**
+        max_docks_xy   len2-tuple like (2,2) or (3,4)
+                       if Docks are added with DockArea.addDock without specified
+                       arguments 'position' and 'relativeTo' docks are placed like:
+                       e.g. max_docks_xy=(2,2): 
+                       [1] ->  [1]  ->  [1,2]  ->  [1,3]
+                               [2]      [3  ]      [2,4]
+                       all following Docks are tabbed in [4] 
+        ============== =================================================================
+        '''
+        self.max_docks_xy = max_docks_xy
+        ##>>
         Container.__init__(self, self)
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self, allowedAreas=['left', 'right', 'top', 'bottom'])
@@ -29,7 +48,45 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         self.temporary = temporary
         self.tempAreas = []
         self.home = home
-        
+
+    #ADDED
+    def _findGridPosition(self, position, relativeTo):
+        '''
+        place added Docks if 'position' and 'relativeTo' are unspecified
+        see __init__-doc for more information
+        '''        
+        if ( (position == None and relativeTo == None) #position in DockArea not specified
+            and (self.max_docks_xy  and len(self.max_docks_xy) == 2) # max grid number is defined
+            and self.topContainer): # at least one Dock is already there 
+            
+            y = self.topContainer.count()
+            if y == self.max_docks_xy[1]:
+                #max grid number of docks in y direction is reached
+                found_space = False
+                for iy in range(y):
+                    c = self.topContainer.widget(iy)
+                    is_container = isinstance(c,Container)
+                    #max number of docks in x direction not reached yet: add dock there
+                    if not is_container or c.count() < self.max_docks_xy[0]:
+                        position = 'right'
+                        found_space = True
+                        break
+                # every space is used: add dock below the last dock down-right
+                if not found_space:
+                    position = 'below'
+                w = c
+                if is_container:
+                    #get widget from container
+                    w = c.widget(c.count()-1)
+                    if isinstance(w,Container):
+                        # last container (down,right) is TContainer, not a Dock:
+                        # take first widget, because docks can only moved relative to docks and not containers
+                        w = w.widget(w.count()-1)
+                relativeTo = w 
+        if position == None:
+            position = 'bottom'
+        return position, relativeTo
+
     def type(self):
         return "top"
         
@@ -50,6 +107,9 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         All extra keyword arguments are passed to Dock.__init__() if *dock* is
         None.        
         """
+        ##<<ADDED
+        (position, relativeTo) = self._findGridPosition(position, relativeTo)
+        ##>>
         if dock is None:
             dock = Dock(**kwds)
         
@@ -105,7 +165,13 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         container.insert(dock, insertPos, neighbor)
         dock.area = self
         self.docks[dock.name()] = dock
-        
+        ##<<ADDED
+        dock.checkShowControls()
+        #adding a new dock means to restore a ramaining mazmized dock:
+        maxDock = getattr(self, 'maximized_dock', None) 
+        if maxDock:
+            maxDock.label.toggleMaximize()
+        ##>>
         return dock
         
     def moveDock(self, dock, position, neighbor):
