@@ -157,6 +157,13 @@ class ImageView(QtGui.QWidget):
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+        
+        # make splitter an unchangeable small grey line:
+        s = self.ui.splitter
+        s.handle(1).setEnabled(False)
+        s.setStyleSheet("QSplitter::handle{background-color: grey}")
+        s.setHandleWidth(2)
+
         self.ui.roiPlot.hideAxis('left')
         
         self.keysPressed = {}
