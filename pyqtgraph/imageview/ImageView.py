@@ -153,7 +153,10 @@ class ImageView(QtGui.QWidget):
         self.normRoi.hide()
         self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
-        self.timeLine.setPen((255, 255, 0, 200))
+        if getConfigOption('background')=='w':
+            self.timeLine.setPen((20, 80,80, 200))
+        else:
+            self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
