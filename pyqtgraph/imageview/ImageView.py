@@ -537,10 +537,12 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        ind = np.clip(ind, 0, self.nframes-1)
-        time = self.tVals[ind]
-        self.timeLine.setValue(time)
-
+        self.currentIndex = np.clip(ind, 0, self.nframes-1)
+        self.updateImage()
+        self.ignoreTimeLine = True
+        self.timeLine.setValue(self.tVals[self.currentIndex])
+        self.ignoreTimeLine = False
+        
     def jumpFrames(self, n):
         """Move video frame ahead n frames (may be negative)"""
         if self.axes['t'] is not None:
@@ -708,7 +710,8 @@ class ImageView(QtGui.QWidget):
             self.updateImage()
         #self.timeLine.setPos(time)
         #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
-        if self.opts['discreteTimeSteps']:
+        if self.opts['discreteTimeLine']:
+            pass
             self.timeLine.sigPositionChanged.disconnect(self.timeLineChanged)
             self.timeLine.setPos(self.currentIndex)
             self.timeLine.sigPositionChanged.connect(self.timeLineChanged)
