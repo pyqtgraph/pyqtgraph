@@ -136,6 +136,13 @@ class RemoteGraphicsView(QtGui.QWidget):
     def close(self):
         """Close the remote process. After this call, the widget will no longer be updated."""
         self._proc.close()
+        self._proc.proxies = {}
+        self._proc._stderrForwarder.enabled = False
+        self._proc._stdoutForwarder.enabled = False
+
+        # Hold off until the fileforwarders have finished
+        self._proc._stderrForwarder.join()
+        self._proc._stdoutForwarder.join()
 
 
 class Renderer(GraphicsView):
