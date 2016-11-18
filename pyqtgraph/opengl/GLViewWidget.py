@@ -15,7 +15,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Rotation/scale controls
         - Axis/grid display
         - Export options
-
     """
     
     def __init__(self, parent=None):
@@ -61,10 +60,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.update()
         
     def removeItem(self, item):
+        """
+        Remove the item from the scene.
+        """
         self.items.remove(item)
         item._setView(None)
         self.update()
-        
+
+    def clear(self):
+        """
+        Remove all items from the scene.
+        """
+        for item in self.items:
+            item._setView(None)
+        self.items = []
+        self.update()        
         
     def initializeGL(self):
         self.resizeGL(self.width(), self.height())
@@ -230,8 +240,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             self.opts['azimuth'] = azimuth
         self.update()
         
-        
-        
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
@@ -322,7 +330,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #self.paintGL(region=region)
         #self.swapBuffers()
         
-        
     def wheelEvent(self, ev):
         delta = 0
         if not USE_PYQT5:
@@ -386,8 +393,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         else:
             raise
             
-
-            
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -410,7 +415,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         img = fn.makeQImage(pixels, transpose=False)
         return img
-        
         
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
@@ -466,6 +470,4 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glfbo.glDeleteFramebuffers([fb])
             
         return output
-        
-        
-        
+ 
