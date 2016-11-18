@@ -28,6 +28,20 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
+        self.reset()
+        self.items = []
+        
+        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
+        self.keysPressed = {}
+        self.keyTimer = QtCore.QTimer()
+        self.keyTimer.timeout.connect(self.evalKeyState)
+        
+        self.makeCurrent()
+        
+    def reset(self):
+        """
+        Initialize the widget state or reset the current state to the original state.
+        """
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
             'distance': 10.0,         ## distance of camera from center
@@ -37,14 +51,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                                       ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
         }
-        self.setBackgroundColor('k')
-        self.items = []
-        self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
-        self.keysPressed = {}
-        self.keyTimer = QtCore.QTimer()
-        self.keyTimer.timeout.connect(self.evalKeyState)
-        
-        self.makeCurrent()
+        self.setBackgroundColor('k')        
 
     def addItem(self, item):
         self.items.append(item)
