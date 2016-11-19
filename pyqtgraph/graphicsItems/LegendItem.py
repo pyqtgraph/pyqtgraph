@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, drawFrame=True):
+    def __init__(self, size=None, offset=None, frame=True, rowCount=1, colCount=1):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -44,9 +44,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.items = []
         self.size = size
         self.offset = offset
-        self.drawFrame = drawFrame
-        self.columnCount = 1
-        self.rowCount = 1
+        self.frame = frame
+        self.columnCount = colCount
+        self.rowCount = rowCount
         self.curRow = 0
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
@@ -120,9 +120,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         return the labelItem inside the legend for a given plotItem
         the label-text can be changed via labenItem.setText
         """
-        for i in self.items:
-            if i[0].item == plotItem:
-                return i[1]
+        out = [(it, lab) for it, lab in self.items if it==plotItem]
+        try: return out[0][1]
+        except IndexError: return None
 
     def removeItem(self, name):
         """
@@ -165,7 +165,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         return QtCore.QRectF(0, 0, self.width(), self.height())
     
     def paint(self, p, *args):
-        if self.drawFrame:
+        if self.frame:
             p.setPen(fn.mkPen(255,255,255,100))
             p.setBrush(fn.mkBrush(100,100,100,50))
             p.drawRect(self.boundingRect())

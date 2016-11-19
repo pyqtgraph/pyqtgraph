@@ -10,7 +10,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 
 plt = pg.plot()
 plt.setWindowTitle('pyqtgraph example: Legend')
-plt.addLegend()
+plt.addLegend(frame=False, rowCount=1, colCount=2)
 #l = pg.LegendItem((100,60), offset=(70,30))  # args are (size, offset)
 #l.setParentItem(plt.graphicsItem())   # Note we do NOT call plt.addItem in this case
 
