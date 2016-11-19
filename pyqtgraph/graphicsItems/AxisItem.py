@@ -17,7 +17,8 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot. 
     """
     
-    def __init__(self, orientation, pen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True):
+    def __init__(self, orientation, pen=None, linkView=None, parent=None,
+                 maxTickLength=-5, showValues=True, autoScale=False):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -28,6 +29,8 @@ class AxisItem(GraphicsWidget):
                         to be linked to the visible range of a ViewBox.
         showValues      (bool) Whether to display values adjacent to ticks 
         pen             (QPen) Pen used when drawing ticks.
+        autoScale       (Bool) if False, the automatic shrinkage of the axis is
++                        not allowed
         ==============  ===============================================================
         """
         
@@ -94,6 +97,7 @@ class AxisItem(GraphicsWidget):
         self.showLabel(False)
         
         self.grid = False
+        self.autoScale = autoScale
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):
@@ -292,17 +296,25 @@ class AxisItem(GraphicsWidget):
         ## changed; we use this to decide whether the item needs to be resized
         ## to accomodate.
         if self.orientation in ['left', 'right']:
-            if x > self.textWidth or x < self.textWidth - 10:
-                self.textWidth = x
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateWidth()
-                    #return True  ## size has changed
+            if self.autoScale:
+                if x > self.textWidth or x < self.textWidth - 10:
+                    self.textWidth = x
+            else:
+                mx = max(self.textWidth, x)
+                if mx > self.textWidth or mx < self.textWidth-10:
+                    self.textWidth = mx
+            if self.style['autoExpandTextSpace'] is True:
+                self._updateWidth()
         else:
-            if x > self.textHeight or x < self.textHeight - 10:
-                self.textHeight = x
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateHeight()
-                    #return True  ## size has changed
+            if self.autoScale:
+                if x > self.textHeight or x < self.textHeight - 10:
+                    self.textHeight = x
+            else:
+                mx = max(self.textHeight, x)
+                if mx > self.textHeight or mx < self.textHeight-10:
+                    self.textHeight = mx
+            if self.style['autoExpandTextSpace'] is True:
+                self._updateHeight()
         
     def _adjustSize(self):
         if self.orientation in ['left', 'right']:
