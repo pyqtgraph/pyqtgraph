@@ -166,8 +166,7 @@ class PlotItem(GraphicsWidget):
         self.legend = None
         
         ## Create and place axis items
-        if axisItems is None:
-            axisItems = {}
+        self.axes = {}
         self.setAxes(axisItems)
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
@@ -278,9 +277,14 @@ class PlotItem(GraphicsWidget):
         Create and place axis items
         For valid values for axisItems see __init__
         """
+        for v in self.axes.values():
+            item = v['item']
+            self.layout.removeItem(item)
+            self.vb.removeItem(item)
+
+        self.axes = {}
         if axisItems is None:
             axisItems = {}
-        self.axes = {}
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
             axis = axisItems.get(k, None)
             if axis:
