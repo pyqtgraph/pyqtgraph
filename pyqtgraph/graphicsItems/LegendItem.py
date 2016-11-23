@@ -120,7 +120,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         return the labelItem inside the legend for a given plotItem
         the label-text can be changed via labenItem.setText
         """
-        out = [(it, lab) for it, lab in self.items if it==plotItem]
+        out = [(it, lab) for it, lab in self.items if it.item==plotItem]
         try: return out[0][1]
         except IndexError: return None
 
