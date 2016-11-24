@@ -74,7 +74,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     p = .001**m
     
-    return (p, pref)    
+    return (p, pref)
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
     """
@@ -943,7 +943,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
-
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
@@ -990,7 +989,11 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.ubyte
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
-            
+
+    # awkward, but fastest numpy native nan evaluation
+    nanMask = None
+    if np.isnan(data.min()):
+        nanMask = np.isnan(data)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1011,10 +1014,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 if minVal == maxVal:
                     maxVal += 1e-16
                 data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
-            
 
     profile()
-
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1057,7 +1058,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         imgData[..., 3] = 255
     else:
         alpha = True
-        
+
+    # apply nan mask through alpha channel
+    if nanMask is not None:
+        alpha = True
+        imgData[nanMask, 3] = 0
+
     profile()
     return imgData, alpha
 
