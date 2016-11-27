@@ -292,15 +292,22 @@ class PlotItem(GraphicsWidget):
             else:
                 axis = AxisItem(orientation=k)
             axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
+            self.axes[k] = {'item': axis, 'pos': pos}            
             self.layout.addItem(axis, *pos)
             axis.setZValue(-1000)
             axis.setFlag(axis.ItemNegativeZStacksBehindParent)
-            
-        self.hideAxis('right')
-        self.hideAxis('top')
-        self.showAxis('left')
-        self.showAxis('bottom')
+        #show/hide axes:
+        all_dir = ['left', 'bottom', 'right', 'top']
+        if axisItems:
+            to_show = list(axisItems.keys())
+            to_hide = [a for a in all_dir if a not in to_show]
+        else:
+            to_show = all_dir[:2]
+            to_hide =  all_dir[2:]
+        for a  in to_hide:
+            self.hideAxis(a)
+        for a  in to_show:
+            self.showAxis(a)
 
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
@@ -1157,8 +1164,8 @@ class PlotItem(GraphicsWidget):
         Show or hide one of the plot's axes.
         axis must be one of 'left', 'bottom', 'right', or 'top'
         """
-        s = self.getScale(axis)
-        p = self.axes[axis]['pos']
+        s = self.getAxis(axis)
+        #p = self.axes[axis]['pos']
         if show:
             s.show()
         else:

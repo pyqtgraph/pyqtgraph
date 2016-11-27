@@ -34,11 +34,8 @@ class AxisItem(GraphicsWidget):
         GraphicsWidget.__init__(self, parent)
         self.label = QtGui.QGraphicsTextItem(self)
         self.picture = None
-        self.orientation = orientation
-        if orientation not in ['left', 'right', 'top', 'bottom']:
-            raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
-        if orientation in ['left', 'right']:
-            self.label.rotate(-90)
+        self.orientation = None
+        self.setOrientation(orientation)
             
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis 
@@ -95,6 +92,27 @@ class AxisItem(GraphicsWidget):
         
         self.grid = False
         #self.setCacheMode(self.DeviceCoordinateCache)
+
+    def setOrientation(self, orientation):
+        """
+        orientation = 'left', 'right', 'top', 'bottom'
+        """
+        if orientation != self.orientation:
+            if orientation not in ['left', 'right', 'top', 'bottom']:
+                raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
+            #rotate absolute allows to change orientation multiple times:
+            if orientation in ['left', 'right']:
+                self.label.setRotation(-90)
+                if self.orientation:
+                    self._updateWidth()
+                    self.setMaximumHeight(16777215)
+            else:
+                self.label.setRotation(0) 
+                if self.orientation:
+                    self._updateHeight()
+                    self.setMaximumWidth(16777215)
+            self.orientation = orientation
+
 
     def setStyle(self, **kwds):
         """
@@ -468,13 +486,16 @@ class AxisItem(GraphicsWidget):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
         oldView = self.linkedView()
         self._linkedView = weakref.ref(view)
-        if self.orientation in ['right', 'left']:
-            if oldView is not None:
+        if oldView is not None:
+            #orientation of axis in oldview unknown, so:
+            try:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
+            except TypeError:
+                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
+        
+        if self.orientation in ['right', 'left']:
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
-            if oldView is not None:
-                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
             view.sigXRangeChanged.connect(self.linkedViewChanged)
         
         if oldView is not None:
