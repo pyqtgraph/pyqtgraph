@@ -154,6 +154,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 self.opts[k] = D(asUnicode(opts[k]))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
+            elif k == 'visible':
+                self.show() if k else self.hide()
             elif k in self.opts:
                 self.opts[k] = opts[k]
             else:
