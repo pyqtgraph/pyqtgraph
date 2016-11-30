@@ -264,6 +264,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 return
             le.setSelection(0, index)
 
+    def focusInEvent(self, ev):
+        super(SpinBox, self).focusInEvent(ev)
+        self.selectNumber()
+
     def value(self):
         """
         Return the value of this SpinBox.
