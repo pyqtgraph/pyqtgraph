@@ -49,28 +49,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         **Arguments:**
         parent         Sets the parent widget for this SpinBox (optional). Default is None.
         value          (float/int) initial value. Default is 0.0.
-        bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
-                       Either may be None to leave the value unbounded. By default, values are unbounded.
-        suffix         (str) suffix (units) to display after the numerical value. By default, suffix is an empty str.
-        siPrefix       (bool) If True, then an SI prefix is automatically prepended
-                       to the units and the value is scaled accordingly. For example,
-                       if value=0.003 and suffix='V', then the SpinBox will display
-                       "300 mV" (but a call to SpinBox.value will still return 0.003). Default is False.
-        step           (float) The size of a single step. This is used when clicking the up/
-                       down arrows, when rolling the mouse wheel, or when pressing 
-                       keyboard arrows while the widget has keyboard focus. Note that
-                       the interpretation of this value is different when specifying
-                       the 'dec' argument. Default is 0.01.
-        dec            (bool) If True, then the step value will be adjusted to match 
-                       the current size of the variable (for example, a value of 15
-                       might step in increments of 1 whereas a value of 1500 would
-                       step in increments of 100). In this case, the 'step' argument
-                       is interpreted *relative* to the current value. The most common
-                       'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0. Default is False.
-        minStep        (float) When dec=True, this specifies the minimum allowable step size.
-        int            (bool) if True, the value is forced to integer type. Default is False
-        decimals       (int) Number of decimal values to display. Default is 2. 
         ============== ========================================================================
+        
+        All keyword arguments are passed to :func:`setOpts`.
         """
         QtGui.QAbstractSpinBox.__init__(self, parent)
         self.lastValEmitted = None
@@ -81,27 +62,14 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         self.opts = {
             'bounds': [None, None],
-            
-            ## Log scaling options   #### Log mode is no longer supported.
-            #'step': 0.1,
-            #'minStep': 0.001,
-            #'log': True,
-            #'dec': False,
-            
-            ## decimal scaling option - example
-            #'step': 0.1,    
-            #'minStep': .001,    
-            #'log': False,
-            #'dec': True,
            
             ## normal arithmetic step
             'step': D('0.01'),  ## if 'dec' is false, the spinBox steps by 'step' every time
                                 ## if 'dec' is True, the step size is relative to the value
                                 ## 'step' needs to be an integral divisor of ten, ie 'step'*n=10 for some integer value of n (but only if dec is True)
-            'log': False,
+            'log': False,   # deprecated
             'dec': False,   ## if true, does decimal stepping. ie from 1-10 it steps by 'step', from 10 to 100 it steps by 10*'step', etc. 
                             ## if true, minStep must be set in order to cross zero.
-            
             
             'int': False, ## Set True to force value to be integer
             
@@ -113,6 +81,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
             
             'decimals': 3,
+            
+            'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
             
         }
         
@@ -134,12 +104,47 @@ class SpinBox(QtGui.QAbstractSpinBox):
             ret = True  ## For some reason, spinbox pretends to ignore return key press
         return ret
         
-    ##lots of config options, just gonna stuff 'em all in here rather than do the get/set crap.
     def setOpts(self, **opts):
-        """
-        Changes the behavior of the SpinBox. Accepts most of the arguments 
-        allowed in :func:`__init__ <pyqtgraph.SpinBox.__init__>`.
+        """Set options affecting the behavior of the SpinBox.
         
+        ============== ========================================================================
+        **Arguments:**
+        bounds         (min,max) Minimum and maximum values allowed in the SpinBox. 
+                       Either may be None to leave the value unbounded. By default, values are
+                       unbounded.
+        suffix         (str) suffix (units) to display after the numerical value. By default,
+                       suffix is an empty str.
+        siPrefix       (bool) If True, then an SI prefix is automatically prepended
+                       to the units and the value is scaled accordingly. For example,
+                       if value=0.003 and suffix='V', then the SpinBox will display
+                       "300 mV" (but a call to SpinBox.value will still return 0.003). Default
+                       is False.
+        step           (float) The size of a single step. This is used when clicking the up/
+                       down arrows, when rolling the mouse wheel, or when pressing 
+                       keyboard arrows while the widget has keyboard focus. Note that
+                       the interpretation of this value is different when specifying
+                       the 'dec' argument. Default is 0.01.
+        dec            (bool) If True, then the step value will be adjusted to match 
+                       the current size of the variable (for example, a value of 15
+                       might step in increments of 1 whereas a value of 1500 would
+                       step in increments of 100). In this case, the 'step' argument
+                       is interpreted *relative* to the current value. The most common
+                       'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0. Default is
+                       False.
+        minStep        (float) When dec=True, this specifies the minimum allowable step size.
+        int            (bool) if True, the value is forced to integer type. Default is False
+        decimals       (int) Number of decimal values to display. Default is 3. 
+        format         (str) Formatting string used to generate the text shown. Formatting is
+                       done with ``str.format()`` and makes use of several arguments:
+                       
+                       * *value* - the unscaled value of the spin box
+                       * *suffix* - the suffix string
+                       * *scaledValue* - the scaled value to use when an SI prefix is present
+                       * *siPrefix* - the SI prefix string (if any), or an empty string if
+                         this feature has been disabled
+                       * *suffixGap* - a single space if a suffix is present, or an empty
+                         string otherwise.
+        ============== ========================================================================
         """
         #print opts
         for k in opts:
@@ -154,6 +159,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 self.opts[k] = D(asUnicode(opts[k]))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
+            elif k == 'format':
+                self.opts[k] = asUnicode(opts[k])
             elif k in self.opts:
                 self.opts[k] = opts[k]
             else:
@@ -378,37 +385,44 @@ class SpinBox(QtGui.QAbstractSpinBox):
         return True
 
     def updateText(self, prev=None):
-        # get the number of decimal places to print
-        decimals = self.opts.get('decimals')
-        
         # temporarily disable validation
         self.skipValidate = True
-
-        # add a prefix to the units if requested
-        if self.opts['siPrefix']:
-
-            # special case: if it's zero use the previous prefix
-            if self.val == 0 and prev is not None:
-                (s, p) = fn.siScale(prev)
-
-                # NOTE: insert optional format string here?
-                txt = ("%."+str(decimals)+"g %s%s") % (0, p, self.opts['suffix'])
-            else:
-                # NOTE: insert optional format string here as an argument?
-                txt = fn.siFormat(float(self.val), precision=decimals, suffix=self.opts['suffix'])
-
-        # otherwise, format the string manually
-        else:
-            # NOTE: insert optional format string here?
-            txt = ('%.'+str(decimals)+'g%s') % (self.val , self.opts['suffix'])
-
+        
+        txt = self.formatText(prev=prev)
+        
         # actually set the text
         self.lineEdit().setText(txt)
         self.lastText = txt
 
         # re-enable the validation
         self.skipValidate = False
-    
+        
+    def formatText(self, prev=None):
+        # get the number of decimal places to print
+        decimals = self.opts['decimals'] if self.opts['int'] is False else 9
+        suffix = self.opts['suffix']
+
+        # format the string 
+        val = float(self.val)
+        if self.opts['siPrefix']:
+            # SI prefix was requested, so scale the value accordingly
+
+            if self.val == 0 and prev is not None:
+                # special case: if it's zero use the previous prefix
+                (s, p) = fn.siScale(prev)
+            else:
+                (s, p) = fn.siScale(val)
+            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val}
+
+        else:
+            # no SI prefix requested; scale is 1
+            parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val}
+
+        parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
+        
+        format = self.opts['format']
+        return format.format(**parts)
+
     def validate(self, strn, pos):
         if self.skipValidate:
             ret = QtGui.QValidator.Acceptable

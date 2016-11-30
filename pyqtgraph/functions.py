@@ -36,8 +36,6 @@ SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 
 
-
-
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -75,6 +73,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     p = .001**m
     
     return (p, pref)    
+
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
     """
