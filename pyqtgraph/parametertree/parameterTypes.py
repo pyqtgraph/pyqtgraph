@@ -279,9 +279,14 @@ class WidgetParameterItem(ParameterItem):
         
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
+            # send only options supported by spinbox
+            sbOpts = {}
             if 'units' in opts and 'suffix' not in opts:
-                opts['suffix'] = opts['units']
-            self.widget.setOpts(**opts)
+                sbOpts['suffix'] = opts['units']
+            for k,v in opts.items():
+                if k in self.widget.opts:
+                    sbOpts[k] = v
+            self.widget.setOpts(**sbOpts)
             self.updateDisplayLabel()
         
             
