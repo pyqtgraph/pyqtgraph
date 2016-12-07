@@ -34,8 +34,13 @@ Colors = {
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
+SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
+SI_PREFIX_EXPONENTS['u'] = -6
 
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siprefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siprefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
+    
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -103,31 +108,48 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
+
+
+def siParse(s, regex=FLOAT_REGEX):
+    """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
-def siEval(s):
+    Example::
+    
+        siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
-    Convert a value written in SI notation to its equivalent prefixless value
-    
+    s = asUnicode(s)
+    m = regex.match(s)
+    if m is None:
+        raise ValueError('Cannot parse number "%s"' % s)
+    sip = m.group('siprefix')
+    suf = m.group('suffix')
+    return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
+
+
+def siEval(s, typ=float, regex=FLOAT_REGEX):
+    """
+    Convert a value written in SI notation to its equivalent prefixless value.
+
     Example::
     
         siEval("100 μV")  # returns 0.0001
     """
+    val, siprefix, suffix = siParse(s, regex)
+    v = typ(val)
+    return siApply(val, siprefix)
+
     
-    s = asUnicode(s)
-    m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?).*$', s)
-    if m is None:
-        raise Exception("Can't convert string '%s' to number." % s)
-    v = float(m.groups()[0])
-    p = m.groups()[6]
-    #if p not in SI_PREFIXES:
-        #raise Exception("Can't convert string '%s' to number--unknown prefix." % s)
-    if p ==  '':
-        n = 0
-    elif p == 'u':
-        n = -2
+def siApply(val, siprefix):
+    """
+    """
+    n = SI_PREFIX_EXPONENTS[siprefix] if siprefix != '' else 0
+    if n > 0:
+        return val * 10**n
+    elif n < 0:
+        # this case makes it possible to use Decimal objects here
+        return val / 10**-n
     else:
-        n = SI_PREFIXES.index(p) - 8
-    return v * 1000**n
+        return val
     
 
 class Color(QtGui.QColor):

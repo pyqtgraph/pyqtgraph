@@ -6,10 +6,13 @@ from ..SignalProxy import SignalProxy
 from .. import functions as fn
 from math import log
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
-from decimal import *
+import decimal
 import weakref
 
+
 __all__ = ['SpinBox']
+
+
 class SpinBox(QtGui.QAbstractSpinBox):
     """
     **Bases:** QtGui.QAbstractSpinBox
@@ -42,7 +45,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     valueChanged = QtCore.Signal(object)     # (value)  for compatibility with QSpinBox
     sigValueChanged = QtCore.Signal(object)  # (self)
     sigValueChanging = QtCore.Signal(object, object)  # (self, value)  sent immediately; no delay.
-    
+
     def __init__(self, parent=None, value=0.0, **kwargs):
         """
         ============== ========================================================================
@@ -60,6 +63,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setMinimumWidth(0)
         self.setMaximumHeight(20)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        self.errorBox = ErrorBox(self.lineEdit())
+        
         self.opts = {
             'bounds': [None, None],
            
@@ -80,7 +85,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             
             'delayUntilEditFinished': True,   ## do not send signals until text editing has finished
             
-            'decimals': 3,
+            'decimals': 6,
             
             'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
             
@@ -97,7 +102,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.editingFinished.connect(self.editingFinishedEvent)
         self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
-        
+
     def event(self, ev):
         ret = QtGui.QAbstractSpinBox.event(self, ev)
         if ev.type() == QtCore.QEvent.KeyPress and ev.key() == QtCore.Qt.Key_Return:
@@ -133,7 +138,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                        False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
         int            (bool) if True, the value is forced to integer type. Default is False
-        decimals       (int) Number of decimal values to display. Default is 3. 
+        decimals       (int) Number of decimal values to display. Default is 6. 
         format         (str) Formatting string used to generate the text shown. Formatting is
                        done with ``str.format()`` and makes use of several arguments:
                        
@@ -301,7 +306,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if self.opts['int']:
             value = int(value)
 
-        value = D(asUnicode(value))
+        if not isinstance(value, D):
+            value = D(asUnicode(value))
+        
         if value == self.val:
             return
         prev = self.val
@@ -315,7 +322,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
             self.emitChanged()
         
         return value
-
     
     def emitChanged(self):
         self.lastValEmitted = self.val
@@ -335,12 +341,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def sizeHint(self):
         return QtCore.QSize(120, 0)
     
-    
     def stepEnabled(self):
         return self.StepUpEnabled | self.StepDownEnabled        
-    
-    #def fixup(self, *args):
-        #print "fixup:", args
     
     def stepBy(self, n):
         n = D(int(n))   ## n must be integral number of steps.
@@ -363,7 +365,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                     vs = [D(-1), D(1)][val >= 0]
                     #exp = D(int(abs(val*(D('1.01')**(s*vs))).log10()))
                     fudge = D('1.01')**(s*vs) ## fudge factor. at some places, the step size depends on the step sign.
-                    exp = abs(val * fudge).log10().quantize(1, ROUND_FLOOR)
+                    exp = abs(val * fudge).log10().quantize(1, decimal.ROUND_FLOOR)
                     step = self.opts['step'] * D(10)**exp
                 if 'minStep' in self.opts:
                     step = max(step, self.opts['minStep'])
@@ -375,7 +377,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
             if 'minStep' in self.opts and abs(val) < self.opts['minStep']:
                 val = D(0)
         self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
-        
 
     def valueInRange(self, value):
         bounds = self.opts['bounds']
@@ -403,12 +404,12 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
     def formatText(self, prev=None):
         # get the number of decimal places to print
-        decimals = self.opts['decimals'] if self.opts['int'] is False else 9
+        decimals = self.opts['decimals']
         suffix = self.opts['suffix']
 
         # format the string 
-        val = float(self.val)
-        if self.opts['siPrefix']:
+        val = self.value()
+        if self.opts['siPrefix'] is True and len(self.opts['suffix']) > 0:
             # SI prefix was requested, so scale the value accordingly
 
             if self.val == 0 and prev is not None:
@@ -419,38 +420,32 @@ class SpinBox(QtGui.QAbstractSpinBox):
             parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': p, 'scaledValue': s*val}
 
         else:
-            # no SI prefix requested; scale is 1
+            # no SI prefix /suffix requested; scale is 1
             parts = {'value': val, 'suffix': suffix, 'decimals': decimals, 'siPrefix': '', 'scaledValue': val}
 
         parts['suffixGap'] = '' if (parts['suffix'] == '' and parts['siPrefix'] == '') else ' '
         
-        format = self.opts['format']
-        return format.format(**parts)
+        return self.opts['format'].format(**parts)
 
     def validate(self, strn, pos):
         if self.skipValidate:
             ret = QtGui.QValidator.Acceptable
         else:
             try:
-                ## first make sure we didn't mess with the suffix
-                suff = self.opts.get('suffix', '')
-                if len(suff) > 0 and asUnicode(strn)[-len(suff):] != suff:
-                    ret = QtGui.QValidator.Invalid
-                    
-                ## next see if we actually have an interpretable value
+                val = self.interpret()
+                if val is False:
+                    ret = QtGui.QValidator.Intermediate
                 else:
-                    val = self.interpret()
-                    if val is False:
-                        ret = QtGui.QValidator.Intermediate
+                    if self.valueInRange(val):
+                        if not self.opts['delayUntilEditFinished']:
+                            self.setValue(val, update=False)
+                        ret = QtGui.QValidator.Acceptable
                     else:
-                        if self.valueInRange(val):
-                            if not self.opts['delayUntilEditFinished']:
-                                self.setValue(val, update=False)
-                            ret = QtGui.QValidator.Acceptable
-                        else:
-                            ret = QtGui.QValidator.Intermediate
+                        ret = QtGui.QValidator.Intermediate
                         
             except:
+                import sys
+                sys.excepthook(*sys.exc_info())
                 ret = QtGui.QValidator.Intermediate
             
         ## draw / clear border
@@ -462,40 +457,46 @@ class SpinBox(QtGui.QAbstractSpinBox):
         ## since the text will be forced to its previous state anyway
         self.update()
         
+        self.errorBox.setVisible(not self.textValid)
+        
         ## support 2 different pyqt APIs. Bleh.
         if hasattr(QtCore, 'QString'):
             return (ret, pos)
         else:
             return (ret, strn, pos)
         
-    def paintEvent(self, ev):
-        QtGui.QAbstractSpinBox.paintEvent(self, ev)
-        
-        ## draw red border if text is invalid
-        if not self.textValid:
-            p = QtGui.QPainter(self)
-            p.setRenderHint(p.Antialiasing)
-            p.setPen(fn.mkPen((200,50,50), width=2))
-            p.drawRoundedRect(self.rect().adjusted(2, 2, -2, -2), 4, 4)
-            p.end()
-
+    def fixup(self, strn):
+        # fixup is called when the spinbox loses focus with an invalid or intermediate string
+        self.updateText()
+        strn.clear()
+        strn.append(self.lineEdit().text())
 
     def interpret(self):
-        """Return value of text. Return False if text is invalid, raise exception if text is intermediate"""
+        """Return value of text or False if text is invalid."""
         strn = self.lineEdit().text()
-        suf = self.opts['suffix']
-        if len(suf) > 0:
-            if strn[-len(suf):] != suf:
-                return False
-            #raise Exception("Units are invalid.")
-            strn = strn[:-len(suf)]
+        
+        # tokenize into numerical value, si prefix, and suffix
         try:
-            val = fn.siEval(strn)
-        except:
-            #sys.excepthook(*sys.exc_info())
-            #print "invalid"
+            val, siprefix, suffix = fn.siParse(strn)
+        except Exception:
             return False
-        #print val
+            
+        # check suffix
+        if suffix != self.opts['suffix'] or (suffix == '' and siprefix != ''):
+            return False
+           
+        # generate value
+        val = D(val)
+        if self.opts['int']:
+            val = int(fn.siApply(val, siprefix))
+        else:
+            try:
+                val = fn.siApply(val, siprefix)
+            except Exception:
+                import sys
+                sys.excepthook(*sys.exc_info())
+                return False
+
         return val
         
     def editingFinishedEvent(self):
@@ -506,7 +507,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return
         try:
             val = self.interpret()
-        except:
+        except Exception:
             return
         
         if val is False:
@@ -516,3 +517,29 @@ class SpinBox(QtGui.QAbstractSpinBox):
             #print "no value change:", val, self.val
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
+
+
+class ErrorBox(QtGui.QWidget):
+    """Red outline to draw around lineedit when value is invalid.
+    (for some reason, setting border from stylesheet does not work)
+    """
+    def __init__(self, parent):
+        QtGui.QWidget.__init__(self, parent)
+        parent.installEventFilter(self)
+        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self._resize()
+        self.setVisible(False)
+        
+    def eventFilter(self, obj, ev):
+        if ev.type() == QtCore.QEvent.Resize:
+            self._resize()
+        return False
+
+    def _resize(self):
+        self.setGeometry(0, 0, self.parent().width(), self.parent().height())
+        
+    def paintEvent(self, ev):
+        p = QtGui.QPainter(self)
+        p.setPen(fn.mkPen(color='r', width=2))
+        p.drawRect(self.rect())
+        p.end()
