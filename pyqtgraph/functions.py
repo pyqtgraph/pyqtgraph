@@ -907,7 +907,7 @@ def solveBilinearTransform(points1, points2):
     
     return matrix
     
-def rescaleData(data, scale, offset, dtype=None, clip=None):
+def rescaleData(data, scale, maxVal, minVal, dtype=None, clip=None, log=False):
     """Return data rescaled and optionally cast to a new dtype::
     
         data => (data-offset) * scale
@@ -957,8 +957,13 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         
         #p = np.poly1d([scale, -offset*scale])
         #d2 = p(data)
-        d2 = data - float(offset)
-        d2 *= scale
+        rng = maxVal-minVal
+        rng = 1 if rng == 0 else rng
+        if not log:
+            d2 = (data - float(minVal)) * scale / (rng)
+        else:
+            with np.errstate(invalid='ignore', divide='ignore'):
+                d2 = (np.log10(data) - np.log10(minVal)) / np.log10(rng) * scale
         
         # Clip before converting dtype to avoid overflow
         if dtype.kind in 'ui':
@@ -993,7 +998,7 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False): 
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, log=False):
     """ 
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
@@ -1093,9 +1098,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
                     maxVal += 1e-16
-                rng = maxVal-minVal
-                rng = 1 if rng == 0 else rng
-                newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
+                newData[...,i] = rescaleData(data[...,i], scale, maxVal, minVal, dtype=dtype, log=log)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
@@ -1103,7 +1106,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
                     maxVal += 1e-16
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+                data = rescaleData(data, scale, maxVal, minVal, dtype=dtype, log=log)
             
 
     profile()

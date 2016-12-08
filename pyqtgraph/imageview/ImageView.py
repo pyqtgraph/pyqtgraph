@@ -118,10 +118,6 @@ class ImageView(QtGui.QWidget):
             pg.ImageView(view=pg.PlotItem())
         """
         QtGui.QWidget.__init__(self, parent, *args)
-        self._imageLevels = None  # [(min, max), ...] per channel image metrics
-        self.levelMin = None    # min / max levels across all channels
-        self.levelMax = None
-        
         self.name = name
         self.image = None
         self.axes = {}
@@ -192,7 +188,7 @@ class ImageView(QtGui.QWidget):
             setattr(self, fn, getattr(self.view, fn))
 
         ## wrap functions from histogram
-        for fn in ['setHistogramRange', 'autoHistogramRange', 'getLookupTable', 'getLevels']:
+        for fn in ['setHistogramRange', 'getLookupTable', 'getLevels']:
             setattr(self, fn, getattr(self.ui.histogram, fn))
 
         self.timeLine.sigPositionChanged.connect(self.timeLineChanged)
@@ -323,12 +319,13 @@ class ImageView(QtGui.QWidget):
         profiler()
 
         self.currentIndex = 0
-        self.updateImage(autoHistogramRange=autoHistogramRange)
+        self.updateImage()
         if levels is None and autoLevels:
             self.autoLevels()
         if levels is not None:  ## this does nothing since getProcessedImage sets these values again.
             self.setLevels(*levels)
-            
+        if autoHistogramRange:
+            self.autoHistogramRange()
         if self.ui.roiBtn.isChecked():
             self.roiChanged()
 
@@ -384,10 +381,10 @@ class ImageView(QtGui.QWidget):
         self.lastPlayTime = ptime.time()
         if not self.playTimer.isActive():
             self.playTimer.start(16)
-            
+
     def autoLevels(self):
-        """Set the min/max intensity levels automatically to match the image data."""
-        self.setLevels(rgba=self._imageLevels)
+        """Set the levels automatically."""
+        self.ui.histogram.autoLevels(self.axes['c'])
 
     def setLevels(self, *args, **kwds):
         """Set the min/max (bright and dark) levels.
@@ -396,20 +393,20 @@ class ImageView(QtGui.QWidget):
         """
         self.ui.histogram.setLevels(*args, **kwds)
 
+    def autoHistogramRange(self):
+        """Set the histogram range automatically."""
+        self.ui.histogram.autoRange()
+
     def autoRange(self):
         """Auto scale and pan the view around the image such that the image fills the view."""
         image = self.getProcessedImage()
         self.view.autoRange()
         
     def getProcessedImage(self):
-        """Returns the image data after it has been processed by any normalization options in use.
-        """
+        """Returns the image data after it has been processed by any normalization options in use."""
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
-            self._imageLevels = self.quickMinMax(self.imageDisp)
-            self.levelMin = min([level[0] for level in self._imageLevels])
-            self.levelMax = max([level[1] for level in self._imageLevels])
             
         return self.imageDisp
         
@@ -630,24 +627,6 @@ class ImageView(QtGui.QWidget):
             x, y, p = plots[i]
             self.roiCurves[i].setData(x, y, pen=p)
 
-    def quickMinMax(self, data):
-        """
-        Estimate the min/max values of *data* by subsampling.
-        Returns [(min, max), ...] with one item per channel
-        """
-        while data.size > 1e6:
-            ax = np.argmax(data.shape)
-            sl = [slice(None)] * data.ndim
-            sl[ax] = slice(None, None, 2)
-            data = data[sl]
-            
-        cax = self.axes['c']
-        if cax is None:
-            return [(float(nanmin(data)), float(nanmax(data)))]
-        else:
-            return [(float(nanmin(data.take(i, axis=cax))), 
-                     float(nanmax(data.take(i, axis=cax)))) for i in range(data.shape[-1])]
-
     def normalize(self, image):
         """
         Process *image* using the normalization options configured in the
@@ -710,15 +689,12 @@ class ImageView(QtGui.QWidget):
         #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
         self.sigTimeChanged.emit(ind, time)
 
-    def updateImage(self, autoHistogramRange=True):
+    def updateImage(self):
         ## Redraw image on screen
         if self.image is None:
             return
             
         image = self.getProcessedImage()
-        
-        if autoHistogramRange:
-            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
         
         # Transpose image into order expected by ImageItem
         if self.imageItem.axisOrder == 'col-major':

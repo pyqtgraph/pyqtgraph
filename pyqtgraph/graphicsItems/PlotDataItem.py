@@ -511,9 +511,11 @@ class PlotDataItem(GraphicsObject):
                     x=x[1:]
                     y=y[1:]                
             if self.opts['logMode'][0]:
-                x = np.log10(x)
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    x = np.log10(x)
             if self.opts['logMode'][1]:
-                y = np.log10(y)
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    y = np.log10(y)
                     
             ds = self.opts['downsample']
             if not isinstance(ds, int):

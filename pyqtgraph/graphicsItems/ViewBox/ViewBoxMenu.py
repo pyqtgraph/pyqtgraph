@@ -62,6 +62,8 @@ class ViewBoxMenu(QtGui.QMenu):
 
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
+        self.ctrl[0].logCheck.toggled.connect(self.xLogToggled)
+        self.ctrl[1].logCheck.toggled.connect(self.yLogToggled)
         ## exporting is handled by GraphicsScene now
         #self.export = QtGui.QMenu("Export")
         #self.setExportMethods(view.exportMethods)
@@ -145,6 +147,7 @@ class ViewBoxMenu(QtGui.QMenu):
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
             xy = ['x', 'y'][i]
             self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
+            self.ctrl[i].logCheck.setChecked(state.get(xy+'Log', False))
         
         self.valid = True
         
@@ -224,6 +227,12 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def xInvertToggled(self, b):
         self.view().invertX(b)
+
+    def yLogToggled(self, b):
+        self.view().logY(b)
+
+    def xLogToggled(self, b):
+        self.view().logX(b)
 
     def exportMethod(self):
         act = self.sender()

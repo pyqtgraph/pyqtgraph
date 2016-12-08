@@ -1,6 +1,6 @@
 import weakref
 import numpy as np
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
@@ -10,6 +10,14 @@ from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
 from ..python2_3 import cmp
 
+if QT_LIB == 'PyQt4':
+    from .lutCtrlTemplate_pyqt import Ui_Form as LutCtrlTemplate
+elif QT_LIB == 'PySide':
+    from .lutCtrlTemplate_pyside import Ui_Form as LutCtrlTemplate
+elif QT_LIB == 'PyQt5':
+    from .lutCtrlTemplate_pyqt5 import Ui_Form as LutCtrlTemplate
+elif QT_LIB == 'PySide2':
+    from .lutCtrlTemplate_pyside2 import Ui_Form as LutCtrlTemplate
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
 
@@ -54,7 +62,7 @@ class TickSliderItem(GraphicsWidget):
         ## public
         GraphicsWidget.__init__(self)
         self.orientation = orientation
-        self.length = 100
+        self.length = 200
         self.tickSize = 15
         self.ticks = {}
         self.maxDim = 20
@@ -372,6 +380,8 @@ class GradientEditorItem(TickSliderItem):
     
     sigGradientChanged = QtCore.Signal(object)
     sigGradientChangeFinished = QtCore.Signal(object)
+    sigLogModeChanged = QtCore.Signal(object)
+    sigAutoLevelsChanged = QtCore.Signal(object)
     
     def __init__(self, *args, **kargs):
         """
@@ -387,6 +397,8 @@ class GradientEditorItem(TickSliderItem):
                          Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
         ===============  =================================================================================
         """
+        self.autoLevels = True
+        self.logMode = False
         self.currentTick = None
         self.currentTickColor = None
         self.rectSize = 15
@@ -394,6 +406,7 @@ class GradientEditorItem(TickSliderItem):
         self.backgroundRect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, -self.rectSize, 100, self.rectSize))
         self.backgroundRect.setBrush(QtGui.QBrush(QtCore.Qt.DiagCrossPattern))
         self.colorMode = 'rgb'
+        self.histogram = kargs['histogram'] if 'histogram' in kargs else None
         
         TickSliderItem.__init__(self, *args, **kargs)
         
@@ -416,20 +429,27 @@ class GradientEditorItem(TickSliderItem):
         self.hsvAction = QtGui.QAction('HSV', self)
         self.hsvAction.setCheckable(True)
         self.hsvAction.triggered.connect(lambda: self.setColorMode('hsv'))
-            
+
+        if self.histogram is not None:
+            w = QtGui.QWidget()
+            self.lutCtrlWidget = LutCtrlTemplate()
+            self.lutCtrlWidget.setupUi(w)
+            self.lutCtrlAction = QtGui.QWidgetAction(self)
+            self.lutCtrlAction.setDefaultWidget(w)
+        
         self.menu = QtGui.QMenu()
         
         ## build context menu of gradients
         l = self.length
-        self.length = 100
+        self.length = 200
         global Gradients
         for g in Gradients:
-            px = QtGui.QPixmap(100, 15)
+            px = QtGui.QPixmap(self.length, 15)
             p = QtGui.QPainter(px)
             self.restoreState(Gradients[g])
             grad = self.getGradient()
             brush = QtGui.QBrush(grad)
-            p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
+            p.fillRect(QtCore.QRect(0, 0, self.length, 15), brush)
             p.end()
             label = QtGui.QLabel()
             label.setPixmap(px)
@@ -443,6 +463,17 @@ class GradientEditorItem(TickSliderItem):
         self.menu.addSeparator()
         self.menu.addAction(self.rgbAction)
         self.menu.addAction(self.hsvAction)
+        if self.histogram is not None:
+            self.menu.addSeparator()
+            self.menu.addAction(self.lutCtrlAction)
+
+        if self.histogram is not None:
+            self.histogram.sigLevelsChanged.connect(self.levelsChanged)
+            self.lutCtrlWidget.logCheck.toggled.connect(self.logModeChanged)
+            self.lutCtrlWidget.minText.editingFinished.connect(self.minTextChanged)
+            self.lutCtrlWidget.maxText.editingFinished.connect(self.maxTextChanged)
+            self.lutCtrlWidget.manualRadio.clicked.connect(self.manualClick)
+            self.lutCtrlWidget.autoRadio.clicked.connect(self.autoClick)
         
         
         for t in list(self.ticks.keys()):
@@ -451,7 +482,50 @@ class GradientEditorItem(TickSliderItem):
         self.addTick(1, QtGui.QColor(255,0,0), True)
         self.setColorMode('rgb')
         self.updateGradient()
-    
+
+    def autoLevelsEnabled(self):
+        return self.autoLevels
+
+    def setAutoLevels(self, value):
+        self.autoLevels = value
+        self.lutCtrlWidget.manualRadio.setChecked(not self.autoLevels)
+        self.lutCtrlWidget.autoRadio.setChecked(self.autoLevels)
+
+    def logModeEnabled(self):
+        return self.logMode
+
+    def setLogMode(self, value):
+        self.logMode = value
+        self.lutCtrlWidget.logCheck.setChecked(self.logMode)
+
+    def manualClick(self):
+        self.autoLevels = False
+        self.sigAutoLevelsChanged.emit(self)
+
+    def autoClick(self):
+        self.autoLevels = True
+        self.sigAutoLevelsChanged.emit(self)
+
+    def minTextChanged(self):
+        _, mx = self.histogram.getLevels()
+        self.lutCtrlWidget.manualRadio.setChecked(True)
+        self.histogram.setLevels(float(self.lutCtrlWidget.minText.text()), mx)
+
+    def maxTextChanged(self):
+        mn, _ = self.histogram.getLevels()
+        self.lutCtrlWidget.manualRadio.setChecked(True)
+        self.histogram.setLevels(mn, float(self.lutCtrlWidget.maxText.text()))
+
+    def logModeChanged(self, value):
+        self.logMode = value
+        self.sigLogModeChanged.emit(self)
+
+    def levelsChanged(self):
+        mn, mx = self.histogram.getLevels()
+        self.lutCtrlWidget.minText.setText("%0.5g" % mn)
+        self.lutCtrlWidget.maxText.setText("%0.5g" % mx)
+
+
     def setOrientation(self, orientation):
         ## public
         """
