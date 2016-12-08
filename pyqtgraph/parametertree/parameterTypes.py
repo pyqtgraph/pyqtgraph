@@ -122,6 +122,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
+            w.setStyleSheet('border: 0px')
             w.sigChanged = w.editingFinished
             w.value = lambda: asUnicode(w.text())
             w.setValue = lambda v: w.setText(asUnicode(v))
