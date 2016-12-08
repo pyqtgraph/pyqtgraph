@@ -85,6 +85,7 @@ class ViewBox(GraphicsWidget):
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
     sigRangeChanged = QtCore.Signal(object, object)
+    sigLogChanged = QtCore.Signal(object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
@@ -102,7 +103,7 @@ class ViewBox(GraphicsWidget):
     NamedViews = weakref.WeakValueDictionary()   # name: ViewBox
     AllViews = weakref.WeakKeyDictionary()       # ViewBox: None
     
-    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False):
+    def __init__(self, parent=None, border=None, lockAspect=False, enableMouse=True, invertY=False, enableMenu=True, name=None, invertX=False, logY=False, logX=False):
         """
         ==============  =============================================================
         **Arguments:**
@@ -141,6 +142,8 @@ class ViewBox(GraphicsWidget):
         
             'yInverted': invertY,
             'xInverted': invertX,
+            'yLog': logY,
+            'xLog': logX,
             'aspectLocked': False,    ## False if aspect is unlocked, otherwise float specifies the locked ratio.
             'autoRange': [True, True],  ## False if auto range is disabled, 
                                           ## otherwise float gives the fraction of data that is visible
@@ -1033,6 +1036,26 @@ class ViewBox(GraphicsWidget):
 
     def xInverted(self):
         return self.state['xInverted']
+
+    def _logAxis(self, ax, inv):
+        key = 'xy'[ax] + 'Log'
+        if self.state[key] == inv:
+            return
+        
+        self.state[key] = inv
+        self.sigLogChanged.emit(self)
+
+    def logY(self, b=True):
+        self._logAxis(1, b)
+
+    def yLog(self):
+        return self.state['yLog']
+        
+    def logX(self, b=True):
+        self._logAxis(0, b)
+
+    def xLog(self):
+        return self.state['xLog']
         
     def setAspectLocked(self, lock=True, ratio=1):
         """
