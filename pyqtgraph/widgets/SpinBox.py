@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-from ..python2_3 import asUnicode
-from ..SignalProxy import SignalProxy
-
-from .. import functions as fn
 from math import log
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 import decimal
 import weakref
+import re
+
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode, basestring
+from ..SignalProxy import SignalProxy
+from .. import functions as fn
 
 
 __all__ = ['SpinBox']
@@ -89,7 +90,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'decimals': 6,
             
             'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
-
+            'regex': fn.FLOAT_REGEX,
+            'evalFunc': D,
+            
             'compactHeight': True,  # manually remove extra margin outside of text
         }
         
@@ -152,28 +155,41 @@ class SpinBox(QtGui.QAbstractSpinBox):
                          this feature has been disabled
                        * *suffixGap* - a single space if a suffix is present, or an empty
                          string otherwise.
+        regex          (str or RegexObject) Regular expression used to parse the spinbox text.
+                       May contain the following group names:
+                       
+                       * *number* - matches the numerical portion of the string (mandatory)
+                       * *siPrefix* - matches the SI prefix string
+                       * *suffix* - matches the suffix string
+                       
+                       Default is defined in ``pyqtgraph.functions.FLOAT_REGEX``.
+        evalFunc       (callable) Fucntion that converts a numerical string to a number,
+                       preferrably a Decimal instance. This function handles only the numerical
+                       of the text; it does not have access to the suffix or SI prefix.
         compactHeight  (bool) if True, then set the maximum height of the spinbox based on the
                        height of its font. This allows more compact packing on platforms with
                        excessive widget decoration. Default is True.
         ============== ========================================================================
         """
         #print opts
-        for k in opts:
+        for k,v in opts.items():
             if k == 'bounds':
-                self.setMinimum(opts[k][0], update=False)
-                self.setMaximum(opts[k][1], update=False)
+                self.setMinimum(v[0], update=False)
+                self.setMaximum(v[1], update=False)
             elif k == 'min':
-                self.setMinimum(opts[k], update=False)
+                self.setMinimum(v, update=False)
             elif k == 'max':
-                self.setMaximum(opts[k], update=False)
+                self.setMaximum(v, update=False)
             elif k in ['step', 'minStep']:
-                self.opts[k] = D(asUnicode(opts[k]))
+                self.opts[k] = D(asUnicode(v))
             elif k == 'value':
                 pass   ## don't set value until bounds have been set
             elif k == 'format':
-                self.opts[k] = asUnicode(opts[k])
+                self.opts[k] = asUnicode(v)
+            elif k == 'regex' and isinstance(v, basestring):
+                self.opts[k] = re.compile(v)
             elif k in self.opts:
-                self.opts[k] = opts[k]
+                self.opts[k] = v
             else:
                 raise TypeError("Invalid keyword argument '%s'." % k)
         if 'value' in opts:
@@ -266,14 +282,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
         """
         le = self.lineEdit()
         text = asUnicode(le.text())
-        if self.opts['suffix'] == '':
-            le.setSelection(0, len(text))
-        else:
-            try:
-                index = text.index(' ')
-            except ValueError:
-                return
-            le.setSelection(0, index)
+        m = self.opts['regex'].match(text)
+        if m is None:
+            return
+        s,e = m.start('number'), m.end('number')
+        le.setSelection(s, e-s)
 
     def focusInEvent(self, ev):
         super(SpinBox, self).focusInEvent(ev)
@@ -483,7 +496,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         # tokenize into numerical value, si prefix, and suffix
         try:
-            val, siprefix, suffix = fn.siParse(strn)
+            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'])
         except Exception:
             return False
             
@@ -492,7 +505,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return False
            
         # generate value
-        val = D(val)
+        val = self.opts['evalFunc'](val)
         if self.opts['int']:
             val = int(fn.siApply(val, siprefix))
         else:
@@ -504,7 +517,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                 return False
 
         return val
-        
+
     def editingFinishedEvent(self):
         """Edit has finished; set value."""
         #print "Edit finished."

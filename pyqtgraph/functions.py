@@ -37,8 +37,8 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siprefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
-INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siprefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
     
 def siScale(x, minVal=1e-25, allowUnicode=True):
@@ -121,8 +121,16 @@ def siParse(s, regex=FLOAT_REGEX):
     m = regex.match(s)
     if m is None:
         raise ValueError('Cannot parse number "%s"' % s)
-    sip = m.group('siprefix')
-    suf = m.group('suffix')
+    try:
+        sip = m.group('siPrefix')
+    except IndexError:
+        sip = ''
+    
+    try:
+        suf = m.group('suffix')
+    except IndexError:
+        suf = ''
+    
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
 
 
