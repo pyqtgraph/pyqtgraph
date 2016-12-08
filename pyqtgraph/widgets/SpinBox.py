@@ -61,7 +61,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.lastText = ''
         self.textValid = True  ## If false, we draw a red border
         self.setMinimumWidth(0)
-        self.setMaximumHeight(20)
+        self._lastFontHeight = None
+        
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         self.errorBox = ErrorBox(self.lineEdit())
         
@@ -88,7 +89,8 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'decimals': 6,
             
             'format': asUnicode("{scaledValue:.{decimals}g}{suffixGap}{siPrefix}{suffix}"),
-            
+
+            'compactHeight': True,  # manually remove extra margin outside of text
         }
         
         self.decOpts = ['step', 'minStep']
@@ -99,6 +101,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setCorrectionMode(self.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
         self.setOpts(**kwargs)
+        self._updateHeight()
         
         self.editingFinished.connect(self.editingFinishedEvent)
         self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
@@ -149,6 +152,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
                          this feature has been disabled
                        * *suffixGap* - a single space if a suffix is present, or an empty
                          string otherwise.
+        compactHeight  (bool) if True, then set the maximum height of the spinbox based on the
+                       height of its font. This allows more compact packing on platforms with
+                       excessive widget decoration. Default is True.
         ============== ========================================================================
         """
         #print opts
@@ -517,6 +523,21 @@ class SpinBox(QtGui.QAbstractSpinBox):
             #print "no value change:", val, self.val
             return
         self.setValue(val, delaySignal=False)  ## allow text update so that values are reformatted pretty-like
+
+    def _updateHeight(self):
+        # SpinBox has very large margins on some platforms; this is a hack to remove those
+        # margins and allow more compact packing of controls.
+        if not self.opts['compactHeight']:
+            self.setMaximumHeight(1e6)
+            return
+        h = QtGui.QFontMetrics(self.font()).height()
+        if self._lastFontHeight != h:
+            self._lastFontHeight = h
+            self.setMaximumHeight(h)
+
+    def paintEvent(self, ev):
+        self._updateHeight()
+        QtGui.QAbstractSpinBox.paintEvent(self, ev)
 
 
 class ErrorBox(QtGui.QWidget):
