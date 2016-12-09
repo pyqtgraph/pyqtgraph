@@ -18,12 +18,14 @@ class SpinBox(QtGui.QAbstractSpinBox):
     """
     **Bases:** QtGui.QAbstractSpinBox
     
-    QSpinBox widget on steroids. Allows selection of numerical value, with extra features:
+    Extension of QSpinBox widget for selection of a numerical value.     
+    Adds many extra features:
     
-    - SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
-    - Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
-    - Option for unbounded values
-    - Delayed signals (allows multiple rapid changes with only one change signal)
+    * SI prefix notation (eg, automatically display "300 mV" instead of "0.003 V")
+    * Float values with linear and decimal stepping (1-9, 10-90, 100-900, etc.)
+    * Option for unbounded values
+    * Delayed signals (allows multiple rapid changes with only one change signal)
+    * Customizable text formatting
     
     =============================  ==============================================
     **Signals:**
