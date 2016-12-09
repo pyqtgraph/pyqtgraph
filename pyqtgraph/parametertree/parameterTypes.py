@@ -108,7 +108,7 @@ class WidgetParameterItem(ParameterItem):
                 if k in opts:
                     defs[k] = opts[k]
             if 'limits' in opts:
-                defs['bounds'] = opts['limits']
+                defs['min'], defs['max'] = opts['limits']
             w = SpinBox()
             w.setOpts(**defs)
             w.sigChanged = w.sigValueChanged
