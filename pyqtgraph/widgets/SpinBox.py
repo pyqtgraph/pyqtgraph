@@ -69,6 +69,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.opts = {
             'bounds': [None, None],
+            'wrapping': False,
            
             ## normal arithmetic step
             'step': D('0.01'),  ## if 'dec' is false, the spinBox steps by 'step' every time
@@ -144,6 +145,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                        False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
         int            (bool) if True, the value is forced to integer type. Default is False
+        wrapping       (bool) If True and both bounds are not None, spin box has circular behavior.
         decimals       (int) Number of decimal values to display. Default is 6. 
         format         (str) Formatting string used to generate the text shown. Formatting is
                        done with ``str.format()`` and makes use of several arguments:
@@ -239,6 +241,16 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.opts['bounds'][0] = m
         if update:
             self.setValue()
+
+    def wrapping(self):
+        """Return whether or not the spin box is circular."""
+        return self.opts['wrapping']
+
+    def setWrapping(self, s):
+        """Set whether spin box is circular.
+        
+        Both bounds must be set for this to have an effect."""
+        self.opts['wrapping'] = s
         
     def setPrefix(self, p):
         """Set a string prefix.
@@ -303,24 +315,32 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return float(self.val)
 
     def setValue(self, value=None, update=True, delaySignal=False):
-        """
-        Set the value of this spin. 
-        If the value is out of bounds, it will be clipped to the nearest boundary.
+        """Set the value of this SpinBox.
+        
+        If the value is out of bounds, it will be clipped to the nearest boundary
+        or wrapped if wrapping is enabled.
+        
         If the spin is integer type, the value will be coerced to int.
         Returns the actual value set.
         
         If value is None, then the current value is used (this is for resetting
         the value after bounds, etc. have changed)
         """
-        
         if value is None:
             value = self.value()
         
         bounds = self.opts['bounds']
-        if bounds[0] is not None and value < bounds[0]:
-            value = bounds[0]
-        if bounds[1] is not None and value > bounds[1]:
-            value = bounds[1]
+
+        if None not in bounds and self.opts['wrapping'] is True:
+            # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
+            value = float(value)
+            l, u = float(bounds[0]), float(bounds[1])
+            value = (value - l) % (u - l) + l
+        else:
+            if bounds[0] is not None and value < bounds[0]:
+                value = bounds[0]
+            if bounds[1] is not None and value > bounds[1]:
+                value = bounds[1]
 
         if self.opts['int']:
             value = int(value)
