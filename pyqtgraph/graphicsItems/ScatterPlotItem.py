@@ -597,8 +597,6 @@ class ScatterPlotItem(GraphicsObject):
             recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
             return recs
 
-
-
     def measureSpotSizes(self, dataSet):
         for rec in dataSet:
             ## keep track of the maximum spot size and pixel size
@@ -616,7 +614,6 @@ class ScatterPlotItem(GraphicsObject):
             self._maxSpotWidth = max(self._maxSpotWidth, width)
             self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
         self.bounds = [None, None]
-
 
     def clear(self):
         """Remove all spots from the scatter plot"""
@@ -697,29 +694,24 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
 
-
-    def mapPointsToDevice(self, pts):
+    def mapPointsToDevice(self, pts, tr):
         # Map point locations to device
-        tr = self.deviceTransform()
         if tr is None:
             return None
 
-        #pts = np.empty((2,len(self.data['x'])))
-        #pts[0] = self.data['x']
-        #pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         pts -= self.data['width']
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
 
         return pts
 
-    def getViewMask(self, pts):
+    def getViewMask(self, pts, tr):
         # Return bool mask indicating all points that are within viewbox
         # pts is expressed in *device coordiantes*
         vb = self.getViewBox()
         if vb is None:
             return None
-        viewBounds = vb.mapRectToDevice(vb.boundingRect())
+        viewBounds = tr.mapRect(vb.mapRectToItem(self, vb.boundingRect()))
         w = self.data['width']
         mask = ((pts[0] + w > viewBounds.left()) &
                 (pts[0] - w < viewBounds.right()) &
@@ -727,10 +719,8 @@ class ScatterPlotItem(GraphicsObject):
                 (pts[1] - w < viewBounds.bottom())) ## remove out of view points
         return mask
 
-
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
-
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
 
@@ -742,18 +732,17 @@ class ScatterPlotItem(GraphicsObject):
             scale = 1.0
 
         if self.opts['pxMode'] is True:
+            tr = p.transform()
             p.resetTransform()
 
             # Map point coordinates to device
             pts = np.vstack([self.data['x'], self.data['y']])
-            pts = self.mapPointsToDevice(pts)
+            pts = self.mapPointsToDevice(pts, tr)
             if pts is None:
                 return
 
             # Cull points that are outside view
-            viewMask = self.getViewMask(pts)
-            #pts = pts[:,mask]
-            #data = self.data[mask]
+            viewMask = self.getViewMask(pts, tr)
 
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
