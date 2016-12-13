@@ -713,10 +713,10 @@ class ScatterPlotItem(GraphicsObject):
             return None
         viewBounds = tr.mapRect(vb.mapRectToItem(self, vb.boundingRect()))
         w = self.data['width']
-        mask = ((pts[0] + w > viewBounds.left()) &
-                (pts[0] - w < viewBounds.right()) &
-                (pts[1] + w > viewBounds.top()) &
-                (pts[1] - w < viewBounds.bottom())) ## remove out of view points
+        mask = ((pts[0] > viewBounds.left() - 2*w) &
+                (pts[0] < viewBounds.right()) &
+                (pts[1] > viewBounds.top() - 2*w) &
+                (pts[1] < viewBounds.bottom())) ## remove out of view points
         return mask
 
     @debug.warnOnException  ## raising an exception here causes crash
