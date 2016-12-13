@@ -131,8 +131,6 @@ class GraphicsItem(object):
             return self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
 
-
-
     def getBoundingParents(self):
         """Return a list of parents to this item that have child clipping enabled."""
         p = self
@@ -161,8 +159,6 @@ class GraphicsItem(object):
             #bounds &= self.mapRectFromScene(p.sceneBoundingRect())
             
         return bounds
-        
-        
         
     def pixelVectors(self, direction=None):
         """Return vectors in local coordinates representing the width and height of a view pixel.
@@ -255,7 +251,6 @@ class GraphicsItem(object):
         self._pixelVectorCache[0] = dt
         self._pixelVectorGlobalCache[key] = pv
         return self._pixelVectorCache[1]
-    
         
     def pixelLength(self, direction, ortho=False):
         """Return the length of one pixel in the direction indicated (in local coordinates)
@@ -269,7 +264,6 @@ class GraphicsItem(object):
         if ortho:
             return orthoV.length()
         return normV.length()
-        
 
     def pixelSize(self):
         ## deprecated
@@ -293,8 +287,6 @@ class GraphicsItem(object):
             return 0
         vt = fn.invertQTransform(vt)
         return vt.map(QtCore.QLineF(0, 0, 0, 1)).length()
-        #return Point(vt.map(QtCore.QPointF(0, 1))-vt.map(QtCore.QPointF(0, 0))).length()
-        
         
     def mapToDevice(self, obj):
         """
@@ -388,7 +380,6 @@ class GraphicsItem(object):
         ## PyQt bug -- some child items are returned incorrectly.
         return list(map(GraphicsScene.translateGraphicsItem, self._qtBaseClass.childItems(self)))
 
-
     def sceneTransform(self):
         ## Qt bug: do no allow access to sceneTransform() until 
         ## the item has a scene.
@@ -397,7 +388,6 @@ class GraphicsItem(object):
             return self.transform()
         else:
             return self._qtBaseClass.sceneTransform(self)
-
 
     def transformAngle(self, relativeItem=None):
         """Return the rotation produced by this item's transform (this assumes there is no shear in the transform)
@@ -438,7 +428,6 @@ class GraphicsItem(object):
         to make sure viewRangeChanged works properly. It should generally be 
         extended, not overridden."""
         self._updateView()
-        
 
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
@@ -513,8 +502,6 @@ class GraphicsItem(object):
             else:
                 self._replaceView(oldView, child)
         
-        
-
     def viewRangeChanged(self):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
@@ -528,10 +515,6 @@ class GraphicsItem(object):
         """
         pass
     
-    #def prepareGeometryChange(self):
-        #self._qtBaseClass.prepareGeometryChange(self)
-        #self.informViewBoundsChanged()
-        
     def informViewBoundsChanged(self):
         """
         Inform this item's container ViewBox that the bounds of this item have changed.
@@ -557,7 +540,6 @@ class GraphicsItem(object):
             tree.extend(self.allChildItems(ch))
         return tree
     
-    
     def setExportMode(self, export, opts=None):
         """
         This method is called by exporters to inform items that they are being drawn for export
@@ -568,14 +550,8 @@ class GraphicsItem(object):
             opts = {}
         if export:
             self._exportOpts = opts
-            #if 'antialias' not in opts:
-                #self._exportOpts['antialias'] = True
         else:
             self._exportOpts = False
     
-    #def update(self):
-        #self._qtBaseClass.update(self)
-        #print "Update:", self
-
     def getContextMenus(self, event):
         return [self.getMenu()] if hasattr(self, "getMenu") else []

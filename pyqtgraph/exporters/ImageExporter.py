@@ -34,12 +34,12 @@ class ImageExporter(Exporter):
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.height()) / sr.width()
-        self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
+        self.params.param('height').setValue(int(self.params['width'] * ar), blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.width()) / sr.height()
-        self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
+        self.params.param('width').setValue(int(self.params['height'] * ar), blockSignal=self.widthChanged)
         
     def parameters(self):
         return self.params
@@ -61,9 +61,6 @@ class ImageExporter(Exporter):
         targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
         sourceRect = self.getSourceRect()
         
-        
-        #self.png = QtGui.QImage(targetRect.size(), QtGui.QImage.Format_ARGB32)
-        #self.png.fill(pyqtgraph.mkColor(self.params['background']))
         w, h = self.params['width'], self.params['height']
         if w == 0 or h == 0:
             raise Exception("Cannot export image with size=0 (requested export size is %dx%d)" % (w,h))
@@ -78,11 +75,8 @@ class ImageExporter(Exporter):
         ## set resolution of image:
         origTargetRect = self.getTargetRect()
         resolutionScale = targetRect.width() / origTargetRect.width()
-        #self.png.setDotsPerMeterX(self.png.dotsPerMeterX() * resolutionScale)
-        #self.png.setDotsPerMeterY(self.png.dotsPerMeterY() * resolutionScale)
         
         painter = QtGui.QPainter(self.png)
-        #dtr = painter.deviceTransform()
         try:
             self.setExportMode(True, {'antialias': self.params['antialias'], 'background': self.params['background'], 'painter': painter, 'resolutionScale': resolutionScale})
             painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params['antialias'])
@@ -97,6 +91,6 @@ class ImageExporter(Exporter):
             return self.png
         else:
             self.png.save(fileName)
+
         
 ImageExporter.register()        
-        
