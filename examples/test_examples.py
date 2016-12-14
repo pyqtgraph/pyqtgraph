@@ -3,13 +3,17 @@ from pyqtgraph import Qt
 from . import utils
 import itertools
 import pytest
-import os
-import __builtin__
+import os, sys
 
 
 # printing on travis ci frequently leads to "interrupted system call" errors.
 # as a workaround, we overwrite the built-in print function (bleh)
 if os.getenv('TRAVIS') is not None:
+    if sys.version_info[0] < 3:
+        import __builtin__ as builtins
+    else:
+        import builtins
+
     def flaky_print(*args):
         """Wrapper for print that retries in case of IOError.
         """
@@ -24,7 +28,7 @@ if os.getenv('TRAVIS') is not None:
                     raise
                 pass
     orig_print = __builtin__.print
-    __builtin__.print = flaky_print
+    builtins.print = flaky_print
     print("Installed wrapper for flaky print.")
 
 
