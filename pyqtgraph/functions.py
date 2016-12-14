@@ -991,8 +991,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.min_scalar_type(lut.shape[0]-1)
 
     # awkward, but fastest numpy native nan evaluation
+    # 
     nanMask = None
-    if np.isnan(data.min()):
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
         nanMask = np.isnan(data)
     # Apply levels if given
     if levels is not None:
