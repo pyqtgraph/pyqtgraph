@@ -39,6 +39,7 @@ Contributors
   * Martin Fitzpatrick
   * Daniel Lidstrom
   * Eric Dill
+  * Vincent LeSaux
 
 Requirements
 ------------

@@ -51,7 +51,7 @@
       <item row="0" column="0">
        <widget class="QStackedWidget" name="stack">
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="page">
          <layout class="QGridLayout" name="gridLayout_3">
@@ -71,13 +71,6 @@
              </sizepolicy>
             </property>
            </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="page_3">
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0">
-           <widget class="RawImageGLWidget" name="rawGLImg" native="true"/>
           </item>
          </layout>
         </widget>
@@ -339,12 +332,6 @@
    <class>SpinBox</class>
    <extends>QDoubleSpinBox</extends>
    <header>pyqtgraph</header>
-  </customwidget>
-  <customwidget>
-   <class>RawImageGLWidget</class>
-   <extends>QWidget</extends>
-   <header>pyqtgraph.widgets.RawImageWidget</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

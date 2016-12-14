@@ -284,8 +284,6 @@ class WidgetParameterItem(ParameterItem):
             self.widget.setOpts(**opts)
             self.updateDisplayLabel()
         
-        
-        
             
 class EventProxy(QtCore.QObject):
     def __init__(self, qobj, callback):
@@ -295,8 +293,6 @@ class EventProxy(QtCore.QObject):
         
     def eventFilter(self, obj, ev):
         return self.callback(obj, ev)
-
-        
 
 
 class SimpleParameter(Parameter):

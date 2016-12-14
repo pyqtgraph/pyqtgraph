@@ -48,6 +48,7 @@ class TextItem(GraphicsObject):
         self.textItem = QtGui.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self._lastTransform = None
+        self._lastScene = None
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setColor(color)
@@ -149,9 +150,18 @@ class TextItem(GraphicsObject):
         self.updateTransform()
         
     def paint(self, p, *args):
-        # this is not ideal because it causes another update to be scheduled.
+        # this is not ideal because it requires the transform to be updated at every draw.
         # ideally, we would have a sceneTransformChanged event to react to..
-        self.updateTransform()
+        s = self.scene()
+        ls = self._lastScene
+        if s is not ls:
+            if ls is not None:
+                ls.sigPrepareForPaint.disconnect(self.updateTransform)
+            self._lastScene = s
+            if s is not None:
+                s.sigPrepareForPaint.connect(self.updateTransform)
+            self.updateTransform()
+            p.setTransform(self.sceneTransform())
         
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
             p.setPen(self.border)
@@ -191,5 +201,3 @@ class TextItem(GraphicsObject):
         self._lastTransform = pt
         
         self.updateTextPos()
-
-        
