@@ -27,7 +27,7 @@ if os.getenv('TRAVIS') is not None:
                 if count >= 5:
                     raise
                 pass
-    orig_print = __builtin__.print
+    orig_print = builtins.print
     builtins.print = flaky_print
     print("Installed wrapper for flaky print.")
 
