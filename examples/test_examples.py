@@ -3,6 +3,30 @@ from pyqtgraph import Qt
 from . import utils
 import itertools
 import pytest
+import os
+import __builtin__
+
+
+# printing on travis ci frequently leads to "interrupted system call" errors.
+# as a workaround, we overwrite the built-in print function (bleh)
+if os.getenv('TRAVIS') is not None:
+    def flaky_print(*args):
+        """Wrapper for print that retries in case of IOError.
+        """
+        count = 0
+        while count < 5:
+            count += 1
+            try:
+                orig_print(*args)
+                break
+            except IOError:
+                if count >= 5:
+                    raise
+                pass
+    orig_print = __builtin__.print
+    __builtin__.print = flaky_print
+    print("Installed wrapper for flaky print.")
+
 
 # apparently importlib does not exist in python 2.6...
 try:
