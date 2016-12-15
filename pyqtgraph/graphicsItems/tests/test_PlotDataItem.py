@@ -9,16 +9,16 @@ def test_fft():
     x = np.linspace(0, 1, 1000)
     y = np.sin(2 * np.pi * f * x)
     pd = pg.PlotDataItem(x, y)
-    pd.setFftMode(True)    
+    pd.setFftMode(True)
     x, y = pd.getData()
     assert abs(x[np.argmax(y)] - f) < 0.03
-    
+
     x = np.linspace(0, 1, 1001)
     y = np.sin(2 * np.pi * f * x)
     pd.setData(x, y)
     x, y = pd.getData()
     assert abs(x[np.argmax(y)]- f) < 0.03
-    
+
     pd.setLogMode(True, False)
     x, y = pd.getData()
     assert abs(x[np.argmax(y)] - np.log10(f)) < 0.01
@@ -58,3 +58,9 @@ def test_clear():
 
     assert pdi.xData == None
     assert pdi.yData == None
+
+def test_clear_in_step_mode():
+    w = pg.PlotWidget()
+    c = pg.PlotDataItem([1,4,2,3], [5,7,6], stepMode=True)
+    w.addItem(c)
+    c.clear()
