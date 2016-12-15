@@ -21,7 +21,7 @@ class GLGridItem(GLGraphicsItem):
             size = QtGui.QVector3D(20,20,1)
         self.setSize(size=size)
         self.setSpacing(1, 1, 1)
-        self.color = color if color is not None else (1, 1, 1, .3)
+        self.color = color if color is not None else (0, 0, 0, .0)
     
     def setSize(self, x=None, y=None, z=None, size=None):
         """
