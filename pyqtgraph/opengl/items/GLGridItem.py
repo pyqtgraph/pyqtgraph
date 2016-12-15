@@ -53,6 +53,9 @@ class GLGridItem(GLGraphicsItem):
     def spacing(self):
         return self.__spacing[:]
         
+    def setColor(self, color):
+        self.color = color
+
     def paint(self):
         self.setupGLState()
         
