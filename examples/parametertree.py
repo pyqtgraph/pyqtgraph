@@ -71,7 +71,7 @@ params = [
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
         {'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "This is a color button"},
         {'name': 'Gradient', 'type': 'colormap'},
-        {'name': 'Slider', 'type': 'slider', 'value':1.75, 'limits':[1,2.5]},
+        {'name': 'Slider', 'type': 'slider', 'value':1.75, 'limits':[1,2.5], 'suffix':'m'},
         {'name': 'Subgroup', 'type': 'group', 'children': [
             {'name': 'Sub-param 1', 'type': 'int', 'value': 10},
             {'name': 'Sub-param 2', 'type': 'float', 'value': 1.2e6},

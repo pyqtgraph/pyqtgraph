@@ -1,4 +1,6 @@
 from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.functions import siScale
+
 import numpy as np
 
 __all__ = ['SliderWidget']
@@ -18,6 +20,7 @@ class SliderWidget(QtGui.QWidget):
         self.precission = 0
         self.step = 100
         self.valueLen=2
+        self._suffix = None
  
         self.label = QtGui.QLabel()
         self.label.setFont(QtGui.QFont('Courier'))
@@ -58,6 +61,10 @@ class SliderWidget(QtGui.QWidget):
         self._calcPrecission()
         self._updateLabel(self.slider.value())
 
+    def setSuffix(self, suffix):
+        self._suffix = suffix
+        self._updateLabel(self.slider.value())
+
     def _calcPrecission(self):
         #number of floating points:
         self.precission = int(round( np.log10( (self.step / (self.mx-self.mn) )) ) )
@@ -74,10 +81,16 @@ class SliderWidget(QtGui.QWidget):
         if self.mn != None:
             val /= 99.0 #val->0...1
             val = val *(self.mx-self.mn) + self.mn  
-        self._value = round(val, self.precission)
-        self.sigValueChanged.emit(self._value)
-        #to have a fixed width of the label: format the value to a given length:
-        self.label.setText(format(self._value, '%s.%sf' %(self.valueLen,self.precission)))
+        self._value = val = round(val, self.precission)
+        self.sigValueChanged.emit(val)
+
+        if self._suffix:
+            scale,pre = siScale(val)
+            txt = '%s %s%s' %(val*scale,pre,self._suffix)
+        else:
+            #to have a fixed width of the label: format the value to a given length:
+            txt = format(val, '%s.%sf' %(self.valueLen,self.precission))            
+        self.label.setText(txt)
 
 
 
@@ -87,6 +100,7 @@ if __name__ == '__main__':
     s = SliderWidget()
     s.setRange(2,7)
     s.setValue(4.6)
+    s.setSuffix('m')
     s.show()
     sys.exit(app.exec_())
     
