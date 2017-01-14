@@ -22,9 +22,17 @@ def testSolve3D():
     assert_array_almost_equal(tr[:3], tr2[:3])
 
 
-def test_interpolateArray():
+def test_interpolateArray_order0():
+    check_interpolateArray(order=0)
+
+
+def test_interpolateArray_order1():
+    check_interpolateArray(order=1)
+
+
+def check_interpolateArray(order):
     def interpolateArray(data, x):
-        result = pg.interpolateArray(data, x)
+        result = pg.interpolateArray(data, x, order=order)
         assert result.shape == x.shape[:-1] + data.shape[x.shape[-1]:]
         return result
     
@@ -48,17 +56,17 @@ def test_interpolateArray():
     with pytest.raises(TypeError):
         interpolateArray(data, np.ones((5, 5, 3,)))
     
-    
     x = np.array([[  0.3,   0.6],
                   [  1. ,   1. ],
-                  [  0.5,   1. ],
-                  [  0.5,   2.5],
+                  [  0.501,   1. ],   # NOTE: testing at exactly 0.5 can yield different results from map_coordinates
+                  [  0.501,   2.501],  # due to differences in rounding
                   [ 10. ,  10. ]])
     
     result = interpolateArray(data, x)
-    #import scipy.ndimage
-    #spresult = scipy.ndimage.map_coordinates(data, x.T, order=1)
-    spresult = np.array([  5.92,  20.  ,  11.  ,   0.  ,   0.  ])  # generated with the above line
+    # make sure results match ndimage.map_coordinates
+    import scipy.ndimage
+    spresult = scipy.ndimage.map_coordinates(data, x.T, order=order)
+    #spresult = np.array([  5.92,  20.  ,  11.  ,   0.  ,   0.  ])  # generated with the above line
     
     assert_array_almost_equal(result, spresult)
     
@@ -74,26 +82,15 @@ def test_interpolateArray():
     
     
     # test mapping 2D array of locations
-    x = np.array([[[0.5, 0.5], [0.5, 1.0], [0.5, 1.5]],
-                  [[1.5, 0.5], [1.5, 1.0], [1.5, 1.5]]])
+    x = np.array([[[0.501, 0.501], [0.501, 1.0], [0.501, 1.501]],
+                  [[1.501, 0.501], [1.501, 1.0], [1.501, 1.501]]])
     
     r1 = interpolateArray(data, x)
-    #r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=1)
-    r2 = np.array([[   8.25,   11.  ,   16.5 ],  # generated with the above line
-                   [  82.5 ,  110.  ,  165.  ]])
+    r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=order)
+    #r2 = np.array([[   8.25,   11.  ,   16.5 ],  # generated with the above line
+                   #[  82.5 ,  110.  ,  165.  ]])
 
     assert_array_almost_equal(r1, r2)
-    
-    
-    # test interpolate where data.ndim > x.shape[1]
-    
-    data = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]) # 2x2x3
-    x = np.array([[1, 1], [0, 0.5], [5, 5]])
-    
-    r1 = interpolateArray(data, x)
-    assert np.all(r1[0] == data[1, 1])
-    assert np.all(r1[1] == 0.5 * (data[0, 0] + data[0, 1]))
-    assert np.all(r1[2] == 0)
     
     
 def test_subArray():

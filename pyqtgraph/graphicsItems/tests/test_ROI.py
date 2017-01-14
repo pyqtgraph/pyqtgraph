@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtTest
-from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick, TransposedImageItem
+from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick, TransposedImageItem, resizeWindow
 
 
 app = pg.mkQApp()
@@ -43,8 +43,7 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     #win = pg.GraphicsLayoutWidget()
     win = pg.GraphicsView()
     win.show()
-    win.resize(200, 400)
-    
+    resizeWindow(win, 200, 400)
     # Don't use Qt's layouts for testing--these generate unpredictable results.
     #vb1 = win.addViewBox()
     #win.nextRow()
@@ -97,7 +96,6 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     vb2.enableAutoRange(True, True)
     
     app.processEvents()
-    
     assertImageApproved(win, name+'/roi_getarrayregion', 'Simple ROI region selection.')
 
     with pytest.raises(TypeError):
@@ -159,7 +157,7 @@ def test_PolyLineROI():
     #plt = pg.plot()
     plt = pg.GraphicsView()
     plt.show()
-    plt.resize(200, 200)
+    resizeWindow(plt, 200, 200)
     vb = pg.ViewBox()
     plt.scene().addItem(vb)
     vb.resize(200, 200)
