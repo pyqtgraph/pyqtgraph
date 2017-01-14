@@ -127,7 +127,7 @@
   <customwidget>
    <class>CanvasCombo</class>
    <extends>QComboBox</extends>
-   <header>CanvasManager</header>
+   <header>.CanvasManager</header>
   </customwidget>
  </customwidgets>
  <resources/>
