@@ -1,5 +1,4 @@
-
-
+from .. import getConfigOption
 from .GraphicsObject import *
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
@@ -9,12 +8,10 @@ class IsocurveItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     
-    Item displaying an isocurve of a 2D array.To align this item correctly with an 
-    ImageItem,call isocurve.setParentItem(image)
+    Item displaying an isocurve of a 2D array. To align this item correctly with an 
+    ImageItem, call ``isocurve.setParentItem(image)``.
     """
-    
-
-    def __init__(self, data=None, level=0, pen='w'):
+    def __init__(self, data=None, level=0, pen='w', axisOrder=None):
         """
         Create a new isocurve item. 
         
@@ -25,6 +22,9 @@ class IsocurveItem(GraphicsObject):
         level           The cutoff value at which to draw the isocurve.
         pen             The color of the curve item. Can be anything valid for
                         :func:`mkPen <pyqtgraph.mkPen>`
+        axisOrder       May be either 'row-major' or 'col-major'. By default this uses
+                        the ``imageAxisOrder``
+                        :ref:`global configuration option <apiref_config>`.
         ==============  ===============================================================
         """
         GraphicsObject.__init__(self)
@@ -32,9 +32,9 @@ class IsocurveItem(GraphicsObject):
         self.level = level
         self.data = None
         self.path = None
+        self.axisOrder = getConfigOption('imageAxisOrder') if axisOrder is None else axisOrder
         self.setPen(pen)
         self.setData(data, level)
-        
     
     def setData(self, data, level=None):
         """
@@ -54,7 +54,6 @@ class IsocurveItem(GraphicsObject):
         self.path = None
         self.prepareGeometryChange()
         self.update()
-        
 
     def setLevel(self, level):
         """Set the level at which the isocurve is drawn."""
@@ -62,7 +61,6 @@ class IsocurveItem(GraphicsObject):
         self.path = None
         self.prepareGeometryChange()
         self.update()
-    
 
     def setPen(self, *args, **kwargs):
         """Set the pen used to draw the isocurve. Arguments can be any that are valid 
@@ -75,18 +73,8 @@ class IsocurveItem(GraphicsObject):
         for :func:`mkBrush <pyqtgraph.mkBrush>`"""
         self.brush = fn.mkBrush(*args, **kwargs)
         self.update()
-
         
     def updateLines(self, data, level):
-        ##print "data:", data
-        ##print "level", level
-        #lines = fn.isocurve(data, level)
-        ##print len(lines)
-        #self.path = QtGui.QPainterPath()
-        #for line in lines:
-            #self.path.moveTo(*line[0])
-            #self.path.lineTo(*line[1])
-        #self.update()
         self.setData(data, level)
 
     def boundingRect(self):
@@ -100,7 +88,13 @@ class IsocurveItem(GraphicsObject):
         if self.data is None:
             self.path = None
             return
-        lines = fn.isocurve(self.data, self.level, connected=True, extendToEdge=True)
+        
+        if self.axisOrder == 'row-major':
+            data = self.data.T
+        else:
+            data = self.data
+        
+        lines = fn.isocurve(data, self.level, connected=True, extendToEdge=True)
         self.path = QtGui.QPainterPath()
         for line in lines:
             self.path.moveTo(*line[0])

@@ -47,4 +47,4 @@ class GarbageCollector(object):
     def debug_cycles(self):
         gc.collect()
         for obj in gc.garbage:
-            print (obj, repr(obj), type(obj))
+            print(obj, repr(obj), type(obj))

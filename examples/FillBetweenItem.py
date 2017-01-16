@@ -8,6 +8,8 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
+#FIXME: When running on Qt5, not as perfect as on Qt4
+
 win = pg.plot()
 win.setWindowTitle('pyqtgraph example: FillBetweenItem')
 win.setXRange(-10, 10)

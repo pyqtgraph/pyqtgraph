@@ -1,6 +1,8 @@
+import numpy as np
 from ..Qt import QtGui
 from .. import functions as fn
-import numpy as np
+from ..python2_3 import xrange
+
 
 class MeshData(object):
     """

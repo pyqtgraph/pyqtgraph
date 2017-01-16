@@ -10,14 +10,15 @@ as it can be converted to/from a string using repr and eval.
 """
 
 import re, os, sys
+import numpy
 from .pgcollections import OrderedDict
-GLOBAL_PATH = None # so not thread safe.
 from . import units
-from .python2_3 import asUnicode
+from .python2_3 import asUnicode, basestring
 from .Qt import QtCore
 from .Point import Point
 from .colormap import ColorMap
-import numpy
+GLOBAL_PATH = None # so not thread safe.
+
 
 class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):

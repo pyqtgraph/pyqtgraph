@@ -1,1 +1,1 @@
-from relativity import *
+from .relativity import *

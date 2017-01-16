@@ -1,17 +1,17 @@
+import weakref
+import numpy as np
 from ..Qt import QtGui, QtCore
 from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 from ..widgets.SpinBox import SpinBox
-import weakref
 from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
+from ..python2_3 import cmp
 
-import numpy as np
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
-
 
 Gradients = OrderedDict([
     ('thermal', {'ticks': [(0.3333, (185, 0, 0, 255)), (0.6666, (255, 220, 0, 255)), (1, (255, 255, 255, 255)), (0, (0, 0, 0, 255))], 'mode': 'rgb'}),
@@ -24,7 +24,13 @@ Gradients = OrderedDict([
     ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
 ])
 
-
+def addGradientListToDocstring():
+    """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
+    def dec(fn):
+        if fn.__doc__ is not None:
+            fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
+        return fn
+    return dec
 
 
 
@@ -117,16 +123,20 @@ class TickSliderItem(GraphicsWidget):
         self.resetTransform()
         ort = orientation
         if ort == 'top':
-            self.scale(1, -1)
-            self.translate(0, -self.height())
+            transform = QtGui.QTransform.fromScale(1, -1)
+            transform.translate(0, -self.height())
+            self.setTransform(transform)
         elif ort == 'left':
-            self.rotate(270)
-            self.scale(1, -1)
-            self.translate(-self.height(), -self.maxDim)
+            transform = QtGui.QTransform()
+            transform.rotate(270)
+            transform.scale(1, -1)
+            transform.translate(-self.height(), -self.maxDim)
+            self.setTransform(transform)
         elif ort == 'right':
-            self.rotate(270)
-            self.translate(-self.height(), 0)
-            #self.setPos(0, -self.height())
+            transform = QtGui.QTransform()
+            transform.rotate(270)
+            transform.translate(-self.height(), 0)
+            self.setTransform(transform)
         elif ort != 'bottom':
             raise Exception("%s is not a valid orientation. Options are 'left', 'right', 'top', and 'bottom'" %str(ort))
         
@@ -238,7 +248,7 @@ class TickSliderItem(GraphicsWidget):
             self.addTick(pos.x()/self.length)
         elif ev.button() == QtCore.Qt.RightButton:
             self.showMenu(ev)
-        
+
         #if  ev.button() == QtCore.Qt.RightButton:
             #if self.moving:
                 #ev.accept()
@@ -468,11 +478,12 @@ class GradientEditorItem(TickSliderItem):
         act = self.sender()
         self.loadPreset(act.name)
         
+    @addGradientListToDocstring()
     def loadPreset(self, name):
         """
-        Load a predefined gradient. 
-    
-        """ ## TODO: provide image with names of defined gradients
+        Load a predefined gradient. Currently defined gradients are: 
+        """## TODO: provide image with names of defined gradients
+        
         #global Gradients
         self.restoreState(Gradients[name])
     
@@ -783,11 +794,15 @@ class GradientEditorItem(TickSliderItem):
         self.updateGradient()
         self.sigGradientChangeFinished.emit(self)
 
-        
-class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsObject instead results in 
+
+class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsObject instead results in
                                     ## activating this bug: https://bugreports.qt-project.org/browse/PYSIDE-86
     ## private class
-    
+
+    # When making Tick a subclass of QtGui.QGraphicsObject as origin,
+    # ..GraphicsScene.items(self, *args) will get Tick object as a
+    # class of QtGui.QMultimediaWidgets.QGraphicsVideoItem in python2.7-PyQt5(5.4.0)
+
     sigMoving = QtCore.Signal(object)
     sigMoved = QtCore.Signal(object)
     
@@ -805,7 +820,7 @@ class Tick(QtGui.QGraphicsObject):  ## NOTE: Making this a subclass of GraphicsO
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
         self.pg.closeSubpath()
         
-        QtGui.QGraphicsObject.__init__(self)
+        QtGui.QGraphicsWidget.__init__(self)
         self.setPos(pos[0], pos[1])
         if self.movable:
             self.setZValue(1)

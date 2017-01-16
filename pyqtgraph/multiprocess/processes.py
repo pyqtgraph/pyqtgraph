@@ -156,14 +156,14 @@ class Process(RemoteEventHandler):
                 time.sleep(0.05)
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
 
-    def debugMsg(self, msg):
+    def debugMsg(self, msg, *args):
         if hasattr(self, '_stdoutForwarder'):
             ## Lock output from subprocess to make sure we do not get line collisions
             with self._stdoutForwarder.lock:
                 with self._stderrForwarder.lock:
-                    RemoteEventHandler.debugMsg(self, msg)
+                    RemoteEventHandler.debugMsg(self, msg, *args)
         else:
-            RemoteEventHandler.debugMsg(self, msg)
+            RemoteEventHandler.debugMsg(self, msg, *args)
 
         
 def startEventLoop(name, port, authkey, ppid, debug=False):
@@ -267,10 +267,11 @@ class ForkedProcess(RemoteEventHandler):
             sys.excepthook = excepthook 
             
             ## Make it harder to access QApplication instance
-            if 'PyQt4.QtGui' in sys.modules:
-                sys.modules['PyQt4.QtGui'].QApplication = None
-            sys.modules.pop('PyQt4.QtGui', None)
-            sys.modules.pop('PyQt4.QtCore', None)
+            for qtlib in ('PyQt4', 'PySide', 'PyQt5'):
+                if qtlib in sys.modules:
+                    sys.modules[qtlib+'.QtGui'].QApplication = None
+                    sys.modules.pop(qtlib+'.QtGui', None)
+                    sys.modules.pop(qtlib+'.QtCore', None)
             
             ## sabotage atexit callbacks
             atexit._exithandlers = []
@@ -420,7 +421,6 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     if debug:
         cprint.cout(debug, '[%d] connected; starting remote proxy.\n' % os.getpid(), -1)
     from ..Qt import QtGui, QtCore
-    #from PyQt4 import QtGui, QtCore
     app = QtGui.QApplication.instance()
     #print app
     if app is None:
@@ -429,7 +429,6 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
                                               ## until it is explicitly closed by the parent process.
     
     global HANDLER
-    #ppid = 0 if not hasattr(os, 'getppid') else os.getppid()
     HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
     app.exec_()

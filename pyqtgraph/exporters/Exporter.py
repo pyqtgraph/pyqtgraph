@@ -1,6 +1,6 @@
 from ..widgets.FileDialog import FileDialog
 from ..Qt import QtGui, QtCore, QtSvg
-from ..python2_3 import asUnicode
+from ..python2_3 import asUnicode, basestring
 from ..GraphicsScene import GraphicsScene
 import os, re
 LastExportDirectory = None

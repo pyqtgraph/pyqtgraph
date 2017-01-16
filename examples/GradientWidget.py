@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 w = QtGui.QMainWindow()
 w.show()
 w.setWindowTitle('pyqtgraph example: GradientWidget')
-w.resize(400,400)
+w.setGeometry(10, 50, 400, 400)
 cw = QtGui.QWidget()
 w.setCentralWidget(cw)
 

@@ -95,28 +95,20 @@ class WidgetParameterItem(ParameterItem):
         """
         opts = self.param.opts
         t = opts['type']
-        if t == 'int':
+        if t in ('int', 'float'):
             defs = {
-                'value': 0, 'min': None, 'max': None, 'int': True, 
-                'step': 1.0, 'minStep': 1.0, 'dec': False, 
-                'siPrefix': False, 'suffix': ''
-            } 
-            defs.update(opts)
-            if 'limits' in opts:
-                defs['bounds'] = opts['limits']
-            w = SpinBox()
-            w.setOpts(**defs)
-            w.sigChanged = w.sigValueChanged
-            w.sigChanging = w.sigValueChanging
-        elif t == 'float':
-            defs = {
-                'value': 0, 'min': None, 'max': None, 
+                'value': 0, 'min': None, 'max': None,
                 'step': 1.0, 'dec': False, 
-                'siPrefix': False, 'suffix': ''
+                'siPrefix': False, 'suffix': '', 'decimals': 3,
             }
-            defs.update(opts)
+            if t == 'int':
+                defs['int'] = True
+                defs['minStep'] = 1.0
+            for k in defs:
+                if k in opts:
+                    defs[k] = opts[k]
             if 'limits' in opts:
-                defs['bounds'] = opts['limits']
+                defs['min'], defs['max'] = opts['limits']
             w = SpinBox()
             w.setOpts(**defs)
             w.sigChanged = w.sigValueChanged
@@ -130,6 +122,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
+            w.setStyleSheet('border: 0px')
             w.sigChanged = w.editingFinished
             w.value = lambda: asUnicode(w.text())
             w.setValue = lambda v: w.setText(asUnicode(v))
@@ -287,12 +280,15 @@ class WidgetParameterItem(ParameterItem):
         
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
+            # send only options supported by spinbox
+            sbOpts = {}
             if 'units' in opts and 'suffix' not in opts:
-                opts['suffix'] = opts['units']
-            self.widget.setOpts(**opts)
+                sbOpts['suffix'] = opts['units']
+            for k,v in opts.items():
+                if k in self.widget.opts:
+                    sbOpts[k] = v
+            self.widget.setOpts(**sbOpts)
             self.updateDisplayLabel()
-        
-        
         
             
 class EventProxy(QtCore.QObject):
@@ -303,8 +299,6 @@ class EventProxy(QtCore.QObject):
         
     def eventFilter(self, obj, ev):
         return self.callback(obj, ev)
-
-        
 
 
 class SimpleParameter(Parameter):

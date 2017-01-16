@@ -10,10 +10,11 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import numpy as np
 import types, copy, threading, os, re
 import pickle
 from functools import reduce
+import numpy as np
+from ..python2_3 import basestring
 #import traceback
 
 ## By default, the library will use HDF5 when writing files.
@@ -151,7 +152,7 @@ class MetaArray(object):
             if self._data is None:
                 return
             else:
-                self._info = [{} for i in range(self.ndim)]
+                self._info = [{} for i in range(self.ndim + 1)]
                 return
         else:
             try:
@@ -174,13 +175,16 @@ class MetaArray(object):
                     elif type(info[i]['values']) is not np.ndarray:
                         raise Exception("Axis values must be specified as list or ndarray")
                     if info[i]['values'].ndim != 1 or info[i]['values'].shape[0] != self.shape[i]:
-                        raise Exception("Values array for axis %d has incorrect shape. (given %s, but should be %s)" % (i, str(info[i]['values'].shape), str((self.shape[i],))))
+                        raise Exception("Values array for axis %d has incorrect shape. (given %s, but should be %s)" %
+                                        (i, str(info[i]['values'].shape), str((self.shape[i],))))
                 if i < self.ndim and 'cols' in info[i]:
                     if not isinstance(info[i]['cols'], list):
                         info[i]['cols'] = list(info[i]['cols'])
                     if len(info[i]['cols']) != self.shape[i]:
-                        raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' % (i, len(info[i]['cols']), self.shape[i]))
-   
+                        raise Exception('Length of column list for axis %d does not match data. (given %d, but should be %d)' %
+                                        (i, len(info[i]['cols']), self.shape[i]))
+            self._info = info
+
     def implements(self, name=None):
         ## Rather than isinstance(obj, MetaArray) use object.implements('MetaArray')
         if name is None:
@@ -643,14 +647,21 @@ class MetaArray(object):
             if len(axs) > maxl:
                 maxl = len(axs)
         
-        for i in range(min(self.ndim, len(self._info)-1)):
+        for i in range(min(self.ndim, len(self._info) - 1)):
             ax = self._info[i]
             axs = titles[i]
-            axs += '%s[%d] :' % (' ' * (maxl + 2 - len(axs)), self.shape[i])
+            axs += '%s[%d] :' % (' ' * (maxl - len(axs) + 5 - len(str(self.shape[i]))), self.shape[i])
             if 'values' in ax:
-                v0 = ax['values'][0]
-                v1 = ax['values'][-1]
-                axs += " values: [%g ... %g] (step %g)" % (v0, v1, (v1-v0)/(self.shape[i]-1))
+                if self.shape[i] > 0:
+                    v0 = ax['values'][0]
+                    axs += "  values: [%g" % (v0)
+                    if self.shape[i] > 1:
+                        v1 = ax['values'][-1]
+                        axs += " ... %g] (step %g)" % (v1, (v1 - v0) / (self.shape[i] - 1))
+                    else:
+                        axs += "]"
+                else:
+                    axs += "  values: []"
             if 'cols' in ax:
                 axs += " columns: "
                 colstrs = []

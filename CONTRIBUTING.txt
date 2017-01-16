@@ -3,12 +3,10 @@ Contributions to pyqtgraph are welcome!
 Please use the following guidelines when preparing changes:
 
 * The preferred method for submitting changes is by github pull request
-  against the "develop" branch. If this is inconvenient, don't hesitate to 
-  submit by other means.
+  against the "develop" branch. 
 
 * Pull requests should include only a focused and related set of changes. 
-  Mixed features and unrelated changes (such as .gitignore) will usually be
-  rejected.
+  Mixed features and unrelated changes may be rejected.
 
 * For major changes, it is recommended to discuss your plans on the mailing 
   list or in a github issue before putting in too much effort.
@@ -49,3 +47,12 @@ Please use the following guidelines when preparing changes:
 
         QObject subclasses that implement new signals should also describe 
         these in a similar table.
+
+* Setting up a test environment.
+
+    Tests for a module should ideally cover all code in that module,
+    i.e., statement coverage should be at 100%.
+
+    To measure the test coverage, install py.test, pytest-cov and pytest-xdist.
+    Then run 'py.test --cov -n 4' to run the test suite with coverage on 4 cores.
+

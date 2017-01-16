@@ -351,40 +351,40 @@ def gitCommit(name):
 def getGitVersion(tagPrefix):
     """Return a version string with information about this git checkout.
     If the checkout is an unmodified, tagged commit, then return the tag version.
-    If this is not a tagged commit, return version-branch_name-commit_id.
+    If this is not a tagged commit, return the output of ``git describe --tags``.
     If this checkout has been modified, append "+" to the version.
     """
     path = os.getcwd()
     if not os.path.isdir(os.path.join(path, '.git')):
         return None
         
-    # Find last tag matching "tagPrefix.*"
-    tagNames = check_output(['git', 'tag'], universal_newlines=True).strip().split('\n')
-    while True:
-        if len(tagNames) == 0:
-            raise Exception("Could not determine last tagged version.")
-        lastTagName = tagNames.pop()
-        if re.match(tagPrefix+r'\d+\.\d+.*', lastTagName):
-            break
-    gitVersion = lastTagName.replace(tagPrefix, '')
+    v = check_output(['git', 'describe', '--tags', '--dirty', '--match=%s*'%tagPrefix]).strip().decode('utf-8')
     
-    # is this commit an unchanged checkout of the last tagged version? 
-    lastTag = gitCommit(lastTagName)
-    head = gitCommit('HEAD')
-    if head != lastTag:
-        branch = getGitBranch()
-        gitVersion = gitVersion + "-%s-%s" % (branch, head[:10])
+    # chop off prefix
+    assert v.startswith(tagPrefix)
+    v = v[len(tagPrefix):]
+
+    # split up version parts
+    parts = v.split('-')
     
-    # any uncommitted modifications?
+    # has working tree been modified?
     modified = False
-    status = check_output(['git', 'status', '--porcelain'], universal_newlines=True).strip().split('\n')
-    for line in status:
-        if line != '' and line[:2] != '??':
-            modified = True
-            break        
-                
+    if parts[-1] == 'dirty':
+        modified = True
+        parts = parts[:-1]
+        
+    # have commits been added on top of last tagged version?
+    # (git describe adds -NNN-gXXXXXXX if this is the case)
+    local = None
+    if len(parts) > 2 and re.match(r'\d+', parts[-2]) and re.match(r'g[0-9a-f]{7}', parts[-1]):
+        local = parts[-1]
+        parts = parts[:-2]
+        
+    gitVersion = '-'.join(parts)
+    if local is not None:
+        gitVersion += '+' + local
     if modified:
-        gitVersion = gitVersion + '+'
+        gitVersion += 'm'
 
     return gitVersion
 
@@ -408,11 +408,11 @@ def getVersionStrings(pkg):
     """
     
     ## Determine current version string from __init__.py
-    initVersion = getInitVersion(pkgroot='pyqtgraph')
+    initVersion = getInitVersion(pkgroot=pkg)
 
     ## If this is a git checkout, try to generate a more descriptive version string
     try:
-        gitVersion = getGitVersion(tagPrefix='pyqtgraph-')
+        gitVersion = getGitVersion(tagPrefix=pkg+'-')
     except:
         gitVersion = None
         sys.stderr.write("This appears to be a git checkout, but an error occurred "

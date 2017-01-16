@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/pyqtgraph/pyqtgraph.svg?branch=develop)](https://travis-ci.org/pyqtgraph/pyqtgraph)
+[![codecov.io](http://codecov.io/github/pyqtgraph/pyqtgraph/coverage.svg?branch=develop)](http://codecov.io/github/pyqtgraph/pyqtgraph?branch=develop)
+
 PyQtGraph
 =========
 
@@ -30,13 +33,20 @@ Contributors
   * Mikhail Terekhov
   * Pietro Zambelli
   * Stefan Holzmann
+  * Nicholas TJ
+  * John David Reaver
+  * David Kaplan
+  * Martin Fitzpatrick
+  * Daniel Lidstrom
+  * Eric Dill
+  * Vincent LeSaux
 
 Requirements
 ------------
 
-  * PyQt 4.7+ or PySide
+  * PyQt 4.7+, PySide, or PyQt5
   * python 2.6, 2.7, or 3.x
-  * NumPy 
+  * NumPy
   * For 3D graphics: pyopengl and qt-opengl
   * Known to run on Windows, Linux, and Mac.
 

@@ -40,10 +40,6 @@ def sortList(l, cmpFunc):
         l.sort(key=cmpToKey(cmpFunc))
 
 if sys.version_info[0] == 3:
-    import builtins
-    builtins.basestring = str
-    #builtins.asUnicode = asUnicode
-    #builtins.sortList = sortList
     basestring = str
     def cmp(a,b):
         if a>b:
@@ -52,9 +48,11 @@ if sys.version_info[0] == 3:
             return -1
         else:
             return 0
-    builtins.cmp = cmp
-    builtins.xrange = range
-#else:    ## don't use __builtin__  -- this confuses things like pyshell and ActiveState's lazy import recipe
-    #import __builtin__
-    #__builtin__.asUnicode = asUnicode
-    #__builtin__.sortList = sortList
+    xrange = range
+else:
+    import __builtin__
+    basestring = __builtin__.basestring
+    cmp = __builtin__.cmp
+    xrange = __builtin__.xrange
+    
+    

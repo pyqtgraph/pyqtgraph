@@ -4,15 +4,17 @@ if __name__ == '__main__':
     md = os.path.dirname(os.path.abspath(__file__))
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..graphicsItems.ROI import ROI
 from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.GridItem import GridItem
 
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from .CanvasTemplate_pyside import *
-else:
+elif QT_LIB == 'PyQt4':
     from .CanvasTemplate_pyqt import *
+elif QT_LIB == 'PyQt5':
+    from .CanvasTemplate_pyqt5 import *
     
 import numpy as np
 from .. import debug
@@ -378,7 +380,7 @@ class Canvas(QtGui.QWidget):
         z = citem.zValue()
         if z is None:
             zvals = [i.zValue() for i in siblings]
-            if parent == self.itemList.invisibleRootItem():
+            if parent is self.itemList.invisibleRootItem():
                 if len(zvals) == 0:
                     z = 0
                 else:

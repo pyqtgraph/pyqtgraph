@@ -45,41 +45,6 @@ class SVGExporter(Exporter):
         if toBytes is False and copy is False and fileName is None:
             self.fileSaveDialog(filter="Scalable Vector Graphics (*.svg)")
             return
-        #self.svg = QtSvg.QSvgGenerator()
-        #self.svg.setFileName(fileName)
-        #dpi = QtGui.QDesktopWidget().physicalDpiX()
-        ### not really sure why this works, but it seems to be important:
-        #self.svg.setSize(QtCore.QSize(self.params['width']*dpi/90., self.params['height']*dpi/90.))
-        #self.svg.setResolution(dpi)
-        ##self.svg.setViewBox()
-        #targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
-        #sourceRect = self.getSourceRect()
-        
-        #painter = QtGui.QPainter(self.svg)
-        #try:
-            #self.setExportMode(True)
-            #self.render(painter, QtCore.QRectF(targetRect), sourceRect)
-        #finally:
-            #self.setExportMode(False)
-        #painter.end()
-
-        ## Workaround to set pen widths correctly
-        #data = open(fileName).readlines()
-        #for i in range(len(data)):
-            #line = data[i]
-            #m = re.match(r'(<g .*)stroke-width="1"(.*transform="matrix\(([^\)]+)\)".*)', line)
-            #if m is not None:
-                ##print "Matched group:", line
-                #g = m.groups()
-                #matrix = list(map(float, g[2].split(',')))
-                ##print "matrix:", matrix
-                #scale = max(abs(matrix[0]), abs(matrix[3]))
-                #if scale == 0 or scale == 1.0:
-                    #continue
-                #data[i] = g[0] + ' stroke-width="%0.2g" ' % (1.0/scale) + g[1] + '\n'
-                ##print "old line:", line
-                ##print "new line:", data[i]
-        #open(fileName, 'w').write(''.join(data))
         
         ## Qt's SVG generator is not complete. (notably, it lacks clipping)
         ## Instead, we will use Qt to generate SVG for each item independently,

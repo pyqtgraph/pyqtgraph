@@ -1,14 +1,17 @@
-
-from ..Qt import QtCore, QtGui, USE_PYSIDE
 import sys, re, os, time, traceback, subprocess
+import pickle
+
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from ..python2_3 import basestring
+from .. import exceptionHandling as exceptionHandling
+from .. import getConfigOption
 if USE_PYSIDE:
     from . import template_pyside as template
+elif USE_PYQT5:
+    from . import template_pyqt5 as template
 else:
     from . import template_pyqt as template
-    
-from .. import exceptionHandling as exceptionHandling
-import pickle
-from .. import getConfigOption
+
 
 class ConsoleWidget(QtGui.QWidget):
     """
@@ -45,6 +48,7 @@ class ConsoleWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         if namespace is None:
             namespace = {}
+        namespace['__console__'] = self
         self.localNamespace = namespace
         self.editor = editor
         self.multiline = None
@@ -131,7 +135,7 @@ class ConsoleWidget(QtGui.QWidget):
         if frame is not None and self.ui.runSelectedFrameCheck.isChecked():
             return self.currentFrame().tb_frame.f_globals
         else:
-            return globals()
+            return self.localNamespace
         
     def locals(self):
         frame = self.currentFrame()

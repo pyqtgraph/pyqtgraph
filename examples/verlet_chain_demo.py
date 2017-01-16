@@ -1,26 +1,38 @@
 """
 Mechanical simulation of a chain using verlet integration.
 
+Use the mouse to interact with one of the chains.
 
+By default, this uses a slow, pure-python integrator to solve the chain link
+positions. Unix users may compile a small math library to speed this up by 
+running the `examples/verlet_chain/make` script.
 
 """
+
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-from verlet_chain import ChainSim
+import verlet_chain
 
-sim = ChainSim()
+sim = verlet_chain.ChainSim()
 
-
-chlen1 = 80
-chlen2 = 60
+if verlet_chain.relax.COMPILED:
+    # Use more complex chain if compiled mad library is available.
+    chlen1 = 80
+    chlen2 = 60
+    linklen = 1
+else:
+    chlen1 = 10
+    chlen2 = 8
+    linklen = 8
+    
 npts = chlen1 + chlen2
 
 sim.mass = np.ones(npts)
-sim.mass[chlen1-15] = 100
+sim.mass[int(chlen1 * 0.8)] = 100
 sim.mass[chlen1-1] = 500
 sim.mass[npts-1] = 200
 
@@ -31,8 +43,10 @@ sim.fixed[chlen1] = True
 sim.pos = np.empty((npts, 2))
 sim.pos[:chlen1, 0] = 0
 sim.pos[chlen1:, 0] = 10
-sim.pos[:chlen1, 1] = np.arange(chlen1)
-sim.pos[chlen1:, 1] = np.arange(chlen2)
+sim.pos[:chlen1, 1] = np.arange(chlen1) * linklen
+sim.pos[chlen1:, 1] = np.arange(chlen2) * linklen
+# to prevent miraculous balancing acts:
+sim.pos += np.random.normal(size=sim.pos.shape, scale=1e-3)
 
 links1 = [(j, i+j+1) for i in range(chlen1) for j in range(chlen1-i-1)]
 links2 = [(j, i+j+1) for i in range(chlen2) for j in range(chlen2-i-1)]
@@ -55,7 +69,8 @@ sim.push = np.concatenate([push1, push2, np.array([True], dtype=bool)])
 sim.pull = np.ones(sim.links.shape[0], dtype=bool)
 sim.pull[-1] = False
 
-mousepos = sim.pos[0]
+# move chain initially just to generate some motion if the mouse is not over the window
+mousepos = np.array([30, 20])
 
 
 def display():

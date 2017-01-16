@@ -11,6 +11,8 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+app = QtGui.QApplication([])
+
 # win.setWindowTitle('pyqtgraph example: ____')
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 from ...Qt import QtCore, QtGui
 from ..Node import Node
 from . import functions
 from ... import functions as pgfn
 from .common import *
-import numpy as np
-
+from ...python2_3 import xrange
 from ... import PolyLineROI
 from ... import Point
 from ... import metaarray as metaarray
@@ -164,8 +164,15 @@ class Gaussian(CtrlNode):
             import scipy.ndimage
         except ImportError:
             raise Exception("GaussianFilter node requires the package scipy.ndimage.")
-        return pgfn.gaussianFilter(data, self.ctrls['sigma'].value())
 
+        if hasattr(data, 'implements') and data.implements('MetaArray'):
+            info = data.infoCopy()
+            filt = pgfn.gaussianFilter(data.asarray(), self.ctrls['sigma'].value())
+            if 'values' in info[0]:
+                info[0]['values'] = info[0]['values'][:filt.shape[0]]
+            return metaarray.MetaArray(filt, info=info)
+        else:
+            return pgfn.gaussianFilter(data, self.ctrls['sigma'].value())
 
 class Derivative(CtrlNode):
     """Returns the pointwise derivative of the input"""

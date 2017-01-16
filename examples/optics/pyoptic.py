@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
-#from pyqtgraph.canvas import Canvas, CanvasItem
+from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import csv, gzip, os
 from pyqtgraph import Point
@@ -90,7 +89,7 @@ def wlPen(wl):
     return pen
 
 
-class ParamObj:
+class ParamObj(object):
     # Just a helper for tracking parameters and responding to changes
     def __init__(self):
         self.__params = {}
@@ -110,7 +109,8 @@ class ParamObj:
         pass
 
     def __getitem__(self, item):
-        return self.getParam(item)
+        # bug in pyside 1.2.2 causes getitem to be called inside QGraphicsObject.parentItem:
+        return self.getParam(item)  # PySide bug: https://bugreports.qt.io/browse/PYSIDE-441
 
     def getParam(self, param):
         return self.__params[param]

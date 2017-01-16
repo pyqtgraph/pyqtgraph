@@ -91,6 +91,8 @@ Mesh Generation Functions
 Miscellaneous Functions
 -----------------------
 
+.. autofunction:: pyqtgraph.eq
+
 .. autofunction:: pyqtgraph.arrayToQPath
 
 .. autofunction:: pyqtgraph.pseudoScatter
