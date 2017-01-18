@@ -679,8 +679,10 @@ class PlotDataItem(GraphicsObject):
             x2 = np.linspace(x[0], x[-1], len(x))
             y = np.interp(x2, x, y)
             x = x2
-        f = np.fft.rfft(y) / y.size
-        x = np.fft.rfftfreq(y.size)
+        n = y.size
+        f = np.fft.rfft(y) / n
+        d = (x[-1] - x[0]) / (n - 1)
+        x = np.fft.rfftfreq(n, d)
         y = np.abs(f)
         return x, y
     
