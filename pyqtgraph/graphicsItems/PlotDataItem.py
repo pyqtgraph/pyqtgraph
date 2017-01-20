@@ -681,7 +681,7 @@ class PlotDataItem(GraphicsObject):
             x = x2
         n = y.size
         f = np.fft.rfft(y) / n
-        d = (x[-1] - x[0]) / (n - 1)
+        d = float(x[-1]-x[0]) / (len(x)-1)
         x = np.fft.rfftfreq(n, d)
         y = np.abs(f)
         return x, y
