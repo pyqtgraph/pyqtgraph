@@ -374,7 +374,7 @@ class Node(QtCore.QObject):
         pos = self.graphicsItem().pos()
         state = {'pos': (pos.x(), pos.y()), 'bypass': self.isBypassed()}
         termsEditable = self._allowAddInput | self._allowAddOutput
-        for term in self._inputs.values() + self._outputs.values():
+        for term in list(self._inputs.values()) + list(self._outputs.values()):
             termsEditable |= term._renamable | term._removable | term._multiable
         if termsEditable:
             state['terminals'] = self.saveTerminals()
