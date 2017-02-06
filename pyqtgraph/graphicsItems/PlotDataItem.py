@@ -500,27 +500,10 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
         
-        #if self.xClean is None:
-            #nanMask = np.isnan(self.xData) | np.isnan(self.yData) | np.isinf(self.xData) | np.isinf(self.yData)
-            #if nanMask.any():
-                #self.dataMask = ~nanMask
-                #self.xClean = self.xData[self.dataMask]
-                #self.yClean = self.yData[self.dataMask]
-            #else:
-                #self.dataMask = None
-                #self.xClean = self.xData
-                #self.yClean = self.yData
-            
         if self.xDisp is None:
             x = self.xData
             y = self.yData
             
-            
-            #ds = self.opts['downsample']
-            #if isinstance(ds, int) and ds > 1:
-                #x = x[::ds]
-                ##y = resample(y[:len(x)*ds], len(x))  ## scipy.signal.resample causes nasty ringing
-                #y = y[::ds]
             if self.opts['fftMode']:
                 x,y = self._fourierTransform(x, y)
                 # Ignore the first bin for fft data if we have a logx scale
@@ -531,14 +514,6 @@ class PlotDataItem(GraphicsObject):
                 x = np.log10(x)
             if self.opts['logMode'][1]:
                 y = np.log10(y)
-            #if any(self.opts['logMode']):  ## re-check for NANs after log
-                #nanMask = np.isinf(x) | np.isinf(y) | np.isnan(x) | np.isnan(y)
-                #if any(nanMask):
-                    #self.dataMask = ~nanMask
-                    #x = x[self.dataMask]
-                    #y = y[self.dataMask]
-                #else:
-                    #self.dataMask = None
                     
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -591,8 +566,6 @@ class PlotDataItem(GraphicsObject):
                     
             self.xDisp = x
             self.yDisp = y
-        #print self.yDisp.shape, self.yDisp.min(), self.yDisp.max()
-        #print self.xDisp.shape, self.xDisp.min(), self.xDisp.max()
         return self.xDisp, self.yDisp
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
