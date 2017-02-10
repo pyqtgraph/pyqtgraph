@@ -378,8 +378,6 @@ class ScatterPlotItem(GraphicsObject):
                         newData[i]['y'] = y
                     elif k == 'pen':
                         newData[i][k] = fn.mkPen(spot[k])
-                    elif k == 'brush':
-                        newData[i][k] = fn.mkBrush(spot[k])
                     elif k in ['x', 'y', 'size', 'symbol', 'brush', 'data']:
                         newData[i][k] = spot[k]
                     else:
