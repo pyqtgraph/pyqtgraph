@@ -162,6 +162,8 @@ class PlotCurveItem(GraphicsObject):
             # include a percentile of data range
             mask = np.isfinite(d)
             d = d[mask]
+            if len(d) == 0:
+                return (None, None)
             b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
 
         ## adjust for fill level
