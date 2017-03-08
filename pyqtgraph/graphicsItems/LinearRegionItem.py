@@ -1,4 +1,5 @@
 from ..Qt import QtGui, QtCore
+import numpy as np
 from .UIGraphicsItem import UIGraphicsItem
 from .InfiniteLine import InfiniteLine
 from .. import functions as fn
@@ -256,7 +257,8 @@ class LinearRegionItem(UIGraphicsItem):
         self.mouseHovering = hover
         if hover:
             c = self.brush.color()
-            c.setAlpha(c.alpha() * 2)
+            hover_alpha = np.clip(c.alpha() * 2, 0, 255 )
+            c.setAlpha(hover_alpha)
             self.currentBrush = fn.mkBrush(c)
         else:
             self.currentBrush = self.brush
