@@ -19,10 +19,11 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 't1', 't2', 't3','d', '+', 'x', 'p', 'h', 'star']])
+Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 't1', 't2', 't3','d', '+', 'x', 'p', 'h', 'star', ' ']])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 coords = {
+    ' ': [(0, 0)],
     't': [(-0.5, -0.5), (0, 0.5), (0.5, -0.5)],
     't1': [(-0.5, 0.5), (0, -0.5), (0.5, 0.5)],
     't2': [(-0.5, -0.5), (-0.5, 0.5), (0.5, 0)],
