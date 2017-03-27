@@ -148,6 +148,8 @@ class PlotDataItem(GraphicsObject):
             
             'fftMode': False,
             'logMode': [False, False],
+            'derivativeMode': False,
+            'phasemapMode': False,
             'alphaHint': 1.0,
             'alphaMode': False,
             
@@ -213,7 +215,25 @@ class PlotDataItem(GraphicsObject):
         self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
-    
+
+    def setDerivativeMode(self, mode):
+        if self.opts['derivativeMode'] == mode:
+            return
+        self.opts['derivativeMode'] = mode
+        self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
+        self.updateItems()
+        self.informViewBoundsChanged()
+
+    def setPhasemapMode(self, mode):
+        if self.opts['phasemapMode'] == mode:
+            return
+        self.opts['phasemapMode'] = mode
+        self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
+        self.updateItems()
+        self.informViewBoundsChanged()
+
     def setPointMode(self, mode):
         if self.opts['pointMode'] == mode:
             return
@@ -514,7 +534,13 @@ class PlotDataItem(GraphicsObject):
                 x = np.log10(x)
             if self.opts['logMode'][1]:
                 y = np.log10(y)
-                    
+            if self.opts['derivativeMode']:  # plot dV/dt
+                y = np.diff(self.yData)/np.diff(self.xData)
+                x = x[:-1]
+            if self.opts['phasemapMode']:  # plot dV/dt vs V
+                x = self.yData[:-1]
+                y = np.diff(self.yData)/np.diff(self.xData)
+            
             ds = self.opts['downsample']
             if not isinstance(ds, int):
                 ds = 1
