@@ -312,7 +312,8 @@ class Parameter(QtCore.QObject):
         If blockSignals is True, no signals will be emitted until the tree has been completely restored. 
         This prevents signal handlers from responding to a partially-rebuilt network.
         """
-        childState = state.get('children', [])
+        state = state.copy()
+        childState = state.pop('children', [])
         
         ## list of children may be stored either as list or dict.
         if isinstance(childState, dict):

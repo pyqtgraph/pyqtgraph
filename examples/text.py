@@ -46,7 +46,6 @@ def update():
     global curvePoint, index
     index = (index + 1) % len(x)
     curvePoint.setPos(float(index)/(len(x)-1))
-    #text2.viewRangeChanged()
     text2.setText('[%0.1f, %0.1f]' % (x[index], y[index]))
     
 timer = QtCore.QTimer()
