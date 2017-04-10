@@ -388,11 +388,9 @@ class ImageView(QtGui.QWidget):
         
     def close(self):
         """Closes the widget nicely, making sure to clear the graphics scene and release memory."""
-        self.ui.roiPlot.close()
-        self.ui.graphicsView.close()
-        self.scene.clear()
-        del self.image
-        del self.imageDisp
+        self.clear()
+        self.imageDisp = None
+        self.imageItem.setParent(None)
         super(ImageView, self).close()
         self.setParent(None)
         
