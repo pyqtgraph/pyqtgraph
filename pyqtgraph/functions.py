@@ -1188,7 +1188,9 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if USE_PYSIDE:
         ch = ctypes.c_char.from_buffer(imgData, 0)
+        rcount = ctypes.c_long.from_address(id(ch)).value  # Get the reference count of self.data.
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+        ctypes.c_long.from_address(id(ch)).value = rcount  # This puts the refcount back where it belongs.
     else:
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
