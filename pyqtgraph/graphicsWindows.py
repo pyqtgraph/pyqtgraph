@@ -10,6 +10,7 @@ from .widgets.PlotWidget import *
 from .imageview import *
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 from .widgets.GraphicsView import GraphicsView
+from . import getConfigOption
 QAPP = None
 
 def mkQApp():
@@ -43,6 +44,9 @@ class TabWindow(QtGui.QMainWindow):
         if title is not None:
             self.setWindowTitle(title)
         self.show()
+        if getConfigOption("closeShortcut")
+            self.closeKeySequence = QtGui.QKeySequence("Ctrl+w")
+            self.closeShortcut = QtGui.QShortcut(self.closeKeySequence,self,self.close)
         
     def __getattr__(self, attr):
         if hasattr(self.cw, attr):
@@ -61,8 +65,8 @@ class PlotWindow(PlotWidget):
             setattr(self, m, getattr(self.win, m))
         if title is not None:
             self.win.setWindowTitle(title)
-        self.win.show()
 
+        self.win.show()
 
 class ImageWindow(ImageView):
     def __init__(self, *args, **kargs):
@@ -80,4 +84,7 @@ class ImageWindow(ImageView):
             setattr(self, m, getattr(self.win, m))
         #for m in ['setImage', 'autoRange', 'addItem', 'removeItem', 'blackLevel', 'whiteLevel', 'imageItem']:
             #setattr(self, m, getattr(self.cw, m))
+        if getConfigOption("closeShortcut")
+            self.closeKeySequence = QtGui.QKeySequence("Ctrl+w")
+            self.closeShortcut = QtGui.QShortcut(self.closeKeySequence,self,self.close)
         self.win.show()
