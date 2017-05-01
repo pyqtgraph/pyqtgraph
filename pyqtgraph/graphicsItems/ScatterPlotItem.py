@@ -251,6 +251,7 @@ class ScatterPlotItem(GraphicsObject):
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
             'antialias': getConfigOption('antialias'),
+            'compositionMode': None,
             'name': None,
         }
 
@@ -730,7 +731,9 @@ class ScatterPlotItem(GraphicsObject):
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
-
+        cmode = self.opts.get('compositionMode', None)
+        if cmode is not None:
+            p.setCompositionMode(cmode)
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
 
