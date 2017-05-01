@@ -342,7 +342,7 @@ def colorStr(c):
     return ('%02x'*4) % colorTuple(c)
 
 
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
+def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255):
     """
     Creates a QColor from a single index. Useful for stepping through a predefined list of colors.
     
@@ -354,7 +354,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     values = int(values)
     ind = int(index) % (hues * values)
     indh = ind % hues
-    indv = ind / hues
+    indv = ind // hues
     if values > 1:
         v = minValue + indv * ((maxValue-minValue) / (values-1))
     else:
