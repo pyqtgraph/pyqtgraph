@@ -300,6 +300,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
+        *compositionMode*      If specified, this sets the composition mode used when drawing the
+                               scatter plot (see QPainter::CompositionMode in the Qt documentation).
         *name*                 The name of this item. Names are used for automatically
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
