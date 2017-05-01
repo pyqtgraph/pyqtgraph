@@ -1188,7 +1188,20 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if USE_PYSIDE:
         ch = ctypes.c_char.from_buffer(imgData, 0)
+        
+        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
+        # incremented, which leads to leaked memory. As a workaround, we manually
+        # reset the reference count after creating the QImage.
+        # See: https://bugreports.qt.io/browse/PYSIDE-140
+        
+        # Get initial reference count (PyObject struct has ob_refcnt as first element)
+        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+        if sys.version[0] == '3':
+            # Reset refcount only on python 3. Technically this would have no effect
+            # on python 2, but this is a nasty hack, and checking for version here 
+            # helps to mitigate possible unforseen consequences.
+            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
