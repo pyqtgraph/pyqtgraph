@@ -107,3 +107,6 @@ rtr.cvs
 # ctags
 .tags*
 
+
+.settings/*
+pyqtgraph_karl/

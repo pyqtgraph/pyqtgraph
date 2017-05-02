@@ -1,6 +1,19 @@
 [![Build Status](https://travis-ci.org/pyqtgraph/pyqtgraph.svg?branch=develop)](https://travis-ci.org/pyqtgraph/pyqtgraph)
 [![codecov.io](http://codecov.io/github/pyqtgraph/pyqtgraph/coverage.svg?branch=develop)](http://codecov.io/github/pyqtgraph/pyqtgraph?branch=develop)
 
+pyqtgraph_karl
+==============
+A pyqtgraph fork including a´some bug fixes and extended functionality.
+
+**IMPORTANT:**
+other packages (dataArtist) use this fork as 'pyqtgraph_karl'
+
+Since git cannot handle symbolic links, please create one after downloading the code
+
+>>> cd PATH\TO\FOLDER
+>>> mklink /J pyqtgraph_karl pyqtgraph
+
+
 PyQtGraph
 =========
 
