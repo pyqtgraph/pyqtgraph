@@ -23,8 +23,8 @@ class ImageExporter(Exporter):
             bg.setAlpha(0)
             
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'width', 'type': 'int', 'value': tr.width(), 'limits': (0, None)},
-            {'name': 'height', 'type': 'int', 'value': tr.height(), 'limits': (0, None)},
+            {'name': 'width', 'type': 'int', 'value': int(tr.width()), 'limits': (0, None)},
+            {'name': 'height', 'type': 'int', 'value': int(tr.height()), 'limits': (0, None)},
             {'name': 'antialias', 'type': 'bool', 'value': True},
             {'name': 'background', 'type': 'color', 'value': bg},
         ])
@@ -34,12 +34,12 @@ class ImageExporter(Exporter):
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.height()) / sr.width()
-        self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
+        self.params.param('height').setValue(int(self.params['width'] * ar), blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.width()) / sr.height()
-        self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
+        self.params.param('width').setValue(int(self.params['height'] * ar), blockSignal=self.widthChanged)
         
     def parameters(self):
         return self.params
