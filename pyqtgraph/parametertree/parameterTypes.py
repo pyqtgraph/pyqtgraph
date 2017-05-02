@@ -4,10 +4,11 @@ from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
+from ..colormap import ColorMap
 #from ..widgets.GradientWidget import GradientWidget ## creates import loop
 from .. import pixmaps as pixmaps
 from .. import functions as fn
-import os
+import os, sys
 from ..pgcollections import OrderedDict
 
 class WidgetParameterItem(ParameterItem):
@@ -319,6 +320,39 @@ class SimpleParameter(Parameter):
         state = Parameter.saveState(self, *args, **kwds)
         state['value'] = fn.colorTuple(self.value())
         return state
+        
+    def _interpretValue(self, v):
+        fn = {
+            'int': int,
+            'float': float,
+            'bool': bool,
+            'str': self._interpStr,
+            'color': self._interpColor,
+            'colormap': self._interpColormap,
+        }[self.opts['type']]
+        return fn(v)
+    
+    def _interpStr(self, v):
+        if sys.version[0] == '2':
+            if isinstance(v, QtCore.QString):
+                v = unicode(v)
+            elif not isinstance(v, basestring):
+                raise TypeError("Cannot set str parmeter from object %r" % v)
+        else:
+            if isinstance(v, QtCore.QString):
+                v = str(v)
+            elif not isinstance(v, str):
+                raise TypeError("Cannot set str parmeter from object %r" % v)
+        return v
+    
+    def _interpColor(self, v):
+        return fn.mkColor(v)
+    
+    def _interpColormap(self, v):
+        if not isinstance(v, ColorMap):
+            raise TypeError("Cannot set colormap parameter from object %r" % v)
+        return v
+            
         
     
 registerParameterType('int', SimpleParameter, override=True)
