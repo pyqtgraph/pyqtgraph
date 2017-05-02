@@ -641,13 +641,13 @@ class PlotItem(GraphicsWidget):
         
         return item
 
-    def addLegend(self, size=None, offset=(30, 30)):
+    def addLegend(self, size=None, offset=(30, 30), bkgnd=(100, 100, 100, 50), frame=(255,255,255,50)):
         """
         Create a new LegendItem and anchor it over the internal ViewBox.
         Plots will be automatically displayed in the legend if they
         are created with the 'name' argument.
         """
-        self.legend = LegendItem(size, offset)
+        self.legend = LegendItem(size, offset, bkgnd, frame)
         self.legend.setParentItem(self.vb)
         return self.legend
         
