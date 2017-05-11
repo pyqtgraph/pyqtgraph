@@ -104,6 +104,8 @@ class PlotDataItem(GraphicsObject):
             downsampleMethod 'subsample': Downsample by taking the first of N samples. 
                              This method is fastest and least accurate.
                              'mean': Downsample by taking the mean of N samples.
+                             'min': Downsample by taking the min of N samples.
+                             'max': Downsample by taking the max of N samples.
                              'peak': Downsample by drawing a saw wave that follows the min 
                              and max of the original data. This method produces the best 
                              visual representation of the data but is slower.
@@ -111,6 +113,9 @@ class PlotDataItem(GraphicsObject):
                              multiple line segments per pixel. This can improve performance when
                              viewing very high-density data, but increases the initial overhead 
                              and memory usage.
+            quantizedDownsample  (bool) If True, downsampling will occur at deterministic
+                             x-intervals when updating data.  This allows for a smoother
+                             representation of scrolling data.
             clipToView       (bool) If True, only plot data that is visible within the X range of
                              the containing ViewBox. This can improve performance when plotting
                              very large data sets where only a fraction of the data is visible
@@ -170,6 +175,7 @@ class PlotDataItem(GraphicsObject):
             'autoDownsample': False,
             'downsampleMethod': 'peak',
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
+            'quantizedDownsample': False, #ensures downsample points align across scrolls
             'clipToView': False,
             
             'data': None,
@@ -310,6 +316,8 @@ class PlotDataItem(GraphicsObject):
         mode            'subsample': Downsample by taking the first of N samples.
                         This method is fastest and least accurate.
                         'mean': Downsample by taking the mean of N samples.
+                        'min': Downsample by taking the min of N samples.
+                        'max': Downsample by taking the max of N samples.
                         'peak': Downsample by drawing a saw wave that follows the min
                         and max of the original data. This method produces the best
                         visual representation of the data but is slower.
@@ -531,6 +539,7 @@ class PlotDataItem(GraphicsObject):
                         ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
                     ## downsampling is expensive; delay until after clipping.
             
+
             if self.opts['clipToView']:
                 view = self.getViewBox()
                 if view is None or not view.autoRangeEnabled()[0]:
@@ -544,14 +553,41 @@ class PlotDataItem(GraphicsObject):
                         x = x[x0:x1]
                         y = y[x0:x1]
                     
-            if ds > 1:
+        
+            if len(x) > 1 and ds > 1:
+                n = len(x) // ds
+                if self.opts['quantizedDownsample']:
+                    i0 = np.searchsorted( x, ds*(1 + x[0]//ds ))
+                    if i0 < x[-1]:
+                        indices = np.arange(i0, n*ds, ds)
+                    else:
+                        indices = [0]
+                    """use midpoint of x downsample points"""
+                    x = x[indices] + float(x[-1]-x[0]) / (len(x)-1)
+                else: 
+                    indices = np.arange(0, n*ds, ds)
+                    x = x[indices]
+
                 if self.opts['downsampleMethod'] == 'subsample':
-                    x = x[::ds]
-                    y = y[::ds]
-                elif self.opts['downsampleMethod'] == 'mean':
-                    n = len(x) // ds
-                    x = x[:n*ds:ds]
-                    y = y[:n*ds].reshape(n,ds).mean(axis=1)
+                    y = y[indices]
+                elif self.opts['downsampleMethod'] in ['mean', 'max', 'min']:
+                    if self.opts['downsampleMethod'] == 'mean':
+                        downsampler = np.mean
+                    elif self.opts['downsampleMethod'] == 'max':
+                        downsampler = np.max
+                    else:
+                        downsampler = np.min
+ 
+                    n = len(indices)
+                    y1 = np.zeros(n)
+                     
+                    for i in np.arange(1, n):
+                        i0 = indices[i-1]
+                        i1 = indices[i]
+                        y1[i] = downsampler(y[i0:i1]) 
+                    """ final value """
+                    y1[-1] = downsampler(y[indices[-1]:])
+                    y = y1
                 elif self.opts['downsampleMethod'] == 'peak':
                     n = len(x) // ds
                     x1 = np.empty((n,2))
@@ -562,7 +598,6 @@ class PlotDataItem(GraphicsObject):
                     y1[:,0] = y2.max(axis=1)
                     y1[:,1] = y2.min(axis=1)
                     y = y1.reshape(n*2)
-                
                     
             self.xDisp = x
             self.yDisp = y
