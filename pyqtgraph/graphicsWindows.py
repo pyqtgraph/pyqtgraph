@@ -52,6 +52,8 @@ class TabWindow(QtGui.QMainWindow):
     
 
 class PlotWindow(PlotWidget):
+    sigClosed = QtCore.Signal(object)
+
     def __init__(self, title=None, **kargs):
         mkQApp()
         PlotWidget.__init__(self, **kargs)
@@ -59,8 +61,14 @@ class PlotWindow(PlotWidget):
             self.setWindowTitle(title)
         self.show()
 
+    def closeEvent(self, event):
+        PlotWidget.closeEvent(self, event)
+        self.sigClosed.emit(self)
+
 
 class ImageWindow(ImageView):
+    sigClosed = QtCore.Signal(object)
+
     def __init__(self, *args, **kargs):
         mkQApp()
         ImageView.__init__(self)
@@ -70,3 +78,7 @@ class ImageWindow(ImageView):
         if len(args) > 0 or len(kargs) > 0:
             self.setImage(*args, **kargs)
         self.show()
+
+    def closeEvent(self, event):
+        ImageView.closeEvent(self, event)
+        self.sigClosed.emit(self)

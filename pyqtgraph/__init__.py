@@ -409,12 +409,20 @@ def plot(*args, **kargs):
             dataArgs[k] = kargs[k]
         
     w = PlotWindow(**pwArgs)
+    w.sigClosed.connect(_plotWindowClosed)
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
-    
+
+def _plotWindowClosed(w):
+    w.close()
+    try:
+        plots.remove(w)
+    except ValueError:
+        pass
+
 def image(*args, **kargs):
     """
     Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
@@ -425,10 +433,18 @@ def image(*args, **kargs):
     """
     mkQApp()
     w = ImageWindow(*args, **kargs)
+    w.sigClosed.connect(_imageWindowClosed)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
+
+def _imageWindowClosed(w):
+    w.close()
+    try:
+        images.remove(w)
+    except ValueError:
+        pass
 
 def dbg(*args, **kwds):
     """
