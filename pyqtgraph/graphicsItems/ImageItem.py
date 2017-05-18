@@ -399,7 +399,11 @@ class ImageItem(GraphicsObject):
         
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
-        
+
+        if image.ndim > 2:
+            #no lookup table form color images
+            lut = None
+
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
