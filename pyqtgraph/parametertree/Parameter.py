@@ -178,8 +178,11 @@ class Parameter(QtCore.QObject):
         if 'name' not in self.opts or not isinstance(self.opts['name'], basestring):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(opts['name'])
-        
-        self.addChildren(self.opts.get('children', []))
+
+        if 'children' in self.opts:
+            self.addChildren(self.opts['children'])
+            del self.opts['children']
+
             
         if 'value' in self.opts and 'default' not in self.opts:
             self.opts['default'] = self.opts['value']
