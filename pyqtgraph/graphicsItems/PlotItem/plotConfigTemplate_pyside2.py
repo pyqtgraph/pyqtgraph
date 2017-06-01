@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created: Thu Jun  1 08:59:30 2017
+#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -134,36 +134,35 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.averageGroup.setToolTip(_translate("Form", "Display averages of the curves displayed in this plot. The parameter list allows you to choose parameters to average over (if any are available)."))
-        self.averageGroup.setTitle(_translate("Form", "Average"))
-        self.clipToViewCheck.setToolTip(_translate("Form", "Plot only the portion of each curve that is visible. This assumes X values are uniformly spaced."))
-        self.clipToViewCheck.setText(_translate("Form", "Clip to View"))
-        self.maxTracesCheck.setToolTip(_translate("Form", "If multiple curves are displayed in this plot, check this box to limit the number of traces that are displayed."))
-        self.maxTracesCheck.setText(_translate("Form", "Max Traces:"))
-        self.downsampleCheck.setText(_translate("Form", "Downsample"))
-        self.peakRadio.setToolTip(_translate("Form", "Downsample by drawing a saw wave that follows the min and max of the original data. This method produces the best visual representation of the data but is slower."))
-        self.peakRadio.setText(_translate("Form", "Peak"))
-        self.maxTracesSpin.setToolTip(_translate("Form", "If multiple curves are displayed in this plot, check \"Max Traces\" and set this value to limit the number of traces that are displayed."))
-        self.forgetTracesCheck.setToolTip(_translate("Form", "If MaxTraces is checked, remove curves from memory after they are hidden (saves memory, but traces can not be un-hidden)."))
-        self.forgetTracesCheck.setText(_translate("Form", "Forget hidden traces"))
-        self.meanRadio.setToolTip(_translate("Form", "Downsample by taking the mean of N samples."))
-        self.meanRadio.setText(_translate("Form", "Mean"))
-        self.subsampleRadio.setToolTip(_translate("Form", "Downsample by taking the first of N samples. This method is fastest and least accurate."))
-        self.subsampleRadio.setText(_translate("Form", "Subsample"))
-        self.autoDownsampleCheck.setToolTip(_translate("Form", "Automatically downsample data based on the visible range. This assumes X values are uniformly spaced."))
-        self.autoDownsampleCheck.setText(_translate("Form", "Auto"))
-        self.downsampleSpin.setToolTip(_translate("Form", "Downsample data before plotting. (plot every Nth sample)"))
-        self.downsampleSpin.setSuffix(_translate("Form", "x"))
-        self.fftCheck.setText(_translate("Form", "Power Spectrum (FFT)"))
-        self.logXCheck.setText(_translate("Form", "Log X"))
-        self.logYCheck.setText(_translate("Form", "Log Y"))
-        self.pointsGroup.setTitle(_translate("Form", "Points"))
-        self.autoPointsCheck.setText(_translate("Form", "Auto"))
-        self.xGridCheck.setText(_translate("Form", "Show X Grid"))
-        self.yGridCheck.setText(_translate("Form", "Show Y Grid"))
-        self.label.setText(_translate("Form", "Opacity"))
-        self.alphaGroup.setTitle(_translate("Form", "Alpha"))
-        self.autoAlphaCheck.setText(_translate("Form", "Auto"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        self.averageGroup.setToolTip(QtWidgets.QApplication.translate("Form", "Display averages of the curves displayed in this plot. The parameter list allows you to choose parameters to average over (if any are available).", None, -1))
+        self.averageGroup.setTitle(QtWidgets.QApplication.translate("Form", "Average", None, -1))
+        self.clipToViewCheck.setToolTip(QtWidgets.QApplication.translate("Form", "Plot only the portion of each curve that is visible. This assumes X values are uniformly spaced.", None, -1))
+        self.clipToViewCheck.setText(QtWidgets.QApplication.translate("Form", "Clip to View", None, -1))
+        self.maxTracesCheck.setToolTip(QtWidgets.QApplication.translate("Form", "If multiple curves are displayed in this plot, check this box to limit the number of traces that are displayed.", None, -1))
+        self.maxTracesCheck.setText(QtWidgets.QApplication.translate("Form", "Max Traces:", None, -1))
+        self.downsampleCheck.setText(QtWidgets.QApplication.translate("Form", "Downsample", None, -1))
+        self.peakRadio.setToolTip(QtWidgets.QApplication.translate("Form", "Downsample by drawing a saw wave that follows the min and max of the original data. This method produces the best visual representation of the data but is slower.", None, -1))
+        self.peakRadio.setText(QtWidgets.QApplication.translate("Form", "Peak", None, -1))
+        self.maxTracesSpin.setToolTip(QtWidgets.QApplication.translate("Form", "If multiple curves are displayed in this plot, check \"Max Traces\" and set this value to limit the number of traces that are displayed.", None, -1))
+        self.forgetTracesCheck.setToolTip(QtWidgets.QApplication.translate("Form", "If MaxTraces is checked, remove curves from memory after they are hidden (saves memory, but traces can not be un-hidden).", None, -1))
+        self.forgetTracesCheck.setText(QtWidgets.QApplication.translate("Form", "Forget hidden traces", None, -1))
+        self.meanRadio.setToolTip(QtWidgets.QApplication.translate("Form", "Downsample by taking the mean of N samples.", None, -1))
+        self.meanRadio.setText(QtWidgets.QApplication.translate("Form", "Mean", None, -1))
+        self.subsampleRadio.setToolTip(QtWidgets.QApplication.translate("Form", "Downsample by taking the first of N samples. This method is fastest and least accurate.", None, -1))
+        self.subsampleRadio.setText(QtWidgets.QApplication.translate("Form", "Subsample", None, -1))
+        self.autoDownsampleCheck.setToolTip(QtWidgets.QApplication.translate("Form", "Automatically downsample data based on the visible range. This assumes X values are uniformly spaced.", None, -1))
+        self.autoDownsampleCheck.setText(QtWidgets.QApplication.translate("Form", "Auto", None, -1))
+        self.downsampleSpin.setToolTip(QtWidgets.QApplication.translate("Form", "Downsample data before plotting. (plot every Nth sample)", None, -1))
+        self.downsampleSpin.setSuffix(QtWidgets.QApplication.translate("Form", "x", None, -1))
+        self.fftCheck.setText(QtWidgets.QApplication.translate("Form", "Power Spectrum (FFT)", None, -1))
+        self.logXCheck.setText(QtWidgets.QApplication.translate("Form", "Log X", None, -1))
+        self.logYCheck.setText(QtWidgets.QApplication.translate("Form", "Log Y", None, -1))
+        self.pointsGroup.setTitle(QtWidgets.QApplication.translate("Form", "Points", None, -1))
+        self.autoPointsCheck.setText(QtWidgets.QApplication.translate("Form", "Auto", None, -1))
+        self.xGridCheck.setText(QtWidgets.QApplication.translate("Form", "Show X Grid", None, -1))
+        self.yGridCheck.setText(QtWidgets.QApplication.translate("Form", "Show Y Grid", None, -1))
+        self.label.setText(QtWidgets.QApplication.translate("Form", "Opacity", None, -1))
+        self.alphaGroup.setTitle(QtWidgets.QApplication.translate("Form", "Alpha", None, -1))
+        self.autoAlphaCheck.setText(QtWidgets.QApplication.translate("Form", "Auto", None, -1))
 

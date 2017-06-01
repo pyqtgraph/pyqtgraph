@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file './examples/exampleLoaderTemplate.ui'
 #
-# Created: Sun Sep 18 19:20:44 2016
+# Created: Thu Jun  1 08:59:30 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'TransformGuiTemplate.ui'
+# Form implementation generated from reading ui file './pyqtgraph/canvas/TransformGuiTemplate.ui'
 #
-# Created: Sun Sep 18 19:18:41 2016
+# Created: Thu Jun  1 08:59:31 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
