@@ -2,7 +2,7 @@
 """
 This example demonstrates a very basic use of flowcharts: filter data,
 displaying both the input and output of the filter. The behavior of
-he filter can be reprogrammed by the user.
+the filter can be reprogrammed by the user.
 
 Basic steps are:
   - create a flowchart and two plots

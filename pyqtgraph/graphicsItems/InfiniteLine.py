@@ -325,6 +325,7 @@ class InfLineLabel(TextItem):
     def __init__(self, line, text="", movable=False, position=0.5, anchors=None, **kwds):
         self.line = line
         self.movable = movable
+        self.moving = False
         self.orthoPos = position  # text will always be placed on the line at a position relative to view bounds
         self.format = text
         self.line.sigPositionChanged.connect(self.valueChanged)
@@ -425,7 +426,7 @@ class InfLineLabel(TextItem):
         May optionally contain "{value}" to include the lines current value
         (the text will be reformatted whenever the line is moved).
         """
-        self.format = format
+        self.format = text
         self.valueChanged()
         
     def mouseDragEvent(self, ev):

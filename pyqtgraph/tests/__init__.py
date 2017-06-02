@@ -1,2 +1,2 @@
-from .image_testing import assertImageApproved
-from .ui_testing import mousePress, mouseMove, mouseRelease, mouseDrag, mouseClick
+from .image_testing import assertImageApproved, TransposedImageItem
+from .ui_testing import resizeWindow, mousePress, mouseMove, mouseRelease, mouseDrag, mouseClick

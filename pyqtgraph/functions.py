@@ -34,10 +34,13 @@ Colors = {
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
+SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
+SI_PREFIX_EXPONENTS['u'] = -6
 
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
-
-
+    
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -76,6 +79,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     return (p, pref)    
 
+
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
     """
     Return the number x formatted in engineering notation with SI prefix.
@@ -104,31 +108,56 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
+
+
+def siParse(s, regex=FLOAT_REGEX):
+    """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
-def siEval(s):
+    Example::
+    
+        siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
-    Convert a value written in SI notation to its equivalent prefixless value
+    s = asUnicode(s)
+    m = regex.match(s)
+    if m is None:
+        raise ValueError('Cannot parse number "%s"' % s)
+    try:
+        sip = m.group('siPrefix')
+    except IndexError:
+        sip = ''
     
+    try:
+        suf = m.group('suffix')
+    except IndexError:
+        suf = ''
+    
+    return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
+
+
+def siEval(s, typ=float, regex=FLOAT_REGEX):
+    """
+    Convert a value written in SI notation to its equivalent prefixless value.
+
     Example::
     
         siEval("100 μV")  # returns 0.0001
     """
+    val, siprefix, suffix = siParse(s, regex)
+    v = typ(val)
+    return siApply(val, siprefix)
+
     
-    s = asUnicode(s)
-    m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?).*$', s)
-    if m is None:
-        raise Exception("Can't convert string '%s' to number." % s)
-    v = float(m.groups()[0])
-    p = m.groups()[6]
-    #if p not in SI_PREFIXES:
-        #raise Exception("Can't convert string '%s' to number--unknown prefix." % s)
-    if p ==  '':
-        n = 0
-    elif p == 'u':
-        n = -2
+def siApply(val, siprefix):
+    """
+    """
+    n = SI_PREFIX_EXPONENTS[siprefix] if siprefix != '' else 0
+    if n > 0:
+        return val * 10**n
+    elif n < 0:
+        # this case makes it possible to use Decimal objects here
+        return val / 10**-n
     else:
-        n = SI_PREFIXES.index(p) - 8
-    return v * 1000**n
+        return val
     
 
 class Color(QtGui.QColor):
@@ -313,7 +342,7 @@ def colorStr(c):
     return ('%02x'*4) % colorTuple(c)
 
 
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
+def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255):
     """
     Creates a QColor from a single index. Useful for stepping through a predefined list of colors.
     
@@ -325,7 +354,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     values = int(values)
     ind = int(index) % (hues * values)
     indh = ind % hues
-    indv = ind / hues
+    indv = ind // hues
     if values > 1:
         v = minValue + indv * ((maxValue-minValue) / (values-1))
     else:
@@ -409,12 +438,45 @@ def eq(a, b):
     else:
         raise Exception("== operator returned type %s" % str(type(e)))
 
+
+def affineSliceCoords(shape, origin, vectors, axes):
+    """Return the array of coordinates used to sample data arrays in affineSlice().
+    """
+    # sanity check
+    if len(shape) != len(vectors):
+        raise Exception("shape and vectors must have same length.")
+    if len(origin) != len(axes):
+        raise Exception("origin and axes must have same length.")
+    for v in vectors:
+        if len(v) != len(axes):
+            raise Exception("each vector must be same length as axes.")
+        
+    shape = list(map(np.ceil, shape))
+
+    ## make sure vectors are arrays
+    if not isinstance(vectors, np.ndarray):
+        vectors = np.array(vectors)
+    if not isinstance(origin, np.ndarray):
+        origin = np.array(origin)
+    origin.shape = (len(axes),) + (1,)*len(shape)
+
+    ## Build array of sample locations. 
+    grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
+    x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
+    x += origin
+
+    return x
+
     
 def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
     """
-    Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
+    Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays
+    such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates if it is available (see the scipy documentation for more information about this). If scipy is not available, then a slower implementation of map_coordinates is used.
+    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is
+    possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger
+    datasets. The original data is interpolated onto a new array of coordinates using either interpolateArray if order<2
+    or scipy.ndimage.map_coordinates otherwise.
     
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
@@ -453,47 +515,24 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         affineSlice(data, shape=(20,20), origin=(40,0,0), vectors=((-1, 1, 0), (-1, 0, 1)), axes=(1,2,3))
     
     """
-    try:
-        import scipy.ndimage
-        have_scipy = True
-    except ImportError:
-        have_scipy = False
-    have_scipy = False
-
-    # sanity check
-    if len(shape) != len(vectors):
-        raise Exception("shape and vectors must have same length.")
-    if len(origin) != len(axes):
-        raise Exception("origin and axes must have same length.")
-    for v in vectors:
-        if len(v) != len(axes):
-            raise Exception("each vector must be same length as axes.")
-        
-    shape = list(map(np.ceil, shape))
+    x = affineSliceCoords(shape, origin, vectors, axes)
 
     ## transpose data so slice axes come first
     trAx = list(range(data.ndim))
-    for x in axes:
-        trAx.remove(x)
+    for ax in axes:
+        trAx.remove(ax)
     tr1 = tuple(axes) + tuple(trAx)
     data = data.transpose(tr1)
     #print "tr1:", tr1
     ## dims are now [(slice axes), (other axes)]
-    
-    ## make sure vectors are arrays
-    if not isinstance(vectors, np.ndarray):
-        vectors = np.array(vectors)
-    if not isinstance(origin, np.ndarray):
-        origin = np.array(origin)
-    origin.shape = (len(axes),) + (1,)*len(shape)
-    
-    ## Build array of sample locations. 
-    grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
-    x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
-    x += origin
 
-    ## iterate manually over unused axes since map_coordinates won't do it for us
-    if have_scipy:
+    if order > 1:
+        try:
+            import scipy.ndimage
+        except ImportError:
+            raise ImportError("Interpolating with order > 1 requires the scipy.ndimage module, but it could not be imported.")
+
+        # iterate manually over unused axes since map_coordinates won't do it for us
         extraShape = data.shape[len(axes):]
         output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
         for inds in np.ndindex(*extraShape):
@@ -502,8 +541,8 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     else:
         # map_coordinates expects the indexes as the first axis, whereas
         # interpolateArray expects indexes at the last axis. 
-        tr = tuple(range(1,x.ndim)) + (0,)
-        output = interpolateArray(data, x.transpose(tr))
+        tr = tuple(range(1, x.ndim)) + (0,)
+        output = interpolateArray(data, x.transpose(tr), order=order)
     
     tr = list(range(output.ndim))
     trb = []
@@ -520,16 +559,24 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     else:
         return output
 
-def interpolateArray(data, x, default=0.0):
+
+def interpolateArray(data, x, default=0.0, order=1):
     """
     N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
     
     This function returns linearly-interpolated values sampled from a regular
-    grid of data. 
+    grid of data. It differs from `ndimage.map_coordinates` by allowing broadcasting
+    within the input array.
     
-    *data* is an array of any shape containing the values to be interpolated.
-    *x* is an array with (shape[-1] <= data.ndim) containing the locations
-        within *data* to interpolate. 
+    ==============  ===========================================================================================
+    **Arguments:**
+    *data*          Array of any shape containing the values to be interpolated.
+    *x*             Array with (shape[-1] <= data.ndim) containing the locations within *data* to interpolate.
+                    (note: the axes for this argument are transposed relative to the same argument for
+                    `ndimage.map_coordinates`).
+    *default*       Value to return for locations in *x* that are outside the bounds of *data*.
+    *order*         Order of interpolation: 0=nearest, 1=linear.
+    ==============  ===========================================================================================
     
     Returns array of shape (x.shape[:-1] + data.shape[x.shape[-1]:])
     
@@ -574,53 +621,66 @@ def interpolateArray(data, x, default=0.0):
 
     This is useful for interpolating from arrays of colors, vertexes, etc.
     """
+    if order not in (0, 1):
+        raise ValueError("interpolateArray requires order=0 or 1 (got %s)" % order)
+
     prof = debug.Profiler()
-    
+
     nd = data.ndim
     md = x.shape[-1]
     if md > nd:
         raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
-    # First we generate arrays of indexes that are needed to 
-    # extract the data surrounding each point
-    fields = np.mgrid[(slice(0,2),) * md]
-    xmin = np.floor(x).astype(int)
-    xmax = xmin + 1
-    indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
-    fieldInds = []
     totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
-    for ax in range(md):
-        mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
-        # keep track of points that need to be set to default
-        totalMask &= mask
+    if order == 0:
+        xinds = np.round(x).astype(int)  # NOTE: for 0.5 this rounds to the nearest *even* number
+        for ax in range(md):
+            mask = (xinds[...,ax] >= 0) & (xinds[...,ax] <= data.shape[ax]-1) 
+            xinds[...,ax][~mask] = 0
+            # keep track of points that need to be set to default
+            totalMask &= mask
+        result = data[tuple([xinds[...,i] for i in range(xinds.shape[-1])])]
         
-        # ..and keep track of indexes that are out of bounds 
-        # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
-        #  of bounds, but the interpolation will work anyway)
-        mask &= (xmax[...,ax] < data.shape[ax])
-        axisIndex = indexes[...,ax][fields[ax]]
-        axisIndex[axisIndex < 0] = 0
-        axisIndex[axisIndex >= data.shape[ax]] = 0
-        fieldInds.append(axisIndex)
-    prof()
+    elif order == 1:
+        # First we generate arrays of indexes that are needed to 
+        # extract the data surrounding each point
+        fields = np.mgrid[(slice(0,order+1),) * md]
+        xmin = np.floor(x).astype(int)
+        xmax = xmin + 1
+        indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
+        fieldInds = []
+        for ax in range(md):
+            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+            # keep track of points that need to be set to default
+            totalMask &= mask
+            
+            # ..and keep track of indexes that are out of bounds 
+            # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
+            #  of bounds, but the interpolation will work anyway)
+            mask &= (xmax[...,ax] < data.shape[ax])
+            axisIndex = indexes[...,ax][fields[ax]]
+            axisIndex[axisIndex < 0] = 0
+            axisIndex[axisIndex >= data.shape[ax]] = 0
+            fieldInds.append(axisIndex)
+        prof()
 
-    # Get data values surrounding each requested point
-    fieldData = data[tuple(fieldInds)]
-    prof()
+        # Get data values surrounding each requested point
+        fieldData = data[tuple(fieldInds)]
+        prof()
     
-    ## Interpolate
-    s = np.empty((md,) + fieldData.shape, dtype=float)
-    dx = x - xmin
-    # reshape fields for arithmetic against dx
-    for ax in range(md):
-        f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
-        sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
-        sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
-        s[ax] = sax
-    s = np.product(s, axis=0)
-    result = fieldData * s
-    for i in range(md):
-        result = result.sum(axis=0)
+        ## Interpolate
+        s = np.empty((md,) + fieldData.shape, dtype=float)
+        dx = x - xmin
+        # reshape fields for arithmetic against dx
+        for ax in range(md):
+            f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
+            sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
+            sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
+            s[ax] = sax
+        s = np.product(s, axis=0)
+        result = fieldData * s
+        for i in range(md):
+            result = result.sum(axis=0)
 
     prof()
 
@@ -959,6 +1019,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         elif data.dtype.kind == 'i':
             s = 2**(data.itemsize*8 - 1)
             levels = np.array([-s, s-1])
+        elif data.dtype.kind == 'b':
+            levels = np.array([0,1])
         else:
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
@@ -1126,7 +1188,20 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if USE_PYSIDE:
         ch = ctypes.c_char.from_buffer(imgData, 0)
+        
+        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
+        # incremented, which leads to leaked memory. As a workaround, we manually
+        # reset the reference count after creating the QImage.
+        # See: https://bugreports.qt.io/browse/PYSIDE-140
+        
+        # Get initial reference count (PyObject struct has ob_refcnt as first element)
+        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+        if sys.version[0] == '3':
+            # Reset refcount only on python 3. Technically this would have no effect
+            # on python 2, but this is a nasty hack, and checking for version here 
+            # helps to mitigate possible unforseen consequences.
+            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
@@ -1727,7 +1802,7 @@ def isosurface(data, level):
     See Paul Bourke, "Polygonising a Scalar Field"  
     (http://paulbourke.net/geometry/polygonise/)
     
-    *data*   3D numpy array of scalar values
+    *data*   3D numpy array of scalar values. Must be contiguous.
     *level*  The level at which to generate an isosurface
     
     Returns an array of vertex coordinates (Nv, 3) and an array of 
@@ -2079,7 +2154,10 @@ def isosurface(data, level):
     else:
         faceShiftTables, edgeShifts, edgeTable, nTableFaces = IsosurfaceDataCache
 
-
+    # We use strides below, which means we need contiguous array input.
+    # Ideally we can fix this just by removing the dependency on strides.
+    if not data.flags['C_CONTIGUOUS']:
+        raise TypeError("isosurface input data must be c-contiguous.")
     
     ## mark everything below the isosurface level
     mask = data < level

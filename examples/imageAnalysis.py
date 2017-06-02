@@ -12,8 +12,11 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-pg.mkQApp()
 
+# Interpret image data as row-major instead of col-major
+pg.setConfigOptions(imageAxisOrder='row-major')
+
+pg.mkQApp()
 win = pg.GraphicsLayoutWidget()
 win.setWindowTitle('pyqtgraph example: Image Analysis')
 
@@ -57,10 +60,10 @@ win.show()
 
 
 # Generate image data
-data = np.random.normal(size=(100, 200))
+data = np.random.normal(size=(200, 100))
 data[20:80, 20:80] += 2.
 data = pg.gaussianFilter(data, (3, 3))
-data += np.random.normal(size=(100, 200)) * 0.1
+data += np.random.normal(size=(200, 100)) * 0.1
 img.setImage(data)
 hist.setLevels(data.min(), data.max())
 
@@ -79,7 +82,7 @@ p1.autoRange()
 def updatePlot():
     global img, roi, data, p2
     selected = roi.getArrayRegion(data, img)
-    p2.plot(selected.mean(axis=1), clear=True)
+    p2.plot(selected.mean(axis=0), clear=True)
 
 roi.sigRegionChanged.connect(updatePlot)
 updatePlot()
