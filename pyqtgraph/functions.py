@@ -2133,13 +2133,13 @@ def isosurface(data, level):
             [0, 1, 0, 2],
             #[9, 9, 9, 9]  ## fake
         ], dtype=np.uint16) # don't use ubyte here! This value gets added to cell index later; will need the extra precision.
-        nTableFaces = np.array([len(f)/3 for f in triTable], dtype=np.ubyte)
+        nTableFaces = np.array([len(f)//3 for f in triTable], dtype=np.ubyte)
         faceShiftTables = [None]
         for i in range(1,6):
             ## compute lookup table of index: vertexes mapping
             faceTableI = np.zeros((len(triTable), i*3), dtype=np.ubyte)
             faceTableInds = np.argwhere(nTableFaces == i)
-            faceTableI[faceTableInds[:,0]] = np.array([triTable[j] for j in faceTableInds])
+            faceTableI[faceTableInds[:,0]] = np.array([triTable[j[0]] for j in faceTableInds])
             faceTableI = faceTableI.reshape((len(triTable), i, 3))
             faceShiftTables.append(edgeShifts[faceTableI])
             
@@ -2394,4 +2394,4 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
         seen.add(n)
         sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
         sorted.append(n)
-    return sorted
+    return sorted   
