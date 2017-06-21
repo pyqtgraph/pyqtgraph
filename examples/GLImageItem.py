@@ -28,7 +28,7 @@ data += pg.gaussianFilter(np.random.normal(size=shape), (15,15,15))*15
 levels = (-0.08, 0.08)
 tex1 = pg.makeRGBA(data[shape[0]//2], levels=levels)[0]       # yz plane
 tex2 = pg.makeRGBA(data[:,shape[1]//2], levels=levels)[0]     # xz plane
-tex3 = pg.makeRGBA(data[:,:,shape[2]/   /2], levels=levels)[0]   # xy plane
+tex3 = pg.makeRGBA(data[:,:,shape[2]//2], levels=levels)[0]   # xy plane
 #tex1[:,:,3] = 128
 #tex2[:,:,3] = 128
 #tex3[:,:,3] = 128
@@ -54,4 +54,4 @@ w.addItem(ax)
 if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtGui.QApplication.instance().exec_()   
