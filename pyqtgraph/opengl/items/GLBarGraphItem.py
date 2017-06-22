@@ -1,6 +1,7 @@
 from .GLMeshItem import GLMeshItem
 from ..MeshData import MeshData
 import numpy as np
+from functools import reduce    
 
 class GLBarGraphItem(GLMeshItem):
     def __init__(self, pos, size):
