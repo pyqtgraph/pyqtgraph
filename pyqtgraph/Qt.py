@@ -207,6 +207,7 @@ elif QT_LIB == PYQT5:
     QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
 
     QtGui.QApplication.setGraphicsSystem = None
+    QtGui.QWheelEvent.delta = QtGui.QWheelEvent.angleDelta  
     
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
