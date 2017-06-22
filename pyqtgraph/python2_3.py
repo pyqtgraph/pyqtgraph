@@ -54,5 +54,21 @@ else:
     basestring = __builtin__.basestring
     cmp = __builtin__.cmp
     xrange = __builtin__.xrange
-    
+ 
+# Add compatibility for dict @ 2017.06.22 by <ausk@github.com>
+# http://legacy.python.org/dev/peps/pep-0469/#migrating-to-the-common-subset-of-python-2-and-3
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def itervalues(d):
+        return iter(d.values())
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def itervalues(d):
+        return d.itervalues()
+    def iteritems(d):
+        return d.iteritems()
     
