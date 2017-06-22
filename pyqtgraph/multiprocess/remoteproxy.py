@@ -10,6 +10,7 @@ except ImportError:
 
 # color printing for debugging
 from ..util import cprint
+from ..python2_3 import iteritems
 
 class ClosedError(Exception):
     """Raised when an event handler receives a request to close the connection
@@ -548,7 +549,8 @@ class RemoteEventHandler(object):
         
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
-            for k, v in kwds.iteritems():
+            #for k, v in kwds.iteritems():
+            for k, v in iteritems(kwds):
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
         byteMsgs = []
