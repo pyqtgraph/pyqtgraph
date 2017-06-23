@@ -216,7 +216,8 @@ class MeshData(object):
                     continue
                 norms = faceNorms[faces]  ## get all face normals
                 norm = norms.sum(axis=0)       ## sum normals
-                norm /= (norm**2).sum()**0.5  ## and re-normalize
+                #norm /= (norm**2).sum()**0.5  ## and re-normalize
+                np.divide(norm, (norm**2).sum()**0.5, out=norm, casting="unsafe")
                 self._vertexNormals[vindex] = norm
                 
         if indexed is None:
