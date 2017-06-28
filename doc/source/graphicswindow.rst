@@ -2,7 +2,7 @@ Basic display widgets
 =====================
 
  - GraphicsWindow
- - GraphicsView
- - GraphicsLayoutItem
- - ViewBox
+ - :class:`GraphicsView <pyqtgraph.GraphicsView>`
+ - GraphicsLayoutWidget
+ - :class:`ViewBox <pyqtgraph.ViewBox.ViewBox>`
 
