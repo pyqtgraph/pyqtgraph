@@ -235,6 +235,7 @@ class Dock(QtGui.QWidget, DockDrop):
     def close(self):
         """Remove this dock from the DockArea it lives inside."""
         self.setParent(None)
+        QtGui.QLabel.close(self.label)
         self.label.setParent(None)
         self._container.apoptose()
         self._container = None
