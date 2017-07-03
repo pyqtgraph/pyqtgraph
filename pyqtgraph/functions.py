@@ -75,9 +75,8 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    p = .001**m
-    
-    return (p, pref)    
+    m1 = -3*m
+    p = float('1E{0}'.format(m1))
 
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
