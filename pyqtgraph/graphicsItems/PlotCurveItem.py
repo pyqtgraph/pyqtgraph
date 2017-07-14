@@ -132,6 +132,8 @@ class PlotCurveItem(GraphicsObject):
             if any(np.isinf(b)):
                 mask = np.isfinite(d)
                 d = d[mask]
+                if len(d) == 0:
+                    return (None, None)
                 b = (d.min(), d.max())
                 
         elif frac <= 0.0:
@@ -173,7 +175,7 @@ class PlotCurveItem(GraphicsObject):
         if self._boundingRect is None:
             (xmn, xmx) = self.dataBounds(ax=0)
             (ymn, ymx) = self.dataBounds(ax=1)
-            if xmn is None:
+            if xmn is None or ymn is None:
                 return QtCore.QRectF()
             
             px = py = 0.0
