@@ -165,7 +165,7 @@ class TreeWidget(QtGui.QTreeWidget):
     def informTreeWidgetChange(item):
         if hasattr(item, 'treeWidgetChanged'):
             item.treeWidgetChanged()
-        for i in xrange(item.childCount()):
+        for i in range(item.childCount()):
             TreeWidget.informTreeWidgetChange(item.child(i))
         
     def addTopLevelItem(self, item):
