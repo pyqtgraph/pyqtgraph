@@ -141,7 +141,7 @@ class TreeWidget(QtGui.QTreeWidget):
     def dropEvent(self, ev):
         QtGui.QTreeWidget.dropEvent(self, ev)
         self.updateDropFlags()
-    
+
     def updateDropFlags(self):
         ### intended to put a limit on how deep nests of children can go.
         ### self.childNestingLimit is upheld when moving items without children, but if the item being moved has children/grandchildren, the children/grandchildren
@@ -167,7 +167,6 @@ class TreeWidget(QtGui.QTreeWidget):
             item.treeWidgetChanged()
         for i in xrange(item.childCount()):
             TreeWidget.informTreeWidgetChange(item.child(i))
-        
         
     def addTopLevelItem(self, item):
         QtGui.QTreeWidget.addTopLevelItem(self, item)
@@ -208,6 +207,11 @@ class TreeWidget(QtGui.QTreeWidget):
         ## Why do we want to do this? It causes RuntimeErrors. 
         #for item in items:
             #self.informTreeWidgetChange(item)
+
+    def invisibleRootItem(self):
+        # wrap this item so that we can propagate tree change information
+        # to children.
+        return InvisibleRootItem(QtGui.QTreeWidget.invisibleRootItem(self))
         
     def itemFromIndex(self, index):
         """Return the item and column corresponding to a QModelIndex.
@@ -333,4 +337,47 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             treewidget.sigItemCheckStateChanged.emit(self, column)
         elif (role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole) and text != self.text(column)):
             treewidget.sigItemTextChanged.emit(self, column)
+
             
+class InvisibleRootItem(QtGui.QTreeWidgetItem):
+    """Wrapper around a TreeWidget's invisible root item that calls
+    TreeWidget.informTreeWidgetChange when child items are added/removed.
+    """
+    def __init__(self, item):
+        self._real_item = item
+        
+    def addChild(self, child):
+        self._real_item.addChild(child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def addChildren(self, childs):
+        self._real_item.addChildren(childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+
+    def insertChild(self, index, child):
+        self._real_item.insertChild(index, child)
+        TreeWidget.informTreeWidgetChange(child)
+    
+    def insertChildren(self, index, childs):
+        self._real_item.addChildren(index, childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+    
+    def removeChild(self, child):
+        self._real_item.removeChild(child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def takeChild(self, index):
+        child = self._real_item.takeChild(index)
+        TreeWidget.informTreeWidgetChange(child)
+        return child
+    
+    def takeChildren(self):
+        childs = self._real_item.takeChildren()
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+        return childs
+
+    def __getattr__(self, attr):
+        return getattr(self._real_item, attr)
