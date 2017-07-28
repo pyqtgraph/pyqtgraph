@@ -214,7 +214,8 @@ class ImageItem(GraphicsObject):
         border             Sets the pen used when drawing the image border. Default is None.
         autoDownsample     (bool) If True, the image is automatically downsampled to match the
                            screen resolution. This improves performance for large images and 
-                           reduces aliasing.
+                           reduces aliasing. If autoDownsample is not specified, then ImageItem will
+                           choose whether to downsample the image based on its size.
         =================  =========================================================================
         
         
