@@ -1482,9 +1482,9 @@ class ViewBox(GraphicsWidget):
             self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
         
         if any(changed):
+            self._matrixNeedsUpdate = True
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             self.update()
-            self._matrixNeedsUpdate = True
         
             # Inform linked views that the range has changed
             for ax in [0, 1]:
