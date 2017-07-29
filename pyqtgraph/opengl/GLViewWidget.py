@@ -355,6 +355,12 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             except:
                 self.keysPressed = {}
             self.evalKeyState()
+
+    def width(self):
+        return QtOpenGL.QGLWidget.width(self) * self.devicePixelRatio()
+
+    def height(self):
+        return QtOpenGL.QGLWidget.height(self) * self.devicePixelRatio()
         
     def evalKeyState(self):
         speed = 2.0
