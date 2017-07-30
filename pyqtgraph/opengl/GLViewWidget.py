@@ -295,44 +295,67 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
-        
+
     def mouseMoveEvent(self, ev):
         diff = ev.pos() - self.mousePos
         self.mousePos = ev.pos()
-        
+
         if ev.buttons() == QtCore.Qt.LeftButton:
-            self.orbit(-diff.x(), diff.y())
-            #print self.opts['azimuth'], self.opts['elevation']
-        elif ev.buttons() == QtCore.Qt.MidButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
-                self.pan(diff.x(), 0, diff.y(), relative=True)
+                center = self.opts['center']
+                dist = self.opts['distance']
+                elev = self.opts['elevation'] * np.pi / 180.
+                azim = -self.opts['azimuth'] * np.pi / 180.
+
+                cPos = self.cameraPosition()
+                cVec = self.opts['center'] - cPos
+                dist = cVec.length()  ## distance from camera to center
+                ## approx. width of view at distance of center point
+                xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
+                yDist = dist * 2. * np.tan(
+                    0.5 * self.opts['fov'] * self.height() / self.width() * np.pi / 180.)
+                xScale = xDist / self.width() * self.devicePixelRatio()
+                yScale = yDist / self.height() * self.devicePixelRatio()
+                dx = diff.x()
+                dy = diff.y()
+                if elev < 0:
+                    dy = -dy
+                z = yScale * np.cos(elev) * dy
+                x = -xScale * (np.sin(azim) * dx + np.cos(azim) * dy)
+                y = -yScale * (np.cos(azim) * dx - np.sin(azim) * dy)
+
+                self.pan(x, y, z, relative=False)
             else:
-                self.pan(diff.x(), diff.y(), 0, relative=True)
-        
+                self.orbit(-diff.x(), diff.y())
+                # print self.opts['azimuth'], self.opts['elevation']
+        elif ev.buttons() == QtCore.Qt.MidButton:
+            self.pan(diff.x(), diff.y(), 0, relative=True)
+
     def mouseReleaseEvent(self, ev):
         pass
         # Example item selection code:
         #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
         #print(self.itemsAt(region))
-        
+
         ## debugging code: draw the picking region
         #glViewport(*self.getViewport())
         #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         #self.paintGL(region=region)
         #self.swapBuffers()
-        
-        
+
     def wheelEvent(self, ev):
-        delta = 0
         if not USE_PYQT5:
             delta = ev.delta()
         else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                delta = ev.angleDelta().y()
+            delta = ev.angleDelta().x() + ev.angleDelta().y()
         if (ev.modifiers() & QtCore.Qt.ControlModifier):
             self.opts['fov'] *= 0.999**delta
+            if self.opts['fov'] < 1:
+                self.opts['fov'] = 1
+            if self.opts['fov'] > 178:
+                self.opts['fov'] = 178
+
         else:
             self.opts['distance'] *= 0.999**delta
         self.update()
