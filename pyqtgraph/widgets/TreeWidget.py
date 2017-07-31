@@ -23,6 +23,7 @@ class TreeWidget(QtGui.QTreeWidget):
         self.setEditTriggers(QtGui.QAbstractItemView.EditKeyPressed|QtGui.QAbstractItemView.SelectedClicked)
         self.placeholders = []
         self.childNestingLimit = None
+        self.itemClicked.connect(self._itemClicked)
 
     def setItemWidget(self, item, col, wid):
         """
@@ -230,7 +231,11 @@ class TreeWidget(QtGui.QTreeWidget):
         QtGui.QTreeWidget.setColumnCount(self, c)
         self.sigColumnCountChanged.emit(self, c)
 
-                
+    def _itemClicked(self, item, col):
+        if hasattr(item, 'itemClicked'):
+            item.itemClicked(col)
+
+
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
     """
     TreeWidgetItem that keeps track of its own widgets and expansion state.
@@ -337,6 +342,12 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             treewidget.sigItemCheckStateChanged.emit(self, column)
         elif (role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole) and text != self.text(column)):
             treewidget.sigItemTextChanged.emit(self, column)
+
+    def itemClicked(self, col):
+        """Called when this item is clicked on.
+        
+        Override this method to react to user clicks.
+        """
 
             
 class InvisibleRootItem(QtGui.QTreeWidgetItem):
