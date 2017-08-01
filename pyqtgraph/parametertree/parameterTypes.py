@@ -333,13 +333,14 @@ class SimpleParameter(Parameter):
         return fn(v)
     
     def _interpStr(self, v):
+        isQString = hasattr(QtCore, 'QString') and isinstance(v, QtCore.QString)
         if sys.version[0] == '2':
-            if isinstance(v, QtCore.QString):
+            if isQString:
                 v = unicode(v)
             elif not isinstance(v, basestring):
                 raise TypeError("Cannot set str parmeter from object %r" % v)
         else:
-            if isinstance(v, QtCore.QString):
+            if isQString:
                 v = str(v)
             elif not isinstance(v, str):
                 raise TypeError("Cannot set str parmeter from object %r" % v)
