@@ -326,24 +326,11 @@ class SimpleParameter(Parameter):
             'int': int,
             'float': float,
             'bool': bool,
-            'str': self._interpStr,
+            'str': asUnicode,
             'color': self._interpColor,
             'colormap': self._interpColormap,
         }[self.opts['type']]
         return fn(v)
-    
-    def _interpStr(self, v):
-        if sys.version[0] == '2':
-            if isinstance(v, QtCore.QString):
-                v = unicode(v)
-            elif not isinstance(v, basestring):
-                raise TypeError("Cannot set str parmeter from object %r" % v)
-        else:
-            if isinstance(v, QtCore.QString):
-                v = str(v)
-            elif not isinstance(v, str):
-                raise TypeError("Cannot set str parmeter from object %r" % v)
-        return v
     
     def _interpColor(self, v):
         return fn.mkColor(v)
