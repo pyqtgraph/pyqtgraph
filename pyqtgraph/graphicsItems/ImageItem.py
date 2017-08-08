@@ -368,6 +368,10 @@ class ImageItem(GraphicsObject):
             image = fn.downsample(self.image, xds, axis=axes[0])
             image = fn.downsample(image, yds, axis=axes[1])
             self._lastDownsample = (xds, yds)
+            
+            # Check if downsampling reduced the image size to zero due to inf values.
+            if image.size == 0:
+                return
         else:
             image = self.image
 
@@ -401,8 +405,7 @@ class ImageItem(GraphicsObject):
             image = image.transpose((1, 0, 2)[:image.ndim])
         
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
-        if argb.size > 0:
-            self.qimage = fn.makeQImage(argb, alpha, transpose=False)
+        self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
         profile = debug.Profiler()
