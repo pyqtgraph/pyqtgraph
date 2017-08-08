@@ -321,9 +321,14 @@ class ForkedProcess(RemoteEventHandler):
         #os.kill(pid, 9)  
         try:
             self.close(callSync='sync', timeout=timeout, noCleanup=True)  ## ask the child process to exit and require that it return a confirmation.
-            os.waitpid(self.childPid, 0)
         except IOError:  ## probably remote process has already quit
             pass  
+        
+        try:
+            os.waitpid(self.childPid, 0)
+        except OSError:  ## probably remote process has already quit
+            pass
+        
         self.hasJoined = True
 
     def kill(self):

@@ -255,6 +255,7 @@ class Parameter(QtCore.QObject):
         try:
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
+            value = self._interpretValue(value)
             if self.opts['value'] == value:
                 return value
             self.opts['value'] = value
@@ -264,6 +265,9 @@ class Parameter(QtCore.QObject):
                 self.sigValueChanged.connect(blockSignal)
             
         return value
+
+    def _interpretValue(self, v):
+        return v
 
     def value(self):
         """

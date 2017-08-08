@@ -132,12 +132,10 @@ class PlotCurveItem(GraphicsObject):
             if any(np.isinf(b)):
                 mask = np.isfinite(d)
                 d = d[mask]
-                try:
-                    b = (d.min(), d.max())
-                except ValueError:
-                    # d has no size, because all of d is inf.
+                if len(d) == 0:
                     return (None, None)
-
+                b = (d.min(), d.max())
+                
         elif frac <= 0.0:
             raise Exception("Value for parameter 'frac' must be > 0. (got %s)" % str(frac))
         else:
