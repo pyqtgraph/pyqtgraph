@@ -401,7 +401,8 @@ class ImageItem(GraphicsObject):
             image = image.transpose((1, 0, 2)[:image.ndim])
         
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
-        self.qimage = fn.makeQImage(argb, alpha, transpose=False)
+        if argb.size > 0:
+            self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
         profile = debug.Profiler()
