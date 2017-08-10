@@ -190,7 +190,7 @@ def _generateItemSvg(item, nodes=None, root=None):
             xmlStr = str(arr)
         else:
             xmlStr = bytes(arr).decode('utf-8')
-        doc = xml.parseString(xmlStr)
+        doc = xml.parseString(xmlStr.encode('utf-8'))
         
     try:
         ## Get top-level group for this item

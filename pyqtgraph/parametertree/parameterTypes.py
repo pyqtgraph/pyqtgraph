@@ -4,10 +4,11 @@ from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
+from ..colormap import ColorMap
 #from ..widgets.GradientWidget import GradientWidget ## creates import loop
 from .. import pixmaps as pixmaps
 from .. import functions as fn
-import os
+import os, sys
 from ..pgcollections import OrderedDict
 
 class WidgetParameterItem(ParameterItem):
@@ -319,6 +320,26 @@ class SimpleParameter(Parameter):
         state = Parameter.saveState(self, *args, **kwds)
         state['value'] = fn.colorTuple(self.value())
         return state
+        
+    def _interpretValue(self, v):
+        fn = {
+            'int': int,
+            'float': float,
+            'bool': bool,
+            'str': asUnicode,
+            'color': self._interpColor,
+            'colormap': self._interpColormap,
+        }[self.opts['type']]
+        return fn(v)
+    
+    def _interpColor(self, v):
+        return fn.mkColor(v)
+    
+    def _interpColormap(self, v):
+        if not isinstance(v, ColorMap):
+            raise TypeError("Cannot set colormap parameter from object %r" % v)
+        return v
+            
         
     
 registerParameterType('int', SimpleParameter, override=True)

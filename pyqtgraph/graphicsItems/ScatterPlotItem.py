@@ -251,6 +251,7 @@ class ScatterPlotItem(GraphicsObject):
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
             'antialias': getConfigOption('antialias'),
+            'compositionMode': None,
             'name': None,
         }
 
@@ -299,6 +300,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
+        *compositionMode*      If specified, this sets the composition mode used when drawing the
+                               scatter plot (see QPainter::CompositionMode in the Qt documentation).
         *name*                 The name of this item. Names are used for automatically
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
@@ -730,7 +733,9 @@ class ScatterPlotItem(GraphicsObject):
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
-
+        cmode = self.opts.get('compositionMode', None)
+        if cmode is not None:
+            p.setCompositionMode(cmode)
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
 
