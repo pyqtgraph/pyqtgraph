@@ -369,6 +369,10 @@ class ImageItem(GraphicsObject):
             image = fn.downsample(self.image, xds, axis=axes[0])
             image = fn.downsample(image, yds, axis=axes[1])
             self._lastDownsample = (xds, yds)
+
+            # Check if downsampling reduced the image size to zero due to inf values.
+            if image.size == 0:
+                return
         else:
             image = self.image
 
