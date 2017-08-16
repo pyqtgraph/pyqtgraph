@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 import numpy as np
+import sys
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
 import pytest
 
@@ -292,6 +293,68 @@ def test_makeARGB():
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=[(1,2)]*4)
     with AssertExc():  # 3d levels not allowed
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=np.zeros([3, 2, 2]))
+
+
+def test_eq():
+    eq = pg.functions.eq
+    
+    zeros = [0, 0.0, np.float(0), np.int(0)]
+    if sys.version[0] < '3':
+        zeros.append(long(0))
+    for i,x in enumerate(zeros):
+        for y in zeros[i:]:
+            assert eq(x, y)
+            assert eq(y, x)
+    
+    assert eq(np.nan, np.nan)
+    
+    # test 
+    class NotEq(object):
+        def __eq__(self, x):
+            return False
+        
+    noteq = NotEq()
+    assert eq(noteq, noteq) # passes because they are the same object
+    assert not eq(noteq, NotEq())
+
+
+    # Should be able to test for equivalence even if the test raises certain
+    # exceptions
+    class NoEq(object):
+        def __init__(self, err):
+            self.err = err
+        def __eq__(self, x):
+            raise self.err
+        
+    noeq1 = NoEq(AttributeError())
+    noeq2 = NoEq(ValueError())
+    noeq3 = NoEq(Exception())
+    
+    assert eq(noeq1, noeq1)
+    assert not eq(noeq1, noeq2)
+    assert not eq(noeq2, noeq1)
+    with pytest.raises(Exception):
+        eq(noeq3, noeq2)
+
+    # test array equivalence
+    # note that numpy has a weird behavior here--np.all() always returns True
+    # if one of the arrays has size=0; eq() will only return True if both arrays
+    # have the same shape.
+    a1 = np.zeros((10, 20)).astype('float')
+    a2 = a1 + 1
+    a3 = a2.astype('int')
+    a4 = np.empty((0, 20))
+    assert not eq(a1, a2)
+    assert not eq(a1, a3)
+    assert not eq(a1, a4)
+
+    assert eq(a2, a3)
+    assert not eq(a2, a4)
+    
+    assert not eq(a3, a4)
+    
+    assert eq(a4, a4.copy())
+    assert not eq(a4, a4.T)
 
     
 if __name__ == '__main__':
