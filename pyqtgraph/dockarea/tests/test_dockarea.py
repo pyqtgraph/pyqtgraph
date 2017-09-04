@@ -156,10 +156,15 @@ def test_dockarea():
             ], {'sizes': [1159, 116]})}
 
     a4.restoreState(state1, missing='create')
-    a4.restoreState(state2, missing='ignore')
+    # dock3 not mentioned in restored state; stays in dockarea by default
+    c, d = a4.findAll()
+    assert d['dock3'].area is a4
+    
+    a4.restoreState(state2, missing='ignore', extra='float')
     a4.printState()
 
     c, d = a4.findAll()
+    # dock3 not mentioned in restored state; goes to float due to `extra` argument
     assert d['dock3'].area is not a4
     assert d['dock1'].container() is d['dock4'].container() is d['dock8'].container()
     assert d['dock6'].container() is d['dock7'].container()
