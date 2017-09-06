@@ -24,6 +24,14 @@ class C(pg.QtCore.QObject):
 
 """
 
+def remove_cache(mod):
+    if os.path.isfile(mod+'c'):
+        os.remove(mod+'c')
+    cachedir = os.path.join(os.path.dirname(mod), '__pycache__')
+    if os.path.isdir(cachedir):
+        shutil.rmtree(cachedir)
+
+
 def test_reload():
     # write a module
     mod = os.path.join(path, 'reload_test.py')
@@ -40,12 +48,16 @@ def test_reload():
 
     # write again and reload
     open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
-    os.remove(mod+'c')
+    remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
     assert c.fn.im_class is v2[0]
     oldcfn = pg.reload.getPreviousVersion(c.fn)
+    if oldcfn is None:
+        # Function did not reload; are we using pytest's assertion rewriting?
+        raise Exception("Function did not reload. (This can happen when using py.test"
+            " with assertion rewriting; use --assert=reinterp or --assert=plain)")
     assert oldcfn.im_class is v1[0]
     assert oldcfn.im_func is v1[2].im_func
     assert oldcfn.im_self is c
@@ -54,7 +66,7 @@ def test_reload():
 
     # write again and reload
     open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
-    os.remove(mod+'c')
+    remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
