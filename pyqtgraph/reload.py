@@ -22,12 +22,13 @@ Does NOT:
 """
 
 
-import inspect, os, sys, gc, traceback
+import inspect, os, sys, gc, traceback, types
 try:
     import __builtin__ as builtins
 except ImportError:
     import builtins
 from .debug import printExc
+
 
 def reloadAll(prefix=None, debug=False):
     """Automatically reload everything whose __file__ begins with prefix.
@@ -97,7 +98,9 @@ def reload(module, debug=False, lists=False, dicts=False):
             if debug:
                 print("  Updating class %s.%s (0x%x -> 0x%x)" % (module.__name__, k, id(old), id(new)))
             updateClass(old, new, debug)
-                    
+            # don't put this inside updateClass because it is reentrant.
+            new.__previous_reload_version__ = old
+
         elif inspect.isfunction(old):
             depth = updateFunction(old, new, debug)
             if debug:
@@ -152,7 +155,6 @@ def updateFunction(old, new, debug, depth=0, visited=None):
 ##  1) find all instances of the old class and set instance.__class__ to the new class
 ##  2) update all old class methods to use code from the new class methods
 def updateClass(old, new, debug):
-
     ## Track town all instances and subclasses of old
     refs = gc.get_referrers(old)
     for ref in refs:
@@ -174,13 +176,20 @@ def updateClass(old, new, debug):
                 ## This seems to work. Is there any reason not to?
                 ## Note that every time we reload, the class hierarchy becomes more complex.
                 ## (and I presume this may slow things down?)
-                ref.__bases__ = ref.__bases__[:ind] + (new,old) + ref.__bases__[ind+1:]
+                newBases = ref.__bases__[:ind] + (new,old) + ref.__bases__[ind+1:]
+                try:
+                    ref.__bases__ = newBases
+                except TypeError:
+                    print("    Error setting bases for class %s" % ref)
+                    print("        old bases: %s" % repr(ref.__bases__))
+                    print("        new bases: %s" % repr(newBases))
+                    raise
                 if debug:
                     print("    Changed superclass for %s" % safeStr(ref))
             #else:
                 #if debug:
                     #print "    Ignoring reference", type(ref)
-        except:
+        except Exception:
             print("Error updating reference (%s) for class change (%s -> %s)" % (safeStr(ref), safeStr(old), safeStr(new)))
             raise
         
@@ -199,6 +208,8 @@ def updateClass(old, new, debug):
                 
             if hasattr(oa, 'im_func') and hasattr(na, 'im_func') and oa.__func__ is not na.__func__:
                 depth = updateFunction(oa.__func__, na.__func__, debug)
+                if not hasattr(na.__func__, '__previous_reload_method__'):
+                    na.__func__.__previous_reload_method__ = oa  # important for managing signal connection
                 #oa.im_class = new  ## bind old method to new class  ## not allowed
                 if debug:
                     extra = ""
@@ -208,6 +219,8 @@ def updateClass(old, new, debug):
                 
     ## And copy in new functions that didn't exist previously
     for attr in dir(new):
+        if attr == '__previous_reload_version__':
+            continue
         if not hasattr(old, attr):
             if debug:
                 print("    Adding missing attribute %s" % attr)
@@ -223,14 +236,31 @@ def updateClass(old, new, debug):
 def safeStr(obj):
     try:
         s = str(obj)
-    except:
+    except Exception:
         try:
             s = repr(obj)
-        except:
+        except Exception:
             s = "<instance of %s at 0x%x>" % (safeStr(type(obj)), id(obj))
     return s
 
 
+def getPreviousVersion(obj):
+    """Return the previous version of *obj*, or None if this object has not
+    been reloaded.
+    """
+    if isinstance(obj, type) or inspect.isfunction(obj):
+        return getattr(obj, '__previous_reload_version__', None)
+    elif inspect.ismethod(obj):
+        if obj.im_self is None:
+            # unbound method
+            return getattr(obj.__func__, '__previous_reload_method__', None)
+        else:
+            oldmethod = getattr(obj.__func__, '__previous_reload_method__', None)
+            if oldmethod is None:
+                return None
+            self = obj.im_self
+            cls = oldmethod.im_class
+            return types.MethodType(oldmethod.__func__, self, cls)
 
 
 
