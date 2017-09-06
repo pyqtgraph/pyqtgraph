@@ -57,7 +57,7 @@ def test_reload():
     if oldcfn is None:
         # Function did not reload; are we using pytest's assertion rewriting?
         raise Exception("Function did not reload. (This can happen when using py.test"
-            " with assertion rewriting; use --assert=reinterp or --assert=plain)")
+            " with assertion rewriting; use --assert=plain for this test.)")
     assert oldcfn.im_class is v1[0]
     assert oldcfn.im_func is v1[2].im_func
     assert oldcfn.im_self is c
