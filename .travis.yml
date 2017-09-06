@@ -143,7 +143,8 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. py.test --cov pyqtgraph -sv;
+      # NOTE: tests/test_reload.py breaks without --assert=reinterp|plain
+      PYTHONPATH=. py.test --cov --assert=reinterp pyqtgraph -sv;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
