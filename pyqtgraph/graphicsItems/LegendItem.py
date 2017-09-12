@@ -110,7 +110,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         #print("-------")
         for sample, label in self.items:
             height += max(sample.height(), label.height()) + 3
-            width = max(width, sample.width()+label.width())
+            width = max(width, (sample.sizeHint(QtCore.Qt.MinimumSize, sample.size()).width() +
+                                label.sizeHint(QtCore.Qt.MinimumSize, label.size()).width()))
             #print(width, height)
         #print width, height
         self.setGeometry(0, 0, width+25, height)
