@@ -182,7 +182,8 @@ def startEventLoop(name, port, authkey, ppid, debug=False):
             HANDLER.processRequests()  # exception raised when the loop should exit
             time.sleep(0.01)
         except ClosedError:
-            break
+            HANDLER.debugMsg('Exiting server loop.')
+            sys.exit(0)
 
 
 class ForkedProcess(RemoteEventHandler):
