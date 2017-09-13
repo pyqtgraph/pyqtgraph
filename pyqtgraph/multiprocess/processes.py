@@ -471,21 +471,20 @@ class FileForwarder(threading.Thread):
         self.start()
 
     def run(self):
-        if self.output == 'stdout':
+        if self.output == 'stdout' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cout(self.color, line, -1)
-        elif self.output == 'stderr':
+        elif self.output == 'stderr' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cerr(self.color, line, -1)
         else:
+            if isinstance(self.output, str):
+                self.output = getattr(sys, self.output)
             while True:
                 line = self.input.readline()
                 with self.lock:
                     self.output.write(line)
-
-
-
