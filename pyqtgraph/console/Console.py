@@ -318,7 +318,6 @@ class ConsoleWidget(QtGui.QWidget):
         elif not self.ui.catchAllExceptionsBtn.isChecked():
             return
         
-        self.ui.clearExceptionBtn.setEnabled(True)
         self.currentTraceback = tb
         
         excMessage = ''.join(traceback.format_exception_only(excType, exc))
@@ -343,6 +342,8 @@ class ConsoleWidget(QtGui.QWidget):
         the end of the stack list. If *tb* is None, then sys.exc_info() will 
         be checked instead.
         """
+        self.ui.clearExceptionBtn.setEnabled(True)
+        
         if frame is None:
             frame = sys._getframe().f_back
 
