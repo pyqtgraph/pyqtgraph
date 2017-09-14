@@ -19,8 +19,10 @@ elif QT_LIB == 'PyQt5':
 import numpy as np
 from .. import debug
 import weakref
+import gc
 from .CanvasManager import CanvasManager
 from .CanvasItem import CanvasItem, GroupCanvasItem
+
 
 class Canvas(QtGui.QWidget):
     
@@ -417,25 +419,24 @@ class Canvas(QtGui.QWidget):
             ctrl = item.ctrlWidget()
             ctrl.hide()
             self.ui.ctrlLayout.removeWidget(ctrl)
+            ctrl.setParent(None)
         else:
             if hasattr(item, '_canvasItem'):
                 self.removeItem(item._canvasItem)
             else:
                 self.view.removeItem(item)
-        
-        ## disconnect signals, remove from list, etc..
+                
+        gc.collect()
         
     def clear(self):
         while len(self.items) > 0:
             self.removeItem(self.items[0])
-        
 
     def addToScene(self, item):
         self.view.addItem(item)
         
     def removeFromScene(self, item):
         self.view.removeItem(item)
-
     
     def listItems(self):
         """Return a dictionary of name:item pairs"""

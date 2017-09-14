@@ -453,6 +453,25 @@ class CanvasItem(QtCore.QObject):
     def isVisible(self):
         return self.opts['visible']
 
+    def saveState(self):
+        return {
+            'type': self.__class__.__name__,
+            'name': self.name,
+            'visible': self.isVisible(),
+            'alpha': self.alpha(),
+            'userTransform': self.saveTransform(), 
+            'z': self.zValue(),
+            'scalable': self.opts['scalable'],
+            'rotatable': self.opts['rotatable'],
+            'movable': self.opts['movable'],
+        }
+    
+    def restoreState(self, state):
+        self.setVisible(state['visible'])
+        self.setAlpha(state['alpha'])
+        self.restoreTransform(state['userTransform'])
+        self.setZValue(state['z'])
+
 
 class GroupCanvasItem(CanvasItem):
     """
