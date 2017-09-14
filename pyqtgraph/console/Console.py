@@ -53,6 +53,7 @@ class ConsoleWidget(QtGui.QWidget):
         self.editor = editor
         self.multiline = None
         self.inCmd = False
+        self.frames = []  # stack frames to access when an item in the stack list is selected
         
         self.ui = template.Ui_Form()
         self.ui.setupUi(self)
@@ -133,14 +134,14 @@ class ConsoleWidget(QtGui.QWidget):
     def globals(self):
         frame = self.currentFrame()
         if frame is not None and self.ui.runSelectedFrameCheck.isChecked():
-            return self.currentFrame().tb_frame.f_globals
+            return self.currentFrame().f_globals
         else:
             return self.localNamespace
         
     def locals(self):
         frame = self.currentFrame()
         if frame is not None and self.ui.runSelectedFrameCheck.isChecked():
-            return self.currentFrame().tb_frame.f_locals
+            return self.currentFrame().f_locals
         else:
             return self.localNamespace
             
@@ -149,10 +150,7 @@ class ConsoleWidget(QtGui.QWidget):
         if self.currentTraceback is None:
             return None
         index = self.ui.exceptionStackList.currentRow()
-        tb = self.currentTraceback
-        for i in range(index):
-            tb = tb.tb_next
-        return tb
+        return self.frames[index]
         
     def execSingle(self, cmd):
         try:
@@ -170,7 +168,6 @@ class ConsoleWidget(QtGui.QWidget):
                 self.displayException()
         except:
             self.displayException()
-            
             
     def execMulti(self, nextLine):
         #self.stdout.write(nextLine+"\n")
@@ -202,6 +199,10 @@ class ConsoleWidget(QtGui.QWidget):
             self.multiline = None
 
     def write(self, strn, html=False):
+        isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
+        if not isGuiThread:
+            self.stdout.write(strn)
+            return
         self.output.moveCursor(QtGui.QTextCursor.End)
         if html:
             self.output.textCursor().insertHtml(strn)
@@ -293,14 +294,6 @@ class ConsoleWidget(QtGui.QWidget):
         fileName = tb.tb_frame.f_code.co_filename
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
         
-    
-    #def allExceptionsHandler(self, *args):
-        #self.exceptionHandler(*args)
-    
-    #def nextExceptionHandler(self, *args):
-        #self.ui.catchNextExceptionBtn.setChecked(False)
-        #self.exceptionHandler(*args)
-
     def updateSysTrace(self):
         ## Install or uninstall  sys.settrace handler 
         
@@ -319,7 +312,7 @@ class ConsoleWidget(QtGui.QWidget):
             else:
                 sys.settrace(self.systrace)
         
-    def exceptionHandler(self, excType, exc, tb):
+    def exceptionHandler(self, excType, exc, tb, systrace=False):
         if self.ui.catchNextExceptionBtn.isChecked():
             self.ui.catchNextExceptionBtn.setChecked(False)
         elif not self.ui.catchAllExceptionsBtn.isChecked():
@@ -330,13 +323,60 @@ class ConsoleWidget(QtGui.QWidget):
         
         excMessage = ''.join(traceback.format_exception_only(excType, exc))
         self.ui.exceptionInfoLabel.setText(excMessage)
+
+        if systrace:
+            # exceptions caught using systrace don't need the usual 
+            # call stack + traceback handling
+            self.setStack(sys._getframe().f_back.f_back)
+        else:
+            self.setStack(frame=sys._getframe().f_back, tb=tb)
+    
+    def setStack(self, frame=None, tb=None):
+        """Display a call stack and exception traceback.
+
+        This allows the user to probe the contents of any frame in the given stack.
+
+        *frame* may either be a Frame instance or None, in which case the current 
+        frame is retrieved from ``sys._getframe()``. 
+
+        If *tb* is provided then the frames in the traceback will be appended to 
+        the end of the stack list. If *tb* is None, then sys.exc_info() will 
+        be checked instead.
+        """
+        if frame is None:
+            frame = sys._getframe().f_back
+
+        if tb is None:
+            tb = sys.exc_info()[2]
+
         self.ui.exceptionStackList.clear()
+        self.frames = []
+
+        # Build stack up to this point
+        for index, line in enumerate(traceback.extract_stack(frame)):
+            self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
+        while frame is not None:
+            self.frames.insert(0, frame)
+            frame = frame.f_back
+
+        if tb is None:
+            return
+
+        self.ui.exceptionStackList.addItem('-- exception caught here: --')
+        item = self.ui.exceptionStackList.item(self.ui.exceptionStackList.count()-1)
+        item.setBackground(QtGui.QBrush(QtGui.QColor(200, 200, 200)))
+        self.frames.append(None)
+
+        # And finish the rest of the stack up to the exception
         for index, line in enumerate(traceback.extract_tb(tb)):
             self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
-    
+        while tb is not None:
+            self.frames.append(tb.tb_frame)
+            tb = tb.tb_next
+
     def systrace(self, frame, event, arg):
         if event == 'exception' and self.checkException(*arg):
-            self.exceptionHandler(*arg)
+            self.exceptionHandler(*arg, systrace=True)
         return self.systrace
         
     def checkException(self, excType, exc, tb):

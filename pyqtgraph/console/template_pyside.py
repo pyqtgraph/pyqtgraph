@@ -100,7 +100,7 @@ class Ui_Form(object):
         self.catchNextExceptionBtn.setText(QtGui.QApplication.translate("Form", "Show Next Exception", None, QtGui.QApplication.UnicodeUTF8))
         self.onlyUncaughtCheck.setText(QtGui.QApplication.translate("Form", "Only Uncaught Exceptions", None, QtGui.QApplication.UnicodeUTF8))
         self.runSelectedFrameCheck.setText(QtGui.QApplication.translate("Form", "Run commands in selected stack frame", None, QtGui.QApplication.UnicodeUTF8))
-        self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Exception Info", None, QtGui.QApplication.UnicodeUTF8))
-        self.clearExceptionBtn.setText(QtGui.QApplication.translate("Form", "Clear Exception", None, QtGui.QApplication.UnicodeUTF8))
+        self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Stack Trace", None, QtGui.QApplication.UnicodeUTF8))
+        self.clearExceptionBtn.setText(QtGui.QApplication.translate("Form", "Clear Stack", None, QtGui.QApplication.UnicodeUTF8))
 
 from .CmdInput import CmdInput
