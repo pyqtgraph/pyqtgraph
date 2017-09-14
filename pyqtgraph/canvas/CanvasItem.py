@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
@@ -238,6 +239,12 @@ class CanvasItem(QtCore.QObject):
     def alphaChanged(self, val):
         alpha = val / 1023.
         self._graphicsItem.setOpacity(alpha)
+        
+    def setAlpha(self, alpha):
+        self.alphaSlider.setValue(int(np.clip(alpha * 1023, 0, 1023)))
+        
+    def alpha(self):
+        return self.alphaSlider.value() / 1023.
         
     def isMovable(self):
         return self.opts['movable']
