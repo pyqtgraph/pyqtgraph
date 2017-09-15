@@ -189,31 +189,36 @@ class EvalNode(Node):
         
         self.ui = QtGui.QWidget()
         self.layout = QtGui.QGridLayout()
-        #self.addInBtn = QtGui.QPushButton('+Input')
-        #self.addOutBtn = QtGui.QPushButton('+Output')
         self.text = QtGui.QTextEdit()
         self.text.setTabStopWidth(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
-        #self.layout.addWidget(self.addInBtn, 0, 0)
-        #self.layout.addWidget(self.addOutBtn, 0, 1)
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)
         
-        #QtCore.QObject.connect(self.addInBtn, QtCore.SIGNAL('clicked()'), self.addInput)
-        #self.addInBtn.clicked.connect(self.addInput)
-        #QtCore.QObject.connect(self.addOutBtn, QtCore.SIGNAL('clicked()'), self.addOutput)
-        #self.addOutBtn.clicked.connect(self.addOutput)
         self.text.focusOutEvent = self.focusOutEvent
         self.lastText = None
         
     def ctrlWidget(self):
         return self.ui
         
-    #def addInput(self):
-        #Node.addInput(self, 'input', renamable=True)
+    def setCode(self, code):
+        # unindent code; this allows nicer inline code specification when 
+        # calling this method.
+        ind = []
+        lines = code.split('\n')
+        for line in lines:
+            stripped = line.lstrip()
+            if len(stripped) > 0:
+                ind.append(len(line) - len(stripped))
+        if len(ind) > 0:
+            ind = min(ind)
+            code = '\n'.join([line[ind:] for line in lines])
         
-    #def addOutput(self):
-        #Node.addOutput(self, 'output', renamable=True)
+        self.text.clear()
+        self.text.insertPlainText(code)
+
+    def code(self):
+        return self.text.toPlainText()
         
     def focusOutEvent(self, ev):
         text = str(self.text.toPlainText())
@@ -247,10 +252,10 @@ class EvalNode(Node):
         
     def restoreState(self, state):
         Node.restoreState(self, state)
-        self.text.clear()
-        self.text.insertPlainText(state['text'])
+        self.setCode(state['text'])
         self.restoreTerminals(state['terminals'])
         self.update()
+
         
 class ColumnJoinNode(Node):
     """Concatenates record arrays and/or adds new columns"""
