@@ -359,3 +359,117 @@ class ColumnJoinNode(Node):
         self.update()
         
         
+class Mean(CtrlNode):
+    """Calculate the mean of an array across an axis.
+    """
+    nodeName = 'Mean'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = None if s['axis'] == -1 else s['axis']
+        return data.mean(axis=ax)
+
+
+class Max(CtrlNode):
+    """Calculate the maximum of an array across an axis.
+    """
+    nodeName = 'Max'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = None if s['axis'] == -1 else s['axis']
+        return data.max(axis=ax)
+
+
+class Min(CtrlNode):
+    """Calculate the minimum of an array across an axis.
+    """
+    nodeName = 'Min'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': 0, 'min': -1, 'max': 1000000}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = None if s['axis'] == -1 else s['axis']
+        return data.min(axis=ax)
+
+
+class Stdev(CtrlNode):
+    """Calculate the standard deviation of an array across an axis.
+    """
+    nodeName = 'Stdev'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': -0, 'min': -1, 'max': 1000000}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = None if s['axis'] == -1 else s['axis']
+        return data.std(axis=ax)
+
+
+class Index(CtrlNode):
+    """Select an index from an array axis.
+    """
+    nodeName = 'Index'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': 0, 'min': 0, 'max': 1000000}),
+        ('index', 'intSpin', {'value': 0, 'min': 0, 'max': 1000000}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = s['axis']
+        ind = s['index']
+        if ax == 0:
+            # allow support for non-ndarray sequence types
+            return data[ind]
+        else:
+            return data.take(ind, axis=ax)
+        
+
+class Slice(CtrlNode):
+    """Select a slice from an array axis.
+    """
+    nodeName = 'Slice'
+    uiTemplate = [
+        ('axis', 'intSpin', {'value': 0, 'min': 0, 'max': 1e6}),
+        ('start', 'intSpin', {'value': 0, 'min': -1e6, 'max': 1e6}),
+        ('stop', 'intSpin', {'value': -1, 'min': -1e6, 'max': 1e6}),
+        ('step', 'intSpin', {'value': 1, 'min': -1e6, 'max': 1e6}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        ax = s['axis']
+        start = s['start']
+        stop = s['stop']
+        step = s['step']
+        if ax == 0:
+            # allow support for non-ndarray sequence types
+            return data[start:stop:step]
+        else:
+            sl = [slice(None) for i in range(data.ndim)]
+            sl[ax] = slice(start, stop, step)
+            return data[sl]
+        
+
+class AsType(CtrlNode):
+    """Convert an array to a different dtype.
+    """
+    nodeName = 'AsType'
+    uiTemplate = [
+        ('dtype', 'combo', {'values': ['float', 'int', 'float32', 'float64', 'float128', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64'], 'index': 0}),
+    ]
+    
+    def processData(self, data):
+        s = self.stateGroup.state()
+        return data.astype(s['dtype'])
+
