@@ -189,7 +189,8 @@ class Flowchart(Node):
         self.viewBox.addItem(item)
         item.moveBy(*pos)
         self._nodes[name] = node
-        self.widget().addNode(node) 
+        if node is not self.inputNode and node is not self.outputNode:
+            self.widget().addNode(node) 
         node.sigClosed.connect(self.nodeClosed)
         node.sigRenamed.connect(self.nodeRenamed)
         node.sigOutputChanged.connect(self.nodeOutputChanged)
