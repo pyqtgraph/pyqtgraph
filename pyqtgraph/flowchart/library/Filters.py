@@ -160,19 +160,13 @@ class Gaussian(CtrlNode):
     
     @metaArrayWrapper
     def processData(self, data):
+        sigma = self.ctrls['sigma'].value()
         try:
             import scipy.ndimage
+            return scipy.ndimage.gaussian_filter(data, sigma)
         except ImportError:
-            raise Exception("GaussianFilter node requires the package scipy.ndimage.")
+            return pgfn.gaussianFilter(data, sigma)
 
-        if hasattr(data, 'implements') and data.implements('MetaArray'):
-            info = data.infoCopy()
-            filt = pgfn.gaussianFilter(data.asarray(), self.ctrls['sigma'].value())
-            if 'values' in info[0]:
-                info[0]['values'] = info[0]['values'][:filt.shape[0]]
-            return metaarray.MetaArray(filt, info=info)
-        else:
-            return pgfn.gaussianFilter(data, self.ctrls['sigma'].value())
 
 class Derivative(CtrlNode):
     """Returns the pointwise derivative of the input"""
