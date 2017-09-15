@@ -96,4 +96,10 @@ class DivideNode(BinOpNode):
         # try truediv first, followed by div
         BinOpNode.__init__(self, name, ('__truediv__', '__div__'))
         
+class FloorDivideNode(BinOpNode):
+    """Returns A // B. Does not check input types."""
+    nodeName = 'FloorDivide'
+    def __init__(self, name):
+        BinOpNode.__init__(self, name, '__floordiv__')
+        
 
