@@ -602,6 +602,9 @@ class PlotItem(GraphicsWidget):
             #item.connect(item, QtCore.SIGNAL('plotChanged'), self.plotChanged)
             #item.sigPlotChanged.connect(self.plotChanged)
 
+        if self.legend is not None:
+            self.legend.removeItem(item)
+
     def clear(self):
         """
         Remove all items from the ViewBox.
@@ -646,9 +649,13 @@ class PlotItem(GraphicsWidget):
         Create a new LegendItem and anchor it over the internal ViewBox.
         Plots will be automatically displayed in the legend if they
         are created with the 'name' argument.
+
+        If a LegendItem has already been created using this method, that
+        item will be returned rather than creating a new one.
         """
-        self.legend = LegendItem(size, offset)
-        self.legend.setParentItem(self.vb)
+        if self.legend is None:
+            self.legend = LegendItem(size, offset)
+            self.legend.setParentItem(self.vb)
         return self.legend
         
     def scatterPlot(self, *args, **kargs):
