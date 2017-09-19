@@ -1280,7 +1280,7 @@ class ViewBox(GraphicsWidget):
         ## First collect all boundary information
         itemBounds = []
         for item in items:
-            if not item.isVisible():
+            if not item.isVisible() or not item.scene() is self.scene():
                 continue
         
             useX = True
