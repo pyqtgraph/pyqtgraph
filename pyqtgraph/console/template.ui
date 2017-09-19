@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>694</width>
+    <width>739</width>
     <height>497</height>
    </rect>
   </property>
@@ -153,6 +153,9 @@
         <widget class="QLabel" name="exceptionInfoLabel">
          <property name="text">
           <string>Stack Trace</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

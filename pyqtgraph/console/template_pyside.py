@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/console/template.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/console/template.ui'
 #
-# Created: Mon Dec 23 10:10:53 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Tue Sep 19 09:45:18 2017
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(710, 497)
+        Form.resize(739, 497)
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
@@ -54,9 +54,14 @@ class Ui_Form(object):
         self.exceptionGroup = QtGui.QGroupBox(self.splitter)
         self.exceptionGroup.setObjectName("exceptionGroup")
         self.gridLayout_2 = QtGui.QGridLayout(self.exceptionGroup)
-        self.gridLayout_2.setSpacing(0)
         self.gridLayout_2.setContentsMargins(-1, 0, -1, 0)
+        self.gridLayout_2.setHorizontalSpacing(2)
+        self.gridLayout_2.setVerticalSpacing(0)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.clearExceptionBtn = QtGui.QPushButton(self.exceptionGroup)
+        self.clearExceptionBtn.setEnabled(False)
+        self.clearExceptionBtn.setObjectName("clearExceptionBtn")
+        self.gridLayout_2.addWidget(self.clearExceptionBtn, 0, 6, 1, 1)
         self.catchAllExceptionsBtn = QtGui.QPushButton(self.exceptionGroup)
         self.catchAllExceptionsBtn.setCheckable(True)
         self.catchAllExceptionsBtn.setObjectName("catchAllExceptionsBtn")
@@ -68,24 +73,27 @@ class Ui_Form(object):
         self.onlyUncaughtCheck = QtGui.QCheckBox(self.exceptionGroup)
         self.onlyUncaughtCheck.setChecked(True)
         self.onlyUncaughtCheck.setObjectName("onlyUncaughtCheck")
-        self.gridLayout_2.addWidget(self.onlyUncaughtCheck, 0, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.onlyUncaughtCheck, 0, 4, 1, 1)
         self.exceptionStackList = QtGui.QListWidget(self.exceptionGroup)
         self.exceptionStackList.setAlternatingRowColors(True)
         self.exceptionStackList.setObjectName("exceptionStackList")
-        self.gridLayout_2.addWidget(self.exceptionStackList, 2, 0, 1, 5)
+        self.gridLayout_2.addWidget(self.exceptionStackList, 2, 0, 1, 7)
         self.runSelectedFrameCheck = QtGui.QCheckBox(self.exceptionGroup)
         self.runSelectedFrameCheck.setChecked(True)
         self.runSelectedFrameCheck.setObjectName("runSelectedFrameCheck")
-        self.gridLayout_2.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 5)
+        self.gridLayout_2.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
         self.exceptionInfoLabel = QtGui.QLabel(self.exceptionGroup)
+        self.exceptionInfoLabel.setWordWrap(True)
         self.exceptionInfoLabel.setObjectName("exceptionInfoLabel")
-        self.gridLayout_2.addWidget(self.exceptionInfoLabel, 1, 0, 1, 5)
-        self.clearExceptionBtn = QtGui.QPushButton(self.exceptionGroup)
-        self.clearExceptionBtn.setEnabled(False)
-        self.clearExceptionBtn.setObjectName("clearExceptionBtn")
-        self.gridLayout_2.addWidget(self.clearExceptionBtn, 0, 4, 1, 1)
+        self.gridLayout_2.addWidget(self.exceptionInfoLabel, 1, 0, 1, 7)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 0, 3, 1, 1)
+        self.gridLayout_2.addItem(spacerItem, 0, 5, 1, 1)
+        self.label = QtGui.QLabel(self.exceptionGroup)
+        self.label.setObjectName("label")
+        self.gridLayout_2.addWidget(self.label, 0, 2, 1, 1)
+        self.filterText = QtGui.QLineEdit(self.exceptionGroup)
+        self.filterText.setObjectName("filterText")
+        self.gridLayout_2.addWidget(self.filterText, 0, 3, 1, 1)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
@@ -96,11 +104,12 @@ class Ui_Form(object):
         self.historyBtn.setText(QtGui.QApplication.translate("Form", "History..", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionBtn.setText(QtGui.QApplication.translate("Form", "Exceptions..", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionGroup.setTitle(QtGui.QApplication.translate("Form", "Exception Handling", None, QtGui.QApplication.UnicodeUTF8))
+        self.clearExceptionBtn.setText(QtGui.QApplication.translate("Form", "Clear Stack", None, QtGui.QApplication.UnicodeUTF8))
         self.catchAllExceptionsBtn.setText(QtGui.QApplication.translate("Form", "Show All Exceptions", None, QtGui.QApplication.UnicodeUTF8))
         self.catchNextExceptionBtn.setText(QtGui.QApplication.translate("Form", "Show Next Exception", None, QtGui.QApplication.UnicodeUTF8))
         self.onlyUncaughtCheck.setText(QtGui.QApplication.translate("Form", "Only Uncaught Exceptions", None, QtGui.QApplication.UnicodeUTF8))
         self.runSelectedFrameCheck.setText(QtGui.QApplication.translate("Form", "Run commands in selected stack frame", None, QtGui.QApplication.UnicodeUTF8))
         self.exceptionInfoLabel.setText(QtGui.QApplication.translate("Form", "Stack Trace", None, QtGui.QApplication.UnicodeUTF8))
-        self.clearExceptionBtn.setText(QtGui.QApplication.translate("Form", "Clear Stack", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Form", "Filter (regex):", None, QtGui.QApplication.UnicodeUTF8))
 
 from .CmdInput import CmdInput
