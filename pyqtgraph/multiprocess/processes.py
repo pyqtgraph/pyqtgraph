@@ -1,4 +1,4 @@
-import subprocess, atexit, os, sys, time, random, socket, signal
+import subprocess, atexit, os, sys, time, random, socket, signal, inspect
 import multiprocessing.connection
 try:
     import cPickle as pickle
@@ -50,7 +50,9 @@ class Process(RemoteEventHandler):
                         process to process requests from the parent process until it
                         is asked to quit. If you wish to specify a different target,
                         it must be picklable (bound methods are not).
-        copySysPath     If True, copy the contents of sys.path to the remote process
+        copySysPath     If True, copy the contents of sys.path to the remote process.
+                        If False, then only the path required to import pyqtgraph is
+                        added.
         debug           If True, print detailed information about communication
                         with the child process.
         wrapStdout      If True (default on windows) then stdout and stderr from the
@@ -82,7 +84,13 @@ class Process(RemoteEventHandler):
         port = l.address[1]
 
         ## start remote process, instruct it to run target function
-        sysPath = sys.path if copySysPath else None
+        if copySysPath:
+            sysPath = sys.path
+        else:
+            # what path do we need to make target importable?
+            mod = inspect.getmodule(target)
+            modroot = sys.modules[mod.__name__.split('.')[0]]
+            sysPath = os.path.abspath(os.path.join(os.path.dirname(modroot.__file__), '..'))
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
 
@@ -182,7 +190,8 @@ def startEventLoop(name, port, authkey, ppid, debug=False):
             HANDLER.processRequests()  # exception raised when the loop should exit
             time.sleep(0.01)
         except ClosedError:
-            break
+            HANDLER.debugMsg('Exiting server loop.')
+            sys.exit(0)
 
 
 class ForkedProcess(RemoteEventHandler):
@@ -462,21 +471,20 @@ class FileForwarder(threading.Thread):
         self.start()
 
     def run(self):
-        if self.output == 'stdout':
+        if self.output == 'stdout' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cout(self.color, line, -1)
-        elif self.output == 'stderr':
+        elif self.output == 'stderr' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cerr(self.color, line, -1)
         else:
+            if isinstance(self.output, str):
+                self.output = getattr(sys, self.output)
             while True:
                 line = self.input.readline()
                 with self.lock:
                     self.output.write(line)
-
-
-
