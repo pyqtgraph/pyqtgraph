@@ -1066,9 +1066,11 @@ class AxisItem(GraphicsWidget):
         if self.linkedView() is None: 
             return
         if self.orientation in ['left', 'right']:
-            return self.linkedView().mouseDragEvent(event, axis=1)
+            ret = self.linkedView().mouseDragEvent(event, axis=1)
         else:
-            return self.linkedView().mouseDragEvent(event, axis=0)
+            ret = self.linkedView().mouseDragEvent(event, axis=0)
+        event.ignore()
+        return ret
         
     def mouseClickEvent(self, event):
         if self.linkedView() is None: 
