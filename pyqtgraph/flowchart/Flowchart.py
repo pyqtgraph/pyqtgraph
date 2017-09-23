@@ -166,6 +166,8 @@ class Flowchart(Node):
                 n[oldName].rename(newName)
 
     def createNode(self, nodeType, name=None, pos=None):
+        """Create a new Node and add it to this flowchart.
+        """
         if name is None:
             n = 0
             while True:
@@ -179,6 +181,10 @@ class Flowchart(Node):
         return node
         
     def addNode(self, node, name, pos=None):
+        """Add an existing Node to this flowchart.
+        
+        See also: createNode()
+        """
         if pos is None:
             pos = [0, 0]
         if type(pos) in [QtCore.QPoint, QtCore.QPointF]:
@@ -189,13 +195,16 @@ class Flowchart(Node):
         self.viewBox.addItem(item)
         item.moveBy(*pos)
         self._nodes[name] = node
-        self.widget().addNode(node) 
+        if node is not self.inputNode and node is not self.outputNode:
+            self.widget().addNode(node) 
         node.sigClosed.connect(self.nodeClosed)
         node.sigRenamed.connect(self.nodeRenamed)
         node.sigOutputChanged.connect(self.nodeOutputChanged)
         self.sigChartChanged.emit(self, 'add', node)
         
     def removeNode(self, node):
+        """Remove a Node from this flowchart.
+        """
         node.close()
         
     def nodeClosed(self, node):
@@ -232,7 +241,6 @@ class Flowchart(Node):
         term1 = self.internalTerminal(term1)
         term2 = self.internalTerminal(term2)
         term1.connectTo(term2)
-        
         
     def process(self, **args):
         """
@@ -325,7 +333,6 @@ class Flowchart(Node):
             
         #print "DEPS:", deps
         ## determine correct node-processing order
-        #deps[self] = []
         order = fn.toposort(deps)
         #print "ORDER1:", order
         
@@ -349,7 +356,6 @@ class Flowchart(Node):
                 if lastNode is None or ind > lastInd:
                     lastNode = n
                     lastInd = ind
-            #tdeps[t] = lastNode
             if lastInd is not None:
                 dels.append((lastInd+1, t))
         dels.sort(key=lambda a: a[0], reverse=True)
@@ -404,27 +410,25 @@ class Flowchart(Node):
                 self.inputWasSet = False
             else:
                 self.sigStateChanged.emit()
-        
-        
 
     def chartGraphicsItem(self):
-        """Return the graphicsItem which displays the internals of this flowchart.
-        (graphicsItem() still returns the external-view item)"""
-        #return self._chartGraphicsItem
+        """Return the graphicsItem that displays the internal nodes and
+        connections of this flowchart.
+        
+        Note that the similar method `graphicsItem()` is inherited from Node
+        and returns the *external* graphical representation of this flowchart."""
         return self.viewBox
         
     def widget(self):
+        """Return the control widget for this flowchart.
+        
+        This widget provides GUI access to the parameters for each node and a
+        graphical representation of the flowchart.
+        """
         if self._widget is None:
             self._widget = FlowchartCtrlWidget(self)
             self.scene = self._widget.scene()
             self.viewBox = self._widget.viewBox()
-            #self._scene = QtGui.QGraphicsScene()
-            #self._widget.setScene(self._scene)
-            #self.scene.addItem(self.chartGraphicsItem())
-            
-            #ci = self.chartGraphicsItem()
-            #self.viewBox.addItem(ci)
-            #self.viewBox.autoRange()
         return self._widget
 
     def listConnections(self):
@@ -437,10 +441,11 @@ class Flowchart(Node):
         return conn
 
     def saveState(self):
+        """Return a serializable data structure representing the current state of this flowchart. 
+        """
         state = Node.saveState(self)
         state['nodes'] = []
         state['connects'] = []
-        #state['terminals'] = self.saveTerminals()
         
         for name, node in self._nodes.items():
             cls = type(node)
@@ -460,6 +465,8 @@ class Flowchart(Node):
         return state
         
     def restoreState(self, state, clear=False):
+        """Restore the state of this flowchart from a previous call to `saveState()`.
+        """
         self.blockSignals(True)
         try:
             if clear:
@@ -469,7 +476,6 @@ class Flowchart(Node):
             nodes.sort(key=lambda a: a['pos'][0])
             for n in nodes:
                 if n['name'] in self._nodes:
-                    #self._nodes[n['name']].graphicsItem().moveBy(*n['pos'])
                     self._nodes[n['name']].restoreState(n['state'])
                     continue
                 try:
@@ -477,7 +483,6 @@ class Flowchart(Node):
                     node.restoreState(n['state'])
                 except:
                     printExc("Error creating node %s: (continuing anyway)" % n['name'])
-                #node.graphicsItem().moveBy(*n['pos'])
                 
             self.inputNode.restoreState(state.get('inputNode', {}))
             self.outputNode.restoreState(state.get('outputNode', {}))
@@ -490,7 +495,6 @@ class Flowchart(Node):
                     print(self._nodes[n1].terminals)
                     print(self._nodes[n2].terminals)
                     printExc("Error connecting terminals %s.%s - %s.%s:" % (n1, t1, n2, t2))
-                    
                 
         finally:
             self.blockSignals(False)
@@ -498,48 +502,46 @@ class Flowchart(Node):
         self.sigChartLoaded.emit()
         self.outputChanged()
         self.sigStateChanged.emit()
-        #self.sigOutputChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):
+        """Load a flowchart (*.fc) file.
+        """
         if fileName is None:
             if startDir is None:
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
             self.fileDialog = FileDialog(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
-            #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            #self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             self.fileDialog.show()
             self.fileDialog.fileSelected.connect(self.loadFile)
             return
             ## NOTE: was previously using a real widget for the file dialog's parent, but this caused weird mouse event bugs..
-            #fileName = QtGui.QFileDialog.getOpenFileName(None, "Load Flowchart..", startDir, "Flowchart (*.fc)")
         fileName = unicode(fileName)
         state = configfile.readConfigFile(fileName)
         self.restoreState(state, clear=True)
         self.viewBox.autoRange()
-        #self.emit(QtCore.SIGNAL('fileLoaded'), fileName)
         self.sigFileLoaded.emit(fileName)
         
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
+        """Save this flowchart to a .fc file
+        """
         if fileName is None:
             if startDir is None:
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
             self.fileDialog = FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
-            #self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
             self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            #self.fileDialog.setDirectory(startDir)
             self.fileDialog.show()
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
-            #fileName = QtGui.QFileDialog.getSaveFileName(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
         fileName = unicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
     def clear(self):
+        """Remove all nodes from this flowchart except the original input/output nodes.
+        """
         for n in list(self._nodes.values()):
             if n is self.inputNode or n is self.outputNode:
                 continue
@@ -552,18 +554,15 @@ class Flowchart(Node):
         self.inputNode.clearTerminals()
         self.outputNode.clearTerminals()
 
-#class FlowchartGraphicsItem(QtGui.QGraphicsItem):
+
 class FlowchartGraphicsItem(GraphicsObject):
     
     def __init__(self, chart):
-        #print "FlowchartGraphicsItem.__init__"
-        #QtGui.QGraphicsItem.__init__(self)
         GraphicsObject.__init__(self)
         self.chart = chart ## chart is an instance of Flowchart()
         self.updateTerminals()
         
     def updateTerminals(self):
-        #print "FlowchartGraphicsItem.updateTerminals"
         self.terminals = {}
         bounds = self.boundingRect()
         inp = self.chart.inputs()
@@ -758,6 +757,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
     def select(self, node):
         item = self.items[node]
         self.ui.ctrlList.setCurrentItem(item)
+
 
 class FlowchartWidget(dockarea.DockArea):
     """Includes the actual graphical flowchart and debugging interface"""
