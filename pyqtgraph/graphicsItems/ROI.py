@@ -239,6 +239,7 @@ class ROI(GraphicsObject):
             if isinstance(y, bool):
                 raise TypeError("Positional arguments to setPos() must be numerical.")
             pos = Point(pos, y)
+
         self.state['pos'] = pos
         QtGui.QGraphicsItem.setPos(self, pos)
         if update:
@@ -253,7 +254,7 @@ class ROI(GraphicsObject):
         self.state['size'] = size
         if update:
             self.stateChanged(finish=finish)
-        
+
     def setAngle(self, angle, update=True, finish=True):
         """Set the angle of rotation (in degrees) for this ROI.
         See setPos() for an explanation of the update and finish arguments.
@@ -757,11 +758,6 @@ class ROI(GraphicsObject):
         else:
             raise Exception("New point location must be given in either 'parent' or 'scene' coordinates.")
 
-        
-        ## transform p0 and p1 into parent's coordinates (same as scene coords if there is no parent). I forget why.
-        #p0 = self.mapSceneToParent(p0)
-        #p1 = self.mapSceneToParent(p1)
-
         ## Handles with a 'center' need to know their local position relative to the center point (lp0, lp1)
         if 'center' in h:
             c = h['center']
@@ -771,8 +767,6 @@ class ROI(GraphicsObject):
         
         if h['type'] == 't':
             snap = True if (modifiers & QtCore.Qt.ControlModifier) else None
-            #if self.translateSnap or ():
-                #snap = Point(self.snapSize, self.snapSize)
             self.translate(p1-p0, snap=snap, update=False)
         
         elif h['type'] == 'f':
@@ -780,7 +774,6 @@ class ROI(GraphicsObject):
             h['item'].setPos(newPos)
             h['pos'] = newPos
             self.freeHandleMoved = True
-            #self.sigRegionChanged.emit(self)  ## should be taken care of by call to stateChanged()
             
         elif h['type'] == 's':
             ## If a handle and its center have the same x or y value, we can't scale across that axis.
@@ -922,10 +915,7 @@ class ROI(GraphicsObject):
                 r = self.stateRect(newState)
                 if not self.maxBounds.contains(r):
                     return
-            #self.setTransform(tr)
-            #self.setPos(newState['pos'], update=False)
-            #self.prepareGeometryChange()
-            #self.state = newState
+            
             self.setState(newState, update=False)
         
         self.stateChanged(finish=finish)
@@ -1761,6 +1751,7 @@ class EllipseROI(ROI):
             return arr
         w = arr.shape[axes[0]]
         h = arr.shape[axes[1]]
+
         ## generate an ellipsoidal mask
         mask = np.fromfunction(lambda x,y: (((x+0.5)/(w/2.)-1)**2+ ((y+0.5)/(h/2.)-1)**2)**0.5 < 1, (w, h))
         
@@ -2179,15 +2170,7 @@ class CrosshairROI(ROI):
         self.prepareGeometryChange()
         
     def boundingRect(self):
-        #size = self.size()
-        #return QtCore.QRectF(-size[0]/2., -size[1]/2., size[0], size[1]).normalized()
         return self.shape().boundingRect()
-    
-    #def getRect(self):
-        ### same as boundingRect -- for internal use so that boundingRect can be re-implemented in subclasses
-        #size = self.size()
-        #return QtCore.QRectF(-size[0]/2., -size[1]/2., size[0], size[1]).normalized()
-        
     
     def shape(self):
         if self._shape is None:
@@ -2202,56 +2185,13 @@ class CrosshairROI(ROI):
             stroker.setWidth(10)
             outline = stroker.createStroke(p)
             self._shape = self.mapFromDevice(outline)
-            
-        
-            ##h1 = self.handles[0]['item'].pos()
-            ##h2 = self.handles[1]['item'].pos()
-            #w1 = Point(-0.5, 0)*self.size()
-            #w2 = Point(0.5, 0)*self.size()
-            #h1 = Point(0, -0.5)*self.size()
-            #h2 = Point(0, 0.5)*self.size()
-            
-            #dh = h2-h1
-            #dw = w2-w1
-            #if dh.length() == 0 or dw.length() == 0:
-                #return p
-            #pxv = self.pixelVectors(dh)[1]
-            #if pxv is None:
-                #return p
-                
-            #pxv *= 4
-            
-            #p.moveTo(h1+pxv)
-            #p.lineTo(h2+pxv)
-            #p.lineTo(h2-pxv)
-            #p.lineTo(h1-pxv)
-            #p.lineTo(h1+pxv)
-            
-            #pxv = self.pixelVectors(dw)[1]
-            #if pxv is None:
-                #return p
-                
-            #pxv *= 4
-            
-            #p.moveTo(w1+pxv)
-            #p.lineTo(w2+pxv)
-            #p.lineTo(w2-pxv)
-            #p.lineTo(w1-pxv)
-            #p.lineTo(w1+pxv)
         
         return self._shape
     
     def paint(self, p, *args):
-        #p.save()
-        #r = self.getRect()
         radius = self.getState()['size'][1]
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         p.setPen(self.currentPen)
-        #p.translate(r.left(), r.top())
-        #p.scale(r.width()/10., r.height()/10.) ## need to scale up a little because drawLine has trouble dealing with 0.5
-        #p.drawLine(0,5, 10,5)
-        #p.drawLine(5,0, 5,10)
-        #p.restore()
         
         p.drawLine(Point(0, -radius), Point(0, radius))
         p.drawLine(Point(-radius, 0), Point(radius, 0))
