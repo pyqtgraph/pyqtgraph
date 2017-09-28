@@ -232,6 +232,9 @@ class ROI(GraphicsObject):
         multiple change functions to be called sequentially while minimizing processing overhead
         and repeated signals. Setting ``update=False`` also forces ``finish=False``.
         """
+        if update not in (True, False):
+            raise TypeError("update argument must be bool")
+        
         if y is None:
             pos = Point(pos)
         else:
@@ -249,6 +252,8 @@ class ROI(GraphicsObject):
         """Set the size of the ROI. May be specified as a QPoint, Point, or list of two values.
         See setPos() for an explanation of the update and finish arguments.
         """
+        if update not in (True, False):
+            raise TypeError("update argument must be bool")
         size = Point(size)
         self.prepareGeometryChange()
         self.state['size'] = size
@@ -259,6 +264,8 @@ class ROI(GraphicsObject):
         """Set the angle of rotation (in degrees) for this ROI.
         See setPos() for an explanation of the update and finish arguments.
         """
+        if update not in (True, False):
+            raise TypeError("update argument must be bool")
         self.state['angle'] = angle
         tr = QtGui.QTransform()
         #tr.rotate(-angle * 180 / np.pi)
