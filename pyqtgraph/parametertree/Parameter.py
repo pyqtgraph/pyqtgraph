@@ -653,18 +653,19 @@ class Parameter(QtCore.QObject):
         """Return a child parameter. 
         Accepts the name of the child or a tuple (path, to, child)
 
-        Added in version 0.9.9. Ealier versions used the 'param' method, which is still
-        implemented for backward compatibility."""
+        Added in version 0.9.9. Earlier versions used the 'param' method, which is still
+        implemented for backward compatibility.
+        """
         try:
             param = self.names[names[0]]
         except KeyError:
-            raise Exception("Parameter %s has no child named %s" % (self.name(), names[0]))
+            raise KeyError("Parameter %s has no child named %s" % (self.name(), names[0]))
         
         if len(names) > 1:
-            return param.param(*names[1:])
+            return param.child(*names[1:])
         else:
             return param
-        
+
     def param(self, *names):
         # for backward compatibility.
         return self.child(*names)
