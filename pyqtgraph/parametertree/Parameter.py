@@ -162,7 +162,11 @@ class Parameter(QtCore.QObject):
             'title': None,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
+        value = opts.get('value', None)
+        name = opts.get('name', None)
         self.opts.update(opts)
+        self.opts['value'] = None  # will be set later.
+        self.opts['name'] = None
         
         self.childs = []
         self.names = {}   ## map name:child
@@ -172,17 +176,19 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
         
-        if 'value' not in self.opts:
-            self.opts['value'] = None
-        
-        if 'name' not in self.opts or not isinstance(self.opts['name'], basestring):
+        if not isinstance(name, basestring):
             raise Exception("Parameter must have a string name specified in opts.")
-        self.setName(opts['name'])
+        self.setName(name)
         
         self.addChildren(self.opts.get('children', []))
-            
-        if 'value' in self.opts and 'default' not in self.opts:
-            self.opts['default'] = self.opts['value']
+        
+        self.opts['value'] = None
+        if value is not None:
+            self.setValue(value)
+
+        if 'default' not in self.opts:
+            self.opts['default'] = None
+            self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
