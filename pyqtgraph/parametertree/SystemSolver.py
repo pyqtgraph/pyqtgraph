@@ -175,6 +175,16 @@ class SystemSolver(object):
         elif constraint == 'fixed':
             if 'f' not in var[3]:
                 raise TypeError("Fixed constraints not allowed for '%s'" % name)
+            # This is nice, but not reliable because sometimes there is 1 DOF but we set 2
+            # values simultaneously. 
+            # if var[2] is None:
+            #     try:
+            #         self.get(name)
+            #         # has already been computed by the system; adding a fixed constraint
+            #         # would overspecify the system.
+            #         raise ValueError("Cannot fix parameter '%s'; system would become overconstrained." % name)
+            #     except RuntimeError:
+            #         pass
             var[2] = constraint
         elif isinstance(constraint, tuple):
             if 'r' not in var[3]:
@@ -245,6 +255,31 @@ class SystemSolver(object):
         for k in self._vars:
             getattr(self, k)
                 
+    def checkOverconstraint(self):
+        """Check whether the system is overconstrained. If so, return the name of
+        the first overconstrained parameter.
+
+        Overconstraints occur when any fixed parameter can be successfully computed by the system.
+        (Ideally, all parameters are either fixed by the user or constrained by the
+        system, but never both).
+        """
+        for k,v in self._vars.items():
+            if v[2] == 'fixed' and 'n' in v[3]:
+                oldval = v[:]
+                self.set(k, None, None)
+                try:
+                    self.get(k)
+                    return k
+                except RuntimeError:
+                    pass
+                finally:
+                    self._vars[k] = oldval
+
+        return False
+
+
+
+
     def __repr__(self):
         state = OrderedDict()
         for name, var in self._vars.items():
