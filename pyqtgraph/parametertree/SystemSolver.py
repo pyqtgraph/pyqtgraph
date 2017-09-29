@@ -177,7 +177,7 @@ class SystemSolver(object):
             raise TypeError("constraint must be None, True, 'fixed', or tuple. (got %s)" % constraint)
         
         # type checking / massaging
-        if var[1] is np.ndarray:
+        if var[1] is np.ndarray and value is not None:
             value = np.array(value, dtype=float)
         elif var[1] in (int, float, tuple) and value is not None:
             value = var[1](value)
@@ -185,9 +185,9 @@ class SystemSolver(object):
         # constraint checks
         if constraint is True and not self.check_constraint(name, value):
             raise ValueError("Setting %s = %s violates constraint %s" % (name, value, var[2]))
-        
+
         # invalidate other dependent values
-        if var[0] is not None:
+        if var[0] is not None or value is None:
             # todo: we can make this more clever..(and might need to) 
             # we just know that a value of None cannot have dependencies
             # (because if anyone else had asked for this value, it wouldn't be 
