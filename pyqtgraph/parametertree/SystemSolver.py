@@ -1,5 +1,7 @@
 from ..pgcollections import OrderedDict
 import numpy as np
+import copy
+
 
 class SystemSolver(object):
     """
@@ -73,6 +75,12 @@ class SystemSolver(object):
         self.__dict__['_currentGets'] = set()
         self.reset()
         
+    def copy(self):
+        sys = type(self)()
+        sys.__dict__['_vars'] = copy.deepcopy(self.__dict__['_vars'])
+        sys.__dict__['_currentGets'] = copy.deepcopy(self.__dict__['_currentGets'])
+        return sys
+
     def reset(self):
         """
         Reset all variables in the solver to their default state.
