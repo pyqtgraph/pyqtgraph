@@ -22,6 +22,12 @@ if __name__ == '__main__':
             while len(sys.path) > 0:
                 sys.path.pop()
             sys.path.extend(path)
+
+    pyqtapis = opts.pop('pyqtapis', None)
+    if pyqtapis is not None:
+        import sip
+        for k,v in pyqtapis.items():
+            sip.setapi(k, v)
         
     if opts.pop('pyside', False):
         import PySide

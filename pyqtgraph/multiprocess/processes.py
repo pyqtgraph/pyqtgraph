@@ -39,7 +39,7 @@ class Process(RemoteEventHandler):
     """
     _process_count = 1  # just used for assigning colors to each process for debugging
 
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None, pyqtapis=None):
         """
         ==============  =============================================================
         **Arguments:**
@@ -47,7 +47,7 @@ class Process(RemoteEventHandler):
                         from the remote process.
         target          Optional function to call after starting remote process.
                         By default, this is startEventLoop(), which causes the remote
-                        process to process requests from the parent process until it
+                        process to handle requests from the parent process until it
                         is asked to quit. If you wish to specify a different target,
                         it must be picklable (bound methods are not).
         copySysPath     If True, copy the contents of sys.path to the remote process.
@@ -61,6 +61,8 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
+        pyqtapis        Optional dictionary of PyQt API version numbers to set before
+                        importing pyqtgraph in the remote process.
         ==============  =============================================================
         """
         if target is None:
@@ -130,7 +132,8 @@ class Process(RemoteEventHandler):
             targetStr=targetStr, 
             path=sysPath, 
             pyside=USE_PYSIDE,
-            debug=procDebug
+            debug=procDebug,
+            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
