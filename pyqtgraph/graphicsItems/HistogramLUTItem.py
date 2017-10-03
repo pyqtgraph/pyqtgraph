@@ -25,11 +25,29 @@ __all__ = ['HistogramLUTItem']
 class HistogramLUTItem(GraphicsWidget):
     """
     This is a graphicsWidget which provides controls for adjusting the display of an image.
+    
     Includes:
 
     - Image histogram 
     - Movable region over histogram to select black/white levels
     - Gradient editor to define color lookup table for single-channel images
+    
+    Parameters
+    ----------
+    image : ImageItem or None
+        If *image* is provided, then the control will be automatically linked to
+        the image and changes to the control will be immediately reflected in
+        the image's appearance.
+    fillHistogram : bool
+        By default, the histogram is rendered with a fill.
+        For performance, set *fillHistogram* = False.    
+    rgbHistogram : bool
+        Sets whether the histogram is computed once over all channels of the
+        image, or once per channel.
+    levelMode : 'mono' or 'rgba'
+        If 'mono', then only a single set of black/whilte level lines is drawn,
+        and the levels apply to all channels in the image. If 'rgba', then one
+        set of levels is drawn for each channel.
     """
     
     sigLookupTableChanged = QtCore.Signal(object)
@@ -37,10 +55,6 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelChangeFinished = QtCore.Signal(object)
     
     def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono'):
-        """
-        If *image* (ImageItem) is provided, then the control will be automatically linked to the image and changes to the control will be immediately reflected in the image's appearance.
-        By default, the histogram is rendered with a fill. For performance, set *fillHistogram* = False.
-        """
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
@@ -241,6 +255,8 @@ class HistogramLUTItem(GraphicsWidget):
             
     def getLevels(self):
         """Return the min and max levels.
+        
+        For rgba mode, this returns a list of the levels for each channel.
         """
         if self.levelMode == 'mono':
             return self.region.getRegion()
