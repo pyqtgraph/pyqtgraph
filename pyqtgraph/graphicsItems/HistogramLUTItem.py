@@ -76,7 +76,6 @@ class HistogramLUTItem(GraphicsWidget):
             region.sigRegionChanged.connect(self.regionChanging)
             region.sigRegionChangeFinished.connect(self.regionChanged)
             
-            
         self.region = self.regions[0]  # for backward compatibility.
         
         self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
@@ -86,9 +85,6 @@ class HistogramLUTItem(GraphicsWidget):
         self.range = None
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
-        
-        #self.grid = GridItem()
-        #self.vb.addItem(self.grid)
         
         self.gradient.sigGradientChanged.connect(self.gradientChanged)
         self.vb.sigRangeChanged.connect(self.viewRangeChanged)
@@ -114,7 +110,6 @@ class HistogramLUTItem(GraphicsWidget):
         
         if image is not None:
             self.setImageItem(image)
-        #self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Expanding)
         
     def fillHistogram(self, fill=True, level=0.0, color=(100, 100, 200)):
         colors = [color, (255, 0, 0, 50), (0, 255, 0, 50), (0, 0, 255, 50), (255, 255, 255, 50)]
@@ -124,9 +119,6 @@ class HistogramLUTItem(GraphicsWidget):
                 plot.setBrush(colors[i])
             else:
                 plot.setFillLevel(None)
-        
-    #def sizeHint(self, *args):
-        #return QtCore.QSizeF(115, 200)
         
     def paint(self, p, *args):
         if self.levelMode != 'mono':
@@ -143,8 +135,6 @@ class HistogramLUTItem(GraphicsWidget):
             p.drawLine(p2 - Point(0, 5), gradRect.topLeft())
             p.drawLine(gradRect.topLeft(), gradRect.topRight())
             p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
-        #p.drawRect(self.boundingRect())
-        
         
     def setHistogramRange(self, mn, mx, padding=0.1):
         """Set the Y range on the histogram plot. This disables auto-scaling."""
