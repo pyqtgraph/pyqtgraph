@@ -489,14 +489,17 @@ class ImageItem(GraphicsObject):
                 bins = [mn, mx]
 
         kwds['bins'] = bins
-        stepData = stepData[np.isfinite(stepData)]
+
         if perChannel:
             hist = []
             for i in range(stepData.shape[-1]):
-                h = np.histogram(stepData[..., i], **kwds)
+                stepChan = stepData[..., i]
+                stepChan = stepChan[np.isfinite(stepChan)]
+                h = np.histogram(stepChan, **kwds)
                 hist.append((h[1][:-1], h[0]))
             return hist
         else:
+            stepData = stepData[np.isfinite(stepData)]
             hist = np.histogram(stepData, **kwds)
             return hist[1][:-1], hist[0]
 
