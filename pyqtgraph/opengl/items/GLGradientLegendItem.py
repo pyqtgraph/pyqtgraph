@@ -1,40 +1,56 @@
-from pyqtgraph.Qt import QtGui, QtCore
 import numpy
 import pyqtgraph as pg
 from OpenGL.GL import *
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
+from .. GLGraphicsItem import GLGraphicsItem
 
-class glGradientLegendItem(GLGraphicsItem):
+class GLGradientLegendItem(GLGraphicsItem):
+    """
+    Displays legend colorbar on the screen.
+    """
     def __init__(self, **kwds):
-        """All keyword arguments are passed to setData()"""
+        """
+        Arguments:
+            pos: position of the colorbar on the screen, from the top left corner, in pixels
+            size: size of the colorbar without the text, in pixels
+            gradient: a pg.ColorMap used to color the colorbar
+            labels: a dict of text:value to display next to the colorbar.
+                The value corresponds to a position in the gradient.
+            fontColor: sets the color of the texts
+            #Todo:
+                size as percentage
+                legend title
+        """
         GLGraphicsItem.__init__(self)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
-        self.pos = None
+        self.pos = (10,10)
+        self.size = (10,100)
+        self.fontColor = (1.0, 1.0, 1.0, 1.0)
         self.stops = None
         self.colors = None
         self.gradient = None
         self.setData(**kwds)
 
     def setData(self, **kwds):
-        args = ['size', 'pos', 'gradient', 'labels']
+        args = ['size', 'pos', 'gradient', 'labels', 'fontColor']
         for k in kwds.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
+
         self.antialias = False
+
         for arg in args:
             if arg in kwds:
                 setattr(self, arg, kwds[arg])
-                #self.vbo.pop(arg, None)
-        if self.gradient is not None and hasattr(self.gradient,"getStops"):
-            self.stops, self.colors = self.gradient.getStops("float")
 
+        if self.gradient is not None and hasattr(self.gradient, "getStops"):
+            self.stops, self.colors = self.gradient.getStops("float")
             self.colors = self.colors/255.0
 
         self.update()
 
     def paint(self):
-        if self.pos is None:
+        if self.pos is None or self.stops is None:
             return
         self.setupGLState()
         glMatrixMode(GL_PROJECTION)
@@ -47,6 +63,7 @@ class glGradientLegendItem(GLGraphicsItem):
 
         glClear(GL_DEPTH_BUFFER_BIT)
 
+        #draw the colorbar
         glTranslate(self.pos[0],self.pos[1],0)
         glScale(self.size[0],self.size[1],0)
         glBegin(GL_QUAD_STRIP)
@@ -57,52 +74,17 @@ class glGradientLegendItem(GLGraphicsItem):
             glVertex2d(1,1-p)
         glEnd()
 
+        #draw labels
         #scaling and translate doent work on rendertext
-        glColor3f(1,1,1)
+        glColor4f(*self.fontColor)
         for k in self.labels:
             x = 1.1*self.size[0]+self.pos[0]
             y = self.size[1]-self.labels[k]*self.size[1]+self.pos[1]+8
             self.view().renderText(x,y,k)
 
-
-
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
 
-if __name__ == '__main__':
-    from pyqtgraph.Qt import QtCore, QtGui
-    import pyqtgraph.opengl as gl
-    import pyqtgraph as pg
-    import numpy
-    import sys
-    app = QtGui.QApplication([])
-    w = gl.GLViewWidget()
-    w.show()
 
-    def fn(x, y):
-        return np.cos((x**2 + y**2)**0.5)
-    n=50
-    y = numpy.linspace(-10,10,50)
-    x = numpy.linspace(-10,10,50)
-    d = (x**2 + y[:,None]**2)**0.5
-    z = 10*numpy.cos(d) / (d+1)
-    c = z/z.max()
-
-    cmap = pg.ColorMap((0,.25,.5,.75,1),((0,0,255),(0,255,255),(0,255,0),(255,255,0),(255,0,0)))
-    c = cmap.map(c)
-
-    for i in range(n):
-        yi = y[i]
-        di = d[i]
-        zi = z[i]
-        ci = c[i]
-        pos = numpy.vstack([x,numpy.ones(len(x))*yi,zi]).transpose()
-        plt = gl.GLLinePlotItem(pos=pos, color=ci, antialias=True)
-        w.addItem(plt)
-
-    gll = glGradientLegendItem(pos = (10,10), size=(50,300), gradient=cmap,labels= {".1":.1,".5":.5, ".7":.7, "1":1})
-    w.addItem(gll)
-
-    QtGui.QApplication.instance().exec_()
 
