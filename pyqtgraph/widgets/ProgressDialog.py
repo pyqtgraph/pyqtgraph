@@ -39,6 +39,13 @@ class ProgressDialog(QtGui.QProgressDialog):
                        any).
         ============== ================================================================
         """    
+        # attributes used for nesting dialogs
+        self.nestedLayout = None
+        self._nestableWidgets = None
+        self._nestingReady = False
+        self._topDialog = None
+        self._subBars = []
+        
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
         if self.disabled:
@@ -63,12 +70,6 @@ class ProgressDialog(QtGui.QProgressDialog):
         self.setValue(self.minimum())
         if noCancel:
             self.setCancelButton(None)
-
-        # attributes used for nesting dialogs
-        self.nestedLayout = None
-        self._nestableWidgets = None
-        self._nestingReady = False
-        self._topDialog = None
         
     def __enter__(self):
         if self.disabled:
@@ -113,31 +114,32 @@ class ProgressDialog(QtGui.QProgressDialog):
         self._prepareNesting()
         
         bar, btn = dlg._extractWidgets()
-        bar.removed = False
         
         # where should we insert this widget? Find the first slot with a 
         # "removed" widget (that was left as a placeholder)
-        nw = self.nestedLayout.count()
         inserted = False
-        if nw > 1:
-            for i in range(1, nw):
-                bar2 = self.nestedLayout.itemAt(i).widget()
-                if bar2.removed:
-                    self.nestedLayout.removeWidget(bar2)
-                    bar2.hide()
-                    bar2.setParent(None)
-                    self.nestedLayout.insertWidget(i, bar)
-                    inserted = True
-                    break
+        for i,bar2 in enumerate(self._subBars):
+            if bar2.hidden:
+                self._subBars.pop(i)
+                bar2.hide()
+                bar2.setParent(None)
+                self._subBars.insert(i, bar)
+                inserted = True
+                break
         if not inserted:
-            self.nestedLayout.addWidget(bar)
-
+            self._subBars.append(bar)
+            
+        # reset the layout
+        while self.nestedLayout.count() > 0:
+            self.nestedLayout.takeAt(0)
+        for b in self._subBars:
+            self.nestedLayout.addWidget(b)
+            
     def _removeSubDialog(self, dlg):
         # don't remove the widget just yet; instead we hide it and leave it in 
         # as a placeholder.
         bar, btn = dlg._extractWidgets()
-        bar.layout().setCurrentIndex(1)  # causes widgets to be hidden without changing size
-        bar.removed = True # mark as removed so we know we can insert another bar here later
+        bar.hide()
 
     def _prepareNesting(self):
         # extract all child widgets and place into a new layout that we can add to
@@ -156,6 +158,7 @@ class ProgressDialog(QtGui.QProgressDialog):
             # re-insert all widgets
             bar, btn = self._extractWidgets()
             self.nestedLayout.addWidget(bar)
+            self._subBars.append(bar)
             self._topLayout.addWidget(btn, 1, 1, 1, 1)
             self._topLayout.setColumnStretch(0, 100)
             self._topLayout.setColumnStretch(1, 1)
@@ -165,31 +168,17 @@ class ProgressDialog(QtGui.QProgressDialog):
             self._nestingReady = True
 
     def _extractWidgets(self):
-        # return a single widget containing all sub-widgets nicely arranged
+        # return:
+        #   1. a single widget containing the label and progress bar
+        #   2. the cancel button
+        
         if self._nestableWidgets is None:
             widgets = [ch for ch in self.children() if isinstance(ch, QtGui.QWidget)]
             label = [ch for ch in self.children() if isinstance(ch, QtGui.QLabel)][0]
             bar = [ch for ch in self.children() if isinstance(ch, QtGui.QProgressBar)][0]
             btn = [ch for ch in self.children() if isinstance(ch, QtGui.QPushButton)][0]
             
-            # join label and bar into a stacked layout so they can be hidden
-            # without changing size
-            sw = QtGui.QWidget()
-            sl = QtGui.QStackedLayout()
-            sw.setLayout(sl)
-            sl.setContentsMargins(0, 0, 0, 0)
-            
-            # inside the stacked layout, the bar and label are in a vbox
-            w = QtGui.QWidget()
-            sl.addWidget(w)
-            l = QtGui.QVBoxLayout()
-            w.setLayout(l)
-            l.addWidget(label)
-            l.addWidget(bar)
-            
-            # add a blank page to the stacked layout
-            blank = QtGui.QWidget()
-            sl.addWidget(blank)
+            sw = ProgressWidget(label, bar)
             
             self._nestableWidgets = (sw, btn)
             
@@ -201,6 +190,11 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return
         QtGui.QProgressDialog.setValue(self, val)
+        
+        if self._topDialog is not None:
+            tbar = self._topDialog._extractWidgets()[0].bar
+            tlab = self._topDialog._extractWidgets()[0].label
+            print(tlab.pos(), tbar.pos())
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
@@ -236,3 +230,26 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.disabled:
             return 0
         return QtGui.QProgressDialog.minimum(self)
+
+
+class ProgressWidget(QtGui.QWidget):
+    def __init__(self, label, bar):
+        QtGui.QWidget.__init__(self)
+        self.hidden = False
+        self.layout = QtGui.QVBoxLayout()
+        self.setLayout(self.layout)
+        
+        self.label = label
+        self.bar = bar
+        self.layout.addWidget(label)
+        self.layout.addWidget(bar)
+        
+    def eventFilter(self, obj, ev):
+        return ev.type() == QtCore.QEvent.Paint
+    
+    def hide(self):
+        # hide label and bar, but continue occupying the same space in the layout
+        for widget in (self.label, self.bar):
+            widget.installEventFilter(self)
+            widget.update()
+        self.hidden = True
