@@ -199,7 +199,7 @@ class HistogramLUTItem(GraphicsWidget):
 
     def regionChanged(self):
         if self.imageItem() is not None:
-            self.imageItem().setLevels(self.region.getRegion())
+            self.imageItem().setLevels(self.getLevels())
         self.sigLevelChangeFinished.emit(self)
 
     def regionChanging(self):
