@@ -15,7 +15,7 @@ from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
 from . import getConfigOption, setConfigOptions
 from . import debug
-
+from .metaarray import MetaArray
 
 
 Colors = {
