@@ -45,6 +45,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         self._nestingReady = False
         self._topDialog = None
         self._subBars = []
+        self.nested = nested
         
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
@@ -77,7 +78,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self.busyCursor:
             QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         
-        if len(ProgressDialog.allDialogs) > 0:
+        if self.nested and len(ProgressDialog.allDialogs) > 0:
             topDialog = ProgressDialog.allDialogs[0]
             topDialog._addSubDialog(self)
             self._topDialog = topDialog
