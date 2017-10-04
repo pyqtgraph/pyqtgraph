@@ -288,9 +288,21 @@ class HistogramLUTItem(GraphicsWidget):
         Options are 'mono' or 'rgba'.
         """
         assert mode in ('mono', 'rgba')
+        
+        oldLevels = self.getLevels()
+        
         self.levelMode = mode
         self._showRegions()
         self.imageChanged()
+        
+        # do our best to preserve old levels
+        if mode == 'mono':
+            levels = np.array(oldLevels).mean(axis=0)
+            self.setLevels(*levels)
+        else:
+            levels = [oldLevels] * 4
+            self.setLevels(rgba=levels)
+        
         self.update()
 
     def _showRegions(self):
