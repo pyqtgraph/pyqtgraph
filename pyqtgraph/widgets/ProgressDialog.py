@@ -6,7 +6,10 @@ __all__ = ['ProgressDialog']
 
 class ProgressDialog(QtGui.QProgressDialog):
     """
-    Extends QProgressDialog for use in 'with' statements.
+    Extends QProgressDialog:
+    
+    * Adds context management so the dialog may be used in `with` statements
+    * Allows nesting multiple progress dialogs
 
     Example::
 
@@ -35,8 +38,7 @@ class ProgressDialog(QtGui.QProgressDialog):
                        If ProgressDialog is entered from a non-gui thread, it will
                        always be disabled.
         nested         (bool) If True, then this progress bar will be displayed inside
-                       any pre-existing progress dialogs that also allow nesting (if
-                       any).
+                       any pre-existing progress dialogs that also allow nesting.
         ============== ================================================================
         """    
         # attributes used for nesting dialogs
@@ -198,10 +200,6 @@ class ProgressDialog(QtGui.QProgressDialog):
             return
         QtGui.QProgressDialog.setValue(self, val)
         
-        if self._topDialog is not None:
-            tbar = self._topDialog._extractWidgets()[0].bar
-            tlab = self._topDialog._extractWidgets()[0].label
-        
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
         if self.windowModality() == QtCore.Qt.WindowModal:
@@ -239,6 +237,9 @@ class ProgressDialog(QtGui.QProgressDialog):
 
 
 class ProgressWidget(QtGui.QWidget):
+    """Container for a label + progress bar that also allows its child widgets
+    to be hidden without changing size.
+    """
     def __init__(self, label, bar):
         QtGui.QWidget.__init__(self)
         self.hidden = False
