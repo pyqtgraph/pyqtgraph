@@ -747,8 +747,7 @@ def subArray(data, offset, shape, stride):
     the input in the example above to have shape (10, 7) would cause the
     output to have shape (2, 3, 7).
     """
-    #data = data.flatten()
-    data = data[offset:]
+    data = np.ascontiguousarray(data)[offset:]
     shape = tuple(shape)
     extraShape = data.shape[1:]
 
