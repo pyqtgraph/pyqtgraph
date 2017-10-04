@@ -200,7 +200,6 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self._topDialog is not None:
             tbar = self._topDialog._extractWidgets()[0].bar
             tlab = self._topDialog._extractWidgets()[0].label
-            print(tlab.pos(), tbar.pos())
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
