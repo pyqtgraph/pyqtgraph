@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0,'C:/Python27/Lib/site-packages/pg__dev/pyqtgraph/')
-
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
