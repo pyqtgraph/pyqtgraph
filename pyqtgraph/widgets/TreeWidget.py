@@ -350,7 +350,7 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
         """
 
             
-class InvisibleRootItem(QtGui.QTreeWidgetItem):
+class InvisibleRootItem(object):
     """Wrapper around a TreeWidget's invisible root item that calls
     TreeWidget.informTreeWidgetChange when child items are added/removed.
     """
