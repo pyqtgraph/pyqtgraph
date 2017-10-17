@@ -17,7 +17,11 @@ class TreeWidget(QtGui.QTreeWidget):
     
     def __init__(self, parent=None):
         QtGui.QTreeWidget.__init__(self, parent)
-        #self.itemWidgets = WeakKeyDictionary()
+        
+        # wrap this item so that we can propagate tree change information
+        # to children.
+        self._invRootItem = InvisibleRootItem(QtGui.QTreeWidget.invisibleRootItem(self))
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setEditTriggers(QtGui.QAbstractItemView.EditKeyPressed|QtGui.QAbstractItemView.SelectedClicked)
@@ -210,9 +214,7 @@ class TreeWidget(QtGui.QTreeWidget):
             #self.informTreeWidgetChange(item)
 
     def invisibleRootItem(self):
-        # wrap this item so that we can propagate tree change information
-        # to children.
-        return InvisibleRootItem(QtGui.QTreeWidget.invisibleRootItem(self))
+        return self._invRootItem
         
     def itemFromIndex(self, index):
         """Return the item and column corresponding to a QModelIndex.
