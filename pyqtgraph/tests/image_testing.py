@@ -10,11 +10,13 @@ Procedure for unit-testing with images:
 
        $ PYQTGRAPH_AUDIT=1 python pyqtgraph/graphicsItems/tests/test_PlotCurveItem.py
 
-   Any failing tests will
-   display the test results, standard image, and the differences between the
-   two. If the test result is bad, then press (f)ail. If the test result is
-   good, then press (p)ass and the new image will be saved to the test-data
-   directory.
+   Any failing tests will display the test results, standard image, and the
+   differences between the two. If the test result is bad, then press (f)ail.
+   If the test result is good, then press (p)ass and the new image will be
+   saved to the test-data directory.
+   
+   To check all test results regardless of whether the test failed, set the
+   environment variable PYQTGRAPH_AUDIT_ALL=1.
 
 3. After adding or changing test images, create a new commit:
 
@@ -162,6 +164,8 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
 
     # If the test image does not match, then we go to audit if requested.
     try:
+        if stdImage is None:
+            raise Exception("No reference image saved for this test.")
         if image.shape[2] != stdImage.shape[2]:
             raise Exception("Test result has different channel count than standard image"
                             "(%d vs %d)" % (image.shape[2], stdImage.shape[2]))
