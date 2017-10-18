@@ -571,7 +571,6 @@ class ROI(GraphicsObject):
         ## Note: by default, handles are not user-removable even if this method returns True.
         return True
         
-        
     def getLocalHandlePositions(self, index=None):
         """Returns the position of handles in the ROI's coordinate system.
         
@@ -1969,9 +1968,13 @@ class LineSegmentROI(ROI):
         if len(positions) > 2:
             raise Exception("LineSegmentROI must be defined by exactly 2 positions. For more points, use PolyLineROI.")
         
-        self.endpoints = []
         for i, p in enumerate(positions):
-            self.endpoints.append(self.addFreeHandle(p, item=handles[i]))
+            self.addFreeHandle(p, item=handles[i])
+            
+    @property
+    def endpoints(self):
+        # must not be cached because self.handles may change.
+        return [h['item'] for h in self.handles]
         
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]
@@ -2018,7 +2021,6 @@ class LineSegmentROI(ROI):
         
         See ROI.getArrayRegion() for a description of the arguments.
         """
-        
         imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
         rgns = []
         coords = []
