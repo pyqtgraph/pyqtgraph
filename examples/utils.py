@@ -32,6 +32,7 @@ examples = OrderedDict([
         ('Optics', 'optics_demos.py'),
         ('Special relativity', 'relativity_demo.py'),
         ('Verlet chain', 'verlet_chain_demo.py'),
+        ('Koch Fractal', 'fractal.py'),
     ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
