@@ -106,11 +106,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
+        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
         self.setOpts(**kwargs)
         self._updateHeight()
         
         self.editingFinished.connect(self.editingFinishedEvent)
-        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
 
     def event(self, ev):
         ret = QtGui.QAbstractSpinBox.event(self, ev)
