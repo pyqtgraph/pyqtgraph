@@ -1,7 +1,7 @@
 import os, sys, subprocess, tempfile
 import pyqtgraph as pg
-import six
 import pytest
+from pyqtgraph.util import six
 
 code = """
 import sys

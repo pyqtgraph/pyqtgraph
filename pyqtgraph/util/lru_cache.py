@@ -5,6 +5,10 @@ import itertools
 
 _IS_PY3 = sys.version_info[0] == 3
 
+# might be worth replacing this LRU cache with the one from boltons.
+# https://github.com/mahmoud/boltons/blob/e2e5094bf6cd2974201d948710b8179635857dec/boltons/cacheutils.py#L73
+# boltons is tested for 2.6, 2.7 and 3.4
+# https://travis-ci.org/mahmoud/boltons
 class LRUCache(object):
     '''
     This LRU cache should be reasonable for short collections (until around 100 items), as it does a

@@ -43,6 +43,8 @@ def checkLru(lru):
     assert [(1, 1), (2, 2)] == list(lru.iteritems(accessTime=True))
 
     lru.clear()
+    # this iteritems() should be py2/py3 compatible since there is an
+    # `iteritems` function on `lru`
     assert [] == list(lru.iteritems())
 
 

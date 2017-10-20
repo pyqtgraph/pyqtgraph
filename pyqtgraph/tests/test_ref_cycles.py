@@ -5,7 +5,7 @@ Test for unwanted reference cycles
 import pyqtgraph as pg
 import numpy as np
 import gc, weakref
-import six
+from pyqtgraph.util import six
 import pytest
 app = pg.mkQApp()
 

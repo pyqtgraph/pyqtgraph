@@ -2,7 +2,7 @@ import os, sys, time, multiprocessing, re
 from .processes import ForkedProcess
 from .remoteproxy import ClosedError
 from ..python2_3 import basestring, xrange
-
+from ..util import six
 
 class CanceledError(Exception):
     """Raised when the progress dialog is canceled during a processing operation."""
@@ -240,7 +240,7 @@ class Tasker(object):
         self.proc = process
         self.par = parallelizer
         self.tasks = tasks
-        for k, v in kwds.iteritems():
+        for k, v in six.iteritems(kwds):
             setattr(self, k, v)
         
     def __iter__(self):
