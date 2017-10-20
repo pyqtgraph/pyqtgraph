@@ -400,6 +400,7 @@ class GroupParameterItem(ParameterItem):
         else:
             for c in [0,1]:
                 self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
+                self.setForeground(c, QtGui.QBrush(QtGui.QColor(100,100,100)))
                 font = self.font(c)
                 font.setBold(True)
                 #font.setPointSize(font.pointSize()+1)
