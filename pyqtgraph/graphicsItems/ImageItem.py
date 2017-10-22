@@ -329,7 +329,7 @@ class ImageItem(GraphicsObject):
             sl = [slice(None)] * data.ndim
             sl[ax] = slice(None, None, 2)
             data = data[sl]
-        return nanmin(data), nanmax(data)
+        return np.nanmin(data), np.nanmax(data)
 
     def updateImage(self, *args, **kargs):
         ## used for re-rendering qimage from self.image.
