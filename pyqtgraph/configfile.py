@@ -9,7 +9,7 @@ file format. Data structures may be nested and contain any data type as long
 as it can be converted to/from a string using repr and eval.
 """
 
-import re, os, sys
+import re, os, sys, datetime
 import numpy
 from .pgcollections import OrderedDict
 from . import units
@@ -143,6 +143,7 @@ def parseString(lines, start=0):
             local['Point'] = Point
             local['QtCore'] = QtCore
             local['ColorMap'] = ColorMap
+            local['datetime'] = datetime
             # Needed for reconstructing numpy arrays
             local['array'] = numpy.array
             for dtype in ['int8', 'uint8', 
