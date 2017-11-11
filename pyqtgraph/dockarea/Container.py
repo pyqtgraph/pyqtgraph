@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 import weakref
+from .DockError import DockError
 
 class Container(object):
     #sigStretchChanged = QtCore.Signal()  ## can't do this here; not a QObject.
@@ -233,7 +234,7 @@ class TContainer(Container, QtGui.QWidget):
 
     def _insertItem(self, item, index):
         if not isinstance(item, Dock.Dock):
-            raise Exception("Tab containers may hold only docks, not other containers.")
+            raise DockError("Tab containers may hold only docks, not other containers.")
         self.stack.insertWidget(index, item)
         self.hTabLayout.insertWidget(index, item.label)
         #QtCore.QObject.connect(item.label, QtCore.SIGNAL('clicked'), self.tabClicked)
