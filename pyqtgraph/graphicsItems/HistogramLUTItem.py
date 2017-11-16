@@ -293,7 +293,6 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.levelMode = mode
         self._showRegions()
-        self.imageChanged()
         
         # do our best to preserve old levels
         if mode == 'mono':
@@ -302,7 +301,12 @@ class HistogramLUTItem(GraphicsWidget):
         else:
             levels = [oldLevels] * 4
             self.setLevels(rgba=levels)
+            
+        # force this because calling self.setLevels might not set the imageItem
+        # levels if there was no change to the region item
+        self.imageItem().setLevels(self.getLevels())
         
+        self.imageChanged()
         self.update()
 
     def _showRegions(self):
