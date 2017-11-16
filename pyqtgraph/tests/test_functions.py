@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 import numpy as np
+import sys
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
 import pytest
 
@@ -22,9 +23,17 @@ def testSolve3D():
     assert_array_almost_equal(tr[:3], tr2[:3])
 
 
-def test_interpolateArray():
+def test_interpolateArray_order0():
+    check_interpolateArray(order=0)
+
+
+def test_interpolateArray_order1():
+    check_interpolateArray(order=1)
+
+
+def check_interpolateArray(order):
     def interpolateArray(data, x):
-        result = pg.interpolateArray(data, x)
+        result = pg.interpolateArray(data, x, order=order)
         assert result.shape == x.shape[:-1] + data.shape[x.shape[-1]:]
         return result
     
@@ -48,17 +57,17 @@ def test_interpolateArray():
     with pytest.raises(TypeError):
         interpolateArray(data, np.ones((5, 5, 3,)))
     
-    
     x = np.array([[  0.3,   0.6],
                   [  1. ,   1. ],
-                  [  0.5,   1. ],
-                  [  0.5,   2.5],
+                  [  0.501,   1. ],   # NOTE: testing at exactly 0.5 can yield different results from map_coordinates
+                  [  0.501,   2.501],  # due to differences in rounding
                   [ 10. ,  10. ]])
     
     result = interpolateArray(data, x)
-    #import scipy.ndimage
-    #spresult = scipy.ndimage.map_coordinates(data, x.T, order=1)
-    spresult = np.array([  5.92,  20.  ,  11.  ,   0.  ,   0.  ])  # generated with the above line
+    # make sure results match ndimage.map_coordinates
+    import scipy.ndimage
+    spresult = scipy.ndimage.map_coordinates(data, x.T, order=order)
+    #spresult = np.array([  5.92,  20.  ,  11.  ,   0.  ,   0.  ])  # generated with the above line
     
     assert_array_almost_equal(result, spresult)
     
@@ -74,26 +83,15 @@ def test_interpolateArray():
     
     
     # test mapping 2D array of locations
-    x = np.array([[[0.5, 0.5], [0.5, 1.0], [0.5, 1.5]],
-                  [[1.5, 0.5], [1.5, 1.0], [1.5, 1.5]]])
+    x = np.array([[[0.501, 0.501], [0.501, 1.0], [0.501, 1.501]],
+                  [[1.501, 0.501], [1.501, 1.0], [1.501, 1.501]]])
     
     r1 = interpolateArray(data, x)
-    #r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=1)
-    r2 = np.array([[   8.25,   11.  ,   16.5 ],  # generated with the above line
-                   [  82.5 ,  110.  ,  165.  ]])
+    r2 = scipy.ndimage.map_coordinates(data, x.transpose(2,0,1), order=order)
+    #r2 = np.array([[   8.25,   11.  ,   16.5 ],  # generated with the above line
+                   #[  82.5 ,  110.  ,  165.  ]])
 
     assert_array_almost_equal(r1, r2)
-    
-    
-    # test interpolate where data.ndim > x.shape[1]
-    
-    data = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]) # 2x2x3
-    x = np.array([[1, 1], [0, 0.5], [5, 5]])
-    
-    r1 = interpolateArray(data, x)
-    assert np.all(r1[0] == data[1, 1])
-    assert np.all(r1[1] == 0.5 * (data[0, 0] + data[0, 1]))
-    assert np.all(r1[2] == 0)
     
     
 def test_subArray():
@@ -295,6 +293,68 @@ def test_makeARGB():
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=[(1,2)]*4)
     with AssertExc():  # 3d levels not allowed
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=np.zeros([3, 2, 2]))
+
+
+def test_eq():
+    eq = pg.functions.eq
+    
+    zeros = [0, 0.0, np.float(0), np.int(0)]
+    if sys.version[0] < '3':
+        zeros.append(long(0))
+    for i,x in enumerate(zeros):
+        for y in zeros[i:]:
+            assert eq(x, y)
+            assert eq(y, x)
+    
+    assert eq(np.nan, np.nan)
+    
+    # test 
+    class NotEq(object):
+        def __eq__(self, x):
+            return False
+        
+    noteq = NotEq()
+    assert eq(noteq, noteq) # passes because they are the same object
+    assert not eq(noteq, NotEq())
+
+
+    # Should be able to test for equivalence even if the test raises certain
+    # exceptions
+    class NoEq(object):
+        def __init__(self, err):
+            self.err = err
+        def __eq__(self, x):
+            raise self.err
+        
+    noeq1 = NoEq(AttributeError())
+    noeq2 = NoEq(ValueError())
+    noeq3 = NoEq(Exception())
+    
+    assert eq(noeq1, noeq1)
+    assert not eq(noeq1, noeq2)
+    assert not eq(noeq2, noeq1)
+    with pytest.raises(Exception):
+        eq(noeq3, noeq2)
+
+    # test array equivalence
+    # note that numpy has a weird behavior here--np.all() always returns True
+    # if one of the arrays has size=0; eq() will only return True if both arrays
+    # have the same shape.
+    a1 = np.zeros((10, 20)).astype('float')
+    a2 = a1 + 1
+    a3 = a2.astype('int')
+    a4 = np.empty((0, 20))
+    assert not eq(a1, a2)  # same shape/dtype, different values
+    assert not eq(a1, a3)  # same shape, different dtype and values
+    assert not eq(a1, a4)  # different shape (note: np.all gives True if one array has size 0)
+
+    assert not eq(a2, a3)  # same values, but different dtype
+    assert not eq(a2, a4)  # different shape
+    
+    assert not eq(a3, a4)  # different shape and dtype
+    
+    assert eq(a4, a4.copy())
+    assert not eq(a4, a4.T)
 
     
 if __name__ == '__main__':

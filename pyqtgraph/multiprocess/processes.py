@@ -1,4 +1,4 @@
-import subprocess, atexit, os, sys, time, random, socket, signal
+import subprocess, atexit, os, sys, time, random, socket, signal, inspect
 import multiprocessing.connection
 try:
     import cPickle as pickle
@@ -39,7 +39,7 @@ class Process(RemoteEventHandler):
     """
     _process_count = 1  # just used for assigning colors to each process for debugging
 
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None, pyqtapis=None):
         """
         ==============  =============================================================
         **Arguments:**
@@ -47,10 +47,12 @@ class Process(RemoteEventHandler):
                         from the remote process.
         target          Optional function to call after starting remote process.
                         By default, this is startEventLoop(), which causes the remote
-                        process to process requests from the parent process until it
+                        process to handle requests from the parent process until it
                         is asked to quit. If you wish to specify a different target,
                         it must be picklable (bound methods are not).
-        copySysPath     If True, copy the contents of sys.path to the remote process
+        copySysPath     If True, copy the contents of sys.path to the remote process.
+                        If False, then only the path required to import pyqtgraph is
+                        added.
         debug           If True, print detailed information about communication
                         with the child process.
         wrapStdout      If True (default on windows) then stdout and stderr from the
@@ -59,6 +61,8 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
+        pyqtapis        Optional dictionary of PyQt API version numbers to set before
+                        importing pyqtgraph in the remote process.
         ==============  =============================================================
         """
         if target is None:
@@ -82,7 +86,13 @@ class Process(RemoteEventHandler):
         port = l.address[1]
 
         ## start remote process, instruct it to run target function
-        sysPath = sys.path if copySysPath else None
+        if copySysPath:
+            sysPath = sys.path
+        else:
+            # what path do we need to make target importable?
+            mod = inspect.getmodule(target)
+            modroot = sys.modules[mod.__name__.split('.')[0]]
+            sysPath = os.path.abspath(os.path.join(os.path.dirname(modroot.__file__), '..'))
         bootstrap = os.path.abspath(os.path.join(os.path.dirname(__file__), 'bootstrap.py'))
         self.debugMsg('Starting child process (%s %s)' % (executable, bootstrap))
 
@@ -122,7 +132,8 @@ class Process(RemoteEventHandler):
             targetStr=targetStr, 
             path=sysPath, 
             pyside=USE_PYSIDE,
-            debug=procDebug
+            debug=procDebug,
+            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
@@ -182,7 +193,8 @@ def startEventLoop(name, port, authkey, ppid, debug=False):
             HANDLER.processRequests()  # exception raised when the loop should exit
             time.sleep(0.01)
         except ClosedError:
-            break
+            HANDLER.debugMsg('Exiting server loop.')
+            sys.exit(0)
 
 
 class ForkedProcess(RemoteEventHandler):
@@ -321,9 +333,14 @@ class ForkedProcess(RemoteEventHandler):
         #os.kill(pid, 9)  
         try:
             self.close(callSync='sync', timeout=timeout, noCleanup=True)  ## ask the child process to exit and require that it return a confirmation.
-            os.waitpid(self.childPid, 0)
         except IOError:  ## probably remote process has already quit
             pass  
+        
+        try:
+            os.waitpid(self.childPid, 0)
+        except OSError:  ## probably remote process has already quit
+            pass
+        
         self.hasJoined = True
 
     def kill(self):
@@ -457,21 +474,20 @@ class FileForwarder(threading.Thread):
         self.start()
 
     def run(self):
-        if self.output == 'stdout':
+        if self.output == 'stdout' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cout(self.color, line, -1)
-        elif self.output == 'stderr':
+        elif self.output == 'stderr' and self.color is not False:
             while True:
                 line = self.input.readline()
                 with self.lock:
                     cprint.cerr(self.color, line, -1)
         else:
+            if isinstance(self.output, str):
+                self.output = getattr(sys, self.output)
             while True:
                 line = self.input.readline()
                 with self.lock:
                     self.output.write(line)
-
-
-

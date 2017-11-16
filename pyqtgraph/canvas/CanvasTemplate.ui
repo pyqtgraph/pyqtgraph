@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>490</width>
-    <height>414</height>
+    <width>821</width>
+    <height>578</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
+  <layout class="QGridLayout" name="gridLayout_2">
    <property name="margin">
     <number>0</number>
    </property>
@@ -26,88 +26,96 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <widget class="GraphicsView" name="view"/>
-     <widget class="QWidget" name="layoutWidget">
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="2" column="0" colspan="2">
-        <widget class="QPushButton" name="autoRangeBtn">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>1</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Auto Range</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QCheckBox" name="redirectCheck">
-           <property name="toolTip">
-            <string>Check to display all local items in a remote canvas.</string>
-           </property>
-           <property name="text">
-            <string>Redirect</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="CanvasCombo" name="redirectCombo"/>
-         </item>
-        </layout>
-       </item>
-       <item row="6" column="0" colspan="2">
-        <widget class="TreeWidget" name="itemList">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>100</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="headerHidden">
-          <bool>true</bool>
-         </property>
-         <column>
-          <property name="text">
-           <string notr="true">1</string>
+     <widget class="QSplitter" name="vsplitter">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <widget class="QWidget" name="canvasCtrlWidget" native="true">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0" colspan="2">
+         <widget class="QPushButton" name="autoRangeBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
           </property>
-         </column>
-        </widget>
-       </item>
-       <item row="10" column="0" colspan="2">
-        <layout class="QGridLayout" name="ctrlLayout">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-        </layout>
-       </item>
-       <item row="7" column="0">
-        <widget class="QPushButton" name="resetTransformsBtn">
-         <property name="text">
-          <string>Reset Transforms</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="mirrorSelectionBtn">
-         <property name="text">
-          <string>Mirror Selection</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="reflectSelectionBtn">
-         <property name="text">
-          <string>MirrorXY</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+          <property name="text">
+           <string>Auto Range</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="redirectCheck">
+            <property name="toolTip">
+             <string>Check to display all local items in a remote canvas.</string>
+            </property>
+            <property name="text">
+             <string>Redirect</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="CanvasCombo" name="redirectCombo"/>
+          </item>
+         </layout>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="TreeWidget" name="itemList">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>100</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="headerHidden">
+           <bool>true</bool>
+          </property>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QPushButton" name="resetTransformsBtn">
+          <property name="text">
+           <string>Reset Transforms</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="mirrorSelectionBtn">
+          <property name="text">
+           <string>Mirror Selection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="reflectSelectionBtn">
+          <property name="text">
+           <string>MirrorXY</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="canvasItemCtrl" native="true">
+       <layout class="QGridLayout" name="ctrlLayout">
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <property name="spacing">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
@@ -127,7 +135,7 @@
   <customwidget>
    <class>CanvasCombo</class>
    <extends>QComboBox</extends>
-   <header>CanvasManager</header>
+   <header>.CanvasManager</header>
   </customwidget>
  </customwidgets>
  <resources/>

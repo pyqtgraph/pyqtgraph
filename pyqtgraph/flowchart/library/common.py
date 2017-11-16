@@ -30,6 +30,11 @@ def generateUi(opts):
             k, t, o = opt
         else:
             raise Exception("Widget specification must be (name, type) or (name, type, {opts})")
+            
+        ## clean out these options so they don't get sent to SpinBox
+        hidden = o.pop('hidden', False)
+        tip = o.pop('tip', None)
+
         if t == 'intSpin':
             w = QtGui.QSpinBox()
             if 'max' in o:
@@ -63,11 +68,12 @@ def generateUi(opts):
             w = ColorButton()
         else:
             raise Exception("Unknown widget type '%s'" % str(t))
-        if 'tip' in o:
-            w.setToolTip(o['tip'])
+
+        if tip is not None:
+            w.setToolTip(tip)
         w.setObjectName(k)
         l.addRow(k, w)
-        if o.get('hidden', False):
+        if hidden:
             w.hide()
             label = l.labelForField(w)
             label.hide()

@@ -1,10 +1,31 @@
+import time
+from ..Qt import QtCore, QtGui, QtTest, QT_LIB
+
+
+def resizeWindow(win, w, h, timeout=2.0):
+    """Resize a window and wait until it has the correct size.
+    
+    This is required for unit testing on some platforms that do not guarantee
+    immediate response from the windowing system.
+    """
+    QtGui.QApplication.processEvents()
+    # Sometimes the window size will switch multiple times before settling
+    # on its final size. Adding qWaitForWindowShown seems to help with this.
+    QtTest.QTest.qWaitForWindowShown(win)
+    win.resize(w, h)
+    start = time.time()
+    while True:
+        w1, h1 = win.width(), win.height()
+        if (w,h) == (w1,h1):
+            return
+        QtTest.QTest.qWait(10)
+        if time.time()-start > timeout:
+            raise TimeoutError("Window resize failed (requested %dx%d, got %dx%d)" % (w, h, w1, h1))
+    
 
 # Functions for generating user input events. 
 # We would like to use QTest for this purpose, but it seems to be broken.
 # See: http://stackoverflow.com/questions/16299779/qt-qgraphicsview-unit-testing-how-to-keep-the-mouse-in-a-pressed-state
-
-from ..Qt import QtCore, QtGui, QT_LIB
-
 
 def mousePress(widget, pos, button, modifier=None):
     if isinstance(widget, QtGui.QGraphicsView):
@@ -52,4 +73,3 @@ def mouseClick(widget, pos, button, modifier=None):
     mouseMove(widget, pos)
     mousePress(widget, pos, button, modifier)
     mouseRelease(widget, pos, button, modifier)
-    
