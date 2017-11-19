@@ -76,7 +76,7 @@ class PlotWidget(GraphicsView):
             m = getattr(self.plotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise NameError(attr)
+        raise AttributeError(attr)
     
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)
@@ -94,6 +94,3 @@ class PlotWidget(GraphicsView):
     def getPlotItem(self):
         """Return the PlotItem contained within."""
         return self.plotItem
-        
-        
-        
