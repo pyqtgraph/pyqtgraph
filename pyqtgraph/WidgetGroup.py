@@ -2,7 +2,7 @@
 """
 WidgetGroup.py -  WidgetGroup class for easily managing lots of Qt widgets
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 This class addresses the problem of having to save and restore the state
 of a large group of widgets. 

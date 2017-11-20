@@ -2,7 +2,7 @@
 """
 PlotItem.py -  Graphics item implementing a scalable ViewBox with plotting powers.
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 This class is one of the workhorses of pyqtgraph. It implements a graphics item with 
 plots, labels, and scales which can be viewed inside a QGraphicsScene. If you want
