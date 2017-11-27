@@ -262,6 +262,7 @@ from .widgets.GraphicsView import *
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
+from .widgets.GroupBox import GroupBox
 
 from .imageview import *
 from .WidgetGroup import *

@@ -90,7 +90,7 @@ class VTickGroup(UIGraphicsItem):
         br = self.boundingRect()
         h = br.height()
         br.setY(br.y() + self.yrange[0] * h)
-        br.setHeight(h - (1.0-self.yrange[1]) * h)
+        br.setHeight((self.yrange[1] - self.yrange[0]) * h)
         p.translate(0, br.y())
         p.scale(1.0, br.height())
         p.setPen(self.pen)

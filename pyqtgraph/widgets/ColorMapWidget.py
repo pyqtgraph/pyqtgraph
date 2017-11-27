@@ -152,7 +152,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
     def restoreState(self, state):
         if 'fields' in state:
             self.setFields(state['fields'])
-        for itemState in state['items']:
+        for name, itemState in state['items'].items():
             item = self.addNew(itemState['field'])
             item.restoreState(itemState)
         

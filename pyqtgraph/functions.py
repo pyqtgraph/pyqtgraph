@@ -15,7 +15,7 @@ from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, USE_PYSIDE
 from . import getConfigOption, setConfigOptions
 from . import debug
-
+from .metaarray import MetaArray
 
 
 Colors = {
@@ -200,7 +200,7 @@ def mkColor(*args):
                 try:
                     return Colors[c]
                 except KeyError:
-                    raise Exception('No color named "%s"' % c)
+                    raise ValueError('No color named "%s"' % c)
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -235,18 +235,18 @@ def mkColor(*args):
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
-                raise Exception(err)
+                raise TypeError(err)
         elif type(args[0]) == int:
             return intColor(args[0])
         else:
-            raise Exception(err)
+            raise TypeError(err)
     elif len(args) == 3:
         (r, g, b) = args
         a = 255
     elif len(args) == 4:
         (r, g, b, a) = args
     else:
-        raise Exception(err)
+        raise TypeError(err)
     
     args = [r,g,b,a]
     args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
@@ -342,7 +342,7 @@ def colorStr(c):
     return ('%02x'*4) % colorTuple(c)
 
 
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
+def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255):
     """
     Creates a QColor from a single index. Useful for stepping through a predefined list of colors.
     
@@ -354,7 +354,7 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     values = int(values)
     ind = int(index) % (hues * values)
     indh = ind % hues
-    indv = ind / hues
+    indv = ind // hues
     if values > 1:
         v = minValue + indv * ((maxValue-minValue) / (values-1))
     else:
@@ -404,22 +404,53 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     
     
 def eq(a, b):
-    """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
+    """The great missing equivalence function: Guaranteed evaluation to a single bool value.
+    
+    This function has some important differences from the == operator:
+    
+    1. Returns True if a IS b, even if a==b still evaluates to False, such as with nan values.
+    2. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
+       (AtrtibuteError, ValueError).
+    3. When comparing arrays, returns False if the array shapes are not the same.
+    4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
+       the == operator would return a boolean array).
+    """
     if a is b:
         return True
-        
-    try:
-        with warnings.catch_warnings(module=np):  # ignore numpy futurewarning (numpy v. 1.10)
-            e = a==b
-    except ValueError:
+
+    # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
+    aIsArr = isinstance(a, (np.ndarray, MetaArray))
+    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    if (aIsArr or bIsArr) and type(a) != type(b):
         return False
-    except AttributeError: 
+
+    # If both inputs are arrays, we can speeed up comparison if shapes / dtypes don't match
+    # NOTE: arrays of dissimilar type should be considered unequal even if they are numerically
+    # equal because they may behave differently when computed on.
+    if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
+        return False
+
+    # Test for equivalence. 
+    # If the test raises a recognized exception, then return Falase
+    try:
+        try:
+            # Sometimes running catch_warnings(module=np) generates AttributeError ???
+            catcher =  warnings.catch_warnings(module=np)  # ignore numpy futurewarning (numpy v. 1.10)
+            catcher.__enter__()
+        except Exception:
+            catcher = None
+        e = a==b
+    except (ValueError, AttributeError): 
         return False
     except:
         print('failed to evaluate equivalence for:')
         print("  a:", str(type(a)), str(a))
         print("  b:", str(type(b)), str(b))
         raise
+    finally:
+        if catcher is not None:
+            catcher.__exit__(None, None, None)
+    
     t = type(e)
     if t is bool:
         return e
@@ -716,26 +747,17 @@ def subArray(data, offset, shape, stride):
     the input in the example above to have shape (10, 7) would cause the
     output to have shape (2, 3, 7).
     """
-    #data = data.flatten()
-    data = data[offset:]
+    data = np.ascontiguousarray(data)[offset:]
     shape = tuple(shape)
-    stride = tuple(stride)
     extraShape = data.shape[1:]
-    #print data.shape, offset, shape, stride
-    for i in range(len(shape)):
-        mask = (slice(None),) * i + (slice(None, shape[i] * stride[i]),)
-        newShape = shape[:i+1]
-        if i < len(shape)-1:
-            newShape += (stride[i],)
-        newShape += extraShape 
-        #print i, mask, newShape
-        #print "start:\n", data.shape, data
-        data = data[mask]
-        #print "mask:\n", data.shape, data
-        data = data.reshape(newShape)
-        #print "reshape:\n", data.shape, data
+
+    strides = list(data.strides[::-1])
+    itemsize = strides[-1]
+    for s in stride[1::-1]:
+        strides.append(itemsize * s)
+    strides = tuple(strides[::-1])
     
-    return data
+    return np.ndarray(buffer=data, shape=shape+extraShape, strides=strides, dtype=data.dtype)
 
 
 def transformToArray(tr):
@@ -1188,7 +1210,20 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if USE_PYSIDE:
         ch = ctypes.c_char.from_buffer(imgData, 0)
+        
+        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
+        # incremented, which leads to leaked memory. As a workaround, we manually
+        # reset the reference count after creating the QImage.
+        # See: https://bugreports.qt.io/browse/PYSIDE-140
+        
+        # Get initial reference count (PyObject struct has ob_refcnt as first element)
+        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+        if sys.version[0] == '3':
+            # Reset refcount only on python 3. Technically this would have no effect
+            # on python 2, but this is a nasty hack, and checking for version here 
+            # helps to mitigate possible unforseen consequences.
+            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
         #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
