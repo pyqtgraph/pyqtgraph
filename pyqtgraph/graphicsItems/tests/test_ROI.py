@@ -208,15 +208,23 @@ def test_PolyLineROI():
         # click segment
         mouseClick(plt, pt, QtCore.Qt.LeftButton)
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_click_segment', 'Click mouse over segment.')
+
+        # drag new handle
+        mouseMove(plt, pt+pg.Point(10, -10)) # pg bug: have to move the mouse off/on again to register hover
+        mouseDrag(plt, pt, pt + pg.Point(10, -10), QtCore.Qt.LeftButton)
+        assertImageApproved(plt, 'roi/polylineroi/'+name+'_drag_new_handle', 'Drag mouse over created handle.')
         
+        # clear all points
         r.clearPoints()
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_clear', 'All points cleared.')
         assert len(r.getState()['points']) == 0
         
+        # call setPoints
         r.setPoints(initState['points'])
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_setpoints', 'Reset points to initial state.')
         assert len(r.getState()['points']) == 3
         
+        # call setState
         r.setState(initState)
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_setstate', 'Reset ROI to initial state.')
         assert len(r.getState()['points']) == 3
