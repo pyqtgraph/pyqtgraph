@@ -1140,12 +1140,27 @@ class ViewBox(GraphicsWidget):
         s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
-        
-        self._resetTarget()
-        self.scaleBy(s, center)
-        self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+
+        viewRange = [self.state['targetRange'][0][:], self.state['targetRange'][1][:]]
+        xrange = viewRange[0][1]-viewRange[0][0]
+        yrange = viewRange[1][1]-viewRange[1][0]
+
+        minXRng = self.state['limits']['xRange'][0]
+        minYRng = self.state['limits']['yRange'][0]
+        maxXRng = self.state['limits']['xRange'][1]
+        maxYRng = self.state['limits']['yRange'][1]
+
+        xmin_ok = s[0] < 1.0 and minXRng is not None and xrange > minXRng
+        ymin_ok = s[0] < 1.0 and minYRng is not None and yrange > minYRng
+        xmax_ok = s[0] > 1.0 and maxXRng is not None and xrange < maxXRng
+        ymax_ok = s[0] > 1.0 and maxYRng is not None and yrange < maxYRng
+
+        if (xmin_ok and ymin_ok) or (xmax_ok and ymax_ok):
+            self._resetTarget()
+            self.scaleBy(s, center)
+            self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         ev.accept()
-        
+
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():
             ev.accept()
