@@ -36,7 +36,7 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, image=None, fillHistogram=True):
+    def __init__(self, image=None, fillHistogram=True, orientation='right'):
         """
         If *image* (ImageItem) is provided, then the control will be automatically linked to the image and changes to the control will be immediately reflected in the image's appearance.
         By default, the histogram is rendered with a fill. For performance, set *fillHistogram* = False.
@@ -50,19 +50,56 @@ class HistogramLUTItem(GraphicsWidget):
         self.layout.setContentsMargins(1,1,1,1)
         self.layout.setSpacing(0)
         self.vb = ViewBox(parent=self)
-        self.vb.setMaximumWidth(152)
-        self.vb.setMinimumWidth(45)
-        self.vb.setMouseEnabled(x=False, y=True)
+        
+        if orientation in ['right', 'left']:
+            self.vb.setMaximumWidth(150)
+            self.vb.setMinimumWidth(15)
+            self.vb.setMouseEnabled(x=False, y=True)
+        elif orientation in ['bottom', 'top']:
+            self.vb.setMaximumHeight(150)
+            self.vb.setMinimumHeight(15)
+            self.vb.setMouseEnabled(x=True, y=False)
+        
+        self.orientation = orientation
+        orientationGEI = orientation
+        if orientation == 'right':
+            orientationLRI = 'horizontal'
+            orientationAI = 'left'
+        elif orientation == 'left':
+            orientationLRI = 'horizontal'
+            orientationAI = 'right'
+        elif orientation == 'bottom':
+            orientationLRI = 'vertical'
+            orientationAI = 'top'
+        elif orientation == 'top':
+            orientationLRI = 'vertical'
+            orientationAI = 'bottom'
+        
         self.gradient = GradientEditorItem()
-        self.gradient.setOrientation('right')
+        self.gradient.setOrientation(orientationGEI)
         self.gradient.loadPreset('grey')
-        self.region = LinearRegionItem([0, 1], LinearRegionItem.Horizontal)
+        self.region = LinearRegionItem([0, 1], orientation=orientationLRI)
         self.region.setZValue(1000)
         self.vb.addItem(self.region)
-        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
-        self.layout.addItem(self.axis, 0, 0)
-        self.layout.addItem(self.vb, 0, 1)
-        self.layout.addItem(self.gradient, 0, 2)
+        self.axis = AxisItem(orientationAI, linkView=self.vb, maxTickLength=-10, parent=self)
+        
+        if orientation == 'right':
+            self.layout.addItem(self.axis, 0, 0)
+            self.layout.addItem(self.vb, 0, 1)
+            self.layout.addItem(self.gradient, 0, 2)
+        elif orientation == 'left':
+            self.layout.addItem(self.gradient, 0, 0)
+            self.layout.addItem(self.vb, 0, 1)
+            self.layout.addItem(self.axis, 0, 2)
+        elif orientation == 'bottom':
+            self.layout.addItem(self.axis, 0, 0)
+            self.layout.addItem(self.vb, 1, 0)
+            self.layout.addItem(self.gradient, 2, 0)
+        elif orientation == 'top':
+            self.layout.addItem(self.gradient, 0, 0)
+            self.layout.addItem(self.vb, 1, 0)
+            self.layout.addItem(self.axis, 2, 0)
+            
         self.range = None
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
@@ -98,15 +135,46 @@ class HistogramLUTItem(GraphicsWidget):
     def paint(self, p, *args):
         pen = self.region.lines[0].pen
         rgn = self.getLevels()
-        p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
-        p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
-        gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
-        for pen in [fn.mkPen('k', width=3), pen]:
-            p.setPen(pen)
-            p.drawLine(p1, gradRect.bottomLeft())
-            p.drawLine(p2, gradRect.topLeft())
-            p.drawLine(gradRect.topLeft(), gradRect.topRight())
-            p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
+        if self.orientation == 'right':
+            p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
+            p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
+            gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+            for pen in [fn.mkPen('k', width=3), pen]:
+                p.setPen(pen)
+                p.drawLine(p1, gradRect.bottomLeft())
+                p.drawLine(p2, gradRect.topLeft())
+                p.drawLine(gradRect.topLeft(), gradRect.topRight())
+                p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
+        elif self.orientation == 'left':
+            p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
+            p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
+            gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+            for pen in [fn.mkPen('k', width=3), pen]:
+                p.setPen(pen)
+                p.drawLine(p1, gradRect.bottomRight())
+                p.drawLine(p2, gradRect.topRight())
+                p.drawLine(gradRect.topLeft(), gradRect.topRight())
+                p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
+        elif self.orientation == 'bottom':
+            p1 = self.vb.mapFromViewToItem(self, Point(rgn[0], self.vb.viewRect().center().y()))
+            p2 = self.vb.mapFromViewToItem(self, Point(rgn[1], self.vb.viewRect().center().y()))
+            gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+            for pen in [fn.mkPen('k', width=3), pen]:
+                p.setPen(pen)
+                p.drawLine(p1, gradRect.topLeft())
+                p.drawLine(p2, gradRect.topRight())
+                p.drawLine(gradRect.topLeft(), gradRect.bottomLeft())
+                p.drawLine(gradRect.topRight(), gradRect.bottomRight())
+        elif self.orientation == 'top':
+            p1 = self.vb.mapFromViewToItem(self, Point(rgn[0], self.vb.viewRect().center().y()))
+            p2 = self.vb.mapFromViewToItem(self, Point(rgn[1], self.vb.viewRect().center().y()))
+            gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+            for pen in [fn.mkPen('k', width=3), pen]:
+                p.setPen(pen)
+                p.drawLine(p1, gradRect.bottomLeft())
+                p.drawLine(p2, gradRect.bottomRight())
+                p.drawLine(gradRect.topLeft(), gradRect.bottomLeft())
+                p.drawLine(gradRect.topRight(), gradRect.bottomRight())
         #p.drawRect(self.boundingRect())
         
         
