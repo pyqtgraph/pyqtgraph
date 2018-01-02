@@ -281,3 +281,4 @@ class HistogramLUTItem(GraphicsWidget):
         """Set the min and max levels.
         """
         self.region.setRegion([mn, mx])
+        self.update()
