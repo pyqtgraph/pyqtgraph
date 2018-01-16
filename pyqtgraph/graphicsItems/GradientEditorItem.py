@@ -9,7 +9,7 @@ from ..widgets.SpinBox import SpinBox
 from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
 from ..python2_3 import cmp
-
+from ..colorbar_gradients import Gradients as customGradients
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
 
@@ -422,11 +422,12 @@ class GradientEditorItem(TickSliderItem):
         ## build context menu of gradients
         l = self.length
         self.length = 100
-        global Gradients
-        for g in Gradients:
+        #global Gradients
+        self.gradients = customGradients
+        for g in self.gradients:
             px = QtGui.QPixmap(100, 15)
             p = QtGui.QPainter(px)
-            self.restoreState(Gradients[g])
+            self.restoreState(self.gradients[g])
             grad = self.getGradient()
             brush = QtGui.QBrush(grad)
             p.fillRect(QtCore.QRect(0, 0, 100, 15), brush)
@@ -434,8 +435,14 @@ class GradientEditorItem(TickSliderItem):
             label = QtGui.QLabel()
             label.setPixmap(px)
             label.setContentsMargins(1, 1, 1, 1)
+            labelName = QtGui.QLabel(g)
+            hbox = QtGui.QHBoxLayout()
+            hbox.addWidget(labelName)
+            hbox.addWidget(label)
+            widget = QtGui.QWidget()
+            widget.setLayout(hbox)
             act = QtGui.QWidgetAction(self)
-            act.setDefaultWidget(label)
+            act.setDefaultWidget(widget)
             act.triggered.connect(self.contextMenuClicked)
             act.name = g
             self.menu.addAction(act)
@@ -485,7 +492,7 @@ class GradientEditorItem(TickSliderItem):
         """## TODO: provide image with names of defined gradients
         
         #global Gradients
-        self.restoreState(Gradients[name])
+        self.restoreState(self.gradients[name])
     
     def setColorMode(self, cm):
         """

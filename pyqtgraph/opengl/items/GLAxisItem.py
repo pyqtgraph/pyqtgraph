@@ -50,15 +50,15 @@ class GLAxisItem(GLGraphicsItem):
         glBegin( GL_LINES )
         
         x,y,z = self.size()
-        glColor4f(0, 1, 0, .6)  # z is green
+        glColor4f(0, 0, 1, 1)  # z is blue
         glVertex3f(0, 0, 0)
         glVertex3f(0, 0, z)
 
-        glColor4f(1, 1, 0, .6)  # y is yellow
+        glColor4f(0, 1, 0, 1)  # y is green
         glVertex3f(0, 0, 0)
         glVertex3f(0, y, 0)
 
-        glColor4f(0, 0, 1, .6)  # x is blue
+        glColor4f(1, 0, 0, 1)  # x is red
         glVertex3f(0, 0, 0)
         glVertex3f(x, 0, 0)
         glEnd()
