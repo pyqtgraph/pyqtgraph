@@ -22,6 +22,9 @@ class GLBoxItem(GLGraphicsItem):
         self.setColorAxis(colorAxis)
         self.setGLOptions(glOptions)
     
+        # Add this because self.color is bound method GLBoxItem.color
+        self.edgeColor = fn.mkColor(color) # QColor
+
     def setSize(self, x=None, y=None, z=None, size=None):
         """
         Set the size of the box (in its local coordinate system; this does not affect the transform)
@@ -40,9 +43,11 @@ class GLBoxItem(GLGraphicsItem):
     def setColor(self, *args):
         """Set the color of the box. Arguments are the same as those accepted by functions.mkColor()"""
         self.__color = fn.Color(*args)
+        self.update()
 
     def setColorAxis(self, colorAxis=False):
         self.colorAxis = colorAxis
+        self.update()
         
     def color(self):
         return self.__color
