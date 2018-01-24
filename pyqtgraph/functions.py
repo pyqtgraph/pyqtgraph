@@ -110,7 +110,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
 
 
-def siParse(s, regex=FLOAT_REGEX):
+def siParse(s, regex=FLOAT_REGEX, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
     Example::
@@ -118,6 +118,12 @@ def siParse(s, regex=FLOAT_REGEX):
         siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
     s = asUnicode(s)
+    s = s.strip()
+    if suffix is not None and len(suffix) > 0:
+        if s[-len(suffix):] != suffix:
+            raise ValueError("String '%s' does not have the expected suffix '%s'" % (s, suffix))
+        s = s[:-len(suffix)] + 'X'  # add a fake suffix so the regex still picks up the si prefix
+        
     m = regex.match(s)
     if m is None:
         raise ValueError('Cannot parse number "%s"' % s)
@@ -126,15 +132,18 @@ def siParse(s, regex=FLOAT_REGEX):
     except IndexError:
         sip = ''
     
-    try:
-        suf = m.group('suffix')
-    except IndexError:
-        suf = ''
+    if suffix is None:
+        try:
+            suf = m.group('suffix')
+        except IndexError:
+            suf = ''
+    else:
+        suf = suffix
     
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX):
+def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -142,9 +151,9 @@ def siEval(s, typ=float, regex=FLOAT_REGEX):
     
         siEval("100 μV")  # returns 0.0001
     """
-    val, siprefix, suffix = siParse(s, regex)
+    val, siprefix, suffix = siParse(s, regex, suffix=suffix)
     v = typ(val)
-    return siApply(val, siprefix)
+    return siApply(v, siprefix)
 
     
 def siApply(val, siprefix):
