@@ -147,10 +147,11 @@ class ConsoleWidget(QtGui.QWidget):
             
     def currentFrame(self):
         ## Return the currently selected exception stack frame (or None if there is no exception)
-        if self.currentTraceback is None:
-            return None
         index = self.ui.exceptionStackList.currentRow()
-        return self.frames[index]
+        if index >= 0 and index < len(self.frames):
+            return self.frames[index]
+        else:
+            return None
         
     def execSingle(self, cmd):
         try:
@@ -276,6 +277,7 @@ class ConsoleWidget(QtGui.QWidget):
         
     def clearExceptionClicked(self):
         self.currentTraceback = None
+        self.frames = []
         self.ui.exceptionInfoLabel.setText("[No current exception]")
         self.ui.exceptionStackList.clear()
         self.ui.clearExceptionBtn.setEnabled(False)

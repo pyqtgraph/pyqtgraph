@@ -447,6 +447,25 @@ def dbg(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def stack(*args, **kwds):
+    """
+    Create a console window and show the current stack trace.
+    
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
+    """
+    mkQApp()
+    from . import console
+    c = console.ConsoleWidget(*args, **kwds)
+    c.setStack()
+    c.show()
+    global consoles
+    try:
+        consoles.append(c)
+    except NameError:
+        consoles = [c]
+    return c
     
     
 def mkQApp():
