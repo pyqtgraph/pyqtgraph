@@ -289,8 +289,10 @@ class HistogramLUTItem(GraphicsWidget):
         """
         assert mode in ('mono', 'rgba')
         
-        oldLevels = self.getLevels()
+        if mode == self.levelMode:
+            return
         
+        oldLevels = self.getLevels()
         self.levelMode = mode
         self._showRegions()
         
