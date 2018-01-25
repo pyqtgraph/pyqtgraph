@@ -518,7 +518,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         # tokenize into numerical value, si prefix, and suffix
         try:
-            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'])
+            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'], suffix=self.opts['suffix'])
         except Exception:
             return False
             
