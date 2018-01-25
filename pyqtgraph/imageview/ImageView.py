@@ -2,7 +2,7 @@
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Widget used for displaying 2D or 3D data. Features:
   - float or int (including 16-bit int) image display via ImageItem
