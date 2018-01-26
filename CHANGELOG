@@ -1,3 +1,13 @@
+pyqtgraph-0.11.0 (in development)
+
+  API / behavior changes:
+    - ArrowItem's `angle` option now rotates the arrow without affecting its coordinate system.
+      The result is visually the same, but children of ArrowItem are no longer rotated
+      (this allows screen-aligned text to be attached more easily).
+      To mimic the old behavior, use ArrowItem.rotate() instead of the `angle` argument.
+        
+
+
 pyqtgraph-0.10.0
 
   New Features:
