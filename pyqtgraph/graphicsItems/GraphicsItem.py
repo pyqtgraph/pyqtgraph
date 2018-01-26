@@ -2,6 +2,7 @@ from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
 from .. import functions as fn
+import math
 import weakref
 import operator
 from ..util.lru_cache import LRUCache
@@ -126,10 +127,14 @@ class GraphicsItem(object):
             tr = self.itemTransform(view.innerSceneItem())
             if isinstance(tr, tuple):
                 tr = tr[0]   ## difference between pyside and pyqt
-            return tr
+            vt = tr
         else:
-            return self.sceneTransform()
+            vt = self.sceneTransform()
             #return self.deviceTransform(view.viewportTransform())
+        if math.isnan(vt.determinant()):
+            return None
+        else:
+            return vt
 
 
 
