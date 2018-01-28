@@ -126,7 +126,7 @@ class SymbolAtlas(object):
         keyi = None
         sourceRecti = None
         for i, rec in enumerate(opts):
-            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
+            key = (id(rec[3]), rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
             if key == keyi:
                 sourceRect[i] = sourceRecti
             else:
@@ -136,6 +136,7 @@ class SymbolAtlas(object):
                     newRectSrc = QtCore.QRectF()
                     newRectSrc.pen = rec['pen']
                     newRectSrc.brush = rec['brush']
+                    newRectSrc.symbol = rec[3]
                     self.symbolMap[key] = newRectSrc
                     self.atlasValid = False
                     sourceRect[i] = newRectSrc
@@ -151,7 +152,7 @@ class SymbolAtlas(object):
         images = []
         for key, sourceRect in self.symbolMap.items():
             if sourceRect.width() == 0:
-                img = renderSymbol(key[0], key[1], sourceRect.pen, sourceRect.brush)
+                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
             else:
