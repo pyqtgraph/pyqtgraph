@@ -297,7 +297,12 @@ class EventProxy(QtCore.QObject):
 
 class SimpleParameter(Parameter):
     itemClass = WidgetParameterItem
-    
+    _type_mapping = {
+        'int' : int,
+        'float' : float,
+        'bool' : bool,
+        'str' : str
+    }
     def __init__(self, *args, **kargs):
         Parameter.__init__(self, *args, **kargs)
         
@@ -305,6 +310,8 @@ class SimpleParameter(Parameter):
         if self.opts['type'] == 'color':
             self.value = self.colorValue
             self.saveState = self.saveColorState
+        elif self.opts['type'] in self._type_mapping.keys():
+            self.value = lambda: self._type_mapping[self.opts['type']](Parameter.value(self))
     
     def colorValue(self):
         return fn.mkColor(Parameter.value(self))
@@ -315,13 +322,10 @@ class SimpleParameter(Parameter):
         return state
         
     
-registerParameterType('int', SimpleParameter, override=True)
-registerParameterType('float', SimpleParameter, override=True)
-registerParameterType('bool', SimpleParameter, override=True)
-registerParameterType('str', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
 registerParameterType('colormap', SimpleParameter, override=True)
-
+for type_ in SimpleParameter._type_mapping.keys():
+    registerParameterType(type_, SimpleParameter, override=True)
 
 
 
