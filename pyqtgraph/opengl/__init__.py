@@ -13,6 +13,7 @@ from .items.GLAxisItem import *
 from .items.GLImageItem import *                                                                                                                            
 from .items.GLSurfacePlotItem import *                                                                                                                      
 from .items.GLBoxItem import *                                                                                                                              
+from .items.GLTextItem import *
 from .items.GLVolumeItem import *                                                                                                                           
 
 from .MeshData import MeshData
