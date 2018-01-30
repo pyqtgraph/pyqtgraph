@@ -4,8 +4,10 @@ from ..Qt import QtCore, QtGui
 from .Container import *
 from .DockDrop import *
 from .Dock import Dock
+from .DockError import DockError
 from .. import debug as debug
 from ..python2_3 import basestring
+from . import DockError
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):
@@ -62,7 +64,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
                 relativeTo = self.docks[relativeTo]
             container = self.getContainer(relativeTo)
             if container is None:
-                raise TypeError("Dock %s is not contained in a DockArea; cannot add another dock relative to it." % relativeTo)
+                raise DockError("Dock %s is not contained in a DockArea; cannot add another dock relative to it." % relativeTo)
             neighbor = relativeTo
         
         ## what container type do we need?
@@ -264,13 +266,13 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
                 del docks[contents]
             except KeyError:
                 if missing == 'error':
-                    raise Exception('Cannot restore dock state; no dock with name "%s"' % contents)
+                    raise DockError('Cannot restore dock state; no dock with name "%s"' % contents)
                 elif missing == 'create':
                     obj = Dock(name=contents)
                 elif missing == 'ignore':
                     return
                 else:
-                    raise ValueError('"missing" argument must be one of "error", "create", or "ignore".')
+                    raise DockError('"missing" argument must be one of "error", "create", or "ignore".')
 
         else:
             obj = self.makeContainer(typ)

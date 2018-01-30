@@ -1,0 +1,2 @@
+class DockError(Exception):
+    pass
