@@ -488,7 +488,7 @@ class ImageView(QtGui.QWidget):
         n = int(self.playRate * dt)
         if n != 0:
             self.lastPlayTime += (float(n)/self.playRate)
-            if self.currentIndex+n > self.image.shape[0]:
+            if self.currentIndex+n > self.image.shape[self.axes['t']]:
                 self.play(0)
             self.jumpFrames(n)
         
