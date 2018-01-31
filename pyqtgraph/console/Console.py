@@ -115,7 +115,7 @@ class ConsoleWidget(QtGui.QWidget):
                 self.write("<br><b>%s</b>\n"%encCmd, html=True)
                 self.execMulti(cmd)
             else:
-                self.write("<br><div style='background-color: #CCF'><b>%s</b>\n"%encCmd, html=True)
+                self.write("<br><div style='background-color: #CCF; color: black'><b>%s</b>\n"%encCmd, html=True)
                 self.inCmd = True
                 self.execSingle(cmd)
             
@@ -210,7 +210,7 @@ class ConsoleWidget(QtGui.QWidget):
         else:
             if self.inCmd:
                 self.inCmd = False
-                self.output.textCursor().insertHtml("</div><br><div style='font-weight: normal; background-color: #FFF;'>")
+                self.output.textCursor().insertHtml("</div><br><div style='font-weight: normal; background-color: #FFF; color: black'>")
                 #self.stdout.write("</div><br><div style='font-weight: normal; background-color: #FFF;'>")
             self.output.insertPlainText(strn)
         #self.stdout.write(strn)
@@ -368,6 +368,7 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.exceptionStackList.addItem('-- exception caught here: --')
         item = self.ui.exceptionStackList.item(self.ui.exceptionStackList.count()-1)
         item.setBackground(QtGui.QBrush(QtGui.QColor(200, 200, 200)))
+        item.setForeground(QtGui.QBrush(QtGui.QColor(50, 50, 50)))
         self.frames.append(None)
 
         # And finish the rest of the stack up to the exception
