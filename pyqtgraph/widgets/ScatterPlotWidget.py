@@ -33,6 +33,8 @@ class ScatterPlotWidget(QtGui.QSplitter):
        specifying multiple criteria.
     4) A PlotWidget for displaying the data.
     """
+    sigScatterPlotClicked = QtCore.Signal(object, object)
+    
     def __init__(self, parent=None):
         QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
         self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -211,8 +213,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.scatterPlot = self.plot.plot(xy[0], xy[1], data=data[mask], **style)
         self.scatterPlot.sigPointsClicked.connect(self.plotClicked)
         
-        
     def plotClicked(self, plot, points):
-        pass
+        self.sigScatterPlotClicked.emit(self, points)
 
 
