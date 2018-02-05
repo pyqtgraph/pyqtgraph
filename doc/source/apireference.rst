@@ -9,6 +9,7 @@ Contents:
     config_options
     functions
     graphicsItems/index
+    graphicsWindows/index
     widgets/index
     3dgraphics/index
     colormap
