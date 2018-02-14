@@ -239,7 +239,7 @@ class ImageView(QtGui.QWidget):
                            levels. Options are 'mono', which provides a single level control for
                            all image channels, and 'rgb' or 'rgba', which provide individual
                            controls for each channel.
-        ================== =======================================================================
+        ================== ===========================================================================
 
         **Notes:**        
         
