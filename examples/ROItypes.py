@@ -13,7 +13,7 @@ pg.setConfigOptions(imageAxisOrder='row-major')
 ## create GUI
 app = QtGui.QApplication([])
 
-w = pg.GraphicsWindow(size=(800,800), border=True)
+w = pg.GraphicsLayoutWidget(show=True, size=(800,800), border=True)
 v = w.addViewBox(colspan=2)
 v.invertY(True)  ## Images usually have their Y-axis pointing downward
 v.setAspectLocked(True)

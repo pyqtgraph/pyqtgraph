@@ -20,7 +20,7 @@ data = np.concatenate([data, data], axis=0)
 data = pg.gaussianFilter(data, (10, 10, 10))[frames/2:frames + frames/2]
 data[:, 15:16, 15:17] += 1
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: Isocurve')
 vb = win.addViewBox()
 img = pg.ImageItem(data[0])
