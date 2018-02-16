@@ -41,6 +41,8 @@ elif QT_LIB == 'PySide':
     from .plotConfigTemplate_pyside import *
 elif QT_LIB == 'PyQt5':
     from .plotConfigTemplate_pyqt5 import *
+elif QT_LIB == 'PySide2':
+    from .plotConfigTemplate_pyside2 import *
 
 __all__ = ['PlotItem']
 

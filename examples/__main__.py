@@ -7,13 +7,15 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
 
 
 from .utils import buildFileList, testFile, path, examples
 
 if USE_PYSIDE:
     from .exampleLoaderTemplate_pyside import Ui_Form
+elif USE_PYSIDE2:
+    from .exampleLoaderTemplate_pyside2 import Ui_Form
 elif USE_PYQT5:
     from .exampleLoaderTemplate_pyqt5 import Ui_Form
 else:
