@@ -1,15 +1,15 @@
 import sys, re, os, time, traceback, subprocess
 import pickle
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
+from ..Qt import QtCore, QtGui, QT_LIB
 from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from . import template_pyside as template
-elif USE_PYSIDE2:
+elif QT_LIB == 'PySide2':
     from . import template_pyside2 as template
-elif USE_PYQT5:
+elif QT_LIB == 'PyQt5':
     from . import template_pyqt5 as template
 else:
     from . import template_pyqt as template

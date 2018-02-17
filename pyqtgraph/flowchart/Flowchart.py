@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
+from ..Qt import QtCore, QtGui, QT_LIB
 from .Node import *
 from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *
 from .. import FileDialog, DataTreeWidget
 
 ## pyside and pyqt use incompatible ui files.
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from . import FlowchartTemplate_pyside as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyside as FlowchartCtrlTemplate
-elif USE_PYSIDE2:
+elif QT_LIB == 'PySide2':
     from . import FlowchartTemplate_pyside2 as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyside2 as FlowchartCtrlTemplate
-elif USE_PYQT5:
+elif QT_LIB == 'PyQt5':
     from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
 else:
@@ -622,7 +622,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         self.cwWin.resize(1000,800)
         
         h = self.ui.ctrlList.header()
-        if not USE_PYQT5:
+        if QT_LIB in ['PyQt4', 'PySide']:
             h.setResizeMode(0, h.Stretch)
         else:
             h.setSectionResizeMode(0, h.Stretch)

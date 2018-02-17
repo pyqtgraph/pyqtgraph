@@ -5,7 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore, QT_LIB
 import numpy as np
 
 class Vector(QtGui.QVector3D):
@@ -36,7 +36,7 @@ class Vector(QtGui.QVector3D):
 
     def __add__(self, b):
         # workaround for pyside bug. see https://bugs.launchpad.net/pyqtgraph/+bug/1223173
-        if USE_PYSIDE and isinstance(b, QtGui.QVector3D):
+        if QT_LIB == 'PySide' and isinstance(b, QtGui.QVector3D):
             b = Vector(b)
         return QtGui.QVector3D.__add__(self, b)
     

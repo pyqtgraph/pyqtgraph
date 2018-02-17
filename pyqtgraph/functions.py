@@ -12,7 +12,7 @@ import decimal, re
 import ctypes
 import sys, struct
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, USE_PYSIDE, USE_PYSIDE2
+from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
 from . import debug
 from .metaarray import MetaArray
@@ -1219,7 +1219,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE or USE_PYSIDE2:
+    if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         
         # Bug in PySide + Python 3 causes refcount for image data to be improperly 
@@ -1277,7 +1277,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE or USE_PYSIDE2:
+    if QT_LIB in ['PySide', 'PySide2']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())

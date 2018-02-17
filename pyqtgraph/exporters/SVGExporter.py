@@ -1,7 +1,7 @@
 from .Exporter import Exporter
 from ..python2_3 import asUnicode
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from .. import debug
 from .. import functions as fn
 import re
@@ -186,7 +186,7 @@ def _generateItemSvg(item, nodes=None, root=None):
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
 
-        if USE_PYSIDE:
+        if QT_LIB in ['PySide', 'PySide2']:
             xmlStr = str(arr)
         else:
             xmlStr = bytes(arr).decode('utf-8')

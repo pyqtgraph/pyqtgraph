@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
 #
-# Created: Sun Sep 18 19:20:44 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Fri Feb 16 20:30:37 2018
+#      by: pyside2-uic 2.0.0 running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -37,6 +37,7 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.graphicsSystemCombo, 2, 1, 1, 1)
         self.qtLibCombo = QtWidgets.QComboBox(self.widget)
         self.qtLibCombo.setObjectName("qtLibCombo")
+        self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
@@ -86,6 +87,7 @@ class Ui_Form(object):
         self.qtLibCombo.setItemText(1, QtWidgets.QApplication.translate("Form", "PyQt4", None, -1))
         self.qtLibCombo.setItemText(2, QtWidgets.QApplication.translate("Form", "PySide", None, -1))
         self.qtLibCombo.setItemText(3, QtWidgets.QApplication.translate("Form", "PyQt5", None, -1))
+        self.qtLibCombo.setItemText(4, QtWidgets.QApplication.translate("Form", "PySide2", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("Form", "Graphics System:", None, -1))
         self.label.setText(QtWidgets.QApplication.translate("Form", "Qt Library:", None, -1))
         self.loadBtn.setText(QtWidgets.QApplication.translate("Form", "Run Example", None, -1))

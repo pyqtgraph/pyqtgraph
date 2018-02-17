@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtOpenGL, USE_PYQT5
+from ..Qt import QtCore, QtGui, QtOpenGL, QT_LIB
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
@@ -325,7 +325,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
     def wheelEvent(self, ev):
         delta = 0
-        if not USE_PYQT5:
+        if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
         else:
             delta = ev.angleDelta().x()
