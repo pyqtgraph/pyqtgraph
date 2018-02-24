@@ -274,8 +274,9 @@ if m is not None and list(map(int, m.groups())) < versionReq:
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
 
 
+QAPP = None
 def mkQApp():
-    app = QtGui.QApplication.instance()
-    if app is None:
-        app = QtGui.QApplication([])
-    return app
+    global QAPP
+    if QtGui.QApplication.instance() is None:
+        QAPP = QtGui.QApplication([])
+    return QAPP
