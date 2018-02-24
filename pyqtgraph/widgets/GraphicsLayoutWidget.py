@@ -1,4 +1,4 @@
-from ..Qt import QtGui
+from ..Qt import QtGui, mkQApp
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
 from .GraphicsView import GraphicsView
 
@@ -48,6 +48,7 @@ class GraphicsLayoutWidget(GraphicsView):
     :func:`clear <pyqtgraph.GraphicsLayout.clear>`
     """
     def __init__(self, parent=None, show=False, size=None, title=None, **kargs):
+        mkQApp()
         GraphicsView.__init__(self, parent)
         self.ci = GraphicsLayout(**kargs)
         for n in ['nextRow', 'nextCol', 'nextColumn', 'addPlot', 'addViewBox', 'addItem', 'getItem', 'addLayout', 'addLabel', 'removeItem', 'itemIndex', 'clear']:
