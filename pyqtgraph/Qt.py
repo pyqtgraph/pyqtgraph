@@ -272,3 +272,10 @@ m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
+
+
+def mkQApp():
+    app = QtGui.QApplication.instance()
+    if app is None:
+        app = QtGui.QApplication([])
+    return app

@@ -10,7 +10,7 @@ __version__ = '0.10.0'
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui
+from .Qt import QtGui, mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -466,14 +466,3 @@ def stack(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
-    
-    
-def mkQApp():
-    global QAPP
-    inst = QtGui.QApplication.instance()
-    if inst is None:
-        QAPP = QtGui.QApplication([])
-    else:
-        QAPP = inst
-    return QAPP
-        

@@ -6,17 +6,11 @@ it is possible to place any widget into its own window by simply calling its
 show() method.
 """
 
-from .Qt import QtCore, QtGui
+from .Qt import QtCore, QtGui, mkQApp
 from .widgets.PlotWidget import *
 from .imageview import *
 from .widgets.GraphicsLayoutWidget import GraphicsLayoutWidget
 from .widgets.GraphicsView import GraphicsView
-QAPP = None
-
-def mkQApp():
-    if QtGui.QApplication.instance() is None:
-        global QAPP
-        QAPP = QtGui.QApplication([])
 
 
 class GraphicsWindow(GraphicsLayoutWidget):
