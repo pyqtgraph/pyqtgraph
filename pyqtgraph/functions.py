@@ -2172,7 +2172,7 @@ def isosurface(data, level):
             ## compute lookup table of index: vertexes mapping
             faceTableI = np.zeros((len(triTable), i*3), dtype=np.ubyte)
             faceTableInds = np.argwhere(nTableFaces == i)
-            faceTableI[faceTableInds[:,0]] = np.array([triTable[j] for j in faceTableInds])
+            faceTableI[faceTableInds[:,0]] = np.array([triTable[j[0]] for j in faceTableInds])
             faceTableI = faceTableI.reshape((len(triTable), i, 3))
             faceShiftTables.append(edgeShifts[faceTableI])
             
