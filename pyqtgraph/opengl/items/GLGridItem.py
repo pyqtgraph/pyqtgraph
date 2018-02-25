@@ -10,7 +10,7 @@ class GLGridItem(GLGraphicsItem):
     """
     **Bases:** :class:`GLGraphicsItem <pyqtgraph.opengl.GLGraphicsItem>`
     
-    Displays a wire-grame grid. 
+    Displays a wire-frame grid. 
     """
     
     def __init__(self, size=None, color=None, antialias=True, glOptions='translucent'):
