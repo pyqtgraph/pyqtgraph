@@ -33,7 +33,7 @@ class PlotDataItem(GraphicsObject):
     sigClicked = QtCore.Signal(object)
     sigPointsClicked = QtCore.Signal(object, object)
     
-    def __init__(self, *args, **kargs):
+    def __init__(self, curve=None, *args, **kargs):
         """
         There are many different ways to create a PlotDataItem:
         
@@ -122,7 +122,9 @@ class PlotDataItem(GraphicsObject):
         
             ==========   ================================================
             name         name of dataset. This would appear in a legend
+            curve        If specified, the curve will be constructed with this as its PlotCurveItem.
             ==========   ================================================
+         
         """
         GraphicsObject.__init__(self)
         self.setFlag(self.ItemHasNoContents)
@@ -133,7 +135,9 @@ class PlotDataItem(GraphicsObject):
         #self.dataMask = None
         #self.curves = []
         #self.scatters = []
-        self.curve = PlotCurveItem()
+        if curve is None:
+            curve = PlotCurveItem()
+        self.curve = curve
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
         self.scatter.setParentItem(self)
