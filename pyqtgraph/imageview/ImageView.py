@@ -85,7 +85,7 @@ class ImageView(QtGui.QWidget):
     sigProcessingChanged = QtCore.Signal(object)
     
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, 
-                 levelMode='mono', *args):
+                 levelMode='mono', load_ui=None, *args):
         """
         By default, this class creates an :class:`ImageItem <pyqtgraph.ImageItem>` to display image data
         and a :class:`ViewBox <pyqtgraph.ViewBox>` to contain the ImageItem. 
@@ -126,8 +126,12 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.axes = {}
         self.imageDisp = None
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
+        def default_load_ui():
+            self.ui = Ui_Form()
+            self.ui.setupUi(self)
+        if load_ui is None:
+            load_ui = default_load_ui
+        load_ui()
         self.scene = self.ui.graphicsView.scene()
         self.ui.histogram.setLevelMode(levelMode)
         
