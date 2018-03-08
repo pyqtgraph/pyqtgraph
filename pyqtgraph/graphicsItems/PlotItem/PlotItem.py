@@ -99,6 +99,7 @@ class PlotItem(GraphicsWidget):
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
+    sigLogChanged = QtCore.Signal(object)              ## Emitted when the ViewBox log has changed
     
     
     lastFileDir = None
@@ -159,6 +160,9 @@ class PlotItem(GraphicsWidget):
         self.vb.sigRangeChanged.connect(self.sigRangeChanged)
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
+        self.vb.sigLogChanged.connect(self.sigLogChanged)
+        self.vb.sigLogChanged.connect(lambda x: self.setLogMode(x.xLog(), x.yLog()))
+        
         
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
@@ -332,8 +336,10 @@ class PlotItem(GraphicsWidget):
         
         """
         if x is not None:
+            self.vb.logX(x)
             self.ctrl.logXCheck.setChecked(x)
         if y is not None:
+            self.vb.logY(y)
             self.ctrl.logYCheck.setChecked(y)
         
     def showGrid(self, x=None, y=None, alpha=None):
@@ -904,6 +910,8 @@ class PlotItem(GraphicsWidget):
     def updateLogMode(self):
         x = self.ctrl.logXCheck.isChecked()
         y = self.ctrl.logYCheck.isChecked()
+        self.vb.logX(x)
+        self.vb.logY(y)
         for i in self.items:
             if hasattr(i, 'setLogMode'):
                 i.setLogMode(x,y)
