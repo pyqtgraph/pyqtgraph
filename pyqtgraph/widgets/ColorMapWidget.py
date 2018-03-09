@@ -42,6 +42,11 @@ class ColorMapWidget(ptree.ParameterTree):
     def restoreState(self, state):
         self.params.restoreState(state)
         
+    def addColorMap(self, name):
+        """Add a new color mapping and return the created parameter.
+        """
+        return self.params.addNew(name)
+
 
 class ColorMapParameter(ptree.types.GroupParameter):
     sigColorMapChanged = QtCore.Signal(object)
