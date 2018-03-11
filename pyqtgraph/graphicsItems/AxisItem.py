@@ -762,7 +762,7 @@ class AxisItem(GraphicsWidget):
         
     def logTickStrings(self, values, scale, spacing):
         with np.errstate(invalid='ignore', over='ignore'):
-            return ["%0.1g"%x for x in 10 ** np.array(values).astype(float)]
+            return ["%0.1g"%x for x in np.power(10, np.array(values).astype(float))]
         
     def generateDrawSpecs(self, p):
         """
@@ -815,9 +815,14 @@ class AxisItem(GraphicsWidget):
         if lengthInPixels == 0:
             return
 
+        trueRange = self.range
+        if self.logMode:
+            with np.errstate(invalid='ignore', divide='ignore'):
+                trueRange = [x if np.isfinite(x) else 0 for x in np.log10(trueRange)]
+
         # Determine major / minor / subminor axis ticks
         if self._tickLevels is None:
-            tickLevels = self.tickValues(self.range[0], self.range[1], lengthInPixels)
+            tickLevels = self.tickValues(trueRange[0], trueRange[1], lengthInPixels)
             tickStrings = None
         else:
             ## parse self.tickLevels into the formats returned by tickLevels() and tickStrings()
@@ -833,19 +838,19 @@ class AxisItem(GraphicsWidget):
                     strings.append(strn)
         
         ## determine mapping between tick values and local coordinates
-        dif = self.range[1] - self.range[0]
+        dif = trueRange[1] - trueRange[0]
         if dif == 0:
             xScale = 1
             offset = 0
         else:
             if axis == 0:
                 xScale = -bounds.height() / dif
-                offset = self.range[0] * xScale - bounds.height()
+                offset = trueRange[0] * xScale - bounds.height()
             else:
                 xScale = bounds.width() / dif
-                offset = self.range[0] * xScale
+                offset = trueRange[0] * xScale
             
-        xRange = [x * xScale - offset for x in self.range]
+        xRange = [x * xScale - offset for x in trueRange]
         xMin = min(xRange)
         xMax = max(xRange)
         
