@@ -185,9 +185,9 @@ class HistogramLUTItem(GraphicsWidget):
             plot.setLogMode(y,x)
         self.region.setLogMode(x,y)
         self.axis.setLogMode(y)
-        are = self.vb.autoRangeEnabled()
-        self.vb.enableAutoRange()
-        self.vb.enableAutoRange(x=are[0],y=are[1])
+        #are = self.vb.autoRangeEnabled()
+        #self.vb.enableAutoRange()
+        #self.vb.enableAutoRange(x=are[0],y=are[1])
         self.updatePlots()
     
     def gradientChanged(self):
