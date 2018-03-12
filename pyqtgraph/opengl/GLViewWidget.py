@@ -450,6 +450,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glfbo.glFramebufferTexture2D(glfbo.GL_FRAMEBUFFER, glfbo.GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
                     
                     self.paintGL(region=(x, h-y-h2, w2, h2), viewport=(0, 0, w2, h2))  # only render sub-region
+                    glBindTexture(GL_TEXTURE_2D, tex) # fixes issue #366
                     
                     ## read texture back to array
                     data = glGetTexImage(GL_TEXTURE_2D, 0, format, type)

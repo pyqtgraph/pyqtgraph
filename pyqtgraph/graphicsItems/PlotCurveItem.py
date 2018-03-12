@@ -68,6 +68,7 @@ class PlotCurveItem(GraphicsObject):
             'antialias': getConfigOption('antialias'),
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
+            'compositionMode': None,
         }
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
@@ -93,6 +94,24 @@ class PlotCurveItem(GraphicsObject):
             self._mouseShape = None
             self._boundingRect = None        
         
+    def setCompositionMode(self, mode):
+        """Change the composition mode of the item (see QPainter::CompositionMode
+        in the Qt documentation). This is useful when overlaying multiple items.
+        
+        ============================================  ============================================================
+        **Most common arguments:**
+        QtGui.QPainter.CompositionMode_SourceOver     Default; image replaces the background if it
+                                                      is opaque. Otherwise, it uses the alpha channel to blend
+                                                      the image with the background.
+        QtGui.QPainter.CompositionMode_Overlay        The image color is mixed with the background color to 
+                                                      reflect the lightness or darkness of the background.
+        QtGui.QPainter.CompositionMode_Plus           Both the alpha and color of the image and background pixels 
+                                                      are added together.
+        QtGui.QPainter.CompositionMode_Multiply       The output is the image color multiplied by the background.
+        ============================================  ============================================================
+        """
+        self.opts['compositionMode'] = mode
+        self.update()
         
     def getData(self):
         return self.xData, self.yData
@@ -132,6 +151,8 @@ class PlotCurveItem(GraphicsObject):
             if any(np.isinf(b)):
                 mask = np.isfinite(d)
                 d = d[mask]
+                if len(d) == 0:
+                    return (None, None)
                 b = (d.min(), d.max())
                 
         elif frac <= 0.0:
@@ -173,7 +194,7 @@ class PlotCurveItem(GraphicsObject):
         if self._boundingRect is None:
             (xmn, xmx) = self.dataBounds(ax=0)
             (ymn, ymx) = self.dataBounds(ax=1)
-            if xmn is None:
+            if xmn is None or ymn is None:
                 return QtCore.QRectF()
             
             px = py = 0.0
@@ -272,7 +293,7 @@ class PlotCurveItem(GraphicsObject):
 
     def setData(self, *args, **kargs):
         """
-        ==============  ========================================================
+        =============== ========================================================
         **Arguments:**
         x, y            (numpy arrays) Data to show 
         pen             Pen to use when drawing. Any single argument accepted by
@@ -296,7 +317,9 @@ class PlotCurveItem(GraphicsObject):
                         to be drawn. "finite" causes segments to be omitted if
                         they are attached to nan or inf values. For any other
                         connectivity, specify an array of boolean values.
-        ==============  ========================================================
+        compositionMode See :func:`setCompositionMode 
+                        <pyqtgraph.PlotCurveItem.setCompositionMode>`.
+        =============== ========================================================
         
         If non-keyword arguments are used, they will be interpreted as
         setData(y) for a single argument and setData(x, y) for two
@@ -308,6 +331,9 @@ class PlotCurveItem(GraphicsObject):
         
     def updateData(self, *args, **kargs):
         profiler = debug.Profiler()
+
+        if 'compositionMode' in kargs:
+            self.setCompositionMode(kargs['compositionMode'])
 
         if len(args) == 1:
             kargs['y'] = args[0]
@@ -428,7 +454,6 @@ class PlotCurveItem(GraphicsObject):
         x = None
         y = None
         path = self.getPath()
-        
         profiler('generate path')
         
         if self._exportOpts is not False:
@@ -438,6 +463,9 @@ class PlotCurveItem(GraphicsObject):
         
         p.setRenderHint(p.Antialiasing, aa)
         
+        cmode = self.opts['compositionMode']
+        if cmode is not None:
+            p.setCompositionMode(cmode)
             
         if self.opts['brush'] is not None and self.opts['fillLevel'] is not None:
             if self.fillPath is None:

@@ -326,24 +326,11 @@ class SimpleParameter(Parameter):
             'int': int,
             'float': float,
             'bool': bool,
-            'str': self._interpStr,
+            'str': asUnicode,
             'color': self._interpColor,
             'colormap': self._interpColormap,
         }[self.opts['type']]
         return fn(v)
-    
-    def _interpStr(self, v):
-        if sys.version[0] == '2':
-            if isinstance(v, QtCore.QString):
-                v = unicode(v)
-            elif not isinstance(v, basestring):
-                raise TypeError("Cannot set str parmeter from object %r" % v)
-        else:
-            if isinstance(v, QtCore.QString):
-                v = str(v)
-            elif not isinstance(v, str):
-                raise TypeError("Cannot set str parmeter from object %r" % v)
-        return v
     
     def _interpColor(self, v):
         return fn.mkColor(v)
@@ -413,6 +400,7 @@ class GroupParameterItem(ParameterItem):
         else:
             for c in [0,1]:
                 self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
+                self.setForeground(c, QtGui.QBrush(QtGui.QColor(50,50,50)))
                 font = self.font(c)
                 font.setBold(True)
                 #font.setPointSize(font.pointSize()+1)
@@ -475,12 +463,15 @@ class GroupParameter(Parameter):
     instead of a button.
     """
     itemClass = GroupParameterItem
+    
+    sigAddNew = QtCore.Signal(object, object)  # self, type
 
     def addNew(self, typ=None):
         """
         This method is called when the user has requested to add a new item to the group.
+        By default, it emits ``sigAddNew(self, typ)``.
         """
-        raise Exception("Must override this function in subclass.")
+        self.sigAddNew.emit(self, typ)
     
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
@@ -618,6 +609,7 @@ class ActionParameterItem(ParameterItem):
         ParameterItem.__init__(self, param, depth)
         self.layoutWidget = QtGui.QWidget()
         self.layout = QtGui.QHBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
         self.button = QtGui.QPushButton(param.name())
         #self.layout.addSpacing(100)

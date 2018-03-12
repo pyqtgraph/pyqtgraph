@@ -106,11 +106,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
+        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
         self.setOpts(**kwargs)
         self._updateHeight()
         
         self.editingFinished.connect(self.editingFinishedEvent)
-        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
 
     def event(self, ev):
         ret = QtGui.QAbstractSpinBox.event(self, ev)
@@ -518,7 +518,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         # tokenize into numerical value, si prefix, and suffix
         try:
-            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'])
+            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'], suffix=self.opts['suffix'])
         except Exception:
             return False
             

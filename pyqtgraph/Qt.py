@@ -43,8 +43,29 @@ if QT_LIB is None:
 if QT_LIB is None:
     raise Exception("PyQtGraph requires one of PyQt4, PyQt5 or PySide; none of these packages could be imported.")
 
+
+class FailedImport(object):
+    """Used to defer ImportErrors until we are sure the module is needed.
+    """
+    def __init__(self, err):
+        self.err = err
+        
+    def __getattr__(self, attr):
+        raise self.err
+
+
 if QT_LIB == PYSIDE:
-    from PySide import QtGui, QtCore, QtOpenGL, QtSvg
+    from PySide import QtGui, QtCore
+
+    try:
+        from PySide import QtOpenGL
+    except ImportError as err:
+        QtOpenGL = FailedImport(err)
+    try:
+        from PySide import QtSvg
+    except ImportError as err:
+        QtSvg = FailedImport(err)
+
     try:
         from PySide import QtTest
         if not hasattr(QtTest.QTest, 'qWait'):
@@ -55,9 +76,9 @@ if QT_LIB == PYSIDE:
                 while time.time() < start + msec * 0.001:
                     QtGui.QApplication.processEvents()
             QtTest.QTest.qWait = qWait
-                
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtTest = FailedImport(err)
+        
     import PySide
     try:
         from PySide import shiboken
@@ -133,16 +154,16 @@ elif QT_LIB == PYQT4:
     from PyQt4 import QtGui, QtCore, uic
     try:
         from PyQt4 import QtSvg
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtSvg = FailedImport(err)
     try:
         from PyQt4 import QtOpenGL
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtOpenGL = FailedImport(err)
     try:
         from PyQt4 import QtTest
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtTest = FailedImport(err)
 
     VERSION_INFO = 'PyQt4 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
@@ -151,19 +172,31 @@ elif QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
     from PyQt5 import QtGui, QtCore, QtWidgets, uic
+    
+    # PyQt5, starting in v5.5, calls qAbort when an exception is raised inside
+    # a slot. To maintain backward compatibility (and sanity for interactive
+    # users), we install a global exception hook to override this behavior.
+    ver = QtCore.PYQT_VERSION_STR.split('.')
+    if int(ver[1]) >= 5:
+        if sys.excepthook == sys.__excepthook__:
+            sys_excepthook = sys.excepthook
+            def pyqt5_qabort_override(*args, **kwds):
+                return sys_excepthook(*args, **kwds)
+            sys.excepthook = pyqt5_qabort_override
+    
     try:
         from PyQt5 import QtSvg
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtSvg = FailedImport(err)
     try:
         from PyQt5 import QtOpenGL
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtOpenGL = FailedImport(err)
     try:
         from PyQt5 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
-    except ImportError:
-        pass
+    except ImportError as err:
+        QtTest = FailedImport(err)
 
     # Re-implement deprecated APIs
 
@@ -239,3 +272,11 @@ m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
+
+
+QAPP = None
+def mkQApp():
+    global QAPP
+    if QtGui.QApplication.instance() is None:
+        QAPP = QtGui.QApplication([])
+    return QAPP

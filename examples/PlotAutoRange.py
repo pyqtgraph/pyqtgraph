@@ -16,7 +16,7 @@ app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
-win = pg.GraphicsWindow(title="Plot auto-range examples")
+win = pg.GraphicsLayoutWidget(show=True, title="Plot auto-range examples")
 win.resize(800,600)
 win.setWindowTitle('pyqtgraph example: PlotAutoRange')
 
