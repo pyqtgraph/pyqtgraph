@@ -337,10 +337,15 @@ class HistogramLUTItem(GraphicsWidget):
         if value:
             self.updateAutoLevels()
 
+    def clearPlots(self):
+        for plot in self.plots:
+            plot.clear()
+
     def updatePlots(self):
-       if self.imageItem() is None:
+        if self.imageItem() is None:
+            self.clearPlots()
             return
-            
+
         if self.levelMode == 'mono':
             for plt in self.plots[1:]:
                 plt.setVisible(False)
@@ -350,32 +355,22 @@ class HistogramLUTItem(GraphicsWidget):
             h = self.imageItem().getHistogram(log=self.logModeEnabled())
             profiler('get histogram')
             if h[0] is None:
+                self.clearPlots()
                 return
             self.plot.setData(*h)
             profiler('set plot')
-            if autoLevel:
-                mn = h[0][0]
-                mx = h[0][-1]
-                self.region.setRegion([mn, mx])
-                profiler('set region')
-            else:
-                mn, mx = self.imageItem().levels
-                self.region.setRegion([mn, mx])
         else:
             # plot one histogram for each channel
             self.plots[0].setVisible(False)
             ch = self.imageItem().getHistogram(perChannel=True, log=self.logModeEnabled())
             if ch[0] is None:
+                self.clearPlots()
                 return
             for i in range(1, 5):
                 if len(ch) >= i:
                     h = ch[i-1]
                     self.plots[i].setVisible(True)
                     self.plots[i].setData(*h)
-                    if autoLevel:
-                        mn = h[0][0]
-                        mx = h[0][-1]
-                        self.region[i].setRegion([mn, mx])
                 else:
                     # hide channels not present in image data
                     self.plots[i].setVisible(False)
