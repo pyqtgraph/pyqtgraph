@@ -8,7 +8,9 @@ elif QT_LIB == 'PySide':
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-    
+elif QT_LIB == 'PySide2':
+    from .axisCtrlTemplate_pyside2 import Ui_Form as AxisCtrlTemplate
+
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):
@@ -60,6 +62,8 @@ class ViewBoxMenu(QtGui.QMenu):
 
         self.ctrl[0].invertCheck.toggled.connect(self.xInvertToggled)
         self.ctrl[1].invertCheck.toggled.connect(self.yInvertToggled)
+        self.ctrl[0].logCheck.toggled.connect(self.xLogToggled)
+        self.ctrl[1].logCheck.toggled.connect(self.yLogToggled)
         ## exporting is handled by GraphicsScene now
         #self.export = QtGui.QMenu("Export")
         #self.setExportMethods(view.exportMethods)
@@ -112,7 +116,7 @@ class ViewBoxMenu(QtGui.QMenu):
             self.mouseModes[1].setChecked(True)
             
         for i in [0,1]:  # x, y
-            tr = state['targetRange'][i]
+            tr = state['range'][i]
             self.ctrl[i].minText.setText("%0.5g" % tr[0])
             self.ctrl[i].maxText.setText("%0.5g" % tr[1])
             if state['autoRange'][i] is not False:
@@ -143,6 +147,7 @@ class ViewBoxMenu(QtGui.QMenu):
             self.ctrl[i].visibleOnlyCheck.setChecked(state['autoVisibleOnly'][i])
             xy = ['x', 'y'][i]
             self.ctrl[i].invertCheck.setChecked(state.get(xy+'Inverted', False))
+            self.ctrl[i].logCheck.setChecked(state.get(xy+'Log', False))
         
         self.valid = True
         
@@ -222,6 +227,12 @@ class ViewBoxMenu(QtGui.QMenu):
 
     def xInvertToggled(self, b):
         self.view().invertX(b)
+
+    def yLogToggled(self, b):
+        self.view().logY(b)
+
+    def xLogToggled(self, b):
+        self.view().logX(b)
 
     def exportMethod(self):
         act = self.sender()

@@ -1,5 +1,5 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
-if not USE_PYSIDE:
+from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYSIDE2
+if not USE_PYSIDE and not USE_PYSIDE2:
     import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView

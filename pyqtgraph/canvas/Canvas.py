@@ -11,6 +11,8 @@ from ..graphicsItems.GridItem import GridItem
 
 if QT_LIB == 'PySide':
     from .CanvasTemplate_pyside import *
+elif QT_LIB == 'PySide':
+    from .CanvasTemplate_pyside2 import *
 elif QT_LIB == 'PyQt4':
     from .CanvasTemplate_pyqt import *
 elif QT_LIB == 'PyQt5':

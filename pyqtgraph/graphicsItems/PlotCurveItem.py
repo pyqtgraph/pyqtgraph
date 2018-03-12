@@ -64,6 +64,7 @@ class PlotCurveItem(GraphicsObject):
             'fillLevel': None,
             'brush': None,
             'stepMode': False,
+            'logMode': [False, False],
             'name': None,
             'antialias': getConfigOption('antialias'),
             'connect': 'all',
@@ -114,7 +115,17 @@ class PlotCurveItem(GraphicsObject):
         self.update()
         
     def getData(self):
-        return self.xData, self.yData
+        x = self.xData
+        y = self.yData
+        if x is not None:
+            if self.opts['logMode'][0]:
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    x = np.log10(x)
+        if y is not None:
+            if self.opts['logMode'][1]:
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    y = np.log10(y)
+        return x, y
         
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         ## Need this to run as fast as possible.
@@ -140,7 +151,7 @@ class PlotCurveItem(GraphicsObject):
             d = d[mask]
             #d2 = d2[mask]
             
-        if len(d) == 0:
+        if len(d) == 0 or not any(np.isfinite(d)):
             return (None, None)
 
         ## Get min/max (or percentiles) of the requested data range
@@ -288,6 +299,13 @@ class PlotCurveItem(GraphicsObject):
         """Set the level filled to when filling under the curve"""
         self.opts['fillLevel'] = level
         self.fillPath = None
+        self.invalidateBounds()
+        self.update()
+
+    def setLogMode(self, xMode, yMode):
+        if self.opts['logMode'] == [xMode, yMode]:
+            return
+        self.opts['logMode'] = [xMode, yMode]
         self.invalidateBounds()
         self.update()
 
@@ -631,4 +649,5 @@ class ROIPlotItem(PlotCurveItem):
     def roiChangedEvent(self):
         d = self.getRoiData()
         self.updateData(d, self.xVals)
+
 

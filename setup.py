@@ -97,10 +97,6 @@ class Install(install.install):
         
         name = self.config_vars['dist_name']
         path = os.path.join(self.install_libbase, 'pyqtgraph')
-        if os.path.exists(path):
-            raise Exception("It appears another version of %s is already "
-                            "installed at %s; remove this before installing." 
-                            % (name, path))
         print("Installing to %s" % path)
         rval = install.install.run(self)
 

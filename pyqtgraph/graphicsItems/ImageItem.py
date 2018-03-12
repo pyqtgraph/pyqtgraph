@@ -45,6 +45,7 @@ class ImageItem(GraphicsObject):
         self.paintMode = None
         
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
+        self.log = False
         self.lut = None
         self.autoDownsample = False
         
@@ -130,6 +131,15 @@ class ImageItem(GraphicsObject):
         return self.levels
         #return self.whiteLevel, self.blackLevel
 
+    def setLog(self, log, update=True):
+        if not fn.eq(log, self.log):
+            self.log = log
+            if update:
+                self.updateImage()
+
+    def getLog(self):
+        return self.log
+
     def setLookupTable(self, lut, update=True):
         """
         Set the lookup table (numpy array) to use for this image. (see 
@@ -166,6 +176,8 @@ class ImageItem(GraphicsObject):
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
             self.setLevels(kargs['levels'], update=update)
+        if 'log' in kargs:
+            self.setLog(kargs['log'], update=update)
         #if 'clipLevel' in kargs:
             #self.setClipLevel(kargs['clipLevel'])
         if 'opacity' in kargs:
@@ -362,6 +374,7 @@ class ImageItem(GraphicsObject):
                 lut = self.lut
         else:
             lut = None
+        log = self.log
 
         if self.autoDownsample:
             # reduce dimensions of image based on screen resolution
@@ -414,7 +427,7 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
         
-        argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
+        argb, alpha = fn.makeARGB(image, lut=lut, levels=levels, log=log)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
 
     def paint(self, p, *args):
@@ -444,7 +457,7 @@ class ImageItem(GraphicsObject):
         self.qimage.save(fileName, *args)
 
     def getHistogram(self, bins='auto', step='auto', perChannel=False, targetImageSize=200, 
-                     targetHistogramSize=500, **kwds):
+                     targetHistogramSize=500, log=False, **kwds):
         """Returns x and y arrays containing the histogram values for the current image.
         For an explanation of the return format, see numpy.histogram().
         
@@ -467,12 +480,18 @@ class ImageItem(GraphicsObject):
         """
         if self.image is None:
             return None,None
+
+        data = self.image
         if step == 'auto':
-            step = (int(np.ceil(self.image.shape[0] / targetImageSize)),
-                    int(np.ceil(self.image.shape[1] / targetImageSize)))
+            step = (int(np.ceil(data.shape[0] / targetImageSize)),
+                    int(np.ceil(data.shape[1] / targetImageSize)))
         if np.isscalar(step):
             step = (step, step)
-        stepData = self.image[::step[0], ::step[1]]
+
+        stepData = data[::step[0], ::step[1]].flatten()
+
+        if log:
+            stepData = stepData[stepData > 0]
         
         if bins == 'auto':
             mn = stepData.min()
@@ -482,11 +501,21 @@ class ImageItem(GraphicsObject):
                 step = np.ceil((mx-mn) / 500.)
                 bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
             else:
-                # for float data, let numpy select the bins.
-                bins = np.linspace(mn, mx, 500)
-            
-            if len(bins) == 0:
-                bins = [mn, mx]
+                # Taken from numpy histogram source
+                first_edge, last_edge = (stepData.min(), stepData.max())
+                if first_edge == last_edge:
+                    first_edge = first_edge - 0.5
+                last_edge = last_edge + 0.5
+                bin_type = np.result_type(first_edge, last_edge, stepData)
+                if np.issubdtype(bin_type, np.integer):
+                    bin_type = np.result_type(bin_type, float)
+                #
+
+                if log:
+                    first_edge, last_edge = np.log10((first_edge, last_edge))
+                    bins = np.logspace(first_edge, last_edge, 500 + 1, endpoint=True, dtype=bin_type)
+                else:
+                    bins = np.linspace(first_edge, last_edge, 500 + 1, endpoint=True, dtype=bin_type)
 
         kwds['bins'] = bins
 
@@ -639,3 +668,4 @@ class ImageItem(GraphicsObject):
     def emitRemoveRequested(self):
         self.removeTimer.timeout.disconnect(self.emitRemoveRequested)
         self.sigRemoveRequested.emit(self)
+

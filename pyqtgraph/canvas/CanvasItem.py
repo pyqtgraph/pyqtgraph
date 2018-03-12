@@ -5,6 +5,8 @@ from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
 if QT_LIB == 'PySide':
     from . import TransformGuiTemplate_pyside as TransformGuiTemplate
+elif QT_LIB == 'PySide2':
+    from . import TransformGuiTemplate_pyside2 as TransformGuiTemplate
 elif QT_LIB == 'PyQt4':
     from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
 elif QT_LIB == 'PyQt5':

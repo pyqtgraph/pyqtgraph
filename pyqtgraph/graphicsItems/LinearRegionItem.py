@@ -1,3 +1,4 @@
+import numpy as np
 from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
@@ -77,6 +78,8 @@ class LinearRegionItem(GraphicsObject):
         self.span = span
         self.swapMode = swapMode
         self._bounds = None
+        self.logMode = False
+        self.region = [0, 0]
         
         # note LinearRegionItem.Horizontal and LinearRegionItem.Vertical
         # are kept for backward compatibility.
@@ -124,14 +127,26 @@ class LinearRegionItem(GraphicsObject):
         self.setMovable(movable)
         
     def getRegion(self):
-        """Return the values at the edges of the region."""
-        r = (self.lines[0].value(), self.lines[1].value())
+        r = self.region[:]
         if self.swapMode == 'sort':
-            return (min(r), max(r))
+            return [min(r), max(r)]
         else:
             return r
 
+    def getRealRegion(self):
+        rng = self.getRegion()
+        if self.logMode:
+            with np.errstate(invalid='ignore', divide='ignore'):
+                rng = np.log10(rng)
+        return rng
+
     def setRegion(self, rgn):
+        self.region = list(rgn)
+        self.updateLines()
+
+    def updateLines(self):
+        rgn = self.getRealRegion()
+
         """Set the values for the edges of the region.
         
         ==============   ==============================================
@@ -142,8 +157,10 @@ class LinearRegionItem(GraphicsObject):
         if self.lines[0].value() == rgn[0] and self.lines[1].value() == rgn[1]:
             return
         self.blockLineSignal = True
+        self.lines[0].setVisible(np.isfinite(rgn[0]))
         self.lines[0].setValue(rgn[0])
         self.blockLineSignal = False
+        self.lines[1].setVisible(np.isfinite(rgn[1]))
         self.lines[1].setValue(rgn[1])
         #self.blockLineSignal = False
         self.lineMoved(0)
@@ -192,7 +209,7 @@ class LinearRegionItem(GraphicsObject):
     def boundingRect(self):
         br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
         
-        rng = self.getRegion()
+        rng = self.getRealRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
             br.setRight(rng[1])
@@ -221,8 +238,8 @@ class LinearRegionItem(GraphicsObject):
         p.drawRect(self.boundingRect())
 
     def dataBounds(self, axis, frac=1.0, orthoRange=None):
-        if axis == self._orientation_axis[self.orientation]:
-            return self.getRegion()
+        if axis == self.orientation:
+            return self.getRealRegion()
         else:
             return None
 
@@ -237,6 +254,11 @@ class LinearRegionItem(GraphicsObject):
             elif self.swapMode == 'push':
                 self.lines[1-i].setValue(self.lines[i].value())
         
+        rgn = [self.lines[0].value(), self.lines[1].value()]
+        if self.logMode:
+            with np.errstate(invalid='ignore', over='ignore'):
+                rgn = np.power(10, rgn)
+        self.region = rgn
         self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
             
@@ -294,3 +316,11 @@ class LinearRegionItem(GraphicsObject):
         else:
             self.currentBrush = self.brush
         self.update()
+
+    def setLogMode(self, x, y):
+        if self.orientation == LinearRegionItem.Horizontal:
+            self.logMode = y
+        else:
+            self.logMode = x
+        self.updateLines()
+        self.informViewBoundsChanged()

@@ -5,7 +5,7 @@ except ImportError:
     imap = map
 import numpy as np
 import weakref
-from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsItem import GraphicsItem
@@ -773,7 +773,7 @@ class ScatterPlotItem(GraphicsObject):
                     self.data['targetRect'][updateMask] = list(imap(QtCore.QRectF, updatePts[0,:], updatePts[1,:], width, width))
 
                 data = self.data[viewMask]
-                if USE_PYSIDE or USE_PYQT5:
+                if USE_PYSIDE or USE_PYSIDE2 or USE_PYQT5:
                     list(imap(p.drawPixmap, data['targetRect'], repeat(atlas), data['sourceRect']))
                 else:
                     p.drawPixmapFragments(data['targetRect'].tolist(), data['sourceRect'].tolist(), atlas)

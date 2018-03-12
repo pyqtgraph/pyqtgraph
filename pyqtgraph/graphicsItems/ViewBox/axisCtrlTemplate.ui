@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>186</width>
-    <height>154</height>
+    <width>200</width>
+    <height>174</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -26,14 +26,14 @@
    <property name="spacing">
     <number>0</number>
    </property>
-   <item row="7" column="0" colspan="2">
+   <item row="8" column="0" colspan="2">
     <widget class="QLabel" name="label">
      <property name="text">
       <string>Link Axis:</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="2" colspan="2">
+   <item row="8" column="2" colspan="2">
     <widget class="QComboBox" name="linkCombo">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Links this axis with another view. When linked, both views will display the same data range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -121,7 +121,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="0" colspan="4">
+   <item row="7" column="0" colspan="4">
     <widget class="QCheckBox" name="mouseCheck">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables mouse interaction (panning, scaling) for this axis.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -151,6 +151,16 @@
      </property>
      <property name="text">
       <string>Auto Pan Only</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="4">
+    <widget class="QCheckBox" name="logCheck">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use log scale&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>Log scale</string>
      </property>
     </widget>
    </item>

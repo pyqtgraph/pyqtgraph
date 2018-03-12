@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './pyqtgraph/graphicsItems/ViewBox/axisCtrlTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:51 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Thu Dec  8 17:25:47 2016
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(186, 154)
+        Form.resize(200, 174)
         Form.setMaximumSize(QtCore.QSize(200, 16777215))
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -20,11 +20,11 @@ class Ui_Form(object):
         self.gridLayout.setObjectName("gridLayout")
         self.label = QtGui.QLabel(Form)
         self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 7, 0, 1, 2)
+        self.gridLayout.addWidget(self.label, 8, 0, 1, 2)
         self.linkCombo = QtGui.QComboBox(Form)
         self.linkCombo.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.linkCombo.setObjectName("linkCombo")
-        self.gridLayout.addWidget(self.linkCombo, 7, 2, 1, 2)
+        self.gridLayout.addWidget(self.linkCombo, 8, 2, 1, 2)
         self.autoPercentSpin = QtGui.QSpinBox(Form)
         self.autoPercentSpin.setEnabled(True)
         self.autoPercentSpin.setMinimum(1)
@@ -52,13 +52,16 @@ class Ui_Form(object):
         self.mouseCheck = QtGui.QCheckBox(Form)
         self.mouseCheck.setChecked(True)
         self.mouseCheck.setObjectName("mouseCheck")
-        self.gridLayout.addWidget(self.mouseCheck, 6, 0, 1, 4)
+        self.gridLayout.addWidget(self.mouseCheck, 7, 0, 1, 4)
         self.visibleOnlyCheck = QtGui.QCheckBox(Form)
         self.visibleOnlyCheck.setObjectName("visibleOnlyCheck")
         self.gridLayout.addWidget(self.visibleOnlyCheck, 3, 2, 1, 2)
         self.autoPanCheck = QtGui.QCheckBox(Form)
         self.autoPanCheck.setObjectName("autoPanCheck")
         self.gridLayout.addWidget(self.autoPanCheck, 4, 2, 1, 2)
+        self.logCheck = QtGui.QCheckBox(Form)
+        self.logCheck.setObjectName("logCheck")
+        self.gridLayout.addWidget(self.logCheck, 6, 0, 1, 4)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -85,4 +88,6 @@ class Ui_Form(object):
         self.visibleOnlyCheck.setText(QtGui.QApplication.translate("Form", "Visible Data Only", None, QtGui.QApplication.UnicodeUTF8))
         self.autoPanCheck.setToolTip(QtGui.QApplication.translate("Form", "<html><head/><body><p>When checked, the axis will automatically pan to center on the current data, but the scale along this axis will not change.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.autoPanCheck.setText(QtGui.QApplication.translate("Form", "Auto Pan Only", None, QtGui.QApplication.UnicodeUTF8))
+        self.logCheck.setToolTip(QtGui.QApplication.translate("Form", "<html><head/><body><p>Use log scale</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.logCheck.setText(QtGui.QApplication.translate("Form", "Log scale", None, QtGui.QApplication.UnicodeUTF8))
 

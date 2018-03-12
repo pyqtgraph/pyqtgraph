@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYSIDE2, USE_PYQT5
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.ViewBox import ViewBox
@@ -6,6 +6,8 @@ from ..graphicsItems.PlotItem import PlotItem
 
 if USE_PYSIDE:
     from . import exportDialogTemplate_pyside as exportDialogTemplate
+elif USE_PYSIDE2:
+    from . import exportDialogTemplate_pyside2 as exportDialogTemplate
 elif USE_PYQT5:
     from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
 else:
