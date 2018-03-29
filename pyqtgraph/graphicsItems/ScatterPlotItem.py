@@ -857,10 +857,17 @@ class SpotItem(object):
     def __init__(self, data, plot):
         #GraphicsItem.__init__(self, register=False)
         self._data = data
-        self._plot = plot
+        # SpotItems are kept in plot.data["items"] numpy object array which
+        # does not support cyclic garbage collection (numpy issue 6581).
+        # Keeping a strong ref to plot here would leak the cycle
+        self.__plot_ref = weakref.ref(plot)
         #self.setParentItem(plot)
         #self.setPos(QtCore.QPointF(data['x'], data['y']))
         #self.updateItem()
+
+    @property
+    def _plot(self):
+        return self.__plot_ref()
 
     def data(self):
         """Return the user data associated with this spot."""
