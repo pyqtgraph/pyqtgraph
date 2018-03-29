@@ -372,7 +372,7 @@ def correctCoordinates(node, defs, item):
                     ch.setAttribute('font-family', ', '.join([f if ' ' not in f else '"%s"'%f for f in families]))
                 
             ## correct line widths if needed
-            if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke' and grp.getAttribute('stroke-width'):
+            if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke' and grp.getAttribute('stroke-width') != '':
                 w = float(grp.getAttribute('stroke-width'))
                 s = fn.transformCoordinates(tr, np.array([[w,0], [0,0]]), transpose=True)
                 w = ((s[0]-s[1])**2).sum()**0.5
