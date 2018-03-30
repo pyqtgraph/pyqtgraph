@@ -80,7 +80,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def getViewport(self):
         vp = self.opts['viewport']
         if vp is None:
-            return (0, 0, self.width(), self.height())
+            return (0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
         else:
             return vp
         
@@ -99,7 +99,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def projectionMatrix(self, region=None):
         # Xw = (Xnd + 1) * width/2 + X
         if region is None:
-            region = (0, 0, self.width(), self.height())
+            region = (0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
         
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
