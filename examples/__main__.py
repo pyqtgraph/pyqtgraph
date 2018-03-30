@@ -26,7 +26,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
-        self.setWindowTitle("Examples")
+        self.setWindowTitle("PyQtGraph Examples")
 
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
