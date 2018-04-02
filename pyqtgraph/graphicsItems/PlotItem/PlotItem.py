@@ -356,14 +356,6 @@ class PlotItem(GraphicsWidget):
             v = np.clip(alpha, 0, 1)*self.ctrl.gridAlphaSlider.maximum()
             self.ctrl.gridAlphaSlider.setValue(v)
         
-    #def paint(self, *args):
-        #prof = debug.Profiler()
-        #QtGui.QGraphicsWidget.paint(self, *args)
-        
-    ## bad idea. 
-    #def __getattr__(self, attr):  ## wrap ms
-        #return getattr(self.vb, attr)
-        
     def close(self):
         #print "delete", self
         ## Most of this crap is needed to avoid PySide trouble. 
