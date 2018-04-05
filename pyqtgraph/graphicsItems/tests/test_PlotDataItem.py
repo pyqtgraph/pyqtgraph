@@ -49,3 +49,12 @@ def test_setData():
     pdi.setData({'x': x, 'y': y})
     assert len(pdi.xData) == 200
     assert len(pdi.yData) == 200
+
+def test_clear():
+    y = list(np.random.normal(size=100))
+    x = np.linspace(5, 10, 100)
+    pdi = pg.PlotDataItem(x, y)
+    pdi.clear()
+
+    assert pdi.xData == None
+    assert pdi.yData == None
