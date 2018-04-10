@@ -30,7 +30,7 @@ __all__ = [
     'ROI', 
     'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
     'LineROI', 'MultiLineROI', 'MultiRectROI', 'LineSegmentROI', 'PolyLineROI', 
-    'CrosshairROI',
+    'CrosshairROI','TriangleROI'
 ]
 
 
@@ -2344,3 +2344,43 @@ class RulerROI(LineSegmentROI):
             return r
         pxw = 50 * pxl
         return r.adjusted(-50, -50, 50, 50)
+
+class TriangleROI(ROI):
+    """
+    Equilateral triangle ROI subclass with one scale handle and one rotation handle.
+    Arguments
+    pos            (length-2 sequence) The position of the ROI's origin.
+    size           (length-1 sequence) The size of the ROI's bounding rectangle.
+    \**args        All extra keyword arguments are passed to ROI()
+    ============== =============================================================
+    """
+
+    def __init__(self, pos, size, **args):
+        ROI.__init__(self, pos, [size,size], **args)
+        self.aspectLocked = True
+        #angles are used to generate the triangle edges
+        a = np.linspace(0,np.pi*4/3,3)
+        self.e = (np.array((np.sin(a), np.cos(a))).T+1.0)/2.0
+        self.poly = QtGui.QPolygonF()
+        for e in self.e:
+            self.poly.append(QtCore.QPointF(*e))
+        self.addRotateHandle(self.e[0], [0.5, 0.5])
+        self.addScaleHandle(self.e[1], [0.5, 0.5])
+
+    def paint(self, p, *args):
+        r = self.boundingRect()
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        p.scale(r.width(), r.height())
+        p.setPen(self.currentPen)
+        p.drawPolygon(self.poly)
+
+    def shape(self):
+        self.path = QtGui.QPainterPath()
+        r = self.boundingRect()
+        #scale the path to match whats on the screen
+        t = QtGui.QTransform()
+        t.scale(r.width(), r.height())
+        self.path.addPolygon(self.poly)
+        return t.map(self.path)
+
+    ##todo: getArrayRegion
