@@ -78,6 +78,18 @@ params = [
         {'name': 'Text Parameter', 'type': 'text', 'value': 'Some text...'},
         {'name': 'Action Parameter', 'type': 'action'},
     ]},
+    {'name': 'Custom Parameter Options', 'type': 'group', 'children': [
+        {'name': 'Pen', 'type': 'pen', 'value': pg.mkPen(color=(255,0,0), width=1)},
+        {'name': 'Progress bar', 'type': 'progress', 'value':50, 'limits':(0,100)},
+        {'name': 'Slider', 'type': 'slider', 'value':50, 'limits':(0,100)},
+        {'name': 'Font', 'type': 'font', 'value':QtGui.QFont("Comic Sans MS")},
+        {'name': 'Calendar', 'type': 'calendar', 'value':QtCore.QDate.currentDate().addMonths(1)},
+        {'name': 'Open files', 'type': 'file', "dialogType":"openFiles"},
+        {'name': 'Open file', 'type': 'file', "dialogType":"openFile"},
+        {'name': 'Open directory', 'type': 'file', "dialogType":"openDirectory"},
+        {'name': 'Save file', 'type': 'file', "dialogType":"saveFile"},
+        {'name': 'Save txt file', 'type': 'file', "dialogType":"saveFile", "filterString":"*.txt", "dialogCaption": "Save a text file"}
+    ]},    
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
         {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},

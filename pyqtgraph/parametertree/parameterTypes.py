@@ -10,6 +10,7 @@ from .. import pixmaps as pixmaps
 from .. import functions as fn
 import os, sys
 from ..pgcollections import OrderedDict
+from ..widgets.PenSelectorDialog import PenSelectorDialog
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -681,3 +682,241 @@ class TextParameter(Parameter):
     
     
 registerParameterType('text', TextParameter, override=True)
+
+class FileDialogItem(ParameterItem):
+
+    def __init__(self, param, depth):
+        ParameterItem.__init__(self, param, depth)
+
+        self.dialogTypes={
+        "getExistingDirectory" : (QtGui.QFileDialog().getExistingDirectory,"Open directory"),
+        #"getExistingDirectoryUrl" : (QtGui.QFileDialog().getExistingDirectoryUrl,"Open directory"),
+        "getOpenFileName" : (QtGui.QFileDialog().getOpenFileName,"Open file"),
+        "getOpenFileNames" : (QtGui.QFileDialog().getOpenFileNames,"Open files"),
+        #"getOpenFileUrl" : (QtGui.QFileDialog().getOpenFileUrl,"Open directory"),
+        #"getOpenFileUrls" : (QtGui.QFileDialog().getOpenFileUrls,"Open directory"),
+        "getSaveFileName" : (QtGui.QFileDialog().getSaveFileName,"Save file"),
+        #"getSaveFileUrl" : (QtGui.QFileDialog().getSaveFileUrl,"Open directory"),
+        "openFiles" : (QtGui.QFileDialog().getOpenFileNames,"Open files"),
+        "openFile" : (QtGui.QFileDialog().getOpenFileName,"Open file"),
+        "openDirectory" : (QtGui.QFileDialog().getExistingDirectory,"Open directory"),
+        "saveFile" : (QtGui.QFileDialog().getSaveFileName,"Save file")}
+
+        self.layoutWidget = QtGui.QWidget()
+        self.layout = QtGui.QHBoxLayout()
+        self.layoutWidget.setLayout(self.layout)
+        self.button = QtGui.QPushButton(param.name())
+        self.label = QtGui.QLabel()
+        #self.layout.addSpacing(100)
+        self.layout.addWidget(self.button)
+        self.layout.addWidget(self.label)
+        self.layout.addStretch()
+        self.setText(0, '')
+
+        self.returnedValues = None
+        self.lastDirectory = os.path.dirname(os.path.abspath(__file__))
+        self.button.clicked.connect(self.buttonClicked)
+
+    def treeWidgetChanged(self):
+        ParameterItem.treeWidgetChanged(self)
+        tree = self.treeWidget()
+        if tree is None:
+            return
+
+        tree.setFirstItemColumnSpanned(self, True)
+        tree.setItemWidget(self, 0, self.layoutWidget)
+
+    def buttonClicked(self):
+        filterString = self.param.opts.get('filterString', "All files (*.*)")
+        dialogType = self.param.opts.get('dialogType', "getOpenFileName")
+        dialogFunction, dialogCaption = self.dialogTypes[dialogType]
+        dialogCaption = self.param.opts.get('dialogCaption', dialogCaption)
+
+        if dialogType in ["getExistingDirectory","openDirectory"]:
+            fn = dialogFunction(None, dialogCaption, self.lastDirectory)
+            fn = os.path.realpath(unicode(fn))
+            if fn=="": return 0
+            self.lastDirectory = os.path.dirname(fn)
+            self.label.setText(str(fn))
+            tooltip = str(os.path.realpath(fn))
+        elif dialogType in ["getOpenFileNames","openFiles"]:
+            fn = dialogFunction(None, dialogCaption, self.lastDirectory, filterString)
+            fn = [os.path.realpath(unicode(f)) for f in fn if os.path.isfile(f) and f is not ""]
+            if len(fn)<=0: return 0
+            self.lastDirectory = os.path.dirname(fn[0])
+            self.label.setText(str(fn[0]))
+            tooltip = "\n".join(fn)
+        else:
+            fn = dialogFunction(None, dialogCaption, self.lastDirectory, filterString)
+            if fn == "": return 0
+            fn = os.path.realpath(unicode(fn))
+            self.lastDirectory = os.path.dirname(fn)
+            self.label.setText(str(fn))
+            tooltip = str(fn)
+
+        self.label.setToolTip(tooltip)
+        self.param.fileSelected(fn)
+
+class FileDialogParameter(Parameter):
+    """Used for displaying a button within the tree."""
+    itemClass = FileDialogItem
+    sigFileSelected = QtCore.Signal(object,object)
+
+    def fileSelected(self,f):
+        self.sigFileSelected.emit(self,f)
+        self.emitStateChanged('fileSelected', f)
+
+registerParameterType('file', FileDialogParameter, override=True)
+
+class ProgressBarParameterItem(WidgetParameterItem):
+    def makeWidget(self):
+        w = QtGui.QProgressBar()
+        w.setMaximumHeight(20)
+        w.sigChanged = w.valueChanged
+        self.widget = w
+        self.hideWidget = False
+        return w
+
+class ProgressBarParameter(Parameter):
+    itemClass = ProgressBarParameterItem
+
+registerParameterType('progress', ProgressBarParameter, override=True)
+
+class SliderParameterItem(WidgetParameterItem):
+    def makeWidget(self):
+        w = QtGui.QSlider()
+        w.setOrientation(1)
+        w.setMaximumHeight(20)
+        w.sigChanged = w.valueChanged
+        def setLimits(limits):
+            w.setMinimum(min(limits))
+            w.setMaximum(max(limits))
+        self.limitsChanged = setLimits
+        self.limitsChanged(self.param.opts['limits'])
+        self.widget = w
+        self.hideWidget = False
+        return w
+
+class SliderParameter(Parameter):
+    itemClass = SliderParameterItem
+
+registerParameterType('slider', SliderParameter, override=True)
+
+class FontParameterItem(WidgetParameterItem):
+    def makeWidget(self):
+        w = QtGui.QFontComboBox()
+        w.setMaximumHeight(20)
+        w.sigChanged = w.currentFontChanged
+        w.value = w.currentFont
+        w.setValue = w.setCurrentFont
+        self.widget = w
+        self.hideWidget = False
+        return w
+
+class FontParameter(Parameter):
+    itemClass = FontParameterItem
+
+registerParameterType('font', FontParameter, override=True)
+
+class CalendarParameterItem(WidgetParameterItem):
+    def makeWidget(self):
+        w = QtGui.QCalendarWidget()
+        w.setMaximumHeight(200)
+        w.sigChanged = w.selectionChanged
+        w.value = w.selectedDate
+        w.setValue = w.setSelectedDate
+        self.widget = w
+        self.hideWidget = False
+        self.param.opts['default'] = QtCore.QDate.currentDate()
+        return w
+
+class CalendarParameter(Parameter):
+    itemClass = CalendarParameterItem
+
+registerParameterType('calendar', CalendarParameter, override=True)
+
+
+
+class PenParameterItem(ParameterItem):
+    def __init__(self, param, depth):
+        ParameterItem.__init__(self, param, depth)
+        self.layoutWidget = QtGui.QWidget()
+        self.layout = QtGui.QHBoxLayout()
+        self.layoutWidget.setLayout(self.layout)
+        self.button = QtGui.QPushButton()
+        #larger button
+        self.button.setFixedWidth(100)
+        self.layout.addWidget(self.button)
+        self.layout.addStretch()
+        self.pen = QtGui.QPen()
+        self.button.clicked.connect(self.buttonClicked)
+        #clear button for drawing, override paint event
+        self.setText(0, '')
+        self.button.paintEvent = self.buttonPaintEvent
+        
+
+    def value(self):
+        return self.pen
+
+    def setValue(self,pen):
+        self.penChanged(pen)
+
+    def treeWidgetChanged(self):
+        ParameterItem.treeWidgetChanged(self)
+        tree = self.treeWidget()
+        if tree is None:
+            return
+
+        tree.setFirstItemColumnSpanned(self, True)
+        tree.setItemWidget(self, 0, self.layoutWidget)
+
+    def buttonClicked(self):
+        #open up the pen selector dialog
+        self.oldPen = fn.mkPen(self.pen)
+        self.pdialog = PenSelectorDialog(fn.mkPen(self.pen),QtGui.QApplication.activeWindow())
+        self.pdialog.penChanged.connect(self.penChanged)
+        self.pdialog.finished.connect(self.penChangeFinished)
+        self.pdialog.exec_()
+
+    def penChangeFinished(self,ret):
+        #finished changing
+        if not ret:
+            #revert if cancel
+            self.penChanged(self.oldPen)
+        else:
+            #event if accepted
+            self.param.penChanged(self.pen)
+
+    def penChanged(self,pen):
+        if not isinstance(pen,QtGui.QPen):
+            pen = fn.mkPen(pen)
+        pen.setCosmetic(True)
+        self.pen = pen
+
+    def buttonPaintEvent(self, event):
+        #draw a button as usual
+        QtGui.QPushButton.paintEvent(self.button, event)
+
+        path = QtGui.QPainterPath()
+        displaySize = self.button.size()
+        labelBackgroundColor = self.button.palette().background().color()
+        w,h = displaySize.width(),displaySize.height()
+        #draw a squiggle with the pen
+        path.moveTo(w*.2,h*.2)
+        path.lineTo(w*.4,h*.8)
+        path.cubicTo(w*.5,h*.1,w*.7,h*.1,w*.8,h*.8)
+
+        painter = QtGui.QPainter(self.button)
+        painter.setPen(self.pen)
+        painter.drawPath(path)
+        painter.end()
+
+class PenParameter(Parameter):
+    itemClass = PenParameterItem
+    sigPenChanged = QtCore.Signal(object,object)
+
+    def penChanged(self,pen):
+        self.sigPenChanged.emit(self, pen)
+        self.emitStateChanged('penChanged', pen)
+
+registerParameterType('pen', PenParameter, override=True)
