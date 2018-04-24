@@ -43,7 +43,6 @@ class ImageItem(GraphicsObject):
         self.qimage = None  ## rendered image for display
         
         self.paintMode = None
-        
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
@@ -390,7 +389,7 @@ class ImageItem(GraphicsObject):
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
         levels = self.levels
-        if levels is not None and levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
+        if lut is not None and levels is not None and levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = np.arange(eflsize)
@@ -420,7 +419,7 @@ class ImageItem(GraphicsObject):
             image = image.transpose((1, 0, 2)[:image.ndim])
         
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
-        self.qimage = fn.makeQImage(argb, alpha, transpose=False)
+        self.qimage = fn.makeQImage(argb, alpha, transpose=False, copy=False)
 
     def paint(self, p, *args):
         profile = debug.Profiler()
