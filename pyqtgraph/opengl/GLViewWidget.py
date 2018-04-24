@@ -16,9 +16,13 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Axis/grid display
         - Export options
 
+
+    High-DPI displays: Qt5 should automatically detect the correct resolution.
+    For Qt4, specify the ``devicePixelRatio`` argument when initializing the
+    widget (usually this value is 1-2).
     """
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, devicePixelRatio=None):
         global ShareWidget
 
         if ShareWidget is None:
@@ -37,6 +41,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             'azimuth': 45,            ## camera's azimuthal angle in degrees 
                                       ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
+            'devicePixelRatio': devicePixelRatio,
         }
         self.setBackgroundColor('k')
         self.items = []
@@ -79,10 +84,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
     def getViewport(self):
         vp = self.opts['viewport']
+        dpr = self.devicePixelRatio()
         if vp is None:
-            return (0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
+            return (0, 0, int(self.width() * dpr), int(self.height() * dpr))
         else:
-            return vp
+            return tuple([int(x * dpr) for x in vp])
+        
+    def devicePixelRatio(self):
+        dpr = self.opts['devicePixelRatio']
+        if dpr is not None:
+            return dpr
+        
+        if hasattr(QtOpenGL.QGLWidget, 'devicePixelRatio'):
+            return QtOpenGL.QGLWidget.devicePixelRatio(self)
+        else:
+            return 1.0
         
     def resizeGL(self, w, h):
         pass
@@ -99,7 +115,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def projectionMatrix(self, region=None):
         # Xw = (Xnd + 1) * width/2 + X
         if region is None:
-            region = (0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
+            dpr = self.devicePixelRatio()
+            region = (0, 0, self.width() * dpr, self.height() * dpr)
         
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
