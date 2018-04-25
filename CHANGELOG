@@ -7,6 +7,9 @@ pyqtgraph-0.11.0 (in development)
       To mimic the old behavior, use ArrowItem.rotate() instead of the `angle` argument.
     - Deprecated graphicsWindow classes; these have been unnecessary for many years because
       widgets can be placed into a new window just by calling show().
+    - Integer values in ParameterTree are now formatted as integer (%d) by default, rather than 
+      scientific notation (%g). This can be overridden by providing `format={value:g}` when
+      creating the parameter.
 
 
 pyqtgraph-0.10.0
