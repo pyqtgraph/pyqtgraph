@@ -258,6 +258,7 @@ from .widgets.VerticalLabel import *
 from .widgets.FeedbackButton import * 
 from .widgets.ColorButton import * 
 from .widgets.DataTreeWidget import * 
+from .widgets.DiffTreeWidget import * 
 from .widgets.GraphicsView import * 
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
