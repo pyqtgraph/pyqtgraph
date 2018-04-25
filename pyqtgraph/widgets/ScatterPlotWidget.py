@@ -52,9 +52,9 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.ctrlPanel.addWidget(self.ptree)
         self.addWidget(self.plot)
         
-        bg = fn.mkColor(getConfigOption('background'))
-        bg.setAlpha(150)
-        self.filterText = TextItem(border=getConfigOption('foreground'), color=bg)
+        fg = fn.mkColor(getConfigOption('foreground'))
+        fg.setAlpha(150)
+        self.filterText = TextItem(border=getConfigOption('foreground'), color=fg)
         self.filterText.setPos(60,20)
         self.filterText.setParentItem(self.plot.plotItem)
         
