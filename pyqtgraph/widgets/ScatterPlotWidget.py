@@ -33,6 +33,8 @@ class ScatterPlotWidget(QtGui.QSplitter):
        specifying multiple criteria.
     4) A PlotWidget for displaying the data.
     """
+    sigScatterPlotClicked = QtCore.Signal(object, object)
+    
     def __init__(self, parent=None):
         QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
         self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -81,7 +83,19 @@ class ScatterPlotWidget(QtGui.QSplitter):
             item = self.fieldList.addItem(item)
         self.filter.setFields(fields)
         self.colorMap.setFields(fields)
-        
+
+    def setSelectedFields(self, *fields):
+        self.fieldList.itemSelectionChanged.disconnect(self.fieldSelectionChanged)
+        try:
+            self.fieldList.clearSelection()
+            for f in fields:
+                i = self.fields.keys().index(f)
+                item = self.fieldList.item(i)
+                item.setSelected(True)
+        finally:
+            self.fieldList.itemSelectionChanged.connect(self.fieldSelectionChanged)
+        self.fieldSelectionChanged()
+
     def setData(self, data):
         """
         Set the data to be processed and displayed. 
@@ -112,7 +126,6 @@ class ScatterPlotWidget(QtGui.QSplitter):
         else:
             self.filterText.setText('\n'.join(desc))
             self.filterText.setVisible(True)
-            
         
     def updatePlot(self):
         self.plot.clear()
@@ -175,9 +188,9 @@ class ScatterPlotWidget(QtGui.QSplitter):
         ## mask out any nan values
         mask = np.ones(len(xy[0]), dtype=bool)
         if xy[0].dtype.kind == 'f':
-            mask &= ~np.isnan(xy[0])
+            mask &= np.isfinite(xy[0])
         if xy[1] is not None and xy[1].dtype.kind == 'f':
-            mask &= ~np.isnan(xy[1])
+            mask &= np.isfinite(xy[1])
         
         xy[0] = xy[0][mask]
         style['symbolBrush'] = colors[mask]
@@ -211,8 +224,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.scatterPlot = self.plot.plot(xy[0], xy[1], data=data[mask], **style)
         self.scatterPlot.sigPointsClicked.connect(self.plotClicked)
         
-        
     def plotClicked(self, plot, points):
-        pass
+        self.sigScatterPlotClicked.emit(self, points)
 
 

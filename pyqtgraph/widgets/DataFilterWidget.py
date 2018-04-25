@@ -30,7 +30,12 @@ class DataFilterWidget(ptree.ParameterTree):
         
     def parameters(self):
         return self.params
-        
+
+    def addFilter(self, name):
+        """Add a new filter and return the created parameter item.
+        """
+        return self.params.addNew(name)
+
         
 class DataFilterParameter(ptree.types.GroupParameter):
     
@@ -47,10 +52,10 @@ class DataFilterParameter(ptree.types.GroupParameter):
     def addNew(self, name):
         mode = self.fields[name].get('mode', 'range')
         if mode == 'range':
-            self.addChild(RangeFilterItem(name, self.fields[name]))
+            child = self.addChild(RangeFilterItem(name, self.fields[name]))
         elif mode == 'enum':
-            self.addChild(EnumFilterItem(name, self.fields[name]))
-            
+            child = self.addChild(EnumFilterItem(name, self.fields[name]))
+        return child
             
     def fieldNames(self):
         return self.fields.keys()

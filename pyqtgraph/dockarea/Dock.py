@@ -36,6 +36,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.widgetArea.setLayout(self.layout)
         self.widgetArea.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.widgets = []
+        self._container = None
         self.currentRow = 0
         #self.titlePos = 'top'
         self.raiseOverlay()
@@ -187,9 +188,6 @@ class Dock(QtGui.QWidget, DockDrop):
     def name(self):
         return self._name
 
-    def container(self):
-        return self._container
-
     def addWidget(self, widget, row=None, col=0, rowspan=1, colspan=1):
         """
         Add a new widget to the interior of this Dock.
@@ -201,7 +199,6 @@ class Dock(QtGui.QWidget, DockDrop):
         self.widgets.append(widget)
         self.layout.addWidget(widget, row, col, rowspan, colspan)
         self.raiseOverlay()
-        
         
     def startDrag(self):
         self.drag = QtGui.QDrag(self)
@@ -216,21 +213,30 @@ class Dock(QtGui.QWidget, DockDrop):
     def float(self):
         self.area.floatDock(self)
             
+    def container(self):
+        return self._container
+
     def containerChanged(self, c):
+        if self._container is not None:
+            # ask old container to close itself if it is no longer needed
+            self._container.apoptose()
         #print self.name(), "container changed"
         self._container = c
-        if c.type() != 'tab':
-            self.moveLabel = True
-            self.label.setDim(False)
+        if c is None:
+            self.area = None
         else:
-            self.moveLabel = False
-            
-        self.setOrientation(force=True)
-        
+            self.area = c.area
+            if c.type() != 'tab':
+                self.moveLabel = True
+                self.label.setDim(False)
+            else:
+                self.moveLabel = False
+                
+            self.setOrientation(force=True)
+
     def raiseDock(self):
         """If this Dock is stacked underneath others, raise it to the top."""
         self.container().raiseDock(self)
-        
 
     def close(self):
         """Remove this dock from the DockArea it lives inside."""

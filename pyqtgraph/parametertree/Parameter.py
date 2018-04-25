@@ -162,7 +162,11 @@ class Parameter(QtCore.QObject):
             'title': None,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
+        value = opts.get('value', None)
+        name = opts.get('name', None)
         self.opts.update(opts)
+        self.opts['value'] = None  # will be set later.
+        self.opts['name'] = None
         
         self.childs = []
         self.names = {}   ## map name:child
@@ -172,17 +176,19 @@ class Parameter(QtCore.QObject):
         self.blockTreeChangeEmit = 0
         #self.monitoringChildren = False  ## prevent calling monitorChildren more than once
         
-        if 'value' not in self.opts:
-            self.opts['value'] = None
-        
-        if 'name' not in self.opts or not isinstance(self.opts['name'], basestring):
+        if not isinstance(name, basestring):
             raise Exception("Parameter must have a string name specified in opts.")
-        self.setName(opts['name'])
+        self.setName(name)
         
         self.addChildren(self.opts.get('children', []))
-            
-        if 'value' in self.opts and 'default' not in self.opts:
-            self.opts['default'] = self.opts['value']
+        
+        self.opts['value'] = None
+        if value is not None:
+            self.setValue(value)
+
+        if 'default' not in self.opts:
+            self.opts['default'] = None
+            self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
@@ -255,6 +261,7 @@ class Parameter(QtCore.QObject):
         try:
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
+            value = self._interpretValue(value)
             if self.opts['value'] == value:
                 return value
             self.opts['value'] = value
@@ -264,6 +271,9 @@ class Parameter(QtCore.QObject):
                 self.sigValueChanged.connect(blockSignal)
             
         return value
+
+    def _interpretValue(self, v):
+        return v
 
     def value(self):
         """
@@ -643,18 +653,19 @@ class Parameter(QtCore.QObject):
         """Return a child parameter. 
         Accepts the name of the child or a tuple (path, to, child)
 
-        Added in version 0.9.9. Ealier versions used the 'param' method, which is still
-        implemented for backward compatibility."""
+        Added in version 0.9.9. Earlier versions used the 'param' method, which is still
+        implemented for backward compatibility.
+        """
         try:
             param = self.names[names[0]]
         except KeyError:
-            raise Exception("Parameter %s has no child named %s" % (self.name(), names[0]))
+            raise KeyError("Parameter %s has no child named %s" % (self.name(), names[0]))
         
         if len(names) > 1:
-            return param.param(*names[1:])
+            return param.child(*names[1:])
         else:
             return param
-        
+
     def param(self, *names):
         # for backward compatibility.
         return self.child(*names)

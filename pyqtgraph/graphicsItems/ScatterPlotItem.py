@@ -126,7 +126,7 @@ class SymbolAtlas(object):
         keyi = None
         sourceRecti = None
         for i, rec in enumerate(opts):
-            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
+            key = (id(rec[3]), rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
             if key == keyi:
                 sourceRect[i] = sourceRecti
             else:
@@ -136,6 +136,7 @@ class SymbolAtlas(object):
                     newRectSrc = QtCore.QRectF()
                     newRectSrc.pen = rec['pen']
                     newRectSrc.brush = rec['brush']
+                    newRectSrc.symbol = rec[3]
                     self.symbolMap[key] = newRectSrc
                     self.atlasValid = False
                     sourceRect[i] = newRectSrc
@@ -151,7 +152,7 @@ class SymbolAtlas(object):
         images = []
         for key, sourceRect in self.symbolMap.items():
             if sourceRect.width() == 0:
-                img = renderSymbol(key[0], key[1], sourceRect.pen, sourceRect.brush)
+                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
             else:
@@ -251,6 +252,7 @@ class ScatterPlotItem(GraphicsObject):
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
             'antialias': getConfigOption('antialias'),
+            'compositionMode': None,
             'name': None,
         }
 
@@ -299,6 +301,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
+        *compositionMode*      If specified, this sets the composition mode used when drawing the
+                               scatter plot (see QPainter::CompositionMode in the Qt documentation).
         *name*                 The name of this item. Names are used for automatically
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
@@ -730,7 +734,9 @@ class ScatterPlotItem(GraphicsObject):
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
-
+        cmode = self.opts.get('compositionMode', None)
+        if cmode is not None:
+            p.setCompositionMode(cmode)
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
 
@@ -851,10 +857,17 @@ class SpotItem(object):
     def __init__(self, data, plot):
         #GraphicsItem.__init__(self, register=False)
         self._data = data
-        self._plot = plot
+        # SpotItems are kept in plot.data["items"] numpy object array which
+        # does not support cyclic garbage collection (numpy issue 6581).
+        # Keeping a strong ref to plot here would leak the cycle
+        self.__plot_ref = weakref.ref(plot)
         #self.setParentItem(plot)
         #self.setPos(QtCore.QPointF(data['x'], data['y']))
         #self.updateItem()
+
+    @property
+    def _plot(self):
+        return self.__plot_ref()
 
     def data(self):
         """Return the user data associated with this spot."""

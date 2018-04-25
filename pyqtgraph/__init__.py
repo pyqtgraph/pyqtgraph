@@ -10,7 +10,7 @@ __version__ = '0.10.0'
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui
+from .Qt import QtGui, mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -263,6 +263,7 @@ from .widgets.GraphicsView import *
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
+from .widgets.GroupBox import GroupBox
 
 from .imageview import *
 from .WidgetGroup import *
@@ -320,7 +321,7 @@ def cleanup():
                         'are properly called before app shutdown (%s)\n' % (o,))
                 
                 s.addItem(o)
-        except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
+        except (RuntimeError, ReferenceError):  ## occurs if a python wrapper no longer has its underlying C++ object
             continue
     _cleanupCalled = True
 
@@ -447,14 +448,22 @@ def dbg(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def stack(*args, **kwds):
+    """
+    Create a console window and show the current stack trace.
     
-    
-def mkQApp():
-    global QAPP
-    inst = QtGui.QApplication.instance()
-    if inst is None:
-        QAPP = QtGui.QApplication([])
-    else:
-        QAPP = inst
-    return QAPP
-        
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
+    """
+    mkQApp()
+    from . import console
+    c = console.ConsoleWidget(*args, **kwds)
+    c.setStack()
+    c.show()
+    global consoles
+    try:
+        consoles.append(c)
+    except NameError:
+        consoles = [c]
+    return c
