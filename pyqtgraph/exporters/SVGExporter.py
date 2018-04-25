@@ -344,6 +344,10 @@ def correctCoordinates(node, defs, item):
                         t = ''
                     nc = fn.transformCoordinates(tr, np.array([[float(x),float(y)]]), transpose=True)
                     newCoords += t+str(nc[0,0])+','+str(nc[0,1])+' '
+                # If coords start with L instead of M, then the entire path will not be rendered.
+                # (This can happen if the first point had nan values in it--Qt will skip it on export)
+                if newCoords[0] != 'M':
+                    newCoords = 'M' + newCoords[1:]
                 ch.setAttribute('d', newCoords)
             elif ch.tagName == 'text':
                 removeTransform = False
