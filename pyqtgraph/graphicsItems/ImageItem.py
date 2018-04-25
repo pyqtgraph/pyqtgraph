@@ -469,11 +469,11 @@ class ImageItem(GraphicsObject):
         
         This method is also used when automatically computing levels.
         """
-        if self.image is None:
+        if self.image is None or self.image.size == 0:
             return None,None
         if step == 'auto':
-            step = (int(np.ceil(self.image.shape[0] / targetImageSize)),
-                    int(np.ceil(self.image.shape[1] / targetImageSize)))
+            step = (max(1, int(np.ceil(self.image.shape[0] / targetImageSize))),
+                    max(1, int(np.ceil(self.image.shape[1] / targetImageSize))))
         if np.isscalar(step):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]

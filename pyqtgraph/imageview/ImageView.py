@@ -633,8 +633,12 @@ class ImageView(QtGui.QWidget):
             
         cax = self.axes['c']
         if cax is None:
+            if data.size == 0:
+                return [(0, 0)]
             return [(float(nanmin(data)), float(nanmax(data)))]
         else:
+            if data.size == 0:
+                return [(0, 0)] * data.shape[-1]
             return [(float(nanmin(data.take(i, axis=cax))), 
                      float(nanmax(data.take(i, axis=cax)))) for i in range(data.shape[-1])]
 
