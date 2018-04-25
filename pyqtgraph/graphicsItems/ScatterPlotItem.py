@@ -849,8 +849,15 @@ class SpotItem(object):
 
     def __init__(self, data, plot, index):
         self._data = data
-        self._plot = plot
         self._index = index
+        # SpotItems are kept in plot.data["items"] numpy object array which
+        # does not support cyclic garbage collection (numpy issue 6581).
+        # Keeping a strong ref to plot here would leak the cycle
+        self.__plot_ref = weakref.ref(plot)
+
+    @property
+    def _plot(self):
+        return self.__plot_ref()
 
     def data(self):
         """Return the user data associated with this spot."""
