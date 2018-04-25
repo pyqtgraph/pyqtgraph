@@ -649,6 +649,9 @@ class ScatterPlotItem(GraphicsObject):
             d = d[mask]
             d2 = d2[mask]
 
+            if d.size == 0:
+                return (None, None)
+
         if frac >= 1.0:
             self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
