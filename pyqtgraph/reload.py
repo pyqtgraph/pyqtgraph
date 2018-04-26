@@ -23,11 +23,11 @@ Does NOT:
 
 from __future__ import print_function
 import inspect, os, sys, gc, traceback, types
-try:
-    from builtins import reload as orig_reload
-except ImportError:
-    from importlib import reload as orig_reload
 from .debug import printExc
+try:
+    from importlib import reload as orig_reload
+except ImportError:
+    orig_reload = reload
 
 
 py3 = sys.version_info >= (3,)
