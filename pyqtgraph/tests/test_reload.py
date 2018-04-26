@@ -1,14 +1,23 @@
-import tempfile, os, sys, shutil, atexit
+import tempfile, os, sys, shutil
 import pyqtgraph as pg
 import pyqtgraph.reload
+
+
 pgpath = os.path.join(os.path.dirname(pg.__file__), '..')
 
 # make temporary directory to write module code
-path = tempfile.mkdtemp()
-sys.path.insert(0, path)
-def cleanup():
+path = None
+
+def setup_module():
+    # make temporary directory to write module code
+    global path
+    path = tempfile.mkdtemp()
+    sys.path.insert(0, path)
+
+def teardown_module():
+    global path
     shutil.rmtree(path)
-atexit.register(cleanup)
+    sys.path.remove(path)
 
 
 code = """
@@ -33,6 +42,8 @@ def remove_cache(mod):
 
 
 def test_reload():
+    py3 = sys.version_info >= (3,)
+
     # write a module
     mod = os.path.join(path, 'reload_test.py')
     open(mod, 'w').write(code.format(path=path, msg="C.fn() Version1"))
@@ -42,7 +53,10 @@ def test_reload():
 
     c = reload_test.C()
     c.sig.connect(c.fn)
-    v1 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+    if py3:
+        v1 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+    else:
+        v1 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
 
 
@@ -50,25 +64,34 @@ def test_reload():
     open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
-    v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+    if py3:
+        v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+    else:
+        v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
-    assert c.fn.im_class is v2[0]
+    if not py3:
+        assert c.fn.im_class is v2[0]
     oldcfn = pg.reload.getPreviousVersion(c.fn)
     if oldcfn is None:
         # Function did not reload; are we using pytest's assertion rewriting?
         raise Exception("Function did not reload. (This can happen when using py.test"
             " with assertion rewriting; use --assert=plain for this test.)")
-    assert oldcfn.im_class is v1[0]
-    assert oldcfn.im_func is v1[2].im_func
-    assert oldcfn.im_self is c
-
+    if py3:
+        assert oldcfn.__func__ is v1[2]
+    else:
+        assert oldcfn.im_class is v1[0]
+        assert oldcfn.__func__ is v1[2].__func__
+    assert oldcfn.__self__ is c
 
 
     # write again and reload
     open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
-    v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+    if py3:
+        v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+    else:
+        v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
     #for i in range(len(old)):
         #print id(old[i]), id(new1[i]), id(new2[i]), old[i], new1[i]
@@ -76,11 +99,15 @@ def test_reload():
     cfn1 = pg.reload.getPreviousVersion(c.fn)
     cfn2 = pg.reload.getPreviousVersion(cfn1)
 
-    assert cfn1.im_class is v2[0]
-    assert cfn1.im_func is v2[2].im_func
-    assert cfn1.im_self is c
-    assert cfn2.im_class is v1[0]
-    assert cfn2.im_func is v1[2].im_func
-    assert cfn2.im_self is c
+    if py3:
+        assert cfn1.__func__ is v2[2]
+        assert cfn2.__func__ is v1[2]
+    else:
+        assert cfn1.__func__ is v2[2].__func__
+        assert cfn2.__func__ is v1[2].__func__
+        assert cfn1.im_class is v2[0]
+        assert cfn2.im_class is v1[0]
+    assert cfn1.__self__ is c
+    assert cfn2.__self__ is c
     c.sig.disconnect(cfn2)
 
