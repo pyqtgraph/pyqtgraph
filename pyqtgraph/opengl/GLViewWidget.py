@@ -309,37 +309,51 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             dist = (pos-cam).length()
         xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
         return xDist / self.width()
-        
+
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
-        
+
     def mouseMoveEvent(self, ev):
         diff = ev.pos() - self.mousePos
         self.mousePos = ev.pos()
-        
+
         if ev.buttons() == QtCore.Qt.LeftButton:
-            self.orbit(-diff.x(), diff.y())
-            #print self.opts['azimuth'], self.opts['elevation']
+            if (ev.modifiers() & QtCore.Qt.ControlModifier):
+                # pan in plane of camera
+                elev = np.radians(self.opts['elevation'])
+                azim = np.radians(self.opts['azimuth'])
+                fov = np.radians(self.opts['fov'])
+                dist = (self.opts['center'] - self.cameraPosition()).length()
+                fov_factor = np.tan(fov / 2) * 2
+                scale_factor = dist * fov_factor / self.width()
+                dx = diff.x()
+                dy = diff.y()
+                z = scale_factor * np.cos(elev) * dy
+                x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
+                y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
+                self.pan(x, -y, z, relative=False)
+            else:
+                self.orbit(-diff.x(), diff.y())
         elif ev.buttons() == QtCore.Qt.MidButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative=True)
             else:
                 self.pan(diff.x(), diff.y(), 0, relative=True)
-        
+
     def mouseReleaseEvent(self, ev):
         pass
         # Example item selection code:
         #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
         #print(self.itemsAt(region))
-        
+
         ## debugging code: draw the picking region
         #glViewport(*self.getViewport())
         #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         #self.paintGL(region=region)
         #self.swapBuffers()
-        
-        
+
+
     def wheelEvent(self, ev):
         delta = 0
         if not USE_PYQT5:
