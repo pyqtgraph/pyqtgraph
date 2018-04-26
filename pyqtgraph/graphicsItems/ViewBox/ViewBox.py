@@ -404,6 +404,7 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
         
     def resizeEvent(self, ev):
+        self._matrixNeedsUpdate = True
         self.linkedXChanged()
         self.linkedYChanged()
         self.updateAutoRange()
@@ -553,11 +554,9 @@ class ViewBox(GraphicsWidget):
         # Note that aspect ratio constraints and auto-visible probably do not work together..
         if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
             self._autoRangeNeedsUpdate = True
-            #self.updateAutoRange()  ## Maybe just indicate that auto range needs to be updated?
         elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
             self._autoRangeNeedsUpdate = True
-            #self.updateAutoRange()
-            
+
     def setYRange(self, min, max, padding=None, update=True):
         """
         Set the visible Y range of the view to [*min*, *max*]. 
@@ -1083,35 +1082,43 @@ class ViewBox(GraphicsWidget):
 
     def mapToView(self, obj):
         """Maps from the local coordinates of the ViewBox to the coordinate system displayed inside the ViewBox"""
+        self.updateMatrix()
         m = fn.invertQTransform(self.childTransform())
         return m.map(obj)
 
     def mapFromView(self, obj):
         """Maps from the coordinate system displayed inside the ViewBox to the local coordinates of the ViewBox"""
+        self.updateMatrix()
         m = self.childTransform()
         return m.map(obj)
 
     def mapSceneToView(self, obj):
         """Maps from scene coordinates to the coordinate system displayed inside the ViewBox"""
+        self.updateMatrix()
         return self.mapToView(self.mapFromScene(obj))
 
     def mapViewToScene(self, obj):
         """Maps from the coordinate system displayed inside the ViewBox to scene coordinates"""
+        self.updateMatrix()
         return self.mapToScene(self.mapFromView(obj))
     
     def mapFromItemToView(self, item, obj):
         """Maps *obj* from the local coordinate system of *item* to the view coordinates"""
+        self.updateMatrix()
         return self.childGroup.mapFromItem(item, obj)
         #return self.mapSceneToView(item.mapToScene(obj))
 
     def mapFromViewToItem(self, item, obj):
         """Maps *obj* from view coordinates to the local coordinate system of *item*."""
+        self.updateMatrix()
         return self.childGroup.mapToItem(item, obj)
 
     def mapViewToDevice(self, obj):
+        self.updateMatrix()
         return self.mapToDevice(self.mapFromView(obj))
         
     def mapDeviceToView(self, obj):
+        self.updateMatrix()
         return self.mapToView(self.mapFromDevice(obj))
         
     def viewPixelSize(self):
@@ -1280,7 +1287,7 @@ class ViewBox(GraphicsWidget):
         ## First collect all boundary information
         itemBounds = []
         for item in items:
-            if not item.isVisible():
+            if not item.isVisible() or not item.scene() is self.scene():
                 continue
         
             useX = True

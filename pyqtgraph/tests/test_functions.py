@@ -344,14 +344,14 @@ def test_eq():
     a2 = a1 + 1
     a3 = a2.astype('int')
     a4 = np.empty((0, 20))
-    assert not eq(a1, a2)
-    assert not eq(a1, a3)
-    assert not eq(a1, a4)
+    assert not eq(a1, a2)  # same shape/dtype, different values
+    assert not eq(a1, a3)  # same shape, different dtype and values
+    assert not eq(a1, a4)  # different shape (note: np.all gives True if one array has size 0)
 
-    assert eq(a2, a3)
-    assert not eq(a2, a4)
+    assert not eq(a2, a3)  # same values, but different dtype
+    assert not eq(a2, a4)  # different shape
     
-    assert not eq(a3, a4)
+    assert not eq(a3, a4)  # different shape and dtype
     
     assert eq(a4, a4.copy())
     assert not eq(a4, a4.T)

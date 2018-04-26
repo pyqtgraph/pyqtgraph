@@ -101,7 +101,10 @@ class Parallelize(object):
                 
         else:  ## parent
             if self.showProgress:
-                self.progressDlg.__exit__(None, None, None)
+                try:
+                    self.progressDlg.__exit__(None, None, None)
+                except Exception:
+                    pass
 
     def runSerial(self):
         if self.showProgress:
@@ -192,6 +195,8 @@ class Parallelize(object):
         finally:
             if self.showProgress:
                 self.progressDlg.__exit__(None, None, None)
+            for ch in self.childs:
+                ch.join()
         if len(self.exitCodes) < len(self.childs):
             raise Exception("Parallelizer started %d processes but only received exit codes from %d." % (len(self.childs), len(self.exitCodes)))
         for code in self.exitCodes:

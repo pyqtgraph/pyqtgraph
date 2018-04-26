@@ -120,7 +120,7 @@ class BarGraphItem(GraphicsObject):
         
         p.setPen(fn.mkPen(pen))
         p.setBrush(fn.mkBrush(brush))
-        for i in range(len(x0)):
+        for i in range(len(x0 if not np.isscalar(x0) else y0)):
             if pens is not None:
                 p.setPen(fn.mkPen(pens[i]))
             if brushes is not None:

@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.resize(800,350)
 win.setWindowTitle('pyqtgraph example: Histogram')
 plt1 = win.addPlot()

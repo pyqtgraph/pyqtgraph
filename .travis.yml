@@ -17,10 +17,10 @@ env:
     # Enable python 2 and python 3 builds
     # Note that the 2.6 build doesn't get flake8, and runs old versions of
     # Pyglet and GLFW to make sure we deal with those correctly
-    - PYTHON=2.6 QT=pyqt4 TEST=standard
+    #- PYTHON=2.6 QT=pyqt4 TEST=standard  # 2.6 support ended 
     - PYTHON=2.7 QT=pyqt4 TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
-    - PYTHON=3.4 QT=pyqt5 TEST=standard
+    - PYTHON=3.5 QT=pyqt5 TEST=standard
     # - PYTHON=3.4 QT=pyside TEST=standard # pyside isn't available for 3.4 with conda
     #- PYTHON=3.2 QT=pyqt5 TEST=standard
 
