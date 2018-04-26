@@ -309,14 +309,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             dist = (pos-cam).length()
         xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
         return xDist / self.width()
-
+        
     def mousePressEvent(self, ev):
         self.mousePos = ev.pos()
-
+        
     def mouseMoveEvent(self, ev):
         diff = ev.pos() - self.mousePos
         self.mousePos = ev.pos()
-
+        
         if ev.buttons() == QtCore.Qt.LeftButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 # pan in plane of camera
@@ -339,21 +339,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 self.pan(diff.x(), 0, diff.y(), relative=True)
             else:
                 self.pan(diff.x(), diff.y(), 0, relative=True)
-
+        
     def mouseReleaseEvent(self, ev):
         pass
         # Example item selection code:
         #region = (ev.pos().x()-5, ev.pos().y()-5, 10, 10)
         #print(self.itemsAt(region))
-
+        
         ## debugging code: draw the picking region
         #glViewport(*self.getViewport())
         #glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         #region = (region[0], self.height()-(region[1]+region[3]), region[2], region[3])
         #self.paintGL(region=region)
         #self.swapBuffers()
-
-
+        
+        
     def wheelEvent(self, ev):
         delta = 0
         if not USE_PYQT5:
