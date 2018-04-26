@@ -109,5 +109,6 @@ def test_reload():
         assert cfn2.im_class is v1[0]
     assert cfn1.__self__ is c
     assert cfn2.__self__ is c
-    c.sig.disconnect(cfn2)
+
+    pg.functions.disconnect(c.sig, c.fn)
 
