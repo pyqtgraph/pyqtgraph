@@ -45,29 +45,31 @@ def test_reload():
     py3 = sys.version_info >= (3,)
 
     # write a module
-    mod = os.path.join(path, 'reload_test.py')
-    open(mod, 'w').write(code.format(path=path, msg="C.fn() Version1"))
+    mod = os.path.join(path, 'reload_test_mod.py')
+    print("\nRELOAD FILE:", mod)
+    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version1"))
 
     # import the new module
-    import reload_test
+    import reload_test_mod
+    print("RELOAD MOD:", reload_test_mod.__file__)
 
-    c = reload_test.C()
+    c = reload_test_mod.C()
     c.sig.connect(c.fn)
     if py3:
-        v1 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+        v1 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
     else:
-        v1 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+        v1 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, reload_test_mod.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
 
 
     # write again and reload
-    open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
+    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     if py3:
-        v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+        v2 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
     else:
-        v2 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+        v2 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, reload_test_mod.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
     if not py3:
         assert c.fn.im_class is v2[0]
@@ -85,13 +87,13 @@ def test_reload():
 
 
     # write again and reload
-    open(mod, 'w').write(code.format(path=path, msg="C.fn() Version2"))
+    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     if py3:
-        v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, c.sig, c.fn, c.fn.__func__)
+        v3 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
     else:
-        v3 = (reload_test.C, reload_test.C.sig, reload_test.C.fn, reload_test.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
+        v3 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, reload_test_mod.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
     #for i in range(len(old)):
         #print id(old[i]), id(new1[i]), id(new2[i]), old[i], new1[i]
