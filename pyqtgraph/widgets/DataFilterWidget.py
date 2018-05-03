@@ -10,6 +10,9 @@ class DataFilterWidget(ptree.ParameterTree):
     """
     This class allows the user to filter multi-column data sets by specifying
     multiple criteria
+    
+    Wraps methods from DataFilterParameter: setFields, generateMask,
+    filterData, and describe.
     """
     
     sigFilterChanged = QtCore.Signal(object)
@@ -22,6 +25,7 @@ class DataFilterWidget(ptree.ParameterTree):
         self.params.sigTreeStateChanged.connect(self.filterChanged)
         
         self.setFields = self.params.setFields
+        self.generateMask = self.params.generateMask
         self.filterData = self.params.filterData
         self.describe = self.params.describe
         
@@ -38,7 +42,8 @@ class DataFilterWidget(ptree.ParameterTree):
 
         
 class DataFilterParameter(ptree.types.GroupParameter):
-    
+    """A parameter group that specifies a set of filters to apply to tabular data.
+    """
     sigFilterChanged = QtCore.Signal(object)
     
     def __init__(self):
@@ -61,6 +66,17 @@ class DataFilterParameter(ptree.types.GroupParameter):
         return self.fields.keys()
     
     def setFields(self, fields):
+        """Set the list of fields that are available to be filtered.
+
+        *fields* must be a dict or list of tuples that maps field names
+        to a specification describing the field. Each specification is
+        itself a dict with either ``'mode':'range'`` or ``'mode':'enum'``::
+
+            filter.setFields([
+                ('field1', {'mode': 'range'}),
+                ('field2', {'mode': 'enum', 'values': ['val1', 'val2', 'val3']}),
+            ])
+        """
         self.fields = OrderedDict(fields)
         names = self.fieldNames()
         self.setAddList(names)
@@ -71,6 +87,9 @@ class DataFilterParameter(ptree.types.GroupParameter):
         return data[self.generateMask(data)]
     
     def generateMask(self, data):
+        """Return a boolean mask indicating whether each item in *data* passes
+        the filter critera.
+        """
         mask = np.ones(len(data), dtype=bool)
         if len(data) == 0:
             return mask
@@ -93,6 +112,7 @@ class DataFilterParameter(ptree.types.GroupParameter):
                 continue
             desc.append(fp.describe())
         return desc
+
 
 class RangeFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):
