@@ -6,6 +6,7 @@ from .. import functions as fn
 
 __all__ = ['DataFilterWidget']
 
+
 class DataFilterWidget(ptree.ParameterTree):
     """
     This class allows the user to filter multi-column data sets by specifying
@@ -80,6 +81,12 @@ class DataFilterParameter(ptree.types.GroupParameter):
         self.fields = OrderedDict(fields)
         names = self.fieldNames()
         self.setAddList(names)
+
+        # update any existing filters
+        for ch in self.children():
+            name = ch.fieldName
+            if name in fields:
+                ch.updateFilter(fields[name])
     
     def filterData(self, data):
         if len(data) == 0:
@@ -134,25 +141,17 @@ class RangeFilterItem(ptree.types.SimpleParameter):
     
     def describe(self):
         return "%s < %s < %s" % (fn.siFormat(self['Min'], suffix=self.units), self.fieldName, fn.siFormat(self['Max'], suffix=self.units))
+
+    def updateFilter(self, opts):
+        pass
     
+
 class EnumFilterItem(ptree.types.SimpleParameter):
     def __init__(self, name, opts):
         self.fieldName = name
-        vals = opts.get('values', [])
-        childs = []
-        if isinstance(vals, list):
-            vals = OrderedDict([(v,str(v)) for v in vals])
-        for val,vname in vals.items():
-            ch = ptree.Parameter.create(name=vname, type='bool', value=True)
-            ch.maskValue = val
-            childs.append(ch)
-        ch = ptree.Parameter.create(name='(other)', type='bool', value=True)
-        ch.maskValue = '__other__'
-        childs.append(ch)
-            
         ptree.types.SimpleParameter.__init__(self, 
-            name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
-            children=childs)
+            name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True)
+        self.setEnumVals(opts)            
     
     def generateMask(self, data, startMask):
         vals = data[self.fieldName][startMask]
@@ -173,3 +172,23 @@ class EnumFilterItem(ptree.types.SimpleParameter):
     def describe(self):
         vals = [ch.name() for ch in self if ch.value() is True]
         return "%s: %s" % (self.fieldName, ', '.join(vals))
+
+    def updateFilter(self, opts):
+        self.setEnumVals(opts)
+
+    def setEnumVals(self, opts):
+        vals = opts.get('values', [])
+        prevState = {}
+        for ch in self.children():
+            prevState[ch.name()] = ch.value()
+            self.removeChild(ch)
+
+        if isinstance(vals, list):
+            vals = OrderedDict([(v,str(v)) for v in vals])
+        for val,vname in vals.items():
+            ch = ptree.Parameter.create(name=vname, type='bool', value=prevState.get(vname, True))
+            ch.maskValue = val
+            self.addChild(ch)
+        ch = ptree.Parameter.create(name='(other)', type='bool', value=prevState.get('(other)', True))
+        ch.maskValue = '__other__'
+        self.addChild(ch)
