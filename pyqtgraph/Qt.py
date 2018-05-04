@@ -276,7 +276,8 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 
 QAPP = None
 def mkQApp():
-    global QAPP
-    if QtGui.QApplication.instance() is None:
+    global QAPP    
+    QAPP = QtGui.QApplication.instance()
+    if QAPP is None:
         QAPP = QtGui.QApplication([])
     return QAPP
