@@ -395,7 +395,7 @@ class ScatterPlotItem(GraphicsObject):
             if len(x) == len(y) + 1:
                 newData['x'] = x[:-1]
             else:
-                newData['y'] = y
+                newData['x'] = x
             newData['y'] = y
 
         if 'pxMode' in kargs:
