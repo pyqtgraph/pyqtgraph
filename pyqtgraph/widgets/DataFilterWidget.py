@@ -3,6 +3,7 @@ from .. import parametertree as ptree
 import numpy as np
 from ..pgcollections import OrderedDict
 from .. import functions as fn
+from ..python2_3 import basestring
 
 __all__ = ['DataFilterWidget']
 
@@ -76,6 +77,7 @@ class DataFilterParameter(ptree.types.GroupParameter):
             filter.setFields([
                 ('field1', {'mode': 'range'}),
                 ('field2', {'mode': 'enum', 'values': ['val1', 'val2', 'val3']}),
+                ('field3', {'mode': 'enum', 'values': {'val1':True, 'val2':False, 'val3':True}}),
             ])
         """
         self.fields = OrderedDict(fields)
@@ -177,16 +179,30 @@ class EnumFilterItem(ptree.types.SimpleParameter):
         self.setEnumVals(opts)
 
     def setEnumVals(self, opts):
-        vals = opts.get('values', [])
+        vals = opts.get('values', {})
+
         prevState = {}
         for ch in self.children():
             prevState[ch.name()] = ch.value()
             self.removeChild(ch)
 
-        if isinstance(vals, list):
-            vals = OrderedDict([(v,str(v)) for v in vals])
-        for val,vname in vals.items():
-            ch = ptree.Parameter.create(name=vname, type='bool', value=prevState.get(vname, True))
+        if not isinstance(vals, dict):
+            vals = OrderedDict([(v,(str(v), True)) for v in vals])
+        
+        # Each filterable value can come with either (1) a string name, (2) a bool
+        # indicating whether the value is enabled by default, or (3) a tuple providing
+        # both.
+        for val,valopts in vals.items():
+            if isinstance(valopts, bool):
+                enabled = valopts
+                vname = str(val)
+            elif isinstance(valopts, basestring):
+                enabled = True
+                vname = valopts
+            elif isinstance(valopts, tuple):
+                vname, enabled = valopts
+
+            ch = ptree.Parameter.create(name=vname, type='bool', value=prevState.get(vname, enabled))
             ch.maskValue = val
             self.addChild(ch)
         ch = ptree.Parameter.create(name='(other)', type='bool', value=prevState.get('(other)', True))
