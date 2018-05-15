@@ -311,7 +311,7 @@ class ProtectedDict(dict):
         raise Exception("It is not safe to copy protected dicts! (instead try deepcopy, but be careful.)")
     
     def itervalues(self):
-        for v in self._data_.itervalues():
+        for v in self._data_.values():
             yield protect(v)
         
     def iteritems(self):
