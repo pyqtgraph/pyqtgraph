@@ -771,7 +771,7 @@ def isSequence(obj):
         #if isinstance(arg, basestring):
             #return self.data[arg]
         #elif isinstance(arg, int):
-            #return dict([(k, v[arg]) for k, v in self.data.iteritems()])
+            #return dict([(k, v[arg]) for k, v in self.data.items()])
         #elif isinstance(arg, tuple):
             #arg = self._orderArgs(arg)
             #return self.data[arg[1]][arg[0]]

@@ -239,7 +239,7 @@ class CaselessDict(OrderedDict):
         return key.lower() in self.keyMap
     
     def update(self, d):
-        for k, v in d.iteritems():
+        for k, v in d.items():
             self[k] = v
             
     def copy(self):
@@ -315,7 +315,7 @@ class ProtectedDict(dict):
             yield protect(v)
         
     def iteritems(self):
-        for k, v in self._data_.iteritems():
+        for k, v in self._data_.items():
             yield (k, protect(v))
         
     def deepcopy(self):
