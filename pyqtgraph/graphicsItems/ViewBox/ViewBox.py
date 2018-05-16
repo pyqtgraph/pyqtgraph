@@ -847,10 +847,6 @@ class ViewBox(GraphicsWidget):
                         childRange[ax][1] += wp
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
-            if len(args) == 0:
-                return
-            args['padding'] = 0
-            args['disableAutoRange'] = False
             
              # check for and ignore bad ranges
             for k in ['xRange', 'yRange']:
@@ -858,6 +854,11 @@ class ViewBox(GraphicsWidget):
                     if not np.all(np.isfinite(args[k])):
                         r = args.pop(k)
                         #print("Warning: %s is invalid: %s" % (k, str(r))
+            
+            if len(args) == 0:
+                return
+            args['padding'] = 0
+            args['disableAutoRange'] = False
                         
             self.setRange(**args)
         finally:
