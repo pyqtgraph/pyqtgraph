@@ -80,7 +80,7 @@ class LRUCache(object):
             for i in ordered:
                 del self._dict[i[0]]
                 
-        def iteritems(self, accessTime=False):
+        def items(self, accessTime=False):
             '''
             :param bool accessTime:
                 If True sorts the returned items by the internal access time.
@@ -105,7 +105,7 @@ class LRUCache(object):
             for i in ordered:
                 del self._dict[i[0]]
                 
-        def iteritems(self, accessTime=False):
+        def items(self, accessTime=False):
             '''
             ============= ======================================================
             **Arguments**
