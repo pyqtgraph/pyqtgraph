@@ -222,7 +222,7 @@ class Node(QtCore.QObject):
         for t in self.inputs().values():
             nodes |= set([i.node() for i in t.inputTerminals()])
         return nodes
-        #return set([t.inputTerminals().node() for t in self.listInputs().itervalues()])
+        #return set([t.inputTerminals().node() for t in self.listInputs().values()])
         
     def __repr__(self):
         return "<Node %s @%x>" % (self.name(), id(self))
@@ -477,7 +477,7 @@ class NodeGraphicsItem(GraphicsObject):
         #self.node.sigTerminalRenamed.connect(self.updateActionMenu)
         
     #def setZValue(self, z):
-        #for t, item in self.terminals.itervalues():
+        #for t, item in self.terminals.values():
             #item.setZValue(z+1)
         #GraphicsObject.setZValue(self, z)
         
