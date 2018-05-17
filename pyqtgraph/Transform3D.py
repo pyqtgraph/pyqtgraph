@@ -14,6 +14,7 @@ class Transform3D(QtGui.QMatrix4x4):
             args = [x for y in args[0] for x in y]
             if len(args) != 16:
                 raise TypeError("Single argument to Transform3D must have 16 elements.")
+        print(args)
         QtGui.QMatrix4x4.__init__(self, *args)
         
     def matrix(self, nd=3):
