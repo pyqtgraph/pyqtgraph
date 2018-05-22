@@ -361,7 +361,6 @@ class ConsoleWidget(QtGui.QWidget):
         for index, line in enumerate(traceback.extract_stack(frame)):
             # extract_stack return value changed in python 3.5
             if 'FrameSummary' in str(type(line)):
-                print(dir(line))
                 line = (line.filename, line.lineno, line.name, line._line)
             
             self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)
@@ -382,7 +381,6 @@ class ConsoleWidget(QtGui.QWidget):
         for index, line in enumerate(traceback.extract_tb(tb)):
             # extract_stack return value changed in python 3.5
             if 'FrameSummary' in str(type(line)):
-                print(dir(line))
                 line = (line.filename, line.lineno, line.name, line._line)
             
             self.ui.exceptionStackList.addItem('File "%s", line %s, in %s()\n  %s' % line)

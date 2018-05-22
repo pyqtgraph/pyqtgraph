@@ -379,6 +379,10 @@ class ImageItem(GraphicsObject):
             image = fn.downsample(self.image, xds, axis=axes[0])
             image = fn.downsample(image, yds, axis=axes[1])
             self._lastDownsample = (xds, yds)
+            
+            # Check if downsampling reduced the image size to zero due to inf values.
+            if image.size == 0:
+                return
         else:
             image = self.image
 
@@ -465,11 +469,11 @@ class ImageItem(GraphicsObject):
         
         This method is also used when automatically computing levels.
         """
-        if self.image is None:
+        if self.image is None or self.image.size == 0:
             return None,None
         if step == 'auto':
-            step = (int(np.ceil(self.image.shape[0] / targetImageSize)),
-                    int(np.ceil(self.image.shape[1] / targetImageSize)))
+            step = (max(1, int(np.ceil(self.image.shape[0] / targetImageSize))),
+                    max(1, int(np.ceil(self.image.shape[1] / targetImageSize))))
         if np.isscalar(step):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]

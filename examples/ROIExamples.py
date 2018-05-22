@@ -33,7 +33,7 @@ arr[8:13, 44:46] = 10
 
 ## create GUI
 app = QtGui.QApplication([])
-w = pg.GraphicsWindow(size=(1000,800), border=True)
+w = pg.GraphicsLayoutWidget(show=True, size=(1000,800), border=True)
 w.setWindowTitle('pyqtgraph example: ROI Examples')
 
 text = """Data Selection From Image.<br>\n

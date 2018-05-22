@@ -165,6 +165,7 @@ class Process(RemoteEventHandler):
                 if timeout is not None and time.time() - start > timeout:
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
+        self.conn.close()
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
 
     def debugMsg(self, msg, *args):
@@ -341,6 +342,7 @@ class ForkedProcess(RemoteEventHandler):
         except OSError:  ## probably remote process has already quit
             pass
         
+        self.conn.close()  # don't leak file handles!
         self.hasJoined = True
 
     def kill(self):

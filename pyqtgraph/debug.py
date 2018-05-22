@@ -510,7 +510,7 @@ class Profiler(object):
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
         except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
         else: # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
