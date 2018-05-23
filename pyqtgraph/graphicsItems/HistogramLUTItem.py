@@ -338,8 +338,13 @@ class HistogramLUTItem(GraphicsWidget):
         if value:
             self.updateAutoLevels()
 
+    def clearPlots(self):
+        for plot in self.plots:
+            plot.clear()
+
     def updatePlots(self):
         if self.imageItem() is None:
+            self.clearPlots()
             return
 
         if self.levelMode == 'mono':
@@ -351,6 +356,7 @@ class HistogramLUTItem(GraphicsWidget):
             h = self.imageItem().getHistogram()
             profiler('get histogram')
             if h[0] is None:
+                self.clearPlots()
                 return
             self.plot.setData(*h)
             profiler('set plot')
@@ -359,6 +365,7 @@ class HistogramLUTItem(GraphicsWidget):
             self.plots[0].setVisible(False)
             ch = self.imageItem().getHistogram(perChannel=True)
             if ch[0] is None:
+                self.clearPlots()
                 return
             for i in range(1, 5):
                 if len(ch) >= i:
