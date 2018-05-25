@@ -389,8 +389,14 @@ class ScatterPlotItem(GraphicsObject):
                     else:
                         raise Exception("Unknown spot parameter: %s" % k)
         elif 'y' in kargs:
-            newData['x'] = kargs['x']
-            newData['y'] = kargs['y']
+            # remove extra timestamp in case of stepMode PlotDataItem
+            x = kargs['x']
+            y = kargs['y']
+            if len(x) == len(y) + 1:
+                newData['x'] = x[:-1]
+            else:
+                newData['x'] = x
+            newData['y'] = y
 
         if 'pxMode' in kargs:
             self.setPxMode(kargs['pxMode'])
