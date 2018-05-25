@@ -19,7 +19,7 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-  * PyQt 4.7+, PySide, or PyQt5
+  * PyQt 4.7+, PySide, PyQt5, or PySide2
   * python 2.7, or 3.x
   * NumPy
   * For 3D graphics: pyopengl and qt-opengl

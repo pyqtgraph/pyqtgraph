@@ -36,7 +36,7 @@ Requirements
 PyQtGraph depends on:
     
 * Python 2.7 or Python 3.x
-* A Qt library such as PyQt4, PyQt5, or PySide
+* A Qt library such as PyQt4, PyQt5, PySide, or PySide2
 * numpy
 
 The easiest way to meet these dependencies is with ``pip`` or with a scientific python
