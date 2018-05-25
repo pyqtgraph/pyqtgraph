@@ -3,6 +3,7 @@ from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
 from .. import shaders
 from ... import QtGui
+from ... import functions as fn
 import numpy as np
 
 __all__ = ['GLLinePlotItem']
