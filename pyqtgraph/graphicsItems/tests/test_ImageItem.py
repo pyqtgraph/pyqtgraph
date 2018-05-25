@@ -134,7 +134,7 @@ def test_ImageItem_axisorder():
         pg.setConfigOptions(imageAxisOrder=origMode)
 
 
-@pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason="pyside does not have qWait")
+@pytest.mark.skipif(pg.Qt.QT_LIB=='PySide', reason="pyside does not have qWait")
 def test_dividebyzero():
     import pyqtgraph as pg
     im = pg.image(pg.np.random.normal(size=(100,100)))

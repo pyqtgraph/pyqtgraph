@@ -8,7 +8,9 @@ elif QT_LIB == 'PySide':
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-    
+elif QT_LIB == 'PySide2':
+    from .axisCtrlTemplate_pyside2 import Ui_Form as AxisCtrlTemplate
+
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):

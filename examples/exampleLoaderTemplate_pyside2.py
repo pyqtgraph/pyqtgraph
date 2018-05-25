@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created: Fri Feb 16 20:30:37 2018
+#      by: pyside2-uic 2.0.0 running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -58,8 +59,8 @@ class Ui_Form(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.loadedFileLabel = QtWidgets.QLabel(self.widget1)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.loadedFileLabel.setFont(font)
         self.loadedFileLabel.setText("")
         self.loadedFileLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -77,18 +78,17 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.graphicsSystemCombo.setItemText(0, _translate("Form", "default"))
-        self.graphicsSystemCombo.setItemText(1, _translate("Form", "native"))
-        self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster"))
-        self.graphicsSystemCombo.setItemText(3, _translate("Form", "opengl"))
-        self.qtLibCombo.setItemText(0, _translate("Form", "default"))
-        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4"))
-        self.qtLibCombo.setItemText(2, _translate("Form", "PySide"))
-        self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5"))
-        self.qtLibCombo.setItemText(4, _translate("Form", "PySide2"))
-        self.label_2.setText(_translate("Form", "Graphics System:"))
-        self.label.setText(_translate("Form", "Qt Library:"))
-        self.loadBtn.setText(_translate("Form", "Run Example"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        self.graphicsSystemCombo.setItemText(0, QtWidgets.QApplication.translate("Form", "default", None, -1))
+        self.graphicsSystemCombo.setItemText(1, QtWidgets.QApplication.translate("Form", "native", None, -1))
+        self.graphicsSystemCombo.setItemText(2, QtWidgets.QApplication.translate("Form", "raster", None, -1))
+        self.graphicsSystemCombo.setItemText(3, QtWidgets.QApplication.translate("Form", "opengl", None, -1))
+        self.qtLibCombo.setItemText(0, QtWidgets.QApplication.translate("Form", "default", None, -1))
+        self.qtLibCombo.setItemText(1, QtWidgets.QApplication.translate("Form", "PyQt4", None, -1))
+        self.qtLibCombo.setItemText(2, QtWidgets.QApplication.translate("Form", "PySide", None, -1))
+        self.qtLibCombo.setItemText(3, QtWidgets.QApplication.translate("Form", "PyQt5", None, -1))
+        self.qtLibCombo.setItemText(4, QtWidgets.QApplication.translate("Form", "PySide2", None, -1))
+        self.label_2.setText(QtWidgets.QApplication.translate("Form", "Graphics System:", None, -1))
+        self.label.setText(QtWidgets.QApplication.translate("Form", "Qt Library:", None, -1))
+        self.loadBtn.setText(QtWidgets.QApplication.translate("Form", "Run Example", None, -1))
 

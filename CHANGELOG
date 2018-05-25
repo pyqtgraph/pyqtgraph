@@ -1,5 +1,8 @@
 pyqtgraph-0.11.0 (in development)
 
+  New Features:
+    - PySide2 support
+
   API / behavior changes:
     - ArrowItem's `angle` option now rotates the arrow without affecting its coordinate system.
       The result is visually the same, but children of ArrowItem are no longer rotated

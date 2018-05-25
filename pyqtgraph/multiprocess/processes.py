@@ -6,7 +6,7 @@ except ImportError:
     import pickle
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
-from ..Qt import USE_PYSIDE
+from ..Qt import QT_LIB
 from ..util import cprint  # color printing for debugging
 
 
@@ -131,7 +131,7 @@ class Process(RemoteEventHandler):
             ppid=pid, 
             targetStr=targetStr, 
             path=sysPath, 
-            pyside=USE_PYSIDE,
+            qt_lib=QT_LIB,
             debug=procDebug,
             pyqtapis=pyqtapis,
             )
