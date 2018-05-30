@@ -436,11 +436,14 @@ def getVersionStrings(pkg):
     ## Finally decide on a version string to use:
     if forcedVersion is not None:
         version = forcedVersion
-    elif gitVersion is not None and getGitBranch() != 'debian': # ignore git version if this is debian branch
-        version = gitVersion
-        sys.stderr.write("Detected git commit; will use version string: '%s'\n" % version)
     else:
         version = initVersion
+        # if git says this is a modified branch, add local version information
+        if gitVersion is not None:
+            _, local = gitVersion.split('+')
+            if local != '':
+                version = version + '+' + local
+                sys.stderr.write("Detected git commit; will use version string: '%s'\n" % version)
 
     return version, forcedVersion, gitVersion, initVersion
 
