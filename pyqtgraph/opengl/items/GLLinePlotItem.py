@@ -57,21 +57,6 @@ class GLLinePlotItem(GLGraphicsItem):
     def initializeGL(self):
         pass
         
-    #def setupGLState(self):
-        #"""Prepare OpenGL state for drawing. This function is called immediately before painting."""
-        ##glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)  ## requires z-sorting to render properly.
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE)
-        #glEnable( GL_BLEND )
-        #glEnable( GL_ALPHA_TEST )
-        #glDisable( GL_DEPTH_TEST )
-        
-        ##glEnable( GL_POINT_SMOOTH )
-
-        ##glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
-        ##glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, (0, 0, -1e-3))
-        ##glPointParameterfv(GL_POINT_SIZE_MAX, (65500,))
-        ##glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
-        
     def paint(self):
         if self.pos is None:
             return
@@ -86,12 +71,11 @@ class GLLinePlotItem(GLGraphicsItem):
                 glEnableClientState(GL_COLOR_ARRAY)
                 glColorPointerf(self.color)
             else:
-                if isinstance(self.color, QtGui.QColor):
+                if isinstance(self.color, (str, QtGui.QColor)):
                     glColor4f(*fn.glColor(self.color))
                 else:
                     glColor4f(*self.color)
             glLineWidth(self.width)
-            #glPointSize(self.width)
             
             if self.antialias:
                 glEnable(GL_LINE_SMOOTH)
