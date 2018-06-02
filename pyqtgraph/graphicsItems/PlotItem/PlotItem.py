@@ -605,7 +605,7 @@ class PlotItem(GraphicsWidget):
             #item.sigPlotChanged.connect(self.plotChanged)
 
         if self.legend is not None:
-            self.legend.removeItem(item)
+            self.legend.removeItem(item.name())
 
     def clear(self):
         """
