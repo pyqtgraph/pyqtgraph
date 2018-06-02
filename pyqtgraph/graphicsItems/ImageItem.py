@@ -268,8 +268,9 @@ class ImageItem(GraphicsObject):
             img = self.image
             while img.size > 2**16:
                 img = img[::2, ::2]
-            mn, mx = img.min(), img.max()
-            if mn == mx:
+            mn, mx = np.nanmin(img), np.nanmax(img)
+            # mn and mx can still be NaN if the data is all-NaN
+            if mn == mx or np.isnan(mn) or np.isnan(mx):
                 mn = 0
                 mx = 255
             kargs['levels'] = [mn,mx]
@@ -470,7 +471,7 @@ class ImageItem(GraphicsObject):
         This method is also used when automatically computing levels.
         """
         if self.image is None or self.image.size == 0:
-            return None,None
+            return None, None
         if step == 'auto':
             step = (max(1, int(np.ceil(self.image.shape[0] / targetImageSize))),
                     max(1, int(np.ceil(self.image.shape[1] / targetImageSize))))
@@ -479,8 +480,11 @@ class ImageItem(GraphicsObject):
         stepData = self.image[::step[0], ::step[1]]
         
         if bins == 'auto':
-            mn = stepData.min()
-            mx = stepData.max()
+            mn = np.nanmin(stepData)
+            mx = np.nanmax(stepData)
+            if np.isnan(mn) or np.isnan(mx):
+                # the data are all-nan
+                return None, None
             if stepData.dtype.kind in "ui":
                 # For integer data, we select the bins carefully to avoid aliasing
                 step = np.ceil((mx-mn) / 500.)
