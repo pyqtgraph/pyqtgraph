@@ -318,8 +318,22 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.mousePos = ev.pos()
         
         if ev.buttons() == QtCore.Qt.LeftButton:
-            self.orbit(-diff.x(), diff.y())
-            #print self.opts['azimuth'], self.opts['elevation']
+            if (ev.modifiers() & QtCore.Qt.ControlModifier):
+                # pan in plane of camera
+                elev = np.radians(self.opts['elevation'])
+                azim = np.radians(self.opts['azimuth'])
+                fov = np.radians(self.opts['fov'])
+                dist = (self.opts['center'] - self.cameraPosition()).length()
+                fov_factor = np.tan(fov / 2) * 2
+                scale_factor = dist * fov_factor / self.width()
+                dx = diff.x()
+                dy = diff.y()
+                z = scale_factor * np.cos(elev) * dy
+                x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
+                y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
+                self.pan(x, -y, z, relative=False)
+            else:
+                self.orbit(-diff.x(), diff.y())
         elif ev.buttons() == QtCore.Qt.MidButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative=True)
