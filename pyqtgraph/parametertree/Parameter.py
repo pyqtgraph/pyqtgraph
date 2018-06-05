@@ -180,7 +180,7 @@ class Parameter(QtCore.QObject):
             raise Exception("Parameter must have a string name specified in opts.")
         self.setName(name)
         
-        self.addChildren(self.opts.get('children', []))
+        self.addChildren(self.opts.pop('children', []))
         
         self.opts['value'] = None
         if value is not None:
