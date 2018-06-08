@@ -113,7 +113,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         glMultMatrixf(a.transpose())
 
     def projectionMatrix(self, region=None):
-        # Xw = (Xnd + 1) * width/2 + X
         if region is None:
             dpr = self.devicePixelRatio()
             region = (0, 0, self.width() * dpr, self.height() * dpr)
@@ -127,8 +126,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         r = nearClip * np.tan(fov * 0.5 * np.pi / 180.)
         t = r * h / w
 
-        # convert screen coordinates (region) to normalized device coordinates
-        # Xnd = (Xw - X0) * 2/width - 1
         ## Note that X0 and width in these equations must be the values used in viewport
         left  = r * ((region[0]-x0) * (2.0/w) - 1)
         right = r * ((region[0]+region[2]-x0) * (2.0/w) - 1)
@@ -247,8 +244,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             self.opts['azimuth'] = azimuth
         self.update()
         
-        
-        
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
@@ -267,24 +262,41 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
         self.opts['azimuth'] += azim
-        #self.opts['elevation'] += elev
         self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
         self.update()
         
-    def pan(self, dx, dy, dz, relative=False):
+    def pan(self, dx, dy, dz, relative='global'):
         """
         Moves the center (look-at) position while holding the camera in place. 
         
-        If relative=True, then the coordinates are interpreted such that x
-        if in the global xy plane and points to the right side of the view, y is
-        in the global xy plane and orthogonal to x, and z points in the global z
-        direction. Distances are scaled roughly such that a value of 1.0 moves
+        ==============  =======================================================
+        **Arguments:**
+        *dx*            Distance to pan in x direction
+        *dy*            Distance to pan in y direction
+        *dx*            Distance to pan in z direction
+        *relative*      String that determines the direction of dx,dy,dz. 
+                        If "global", then the global coordinate system is used.
+                        If "view", then the z axis is aligned with the view
+                        direction, and x and y axes are inthe plane of the
+                        view: +x points right, +y points up. 
+                        If "view-upright", then x is in the global xy plane and
+                        points to the right side of the view, y is in the
+                        global xy plane and orthogonal to x, and z points in
+                        the global z direction.
+        ==============  =======================================================
+        
+        Distances are scaled roughly such that a value of 1.0 moves
         by one pixel on screen.
         
+        Prior to version 0.11, *relative* was expected to be either True (x-aligned) or
+        False (global). These values are deprecated but still recognized.
         """
-        if not relative:
+        # for backward compatibility:
+        relative = {True: "view-upright", False: "global"}.get(relative, relative)
+        
+        if relative == 'global':
             self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
-        else:
+        elif relative == 'view-upright':
             cPos = self.cameraPosition()
             cVec = self.opts['center'] - cPos
             dist = cVec.length()  ## distance from camera to center
@@ -294,6 +306,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
             yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
             self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
+        elif relative == 'view':
+            # pan in plane of camera
+            elev = np.radians(self.opts['elevation'])
+            azim = np.radians(self.opts['azimuth'])
+            fov = np.radians(self.opts['fov'])
+            dist = (self.opts['center'] - self.cameraPosition()).length()
+            fov_factor = np.tan(fov / 2) * 2
+            scale_factor = dist * fov_factor / self.width()
+            z = scale_factor * np.cos(elev) * dy
+            x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
+            y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
+            self.opts['center'] += QtGui.QVector3D(x, -y, z)
+        else:
+            raise ValueError("relative argument must be global, view, or view-upright")
+        
         self.update()
         
     def pixelSize(self, pos):
@@ -319,26 +346,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         if ev.buttons() == QtCore.Qt.LeftButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
-                # pan in plane of camera
-                elev = np.radians(self.opts['elevation'])
-                azim = np.radians(self.opts['azimuth'])
-                fov = np.radians(self.opts['fov'])
-                dist = (self.opts['center'] - self.cameraPosition()).length()
-                fov_factor = np.tan(fov / 2) * 2
-                scale_factor = dist * fov_factor / self.width()
-                dx = diff.x()
-                dy = diff.y()
-                z = scale_factor * np.cos(elev) * dy
-                x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
-                y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
-                self.pan(x, -y, z, relative=False)
+                self.pan(diff.x(), diff.y(), 0, relative='view')
             else:
                 self.orbit(-diff.x(), diff.y())
         elif ev.buttons() == QtCore.Qt.MidButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
-                self.pan(diff.x(), 0, diff.y(), relative=True)
+                self.pan(diff.x(), 0, diff.y(), relative='view-upright')
             else:
-                self.pan(diff.x(), diff.y(), 0, relative=True)
+                self.pan(diff.x(), diff.y(), 0, relative='view-upright')
         
     def mouseReleaseEvent(self, ev):
         pass
@@ -417,8 +432,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         else:
             raise
             
-
-            
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -441,7 +454,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         img = fn.makeQImage(pixels, transpose=False)
         return img
-        
         
     def renderToArray(self, size, format=GL_BGRA, type=GL_UNSIGNED_BYTE, textureSize=1024, padding=256):
         w,h = map(int, size)
