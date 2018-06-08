@@ -358,14 +358,6 @@ class PlotItem(GraphicsWidget):
             v = np.clip(alpha, 0, 1)*self.ctrl.gridAlphaSlider.maximum()
             self.ctrl.gridAlphaSlider.setValue(v)
         
-    #def paint(self, *args):
-        #prof = debug.Profiler()
-        #QtGui.QGraphicsWidget.paint(self, *args)
-        
-    ## bad idea. 
-    #def __getattr__(self, attr):  ## wrap ms
-        #return getattr(self.vb, attr)
-        
     def close(self):
         #print "delete", self
         ## Most of this crap is needed to avoid PySide trouble. 
@@ -704,16 +696,9 @@ class PlotItem(GraphicsWidget):
     ## Qt's SVG-writing capabilities are pretty terrible. 
     def writeSvgCurves(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeSvg)
+            self._choose_filename_dialog(handler=self.writeSvg)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
+
         if isinstance(fileName, tuple):
             raise Exception("Not implemented yet..")
         fileName = str(fileName)
@@ -790,7 +775,9 @@ class PlotItem(GraphicsWidget):
     
     def writeSvg(self, fileName=None):
         if fileName is None:
-            fileName = QtGui.QFileDialog.getSaveFileName()
+            self._choose_filename_dialog(handler=self.writeSvg)
+            return
+
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
@@ -800,16 +787,9 @@ class PlotItem(GraphicsWidget):
         
     def writeImage(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeImage)
+            self._choose_filename_dialog(handler=self.writeImage)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
+
         if isinstance(fileName, tuple):
             raise Exception("Not implemented yet..")
         fileName = str(fileName)
@@ -823,16 +803,9 @@ class PlotItem(GraphicsWidget):
         
     def writeCsv(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeCsv)
+            self._choose_filename_dialog(handler=self.writeCsv)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
+
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
@@ -1237,3 +1210,11 @@ class PlotItem(GraphicsWidget):
         #else:
             #self.autoBtn.show()
     
+    def _choose_filename_dialog(self, handler):
+        self.fileDialog = FileDialog()
+        if PlotItem.lastFileDir is not None:
+            self.fileDialog.setDirectory(PlotItem.lastFileDir)
+        self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        self.fileDialog.show()
+        self.fileDialog.fileSelected.connect(handler)
