@@ -34,14 +34,3 @@ def test_getViewWidget_deleted():
 
     assert not pg.Qt.isQObjectAlive(view)
     assert item.getViewWidget() is None
-
-
-#if __name__ == '__main__':
-    #view = pg.PlotItem()
-    #vref = weakref.ref(view)
-    #item = pg.InfiniteLine()
-    #view.addItem(item)
-    #del view
-    #gc.collect()
-    
-    
