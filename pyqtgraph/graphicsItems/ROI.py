@@ -42,9 +42,7 @@ class ROI(GraphicsObject):
     rotate/translate/scale handles.
     ROIs can be customized to have a variety of shapes (by subclassing or using
     any of the built-in subclasses) and any combination of draggable handles
-    that allow the user to manipulate the ROI.
-    
-    
+    that allow the user to manipulate the ROI.    
     
     ================ ===========================================================
     **Arguments**
@@ -78,8 +76,6 @@ class ROI(GraphicsObject):
                      inside the ROI. Default is True.
     rotatable        (bool) If True, the ROI can be rotated by mouse drag + ALT
     resizable        (bool) If True, the ROI can be resized by mouse drag + SHIFT
-    lockAspect       (bool) If True, the aspect ratio of the ROI is locked during
-                     mouse interaction.
     removable        (bool) If True, the ROI will be given a context menu with
                      an option to remove the ROI. The ROI emits
                      sigRemoveRequested when this menu action is selected.
@@ -120,7 +116,7 @@ class ROI(GraphicsObject):
     def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, 
                  snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, 
                  parent=None, pen=None, movable=True, rotatable=True, resizable=True, 
-                 lockAspect=False, removable=False):
+                 removable=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
@@ -129,7 +125,6 @@ class ROI(GraphicsObject):
         self.translatable = movable
         self.rotatable = rotatable
         self.resizable = resizable
-        self.lockAspect = lockAspect
         self.removable = removable
         self.menu = None
         
@@ -281,9 +276,15 @@ class ROI(GraphicsObject):
         if update not in (True, False):
             raise TypeError("update argument must be bool")
         size = Point(size)
+        if snap:
+            size[0] = round(size[0] / self.scaleSnapSize) * self.scaleSnapSize
+            size[1] = round(size[1] / self.scaleSnapSize) * self.scaleSnapSize
 
         if centerLocal is not None:
-            center = Point(centerLocal) / self.state['size']
+            oldSize = Point(self.state['size'])
+            oldSize[0] = 1 if oldSize[0] == 0 else oldSize[0]
+            oldSize[1] = 1 if oldSize[1] == 0 else oldSize[1]
+            center = Point(centerLocal) / oldSize
 
         if center is not None:
             center = Point(center)
@@ -826,8 +827,8 @@ class ROI(GraphicsObject):
             
             ## snap 
             if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
-                lp1[0] = round(lp1[0] / self.snapSize) * self.snapSize
-                lp1[1] = round(lp1[1] / self.snapSize) * self.snapSize
+                lp1[0] = round(lp1[0] / self.scaleSnapSize) * self.scaleSnapSize
+                lp1[1] = round(lp1[1] / self.scaleSnapSize) * self.scaleSnapSize
                 
             ## preserve aspect ratio (this can override snapping)
             if h['lockAspect'] or (modifiers & QtCore.Qt.AltModifier):
@@ -1441,6 +1442,8 @@ class MouseDragHandler(object):
         self.translateModifier = QtCore.Qt.NoModifier
         self.rotateModifier = QtCore.Qt.AltModifier
         self.scaleModifier = QtCore.Qt.ShiftModifier
+        self.rotateSpeed = 0.7
+        self.scaleSpeed = 1.01
 
     def mouseDragEvent(self, ev):
         roi = self.roi
@@ -1485,10 +1488,11 @@ class MouseDragHandler(object):
             newPos = pos + self.cursorOffset
             roi.translate(newPos - roi.pos(), snap=snap, finish=False)
         elif self.dragMode == 'rotate':
-            diff = (ev.scenePos() - ev.buttonDownScenePos()).y()
-            roi.setAngle(self.startState['angle'] + diff, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
+            diff = self.rotateSpeed * (ev.scenePos() - ev.buttonDownScenePos()).x()
+            angle = self.startState['angle'] - diff
+            roi.setAngle(angle, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
         elif self.dragMode == 'scale':
-            diff = 1.01 ** -(ev.scenePos() - ev.buttonDownScenePos()).y()
+            diff = self.scaleSpeed ** -(ev.scenePos() - ev.buttonDownScenePos()).y()
             roi.setSize(Point(self.startState['size']) * diff, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
 
 
