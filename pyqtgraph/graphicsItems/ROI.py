@@ -68,13 +68,18 @@ class ROI(GraphicsObject):
                      to be integer multiples of *snapSize* when being resized
                      by the user. Default is False.
     rotateSnap       (bool) If True, the ROI angle is forced to a multiple of 
-                     15 degrees when rotated by the user. Default is False.
+                     the ROI's snap angle (default is 15 degrees) when rotated
+                     by the user. Default is False.
     parent           (QGraphicsItem) The graphics item parent of this ROI. It
                      is generally not necessary to specify the parent.
     pen              (QPen or argument to pg.mkPen) The pen to use when drawing
                      the shape of the ROI.
     movable          (bool) If True, the ROI can be moved by dragging anywhere 
                      inside the ROI. Default is True.
+    rotatable        (bool) If True, the ROI can be rotated by mouse drag + ALT
+    resizable        (bool) If True, the ROI can be resized by mouse drag + SHIFT
+    lockAspect       (bool) If True, the aspect ratio of the ROI is locked during
+                     mouse interaction.
     removable        (bool) If True, the ROI will be given a context menu with
                      an option to remove the ROI. The ROI emits
                      sigRemoveRequested when this menu action is selected.
@@ -112,14 +117,19 @@ class ROI(GraphicsObject):
     sigClicked = QtCore.Signal(object, object)
     sigRemoveRequested = QtCore.Signal(object)
     
-    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, parent=None, pen=None, movable=True, removable=False):
+    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, 
+                 snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, 
+                 parent=None, pen=None, movable=True, rotatable=True, resizable=True, 
+                 lockAspect=False, removable=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
         size = Point(size)
         self.aspectLocked = False
         self.translatable = movable
-        self.rotateAllowed = True
+        self.rotatable = rotatable
+        self.resizable = resizable
+        self.lockAspect = lockAspect
         self.removable = removable
         self.menu = None
         
@@ -146,7 +156,9 @@ class ROI(GraphicsObject):
         self.snapSize = snapSize
         self.translateSnap = translateSnap
         self.rotateSnap = rotateSnap
+        self.rotateSnapAngle = 15.0
         self.scaleSnap = scaleSnap
+        self.scaleSnapSize = snapSize
 
         # Implement mouse handling in a separate class to allow easier customization
         self.mouseDragHandler = MouseDragHandler(self)
@@ -249,45 +261,87 @@ class ROI(GraphicsObject):
         if update:
             self.stateChanged(finish=finish)
         
-    def setSize(self, size, update=True, finish=True):
-        """Set the size of the ROI. May be specified as a QPoint, Point, or list of two values.
-        See setPos() for an explanation of the update and finish arguments.
+    def setSize(self, size, center=None, centerLocal=None, snap=False, update=True, finish=True):
+        """
+        Set the ROI's size.
+        
+        =============== ==========================================================================
+        **Arguments**
+        size            (Point | QPointF | sequence) The final size of the ROI
+        center          (None | Point) Optional center point around which the ROI is scaled,
+                        expressed as [0-1, 0-1] over the size of the ROI.
+        centerLocal     (None | Point) Same as *center*, but the position is expressed in the
+                        local coordinate system of the ROI
+        snap            (bool) If True, the final size is snapped to the nearest increment (see
+                        ROI.scaleSnapSize)
+        update          (bool) See setPos()
+        finish          (bool) See setPos()
+        =============== ==========================================================================
         """
         if update not in (True, False):
             raise TypeError("update argument must be bool")
         size = Point(size)
+
+        if centerLocal is not None:
+            center = Point(centerLocal) / self.state['size']
+
+        if center is not None:
+            center = Point(center)
+            c = self.mapToParent(Point(center) * self.state['size'])
+            c1 = self.mapToParent(Point(center) * size)
+            newPos = self.state['pos'] + c - c1
+            self.setPos(newPos, update=False, finish=False)
+        
         self.prepareGeometryChange()
         self.state['size'] = size
         if update:
             self.stateChanged(finish=finish)
 
-    def setAngle(self, angle, update=True, finish=True):
-        """Set the angle of rotation (in degrees) for this ROI.
-        See setPos() for an explanation of the update and finish arguments.
+    def setAngle(self, angle, center=None, centerLocal=None, snap=False, update=True, finish=True):
+        """
+        Set the ROI's rotation angle.
+        
+        =============== ==========================================================================
+        **Arguments**
+        angle           (float) The final ROI angle in degrees
+        center          (None | Point) Optional center point around which the ROI is rotated,
+                        expressed as [0-1, 0-1] over the size of the ROI.
+        centerLocal     (None | Point) Same as *center*, but the position is expressed in the
+                        local coordinate system of the ROI
+        snap            (bool) If True, the final ROI angle is snapped to the nearest increment
+                        (default is 15 degrees; see ROI.rotateSnapAngle)
+        update          (bool) See setPos()
+        finish          (bool) See setPos()
+        =============== ==========================================================================
         """
         if update not in (True, False):
             raise TypeError("update argument must be bool")
+
+        if snap is True:
+            angle = round(angle / self.rotateSnapAngle) * self.rotateSnapAngle
+        
         self.state['angle'] = angle
-        tr = QtGui.QTransform()
+        tr = QtGui.QTransform()  # note: only rotation is contained in the transform
         tr.rotate(angle)
+        if center is not None:
+            centerLocal = Point(center) * self.state['size']
+        if centerLocal is not None:
+            centerLocal = Point(centerLocal)
+            # rotate to new angle, keeping a specific point anchored as the center of rotation
+            cc = self.mapToParent(centerLocal) - (tr.map(centerLocal) + self.state['pos'])
+            self.translate(cc, update=False)
+
         self.setTransform(tr)
         if update:
             self.stateChanged(finish=finish)
         
-    def scale(self, s, center=[0,0], update=True, finish=True):
+    def scale(self, s, center=None, centerLocal=None, snap=False, update=True, finish=True):
         """
         Resize the ROI by scaling relative to *center*.
         See setPos() for an explanation of the *update* and *finish* arguments.
         """
-        c = self.mapToParent(Point(center) * self.state['size'])
-        self.prepareGeometryChange()
         newSize = self.state['size'] * s
-        c1 = self.mapToParent(Point(center) * newSize)
-        newPos = self.state['pos'] + c - c1
-        
-        self.setSize(newSize, update=False)
-        self.setPos(newPos, update=update, finish=finish)
-        
+        self.setSize(newSize, center=center, centerLocal=centerLocal, snap=snap, update=update, finish=finish)
    
     def translate(self, *args, **kargs):
         """
@@ -339,14 +393,22 @@ class ROI(GraphicsObject):
         finish = kargs.get('finish', True)
         self.setPos(newState['pos'], update=update, finish=finish)
 
-    def rotate(self, angle, update=True, finish=True):
+    def rotate(self, angle, center=None, snap=False, update=True, finish=True):
         """
         Rotate the ROI by *angle* degrees. 
         
-        Also accepts *update* and *finish* arguments (see setPos() for a 
-        description of these).
+        =============== ==========================================================================
+        **Arguments**
+        angle           (float) The angle in degrees to rotate
+        center          (None | Point) Optional center point around which the ROI is rotated, in
+                        the local coordinate system of the ROI
+        snap            (bool) If True, the final ROI angle is snapped to the nearest increment
+                        (default is 15 degrees; see ROI.rotateSnapAngle)
+        update          (bool) See setPos()
+        finish          (bool) See setPos()
+        =============== ==========================================================================
         """
-        self.setAngle(self.angle()+angle, update=update, finish=finish)
+        self.setAngle(self.angle()+angle, center=center, snap=snap, update=update, finish=finish)
 
     def handleMoveStarted(self):
         self.preMoveState = self.getState()
@@ -701,6 +763,16 @@ class ROI(GraphicsObject):
         else:
             ev.ignore()
 
+    def _moveStarted(self):
+        self.isMoving = True
+        self.preMoveState = self.getState()
+        self.sigRegionChangeStarted.emit(self)
+
+    def _moveFinished(self):
+        if self.isMoving:
+            self.stateChangeFinished()
+        self.isMoving = False
+
     def cancelMove(self):
         self.isMoving = False
         self.setState(self.preMoveState)
@@ -803,7 +875,7 @@ class ROI(GraphicsObject):
             if h['type'] == 'rf':
                 self.freeHandleMoved = True
             
-            if not self.rotateAllowed:
+            if not self.rotatable:
                 return
             ## If the handle is directly over its center point, we can't compute an angle.
             try:
@@ -817,7 +889,7 @@ class ROI(GraphicsObject):
             if ang is None:  ## this should never happen..
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
-                ang = round(ang / 15.) * 15.  ## 180/12 = 15
+                ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
             
             ## create rotation transform
             tr = QtGui.QTransform()
@@ -859,7 +931,7 @@ class ROI(GraphicsObject):
             if ang is None:
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
-                ang = round(ang / 15.) * 15.
+                ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
             
             hs = abs(h['pos'][scaleAxis] - c[scaleAxis])
             newState['size'][scaleAxis] = lp1.length() / hs
@@ -1363,6 +1435,12 @@ class MouseDragHandler(object):
     """
     def __init__(self, roi):
         self.roi = roi
+        self.dragMode = None
+        self.startState = None
+        self.snapModifier = QtCore.Qt.ControlModifier
+        self.translateModifier = QtCore.Qt.NoModifier
+        self.rotateModifier = QtCore.Qt.AltModifier
+        self.scaleModifier = QtCore.Qt.ShiftModifier
 
     def mouseDragEvent(self, ev):
         roi = self.roi
@@ -1370,29 +1448,48 @@ class MouseDragHandler(object):
         if ev.isStart():
             if ev.button() == QtCore.Qt.LeftButton:
                 roi.setSelected(True)
-                if roi.translatable:
-                    roi.isMoving = True
-                    roi.preMoveState = roi.getState()
-                    roi.cursorOffset = roi.pos() - roi.mapToParent(ev.buttonDownPos())
-                    roi.sigRegionChangeStarted.emit(roi)
+                mods = ev.modifiers() & ~self.snapModifier
+                if roi.translatable and mods == self.translateModifier:
+                    self.dragMode = 'translate'
+                elif roi.rotatable and mods == self.rotateModifier:
+                    self.dragMode = 'rotate'
+                elif roi.resizable and mods == self.scaleModifier:
+                    self.dragMode = 'scale'
+                else:
+                    self.dragMode = None
+                
+                if self.dragMode is not None:
+                    roi._moveStarted()
+                    self.startPos = roi.mapToParent(ev.buttonDownPos())
+                    self.startState = roi.saveState()
+                    self.cursorOffset = roi.pos() - self.startPos
                     ev.accept()
                 else:
                     ev.ignore()
+            else:
+                self.dragMode = None
+                ev.ignore()
 
-        elif ev.isFinish():
-            if roi.translatable:
-                if roi.isMoving:
-                    roi.stateChangeFinished()
-                roi.isMoving = False
+
+        if ev.isFinish() and self.dragMode is not None:
+            roi._moveFinished()
             return
 
-        if roi.translatable and roi.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
-            snap = True if (ev.modifiers() & QtCore.Qt.ControlModifier) else None
-            newPos = roi.mapToParent(ev.pos()) + roi.cursorOffset
-            roi.translate(newPos - roi.pos(), snap=snap, finish=False)
-        # elif self.rotatable and self.isMoving and (ev.modifiers() & QtCore.Qt.AltModifier):
-            
+        # roi.isMoving becomes False if the move was cancelled by right-click
+        if not roi.isMoving or self.dragMode is None:
+            return
 
+        snap = True if (ev.modifiers() & self.snapModifier) else None
+        pos = roi.mapToParent(ev.pos())
+        if self.dragMode == 'translate':
+            newPos = pos + self.cursorOffset
+            roi.translate(newPos - roi.pos(), snap=snap, finish=False)
+        elif self.dragMode == 'rotate':
+            diff = (ev.scenePos() - ev.buttonDownScenePos()).y()
+            roi.setAngle(self.startState['angle'] + diff, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
+        elif self.dragMode == 'scale':
+            diff = 1.01 ** -(ev.scenePos() - ev.buttonDownScenePos()).y()
+            roi.setSize(Point(self.startState['size']) * diff, centerLocal=ev.buttonDownPos(), snap=snap, finish=False)
 
 
 class TestROI(ROI):
