@@ -147,6 +147,9 @@ class ROI(GraphicsObject):
         self.translateSnap = translateSnap
         self.rotateSnap = rotateSnap
         self.scaleSnap = scaleSnap
+
+        # Implement mouse handling in a separate class to allow easier customization
+        self.mouseDragHandler = MouseDragHandler(self)
     
     def getState(self):
         return self.stateCopy()
@@ -683,34 +686,8 @@ class ROI(GraphicsObject):
         QtCore.QTimer.singleShot(0, lambda: self.sigRemoveRequested.emit(self))
         
     def mouseDragEvent(self, ev):
-        if ev.isStart():
-            #p = ev.pos()
-            #if not self.isMoving and not self.shape().contains(p):
-                #ev.ignore()
-                #return        
-            if ev.button() == QtCore.Qt.LeftButton:
-                self.setSelected(True)
-                if self.translatable:
-                    self.isMoving = True
-                    self.preMoveState = self.getState()
-                    self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
-                    self.sigRegionChangeStarted.emit(self)
-                    ev.accept()
-                else:
-                    ev.ignore()
+        self.mouseDragHandler.mouseDragEvent(ev)
 
-        elif ev.isFinish():
-            if self.translatable:
-                if self.isMoving:
-                    self.stateChangeFinished()
-                self.isMoving = False
-            return
-
-        if self.translatable and self.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
-            snap = True if (ev.modifiers() & QtCore.Qt.ControlModifier) else None
-            newPos = self.mapToParent(ev.pos()) + self.cursorOffset
-            self.translate(newPos - self.pos(), snap=snap, finish=False)
-        
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton and self.isMoving:
             ev.accept()
@@ -1379,6 +1356,43 @@ class Handle(UIGraphicsItem):
         GraphicsObject.viewTransformChanged(self)
         self._shape = None  ## invalidate shape, recompute later if requested.
         self.update()
+
+
+class MouseDragHandler(object):
+    """Implements default mouse drag behavior for ROI (not for ROI handles).
+    """
+    def __init__(self, roi):
+        self.roi = roi
+
+    def mouseDragEvent(self, ev):
+        roi = self.roi
+
+        if ev.isStart():
+            if ev.button() == QtCore.Qt.LeftButton:
+                roi.setSelected(True)
+                if roi.translatable:
+                    roi.isMoving = True
+                    roi.preMoveState = roi.getState()
+                    roi.cursorOffset = roi.pos() - roi.mapToParent(ev.buttonDownPos())
+                    roi.sigRegionChangeStarted.emit(roi)
+                    ev.accept()
+                else:
+                    ev.ignore()
+
+        elif ev.isFinish():
+            if roi.translatable:
+                if roi.isMoving:
+                    roi.stateChangeFinished()
+                roi.isMoving = False
+            return
+
+        if roi.translatable and roi.isMoving and ev.buttons() == QtCore.Qt.LeftButton:
+            snap = True if (ev.modifiers() & QtCore.Qt.ControlModifier) else None
+            newPos = roi.mapToParent(ev.pos()) + roi.cursorOffset
+            roi.translate(newPos - roi.pos(), snap=snap, finish=False)
+        # elif self.rotatable and self.isMoving and (ev.modifiers() & QtCore.Qt.AltModifier):
+            
+
 
 
 class TestROI(ROI):
