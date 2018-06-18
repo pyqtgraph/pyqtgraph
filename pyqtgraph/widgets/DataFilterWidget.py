@@ -24,15 +24,12 @@ class DataFilterWidget(ptree.ParameterTree):
         self.params = DataFilterParameter()
         
         self.setParameters(self.params)
-        self.params.sigTreeStateChanged.connect(self.filterChanged)
+        self.params.sigFilterChanged.connect(self.sigFilterChanged)
         
         self.setFields = self.params.setFields
         self.generateMask = self.params.generateMask
         self.filterData = self.params.filterData
         self.describe = self.params.describe
-        
-    def filterChanged(self):
-        self.sigFilterChanged.emit(self)
         
     def parameters(self):
         return self.params
@@ -80,15 +77,17 @@ class DataFilterParameter(ptree.types.GroupParameter):
                 ('field3', {'mode': 'enum', 'values': {'val1':True, 'val2':False, 'val3':True}}),
             ])
         """
-        self.fields = OrderedDict(fields)
-        names = self.fieldNames()
-        self.setAddList(names)
+        with fn.SignalBlock(self.sigTreeStateChanged, self.filterChanged):
+            self.fields = OrderedDict(fields)
+            names = self.fieldNames()
+            self.setAddList(names)
 
-        # update any existing filters
-        for ch in self.children():
-            name = ch.fieldName
-            if name in fields:
-                ch.updateFilter(fields[name])
+            # update any existing filters
+            for ch in self.children():
+                name = ch.fieldName
+                if name in fields:
+                    ch.updateFilter(fields[name])
+        self.sigFilterChanged.emit(self)
     
     def filterData(self, data):
         if len(data) == 0:
