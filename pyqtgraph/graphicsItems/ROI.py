@@ -42,8 +42,22 @@ class ROI(GraphicsObject):
     rotate/translate/scale handles.
     ROIs can be customized to have a variety of shapes (by subclassing or using
     any of the built-in subclasses) and any combination of draggable handles
-    that allow the user to manipulate the ROI.    
-    
+    that allow the user to manipulate the ROI.
+
+    Default mouse interaction:
+
+    * Left drag moves the ROI
+    * Left drag + Ctrl moves the ROI with position snapping
+    * Left drag + Alt rotates the ROI
+    * Left drag + Alt + Ctrl rotates the ROI with angle snapping
+    * Left drag + Shift scales the ROI
+    * Left drag + Shift + Ctrl scales the ROI with size snapping
+
+    In addition to the above interaction modes, it is possible to attach any
+    number of handles to the ROI that can be dragged to change the ROI in
+    various ways (see the ROI.add____Handle methods).
+
+
     ================ ===========================================================
     **Arguments**
     pos              (length-2 sequence) Indicates the position of the ROI's 
@@ -75,7 +89,8 @@ class ROI(GraphicsObject):
     movable          (bool) If True, the ROI can be moved by dragging anywhere 
                      inside the ROI. Default is True.
     rotatable        (bool) If True, the ROI can be rotated by mouse drag + ALT
-    resizable        (bool) If True, the ROI can be resized by mouse drag + SHIFT
+    resizable        (bool) If True, the ROI can be resized by mouse drag + 
+                     SHIFT
     removable        (bool) If True, the ROI will be given a context menu with
                      an option to remove the ROI. The ROI emits
                      sigRemoveRequested when this menu action is selected.
@@ -1442,7 +1457,7 @@ class MouseDragHandler(object):
         self.translateModifier = QtCore.Qt.NoModifier
         self.rotateModifier = QtCore.Qt.AltModifier
         self.scaleModifier = QtCore.Qt.ShiftModifier
-        self.rotateSpeed = 0.7
+        self.rotateSpeed = 0.5
         self.scaleSpeed = 1.01
 
     def mouseDragEvent(self, ev):
