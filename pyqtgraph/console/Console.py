@@ -101,7 +101,6 @@ class ConsoleWidget(QtGui.QWidget):
             pickle.dump(open(self.historyFile, 'wb'), history)
         
     def runCmd(self, cmd):
-        #cmd = str(self.input.lastCmd)
         self.stdout = sys.stdout
         self.stderr = sys.stderr
         encCmd = re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', cmd))
@@ -114,22 +113,20 @@ class ConsoleWidget(QtGui.QWidget):
             sys.stdout = self
             sys.stderr = self
             if self.multiline is not None:
-                self.write("<br><b>%s</b>\n"%encCmd, html=True)
+                self.write("<br><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
                 self.execMulti(cmd)
             else:
-                self.write("<br><div style='background-color: #CCF; color: black'><b>%s</b>\n"%encCmd, html=True)
+                self.write("<br><div style='background-color: #CCF; color: black'><b>%s</b>\n"%encCmd, html=True, scrollToBottom=True)
                 self.inCmd = True
                 self.execSingle(cmd)
             
             if not self.inCmd:
-                self.write("</div>\n", html=True)
+                self.write("</div>\n", html=True, scrollToBottom=True)
                 
         finally:
             sys.stdout = self.stdout
             sys.stderr = self.stderr
             
-            sb = self.output.verticalScrollBar()
-            sb.setValue(sb.maximum())
             sb = self.ui.historyList.verticalScrollBar()
             sb.setValue(sb.maximum())
             
@@ -201,11 +198,23 @@ class ConsoleWidget(QtGui.QWidget):
             self.displayException()
             self.multiline = None
 
-    def write(self, strn, html=False):
+    def write(self, strn, html=False, scrollToBottom='auto'):
+        """Write a string into the console.
+
+        If scrollToBottom is 'auto', then the console is automatically scrolled
+        to fit the new text only if it was already at the bottom.
+        """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if not isGuiThread:
             self.stdout.write(strn)
             return
+
+        sb = self.output.verticalScrollBar()
+        scroll = sb.value()
+        if scrollToBottom == 'auto':
+            atBottom = scroll == sb.maximum()
+            scrollToBottom = atBottom
+
         self.output.moveCursor(QtGui.QTextCursor.End)
         if html:
             self.output.textCursor().insertHtml(strn)
@@ -213,10 +222,13 @@ class ConsoleWidget(QtGui.QWidget):
             if self.inCmd:
                 self.inCmd = False
                 self.output.textCursor().insertHtml("</div><br><div style='font-weight: normal; background-color: #FFF; color: black'>")
-                #self.stdout.write("</div><br><div style='font-weight: normal; background-color: #FFF;'>")
             self.output.insertPlainText(strn)
-        #self.stdout.write(strn)
-    
+
+        if scrollToBottom:
+            sb.setValue(sb.maximum())
+        else:
+            sb.setValue(scroll)
+
     def displayException(self):
         """
         Display the current exception and stack.
