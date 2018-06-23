@@ -794,7 +794,7 @@ class ImageView(QtGui.QWidget):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
             return
-        self.export(fileName)
+        self.export(str(fileName))
         
     def buildMenu(self):
         self.menu = QtGui.QMenu()
