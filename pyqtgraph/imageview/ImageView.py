@@ -790,9 +790,11 @@ class ImageView(QtGui.QWidget):
             
     def exportClicked(self):
         fileName = QtGui.QFileDialog.getSaveFileName()
+        if isinstance(fileName, tuple):
+            fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
             return
-        self.export(fileName)
+        self.export(str(fileName))
         
     def buildMenu(self):
         self.menu = QtGui.QMenu()

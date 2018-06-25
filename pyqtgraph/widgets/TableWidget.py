@@ -351,9 +351,11 @@ class TableWidget(QtGui.QTableWidget):
 
     def save(self, data):
         fileName = QtGui.QFileDialog.getSaveFileName(self, "Save As..", "", "Tab-separated values (*.tsv)")
+        if isinstance(fileName, tuple):
+            fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
             return
-        open(fileName, 'w').write(data)
+        open(str(fileName), 'w').write(data)
 
     def contextMenuEvent(self, ev):
         self.contextMenu.popup(ev.globalPos())
