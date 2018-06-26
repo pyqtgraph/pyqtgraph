@@ -21,7 +21,7 @@ platform:
 install:
 
   # Install OpenGL
-  - "powershell ./make/install_opengl.ps1"
+  - "powershell ./tools/install_opengl.ps1"
 
   # Install conda using ci-helpers. More information about ci-helpers can
   # be found here: https://github.com/astropy/ci-helpers
