@@ -1,0 +1,54 @@
+# CI on Windows via appveyor
+# This file was based on Olivier Grisel's python-appveyor-demo
+
+environment:
+
+  global:
+      PYTHON: "C:\\conda"
+      PYTHON_ARCH: "64"
+
+  matrix:
+      - PYTHON_VERSION: "2.7"
+        CONDA_DEPENDENCIES: "numpy pyqt=4 setuptools pytest coverage pytest-cov"
+        PIP_DEPENDENCIES: "numpydoc"
+      - PYTHON_VERSION: "3.6"
+        CONDA_DEPENDENCIES: "numpy pyqt=5 setuptools pytest coverage pytest-cov"
+        PIP_DEPENDENCIES: "numpydoc"
+
+platform:
+    -x64
+
+install:
+
+  # Install OpenGL
+  - "powershell ./make/install_opengl.ps1"
+
+  # Install conda using ci-helpers. More information about ci-helpers can
+  # be found here: https://github.com/astropy/ci-helpers
+  - "git clone git://github.com/astropy/ci-helpers.git"
+  - "rm ci-helpers/test_env.py"
+  - "powershell ci-helpers/appveyor/install-miniconda.ps1"
+
+  # Prepend newly installed Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Switch to test environment
+  - "activate test"
+
+  # Check that we have the expected version and architecture for Python
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # Install pyqtgraph
+  - "python setup.py develop"
+  - "python -c \"import pyqtgraph; pyqtgraph.systemInfo()\""
+
+build: false  # Not a C# project, build stuff at the test step instead.
+
+test_script:
+  - "python test.py"
+
+on_success:
+  - "coveralls"
