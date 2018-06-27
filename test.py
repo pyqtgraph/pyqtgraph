@@ -2,7 +2,7 @@
 Script for invoking pytest with options to select Qt library
 """
 
-import sys
+import os, sys
 import pytest
 
 args = sys.argv[1:]
@@ -19,6 +19,6 @@ elif '--pyqt5' in args:
 import pyqtgraph as pg
 pg.systemInfo()
 
-pytest.main(args)
+os.exit(pytest.main(args))
     
     
