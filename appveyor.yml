@@ -9,10 +9,10 @@ environment:
 
   matrix:
       - PYTHON_VERSION: "2.7"
-        CONDA_DEPENDENCIES: "numpy pyqt=4 setuptools pytest coverage pytest-cov"
+        CONDA_DEPENDENCIES: "numpy scipy pyqt=4 setuptools pytest"
         PIP_DEPENDENCIES: "numpydoc"
       - PYTHON_VERSION: "3.6"
-        CONDA_DEPENDENCIES: "numpy pyqt=5 setuptools pytest coverage pytest-cov"
+        CONDA_DEPENDENCIES: "numpy scipy pyqt=5 setuptools pytest"
         PIP_DEPENDENCIES: "numpydoc"
 
 platform:
@@ -49,6 +49,3 @@ build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
   - "python test.py"
-
-on_success:
-  - "coveralls"
