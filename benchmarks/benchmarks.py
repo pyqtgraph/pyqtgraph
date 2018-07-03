@@ -8,18 +8,20 @@ class TimeSuite:
     of iterating over dictionaries in Python.
     """
     def setup(self):
+        size = (500, 500)
+
         self.float_data = {
-            'data': np.random.normal(size=(1000, 1000)),
+            'data': np.random.normal(size=size),
             'levels': [-4., 4.],
         }
 
         self.uint16_data = {
-            'data': np.random.randint(100, 4500, size=(1000, 1000)).astype('uint16'),
+            'data': np.random.randint(100, 4500, size=size).astype('uint16'),
             'levels': [250, 3000],
         }
 
         self.uint8_data = {
-            'data': np.random.randint(0, 255, size=(1000, 1000)).astype('ubyte'),
+            'data': np.random.randint(0, 255, size=size).astype('ubyte'),
             'levels': [20, 220],
         }
 
