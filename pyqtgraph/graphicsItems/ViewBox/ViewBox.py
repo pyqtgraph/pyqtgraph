@@ -662,7 +662,7 @@ class ViewBox(GraphicsWidget):
         cause slight changes due to floating-point error).
         """
         if s is not None:
-            scale = Point(s)
+            scale = s
         else:
             scale = [x, y]
         
@@ -1139,6 +1139,7 @@ class ViewBox(GraphicsWidget):
             mask[:] = 0
             mask[axis] = mv
         s = ((mask * 0.02) + 1) ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
+        s = np.where(mask, s, None) # only provide values for the axes where the mouse is enabled
         
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
         
