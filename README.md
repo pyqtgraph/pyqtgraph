@@ -34,13 +34,14 @@ Support
 Installation Methods
 --------------------
 
-  * From pypi:  
-        `pip install pyqtgraph`
-  * To use with a specific project, simply copy the pyqtgraph subdirectory
-    anywhere that is importable from your project. 
-  * To install system-wide from source distribution:
-        `$ python setup.py install`
-  * For installation packages, see the website (pyqtgraph.org)
+* From pypi:  
+    - Last released version: `pip install pyqtgraph`
+    - Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph`
+* To install system-wide from source distribution: `python setup.py install`
+* Many linux package repositories have release versions.
+* To use with a specific project, simply copy the pyqtgraph subdirectory
+  anywhere that is importable from your project. 
+* For installation packages, see the website (pyqtgraph.org)
 
 Documentation
 -------------
