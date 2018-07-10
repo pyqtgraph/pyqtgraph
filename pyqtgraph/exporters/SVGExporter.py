@@ -180,7 +180,10 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
             item.setExportMode(True, {'painter': p})
         try:
             p.setTransform(tr)
-            item.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
+            opt = QtGui.QStyleOptionGraphicsItem()
+            if item.flags() & QtGui.QGraphicsItem.ItemUsesExtendedStyleOption:
+                opt.exposedRect = item.boundingRect()
+            item.paint(p, opt, None)
         finally:
             p.end()
             ## Can't do this here--we need to wait until all children have painted as well.
