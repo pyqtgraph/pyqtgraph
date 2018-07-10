@@ -5,6 +5,7 @@ from ..Qt import QtCore, QtGui, QT_LIB
 from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
+from ..functions import SignalBlock
 if QT_LIB == 'PySide':
     from . import template_pyside as template
 elif QT_LIB == 'PySide2':
@@ -33,6 +34,7 @@ class ConsoleWidget(QtGui.QWidget):
     - ability to add extra features like exception stack introspection
     - ability to have multiple interactive prompts, including for spawned sub-processes
     """
+    _threadException = QtCore.Signal(object)
     
     def __init__(self, parent=None, namespace=None, historyFile=None, text=None, editor=None):
         """
@@ -89,6 +91,9 @@ class ConsoleWidget(QtGui.QWidget):
         self.ui.onlyUncaughtCheck.toggled.connect(self.updateSysTrace)
         
         self.currentTraceback = None
+
+        # send exceptions raised in non-gui threads back to the main thread by signal.
+        self._threadException.connect(self._threadExceptionHandler)
         
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
@@ -260,9 +265,12 @@ class ConsoleWidget(QtGui.QWidget):
         If True, the console will catch all unhandled exceptions and display the stack
         trace. Each exception caught clears the last.
         """
-        self.ui.catchAllExceptionsBtn.setChecked(catch)
+        with SignalBlock(self.ui.catchAllExceptionsBtn.toggled, self.catchAllExceptions):
+            self.ui.catchAllExceptionsBtn.setChecked(catch)
+        
         if catch:
-            self.ui.catchNextExceptionBtn.setChecked(False)
+            with SignalBlock(self.ui.catchNextExceptionBtn.toggled, self.catchNextException):
+                self.ui.catchNextExceptionBtn.setChecked(False)
             self.enableExceptionHandling()
             self.ui.exceptionBtn.setChecked(True)
         else:
@@ -273,9 +281,11 @@ class ConsoleWidget(QtGui.QWidget):
         If True, the console will catch the next unhandled exception and display the stack
         trace.
         """
-        self.ui.catchNextExceptionBtn.setChecked(catch)
+        with SignalBlock(self.ui.catchNextExceptionBtn.toggled, self.catchNextException):
+            self.ui.catchNextExceptionBtn.setChecked(catch)
         if catch:
-            self.ui.catchAllExceptionsBtn.setChecked(False)
+            with SignalBlock(self.ui.catchAllExceptionsBtn.toggled, self.catchAllExceptions):
+                self.ui.catchAllExceptionsBtn.setChecked(False)
             self.enableExceptionHandling()
             self.ui.exceptionBtn.setChecked(True)
         else:
@@ -328,7 +338,18 @@ class ConsoleWidget(QtGui.QWidget):
             else:
                 sys.settrace(self.systrace)
         
-    def exceptionHandler(self, excType, exc, tb, systrace=False):
+    def exceptionHandler(self, excType, exc, tb, systrace=False, frame=None):
+        if frame is None:
+            frame = sys._getframe()
+
+        # exceptions raised in non-gui threads must be handled separately
+        isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
+        if not isGuiThread:
+            # sending a frame from one thread to another.. probably not safe, but better than just
+            # dropping the exception?
+            self._threadException.emit((excType, exc, tb, systrace, frame.f_back))
+            return
+
         if self.ui.catchNextExceptionBtn.isChecked():
             self.ui.catchNextExceptionBtn.setChecked(False)
         elif not self.ui.catchAllExceptionsBtn.isChecked():
@@ -342,10 +363,13 @@ class ConsoleWidget(QtGui.QWidget):
         if systrace:
             # exceptions caught using systrace don't need the usual 
             # call stack + traceback handling
-            self.setStack(sys._getframe().f_back.f_back)
+            self.setStack(frame.f_back.f_back)
         else:
-            self.setStack(frame=sys._getframe().f_back, tb=tb)
+            self.setStack(frame=frame.f_back, tb=tb)
     
+    def _threadExceptionHandler(self, args):
+        self.exceptionHandler(*args)
+
     def setStack(self, frame=None, tb=None):
         """Display a call stack and exception traceback.
 
