@@ -300,28 +300,28 @@ class InfiniteLine(GraphicsObject):
         vr = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
         if vr is None:
             return QtCore.QRectF()
-        
-        ## add a 4-pixel radius around the line for mouse interaction.
-        
-        px = self.pixelLength(direction=Point(1,0), ortho=True)  ## get pixel length orthogonal to the line
-        if px is None:
-            px = 0
-        pw = max(self.pen.width() / 2, self.hoverPen.width() / 2)
-        w = max(4, self._maxMarkerSize + pw) + 1
-        w = w * px
-        br = QtCore.QRectF(vr)
-        br.setBottom(-w)
-        br.setTop(w)
 
-        length = br.width()
-        left = br.left() + length * self.span[0]
-        right = br.left() + length * self.span[1]
-        br.setLeft(left)
-        br.setRight(right)
+        # Compute width of area around line to use for mouse interaction, in
+        # pixels (at least 4 for thin lines).
+        penWidth = max(self.pen.width() / 2, self.hoverPen.width() / 2)
+        padding = max(4, self._maxMarkerSize + penWidth) + 1
+
+        br = QtCore.QRectF()
+
+        orthoPadding = padding * (self.pixelLength(direction=Point(1,0), ortho=True) or 0)
+        br.setBottom(-orthoPadding)
+        br.setTop(orthoPadding)
+
+        paraPadding = padding * (self.pixelLength(direction=Point(1,0)) or 0)
+        length = vr.width()
+        left = vr.left() + length * self.span[0]
+        right = vr.left() + length * self.span[1]
+        br.setLeft(left - paraPadding)
+        br.setRight(right + paraPadding)
+
         br = br.normalized()
-        
+
         vs = self.getViewBox().size()
-        
         if self._bounds != br or self._lastViewSize != vs:
             self._bounds = br
             self._lastViewSize = vs

@@ -44,7 +44,48 @@ def test_InfiniteLine():
     px = pg.Point(-0.5, -1.0 / 3**0.5)
     assert br.containsPoint(pos + 5 * px, QtCore.Qt.OddEvenFill)
     assert not br.containsPoint(pos + 7 * px, QtCore.Qt.OddEvenFill)
-    
+
+
+def test_InfiniteLine_scaled_bounding_box():
+    # Make plot with unequal axis ranges.
+    plt = pg.plot()
+    plt.setXRange(0, 1)
+    plt.setYRange(0, 1e-3)
+    plt.resize(400, 400)
+
+    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWait(100)
+
+    # Vertical line.
+    vline = pg.InfiniteLine(angle=90)
+    vline.setPos(0.5)
+    plt.addItem(vline)
+
+    # Make sure there is some padding around the line...
+    vbr = vline.mapToScene(vline.boundingRect())
+    def contains(rect, x, y):
+        return rect.containsPoint(pg.Point(x, y), QtCore.Qt.OddEvenFill)
+    assert contains(vbr, 221, -1)
+    assert contains(vbr, 229, 381)
+
+    # ... but not too much.
+    assert not contains(vbr, 221, -10)
+    assert not contains(vbr, 210, -1)
+    assert not contains(vbr, 229, 390)
+    assert not contains(vbr, 240, 381)
+
+    # Same for horizontal line.
+    hline = pg.InfiniteLine(angle=0)
+    hline.setPos(0.5e-3)
+    plt.addItem(hline)
+    hbr = hline.mapToScene(hline.boundingRect())
+    assert contains(hbr, 47, 185)
+    assert contains(hbr, 403, 194)
+    assert not contains(hbr, 47, 175)
+    assert not contains(hbr, 37, 185)
+    assert not contains(hbr, 413, 194)
+    assert not contains(hbr, 403, 204)
+
 
 def test_mouseInteraction():
     plt = pg.plot()
