@@ -26,7 +26,9 @@ except:
     USE_HDF5 = False
     HAVE_HDF5 = False
 
-
+if HAVE_HDF5:
+    import h5py.highlevel
+    
 def axis(name=None, cols=None, values=None, units=None):
     """Convenience function for generating axis descriptions when defining MetaArrays"""
     ax = {}
@@ -102,7 +104,7 @@ class MetaArray(object):
         since the actual values are described (name and units) in the column info for the first axis.
     """
   
-    version = '2'
+    version = u'2'
 
     # Default hdf5 compression to use when writing
     #   'gzip' is widely available and somewhat slow
@@ -740,7 +742,7 @@ class MetaArray(object):
         ## decide which read function to use
         with open(filename, 'rb') as fd:
             magic = fd.read(8)
-            if magic == '\x89HDF\r\n\x1a\n':
+            if magic == b'\x89HDF\r\n\x1a\n':
                 fd.close()
                 self._readHDF5(filename, **kwargs)
                 self._isHDF = True
@@ -765,7 +767,7 @@ class MetaArray(object):
         """Read meta array from the top of a file. Read lines until a blank line is reached.
         This function should ideally work for ALL versions of MetaArray.
         """
-        meta = ''
+        meta = u''
         ## Read meta information until the first blank line
         while True:
             line = fd.readline().strip()
@@ -776,6 +778,20 @@ class MetaArray(object):
         #print ret
         return ret
 
+    def fix_info(self, info):
+        """
+        Recursive version
+        """
+        if isinstance(info, list):
+            for i in range(len(info)):
+                info[i] = self.fix_info(info[i])
+        elif isinstance(info, dict):
+            for k in info.keys():
+                info[k] = self.fix_info(info[k])
+        elif isinstance(info, bytes):  # change all bytestrings to string and remove internal quotes
+            info = info.decode('utf-8').replace("\'", '')
+        return info
+    
     def _readData1(self, fd, meta, mmap=False, **kwds):
         ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
@@ -786,7 +802,7 @@ class MetaArray(object):
                 frameSize *= ax['values_len']
                 del ax['values_len']
                 del ax['values_type']
-        self._info = meta['info']
+        self._info = self.fix_info(meta['info'])
         if not kwds.get("readAllData", True):
             return
         ## the remaining data is the actual array
@@ -814,7 +830,7 @@ class MetaArray(object):
                     frameSize *= ax['values_len']
                     del ax['values_len']
                     del ax['values_type']
-        self._info = meta['info']
+        self._info = self.fix_info(meta['info'])
         if not kwds.get("readAllData", True):
             return
 
@@ -901,7 +917,7 @@ class MetaArray(object):
             del ax['values_type']
         #subarr = subarr.view(subtype)
         #subarr._info = meta['info']
-        self._info = meta['info']
+        self._info = self.fix_info(meta['info'])
         self._data = subarr
         #raise Exception()  ## stress-testing
         #return subarr
@@ -934,10 +950,14 @@ class MetaArray(object):
         f = h5py.File(fileName, mode)
         
         ver = f.attrs['MetaArray']
+        try:
+            ver = ver.decode('utf-8')
+        except:
+            pass
         if ver > MetaArray.version:
             print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
-        self._info = meta
+        self._info = self.fix_info(meta)
         
         if writable or not readAllData:  ## read all data, convert to ndarray, close file
             self._data = f['data']
@@ -962,7 +982,7 @@ class MetaArray(object):
             MetaArray._h5py_metaarray = proc._import('pyqtgraph.metaarray')
         ma = MetaArray._h5py_metaarray.MetaArray(file=fileName)
         self._data = ma.asarray()._getValue()
-        self._info = ma._info._getValue()
+        self._info = self.fix_info(ma._info._getValue())
         #print MetaArray._hdf5Process
         #import inspect
         #print MetaArray, id(MetaArray), inspect.getmodule(MetaArray)
@@ -1010,6 +1030,10 @@ class MetaArray(object):
             data[k] = val
         
         typ = root.attrs['_metaType_']
+        try:
+            typ = typ.decode('utf-8')
+        except:
+            pass
         del data['_metaType_']
         
         if typ == 'dict':
