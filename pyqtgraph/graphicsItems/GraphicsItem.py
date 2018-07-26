@@ -445,6 +445,10 @@ class GraphicsItem(object):
         ## called to see whether this item has a new view to connect to
         ## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
 
+        if not hasattr(self, '_connectedView'):
+            # Happens when Python is shutting down.
+            return
+
         ## It is possible this item has moved to a different ViewBox or widget;
         ## clear out previously determined references to these.
         self.forgetViewBox()
