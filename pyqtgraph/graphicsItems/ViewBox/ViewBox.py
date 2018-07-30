@@ -1124,8 +1124,8 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    def wheelEvent(self, ev, axis=None):        
-        if axis is not None and axis >= 0 and axis < len(mask):
+    def wheelEvent(self, ev, axis=None):
+        if axis in (0, 1):
             mask = [False, False]
             mask[axis] = self.state['mouseEnabled'][axis]
         else:
