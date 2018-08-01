@@ -1020,7 +1020,7 @@ class MetaArray(object):
         else:
             raise Exception("Don't understand metaType '%s'" % typ)
 
-    def write(self, fileName, version=2, **opts):
+    def write(self, fileName, **opts):
         """Write this object to a file. The object can be restored by calling MetaArray(file=fileName)
         opts:
             appendAxis: the name (or index) of the appendable axis. Allows the array to grow.
@@ -1028,15 +1028,12 @@ class MetaArray(object):
             compression: None, 'gzip' (good compression), 'lzf' (fast compression), etc.
             chunks: bool or tuple specifying chunk shape
         """        
-        if version == 1:
+        if USE_HDF5 is False:
             return self.writeMa(fileName, **opts)
-        elif USE_HDF5 and HAVE_HDF5:
+        elif HAVE_HDF5 is True:
             return self.writeHDF5(fileName, **opts)
         else:
-            if not HAVE_HDF5:
-                raise Exception("h5py is required for writing .ma version 2 files")
-            else:
-                raise Exception("HDF5 is required for writing .ma version 2 files, but it has been disabled.")
+            raise Exception("h5py is required for writing .ma hdf5 files, but it could not be imported.")
 
     def writeMeta(self, fileName):
         """Used to re-write meta info to the given file.
