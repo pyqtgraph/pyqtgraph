@@ -35,7 +35,7 @@ class LinearRegionItem(GraphicsObject):
     
     def __init__(self, values=(0, 1), orientation='vertical', brush=None, pen=None,
                  hoverBrush=None, hoverPen=None, movable=True, bounds=None, 
-                 span=(0, 1), swapMode='sort'):
+                 span=(0, 1), swapMode='sort', clipItem=None):
         """Create a new LinearRegionItem.
         
         ==============  =====================================================================
@@ -65,6 +65,14 @@ class LinearRegionItem(GraphicsObject):
                         * None means that no attempt is made to handle swapped line 
                           positions.
                         The default is "sort".
+
+        clipItem        An item whose boundingRect will be used to clip the
+                        rectangle of the marked region. The clipItem must
+                        share the same ViewBox. This is useful when a
+                        LinearRegionItem is added on top of an ImageItem,
+                        and the visual region should not extend beyond the
+                        ImageItem.
+
         ==============  =====================================================================
         """
         
@@ -122,7 +130,10 @@ class LinearRegionItem(GraphicsObject):
         self.setHoverBrush(hoverBrush)
         
         self.setMovable(movable)
-        
+
+        self.clipItem = None
+        self.setClipItem(clipItem)
+
     def getRegion(self):
         """Return the values at the edges of the region."""
         r = (self.lines[0].value(), self.lines[1].value())
@@ -189,9 +200,30 @@ class LinearRegionItem(GraphicsObject):
         self.lines[1].setSpan(mn, mx)
         self.update()
 
+    def setClipItem(self, item=None):
+        """
+        Set an item, the boundingRect of which will be used to clip the
+        rectangle range. The item must share the same ViewBox as this
+        instance. If item is None, then no clipping is performed.
+        """
+        if item is None:
+            self.clipItem = None
+
+        else:
+            vb = item.getViewBox()
+            if vb is not self.getViewBox():
+                raise RuntimeError('Item {} ViewBox is not the same as '
+                                   'here!')
+            self.clipItem = item
+
+        self.update()
+
     def boundingRect(self):
-        br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
-        
+        br = self.getViewBox().itemBoundingRect(self.clipItem) if self.clipItem \
+            else self.viewRect()
+
+        # br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
+
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
