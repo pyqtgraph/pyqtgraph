@@ -69,7 +69,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1,1,1,1)
         self.layout.setSpacing(0)
-        self.vb = ViewBox(parent=self)
+        self.vb = ViewBox(parent=self, invertX=True)
         self.vb.setMaximumWidth(152)
         self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
@@ -119,7 +119,6 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
-            plot.rotate(90)
             self.vb.addItem(plot)
         
         self.fillHistogram(fillHistogram)
@@ -182,13 +181,12 @@ class HistogramLUTItem(GraphicsWidget):
         x = self.vb.xLog()
         y = self.vb.yLog()
         for plot in self.plots:
-            plot.setLogMode(y,x)
-        self.region.setLogMode(x,y)
+            plot.setLogMode(x,y)
+        self.region.setLogMode(y,x)
         self.axis.setLogMode(y)
         #are = self.vb.autoRangeEnabled()
         #self.vb.enableAutoRange()
         #self.vb.enableAutoRange(x=are[0],y=are[1])
-        self.updatePlots()
     
     def gradientChanged(self):
         if self.imageItem() is not None:
@@ -358,7 +356,8 @@ class HistogramLUTItem(GraphicsWidget):
             if h[0] is None:
                 self.clearPlots()
                 return
-            self.plot.setData(*h)
+            self.plot.setData(*(h[::-1]))
+
             profiler('set plot')
         else:
             # plot one histogram for each channel
@@ -371,7 +370,7 @@ class HistogramLUTItem(GraphicsWidget):
                 if len(ch) >= i:
                     h = ch[i-1]
                     self.plots[i].setVisible(True)
-                    self.plots[i].setData(*h)
+                    self.plots[i].setData(*(h[::-1]))
                 else:
                     # hide channels not present in image data
                     self.plots[i].setVisible(False)
@@ -425,4 +424,3 @@ class HistogramLUTItem(GraphicsWidget):
     def setLogMode(self, value):
         self.imageItem().setLog(value)
         self.gradient.setLogMode(value)
-        self.updatePlots()

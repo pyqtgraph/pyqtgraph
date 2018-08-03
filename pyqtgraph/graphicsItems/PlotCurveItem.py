@@ -473,9 +473,14 @@ class PlotCurveItem(GraphicsObject):
                 if x is None:
                     x,y = self.getData()
                 p2 = QtGui.QPainterPath(self.path)
-                p2.lineTo(x[-1], self.opts['fillLevel'])
-                p2.lineTo(x[0], self.opts['fillLevel'])
-                p2.lineTo(x[0], y[0])
+                if np.abs(y[0]-y[-1]) > np.abs(x[0]-x[-1]):
+                    p2.lineTo(self.opts['fillLevel'], y[-1])
+                    p2.lineTo(self.opts['fillLevel'], y[0])
+                    p2.lineTo(x[0], y[0])
+                else:
+                    p2.lineTo(x[-1], self.opts['fillLevel'])
+                    p2.lineTo(x[0], self.opts['fillLevel'])
+                    p2.lineTo(x[0], y[0])
                 p2.closeSubpath()
                 self.fillPath = p2
                 
