@@ -418,7 +418,7 @@ class ScatterPlotItem(GraphicsObject):
         self.picture = None
         self.update()
 
-    def getData(self):
+    def getData(self, display=True):
         return self.data['x'], self.data['y']
 
     def setPoints(self, *args, **kargs):

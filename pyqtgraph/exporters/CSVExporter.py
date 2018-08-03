@@ -36,7 +36,7 @@ class CSVExporter(Exporter):
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
 
         for i, c in enumerate(self.item.curves):
-            cd = c.getData()
+            cd = c.getData(False)
             if cd[0] is None:
                 continue
             data.append(cd)

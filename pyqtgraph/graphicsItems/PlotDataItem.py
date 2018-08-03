@@ -499,7 +499,9 @@ class PlotDataItem(GraphicsObject):
             self.scatter.hide()
 
 
-    def getData(self):
+    def getData(self, display=True):
+        if not display:
+            return self.xData, self.yData
         if self.xData is None:
             return (None, None)
         

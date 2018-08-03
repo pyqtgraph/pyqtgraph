@@ -47,7 +47,7 @@ class HDF5Exporter(Exporter):
         #print dir(self.item.curves[0])
         tlen = 0
         for i, c in enumerate(self.item.curves):
-            d = c.getData()
+            d = c.getData(False)
             if i > 0 and len(d[0]) != tlen:
                 raise ValueError ("HDF5 Export requires all curves in plot to have same length")
             if appendAllX or i == 0:

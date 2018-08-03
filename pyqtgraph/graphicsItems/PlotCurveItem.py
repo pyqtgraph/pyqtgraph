@@ -114,7 +114,7 @@ class PlotCurveItem(GraphicsObject):
         self.opts['compositionMode'] = mode
         self.update()
         
-    def getData(self):
+    def getData(self, display=True):
         x = self.xData
         y = self.yData
         if x is not None:
