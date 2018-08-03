@@ -507,11 +507,11 @@ class ImageItem(GraphicsObject):
                 return None, None
             if stepData.dtype.kind in "ui" and not log:
                 # For integer data, we select the bins carefully to avoid aliasing
-                step = np.ceil((mx-mn) / 500.)
+                step = np.ceil((mx-mn) / float(targetHistogramSize))
                 bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
             else:
                 # Taken from numpy histogram source
-                first_edge, last_edge = (stepData.min(), stepData.max())
+                first_edge, last_edge = (mn, mx)
                 if first_edge == last_edge:
                     first_edge = first_edge - 0.5
                 last_edge = last_edge + 0.5
@@ -522,9 +522,9 @@ class ImageItem(GraphicsObject):
 
                 if log:
                     first_edge, last_edge = np.log10((first_edge, last_edge))
-                    bins = np.logspace(first_edge, last_edge, 500 + 1, endpoint=True, dtype=bin_type)
+                    bins = np.logspace(first_edge, last_edge, targetHistogramSize + 1, endpoint=True, dtype=bin_type)
                 else:
-                    bins = np.linspace(first_edge, last_edge, 500 + 1, endpoint=True, dtype=bin_type)
+                    bins = np.linspace(first_edge, last_edge, targetHistogramSize + 1, endpoint=True, dtype=bin_type)
 
         kwds['bins'] = bins
 
