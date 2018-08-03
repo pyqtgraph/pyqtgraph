@@ -64,7 +64,6 @@ class PlotCurveItem(GraphicsObject):
             'fillLevel': None,
             'brush': None,
             'stepMode': False,
-            'logMode': [False, False],
             'name': None,
             'antialias': getConfigOption('antialias'),
             'connect': 'all',
@@ -117,14 +116,6 @@ class PlotCurveItem(GraphicsObject):
     def getData(self, display=True):
         x = self.xData
         y = self.yData
-        if x is not None:
-            if self.opts['logMode'][0]:
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    x = np.log10(x)
-        if y is not None:
-            if self.opts['logMode'][1]:
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    y = np.log10(y)
         return x, y
         
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
@@ -302,13 +293,6 @@ class PlotCurveItem(GraphicsObject):
         self.invalidateBounds()
         self.update()
 
-    def setLogMode(self, xMode, yMode):
-        if self.opts['logMode'] == [xMode, yMode]:
-            return
-        self.opts['logMode'] = [xMode, yMode]
-        self.invalidateBounds()
-        self.update()
-
     def setData(self, *args, **kargs):
         """
         =============== ========================================================
@@ -399,7 +383,6 @@ class PlotCurveItem(GraphicsObject):
         self.path = None
         self.fillPath = None
         self._mouseShape = None
-        #self.xDisp = self.yDisp = None
         
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
@@ -590,14 +573,11 @@ class PlotCurveItem(GraphicsObject):
     def clear(self):
         self.xData = None  ## raw values
         self.yData = None
-        self.xDisp = None  ## display values (after log / fft)
-        self.yDisp = None
         self.path = None
         self.fillPath = None
         self._mouseShape = None
         self._mouseBounds = None
         self._boundsCache = [None, None]
-        #del self.xData, self.yData, self.xDisp, self.yDisp, self.path
 
     def mouseShape(self):
         """

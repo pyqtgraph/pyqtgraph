@@ -110,11 +110,11 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.sigLogChanged.connect(self.viewLogChanged)
         add = QtGui.QPainter.CompositionMode_Plus
         self.plots = [
-            PlotCurveItem(pen=(200, 200, 200, 100)),  # mono
-            PlotCurveItem(pen=(255, 0, 0, 100), compositionMode=add),  # r
-            PlotCurveItem(pen=(0, 255, 0, 100), compositionMode=add),  # g
-            PlotCurveItem(pen=(0, 0, 255, 100), compositionMode=add),  # b
-            PlotCurveItem(pen=(200, 200, 200, 100), compositionMode=add),  # a
+            PlotDataItem(pen=(200, 200, 200, 100)),  # mono
+            PlotDataItem(pen=(255, 0, 0, 100), compositionMode=add),  # r
+            PlotDataItem(pen=(0, 255, 0, 100), compositionMode=add),  # g
+            PlotDataItem(pen=(0, 0, 255, 100), compositionMode=add),  # b
+            PlotDataItem(pen=(200, 200, 200, 100), compositionMode=add),  # a
             ]
         
         self.plot = self.plots[0]  # for backward compatibility.
