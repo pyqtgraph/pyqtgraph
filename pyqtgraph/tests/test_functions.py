@@ -1,10 +1,14 @@
 import pyqtgraph as pg
 import numpy as np
 import sys
+from copy import deepcopy
+from collections import OrderedDict
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
 import pytest
 
+
 np.random.seed(12345)
+
 
 def testSolve3D():
     p1 = np.array([[0,0,0,1],
@@ -355,6 +359,29 @@ def test_eq():
     
     assert eq(a4, a4.copy())
     assert not eq(a4, a4.T)
+
+    # test containers
+
+    assert not eq({'a': 1}, {'a': 1, 'b': 2})
+    assert not eq({'a': 1}, {'a': 2})
+    d1 = {'x': 1, 'y': np.nan, 3: ['a', np.nan, a3, 7, 2.3], 4: a4}
+    d2 = deepcopy(d1)
+    assert eq(d1, d2)
+    assert eq(OrderedDict(d1), OrderedDict(d2))
+    assert not eq(OrderedDict(d1), d2)
+    items = list(d1.items())
+    assert not eq(OrderedDict(items), OrderedDict(reversed(items)))
+    
+    assert not eq([1,2,3], [1,2,3,4])
+    l1 = [d1, np.inf, -np.inf, np.nan]
+    l2 = deepcopy(l1)
+    t1 = tuple(l1)
+    t2 = tuple(l2)
+    assert eq(l1, l2)
+    assert eq(t1, t2)
+
+    assert eq(set(range(10)), set(range(10)))
+    assert not eq(set(range(10)), set(range(9)))
 
     
 if __name__ == '__main__':
