@@ -446,7 +446,7 @@ def eq(a, b):
     if isinstance(a, dict) and isinstance(b, dict):
         if type(a) != type(b) or len(a) != len(b):
             return False
-        if a.keys() != b.keys():
+        if set(a.keys()) != set(b.keys()):
             return False
         for k,v in a.items():
             if not eq(v, b[k]):
