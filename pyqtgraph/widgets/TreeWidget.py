@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from weakref import *
+from ..python2_3 import xrange
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
 
