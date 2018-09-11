@@ -152,6 +152,7 @@ class Renderer(GraphicsView):
         else:
             self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
             self.shmFile.write(b'\x00' * (mmap.PAGESIZE+1))
+            self.shmFile.flush()
             fd = self.shmFile.fileno()
             self.shm = mmap.mmap(fd, mmap.PAGESIZE, mmap.MAP_SHARED, mmap.PROT_WRITE)
         atexit.register(self.close)
