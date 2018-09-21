@@ -54,7 +54,7 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono'):
+    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono', gradient=None):
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
@@ -69,9 +69,12 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.setMaximumWidth(152)
         self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
-        self.gradient = GradientEditorItem()
-        self.gradient.setOrientation('right')
-        self.gradient.loadPreset('grey')
+        if gradient==None:
+          self.gradient = GradientEditorItem()
+          self.gradient.loadPreset('grey')
+        else:
+          self.gradient = gradient
+          self.gradient.setOrientation('right')
         self.regions = [
             LinearRegionItem([0, 1], 'horizontal', swapMode='block'),
             LinearRegionItem([0, 1], 'horizontal', swapMode='block', pen='r',
