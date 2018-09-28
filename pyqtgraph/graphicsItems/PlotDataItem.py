@@ -442,6 +442,8 @@ class PlotDataItem(GraphicsObject):
         
 
         if y is None:
+            self.updateItems()
+            profiler('update items')
             return
         if y is not None and x is None:
             x = np.arange(len(y))
