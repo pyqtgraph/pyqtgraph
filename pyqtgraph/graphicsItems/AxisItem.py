@@ -1066,9 +1066,15 @@ class AxisItem(GraphicsWidget):
         if self.linkedView() is None: 
             return
         if self.orientation in ['left', 'right']:
-            return self.linkedView().mouseDragEvent(event, axis=1)
+            ret = self.linkedView().mouseDragEvent(event, axis=1)
         else:
-            return self.linkedView().mouseDragEvent(event, axis=0)
+            ret = self.linkedView().mouseDragEvent(event, axis=0)
+        # Ignore event because if grid lines are enabled, we don't want the
+        # AxisItem to eat events meant for the ViewBox (see PR #565). A better
+        # solution here is to have grid lines drawn by a separate item inside the 
+        # viewbox.
+        event.ignore()
+        return ret
         
     def mouseClickEvent(self, event):
         if self.linkedView() is None: 
