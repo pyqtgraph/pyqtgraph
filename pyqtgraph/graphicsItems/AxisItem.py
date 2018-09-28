@@ -1069,6 +1069,10 @@ class AxisItem(GraphicsWidget):
             ret = self.linkedView().mouseDragEvent(event, axis=1)
         else:
             ret = self.linkedView().mouseDragEvent(event, axis=0)
+        # Ignore event because if grid lines are enabled, we don't want the
+        # AxisItem to eat events meant for the ViewBox (see PR #565). A better
+        # solution here is to have grid lines drawn by a separate item inside the 
+        # viewbox.
         event.ignore()
         return ret
         
