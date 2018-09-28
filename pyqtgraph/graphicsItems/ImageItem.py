@@ -369,6 +369,11 @@ class ImageItem(GraphicsObject):
             o = self.mapToDevice(QtCore.QPointF(0,0))
             x = self.mapToDevice(QtCore.QPointF(1,0))
             y = self.mapToDevice(QtCore.QPointF(0,1))
+
+            # Check if graphics view is too small to render anything
+            if o is None or x is None or y is None:
+                return
+
             w = Point(x-o).length()
             h = Point(y-o).length()
             if w == 0 or h == 0:
