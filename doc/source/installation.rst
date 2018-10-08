@@ -9,18 +9,28 @@ There are many different ways to install pyqtgraph, depending on your needs:
     
   Some users may need to call ``pip3`` instead. This method should work on
   all platforms. 
-* To get access to the very latest features and bugfixes, clone pyqtgraph from
-  github::
+* To get access to the very latest features and bugfixes you have three choice::
+  
+  1. Clone pyqtgraph from github::
       
       $ git clone https://github.com/pyqtgraph/pyqtgraph
-      
-  Now you can install pyqtgraph from the source::
-      
+    
+    Now you can install pyqtgraph from the source::
+
       $ python setup.py install
       
-  ..or you can simply place the pyqtgraph folder someplace importable, such as
-  inside the root of another project. PyQtGraph does not need to be "built" or
-  compiled in any way.
+  2. Directly install from GitHub repo::
+
+      $ pip install git+git://github.com/pyqtgraph/pyqtgraph.git@develop
+
+    You can change to ``develop`` of the above command to the branch 
+    name or the commit you prefer.
+  
+  3.
+    You can simply place the pyqtgraph folder someplace importable, such as
+    inside the root of another project. PyQtGraph does not need to be "built" or
+    compiled in any way.
+
 * Packages for pyqtgraph are also available in a few other forms:
     
   * **Anaconda**: ``conda install pyqtgraph``
