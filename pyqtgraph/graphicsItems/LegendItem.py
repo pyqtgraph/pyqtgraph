@@ -70,7 +70,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
-        label = LabelItem(name)
+        label = LabelItem(name, justify='left')
         if isinstance(item, ItemSample):
             sample = item
         else:
@@ -78,6 +78,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         row = self.layout.rowCount()
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
+        self.layout.addItem(LabelItem(''), row, 1) #spacer
         self.layout.addItem(label, row, 1)
         self.updateSize()
     
