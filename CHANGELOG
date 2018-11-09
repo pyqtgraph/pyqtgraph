@@ -7,6 +7,7 @@ pyqtgraph-0.11.0 (in development)
       - Add DiffTreeWidget, which highlights differences between two DataTreeWidgets
       - Improved support for displaying tracebacks
       - Use TableWidget to represent arrays rather than plain text
+    - #446: Added Perceptually Uniform Sequential colormaps from the matplotlib 2.0 release
     - #476: Add option to set composition mode for scatterplotitem
     - #518: TreeWidget:
       - Add new signals: sigItemCheckStateChanged, sigItemTextChanged, sigColumnCountChanged
