@@ -1125,7 +1125,7 @@ class ViewBox(GraphicsWidget):
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
     def wheelEvent(self, ev, axis=None):        
-        if axis is not None and axis >= 0 and axis < len(mask):
+        if axis is not None and axis >= 0 and axis < len(self.state['mouseEnabled']):
             mask = [False, False]
             mask[axis] = self.state['mouseEnabled'][axis]
         else:
