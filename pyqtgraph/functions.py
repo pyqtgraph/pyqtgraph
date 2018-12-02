@@ -1073,7 +1073,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 
