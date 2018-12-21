@@ -147,29 +147,28 @@ class ItemSample(GraphicsWidget):
         return QtCore.QRectF(0, 0, 20, 20)
         
     def paint(self, p, *args):
-        #p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
+        # p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
         opts = self.item.opts
-        
-        if opts.get('fillLevel',None) is not None and opts.get('fillBrush',None) is not None:
-            p.setBrush(fn.mkBrush(opts['fillBrush']))
-            p.setPen(fn.mkPen(None))
-            p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
-        
+
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(2, 18, 18, 2)
-        
+
+            if opts.get('fillLevel', None) is not None and opts.get('fillBrush', None) is not None:
+                p.setBrush(fn.mkBrush(opts['fillBrush']))
+                p.setPen(fn.mkPen(opts['fillBrush']))
+                p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2, 18), QtCore.QPointF(18, 2), QtCore.QPointF(18, 18)]))
+
         symbol = opts.get('symbol', None)
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
-                
-            pen = fn.mkPen(opts['pen'])
-            brush = fn.mkBrush(opts['brush'])
-            size = opts['size']
-            
-            p.translate(10,10)
-            path = drawSymbol(p, symbol, size, pen, brush)
+            p.translate(10, 10)
+            drawSymbol(p, symbol, opts['size'], fn.mkPen(opts['pen']), fn.mkBrush(opts['brush']))
+
+        if isinstance(self.item, BarGraphItem):
+            p.setBrush(fn.mkBrush(opts['brush']))
+            p.drawRect(QtCore.QRectF(2, 2, 18, 18))
         
         
         
