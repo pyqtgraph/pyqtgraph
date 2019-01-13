@@ -4,6 +4,7 @@ from .GLViewWidget import GLViewWidget
 #from .. import importAll
 #importAll('items', globals(), locals())
 
+from .items.GLGraphItem import * 
 from .items.GLGridItem import * 
 from .items.GLBarGraphItem import * 
 from .items.GLScatterPlotItem import *                                                                                                                      
