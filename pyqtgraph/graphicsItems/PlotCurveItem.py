@@ -483,8 +483,8 @@ class PlotCurveItem(GraphicsObject):
             p.fillPath(self.fillPath, self.opts['brush'])
             profiler('draw fill path')
 
-        sp = fn.mkPen(self.opts['shadowPen'])
-        cp = fn.mkPen(self.opts['pen'])
+        sp = self.opts['shadowPen']
+        cp = self.opts['pen']
 
         ## Copy pens and apply alpha adjustment
         #sp = QtGui.QPen(self.opts['shadowPen'])
@@ -496,8 +496,6 @@ class PlotCurveItem(GraphicsObject):
             #c.setAlpha(c.alpha() * self.opts['alphaHint'])
             #pen.setColor(c)
             ##pen.setCosmetic(True)
-
-
 
         if sp is not None and sp.style() != QtCore.Qt.NoPen:
             p.setPen(sp)
