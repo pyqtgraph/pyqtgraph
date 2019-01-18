@@ -88,6 +88,8 @@ class AxisItem(GraphicsWidget):
         self.autoSIPrefix = True
         self.autoSIPrefixScale = 1.0
 
+        self.showLabel(False)
+
         self.setRange(0, 1)
 
         if pen is None:
@@ -98,8 +100,6 @@ class AxisItem(GraphicsWidget):
         self._linkedView = None
         if linkView is not None:
             self.linkToView(linkView)
-
-        self.showLabel(False)
 
         self.grid = False
         #self.setCacheMode(self.DeviceCoordinateCache)
