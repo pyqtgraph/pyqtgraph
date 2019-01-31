@@ -12,7 +12,7 @@ For testing rapid updates of ScatterPlotItem under various conditions.
 import initExample
 
 
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, QtCore, import_qt_file
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
@@ -20,16 +20,12 @@ from pyqtgraph.ptime import time
 app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
-if USE_PYSIDE:
-    from ScatterPlotSpeedTestTemplate_pyside import Ui_Form
-elif USE_PYQT5:
-    from ScatterPlotSpeedTestTemplate_pyqt5 import Ui_Form
-else:
-    from ScatterPlotSpeedTestTemplate_pyqt import Ui_Form
+
+ScatterPlotSpeedTestTemplate = import_qt_file('examples/ScatterPlotSpeedTestTemplate.ui')
 
 win = QtGui.QWidget()
 win.setWindowTitle('pyqtgraph example: ScatterPlotSpeedTest')
-ui = Ui_Form()
+ui = ScatterPlotSpeedTestTemplate.Ui_Form()
 ui.setupUi(win)
 win.show()
 

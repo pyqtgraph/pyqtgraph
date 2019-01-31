@@ -1,14 +1,9 @@
-from ...Qt import QtCore, QtGui, QT_LIB
+from ...Qt import QtCore, QtGui, import_qt_file
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
-if QT_LIB == 'PyQt4':
-    from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PySide':
-    from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PyQt5':
-    from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-    
+axisCtrlTemplate = import_qt_file('pyqtgraph/graphicsItems/ViewBox/axisCtrlTemplate.ui')
+
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):
@@ -32,7 +27,7 @@ class ViewBoxMenu(QtGui.QMenu):
             m = QtGui.QMenu()
             m.setTitle("%s Axis" % axis)
             w = QtGui.QWidget()
-            ui = AxisCtrlTemplate()
+            ui = axisCtrlTemplate.Ui_Form()
             ui.setupUi(w)
             a = QtGui.QWidgetAction(self)
             a.setDefaultWidget(w)

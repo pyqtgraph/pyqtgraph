@@ -13,8 +13,8 @@ def test_isQObjectAlive():
     gc.collect()
     assert not pg.Qt.isQObjectAlive(o2)
 
-@pytest.mark.skipif(pg.Qt.USE_PYSIDE, reason='pysideuic does not appear to be '
-                                             'packaged with conda')
+@pytest.mark.skipif(pg.Qt.USE_PYSIDE or pg.Qt.USE_PYSIDE2,
+                    reason='pysideuic does not appear to be packaged with conda')
 def test_loadUiType():
     path = os.path.dirname(__file__)
     formClass, baseClass = pg.Qt.loadUiType(os.path.join(path, 'uictest.ui'))

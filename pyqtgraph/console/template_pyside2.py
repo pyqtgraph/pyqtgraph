@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/console/template.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/console/template.ui',
+# licensing of 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/console/template.ui' applies.
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created: Wed Jan 30 12:16:52 2019
+#      by: pyside2-uic  running on PySide2 5.12.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -99,17 +101,16 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Console"))
-        self.historyBtn.setText(_translate("Form", "History.."))
-        self.exceptionBtn.setText(_translate("Form", "Exceptions.."))
-        self.exceptionGroup.setTitle(_translate("Form", "Exception Handling"))
-        self.clearExceptionBtn.setText(_translate("Form", "Clear Stack"))
-        self.catchAllExceptionsBtn.setText(_translate("Form", "Show All Exceptions"))
-        self.catchNextExceptionBtn.setText(_translate("Form", "Show Next Exception"))
-        self.onlyUncaughtCheck.setText(_translate("Form", "Only Uncaught Exceptions"))
-        self.runSelectedFrameCheck.setText(_translate("Form", "Run commands in selected stack frame"))
-        self.exceptionInfoLabel.setText(_translate("Form", "Stack Trace"))
-        self.label.setText(_translate("Form", "Filter (regex):"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Console", None, -1))
+        self.historyBtn.setText(QtWidgets.QApplication.translate("Form", "History..", None, -1))
+        self.exceptionBtn.setText(QtWidgets.QApplication.translate("Form", "Exceptions..", None, -1))
+        self.exceptionGroup.setTitle(QtWidgets.QApplication.translate("Form", "Exception Handling", None, -1))
+        self.clearExceptionBtn.setText(QtWidgets.QApplication.translate("Form", "Clear Stack", None, -1))
+        self.catchAllExceptionsBtn.setText(QtWidgets.QApplication.translate("Form", "Show All Exceptions", None, -1))
+        self.catchNextExceptionBtn.setText(QtWidgets.QApplication.translate("Form", "Show Next Exception", None, -1))
+        self.onlyUncaughtCheck.setText(QtWidgets.QApplication.translate("Form", "Only Uncaught Exceptions", None, -1))
+        self.runSelectedFrameCheck.setText(QtWidgets.QApplication.translate("Form", "Run commands in selected stack frame", None, -1))
+        self.exceptionInfoLabel.setText(QtWidgets.QApplication.translate("Form", "Stack Trace", None, -1))
+        self.label.setText(QtWidgets.QApplication.translate("Form", "Filter (regex):", None, -1))
 
 from .CmdInput import CmdInput

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ImageViewTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/imageview/ImageViewTemplate.ui'
 #
-# Created: Thu May  1 15:20:42 2014
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Wed Jan 30 12:16:51 2019
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -149,6 +149,6 @@ class Ui_Form(object):
         self.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Time range", None, QtGui.QApplication.UnicodeUTF8))
         self.normFrameCheck.setText(QtGui.QApplication.translate("Form", "Frame", None, QtGui.QApplication.UnicodeUTF8))
 
-from ..widgets.HistogramLUTWidget import HistogramLUTWidget
 from ..widgets.GraphicsView import GraphicsView
+from ..widgets.HistogramLUTWidget import HistogramLUTWidget
 from ..widgets.PlotWidget import PlotWidget

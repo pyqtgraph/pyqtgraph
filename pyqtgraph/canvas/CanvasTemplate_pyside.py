@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'CanvasTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/canvas/CanvasTemplate.ui'
 #
-# Created: Fri Mar 24 16:09:39 2017
-#      by: pyside-uic 0.2.15 running on PySide 1.2.2
+# Created: Wed Jan 30 12:16:51 2019
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -88,6 +88,6 @@ class Ui_Form(object):
         self.mirrorSelectionBtn.setText(QtGui.QApplication.translate("Form", "Mirror Selection", None, QtGui.QApplication.UnicodeUTF8))
         self.reflectSelectionBtn.setText(QtGui.QApplication.translate("Form", "MirrorXY", None, QtGui.QApplication.UnicodeUTF8))
 
-from .CanvasManager import CanvasCombo
-from ..widgets.TreeWidget import TreeWidget
 from ..widgets.GraphicsView import GraphicsView
+from ..widgets.TreeWidget import TreeWidget
+from .CanvasManager import CanvasCombo

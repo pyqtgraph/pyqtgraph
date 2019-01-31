@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/canvas/CanvasTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/canvas/CanvasTemplate.ui',
+# licensing of 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/canvas/CanvasTemplate.ui' applies.
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created: Wed Jan 30 12:16:53 2019
+#      by: pyside2-uic  running on PySide2 5.12.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -78,15 +80,14 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.autoRangeBtn.setText(_translate("Form", "Auto Range"))
-        self.redirectCheck.setToolTip(_translate("Form", "Check to display all local items in a remote canvas."))
-        self.redirectCheck.setText(_translate("Form", "Redirect"))
-        self.resetTransformsBtn.setText(_translate("Form", "Reset Transforms"))
-        self.mirrorSelectionBtn.setText(_translate("Form", "Mirror Selection"))
-        self.reflectSelectionBtn.setText(_translate("Form", "MirrorXY"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        self.autoRangeBtn.setText(QtWidgets.QApplication.translate("Form", "Auto Range", None, -1))
+        self.redirectCheck.setToolTip(QtWidgets.QApplication.translate("Form", "Check to display all local items in a remote canvas.", None, -1))
+        self.redirectCheck.setText(QtWidgets.QApplication.translate("Form", "Redirect", None, -1))
+        self.resetTransformsBtn.setText(QtWidgets.QApplication.translate("Form", "Reset Transforms", None, -1))
+        self.mirrorSelectionBtn.setText(QtWidgets.QApplication.translate("Form", "Mirror Selection", None, -1))
+        self.reflectSelectionBtn.setText(QtWidgets.QApplication.translate("Form", "MirrorXY", None, -1))
 
 from ..widgets.GraphicsView import GraphicsView
-from ..widgets.TreeWidget import TreeWidget
 from .CanvasManager import CanvasCombo
+from ..widgets.TreeWidget import TreeWidget

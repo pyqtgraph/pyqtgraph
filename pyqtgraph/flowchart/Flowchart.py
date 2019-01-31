@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtCore, QtGui, import_qt_file, USE_PYQT5
 from .Node import *
 from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *
 from .. import FileDialog, DataTreeWidget
 
 ## pyside and pyqt use incompatible ui files.
-if USE_PYSIDE:
-    from . import FlowchartTemplate_pyside as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyside as FlowchartCtrlTemplate
-elif USE_PYQT5:
-    from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
-else:
-    from . import FlowchartTemplate_pyqt as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyqt as FlowchartCtrlTemplate
+FlowchartTemplate = import_qt_file('pyqtgraph/flowchart/FlowchartTemplate.ui')
+FlowchartCtrlTemplate = import_qt_file('pyqtgraph/flowchart/FlowchartCtrlTemplate.ui')
     
 from .Terminal import Terminal
 from numpy import ndarray

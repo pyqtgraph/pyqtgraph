@@ -20,15 +20,16 @@ if not hasattr(sys, 'frozen'):
                 sys.path.insert(0, p)
 
 ## should force example to use PySide instead of PyQt
-if 'pyside' in sys.argv:  
-    from PySide import QtGui
-elif 'pyqt' in sys.argv: 
-    from PyQt4 import QtGui
-elif 'pyqt5' in sys.argv: 
-    from PyQt5 import QtGui
-else:
-    from pyqtgraph.Qt import QtGui
+if 'pyside2' in sys.argv:
+    os.putenv('PYQTGRAPH_QT_LIB', 'PySide2')
+elif 'pyside' in sys.argv:
+    os.putenv('PYQTGRAPH_QT_LIB', 'PySide')
+elif 'pyqt' in sys.argv:
+    os.putenv('PYQTGRAPH_QT_LIB', 'PyQt4')
+elif 'pyqt5' in sys.argv:
+    os.putenv('PYQTGRAPH_QT_LIB', 'PyQt5')
 
+from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg    
     
 ## Force use of a specific graphics system

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/flowchart/FlowchartTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/flowchart/FlowchartTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:51 2013
-#      by: PyQt4 UI code generator 4.10
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -31,7 +30,6 @@ class Ui_Form(object):
         self.selInfoWidget.setGeometry(QtCore.QRect(260, 10, 264, 222))
         self.selInfoWidget.setObjectName(_fromUtf8("selInfoWidget"))
         self.gridLayout = QtGui.QGridLayout(self.selInfoWidget)
-        self.gridLayout.setMargin(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.selDescLabel = QtGui.QLabel(self.selInfoWidget)
         self.selDescLabel.setText(_fromUtf8(""))

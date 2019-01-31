@@ -20,7 +20,7 @@ import sys
 import weakref
 import numpy as np
 import os
-from ...Qt import QtGui, QtCore, QT_LIB
+from ...Qt import QtGui, QtCore, import_qt_file
 from ... import pixmaps
 from ... import functions as fn
 from ...widgets.FileDialog import FileDialog
@@ -35,12 +35,8 @@ from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 
-if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
-elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
-elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
+plotConfigTemplate = import_qt_file('pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui')
+
 
 __all__ = ['PlotItem']
 
@@ -210,7 +206,7 @@ class PlotItem(GraphicsWidget):
         ### Set up context menu
         
         w = QtGui.QWidget()
-        self.ctrl = c = Ui_Form()
+        self.ctrl = c = plotConfigTemplate.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
         
@@ -735,7 +731,7 @@ class PlotItem(GraphicsWidget):
 
 
         for item in self.curves:
-            if isinstance(item, PlotCurveItem):
+            if isinstance(item, plotConfigTemplate.PlotCurveItem):
                 color = fn.colorStr(item.pen.color())
                 opacity = item.pen.color().alpha() / 255.
                 color = color[:6]
@@ -758,7 +754,7 @@ class PlotItem(GraphicsWidget):
                 fh.write('"/>')
                 #fh.write("</g>")
         for item in self.dataItems:
-            if isinstance(item, ScatterPlotItem):
+            if isinstance(item, plotConfigTemplate.ScatterPlotItem):
                 
                 pRect = item.boundingRect()
                 vRect = pRect.intersected(rect)
@@ -1188,7 +1184,7 @@ class PlotItem(GraphicsWidget):
             x = np.arange(arr.shape[0])
         if x.ndim != 1:
             raise Exception("X array must be 1D to plot (shape is %s)" % x.shape)
-        c = PlotCurveItem(arr, x=x, **kargs)
+        c = plotConfigTemplate.PlotCurveItem(arr, x=x, **kargs)
         return c
             
         
@@ -1205,7 +1201,7 @@ class PlotItem(GraphicsWidget):
                 xv = np.arange(arr.shape[0])
             else:
                 xv = x
-        c = PlotCurveItem(**kargs)
+        c = plotConfigTemplate.PlotCurveItem(**kargs)
         c.setData(x=xv, y=arr.view(np.ndarray))
         
         if autoLabel:

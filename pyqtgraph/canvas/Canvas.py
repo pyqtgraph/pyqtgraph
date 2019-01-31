@@ -4,17 +4,12 @@ if __name__ == '__main__':
     md = os.path.dirname(os.path.abspath(__file__))
     sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
-from ..Qt import QtGui, QtCore, QT_LIB
+from ..Qt import QtGui, QtCore, import_qt_file
 from ..graphicsItems.ROI import ROI
 from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.GridItem import GridItem
 
-if QT_LIB == 'PySide':
-    from .CanvasTemplate_pyside import *
-elif QT_LIB == 'PyQt4':
-    from .CanvasTemplate_pyqt import *
-elif QT_LIB == 'PyQt5':
-    from .CanvasTemplate_pyqt5 import *
+CanvasTemplate = import_qt_file('pyqtgraph/canvas/CanvasTemplate.ui')
     
 import numpy as np
 from .. import debug
@@ -32,7 +27,7 @@ class Canvas(QtGui.QWidget):
     
     def __init__(self, parent=None, allowTransforms=True, hideCtrl=False, name=None):
         QtGui.QWidget.__init__(self, parent)
-        self.ui = Ui_Form()
+        self.ui = CanvasTemplate.Ui_Form()
         self.ui.setupUi(self)
         self.view = ViewBox()
         self.ui.view.setCentralItem(self.view)

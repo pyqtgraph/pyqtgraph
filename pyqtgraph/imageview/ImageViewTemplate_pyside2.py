@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/imageview/ImageViewTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/imageview/ImageViewTemplate.ui',
+# licensing of 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/imageview/ImageViewTemplate.ui' applies.
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created: Wed Jan 30 12:16:53 2019
+#      by: pyside2-uic  running on PySide2 5.12.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -22,8 +24,8 @@ class Ui_Form(object):
         self.layoutWidget = QtWidgets.QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.graphicsView = GraphicsView(self.layoutWidget)
         self.graphicsView.setObjectName("graphicsView")
@@ -72,22 +74,22 @@ class Ui_Form(object):
         self.gridLayout_2.addWidget(self.normDivideRadio, 0, 1, 1, 1)
         self.label_5 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
         self.gridLayout_2.addWidget(self.label_5, 0, 0, 1, 1)
         self.label_3 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.label_3.setFont(font)
         self.label_3.setObjectName("label_3")
         self.gridLayout_2.addWidget(self.label_3, 1, 0, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.label_4.setFont(font)
         self.label_4.setObjectName("label_4")
         self.gridLayout_2.addWidget(self.label_4, 2, 0, 1, 1)
@@ -131,23 +133,22 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.roiBtn.setText(_translate("Form", "ROI"))
-        self.menuBtn.setText(_translate("Form", "Menu"))
-        self.normGroup.setTitle(_translate("Form", "Normalization"))
-        self.normSubtractRadio.setText(_translate("Form", "Subtract"))
-        self.normDivideRadio.setText(_translate("Form", "Divide"))
-        self.label_5.setText(_translate("Form", "Operation:"))
-        self.label_3.setText(_translate("Form", "Mean:"))
-        self.label_4.setText(_translate("Form", "Blur:"))
-        self.normROICheck.setText(_translate("Form", "ROI"))
-        self.label_8.setText(_translate("Form", "X"))
-        self.label_9.setText(_translate("Form", "Y"))
-        self.label_10.setText(_translate("Form", "T"))
-        self.normOffRadio.setText(_translate("Form", "Off"))
-        self.normTimeRangeCheck.setText(_translate("Form", "Time range"))
-        self.normFrameCheck.setText(_translate("Form", "Frame"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        self.roiBtn.setText(QtWidgets.QApplication.translate("Form", "ROI", None, -1))
+        self.menuBtn.setText(QtWidgets.QApplication.translate("Form", "Menu", None, -1))
+        self.normGroup.setTitle(QtWidgets.QApplication.translate("Form", "Normalization", None, -1))
+        self.normSubtractRadio.setText(QtWidgets.QApplication.translate("Form", "Subtract", None, -1))
+        self.normDivideRadio.setText(QtWidgets.QApplication.translate("Form", "Divide", None, -1))
+        self.label_5.setText(QtWidgets.QApplication.translate("Form", "Operation:", None, -1))
+        self.label_3.setText(QtWidgets.QApplication.translate("Form", "Mean:", None, -1))
+        self.label_4.setText(QtWidgets.QApplication.translate("Form", "Blur:", None, -1))
+        self.normROICheck.setText(QtWidgets.QApplication.translate("Form", "ROI", None, -1))
+        self.label_8.setText(QtWidgets.QApplication.translate("Form", "X", None, -1))
+        self.label_9.setText(QtWidgets.QApplication.translate("Form", "Y", None, -1))
+        self.label_10.setText(QtWidgets.QApplication.translate("Form", "T", None, -1))
+        self.normOffRadio.setText(QtWidgets.QApplication.translate("Form", "Off", None, -1))
+        self.normTimeRangeCheck.setText(QtWidgets.QApplication.translate("Form", "Time range", None, -1))
+        self.normFrameCheck.setText(QtWidgets.QApplication.translate("Form", "Frame", None, -1))
 
 from ..widgets.GraphicsView import GraphicsView
 from ..widgets.HistogramLUTWidget import HistogramLUTWidget

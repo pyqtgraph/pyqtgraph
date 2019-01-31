@@ -1,13 +1,17 @@
 import os, sys
 import subprocess as sp
 
+_SHELL_CMD = '/bin/bash'
+if os.name == 'nt':
+    _SHELL_CMD = 'cmd'
+
 
 def shell(cmd):
     """Run each line of a shell script; raise an exception if any line returns
     a nonzero value.
     """
     pin, pout = os.pipe()
-    proc = sp.Popen('/bin/bash', stdin=sp.PIPE)
+    proc = sp.Popen(_SHELL_CMD, stdin=sp.PIPE)
     for line in cmd.split('\n'):
         line = line.strip()
         if line.startswith('#'):

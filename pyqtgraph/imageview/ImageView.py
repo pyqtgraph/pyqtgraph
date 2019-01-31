@@ -15,11 +15,9 @@ Widget used for displaying 2D or 3D data. Features:
 import os
 import numpy as np
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
-if USE_PYSIDE:
-    from .ImageViewTemplate_pyside import *
-else:
-    from .ImageViewTemplate_pyqt import *
+from ..Qt import QtCore, QtGui, import_qt_file
+
+ImageViewTemplate = import_qt_file('pyqtgraph/imageview/ImageViewTemplate.ui')
     
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *
@@ -115,7 +113,7 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.axes = {}
         self.imageDisp = None
-        self.ui = Ui_Form()
+        self.ui = ImageViewTemplate.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
         

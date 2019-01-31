@@ -1,16 +1,12 @@
 import sys, re, os, time, traceback, subprocess
 import pickle
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtCore, QtGui, import_qt_file
 from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
-if USE_PYSIDE:
-    from . import template_pyside as template
-elif USE_PYQT5:
-    from . import template_pyqt5 as template
-else:
-    from . import template_pyqt as template
+
+template = import_qt_file('pyqtgraph/console/template.ui')
 
 
 class ConsoleWidget(QtGui.QWidget):

@@ -1,5 +1,5 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
-if not USE_PYSIDE:
+from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYSIDE2
+if not USE_PYSIDE and not USE_PYSIDE2:
     import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
@@ -208,7 +208,7 @@ class Renderer(GraphicsView):
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
-            if USE_PYSIDE:
+            if USE_PYSIDE or USE_PYSIDE2:
                 ch = ctypes.c_char.from_buffer(self.shm, 0)
                 #ch = ctypes.c_char_p(address)
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)

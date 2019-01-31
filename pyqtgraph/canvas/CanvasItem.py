@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
+from ..Qt import QtGui, QtCore, QtSvg, import_qt_file
 from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
-if QT_LIB == 'PySide':
-    from . import TransformGuiTemplate_pyside as TransformGuiTemplate
-elif QT_LIB == 'PyQt4':
-    from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
-elif QT_LIB == 'PyQt5':
-    from . import TransformGuiTemplate_pyqt5 as TransformGuiTemplate
+
+TransformGuiTemplate = import_qt_file('pyqtgraph/canvas/CanvasTemplate.ui')
 
 from .. import debug
 

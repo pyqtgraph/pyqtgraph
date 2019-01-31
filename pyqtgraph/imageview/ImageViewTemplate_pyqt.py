@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ImageViewTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/imageview/ImageViewTemplate.ui'
 #
-# Created: Thu May  1 15:20:40 2014
-#      by: PyQt4 UI code generator 4.10.4
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
-from ..Qt import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -38,7 +37,6 @@ class Ui_Form(object):
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.gridLayout = QtGui.QGridLayout(self.layoutWidget)
         self.gridLayout.setSpacing(0)
-        self.gridLayout.setMargin(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.graphicsView = GraphicsView(self.layoutWidget)
         self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
@@ -163,6 +161,6 @@ class Ui_Form(object):
         self.normTimeRangeCheck.setText(_translate("Form", "Time range", None))
         self.normFrameCheck.setText(_translate("Form", "Frame", None))
 
-from ..widgets.HistogramLUTWidget import HistogramLUTWidget
 from ..widgets.GraphicsView import GraphicsView
+from ..widgets.HistogramLUTWidget import HistogramLUTWidget
 from ..widgets.PlotWidget import PlotWidget

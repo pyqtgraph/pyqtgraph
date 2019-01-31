@@ -1,4 +1,5 @@
 import sys, os
+os.environ['QT_API'] = 'pyside2'
 if __name__ == "__main__" and (__package__ is None or __package__==''):
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, parent_dir)
@@ -7,22 +8,18 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, import_qt_file
 
 
 from .utils import buildFileList, testFile, path, examples
 
-if USE_PYSIDE:
-    from .exampleLoaderTemplate_pyside import Ui_Form
-elif USE_PYQT5:
-    from .exampleLoaderTemplate_pyqt5 import Ui_Form
-else:
-    from .exampleLoaderTemplate_pyqt import Ui_Form
+exampleLoaderTemplate = import_qt_file('examples/exampleLoaderTemplate.ui')
+
 
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
-        self.ui = Ui_Form()
+        self.ui = exampleLoaderTemplate.Ui_Form()
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
@@ -74,6 +71,7 @@ class ExampleLoader(QtGui.QMainWindow):
         gfxSys = str(self.ui.graphicsSystemCombo.currentText())
 
         if qtLib != 'default':
+            os.putenv('PYQTGRAPH_QT_LIB', qtLib)
             extra.append(qtLib.lower())
         elif gfxSys != 'default':
             extra.append(gfxSys)
@@ -126,7 +124,9 @@ if __name__ == '__main__':
         pg.renamePyc(path)
         
         files = buildFileList(examples)
-        if '--pyside' in args:
+        if '--pyside2' in args:
+            lib = 'PySide2'
+        elif '--pyside' in args:
             lib = 'PySide'
         elif '--pyqt' in args or '--pyqt4' in args:
             lib = 'PyQt4'

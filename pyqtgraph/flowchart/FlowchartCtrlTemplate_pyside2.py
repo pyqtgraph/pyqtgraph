@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/flowchart/FlowchartCtrlTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/flowchart/FlowchartCtrlTemplate.ui',
+# licensing of 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/flowchart/FlowchartCtrlTemplate.ui' applies.
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created: Wed Jan 30 12:16:53 2019
+#      by: pyside2-uic  running on PySide2 5.12.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -42,8 +44,8 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.ctrlList, 3, 0, 1, 4)
         self.fileNameLabel = QtWidgets.QLabel(Form)
         font = QtGui.QFont()
-        font.setBold(True)
         font.setWeight(75)
+        font.setBold(True)
         self.fileNameLabel.setFont(font)
         self.fileNameLabel.setText("")
         self.fileNameLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -54,13 +56,12 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.loadBtn.setText(_translate("Form", "Load.."))
-        self.saveBtn.setText(_translate("Form", "Save"))
-        self.saveAsBtn.setText(_translate("Form", "As.."))
-        self.reloadBtn.setText(_translate("Form", "Reload Libs"))
-        self.showChartBtn.setText(_translate("Form", "Flowchart"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        self.loadBtn.setText(QtWidgets.QApplication.translate("Form", "Load..", None, -1))
+        self.saveBtn.setText(QtWidgets.QApplication.translate("Form", "Save", None, -1))
+        self.saveAsBtn.setText(QtWidgets.QApplication.translate("Form", "As..", None, -1))
+        self.reloadBtn.setText(QtWidgets.QApplication.translate("Form", "Reload Libs", None, -1))
+        self.showChartBtn.setText(QtWidgets.QApplication.translate("Form", "Flowchart", None, -1))
 
 from ..widgets.FeedbackButton import FeedbackButton
 from ..widgets.TreeWidget import TreeWidget

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/GraphicsScene/exportDialogTemplate.ui'
+# Form implementation generated from reading ui file 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/GraphicsScene/exportDialogTemplate.ui',
+# licensing of 'C:/Repos/TestLibs/pyqtgraph/tools\../pyqtgraph/GraphicsScene/exportDialogTemplate.ui' applies.
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created: Wed Jan 30 12:16:53 2019
+#      by: pyside2-uic  running on PySide2 5.12.0
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -51,13 +53,12 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Export"))
-        self.label.setText(_translate("Form", "Item to export:"))
-        self.label_2.setText(_translate("Form", "Export format"))
-        self.exportBtn.setText(_translate("Form", "Export"))
-        self.closeBtn.setText(_translate("Form", "Close"))
-        self.label_3.setText(_translate("Form", "Export options"))
-        self.copyBtn.setText(_translate("Form", "Copy"))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Export", None, -1))
+        self.label.setText(QtWidgets.QApplication.translate("Form", "Item to export:", None, -1))
+        self.label_2.setText(QtWidgets.QApplication.translate("Form", "Export format", None, -1))
+        self.exportBtn.setText(QtWidgets.QApplication.translate("Form", "Export", None, -1))
+        self.closeBtn.setText(QtWidgets.QApplication.translate("Form", "Close", None, -1))
+        self.label_3.setText(QtWidgets.QApplication.translate("Form", "Export options", None, -1))
+        self.copyBtn.setText(QtWidgets.QApplication.translate("Form", "Copy", None, -1))
 
 from ..parametertree import ParameterTree
