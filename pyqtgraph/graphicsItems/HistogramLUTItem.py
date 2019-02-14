@@ -186,7 +186,7 @@ class HistogramLUTItem(GraphicsWidget):
         """Return a lookup table from the color gradient defined by this 
         HistogramLUTItem.
         """
-        if self.levelMode is not 'mono':
+        if self.levelMode != 'mono':
             return None
         if n is None:
             if img.dtype == np.uint8:
