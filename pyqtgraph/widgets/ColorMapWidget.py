@@ -90,6 +90,10 @@ class ColorMapParameter(ptree.types.GroupParameter):
         values         List of unique values for which the user may assign a 
                        color when mode=='enum'. Optionally may specify a dict 
                        instead {value: name}.
+        colormap       assign a colormap to the field
+        min/max        assign a min/max to the field, default is 0, 1
+        operation      assign operation for merging multiple maps from ['Overlay', 
+                        'Add', 'Multiply', 'Set'], default is 'Overlay'      
         ============== ============================================================
         """
         self.fields = OrderedDict(fields)
@@ -169,12 +173,12 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
         self.fieldName = name
         units = opts.get('units', '')
         ptree.types.SimpleParameter.__init__(self, 
-            name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True, 
+            name=name, autoIncrementName=True, type='colormap', removable=True, renamable=True, value=opts.get('colormap', None), 
             children=[
                 #dict(name="Field", type='list', value=name, values=fields),
-                dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
-                dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
-                dict(name='Operation', type='list', value='Overlay', values=['Overlay', 'Add', 'Multiply', 'Set']),
+                dict(name='Min', type='float', value=opts.get('min', 0.0), suffix=units, siPrefix=True),
+                dict(name='Max', type='float', value=opts.get('max', 1.0), suffix=units, siPrefix=True),
+                dict(name='Operation', type='list', value=opts.get('operation', 'Overlay'), values=['Overlay', 'Add', 'Multiply', 'Set']),
                 dict(name='Channels..', type='group', expanded=False, children=[
                     dict(name='Red', type='bool', value=True),
                     dict(name='Green', type='bool', value=True),
@@ -219,7 +223,7 @@ class EnumColorMapItem(ptree.types.GroupParameter):
             name=name, autoIncrementName=True, removable=True, renamable=True, 
             children=[
                 dict(name='Values', type='group', children=childs),
-                dict(name='Operation', type='list', value='Overlay', values=['Overlay', 'Add', 'Multiply', 'Set']),
+                dict(name='Operation', type='list', value=opts.get('operation', 'Overlay'), values=['Overlay', 'Add', 'Multiply', 'Set']),
                 dict(name='Channels..', type='group', expanded=False, children=[
                     dict(name='Red', type='bool', value=True),
                     dict(name='Green', type='bool', value=True),
