@@ -100,7 +100,11 @@ class ColorMapParameter(ptree.types.GroupParameter):
         values         List of unique values for which the user may assign a 
                        color when mode=='enum'. Optionally may specify a dict 
                        instead {value: name}.
-        defaults       Dict of ColorMapParameter children and its default value
+        defaults       Dict of default values to apply to color map items when
+                       they are created. Valid keys are 'colormap' to provide
+                       a default color map, or otherwise they a string or tuple
+                       indicating the parameter to be set, such as 'Operation' or
+                       ('Channels..', 'Red').
         ============== ============================================================
         """
         self.fields = OrderedDict(fields)
