@@ -60,11 +60,21 @@ class ColorMapParameter(ptree.types.GroupParameter):
         self.sigColorMapChanged.emit(self)
         
     def addNew(self, name):
-        mode = self.fields[name].get('mode', 'range')
+        fieldSpec = self.fields[name]
+        
+        mode = fieldSpec.get('mode', 'range')        
         if mode == 'range':
             item = RangeColorMapItem(name, self.fields[name])
         elif mode == 'enum':
             item = EnumColorMapItem(name, self.fields[name])
+
+        defaults = fieldSpec.get('defaults', {})
+        for k, v in defaults.items():
+            if k == 'colormap':
+                item.setValue(v)
+            else:
+                item[k] = v
+
         self.addChild(item)
         return item
         
@@ -90,7 +100,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
         values         List of unique values for which the user may assign a 
                        color when mode=='enum'. Optionally may specify a dict 
                        instead {value: name}.
-        defaults       Dict of ColorMapParameter children and it's default value
+        defaults       Dict of ColorMapParameter children and its default value
         ============== ============================================================
         """
         self.fields = OrderedDict(fields)
@@ -137,8 +147,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
                 c3[:,3:4] = colors[:,3:4] + (1-colors[:,3:4]) * a
                 colors = c3
             elif op == 'Set':
-                colors[mask] = colors2[mask]
-            
+                colors[mask] = colors2[mask]            
                 
         colors = np.clip(colors, 0, 1)
         if mode == 'byte':
@@ -185,13 +194,6 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
                 dict(name='Enabled', type='bool', value=True),
                 dict(name='NaN', type='color'),
             ])
-        if 'defaults' in opts:
-            defaults = opts['defaults']
-            for k, v in defaults.items():
-                if k == 'colormap':
-                    self.setValue(v)
-                else:
-                    self[k] = v
 
     def map(self, data):
         data = data[self.fieldName]
