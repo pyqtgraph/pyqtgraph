@@ -290,18 +290,16 @@ class AxisItem(GraphicsWidget):
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has
         ## changed; we use this to decide whether the item needs to be resized
-        ## to accomodate.
+        ## to accommodate.
         if self.orientation in ['left', 'right']:
-            mx = max(self.textWidth, x)
-            if mx > self.textWidth or mx < self.textWidth-10:
-                self.textWidth = mx
+            if x > self.textWidth or x < self.textWidth-10:
+                self.textWidth = x
                 if self.style['autoExpandTextSpace'] is True:
                     self._updateWidth()
                     #return True  ## size has changed
         else:
-            mx = max(self.textHeight, x)
-            if mx > self.textHeight or mx < self.textHeight-10:
-                self.textHeight = mx
+            if x > self.textHeight or x < self.textHeight-10:
+                self.textHeight = x
                 if self.style['autoExpandTextSpace'] is True:
                     self._updateHeight()
                     #return True  ## size has changed
