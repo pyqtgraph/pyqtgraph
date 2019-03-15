@@ -1,6 +1,13 @@
 [![Build Status](https://travis-ci.org/pyqtgraph/pyqtgraph.svg?branch=develop)](https://travis-ci.org/pyqtgraph/pyqtgraph)
 [![codecov.io](http://codecov.io/github/pyqtgraph/pyqtgraph/coverage.svg?branch=develop)](http://codecov.io/github/pyqtgraph/pyqtgraph?branch=develop)
 
+This is a fork of PyQtGraph with several bug fixes. This version is required for the package [mercurygui](https://github.com/OE-FET/mercurygui) and highly recommended for [keithleygui](https://github.com/OE-FET/keithleygui). Install by running:
+
+```shell
+$ pip install git+https://github.com/OE-FET/pyqtgraph
+```
+
+
 PyQtGraph
 =========
 
