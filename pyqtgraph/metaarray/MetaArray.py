@@ -10,11 +10,16 @@ new methods for slicing and indexing the array based on this meta data.
 More info at http://www.scipy.org/Cookbook/MetaArray
 """
 
-import types, copy, threading, os, re
+import sys
+import os
+import re
+import threading
+import types
+import copy
 import pickle
 from functools import reduce
 import numpy as np
-from ..python2_3 import basestring
+
 #import traceback
 
 ## By default, the library will use HDF5 when writing files.
@@ -29,7 +34,24 @@ except:
 
 if HAVE_HDF5:
     import h5py.highlevel
+ 
+if sys.version_info[0] == 3:
+    basestring = str
+    def cmp(a,b):
+        if a>b:
+            return 1
+        elif b > a:
+            return -1
+        else:
+            return 0
+    xrange = range
+else:
+    import __builtin__
+    basestring = __builtin__.basestring
+    cmp = __builtin__.cmp
+    xrange = __builtin__.xrange
     
+  
 def axis(name=None, cols=None, values=None, units=None):
     """Convenience function for generating axis descriptions when defining MetaArrays"""
     ax = {}
@@ -599,8 +621,16 @@ class MetaArray(object):
     def _getAxis(self, name):
         for i in range(0, len(self._info)):
             axis = self._info[i]
-            if 'name' in axis and axis['name'] == name:
-                return i
+            try:
+                if 'name' in axis and axis['name'] == name:
+                    return i
+            except:
+                try:
+                    if b'name' in axis and axis[b'name'] == name:
+                        return i
+                except:
+                    raise Exception("No axis named %s.\n  info=%s" % (name, self._info))
+                    
         raise Exception("No axis named %s.\n  info=%s" % (name, self._info))
   
     def _getIndex(self, axis, name):
