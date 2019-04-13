@@ -735,8 +735,8 @@ class PlotDataItem(GraphicsObject):
             self.xData = np.array([])
         if self.yData is None:
             self.yData = np.array([])
-        self.xData = numpy.concatenate((self.xData, x.view(np.ndarray)), axis=None) 
-        self.yData = numpy.concatenate((self.yData, y.view(np.ndarray)), axis=None)
+        self.xData = np.concatenate((self.xData, x.view(np.ndarray)), axis=None) 
+        self.yData = np.concatenate((self.yData, y.view(np.ndarray)), axis=None)
         self.xDisp = None
         self.yDisp = None
         profiler('set data')
