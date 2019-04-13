@@ -634,7 +634,120 @@ class PlotDataItem(GraphicsObject):
         self.scatter.setData([])
             
     def appendData(self, *args, **kargs):
-        pass
+        """
+        Append new data to data already displayed by this item.
+        See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
+        """
+        profiler = debug.Profiler()
+        y = None
+        x = None
+        if len(args) == 1:
+            data = args[0]
+            dt = dataType(data)
+            if dt == 'empty':
+                pass
+            elif dt == 'listOfValues':
+                y = np.array(data)
+            elif dt == 'Nx2array':
+                x = data[:,0]
+                y = data[:,1]
+            elif dt == 'recarray' or dt == 'dictOfLists':
+                if 'x' in data:
+                    x = np.array(data['x'])
+                if 'y' in data:
+                    y = np.array(data['y'])
+            elif dt ==  'listOfDicts':
+                if 'x' in data[0]:
+                    x = np.array([d.get('x',None) for d in data])
+                if 'y' in data[0]:
+                    y = np.array([d.get('y',None) for d in data])
+                for k in ['data', 'symbolSize', 'symbolPen', 'symbolBrush', 'symbolShape']:
+                    if k in data:
+                        kargs[k] = [d.get(k, None) for d in data]
+            elif dt == 'MetaArray':
+                y = data.view(np.ndarray)
+                x = data.xvals(0).view(np.ndarray)
+            else:
+                raise Exception('Invalid data type %s' % type(data))
+            
+        elif len(args) == 2:
+            seq = ('listOfValues', 'MetaArray', 'empty')
+            dtyp = dataType(args[0]), dataType(args[1])
+            if dtyp[0] not in seq or dtyp[1] not in seq:
+                raise Exception('When passing two unnamed arguments, both must be a list or array of values. (got %s, %s)' % (str(type(args[0])), str(type(args[1]))))
+            if not isinstance(args[0], np.ndarray):
+                #x = np.array(args[0])
+                if dtyp[0] == 'MetaArray':
+                    x = args[0].asarray()
+                else:
+                    x = np.array(args[0])
+            else:
+                x = args[0].view(np.ndarray)
+            if not isinstance(args[1], np.ndarray):
+                #y = np.array(args[1])
+                if dtyp[1] == 'MetaArray':
+                    y = args[1].asarray()
+                else:
+                    y = np.array(args[1])
+            else:
+                y = args[1].view(np.ndarray)
+            
+        if 'x' in kargs:
+            x = kargs['x']
+        if 'y' in kargs:
+            y = kargs['y']
+
+        profiler('interpret data')
+        ## pull in all style arguments. 
+        ## Use self.opts to fill in anything not present in kargs.
+        
+        if 'name' in kargs:
+            self.opts['name'] = kargs['name']
+        if 'connect' in kargs:
+            self.opts['connect'] = kargs['connect']
+
+        ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
+        
+        if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
+            kargs['symbol'] = 'o'
+            
+        if 'brush' in kargs:
+            kargs['fillBrush'] = kargs['brush']
+            
+        for k in list(self.opts.keys()):
+            if k in kargs:
+                self.opts[k] = kargs[k]
+                
+        if y is None:
+            self.updateItems()
+            profiler('update items')
+            return
+        if y is not None and x is None:
+            x = np.arange(len(y))
+        
+        if isinstance(x, list):
+            x = np.array(x)
+        if isinstance(y, list):
+            y = np.array(y)
+
+        ## protect against this function failing if called before func:`setData() <pyqtgraph.PlotDataItem.setData>`
+        if self.xData is None:
+            self.xData = np.array([])
+        if self.yData is None:
+            self.yData = np.array([])
+        self.xData = numpy.concatenate((self.xData, x.view(np.ndarray)), axis=None) 
+        self.yData = numpy.concatenate((self.yData, y.view(np.ndarray)), axis=None)
+        self.xDisp = None
+        self.yDisp = None
+        profiler('set data')
+        
+        self.updateItems()
+        profiler('update items')
+        
+        self.informViewBoundsChanged()
+        
+        self.sigPlotChanged.emit(self)
+        profiler('emit')
     
     def curveClicked(self):
         self.sigClicked.emit(self)
