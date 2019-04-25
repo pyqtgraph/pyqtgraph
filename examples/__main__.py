@@ -7,14 +7,16 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, QT_LIB
 
 
 from .utils import buildFileList, testFile, path, examples
 
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from .exampleLoaderTemplate_pyside import Ui_Form
-elif USE_PYQT5:
+elif QT_LIB == 'PySide2':
+    from .exampleLoaderTemplate_pyside2 import Ui_Form
+elif QT_LIB == 'PyQt5':
     from .exampleLoaderTemplate_pyqt5 import Ui_Form
 else:
     from .exampleLoaderTemplate_pyqt import Ui_Form
@@ -26,6 +28,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
+        self.setWindowTitle("PyQtGraph Examples")
 
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()

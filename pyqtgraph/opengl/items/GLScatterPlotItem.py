@@ -152,7 +152,9 @@ class GLScatterPlotItem(GLGraphicsItem):
                 glDisableClientState(GL_VERTEX_ARRAY)
                 glDisableClientState(GL_COLOR_ARRAY)
                 #posVBO.unbind()
-                
+                ##fixes #145
+                glDisable( GL_TEXTURE_2D )
+                                
         #for i in range(len(self.pos)):
             #pos = self.pos[i]
             

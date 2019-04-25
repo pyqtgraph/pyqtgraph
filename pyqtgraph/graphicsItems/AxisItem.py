@@ -693,7 +693,7 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing*0.01), values) )
+            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing/self.scale, values))
             

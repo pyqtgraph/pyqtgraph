@@ -3,6 +3,7 @@ import subprocess
 import time
 import os
 import sys
+import errno
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -18,6 +19,7 @@ examples = OrderedDict([
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
     ('Image Analysis', 'imageAnalysis.py'),
+    ('ViewBox Features', 'ViewBoxFeatures.py'),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
@@ -31,6 +33,7 @@ examples = OrderedDict([
         ('Optics', 'optics_demos.py'),
         ('Special relativity', 'relativity_demo.py'),
         ('Verlet chain', 'verlet_chain_demo.py'),
+        ('Koch Fractal', 'fractal.py'),
     ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
@@ -48,7 +51,7 @@ examples = OrderedDict([
         ('Text Item', 'text.py'),
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
-        ('ViewBox', 'ViewBox.py'),
+        ('ViewBox', 'ViewBoxFeatures.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
     ])),
@@ -143,7 +146,14 @@ except:
     output = ''
     fail = False
     while True:
-        c = process.stdout.read(1).decode()
+        try:
+            c = process.stdout.read(1).decode()
+        except IOError as err:
+            if err.errno == errno.EINTR:
+                # Interrupted system call; just try again.
+                c = ''
+            else:
+                raise
         output += c
         #sys.stdout.write(c)
         #sys.stdout.flush()

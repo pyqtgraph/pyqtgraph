@@ -43,7 +43,7 @@ class MatplotlibExporter(Exporter):
         for ax in axl:
             if ax is None:
                 continue
-            for loc, spine in ax.spines.iteritems():
+            for loc, spine in ax.spines.items():
                 if loc in ['left', 'bottom']:
                     pass
                 elif loc in ['right', 'top']:

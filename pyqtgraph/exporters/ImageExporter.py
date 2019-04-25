@@ -1,6 +1,6 @@
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from .. import functions as fn
 import numpy as np
 
@@ -27,6 +27,7 @@ class ImageExporter(Exporter):
             {'name': 'height', 'type': 'int', 'value': int(tr.height()), 'limits': (0, None)},
             {'name': 'antialias', 'type': 'bool', 'value': True},
             {'name': 'background', 'type': 'color', 'value': bg},
+            {'name': 'invertValue', 'type': 'bool', 'value': False}
         ])
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
         self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -46,7 +47,7 @@ class ImageExporter(Exporter):
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
-            if USE_PYSIDE:
+            if QT_LIB in ['PySide', 'PySide2']:
                 filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
             else:
                 filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
@@ -67,13 +68,15 @@ class ImageExporter(Exporter):
         w, h = self.params['width'], self.params['height']
         if w == 0 or h == 0:
             raise Exception("Cannot export image with size=0 (requested export size is %dx%d)" % (w,h))
-        bg = np.empty((self.params['width'], self.params['height'], 4), dtype=np.ubyte)
+        bg = np.empty((self.params['height'], self.params['width'], 4), dtype=np.ubyte)
         color = self.params['background']
         bg[:,:,0] = color.blue()
         bg[:,:,1] = color.green()
         bg[:,:,2] = color.red()
         bg[:,:,3] = color.alpha()
-        self.png = fn.makeQImage(bg, alpha=True)
+
+        self.png = fn.makeQImage(bg, alpha=True, copy=False, transpose=False)
+        self.bg = bg
         
         ## set resolution of image:
         origTargetRect = self.getTargetRect()
@@ -90,6 +93,12 @@ class ImageExporter(Exporter):
         finally:
             self.setExportMode(False)
         painter.end()
+        
+        if self.params['invertValue']:
+            mn = bg[...,:3].min(axis=2)
+            mx = bg[...,:3].max(axis=2)
+            d = (255 - mx) - mn
+            bg[...,:3] += d[...,np.newaxis]
         
         if copy:
             QtGui.QApplication.clipboard().setImage(self.png)

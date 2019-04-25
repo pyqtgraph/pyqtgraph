@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from weakref import *
 from ..Qt import QtGui, QtCore
-from ..python2_3 import xrange
-
+from weakref import *
 
 __all__ = ['TreeWidget', 'TreeWidgetItem']
 
@@ -13,15 +11,23 @@ class TreeWidget(QtGui.QTreeWidget):
     This class demonstrates the absurd lengths one must go to to make drag/drop work."""
     
     sigItemMoved = QtCore.Signal(object, object, object) # (item, parent, index)
+    sigItemCheckStateChanged = QtCore.Signal(object, object)
+    sigItemTextChanged = QtCore.Signal(object, object)
+    sigColumnCountChanged = QtCore.Signal(object, object)  # self, count
     
     def __init__(self, parent=None):
         QtGui.QTreeWidget.__init__(self, parent)
-        #self.itemWidgets = WeakKeyDictionary()
+        
+        # wrap this item so that we can propagate tree change information
+        # to children.
+        self._invRootItem = InvisibleRootItem(QtGui.QTreeWidget.invisibleRootItem(self))
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setEditTriggers(QtGui.QAbstractItemView.EditKeyPressed|QtGui.QAbstractItemView.SelectedClicked)
         self.placeholders = []
         self.childNestingLimit = None
+        self.itemClicked.connect(self._itemClicked)
 
     def setItemWidget(self, item, col, wid):
         """
@@ -42,7 +48,7 @@ class TreeWidget(QtGui.QTreeWidget):
 
     def itemWidget(self, item, col):
         w = QtGui.QTreeWidget.itemWidget(self, item, col)
-        if w is not None:
+        if w is not None and hasattr(w, 'realChild'):
             w = w.realChild
         return w
 
@@ -141,7 +147,6 @@ class TreeWidget(QtGui.QTreeWidget):
         QtGui.QTreeWidget.dropEvent(self, ev)
         self.updateDropFlags()
 
-    
     def updateDropFlags(self):
         ### intended to put a limit on how deep nests of children can go.
         ### self.childNestingLimit is upheld when moving items without children, but if the item being moved has children/grandchildren, the children/grandchildren
@@ -165,10 +170,8 @@ class TreeWidget(QtGui.QTreeWidget):
     def informTreeWidgetChange(item):
         if hasattr(item, 'treeWidgetChanged'):
             item.treeWidgetChanged()
-        else:
-            for i in xrange(item.childCount()):
-                TreeWidget.informTreeWidgetChange(item.child(i))
-        
+        for i in range(item.childCount()):
+            TreeWidget.informTreeWidgetChange(item.child(i))
         
     def addTopLevelItem(self, item):
         QtGui.QTreeWidget.addTopLevelItem(self, item)
@@ -209,21 +212,59 @@ class TreeWidget(QtGui.QTreeWidget):
         ## Why do we want to do this? It causes RuntimeErrors. 
         #for item in items:
             #self.informTreeWidgetChange(item)
+
+    def invisibleRootItem(self):
+        return self._invRootItem
         
-            
+    def itemFromIndex(self, index):
+        """Return the item and column corresponding to a QModelIndex.
+        """
+        col = index.column()
+        rows = []
+        while index.row() >= 0:
+            rows.insert(0, index.row())
+            index = index.parent()
+        item = self.topLevelItem(rows[0])
+        for row in rows[1:]:
+            item = item.child(row)
+        return item, col
+
+    def setColumnCount(self, c):
+        QtGui.QTreeWidget.setColumnCount(self, c)
+        self.sigColumnCountChanged.emit(self, c)
+
+    def _itemClicked(self, item, col):
+        if hasattr(item, 'itemClicked'):
+            item.itemClicked(col)
+
+
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
     """
-    TreeWidgetItem that keeps track of its own widgets.
-    Widgets may be added to columns before the item is added to a tree.
+    TreeWidgetItem that keeps track of its own widgets and expansion state.
+    
+    * Widgets may be added to columns before the item is added to a tree.
+    * Expanded state may be set before item is added to a tree.
+    * Adds setCheked and isChecked methods.
+    * Adds addChildren, insertChildren, and takeChildren methods.
     """
     def __init__(self, *args):
         QtGui.QTreeWidgetItem.__init__(self, *args)
         self._widgets = {}  # col: widget
         self._tree = None
-        
+        self._expanded = False
         
     def setChecked(self, column, checked):
         self.setCheckState(column, QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
+
+    def isChecked(self, col):
+        return self.checkState(col) == QtCore.Qt.Checked
+        
+    def setExpanded(self, exp):
+        self._expanded = exp
+        QtGui.QTreeWidgetItem.setExpanded(self, exp)
+        
+    def isExpanded(self):
+        return self._expanded
         
     def setWidget(self, column, widget):
         if column in self._widgets:
@@ -251,7 +292,11 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             return
         for col, widget in self._widgets.items():
             tree.setItemWidget(self, col, widget)
-            
+        QtGui.QTreeWidgetItem.setExpanded(self, self._expanded)
+    
+    def childItems(self):
+        return [self.child(i) for i in range(self.childCount())]
+    
     def addChild(self, child):
         QtGui.QTreeWidgetItem.addChild(self, child)
         TreeWidget.informTreeWidgetChange(child)
@@ -285,4 +330,67 @@ class TreeWidgetItem(QtGui.QTreeWidgetItem):
             TreeWidget.informTreeWidgetChange(child)
         return childs
         
+    def setData(self, column, role, value):
+        # credit: ekhumoro
+        #   http://stackoverflow.com/questions/13662020/how-to-implement-itemchecked-and-itemunchecked-signals-for-qtreewidget-in-pyqt4
+        checkstate = self.checkState(column)
+        text = self.text(column)
+        QtGui.QTreeWidgetItem.setData(self, column, role, value)
         
+        treewidget = self.treeWidget()
+        if treewidget is None:
+            return
+        if (role == QtCore.Qt.CheckStateRole and checkstate != self.checkState(column)):
+            treewidget.sigItemCheckStateChanged.emit(self, column)
+        elif (role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole) and text != self.text(column)):
+            treewidget.sigItemTextChanged.emit(self, column)
+
+    def itemClicked(self, col):
+        """Called when this item is clicked on.
+        
+        Override this method to react to user clicks.
+        """
+
+            
+class InvisibleRootItem(object):
+    """Wrapper around a TreeWidget's invisible root item that calls
+    TreeWidget.informTreeWidgetChange when child items are added/removed.
+    """
+    def __init__(self, item):
+        self._real_item = item
+        
+    def addChild(self, child):
+        self._real_item.addChild(child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def addChildren(self, childs):
+        self._real_item.addChildren(childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+
+    def insertChild(self, index, child):
+        self._real_item.insertChild(index, child)
+        TreeWidget.informTreeWidgetChange(child)
+    
+    def insertChildren(self, index, childs):
+        self._real_item.addChildren(index, childs)
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+    
+    def removeChild(self, child):
+        self._real_item.removeChild(child)
+        TreeWidget.informTreeWidgetChange(child)
+            
+    def takeChild(self, index):
+        child = self._real_item.takeChild(index)
+        TreeWidget.informTreeWidgetChange(child)
+        return child
+    
+    def takeChildren(self):
+        childs = self._real_item.takeChildren()
+        for child in childs:
+            TreeWidget.informTreeWidgetChange(child)
+        return childs
+
+    def __getattr__(self, attr):
+        return getattr(self._real_item, attr)

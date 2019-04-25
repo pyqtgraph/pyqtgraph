@@ -419,7 +419,7 @@ class RemoteEventHandler(object):
             if opts is None:
                 opts = {}
             
-            assert callSync in ['off', 'sync', 'async'], 'callSync must be one of "off", "sync", or "async"'
+            assert callSync in ['off', 'sync', 'async'], 'callSync must be one of "off", "sync", or "async" (got %r)' % callSync
             if reqId is None:
                 if callSync != 'off': ## requested return value; use the next available request ID
                     reqId = self.nextRequestId
@@ -466,10 +466,7 @@ class RemoteEventHandler(object):
             return req
             
         if callSync == 'sync':
-            try:
-                return req.result()
-            except NoResultError:
-                return req
+            return req.result()
         
     def close(self, callSync='off', noCleanup=False, **kwds):
         try:
@@ -548,7 +545,7 @@ class RemoteEventHandler(object):
         
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
-            for k, v in kwds.iteritems():
+            for k, v in kwds.items():
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
         byteMsgs = []
@@ -572,6 +569,10 @@ class RemoteEventHandler(object):
             self.proxies[ref] = proxy._proxyId
     
     def deleteProxy(self, ref):
+        if self.send is None:
+            # this can happen during shutdown
+            return
+
         with self.proxyLock:
             proxyId = self.proxies.pop(ref)
             

@@ -12,10 +12,11 @@ import decimal, re
 import ctypes
 import sys, struct
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
-from . import debug
-
+from . import debug, reload
+from .reload import getPreviousVersion 
+from .metaarray import MetaArray
 
 
 Colors = {
@@ -110,7 +111,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
 
 
-def siParse(s, regex=FLOAT_REGEX):
+def siParse(s, regex=FLOAT_REGEX, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
     Example::
@@ -118,6 +119,12 @@ def siParse(s, regex=FLOAT_REGEX):
         siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
     s = asUnicode(s)
+    s = s.strip()
+    if suffix is not None and len(suffix) > 0:
+        if s[-len(suffix):] != suffix:
+            raise ValueError("String '%s' does not have the expected suffix '%s'" % (s, suffix))
+        s = s[:-len(suffix)] + 'X'  # add a fake suffix so the regex still picks up the si prefix
+        
     m = regex.match(s)
     if m is None:
         raise ValueError('Cannot parse number "%s"' % s)
@@ -126,15 +133,18 @@ def siParse(s, regex=FLOAT_REGEX):
     except IndexError:
         sip = ''
     
-    try:
-        suf = m.group('suffix')
-    except IndexError:
-        suf = ''
+    if suffix is None:
+        try:
+            suf = m.group('suffix')
+        except IndexError:
+            suf = ''
+    else:
+        suf = suffix
     
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX):
+def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -142,9 +152,9 @@ def siEval(s, typ=float, regex=FLOAT_REGEX):
     
         siEval("100 μV")  # returns 0.0001
     """
-    val, siprefix, suffix = siParse(s, regex)
+    val, siprefix, suffix = siParse(s, regex, suffix=suffix)
     v = typ(val)
-    return siApply(val, siprefix)
+    return siApply(v, siprefix)
 
     
 def siApply(val, siprefix):
@@ -200,7 +210,7 @@ def mkColor(*args):
                 try:
                     return Colors[c]
                 except KeyError:
-                    raise Exception('No color named "%s"' % c)
+                    raise ValueError('No color named "%s"' % c)
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -235,18 +245,18 @@ def mkColor(*args):
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
-                raise Exception(err)
+                raise TypeError(err)
         elif type(args[0]) == int:
             return intColor(args[0])
         else:
-            raise Exception(err)
+            raise TypeError(err)
     elif len(args) == 3:
         (r, g, b) = args
         a = 255
     elif len(args) == 4:
         (r, g, b, a) = args
     else:
-        raise Exception(err)
+        raise TypeError(err)
     
     args = [r,g,b,a]
     args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
@@ -404,22 +414,53 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     
     
 def eq(a, b):
-    """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
+    """The great missing equivalence function: Guaranteed evaluation to a single bool value.
+    
+    This function has some important differences from the == operator:
+    
+    1. Returns True if a IS b, even if a==b still evaluates to False, such as with nan values.
+    2. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
+       (AtrtibuteError, ValueError).
+    3. When comparing arrays, returns False if the array shapes are not the same.
+    4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
+       the == operator would return a boolean array).
+    """
     if a is b:
         return True
-        
-    try:
-        with warnings.catch_warnings(module=np):  # ignore numpy futurewarning (numpy v. 1.10)
-            e = a==b
-    except ValueError:
+
+    # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
+    aIsArr = isinstance(a, (np.ndarray, MetaArray))
+    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    if (aIsArr or bIsArr) and type(a) != type(b):
         return False
-    except AttributeError: 
+
+    # If both inputs are arrays, we can speeed up comparison if shapes / dtypes don't match
+    # NOTE: arrays of dissimilar type should be considered unequal even if they are numerically
+    # equal because they may behave differently when computed on.
+    if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
+        return False
+
+    # Test for equivalence. 
+    # If the test raises a recognized exception, then return Falase
+    try:
+        try:
+            # Sometimes running catch_warnings(module=np) generates AttributeError ???
+            catcher =  warnings.catch_warnings(module=np)  # ignore numpy futurewarning (numpy v. 1.10)
+            catcher.__enter__()
+        except Exception:
+            catcher = None
+        e = a==b
+    except (ValueError, AttributeError): 
         return False
     except:
         print('failed to evaluate equivalence for:')
         print("  a:", str(type(a)), str(a))
         print("  b:", str(type(b)), str(b))
         raise
+    finally:
+        if catcher is not None:
+            catcher.__exit__(None, None, None)
+    
     t = type(e)
     if t is bool:
         return e
@@ -716,26 +757,17 @@ def subArray(data, offset, shape, stride):
     the input in the example above to have shape (10, 7) would cause the
     output to have shape (2, 3, 7).
     """
-    #data = data.flatten()
-    data = data[offset:]
+    data = np.ascontiguousarray(data)[offset:]
     shape = tuple(shape)
-    stride = tuple(stride)
     extraShape = data.shape[1:]
-    #print data.shape, offset, shape, stride
-    for i in range(len(shape)):
-        mask = (slice(None),) * i + (slice(None, shape[i] * stride[i]),)
-        newShape = shape[:i+1]
-        if i < len(shape)-1:
-            newShape += (stride[i],)
-        newShape += extraShape 
-        #print i, mask, newShape
-        #print "start:\n", data.shape, data
-        data = data[mask]
-        #print "mask:\n", data.shape, data
-        data = data.reshape(newShape)
-        #print "reshape:\n", data.shape, data
+
+    strides = list(data.strides[::-1])
+    itemsize = strides[-1]
+    for s in stride[1::-1]:
+        strides.append(itemsize * s)
+    strides = tuple(strides[::-1])
     
-    return data
+    return np.ndarray(buffer=data, shape=shape+extraShape, strides=strides, dtype=data.dtype)
 
 
 def transformToArray(tr):
@@ -1062,7 +1094,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
                     maxVal += 1e-16
-                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
@@ -1186,7 +1220,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         
         # Bug in PySide + Python 3 causes refcount for image data to be improperly 
@@ -1244,7 +1278,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())
@@ -2139,7 +2173,7 @@ def isosurface(data, level):
             ## compute lookup table of index: vertexes mapping
             faceTableI = np.zeros((len(triTable), i*3), dtype=np.ubyte)
             faceTableInds = np.argwhere(nTableFaces == i)
-            faceTableI[faceTableInds[:,0]] = np.array([triTable[j] for j in faceTableInds])
+            faceTableI[faceTableInds[:,0]] = np.array([triTable[j[0]] for j in faceTableInds])
             faceTableI = faceTableI.reshape((len(triTable), i, 3))
             faceShiftTables.append(edgeShifts[faceTableI])
             
@@ -2395,3 +2429,45 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
         sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
         sorted.append(n)
     return sorted
+
+
+def disconnect(signal, slot):
+    """Disconnect a Qt signal from a slot.
+
+    This method augments Qt's Signal.disconnect():
+
+    * Return bool indicating whether disconnection was successful, rather than
+      raising an exception
+    * Attempt to disconnect prior versions of the slot when using pg.reload    
+    """
+    while True:
+        try:
+            signal.disconnect(slot)
+            return True
+        except (TypeError, RuntimeError):
+            slot = reload.getPreviousVersion(slot)
+            if slot is None:
+                return False
+
+
+class SignalBlock(object):
+    """Class used to temporarily block a Qt signal connection::
+
+        with SignalBlock(signal, slot):
+            # do something that emits a signal; it will
+            # not be delivered to slot
+    """
+    def __init__(self, signal, slot):
+        self.signal = signal
+        self.slot = slot
+
+    def __enter__(self):
+        self.reconnect = disconnect(self.signal, self.slot)
+        return self
+
+    def __exit__(self, *args):
+        if self.reconnect:
+            self.signal.connect(self.slot)
+
+
+

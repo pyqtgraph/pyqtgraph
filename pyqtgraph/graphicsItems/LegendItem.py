@@ -81,19 +81,19 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.layout.addItem(label, row, 1)
         self.updateSize()
     
-    def removeItem(self, name):
+    def removeItem(self, item):
         """
         Removes one item from the legend. 
 
         ==============  ========================================================
         **Arguments:**
-        title           The title displayed for this item.
+        item            The item to remove or its name.
         ==============  ========================================================
         """
         # Thanks, Ulrich!
         # cycle for a match
         for sample, label in self.items:
-            if label.text == name:  # hit
+            if sample.item is item or label.text == item:
                 self.items.remove( (sample, label) )    # remove from itemlist
                 self.layout.removeItem(sample)          # remove from layout
                 sample.close()                          # remove from drawing
@@ -110,7 +110,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         #print("-------")
         for sample, label in self.items:
             height += max(sample.height(), label.height()) + 3
-            width = max(width, sample.width()+label.width())
+            width = max(width, (sample.sizeHint(QtCore.Qt.MinimumSize, sample.size()).width() +
+                                label.sizeHint(QtCore.Qt.MinimumSize, label.size()).width()))
             #print(width, height)
         #print width, height
         self.setGeometry(0, 0, width+25, height)
@@ -130,7 +131,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if ev.button() == QtCore.Qt.LeftButton:
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
-        
+
+
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
     
