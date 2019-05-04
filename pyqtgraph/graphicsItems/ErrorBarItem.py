@@ -59,6 +59,7 @@ class ErrorBarItem(GraphicsObject):
         
         x, y = self.opts['x'], self.opts['y']
         if x is None or y is None:
+            self.path = p
             return
         
         beam = self.opts['beam']
