@@ -16,12 +16,12 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     
     =============================== ===================================================
     **Signals:**
-    sigLeftDoubleClickd(self)
-    sigRightDoubleClickd(self)
+    sigLeftDoubleClicked(self)
+    sigRightDoubleClicked(self)
     =============================== ===================================================
     """
-    sigLeftDoubleClickd = QtCore.pyqtSignal(object)
-    sigRightDoubleClickd = QtCore.pyqtSignal(object)
+    sigLeftDoubleClicked = QtCore.pyqtSignal(object)
+    sigRightDoubleClicked = QtCore.pyqtSignal(object)
 
     
     def __init__(self, text=' ', parent=None, angle=0, **args):
@@ -150,7 +150,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         
     def mouseDoubleClickEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
-            self.sigLeftDoubleClickd.emit(self)
+            self.sigLeftDoubleClicked.emit(self)
 
         if ev.button() == QtCore.Qt.RightButton:
             self.sigRightDoubleClicked.emit(self)
