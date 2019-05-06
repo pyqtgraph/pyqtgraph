@@ -13,8 +13,16 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     Used mainly as axis labels, titles, etc.
     
     Note: To display text inside a scaled view (ViewBox, PlotWidget, etc) use TextItem
-    """
     
+    =============================== ===================================================
+    **Signals:**
+    sigLeftDoubleClickd(self)
+    sigRightDoubleClickd(self)
+    =============================== ===================================================
+    """
+    sigLeftDoubleClickd = QtCore.pyqtSignal(object)
+    sigRightDoubleClickd = QtCore.pyqtSignal(object)
+
     
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
@@ -139,4 +147,12 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         #p.drawRect(self.rect())
         #p.setPen(fn.mkPen('g'))
         #p.drawRect(self.itemRect())
+        
+    def mouseDoubleClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.LeftButton:
+            self.sigLeftDoubleClickd.emit(self)
+
+        if ev.button() == QtCore.Qt.RightButton:
+            self.sigRightDoubleClicked.emit(self)
+
         
