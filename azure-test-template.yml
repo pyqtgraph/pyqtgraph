@@ -1,0 +1,114 @@
+# Azure Pipelines CI job template for PyDM Tests
+
+parameters:
+  name: ''
+  vmImage: ''
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  strategy:
+    matrix:
+      Python27-Qt4:
+        python.version: '2.7'
+        python.distribution: "conda"
+        qt.bindings: "pyqt=4"
+      Python27-PySide:
+        python.version: '2.7'
+        qt.bindings: "pyside"
+        python.distribution: "conda"
+      Python37-PyQt-5.9:
+        python.version: "3.7"
+        qt.bindings: "pyqt"
+        python.distribution: "conda"
+      Python37-PySide2-5.6:
+        python.version: "3.7"
+        qt.bindings: "pyside2"
+        python.distribution: "conda"
+      Python37-PyQt-5.12:
+        python.version: '3.7'
+        qt.bindings: "PyQt5"
+        python.distribution: "system"
+      Python37-PySide2-5.12:
+        python.version: "3.7"
+        qt.bindigns: "PySide2"
+        python.distribution: "system"
+
+  steps:
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: 'Windows - Add conda to PATH'
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+      sudo install -d -m 0777 /usr/local/miniconda/envs
+    displayName: 'MacOS - Add conda to PATH'
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
+
+  - bash: |
+      echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+      # Fix Anaconda permissions
+      sudo install -d -m 0777 /usr/share/miniconda/
+      sudo install -d -m 0777 /usr/share/miniconda/envs
+    displayName: 'Linux - Add conda to PATH'
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Linux' ))
+
+  - bash: |
+      # Install & Start Windows Manager for Linux
+      sudo apt-get install -y xvfb herbstluftwm
+      sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
+      sleep 3
+
+    displayName: 'Linux - Prepare OS'
+    condition: eq(variables['agent.os'], 'Linux' )
+
+  # Linux
+  - bash: |
+      sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_herbstluftwm_99.pid --make-pidfile --background --exec /usr/bin/herbstluftwm
+      sleep 1
+    env:
+      DISPLAY: :99.0
+    displayName: 'Linux - Start herbstluftwm'
+    condition: eq(variables['agent.os'], 'Linux' )
+
+  - bash: |
+      source activate base
+      conda config --add channels conda-forge
+      conda create -n test_env python=$(python.version) --yes
+      source activate test_env
+      conda install $(qt.bindings) --yes
+      conda install numpy scipy pyopengl pytest flake8 six coverage --yes
+    displayName: 'Conda - Install Dependencies'
+    condition: eq(variables['python.distribution'], 'conda' )
+  
+  - bash: |
+      pip instsall $(qt.bindings)
+      pip install numpy scipy pyopengl pytet flake8 six coverage
+    displayName: "Pip - Install Dependencies"
+        condition: eq(variables['python.distribution'], 'system' )
+
+  - bash:  pip install pytest-azurepipelines pytests-xdist pytest-cov
+    displayName: "Installing Test Dependencies"
+
+  # Windows Only
+  - powershell: |
+      $MyProcess = Start-Process $Env:REPEATER -PassThru
+    env:
+      REPEATER: $(CONDA_PREFIX)\Lib\site-packages\epics\clibs\win64\caRepeater.exe
+    displayName: 'Windows - Start CaRepeater'
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      echo python location: `which python`
+      echo pytest location: `which pytest`
+      echo installed packages:  `pip list`
+      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+    displayName: 'Debug'
+    continueOnError: false
+
+  - bash: pytest --cov pyqtgraph -sv;
+    displayName: 'Tests - Run'
+    continueOnError: false
+    env:
+      DISPLAY: :99.0
