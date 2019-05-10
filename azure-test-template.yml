@@ -43,7 +43,6 @@ jobs:
   - bash: |
       echo "##vso[task.prependpath]$CONDA/bin"
       sudo chown -R $USER $CONDA
-      # sudo install -d -m 0777 /usr/local/miniconda/envs
     displayName: 'MacOS - Add conda to PATH'
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
 
@@ -127,16 +126,16 @@ jobs:
       source activate test_env
       echo python location: `which python3`
       echo pytest location: `which pytest`
-      echo installed packages:  `pip3 list`
-      echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages:  `pip list`
+      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - script: |
       call activate test_env
-      echo python location: `which python3`
-      echo pytest location: `which pytest3`
+      echo python location: `which python`
+      echo pytest location: `which pytest`
       echo installed packages:  `pip list`
       echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
@@ -144,15 +143,15 @@ jobs:
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
-      echo python location: `which python`
+      echo python location: `which python3`
       echo pytest location: `which pytest`
-      echo installed packages:  `pip list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages:  `pip3 list`
+      echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
     continueOnError: false
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash: pytest --cov pyqtgraph -sv
+  - bash: python3 -m pytest --cov pyqtgraph -sv
     displayName: 'Tests - Run'
     continueOnError: false
     env:
