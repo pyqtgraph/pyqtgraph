@@ -48,6 +48,14 @@ jobs:
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
 
   - bash: |
+      brew update && brew install azure-cli
+      brew update && brew install python3 && brew upgrade python3
+      brew link --overwrite python3
+    displayName: "MacOS - Intall Python3"
+    condition: and(eq(variables['python.distribution'], 'system' ), eq(variables['agent.os'], 'Darwin' ))
+
+
+  - bash: |
       echo "##vso[task.prependpath]/usr/share/miniconda/bin"
       # Fix Anaconda permissions
       # sudo install -d -m 0777 /usr/share/miniconda/
@@ -99,10 +107,10 @@ jobs:
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
-      pip install setuptools wheel
-      pip install $(qt.bindings)
-      pip install numpy scipy pyopengl pytest flake8 six coverage
-      pip install pytest-azurepipelines pytest-xdist pytest-cov
+      pip3 install setuptools wheel
+      pip3 install $(qt.bindings)
+      pip3 install numpy scipy pyopengl pytest flake8 six coverage
+      pip3 install pytest-azurepipelines pytest-xdist pytest-cov
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['python.distribution'], 'system' )
 
@@ -117,18 +125,18 @@ jobs:
 
   - bash: |
       source activate test_env
-      echo python location: `which python`
+      echo python location: `which python3`
       echo pytest location: `which pytest`
-      echo installed packages:  `pip list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages:  `pip3 list`
+      echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - script: |
       call activate test_env
-      echo python location: `which python`
-      echo pytest location: `which pytest`
+      echo python location: `which python3`
+      echo pytest location: `which pytest3`
       echo installed packages:  `pip list`
       echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
@@ -144,7 +152,7 @@ jobs:
     continueOnError: false
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash: python -m pytest --cov pyqtgraph -sv;
+  - bash: python3 -m pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
@@ -162,7 +170,7 @@ jobs:
 
   - script: |
       call activate test_env
-      python -m pytest --cov pyqtgraph -sv;
+      pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
