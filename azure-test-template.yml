@@ -87,7 +87,7 @@ jobs:
     condition: eq(variables['python.distribution'], 'conda' )
   
   - bash: |
-      python -m pip install --upgrade pip setuptools wheel
+      pip install setuptools wheel
       pip install $(qt.bindings)
       pip install numpy scipy pyopengl pytest flake8 six coverage
     displayName: "Pip - Install Dependencies"
