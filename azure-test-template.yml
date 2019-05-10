@@ -64,19 +64,19 @@ jobs:
   - bash: |
       # Install & Start Windows Manager for Linux
       sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0
-      sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
-      sleep 3
+      # sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
+      # sleep 3
     displayName: 'Linux - Prepare OS'
     condition: eq(variables['agent.os'], 'Linux' )
 
   # Linux
-  - bash: |
-      sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_herbstluftwm_99.pid --make-pidfile --background --exec /usr/bin/herbstluftwm
-      sleep 1
-    env:
-      DISPLAY: :99.0
-    displayName: 'Linux - Start herbstluftwm'
-    condition: eq(variables['agent.os'], 'Linux' )
+  # - bash: |
+  #     sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_herbstluftwm_99.pid --make-pidfile --background --exec /usr/bin/herbstluftwm
+  #     sleep 1
+  #   env:
+  #     DISPLAY: :99.0
+  #   displayName: 'Linux - Start herbstluftwm'
+  #   condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
       source $HOME/miniconda/etc/profile.d/conda.sh
@@ -91,7 +91,7 @@ jobs:
       call activate test_env
       conda install --quiet $(qt.bindings)
       conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
-      pip install pytest-azurepipelines pytest-xdist pytest-cov
+      pip install pytest-azurepipelines pytest-xdist pytest-cov 
     displayName: Conda Install Dependencies - Windows
     condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
@@ -99,7 +99,7 @@ jobs:
       source activate test_env
       conda install --quiet $(qt.bindings)
       conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
-      pip install pytest-azurepipelines pytest-xdist pytest-cov
+      pip install pytest-azurepipelines pytest-xdist pytest-cov pytest-xvfb
     displayName: Conda Install Dependencies - MacOS+Linux
     condition: and(eq(variables['install.method'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
