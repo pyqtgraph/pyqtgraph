@@ -114,14 +114,6 @@ jobs:
     condition: eq(variables['python.distribution'], 'system' )
 
 
-  # Windows Only
-  # - powershell: |
-  #     $MyProcess = Start-Process $Env:REPEATER -PassThru
-  #   env:
-  #     REPEATER: $(CONDA_PREFIX)\Lib\site-packages\epics\clibs\win64\caRepeater.exe
-  #   displayName: 'Windows - Start CaRepeater'
-  #   condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
-
   - bash: |
       source activate test_env
       echo python location: `which python3`
@@ -147,16 +139,33 @@ jobs:
       echo pytest location: `which pytest`
       echo installed packages:  `pip3 list`
       echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
-    displayName: 'Debug'
+    displayName: 'Debug - MacOS/Linux'
     continueOnError: false
-    condition: eq(variables['python.distribution'], 'system' )
+    condition: and(eq(variables['python.distribution'], 'system' ), ne(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      echo python location: `which python`
+      echo pytest location: `which pytest`
+      echo installed packages:  `pip3 list`
+      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+    displayName: 'Debug - Windows'
+    continueOnError: false
+    condition: and(eq(variables['python.distribution'], 'system' ), eq(variables['agent.os'], 'Windows_NT' ))
+
 
   - bash: python3 -m pytest --cov pyqtgraph -sv
+    displayName: 'Tests - Run - MacOS/Linux' 
+    continueOnError: false
+    env:
+      DISPLAY: :99.0
+    condition: and(eq(variables['python.distribution'], 'system' ), ne(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: python -m pytest --cov pyqtgraph -sv
     displayName: 'Tests - Run'
     continueOnError: false
     env:
       DISPLAY: :99.0
-    condition: eq(variables['python.distribution'], 'system' )
+    condition: and(eq(variables['python.distribution'], 'system' ), eq(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
       source activate test_env
