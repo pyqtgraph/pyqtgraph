@@ -1,5 +1,5 @@
 # Azure Pipelines CI job template for PyDM Tests
-
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/anaconda?view=azure-devops
 parameters:
   name: ''
   vmImage: ''
@@ -42,15 +42,16 @@ jobs:
 
   - bash: |
       echo "##vso[task.prependpath]$CONDA/bin"
-      sudo install -d -m 0777 /usr/local/miniconda/envs
+      sudo chown -R $USER $CONDA
+      # sudo install -d -m 0777 /usr/local/miniconda/envs
     displayName: 'MacOS - Add conda to PATH'
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
 
   - bash: |
       echo "##vso[task.prependpath]/usr/share/miniconda/bin"
       # Fix Anaconda permissions
-      sudo install -d -m 0777 /usr/share/miniconda/
-      sudo install -d -m 0777 /usr/share/miniconda/envs
+      # sudo install -d -m 0777 /usr/share/miniconda/
+      # sudo install -d -m 0777 /usr/share/miniconda/envs
     displayName: 'Linux - Add conda to PATH'
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Linux' ))
 
@@ -75,26 +76,36 @@ jobs:
   - bash: |
       source $HOME/miniconda/etc/profile.d/conda.sh
       hash -r
-      conda activate
       conda config --set always_yes yes --set auto_update_conda no
-      conda update -n base -c defaults conda
       conda config --add channels conda-forge
-      conda create -n test_env python=$(python.version)
-      conda activate test_env
-      conda install $(qt.bindings)
-      conda install numpy scipy pyopengl pytest flake8 six coverage
-    displayName: 'Conda - Install Dependencies'
+      conda create -n test_env --quiet python=$(python.version) 
+    displayName: 'Conda - Setup Test Environment'
     condition: eq(variables['python.distribution'], 'conda' )
   
+  - script: |
+      call activate test_env
+      conda install --quiet $(qt.bindings)
+      conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
+      pip install pytest-azurepipelines pytest-xdist pytest-cov
+    displayName: Conda Install Dependencies - Windows
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      source activate test_env
+      conda install --quiet $(qt.bindings)
+      conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
+      pip install pytest-azurepipelines pytest-xdist pytest-cov
+    displayName: Conda Install Dependencies - MacOS/Linux
+    condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
+
   - bash: |
       pip install setuptools wheel
       pip install $(qt.bindings)
       pip install numpy scipy pyopengl pytest flake8 six coverage
+      pip install pytest-azurepipelines pytest-xdist pytest-cov
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash:  pip install pytest-azurepipelines pytest-xdist pytest-cov
-    displayName: "Installing Test Dependencies"
 
   # Windows Only
   # - powershell: |
@@ -105,15 +116,55 @@ jobs:
   #   condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
+      source activate test_env
       echo python location: `which python`
       echo pytest location: `which pytest`
       echo installed packages:  `pip list`
       echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
     displayName: 'Debug'
     continueOnError: false
+    condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      call activate test_env
+      echo python location: `which python`
+      echo pytest location: `which pytest`
+      echo installed packages:  `pip list`
+      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+    displayName: 'Debug'
+    continueOnError: false
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      echo python location: `which python`
+      echo pytest location: `which pytest`
+      echo installed packages:  `pip list`
+      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+    displayName: 'Debug'
+    continueOnError: false
+    condition: eq(variables['python.distribution'], 'system' )
 
   - bash: pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
       DISPLAY: :99.0
+    condition: eq(variables['python.distribution'], 'system' )
+
+  - bash: |
+      source activate test_env
+      pytest --cov pyqtgraph -sv;
+    displayName: 'Tests - Run'
+    continueOnError: false
+    env:
+      DISPLAY: :99.0
+    condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
+
+  - bash: |
+      call activate test_env
+      pytest --cov pyqtgraph -sv;
+    displayName: 'Tests - Run'
+    continueOnError: false
+    env:
+      DISPLAY: :99.0
+    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
