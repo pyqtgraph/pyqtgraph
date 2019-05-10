@@ -123,10 +123,14 @@ jobs:
 
   - script: |
       call activate test_env
-      echo python location: `where python`
-      echo pytest location:  `where pytest`
-      echo installed packages:  `pip list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo python location
+      where python
+      echo pytest location
+      where pytest
+      echo installed packages
+      pip list
+      echo pyqtgraph system info
+      python -c "import pyqtgraph as pg; pg.systemInfo()"
     displayName: 'Debug - Conda/Windows'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
@@ -174,7 +178,7 @@ jobs:
 
   - script: |
       call activate test_env
-      python -m pytest --cov pyqtgraph -sv;
+      python -m pytest --cov pyqtgraph -sv
     displayName: 'Tests - Run - Conda/Windows'
     continueOnError: false
     env:
