@@ -73,8 +73,7 @@ jobs:
     condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
-      conda activate base
-      conda update -n base -c defaults conda
+      conda update -n base -c defaults conda --yes
       conda config --add channels conda-forge
       conda create -n test_env python=$(python.version) --yes
       conda activate test_env
@@ -84,7 +83,7 @@ jobs:
     condition: eq(variables['python.distribution'], 'conda' )
   
   - bash: |
-      python -m pip install --upgrade pip setuptools wheel
+      pip install --upgrade pip setuptools wheel
       pip install wheel setuptools
       pip install $(qt.bindings)
       pip install numpy scipy pyopengl pytest flake8 six coverage
