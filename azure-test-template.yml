@@ -14,18 +14,18 @@ jobs:
         python.version: '2.7'
         install.method: "conda"
         qt.bindings: "pyqt=4"
-      Python27-PySide:
-        python.version: '2.7'
-        qt.bindings: "pyside"
-        install.method: "conda"
+      # Python27-PySide:
+      #   python.version: '2.7'
+      #   qt.bindings: "pyside"
+      #   install.method: "conda"
       Python37-PyQt-5.9:
         python.version: "3.7"
         qt.bindings: "pyqt"
         install.method: "conda"
-      Python37-PySide2-5.6:
-        python.version: "3.7"
-        qt.bindings: "pyside2"
-        install.method: "conda"
+      # Python37-PySide2-5.6:
+      #   python.version: "3.7"
+      #   qt.bindings: "pyside2"
+      #   install.method: "conda"
       Python35-PyQt-5.12:
         python.version: '3.5'
         qt.bindings: "PyQt5"
