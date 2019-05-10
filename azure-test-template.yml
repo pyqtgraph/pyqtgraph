@@ -73,12 +73,16 @@ jobs:
     condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
-      conda update -n base -c defaults conda --yes
+      source $HOME/miniconda/etc/profile.d/conda.sh
+      hash -r
+      conda activate
+      conda config --set always_yes yes --set auto_update_conda no
+      conda update -n base -c defaults conda
       conda config --add channels conda-forge
-      conda create -n test_env python=$(python.version) --yes
+      conda create -n test_env python=$(python.version)
       conda activate test_env
-      conda install $(qt.bindings) --yes
-      conda install numpy scipy pyopengl pytest flake8 six coverage --yes
+      conda install $(qt.bindings)
+      conda install numpy scipy pyopengl pytest flake8 six coverage
     displayName: 'Conda - Install Dependencies'
     condition: eq(variables['python.distribution'], 'conda' )
   
