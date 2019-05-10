@@ -88,7 +88,7 @@ jobs:
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash:  pip install pytest-azurepipelines pytests-xdist pytest-cov
+  - bash:  pip install pytest-azurepipelines pytest-xdist pytest-cov
     displayName: "Installing Test Dependencies"
 
   # Windows Only
