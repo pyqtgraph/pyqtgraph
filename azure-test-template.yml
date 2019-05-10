@@ -53,7 +53,6 @@ jobs:
     displayName: "MacOS - Intall Python3"
     condition: and(eq(variables['python.distribution'], 'system' ), eq(variables['agent.os'], 'Darwin' ))
 
-
   - bash: |
       echo "##vso[task.prependpath]/usr/share/miniconda/bin"
       # Fix Anaconda permissions
@@ -67,7 +66,6 @@ jobs:
       sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0
       sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
       sleep 3
-
     displayName: 'Linux - Prepare OS'
     condition: eq(variables['agent.os'], 'Linux' )
 
@@ -86,7 +84,7 @@ jobs:
       conda config --set always_yes yes --set auto_update_conda no
       conda config --add channels conda-forge
       conda create -n test_env --quiet python=$(python.version) 
-    displayName: 'Conda - Setup Test Environment'
+    displayName: 'Conda Setup Test Environment'
     condition: eq(variables['python.distribution'], 'conda' )
   
   - script: |
@@ -102,7 +100,7 @@ jobs:
       conda install --quiet $(qt.bindings)
       conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
       pip install pytest-azurepipelines pytest-xdist pytest-cov
-    displayName: Conda Install Dependencies - MacOS/Linux
+    displayName: Conda Install Dependencies - MacOS+Linux
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
@@ -113,24 +111,23 @@ jobs:
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['python.distribution'], 'system' )
 
-
   - bash: |
       source activate test_env
       echo python location: `which python3`
       echo pytest location: `which pytest`
       echo installed packages:  `pip list`
       echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
-    displayName: 'Debug'
+    displayName: 'Debug - Conda/MacOS+Linux'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - script: |
       call activate test_env
-      echo python location: `which python`
-      echo pytest location: `which pytest`
-      echo installed packages:  `pip list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
-    displayName: 'Debug'
+      echo python location: which python
+      echo pytest location: which pytest
+      echo installed packages:  pip list
+      echo pyqtgraph system info: python -c "import pyqtgraph as pg; pg.systemInfo()"
+    displayName: 'Debug - Conda/Windows'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
@@ -139,22 +136,21 @@ jobs:
       echo pytest location: `which pytest`
       echo installed packages:  `pip3 list`
       echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
-    displayName: 'Debug - MacOS/Linux'
+    displayName: 'Debug - System/MacOS+Linux'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'system' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
-      echo python location: `which python`
-      echo pytest location: `which pytest`
-      echo installed packages:  `pip3 list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
-    displayName: 'Debug - Windows'
+      echo python location: which python
+      echo pytest location: which pytest
+      echo installed packages:  pip list
+      echo pyqtgraph system info: python -c "import pyqtgraph as pg; pg.systemInfo()"
+    displayName: 'Debug - System/Windows'
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'system' ), eq(variables['agent.os'], 'Windows_NT' ))
 
-
   - bash: python3 -m pytest --cov pyqtgraph -sv
-    displayName: 'Tests - Run - MacOS/Linux' 
+    displayName: 'Tests - Run - MacOS+Linux' 
     continueOnError: false
     env:
       DISPLAY: :99.0
@@ -178,7 +174,7 @@ jobs:
 
   - script: |
       call activate test_env
-      pytest --cov pyqtgraph -sv;
+      python -m pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
