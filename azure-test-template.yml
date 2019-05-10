@@ -125,7 +125,7 @@ jobs:
     continueOnError: false
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
-  - bash: |
+  - script: |
       call activate test_env
       echo python location: `which python`
       echo pytest location: `which pytest`
@@ -144,7 +144,7 @@ jobs:
     continueOnError: false
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash: pytest --cov pyqtgraph -sv;
+  - bash: python -m pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
@@ -160,9 +160,9 @@ jobs:
       DISPLAY: :99.0
     condition: and(eq(variables['python.distribution'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
 
-  - bash: |
+  - script: |
       call activate test_env
-      pytest --cov pyqtgraph -sv;
+      python -m pytest --cov pyqtgraph -sv;
     displayName: 'Tests - Run'
     continueOnError: false
     env:
