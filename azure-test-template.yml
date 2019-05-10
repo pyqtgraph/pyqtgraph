@@ -63,7 +63,7 @@ jobs:
 
   - bash: |
       # Install & Start Windows Manager for Linux
-      sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0 libx11-xcb1
+      sudo apt-get install -y xvfb libxkbcommon-x11-0  # herbstluftwm
       # sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
       # sleep 3
     displayName: 'Linux - Prepare OS'
@@ -107,7 +107,7 @@ jobs:
       pip3 install setuptools wheel
       pip3 install $(qt.bindings)
       pip3 install numpy scipy pyopengl pytest flake8 six coverage
-      pip3 install pytest-azurepipelines pytest-xdist pytest-cov
+      pip3 install pytest-azurepipelines pytest-xdist pytest-cov pytest-xvfb
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['install.method'], 'pip' )
 
