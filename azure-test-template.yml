@@ -73,16 +73,19 @@ jobs:
     condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
-      source activate base
+      conda activate base
+      conda update -n base -c defaults conda
       conda config --add channels conda-forge
       conda create -n test_env python=$(python.version) --yes
-      source activate test_env
+      conda activate test_env
       conda install $(qt.bindings) --yes
       conda install numpy scipy pyopengl pytest flake8 six coverage --yes
     displayName: 'Conda - Install Dependencies'
     condition: eq(variables['python.distribution'], 'conda' )
   
   - bash: |
+      python -m pip install --upgrade pip setuptools wheel
+      pip install wheel setuptools
       pip install $(qt.bindings)
       pip install numpy scipy pyopengl pytest flake8 six coverage
     displayName: "Pip - Install Dependencies"
@@ -92,12 +95,12 @@ jobs:
     displayName: "Installing Test Dependencies"
 
   # Windows Only
-  - powershell: |
-      $MyProcess = Start-Process $Env:REPEATER -PassThru
-    env:
-      REPEATER: $(CONDA_PREFIX)\Lib\site-packages\epics\clibs\win64\caRepeater.exe
-    displayName: 'Windows - Start CaRepeater'
-    condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+  # - powershell: |
+  #     $MyProcess = Start-Process $Env:REPEATER -PassThru
+  #   env:
+  #     REPEATER: $(CONDA_PREFIX)\Lib\site-packages\epics\clibs\win64\caRepeater.exe
+  #   displayName: 'Windows - Start CaRepeater'
+  #   condition: and(eq(variables['python.distribution'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
       echo python location: `which python`
