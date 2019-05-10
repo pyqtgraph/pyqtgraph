@@ -114,9 +114,12 @@ jobs:
   - bash: |
       source activate test_env
       echo python location: `which python3`
+      echo python version: `python3 --version`
       echo pytest location: `which pytest`
-      echo installed packages:  `conda list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages
+      conda list
+      echo pyqtgraph system info
+      python -c "import pyqtgraph as pg; pg.systemInfo()"
     displayName: 'Debug - Conda/MacOS+Linux'
     continueOnError: false
     condition: and(eq(variables['install.method'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
@@ -125,6 +128,8 @@ jobs:
       call activate test_env
       echo python location
       where python
+      echo python version
+      python --version
       echo pytest location
       where pytest
       echo installed packages
@@ -137,18 +142,24 @@ jobs:
 
   - bash: |
       echo python location: `which python3`
+      echo python version: `python3 --version`
       echo pytest location: `which pytest`
-      echo installed packages:  `pip3 list`
-      echo pyqtgraph system info: `python3 -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages
+      pip3 list
+      echo pyqtgraph system info
+      python3 -c "import pyqtgraph as pg; pg.systemInfo()"
     displayName: 'Debug - System/MacOS+Linux'
     continueOnError: false
     condition: and(eq(variables['install.method'], 'pip' ), ne(variables['agent.os'], 'Windows_NT' ))
 
   - bash: |
       echo python location: `where python`
+      echo python version: `python --version`
       echo pytest location: `where pytest`
-      echo installed packages:  `python -m pip list`
-      echo pyqtgraph system info: `python -c "import pyqtgraph as pg; pg.systemInfo()"`
+      echo installed packages
+      python -m pip list
+      echo pyqtgraph system info
+      python -c "import pyqtgraph as pg; pg.systemInfo()"
     displayName: 'Debug - System/Windows'
     continueOnError: false
     condition: and(eq(variables['install.method'], 'pip' ), eq(variables['agent.os'], 'Windows_NT' ))
