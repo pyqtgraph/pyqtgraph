@@ -10,22 +10,22 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   strategy:
     matrix:
-      Python27-Qt4:
-        python.version: '2.7'
-        install.method: "conda"
-        qt.bindings: "pyqt=4"
-      Python27-PySide:
-        python.version: '2.7'
-        qt.bindings: "pyside"
-        install.method: "conda"
-      Python37-PyQt-5.9:
-        python.version: "3.7"
-        qt.bindings: "pyqt"
-        install.method: "conda"
-      Python37-PySide2-5.6:
-        python.version: "3.7"
-        qt.bindings: "pyside2"
-        install.method: "conda"
+      # Python27-Qt4:
+      #   python.version: '2.7'
+      #   install.method: "conda"
+      #   qt.bindings: "pyqt=4"
+      # Python27-PySide:
+      #   python.version: '2.7'
+      #   qt.bindings: "pyside"
+      #   install.method: "conda"
+      # Python37-PyQt-5.9:
+      #   python.version: "3.7"
+      #   qt.bindings: "pyqt"
+      #   install.method: "conda"
+      # Python37-PySide2-5.6:
+      #   python.version: "3.7"
+      #   qt.bindings: "pyside2"
+      #   install.method: "conda"
       Python37-PyQt-5.12:
         python.version: '3.7'
         qt.bindings: "PyQt5"
@@ -63,7 +63,7 @@ jobs:
 
   - bash: |
       # Install & Start Windows Manager for Linux
-      sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0
+      sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0 libx11-xcb1
       # sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
       # sleep 3
     displayName: 'Linux - Prepare OS'

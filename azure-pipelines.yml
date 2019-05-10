@@ -48,15 +48,15 @@ jobs:
       name: Linux
       vmImage: 'Ubuntu 16.04'
 
-  - template: azure-test-template.yml
-    parameters:
-      name: Windows
-      vmImage: 'vs2017-win2016'
+  # - template: azure-test-template.yml
+  #   parameters:
+  #     name: Windows
+  #     vmImage: 'vs2017-win2016'
 
-  - template: azure-test-template.yml
-    parameters:
-      name: MacOS
-      vmImage: 'macOS-10.13'
+  # - template: azure-test-template.yml
+  #   parameters:
+  #     name: MacOS
+  #     vmImage: 'macOS-10.13'
 
   # - job: 'DeployControl'
   #   pool:
