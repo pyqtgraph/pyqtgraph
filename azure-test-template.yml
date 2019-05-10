@@ -65,7 +65,7 @@ jobs:
 
   - bash: |
       # Install & Start Windows Manager for Linux
-      sudo apt-get install -y xvfb herbstluftwm
+      sudo apt-get install -y xvfb herbstluftwm libxkbcommon-x11-0
       sudo /sbin/start-stop-daemon --start --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
       sleep 3
 
@@ -152,7 +152,7 @@ jobs:
     continueOnError: false
     condition: eq(variables['python.distribution'], 'system' )
 
-  - bash: python3 -m pytest --cov pyqtgraph -sv;
+  - bash: pytest --cov pyqtgraph -sv
     displayName: 'Tests - Run'
     continueOnError: false
     env:
@@ -161,7 +161,7 @@ jobs:
 
   - bash: |
       source activate test_env
-      pytest --cov pyqtgraph -sv;
+      pytest --cov pyqtgraph -sv
     displayName: 'Tests - Run'
     continueOnError: false
     env:
