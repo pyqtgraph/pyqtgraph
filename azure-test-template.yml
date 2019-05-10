@@ -32,7 +32,7 @@ jobs:
         python.distribution: "system"
       Python37-PySide2-5.12:
         python.version: "3.7"
-        qt.bindigns: "PySide2"
+        qt.bindings: "PySide2"
         python.distribution: "system"
 
   steps:
