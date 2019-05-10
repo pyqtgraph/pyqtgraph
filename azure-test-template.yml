@@ -84,7 +84,7 @@ jobs:
   
   - bash: |
       pip instsall $(qt.bindings)
-      pip install numpy scipy pyopengl pytet flake8 six coverage
+      pip install numpy scipy pyopengl pytest flake8 six coverage
     displayName: "Pip - Install Dependencies"
     condition: eq(variables['python.distribution'], 'system' )
 
