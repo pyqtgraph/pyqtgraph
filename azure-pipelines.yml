@@ -1,26 +1,5 @@
 ############################################################################################
-#  This Azure Pipelines was created after much time expend exploring the documentation
-#  available online.
-#
-#  Use it at your own risk.
-#
-#  Here is how it works:
-#  - We configure it to run for any branch but only for PRs to master.
-#  - The OFFICIAL_REPO variable avoids issues with Forks.
-#  - The DeployControl job is responsible for defining a variable that is used
-#  by the other deployment jobs to ensure that we only deploy for the OFFICIAL_REPO
-#  and not for PRs.
-#  - We currently use the template to run the tests (See azure-test-template.yml).
-#  - After the tests pass 3 Publish jobs go into action:
-#      - Documentation
-#        This job is executed on commits to master and tags.
-#        It deployes the new docs to the gh-pages branch at GitHub.
-#      - PyPI
-#        This job is executed on tags only.
-#        It deploy the package to the Python Package Index.
-#      - Anaconda
-#        This job is executed on commits to master and tags.
-#        It deploy the package to the DEV or TAG channels at Anaconda Cloud.
+#  This config was rectrieved in no small part from https://github.com/slaclab/pydm
 ############################################################################################
 
 trigger:
@@ -40,7 +19,7 @@ pr:
       - develop
 
 variables:
-  OFFICIAL_REPO: 'j9ac9k/pyqtgraph'
+  OFFICIAL_REPO: 'pyqtgraph/pyqtgraph'
 
 jobs:
   - template: azure-test-template.yml
