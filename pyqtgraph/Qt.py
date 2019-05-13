@@ -219,8 +219,12 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    isQObjectAlive = _isQObjectAlive
-    
+    try:
+        import shiboken2
+        isQObjectAlive = shiboken2.isValid
+    except ImportError:
+        # use approximate version
+        isQObjectAlive = _isQObjectAlive    
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
