@@ -100,10 +100,13 @@ def _loadUiType(uiFile):
     how to make PyQt4 and pyside look the same...
         http://stackoverflow.com/a/8717832
     """
-    import pysideuic
+
+    if QT_LIB == "PYSIDE":
+        import pysideuic
+    else:
+        import pyside2uic as pysideuic
     import xml.etree.ElementTree as xml
-    #from io import StringIO
-    
+
     parsed = xml.parse(uiFile)
     widget_class = parsed.find('widget').get('class')
     form_class = parsed.find('class').text
