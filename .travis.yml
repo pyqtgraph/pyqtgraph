@@ -9,10 +9,6 @@ sudo: false
 notifications:
   email: false
 
-virtualenv:
-    system_site_packages: true
-
-
 env:
     # Enable python 2 and python 3 builds
     # Note that the python 2.6 support ended.
