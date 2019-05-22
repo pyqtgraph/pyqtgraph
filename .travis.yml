@@ -9,15 +9,9 @@ sudo: false
 notifications:
   email: false
 
-virtualenv:
-    system_site_packages: true
-
-
 env:
     # Enable python 2 and python 3 builds
-    # Note that the 2.6 build doesn't get flake8, and runs old versions of
-    # Pyglet and GLFW to make sure we deal with those correctly
-    #- PYTHON=2.6 QT=pyqt4 TEST=standard  # 2.6 support ended 
+    # Note that the python 2.6 support ended.
     - PYTHON=2.7 QT=pyqt4 TEST=extra
     - PYTHON=2.7 QT=pyside TEST=standard
     - PYTHON=3.5 QT=pyqt5 TEST=standard
@@ -67,11 +61,6 @@ install:
       fi;
     - pip install pytest-xdist # multi-thread py.test
     - pip install pytest-cov # add coverage stats
-
-    # required for example testing on python 2.6
-    - if [ "${PYTHON}" == "2.6" ]; then
-        pip install importlib;
-      fi;
 
     # Debugging helpers
     - uname -a
