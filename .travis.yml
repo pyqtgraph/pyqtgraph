@@ -9,10 +9,6 @@ sudo: false
 notifications:
   email: false
 
-virtualenv:
-    system_site_packages: true
-
-
 env:
     # Enable python 2 and python 3 builds
     # Note that the 2.6 build doesn't get flake8, and runs old versions of
