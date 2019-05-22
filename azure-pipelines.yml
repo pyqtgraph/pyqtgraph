@@ -1,0 +1,38 @@
+############################################################################################
+#  This config was rectrieved in no small part from https://github.com/slaclab/pydm
+############################################################################################
+
+trigger:
+  branches:
+    include:
+    - '*' # Build for all branches if they have a azure-pipelines.yml file.
+  tags:
+    include:
+    - 'v*' # Ensure that we are building for tags starting with 'v' (Official Versions)
+
+# Build only for PRs for master branch
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - master
+      - develop
+
+variables:
+  OFFICIAL_REPO: 'pyqtgraph/pyqtgraph'
+
+jobs:
+  - template: azure-test-template.yml
+    parameters:
+      name: Linux
+      vmImage: 'Ubuntu 16.04'
+
+  - template: azure-test-template.yml
+    parameters:
+      name: Windows
+      vmImage: 'vs2017-win2016'
+
+  - template: azure-test-template.yml
+    parameters:
+      name: MacOS
+      vmImage: 'macOS-10.13'
