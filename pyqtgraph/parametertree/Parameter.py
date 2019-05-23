@@ -612,7 +612,7 @@ class Parameter(QtCore.QObject):
 
     def incrementName(self, name):
         ## return an unused name by adding a number to the name given
-        base, num = re.match('(.*)(\d*)', name).groups()
+        base, num = re.match(r'(.*)(\d*)', name).groups()
         numLen = len(num)
         if numLen == 0:
             num = 2
