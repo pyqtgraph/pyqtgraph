@@ -630,9 +630,9 @@ class PlotDataItem(GraphicsObject):
         #self.yClean = None
         self.xDisp = None
         self.yDisp = None
-        self.curve.setData([])
-        self.scatter.setData([])
-            
+        self.curve.clear()
+        self.scatter.clear()
+
     def appendData(self, *args, **kargs):
         pass
     
