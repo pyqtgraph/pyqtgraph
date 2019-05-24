@@ -633,7 +633,7 @@ class ImageView(QtGui.QWidget):
             ax = np.argmax(data.shape)
             sl = [slice(None)] * data.ndim
             sl[ax] = slice(None, None, 2)
-            data = data[sl]
+            data = data[tuple(sl)]
             
         cax = self.axes['c']
         if cax is None:
