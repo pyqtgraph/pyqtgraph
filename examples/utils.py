@@ -4,6 +4,7 @@ import time
 import os
 import sys
 import errno
+import pytest
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -90,6 +91,8 @@ examples = OrderedDict([
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
 ])
+    
+example_requirements = {'hdf5.py' : ['h5py']}
 
 
 def buildFileList(examples, files=None):
@@ -105,12 +108,20 @@ def buildFileList(examples, files=None):
     return files
 
 def testFile(name, f, exe, lib, graphicsSystem=None):
-    global path
+    global path, example_requirements
     fn = os.path.join(path,f)
     #print "starting process: ", fn
     os.chdir(path)
     sys.stdout.write(name)
     sys.stdout.flush()
+    
+    if f in example_requirements:
+        for requirement in example_requirements[f]:
+            try:
+                __import__(requirement)
+            except ImportError:
+                print(" Requirement {} of this test not satified ".format(requirement))
+                pytest.skip()
 
     import1 = "import %s" % lib if lib != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
