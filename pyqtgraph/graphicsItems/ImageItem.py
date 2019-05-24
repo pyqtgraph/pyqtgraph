@@ -495,7 +495,7 @@ class ImageItem(GraphicsObject):
                 return None, None
             if stepData.dtype.kind in "ui":
                 # For integer data, we select the bins carefully to avoid aliasing
-                step = np.ceil((mx-mn) / 500.)
+                step = np.ceil((mx-mn) / 500.) if not (mx-mn) == 0 else 1
                 bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
             else:
                 # for float data, let numpy select the bins.
