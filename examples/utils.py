@@ -120,7 +120,7 @@ def testFile(name, f, exe, lib, graphicsSystem=None):
             try:
                 __import__(requirement)
             except ImportError:
-                print(" Requirement {} of this test not satified ".format(requirement))
+                print(" Requirement \"{}\" of this test not satified ".format(requirement))
                 pytest.skip()
 
     import1 = "import %s" % lib if lib != '' else ''
