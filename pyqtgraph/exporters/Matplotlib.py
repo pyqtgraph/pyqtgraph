@@ -124,5 +124,4 @@ class MatplotlibWindow(QtGui.QMainWindow):
         
     def closeEvent(self, ev):
         MatplotlibExporter.windows.remove(self)
-
-
+        self.deleteLater()
