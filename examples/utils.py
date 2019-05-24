@@ -170,4 +170,5 @@ except:
     if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
         print(res[0].decode())
         print(res[1].decode())
+        print()
         assert False
