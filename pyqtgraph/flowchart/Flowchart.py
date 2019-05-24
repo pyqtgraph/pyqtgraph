@@ -526,11 +526,6 @@ class Flowchart(Node):
         self.viewBox.autoRange()
         self.sigFileLoaded.emit(fileName)
 
-    def saveFileSelected(self, fileName):
-        if not fileName.endswith('.fc'):
-            fileName += '.fc'
-        self.saveFile(fileName=fileName)
-
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
         """Save this flowchart to a .fc file
         """
@@ -540,9 +535,10 @@ class Flowchart(Node):
             if startDir is None:
                 startDir = '.'
             self.fileDialog = FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog.setDefaultSuffix("fc")
             self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.saveFileSelected)
+            self.fileDialog.fileSelected.connect(self.saveFile)
             return
         fileName = asUnicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
