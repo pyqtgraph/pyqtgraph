@@ -168,8 +168,6 @@ except:
     res = (process.stdout.read(), process.stderr.read())
 
     if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
-        print('.' * (50-len(name)) + 'FAILED')
         print(res[0].decode())
         print(res[1].decode())
-    else:
-        print('.' * (50-len(name)) + 'passed')
+        assert False
