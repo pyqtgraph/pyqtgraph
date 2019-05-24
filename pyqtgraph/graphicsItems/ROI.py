@@ -2186,8 +2186,9 @@ class _PolyLineSegment(LineSegmentROI):
     def hoverEvent(self, ev):
         # accept drags even though we discard them to prevent competition with parent ROI
         # (unless parent ROI is not movable)
-        if self.parentItem().translatable:
-            ev.acceptDrags(QtCore.Qt.LeftButton)
+        if self.parentItem() is not None:
+            if self.parentItem().translatable:
+                ev.acceptDrags(QtCore.Qt.LeftButton)
         return LineSegmentROI.hoverEvent(self, ev)
 
 
