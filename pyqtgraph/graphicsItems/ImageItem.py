@@ -11,6 +11,7 @@ from .. import getConfigOption
 try:
     from collections.abc import Callable
 except ImportError:
+    # fallback for python < 3.3
     from collections import Callable
 
 __all__ = ['ImageItem']

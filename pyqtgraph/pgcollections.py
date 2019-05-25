@@ -23,6 +23,7 @@ except ImportError:
 try:
     from collections.abc import Sequence
 except ImportError:
+    # fallback for python < 3.3
     from collections import Sequence
 
 
