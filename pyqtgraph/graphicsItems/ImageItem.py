@@ -2,13 +2,17 @@ from __future__ import division
 
 from ..Qt import QtGui, QtCore
 import numpy as np
-import collections
 from .. import functions as fn
 from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 from ..Point import Point
 from .. import getConfigOption
 
+try:
+    from collections.abc import Callable
+except ImportError:
+    # fallback for python < 3.3
+    from collections import Callable
 
 __all__ = ['ImageItem']
 
@@ -357,7 +361,7 @@ class ImageItem(GraphicsObject):
 
         # Request a lookup table if this image has only one channel
         if self.image.ndim == 2 or self.image.shape[2] == 1:
-            if isinstance(self.lut, collections.Callable):
+            if isinstance(self.lut, Callable):
                 lut = self.lut(self.image)
             else:
                 lut = self.lut
@@ -624,7 +628,7 @@ class ImageItem(GraphicsObject):
         mask = self.drawMask
         src = dk
 
-        if isinstance(self.drawMode, collections.Callable):
+        if isinstance(self.drawMode, Callable):
             self.drawMode(dk, self.image, mask, ss, ts, ev)
         else:
             src = src[ss]
