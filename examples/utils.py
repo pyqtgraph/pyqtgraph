@@ -170,8 +170,6 @@ except:
         if output.endswith('test failed'):
             fail = True
             break
-        if output.endswith('test skipped'):
-            break
     time.sleep(1)
     process.kill()
     #res = process.communicate()
