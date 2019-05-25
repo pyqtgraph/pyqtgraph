@@ -253,7 +253,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     assert im1.dtype == im2.dtype
 
     if pxCount == -1:
-        if QT_LIB == 'PyQt5':
+        if QT_LIB in {'PyQt5', 'PySide2'}:
             # Qt5 generates slightly different results; relax the tolerance
             # until test images are updated.
             pxCount = int(im1.shape[0] * im1.shape[1] * 0.01)
