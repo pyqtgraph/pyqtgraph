@@ -4,6 +4,7 @@ import time
 import os
 import sys
 import errno
+import pytest
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -129,6 +130,9 @@ try:
     while True:  ## run a little event loop
         pg.QtGui.QApplication.processEvents()
         time.sleep(0.01)
+except ImportError:
+    print("test skipped")
+    raise
 except:
     print("test failed")
     raise
@@ -145,6 +149,7 @@ except:
         process.stdin.close() ##?
     output = ''
     fail = False
+    skip = False
     while True:
         try:
             c = process.stdout.read(1).decode()
@@ -159,13 +164,24 @@ except:
         #sys.stdout.flush()
         if output.endswith('test complete'):
             break
+        if output.endswith('test skipped'):
+            skip = True
+            break
         if output.endswith('test failed'):
             fail = True
+            break
+        if output.endswith('test skipped'):
             break
     time.sleep(1)
     process.kill()
     #res = process.communicate()
     res = (process.stdout.read(), process.stderr.read())
+    
+    if skip:
+        print(res[0].decode())
+        print(res[1].decode())
+        print()
+        pytest.skip()
 
     if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
         print('.' * (50-len(name)) + 'FAILED')
