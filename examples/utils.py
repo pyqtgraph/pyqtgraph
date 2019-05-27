@@ -117,11 +117,7 @@ def testFile(name, f, exe, lib, graphicsSystem=None):
     
     if f in example_requirements:
         for requirement in example_requirements[f]:
-            try:
-                __import__(requirement)
-            except ImportError:
-                print(" Requirement \"{}\" of this test not satified ".format(requirement))
-                pytest.skip()
+            pytest.importorskip(requirement, reason="Requirement \"{}\" of this test not satified ".format(requirement))
 
     import1 = "import %s" % lib if lib != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
