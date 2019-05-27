@@ -152,9 +152,14 @@ class Dock(QtGui.QWidget, DockDrop):
         """
         #print self.name(), "setOrientation", o, force
         if o == 'auto' and self.autoOrient:
-            if self.container().type() == 'tab':
-                o = 'horizontal'
-            elif self.width() > self.height()*1.5:
+            if 'type' in dir(self.container()):
+                if self.container().type() == 'tab':
+                    o = 'horizontal'
+                elif self.width() > self.height()*1.5:
+                    o = 'vertical'
+                else:
+                    o = 'horizontal'
+            elif self.width() > self.height() * 1.5:
                 o = 'vertical'
             else:
                 o = 'horizontal'
