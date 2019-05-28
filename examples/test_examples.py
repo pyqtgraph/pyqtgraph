@@ -42,7 +42,7 @@ except ImportError:
     pass
 
 files = utils.buildFileList(utils.examples)
-frontends = {Qt.PYQT4: False, Qt.PYSIDE: False}
+frontends = {Qt.PYQT4: False, Qt.PYQT5: False, Qt.PYSIDE: False, Qt.PYSIDE2: False}
 # sort out which of the front ends are available
 for frontend in frontends.keys():
     try:
