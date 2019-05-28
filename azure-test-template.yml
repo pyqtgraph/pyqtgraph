@@ -36,96 +36,32 @@ jobs:
         install.method: "pip"
 
   steps:
-  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-    displayName: 'Windows - Add conda to PATH'
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
 
-  - bash: |
-      echo "##vso[task.prependpath]$CONDA/bin"
-      sudo chown -R $USER $CONDA
-    displayName: 'MacOS - Add conda to PATH'
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
-
-  - bash: |
-      brew update && brew install azure-cli
-      brew update && brew install python3 && brew upgrade python3
-      brew link --overwrite python3
-    displayName: "MacOS - Intall Python3"
-    condition: and(eq(variables['install.method'], 'pip' ), eq(variables['agent.os'], 'Darwin' ))
-
-  - bash: |
-      echo "##vso[task.prependpath]/usr/share/miniconda/bin"
-    displayName: 'Linux - Add conda to PATH'
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Linux' ))
-
-  - bash: |
-      # Install & Start Windows Manager for Linux
-      sudo apt-get install -y xvfb libxkbcommon-x11-0  # herbstluftwm
-    displayName: 'Linux - Prepare OS'
-    condition: eq(variables['agent.os'], 'Linux' )
-
-  - bash: |
-      source $HOME/miniconda/etc/profile.d/conda.sh
-      hash -r
-      conda config --set always_yes yes --set auto_update_conda no
-      conda config --add channels conda-forge
-      conda create -n test_env --quiet python=$(python.version) 
-    displayName: 'Conda Setup Test Environment'
-    condition: eq(variables['install.method'], 'conda' )
+# windows set resolution
+  - task: ScreenResolutionUtility@1
+    inputs:
+      displaySettings: 'specific'
+      width: '1920'
+      height: '1080'
+    condition: eq(variables['agent.os'], 'Windows_NT' )
   
-  - script: |
-      call activate test_env
-      conda install --quiet $(qt.bindings)
-      conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
-      pip install pytest-azurepipelines pytest-xdist pytest-cov 
-    displayName: Conda Install Dependencies - Windows
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
-
-  - bash: |
-      source activate test_env
-      conda install --quiet $(qt.bindings)
-      conda install --quiet numpy scipy pyopengl pytest flake8 six coverage
-      pip install pytest-azurepipelines pytest-xdist pytest-cov pytest-xvfb
-    displayName: Conda Install Dependencies - MacOS+Linux
-    condition: and(eq(variables['install.method'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
-
+# pip - all
   - bash: |
       pip3 install setuptools wheel
       pip3 install $(qt.bindings)
       pip3 install numpy scipy pyopengl pytest flake8 six coverage
-      pip3 install pytest-azurepipelines pytest-xdist pytest-cov pytest-xvfb
+      pip3 install pytest-azurepipelines pytest-xdist pytest-cov
     displayName: "Pip - Install Dependencies"
-    condition: eq(variables['install.method'], 'pip' )
+    condition: eq(variables['install.method'], 'pip')
 
+# xvfb - Linux
   - bash: |
-      source activate test_env
-      echo python location: `which python3`
-      echo python version: `python3 --version`
-      echo pytest location: `which pytest`
-      echo installed packages
-      conda list
-      echo pyqtgraph system info
-      python -c "import pyqtgraph as pg; pg.systemInfo()"
-    displayName: 'Debug - Conda/MacOS+Linux'
-    continueOnError: false
-    condition: and(eq(variables['install.method'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
-
-  - script: |
-      call activate test_env
-      echo python location
-      where python
-      echo python version
-      python --version
-      echo pytest location
-      where pytest
-      echo installed packages
-      conda list
-      echo pyqtgraph system info
-      python -c "import pyqtgraph as pg; pg.systemInfo()"
-    displayName: 'Debug - Conda/Windows'
-    continueOnError: false
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
-
+      sudo apt-get install -y xvfb libxkbcommon-x11-0  # herbstluftwm
+      pip3 install pytest-xvfb
+    displayName: "Linux Virtual Display Setup (pip)"
+    condition: and(eq(variables['install.method'], 'pip'), eq(variables['agent.os'], 'Linux' ))
+  
+# pip - macOS/Linux
   - bash: |
       echo python location: `which python3`
       echo python version: `python3 --version`
@@ -134,50 +70,97 @@ jobs:
       pip3 list
       echo pyqtgraph system info
       python3 -c "import pyqtgraph as pg; pg.systemInfo()"
-    displayName: 'Debug - System/MacOS+Linux'
+    displayName: 'Debug - pip - macOS & Linux'
     continueOnError: false
     condition: and(eq(variables['install.method'], 'pip' ), ne(variables['agent.os'], 'Windows_NT' ))
 
+# pip - macOS/Linux
+  - bash: python3 -m pytest pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
+    displayName: 'Tests - Run - pip - macOS & Linux' 
+    continueOnError: false
+    env:
+      DISPLAY: :99.0
+    condition: and(eq(variables['install.method'], 'pip' ), ne(variables['agent.os'], 'Windows_NT' ))
+
+# pip - Windows
   - bash: |
-      echo python location: `where python`
+      echo python location: `which python`
       echo python version: `python --version`
-      echo pytest location: `where pytest`
+      echo pytest location: `which pytest`
       echo installed packages
-      python -m pip list
+      pip list
       echo pyqtgraph system info
       python -c "import pyqtgraph as pg; pg.systemInfo()"
-    displayName: 'Debug - System/Windows'
+    displayName: 'Debug - pip - Windows'
     continueOnError: false
     condition: and(eq(variables['install.method'], 'pip' ), eq(variables['agent.os'], 'Windows_NT' ))
 
-  - bash: python3 -m pytest --cov pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
-    displayName: 'Tests - Run - Pip/MacOS+Linux' 
+# pip - Windows
+  - bash: python -m pytest pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
+    displayName: 'Tests - Run - pip - Windows'
     continueOnError: false
-    env:
-      DISPLAY: :99.0
-    condition: and(eq(variables['install.method'], 'pip' ), ne(variables['agent.os'], 'Windows_NT' ))
-
-  - bash: python -m pytest --cov pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
-    displayName: 'Tests - Run - Pip/Windows'
-    continueOnError: false
-    env:
-      DISPLAY: :99.0
     condition: and(eq(variables['install.method'], 'pip' ), eq(variables['agent.os'], 'Windows_NT' ))
 
+# conda - windows
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: 'Windows - Add conda to PATH'
+    condition: eq(variables['agent.os'], 'Windows_NT' )
+
+# conda - macOS
   - bash: |
-      source activate test_env
-      pytest --cov pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
-    displayName: 'Tests - Run - Conda/MacOS+Linux'
-    continueOnError: false
-    env:
-      DISPLAY: :99.0
-    condition: and(eq(variables['install.method'], 'conda' ), ne(variables['agent.os'], 'Windows_NT' ))
+      echo '##vso[task.prependpath]$CONDA/bin'
+      # Fix Anaconda permissions
+      sudo install -d -m 0777 /usr/local/miniconda/envs
+    displayName: 'MacOS - Add conda to PATH'
+    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Darwin' ))
 
-  - script: |
-      call activate test_env
-      python -m pytest --cov pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
-    displayName: 'Tests - Run - Conda/Windows'
+# conda - linux
+  - bash: echo '##vso[task.prependpath]/usr/share/miniconda/bin'
+    displayName: 'Linux - Add conda to PATH'
+    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Linux' ))
+
+# conda - create environment
+  - task: CondaEnvironment@0
+    displayName: 'Conda - Create Test Environment'
+    condition: eq(variables['install.method'], 'conda')
+    inputs:
+      environmentName: 'test-environment-$(python.version)'
+      packageSpecs: '-c conda-forge $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage python=$(python.version)'
+  
+  - bash: |
+      sudo apt-get install -y xvfb libxkbcommon-x11-0
+      source activate test-environment-$(python.version)
+      pip install pytest-xvfb
+    displayName: "Linux Virtual Display Setup (conda)"
+    condition: and(eq(variables['install.method'], 'conda'), eq(variables['agent.os'], 'Linux' ))
+
+# conda - all
+  - bash: |
+      source activate test-environment-$(python.version)
+      pip install pytest-azurepipelines pytest-xdist pytest-cov
+    displayName: Conda Install Dependencies
+    condition: eq(variables['install.method'], 'conda' )
+
+# conda - all
+  - bash: |
+      source activate test-environment-$(python.version)
+      echo python location: `which python`
+      echo python version: `python --version`
+      echo pytest location: `which pytest`
+      echo installed packages
+      conda list
+      echo pyqtgraph system info
+      python -c "import pyqtgraph as pg; pg.systemInfo()"
+    displayName: 'Debug - Conda'
+    continueOnError: false
+    condition: eq(variables['install.method'], 'conda' )
+
+# conda - all
+  - bash: |
+      source activate test-environment-$(python.version)
+      python -m pytest pyqtgraph -sv --test-run-title="Tests for $(Agent.OS) - Python $(python.version) - Install Method $(install.method)- Bindings $(qt.bindings)" --napoleon-docstrings
+    displayName: 'Tests - Run - Conda'
     continueOnError: false
     env:
       DISPLAY: :99.0
-    condition: and(eq(variables['install.method'], 'conda' ), eq(variables['agent.os'], 'Windows_NT' ))
+    condition: eq(variables['install.method'], 'conda' )
