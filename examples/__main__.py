@@ -135,6 +135,8 @@ if __name__ == '__main__':
             lib = 'PyQt4'
         elif '--pyqt5' in args:
             lib = 'PyQt5'
+        elif '--pyside2' in args:
+            lib = 'PySide2'
         else:
             lib = ''
             

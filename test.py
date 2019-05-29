@@ -15,10 +15,15 @@ elif '--pyqt4' in args:
 elif '--pyqt5' in args:
     args.remove('--pyqt5')
     import PyQt5
+elif '--pyside2' in args:
+    args.remove('--pyside2')
+    import PySide2
 
 import pyqtgraph as pg
 pg.systemInfo()
-
+qApp = pg.mkQApp()
+desktop = qApp.desktop().screenGeometry()
+print("\n\nDesktop Resolution: {} x {}\n\n".format(desktop.width(), desktop.height()))
 pytest.main(args)
     
     
