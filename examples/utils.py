@@ -4,6 +4,7 @@ import time
 import os
 import sys
 import errno
+import copy
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -90,6 +91,11 @@ examples = OrderedDict([
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
 ])
+
+not_tested = ['HDF5 big data']
+
+tested_examples = copy.deepcopy(examples)
+all(map(tested_examples.pop, not_tested))
 
 
 def buildFileList(examples, files=None):

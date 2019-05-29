@@ -41,7 +41,7 @@ except ImportError:
           "pypi\n\npip install importlib\n\n")
     pass
 
-files = utils.buildFileList(utils.examples)
+files = utils.buildFileList(utils.tested_examples)
 frontends = {Qt.PYQT4: False, Qt.PYQT5: False, Qt.PYSIDE: False, Qt.PYSIDE2: False}
 # sort out which of the front ends are available
 for frontend in frontends.keys():
