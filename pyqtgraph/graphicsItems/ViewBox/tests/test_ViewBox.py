@@ -31,7 +31,8 @@ def init_viewbox():
     
     g = pg.GridItem()
     vb.addItem(g)
-    
+    desktop = app.desktop().screenGeometry()
+    print("\n\nDesktop Resolution: {} x {}\n\n".format(desktop.width(), desktop.height()))
     app.processEvents()
     
 def test_ViewBox():
