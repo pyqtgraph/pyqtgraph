@@ -8,7 +8,7 @@ function of the scale/rotate handles in very flexible ways.
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import numpy as np
 
 pg.setConfigOptions(imageAxisOrder='row-major')
@@ -33,7 +33,15 @@ arr[8:13, 44:46] = 10
 
 ## create GUI
 app = QtGui.QApplication([])
-w = pg.GraphicsLayoutWidget(show=True, size=(1000,800), border=True)
+
+window = QtWidgets.QMainWindow()
+window.setGeometry(300, 300, 1000, 800)
+
+w = pg.GraphicsLayoutWidget(parent=window, border=True)
+
+window.setCentralWidget(w)
+window.show()
+
 w.setWindowTitle('pyqtgraph example: ROI Examples')
 
 text = """Data Selection From Image.<br>\n
@@ -138,7 +146,7 @@ label4 = w4.addLabel(text, row=0, col=0)
 v4 = w4.addViewBox(row=1, col=0, lockAspect=True)
 g = pg.GridItem()
 v4.addItem(g)
-r4 = pg.ROI([0,0], [100,100], resizable=False, removable=True)
+r4 = pg.ROI([0,0], [100,100], removable=True)
 r4.addRotateHandle([1,0], [0.5, 0.5])
 r4.addRotateHandle([0,1], [0.5, 0.5])
 img4 = pg.ImageItem(arr)
