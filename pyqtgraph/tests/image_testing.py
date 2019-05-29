@@ -289,9 +289,9 @@ def saveFailedTest(data, expect, filename, upload=False):
     """Upload failed test images to web server to allow CI test debugging.
     """
     commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
-    name = filename.split('/')
+    name = filename.split(os.path.sep)
     name.insert(-1, commit.strip())
-    filename = '/'.join(name)
+    filename = os.path.sep.join(name)
 
     # concatenate data, expect, and diff into a single image
     ds = data.shape
@@ -309,7 +309,7 @@ def saveFailedTest(data, expect, filename, upload=False):
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
     png = makePng(img)
-    directory, _, _ = filename.rpartition("/")
+    directory = os.path.dirname(filename)
     if not os.path.isdir(directory):
         os.makedirs(directory)
     with open(filename + ".png", "wb") as png_file:
@@ -317,9 +317,9 @@ def saveFailedTest(data, expect, filename, upload=False):
     print("\nImage comparison failed. Test result: %s %s   Expected result: "
         "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
     if upload:
-        uploadFailedTest(filename)
+        uploadFailedTest(filename, png)
     
-def uploadFailedTest(filename):
+def uploadFailedTest(filename, png):
     host = 'data.pyqtgraph.org'
     conn = httplib.HTTPConnection(host)
     req = urllib.urlencode({'name': filename,
