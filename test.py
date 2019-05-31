@@ -21,9 +21,4 @@ elif '--pyside2' in args:
 
 import pyqtgraph as pg
 pg.systemInfo()
-qApp = pg.mkQApp()
-desktop = qApp.desktop().screenGeometry()
-print("\n\nDesktop Resolution: {} x {}\n\n".format(desktop.width(), desktop.height()))
 pytest.main(args)
-    
-    

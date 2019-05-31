@@ -1553,7 +1553,7 @@ class RectROI(ROI):
             self.addScaleHandle([0.5, 1], [0.5, center[1]])
 
 class LineROI(ROI):
-    """
+    r"""
     Rectangular ROI subclass with scale-rotate handles on either side. This
     allows the ROI to be positioned as if moving the ends of a line segment.
     A third handle controls the width of the ROI orthogonal to its "line" axis.

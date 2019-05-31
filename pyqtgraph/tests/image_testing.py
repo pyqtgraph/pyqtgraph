@@ -213,7 +213,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile, upload=True)
                 elif os.getenv('AZURE') is not None:
-                    standardFile = r"artifacts/" + standardFile
+                    standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
                     saveFailedTest(image, stdImage, standardFile)
                 print(graphstate)
                 raise
@@ -288,11 +288,6 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
 def saveFailedTest(data, expect, filename, upload=False):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
-    name = filename.split(os.path.sep)
-    name.insert(-1, commit.strip())
-    filename = os.path.sep.join(name)
-
     # concatenate data, expect, and diff into a single image
     ds = data.shape
     es = expect.shape
@@ -318,8 +313,14 @@ def saveFailedTest(data, expect, filename, upload=False):
         "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
     if upload:
         uploadFailedTest(filename, png)
-    
+
+
 def uploadFailedTest(filename, png):
+    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
+    name = filename.split(os.path.sep)
+    name.insert(-1, commit.strip())
+    filename = os.path.sep.join(name)
+
     host = 'data.pyqtgraph.org'
     conn = httplib.HTTPConnection(host)
     req = urllib.urlencode({'name': filename,
