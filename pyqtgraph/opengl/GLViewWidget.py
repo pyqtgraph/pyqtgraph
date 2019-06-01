@@ -233,11 +233,20 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
             
-    def setCameraPosition(self, pos=None, distance=None, rotation=None):
+    def setCameraPosition(self, distance=None, elevation=None, azimuth=None, rotation=None):
         if distance is not None:
             self.opts['distance'] = distance
         if rotation is not None:
+            # set with quaternion
             self.opts['rotation'] = rotation
+        else:
+            # set with elevation-azimuth, restored for compatibility
+            eu = self.opts['rotation'].toEulerAngles()
+            if azimuth is not None:
+                eu.setZ(-azimuth-90)
+            if elevation is not None:
+                eu.setX(elevation-90)
+            self.opts['rotation'] = QtGui.QQuaternion.fromEulerAngles(eu)
         self.update()
         
     def cameraPosition(self):
