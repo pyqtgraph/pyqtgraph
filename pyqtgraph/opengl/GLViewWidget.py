@@ -35,7 +35,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
-            'rot' : QtGui.QQuaternion(1,0,0,0), ## camera rotation (quaternion:wxyz)
+            'rotation' : QtGui.QQuaternion(1,0,0,0), ## camera rotation (quaternion:wxyz)
             'distance': 10.0,         ## distance of camera from center
             'fov':  60,               ## horizontal field of view in degrees
             'viewport': None,         ## glViewport params; None == whole widget
@@ -144,7 +144,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
         tr.translate( 0.0, 0.0, -self.opts['distance'])
-        u, h = self.opts['rot'].getAxisAndAngle()
+        u, h = self.opts['rotation'].getAxisAndAngle()
         tr.rotate(h, u)
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
@@ -233,18 +233,18 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
             
-    def setCameraPosition(self, pos=None, distance=None, rot=None):
+    def setCameraPosition(self, pos=None, distance=None, rotation=None):
         if distance is not None:
             self.opts['distance'] = distance
-        if rot is not None:
-            self.opts['rot'] = rot
+        if rotation is not None:
+            self.opts['rotation'] = rotation
         self.update()
         
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
         dist = self.opts['distance']
-        pos = center - self.opts['rot'].rotatedVector( Vector(0,0,dist) )
+        pos = center - self.opts['rotation'].rotatedVector( Vector(0,0,dist) )
         return pos
 
     def orbit(self, azim, elev):
@@ -252,8 +252,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         q = QtGui.QQuaternion.fromEulerAngles(
                 elev, -azim, 0
                 ) # rx-ry-rz
-        q *= self.opts['rot']
-        self.opts['rot'] = q
+        q *= self.opts['rotation']
+        self.opts['rotation'] = q
         self.update()
         
     def pan(self, dx, dy, dz, relative='global'):
@@ -301,7 +301,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             # pan in plane of camera
 
             # obtain basis vectors
-            qc = self.opts['rot'].conjugated()
+            qc = self.opts['rotation'].conjugated()
             xv = qc.rotatedVector( Vector(1,0,0) )
             yv = qc.rotatedVector( Vector(0,1,0) )
             zv = qc.rotatedVector( Vector(0,0,1) )
