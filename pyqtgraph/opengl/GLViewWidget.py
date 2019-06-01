@@ -35,11 +35,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         
         self.opts = {
             'center': Vector(0,0,0),  ## will always appear at the center of the widget
+            'rot' : QtGui.QQuaternion(1,0,0,0), ## camera rotation (quaternion:wxyz)
             'distance': 10.0,         ## distance of camera from center
             'fov':  60,               ## horizontal field of view in degrees
-            'elevation':  30,         ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 
-                                      ## (rotation around z-axis 0 points along x-axis)
             'viewport': None,         ## glViewport params; None == whole widget
             'devicePixelRatio': devicePixelRatio,
         }
@@ -146,8 +144,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
         tr.translate( 0.0, 0.0, -self.opts['distance'])
-        tr.rotate(self.opts['elevation']-90, 1, 0, 0)
-        tr.rotate(self.opts['azimuth']+90, 0, 0, -1)
+        u, h = self.opts['rot'].getAxisAndAngle()
+        tr.rotate(h, u)
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
@@ -235,34 +233,27 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
             
-    def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None):
+    def setCameraPosition(self, pos=None, distance=None, rot=None):
         if distance is not None:
             self.opts['distance'] = distance
-        if elevation is not None:
-            self.opts['elevation'] = elevation
-        if azimuth is not None:
-            self.opts['azimuth'] = azimuth
+        if rot is not None:
+            self.opts['rot'] = rot
         self.update()
         
     def cameraPosition(self):
         """Return current position of camera based on center, dist, elevation, and azimuth"""
         center = self.opts['center']
         dist = self.opts['distance']
-        elev = self.opts['elevation'] * np.pi/180.
-        azim = self.opts['azimuth'] * np.pi/180.
-        
-        pos = Vector(
-            center.x() + dist * np.cos(elev) * np.cos(azim),
-            center.y() + dist * np.cos(elev) * np.sin(azim),
-            center.z() + dist * np.sin(elev)
-        )
-        
+        pos = center - self.opts['rot'].rotatedVector( Vector(0,0,dist) )
         return pos
 
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are given in degrees."""
-        self.opts['azimuth'] += azim
-        self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+        q = QtGui.QQuaternion.fromEulerAngles(
+                elev, -azim, 0
+                ) # rx-ry-rz
+        q *= self.opts['rot']
+        self.opts['rot'] = q
         self.update()
         
     def pan(self, dx, dy, dz, relative='global'):
@@ -308,16 +299,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
         elif relative == 'view':
             # pan in plane of camera
-            elev = np.radians(self.opts['elevation'])
-            azim = np.radians(self.opts['azimuth'])
-            fov = np.radians(self.opts['fov'])
-            dist = (self.opts['center'] - self.cameraPosition()).length()
-            fov_factor = np.tan(fov / 2) * 2
-            scale_factor = dist * fov_factor / self.width()
-            z = scale_factor * np.cos(elev) * dy
-            x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
-            y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
-            self.opts['center'] += QtGui.QVector3D(x, -y, z)
+
+            # obtain basis vectors
+            qc = self.opts['rot'].conjugated()
+            xv = qc.rotatedVector( Vector(1,0,0) )
+            yv = qc.rotatedVector( Vector(0,1,0) )
+            zv = qc.rotatedVector( Vector(0,0,1) )
+
+            scale_factor = self.pixelSize( self.opts['center'] )
+
+            # apply translation
+            self.opts['center'] += scale_factor * (xv*-dx + yv*dy + zv*dz)
         else:
             raise ValueError("relative argument must be global, view, or view-upright")
         
