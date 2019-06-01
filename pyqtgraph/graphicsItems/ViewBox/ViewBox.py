@@ -1496,14 +1496,13 @@ class ViewBox(GraphicsWidget):
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
 
-        # emit range change signals
-        if changed[0]:
-            self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
-        if changed[1]:
-            self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
-
         if any(changed):
             self._matrixNeedsUpdate = True
+            # emit range change signals
+            if changed[0]:
+                self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+            if changed[1]:
+                self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
             self.sigRangeChanged.emit(self, self.state['viewRange'])
             self.update()
 
