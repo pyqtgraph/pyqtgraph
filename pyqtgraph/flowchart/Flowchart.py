@@ -503,8 +503,8 @@ class Flowchart(Node):
         finally:
             self.blockSignals(False)
             
-        self.sigChartLoaded.emit()
         self.outputChanged()
+        self.sigChartLoaded.emit()
         self.sigStateChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):

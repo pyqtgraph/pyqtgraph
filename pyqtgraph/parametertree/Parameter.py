@@ -559,8 +559,8 @@ class Parameter(QtCore.QObject):
             self.childs.insert(pos, child)
             
             child.parentChanged(self)
-            self.sigChildAdded.emit(self, child, pos)
             child.sigTreeStateChanged.connect(self.treeStateChanged)
+            self.sigChildAdded.emit(self, child, pos)
         return child
         
     def removeChild(self, child):
@@ -571,11 +571,11 @@ class Parameter(QtCore.QObject):
         del self.names[name]
         self.childs.pop(self.childs.index(child))
         child.parentChanged(None)
-        self.sigChildRemoved.emit(self, child)
         try:
             child.sigTreeStateChanged.disconnect(self.treeStateChanged)
         except (TypeError, RuntimeError):  ## already disconnected
             pass
+        self.sigChildRemoved.emit(self, child)
 
     def clearChildren(self):
         """Remove all child parameters."""
