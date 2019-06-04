@@ -49,8 +49,6 @@ for frontend in frontends.keys():
         frontends[frontend] = True
     except ImportError:
         pass
-    except ModuleNotFoundError:
-        pass
 
 installed = sorted([frontend for frontend, isPresent in frontends.items() if isPresent])
 
@@ -143,7 +141,6 @@ except:
         print(res[0].decode())
         print(res[1].decode())
         pytest.fail("{}\n{}\nFailed {} Example Test Located in {} ".format(res[0].decode(), res[1].decode(), name, file), pytrace=False)
-    assert True
 
 if __name__ == "__main__":
     pytest.cmdline.main()
