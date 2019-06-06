@@ -427,8 +427,8 @@ class ViewBox(GraphicsWidget):
         self.updateAutoRange()
         self.updateViewRange()
         self._matrixNeedsUpdate = True
-        self.sigStateChanged.emit(self)
         self.background.setRect(self.rect())
+        self.sigStateChanged.emit(self)
         self.sigResized.emit(self)
 
     def viewRange(self):
@@ -561,18 +561,18 @@ class ViewBox(GraphicsWidget):
 
         # If nothing has changed, we are done.
         if any(changed):
-            self.sigStateChanged.emit(self)
-
             # Update target rect for debugging
             if self.target.isVisible():
                 self.target.setRect(self.mapRectFromItem(self.childGroup, self.targetRect()))
 
-        # If ortho axes have auto-visible-only, update them now
-        # Note that aspect ratio constraints and auto-visible probably do not work together..
-        if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
-            self._autoRangeNeedsUpdate = True
-        elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
-            self._autoRangeNeedsUpdate = True
+            # If ortho axes have auto-visible-only, update them now
+            # Note that aspect ratio constraints and auto-visible probably do not work together..
+            if changed[0] and self.state['autoVisibleOnly'][1] and (self.state['autoRange'][0] is not False):
+                self._autoRangeNeedsUpdate = True
+            elif changed[1] and self.state['autoVisibleOnly'][0] and (self.state['autoRange'][1] is not False):
+                self._autoRangeNeedsUpdate = True
+                
+            self.sigStateChanged.emit(self)
 
     def setYRange(self, min, max, padding=None, update=True):
         """
@@ -1156,8 +1156,8 @@ class ViewBox(GraphicsWidget):
 
         self._resetTarget()
         self.scaleBy(s, center)
-        self.sigRangeChangedManually.emit(mask)
         ev.accept()
+        self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.RightButton and self.menuEnabled():
@@ -1498,14 +1498,8 @@ class ViewBox(GraphicsWidget):
 
         if any(changed):
             self._matrixNeedsUpdate = True
-            # emit range change signals
-            if changed[0]:
-                self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
-            if changed[1]:
-                self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
-            self.sigRangeChanged.emit(self, self.state['viewRange'])
             self.update()
-
+            
             # Inform linked views that the range has changed
             for ax in [0, 1]:
                 if not changed[ax]:
@@ -1513,6 +1507,13 @@ class ViewBox(GraphicsWidget):
                 link = self.linkedView(ax)
                 if link is not None:
                     link.linkedViewChanged(self, ax)
+
+            # emit range change signals
+            if changed[0]:
+                self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
+            if changed[1]:
+                self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
+            self.sigRangeChanged.emit(self, self.state['viewRange'])
 
     def updateMatrix(self, changed=None):
         if not self._matrixNeedsUpdate:
@@ -1541,9 +1542,9 @@ class ViewBox(GraphicsWidget):
         m.translate(-st[0], -st[1])
 
         self.childGroup.setTransform(m)
+        self._matrixNeedsUpdate = False
 
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
-        self._matrixNeedsUpdate = False
 
     def paint(self, p, opt, widget):
         self.checkSceneChange()
