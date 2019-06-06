@@ -144,8 +144,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def viewMatrix(self):
         tr = QtGui.QMatrix4x4()
         tr.translate( 0.0, 0.0, -self.opts['distance'])
-        u, h = self.opts['rotation'].getAxisAndAngle()
-        tr.rotate(h, u)
+        tr.rotate(self.opts['rotation'])
         center = self.opts['center']
         tr.translate(-center.x(), -center.y(), -center.z())
         return tr
