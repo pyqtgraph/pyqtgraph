@@ -23,6 +23,7 @@ class ErrorBarItem(GraphicsObject):
             beam=None,
             pen=None
         )
+        self.setVisible(False)
         self.setData(**opts)
 
     def setData(self, **opts):
@@ -44,6 +45,8 @@ class ErrorBarItem(GraphicsObject):
         
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """
+        if 'x' in opts and 'y' in opts:
+            self.setVisible(True)
         self.opts.update(opts)
         self.path = None
         self.update()
