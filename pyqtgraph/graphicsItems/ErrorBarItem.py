@@ -46,10 +46,7 @@ class ErrorBarItem(GraphicsObject):
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """
         self.opts.update(opts)
-        if self.opts['x'] is None or self.opts['y'] is None:
-            self.setVisible(False)
-        else:
-            self.setVisible(True)
+        self.setVisible(all(self.opts[ax] is not None for ax in ['x', 'y']))
         self.path = None
         self.update()
         self.prepareGeometryChange()
