@@ -277,7 +277,7 @@ class ViewBox(GraphicsWidget):
         scene = self.scene()
         if scene == self._lastScene:
             return
-        if self._lastScene is not None and hasattr(self.lastScene, 'sigPrepareForPaint'):
+        if self._lastScene is not None and hasattr(self._lastScene, 'sigPrepareForPaint'):
             self._lastScene.sigPrepareForPaint.disconnect(self.prepareForPaint)
         if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
             scene.sigPrepareForPaint.connect(self.prepareForPaint)
