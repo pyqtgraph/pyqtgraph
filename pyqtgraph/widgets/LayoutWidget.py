@@ -39,7 +39,7 @@ class LayoutWidget(QtGui.QWidget):
         Returns the created widget.
         """
         text = QtGui.QLabel(text, **kargs)
-        self.addItem(text, row, col, rowspan, colspan)
+        self.addWidget(text, row, col, rowspan, colspan)
         return text
         
     def addLayout(self, row=None, col=None, rowspan=1, colspan=1, **kargs):
@@ -49,7 +49,7 @@ class LayoutWidget(QtGui.QWidget):
         Returns the created widget.
         """
         layout = LayoutWidget(**kargs)
-        self.addItem(layout, row, col, rowspan, colspan)
+        self.addWidget(layout, row, col, rowspan, colspan)
         return layout
         
     def addWidget(self, item, row=None, col=None, rowspan=1, colspan=1):
