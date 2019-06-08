@@ -40,7 +40,7 @@ if os.getenv('TRAVIS') is not None:
     print("Installed wrapper for flaky print.")
 
 
-files = utils.buildFileList(utils.examples)
+files = sorted(set(utils.buildFileList(utils.examples)))
 frontends = {Qt.PYQT4: False, Qt.PYQT5: False, Qt.PYSIDE: False, Qt.PYSIDE2: False}
 # sort out which of the front ends are available
 for frontend in frontends.keys():
@@ -50,7 +50,7 @@ for frontend in frontends.keys():
     except ImportError:
         pass
 
-installed = sorted([frontend for frontend, isPresent in frontends.items() if isPresent])
+installedFrontends = sorted([frontend for frontend, isPresent in frontends.items() if isPresent])
 
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExampleTests = {
@@ -67,9 +67,9 @@ conditionalExampleTests = {
             marks=pytest.mark.skipif(conditionalExampleTests[f[1]].condition is False,
                                      reason=conditionalExampleTests[f[1]].reason) if f[1] in conditionalExampleTests.keys() else (),
 		)
-		for frontend, f, in itertools.product(installed, files)
+		for frontend, f, in itertools.product(installedFrontends, files)
 	],
-    ids = [" {} - {} ".format(f[1], frontend) for frontend, f in itertools.product(installed, files)]
+    ids = [" {} - {} ".format(f[1], frontend) for frontend, f in itertools.product(installedFrontends, files)]
 )
 def testExamples(frontend, f, graphicsSystem=None):
     # runExampleFile(f[0], f[1], sys.executable, frontend)
