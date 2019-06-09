@@ -1,12 +1,10 @@
-import pytest
-from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
 app = pg.mkQApp()
 
 
-def test_errorbaritem_defer_data():
+def test_ErrorBarItem_defer_data():
     plot = pg.PlotWidget()
     plot.show()
 
