@@ -10,19 +10,19 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   strategy:
     matrix:
-      Python27-PyQt4:
+      Python27-PyQt4-4.8:
         python.version: '2.7'
         qt.bindings: "pyqt=4"
         install.method: "conda"
-      Python27-PySide:
+      Python27-PySide-4.8:
         python.version: '2.7'
         qt.bindings: "pyside"
         install.method: "conda"
-      Python37-PyQt-5.9:
+      Python36-PyQt-5.9:
         python.version: "3.6"
         qt.bindings: "pyqt"
         install.method: "conda"
-      Python37-PySide2-5.9:
+      Python36-PySide2-5.9:
         python.version: "3.6"
         qt.bindings: "pyside2"
         install.method: "conda"
@@ -88,7 +88,6 @@ jobs:
       then
         source activate test-environment-$(python.version)
       fi
-
       pip install setuptools wheel
       python setup.py bdist_wheel
       pip install dist/*.whl
@@ -98,11 +97,11 @@ jobs:
     inputs:
       contents: 'dist/**' 
       targetFolder: $(Build.ArtifactStagingDirectory)
-      cleanTargetFolder: true # Optional
-    displayName: "Copy Distributions To Artifacts"
+      cleanTargetFolder: true
+    displayName: "Copy Binary Wheel Distribution To Artifacts"
 
   - task: PublishBuildArtifacts@1
-    displayName: 'Publish Distributions' 
+    displayName: 'Publish Binary Wheel' 
     condition: always()
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)/dist
@@ -130,10 +129,18 @@ jobs:
       pip list
       echo pyqtgraph system info
       python -c "import pyqtgraph as pg; pg.systemInfo()"
+      echo display information
+      if [ $(agent.os) == 'Linux' ]
+      then
+        export DISPLAY=:99.0
+        Xvfb :99 -screen 0 1920x1080x24 &
+        sleep 3
+      fi
+      python -m pyqtgraph.util.get_resolution
     displayName: 'Debug Info'
     continueOnError: false
 
-  - bash: | 
+  - bash: |
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
