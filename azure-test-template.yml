@@ -10,7 +10,7 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   strategy:
     matrix:
-      Python27-Qt4:
+      Python27-PyQt4:
         python.version: '2.7'
         qt.bindings: "pyqt=4"
         install.method: "conda"
@@ -19,11 +19,11 @@ jobs:
         qt.bindings: "pyside"
         install.method: "conda"
       Python37-PyQt-5.9:
-        python.version: "3.7"
+        python.version: "3.6"
         qt.bindings: "pyqt"
         install.method: "conda"
-      Python37-PySide2-5.6:
-        python.version: "3.7"
+      Python37-PySide2-5.9:
+        python.version: "3.6"
         qt.bindings: "pyside2"
         install.method: "conda"
       Python37-PyQt-5.12:
@@ -141,10 +141,9 @@ jobs:
       mkdir -p "$SCREENSHOT_DIR"
       # echo "If Screenshots are generated, they may be downloaded from:"
       # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
-      python -m pytest -sv \
+      pytest . -sv \
         --junitxml=junit/test-results.xml \
-        --cov pyqtgraph --cov-report=xml --cov-report=html \
-        --faulthandler-timeout=60
+        --cov pyqtgraph --cov-report=xml --cov-report=html
     displayName: 'Unit tests' 
     env:
       AZURE: 1
