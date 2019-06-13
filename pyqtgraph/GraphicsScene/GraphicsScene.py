@@ -263,6 +263,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in prevItems:
             event.currentItem = item
             try:
+                if item.scene() is not self:
+                    continue
                 item.hoverEvent(event)
             except:
                 debug.printExc("Error sending hover exit event:")
@@ -288,7 +290,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             else:
                 acceptedItem = None
                 
-            if acceptedItem is not None:
+            if acceptedItem is not None and acceptedItem.scene() is self:
                 #print "Drag -> pre-selected item:", acceptedItem
                 self.dragItem = acceptedItem
                 event.currentItem = self.dragItem
@@ -434,6 +436,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         items2 = []
         for item in items:
             if hoverable and not hasattr(item, 'hoverEvent'):
+                continue
+            if item.scene() is not self:
                 continue
             shape = item.shape() # Note: default shape() returns boundingRect()
             if shape is None:
