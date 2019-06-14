@@ -263,9 +263,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in prevItems:
             event.currentItem = item
             try:
-                if item.scene() is not self:
-                    continue
-                item.hoverEvent(event)
+                if item.scene() is self:
+                    item.hoverEvent(event)
             except:
                 debug.printExc("Error sending hover exit event:")
             finally:
