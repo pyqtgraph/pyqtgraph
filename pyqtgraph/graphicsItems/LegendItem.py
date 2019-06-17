@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None):
+    def __init__(self, size=None, offset=None, pen=None, brush=None, labelTextColor=None, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -31,6 +31,12 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         offset from the right or bottom. If offset is None, the
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
+        pen             Pen to use when drawing legend border. Any single argument 
+                        accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        brush           QBrush to use as legend background filling. Any single argument
+                        accepted by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
+        labelTextColor  Pen to use when drawing legend text. Any single argument 
+                        accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         ==============  ===============================================================
         
         """
@@ -43,9 +49,68 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.setLayout(self.layout)
         self.items = []
         self.size = size
-        self.offset = offset
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
+        
+        self.layout.setSpacing(0)
+        self.layout.setColumnSpacing(0, 10)
+        self.layout.setContentsMargins(20, 0, 0, 0)
+
+        self.opts = {
+            'pen': fn.mkPen(pen),
+            'brush': fn.mkBrush(brush),
+            'labelTextColor': labelTextColor,
+            'box': False,
+            'offset': offset,
+        }
+
+        self.opts.update(kwargs)
+       
+    def offset(self):
+        return self.opts['offset']
+
+    def setOffset(self, offset):
+        self.opts['offset'] = offset
+
+        offset = Point(self.offset)
+        anchorx = 1 if offset[0] <= 0 else 0
+        anchory = 1 if offset[1] <= 0 else 0
+        anchor = (anchorx, anchory)
+        self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
+        
+    def pen(self):
+        return self.opts['pen']
+
+    def setPen(self, *args, **kargs):
+        """
+        Sets the pen used to draw lines between points.
+        *pen* can be a QPen or any argument accepted by
+        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
+        """
+        pen = fn.mkPen(*args, **kargs)
+        self.opts['pen'] = pen
+
+    def brush(self):
+        return self.opts['brush']
+
+    def setBrush(self, *args, **kargs):
+        brush = fn.mkBrush(*args, **kargs)
+        if self.opts['brush'] == brush:
+            return
+        self.opts['brush'] = brush
+
+    def labelTextColor(self):
+        return self.opts['labelTextColor']
+
+    def setLabelTextColor(self, *args, **kargs):
+        """
+        Sets the color of the label text.
+        *pen* can be a QPen or any argument accepted by
+        :func:`pyqtgraph.mkColor() <pyqtgraph.mkPen>`
+        """
+        self.opts['labelTextColor'] = fn.mkColor(*args, **kargs)
+        for sample, label in self.items:
+            label.setAttr('color', self.opts['labelTextColor'])
         
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
@@ -70,7 +135,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
-        label = LabelItem(name)
+        label = LabelItem(name, color=self.opts['labelTextColor'], justify='left')
         if isinstance(item, ItemSample):
             sample = item
         else:
@@ -79,6 +144,11 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.items.append((sample, label))
         self.layout.addItem(sample, row, 0)
         self.layout.addItem(label, row, 1)
+
+        height = max(sample.minimumHeight(), label.minimumHeight())
+        self.layout.setRowMaximumHeight(row, height)
+        self.layout.setColumnSpacing(0, 10)
+        
         self.updateSize()
     
     def removeItem(self, item):
@@ -120,8 +190,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         return QtCore.QRectF(0, 0, self.width(), self.height())
     
     def paint(self, p, *args):
-        p.setPen(fn.mkPen(255,255,255,100))
-        p.setBrush(fn.mkBrush(100,100,100,50))
+        p.setPen(self.opts['pen'])
+        p.setBrush(self.opts['brush'])
         p.drawRect(self.boundingRect())
 
     def hoverEvent(self, ev):
@@ -132,6 +202,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
 
+    def clear(self):
+        """Clears legend."""
+        for sample, label in self.items:
+            self.layout.removeItem(sample)
+            self.layout.removeItem(label)
+        while len(self.items) > 0:
+            self.items.pop()
 
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
@@ -142,33 +219,30 @@ class ItemSample(GraphicsWidget):
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
-    
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
-        
+
     def paint(self, p, *args):
-        #p.setRenderHint(p.Antialiasing)  # only if the data is antialiased.
         opts = self.item.opts
-        
-        if opts.get('fillLevel',None) is not None and opts.get('fillBrush',None) is not None:
-            p.setBrush(fn.mkBrush(opts['fillBrush']))
-            p.setPen(fn.mkPen(None))
-            p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2,18), QtCore.QPointF(18,2), QtCore.QPointF(18,18)]))
-        
+
+        if opts['antialias']:
+            p.setRenderHint(p.Antialiasing)
+
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
-            p.drawLine(2, 18, 18, 2)
-        
+            p.drawLine(-7, 11, 7, 11)
+
         symbol = opts.get('symbol', None)
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
-                
+
             pen = fn.mkPen(opts['pen'])
             brush = fn.mkBrush(opts['brush'])
             size = opts['size']
-            
-            p.translate(10,10)
+
+            p.translate(10, 10)
             path = drawSymbol(p, symbol, size, pen, brush)
         
         
