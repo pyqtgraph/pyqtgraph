@@ -502,7 +502,11 @@ class PlotCurveItem(GraphicsObject):
             p.setPen(sp)
             p.drawPath(path)
         p.setPen(cp)
-        p.drawPath(path)
+        if self.fillPath is not None:
+            p.drawPath(self.fillPath)
+        else:
+            p.drawPath(path)
+        profiler('drawPath')
         profiler('drawPath')
         
         #print "Render hints:", int(p.renderHints())
