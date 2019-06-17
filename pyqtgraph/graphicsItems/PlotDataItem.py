@@ -542,15 +542,16 @@ class PlotDataItem(GraphicsObject):
             if self.opts['clipToView']:
                 view = self.getViewBox()
                 if view is None or not view.autoRangeEnabled()[0]:
-                    # this option presumes that x-values have uniform spacing
+                    # this option presumes that x-values are in increasing order
                     range = self.viewRect()
                     if range is not None and len(x) > 1:
-                        dx = float(x[-1]-x[0]) / (len(x)-1)
                         # clip to visible region extended by downsampling value
-                        x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)
-                        x1 = np.clip(int((range.right()-x[0])/dx)+2*ds , 0, len(x)-1)
-                        x = x[x0:x1]
-                        y = y[x0:x1]
+                        idx = np.searchsorted(x, [range.left(), range.right()])
+                        idx = idx + np.array([-2*ds, 2*ds])
+                        idx = np.clip(idx, a_min=0, a_max=len(x))
+
+                        x = x[idx[0]:idx[1]]
+                        y = y[idx[0]:idx[1]]
                     
             if ds > 1:
                 if self.opts['downsampleMethod'] == 'subsample':
