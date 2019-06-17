@@ -141,7 +141,7 @@ class ColorMap(object):
         
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(zip(pos, color))
+        g.setStops(list(zip(pos, color)))
         
         #if self.colorMode == 'rgb':
             #ticks = self.listTicks()

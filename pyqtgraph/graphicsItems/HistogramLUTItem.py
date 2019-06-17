@@ -186,7 +186,7 @@ class HistogramLUTItem(GraphicsWidget):
         """Return a lookup table from the color gradient defined by this 
         HistogramLUTItem.
         """
-        if self.levelMode is not 'mono':
+        if self.levelMode != 'mono':
             return None
         if n is None:
             if img.dtype == np.uint8:
@@ -205,8 +205,8 @@ class HistogramLUTItem(GraphicsWidget):
     def regionChanging(self):
         if self.imageItem() is not None:
             self.imageItem().setLevels(self.getLevels())
-        self.sigLevelsChanged.emit(self)
         self.update()
+        self.sigLevelsChanged.emit(self)
 
     def imageChanged(self, autoLevel=False, autoRange=False):
         if self.imageItem() is None:

@@ -10,7 +10,6 @@ def test_isQObjectAlive():
     o2 = pg.QtCore.QObject()
     o2.setParent(o1)
     del o1
-    gc.collect()
     assert not pg.Qt.isQObjectAlive(o2)
 
 @pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason='pysideuic does not appear to be '

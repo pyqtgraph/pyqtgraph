@@ -1,9 +1,5 @@
 from __future__ import division, print_function, absolute_import
-import subprocess
-import time
 import os
-import sys
-import errno
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -86,7 +82,6 @@ examples = OrderedDict([
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', 'JoystickButton.py'),
     ])),
-
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
 ])
@@ -103,73 +98,3 @@ def buildFileList(examples, files=None):
         else:
             buildFileList(val, files)
     return files
-
-def testFile(name, f, exe, lib, graphicsSystem=None):
-    global path
-    fn = os.path.join(path,f)
-    #print "starting process: ", fn
-    os.chdir(path)
-    sys.stdout.write(name)
-    sys.stdout.flush()
-
-    import1 = "import %s" % lib if lib != '' else ''
-    import2 = os.path.splitext(os.path.split(fn)[1])[0]
-    graphicsSystem = '' if graphicsSystem is None else "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
-    code = """
-try:
-    %s
-    import initExample
-    import pyqtgraph as pg
-    %s
-    import %s
-    import sys
-    print("test complete")
-    sys.stdout.flush()
-    import time
-    while True:  ## run a little event loop
-        pg.QtGui.QApplication.processEvents()
-        time.sleep(0.01)
-except:
-    print("test failed")
-    raise
-
-""" % (import1, graphicsSystem, import2)
-
-    if sys.platform.startswith('win'):
-        process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close()
-    else:
-        process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close() ##?
-    output = ''
-    fail = False
-    while True:
-        try:
-            c = process.stdout.read(1).decode()
-        except IOError as err:
-            if err.errno == errno.EINTR:
-                # Interrupted system call; just try again.
-                c = ''
-            else:
-                raise
-        output += c
-        #sys.stdout.write(c)
-        #sys.stdout.flush()
-        if output.endswith('test complete'):
-            break
-        if output.endswith('test failed'):
-            fail = True
-            break
-    time.sleep(1)
-    process.kill()
-    #res = process.communicate()
-    res = (process.stdout.read(), process.stderr.read())
-
-    if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
-        print('.' * (50-len(name)) + 'FAILED')
-        print(res[0].decode())
-        print(res[1].decode())
-    else:
-        print('.' * (50-len(name)) + 'passed')

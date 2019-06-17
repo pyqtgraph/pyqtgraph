@@ -227,12 +227,12 @@ class GraphicsView(QtGui.QGraphicsView):
             else:
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
-        self.sigDeviceRangeChanged.emit(self, self.range)
-        self.sigDeviceTransformChanged.emit(self)
-        
         if propagate:
             for v in self.lockedViewports:
                 v.setXRange(self.range, padding=0)
+
+        self.sigDeviceRangeChanged.emit(self, self.range)
+        self.sigDeviceTransformChanged.emit(self)
         
     def viewRect(self):
         """Return the boundaries of the view in scene coordinates"""
@@ -261,7 +261,6 @@ class GraphicsView(QtGui.QGraphicsView):
         w = self.range.width()  / scale[0]
         h = self.range.height() / scale[1]
         self.range = QtCore.QRectF(center.x() - (center.x()-self.range.left()) / scale[0], center.y() - (center.y()-self.range.top())  /scale[1], w, h)
-        
         
         self.updateMatrix()
         self.sigScaleChanged.emit(self)
@@ -362,7 +361,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def mouseMoveEvent(self, ev):
         if self.lastMousePos is None:
             self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - self.lastMousePos)
+        delta = Point(ev.pos() - QtCore.QPoint(*self.lastMousePos))
         self.lastMousePos = Point(ev.pos())
 
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)
