@@ -143,7 +143,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         else:
             sample = ItemSample(item)
 
-        self.legendItems.append((sample, label))
+        self.items.append((sample, label))
         self.layout.addItem(sample, self._numItems, 0)
         self.layout.addItem(label, self._numItems, 1)
         self._numItems += 1
