@@ -10,6 +10,11 @@ import mmap, tempfile, ctypes, atexit, sys, random
 __all__ = ['RemoteGraphicsView']
         
 class SerializableWheelEvent:
+    """
+    Contains all information of a QWheelEvent, is serializable and can generate QWheelEvents.
+    
+    Methods have the functionality of their QWheelEvent equivalent.
+    """
     def __init__(self, _pos, _globalPos, _delta, _buttons, _modifiers, _orientation):
         self._pos = _pos
         self._globalPos = _globalPos
@@ -44,6 +49,9 @@ class SerializableWheelEvent:
         return QtCore.Qt.KeyboardModifiers(self._modifiers)
     
     def toQWheelEvent(self):
+        """
+        Generate QWheelEvent from SerializableWheelEvent.
+        """
         if QT_LIB in ['PyQt4', 'PySide']:
             return QtGui.QWheelEvent(self.pos(), self.globalPos(), self.delta(), self.buttons(), self.modifiers(), self.orientation())
         else:
