@@ -49,8 +49,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
         self.layout = QtGui.QGraphicsGridLayout()
+        # self.layout.setContentsMargins(0, 0, 0, 0)        
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
+        
         self.setLayout(self.layout)
         self.items = []
         self.size = size
@@ -218,7 +220,7 @@ class ItemSample(GraphicsWidget):
 
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
-            p.drawLine(-7, 11, 7, 11)
+            p.drawLine(0, 11, 20, 11)
 
         symbol = opts.get('symbol', None)
         if symbol is not None:
