@@ -301,16 +301,18 @@ class AxisItem(GraphicsWidget):
     def _updateMaxTextSize(self, x):
         ## Informs that the maximum tick size orthogonal to the axis has
         ## changed; we use this to decide whether the item needs to be resized
-        ## to accommodate.
+        ## to accomodate.
         if self.orientation in ['left', 'right']:
-            if x > self.textWidth or x < self.textWidth-10:
-                self.textWidth = x
+            mx = max(self.textWidth, x)
+            if mx > self.textWidth or mx < self.textWidth-10:
+                self.textWidth = mx
                 if self.style['autoExpandTextSpace'] is True:
                     self._updateWidth()
                     #return True  ## size has changed
         else:
-            if x > self.textHeight or x < self.textHeight-10:
-                self.textHeight = x
+            mx = max(self.textHeight, x)
+            if mx > self.textHeight or mx < self.textHeight-10:
+                self.textHeight = mx
                 if self.style['autoExpandTextSpace'] is True:
                     self._updateHeight()
                     #return True  ## size has changed
@@ -400,6 +402,25 @@ class AxisItem(GraphicsWidget):
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
+        self.setLabel()
+        self.update()
+        
+    def textPen(self):
+        if self._textPen is None:
+            return fn.mkPen(getConfigOption('foreground'))
+        return fn.mkPen(self._textPen)
+
+    def setTextPen(self, *args, **kwargs):
+        """
+        Set the pen used for drawing text.
+        If no arguments are given, the default foreground color will be used.
+        """
+        self.picture = None
+        if args or kwargs:
+            self._textPen = fn.mkPen(*args, **kwargs)
+        else:
+            self._textPen = fn.mkPen(getConfigOption('foreground'))
+        self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
         self.setLabel()
         self.update()
 
@@ -1039,13 +1060,13 @@ class AxisItem(GraphicsWidget):
             p.drawLine(p1, p2)
         profiler('draw ticks')
 
-        ## Draw all text
+        # Draw all text
         if self.tickFont is not None:
             p.setFont(self.tickFont)
-        p.setPen(self.pen())
+        p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
             p.drawText(rect, flags, text)
-            #p.drawRect(rect)
+
         profiler('draw text')
 
     def show(self):
