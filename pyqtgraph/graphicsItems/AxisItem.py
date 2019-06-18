@@ -17,7 +17,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -28,6 +28,7 @@ class AxisItem(GraphicsWidget):
                         to be linked to the visible range of a ViewBox.
         showValues      (bool) Whether to display values adjacent to ticks
         pen             (QPen) Pen used when drawing ticks.
+        textPen         (QPen) Pen used when drawing tick labels.
         text            The text (excluding units) to display on the label for this
                         axis.
         units           The units for this axis. Units should generally be given
@@ -96,6 +97,11 @@ class AxisItem(GraphicsWidget):
             self.setPen()
         else:
             self.setPen(pen)
+
+        if textPen is None:
+            self.setTextPen()
+        else:
+            self.setTextPen(pen)
 
         self._linkedView = None
         if linkView is not None:
@@ -404,7 +410,7 @@ class AxisItem(GraphicsWidget):
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
         self.setLabel()
         self.update()
-        
+
     def textPen(self):
         if self._textPen is None:
             return fn.mkPen(getConfigOption('foreground'))
