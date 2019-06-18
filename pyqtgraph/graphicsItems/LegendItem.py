@@ -148,12 +148,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.layout.addItem(label, self._numItems, 1)
         self._numItems += 1
         self.updateSize()
-
-        height = max(sample.minimumHeight(), label.minimumHeight())
-        self.layout.setRowMaximumHeight(row, height)
-        self.layout.setColumnSpacing(0, 10)
-        
-        self.updateSize()
     
     def removeItem(self, item):
         """
