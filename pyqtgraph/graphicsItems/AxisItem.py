@@ -900,16 +900,20 @@ class AxisItem(GraphicsWidget):
 
 
         if self.style['stopAxisAtTick'][0] is True:
-            stop = max(span[0].y(), min(map(min, tickPositions)))
+            minTickPosition = min(map(min, tickPositions))
             if axis == 0:
+                stop = max(span[0].y(), minTickPosition)
                 span[0].setY(stop)
             else:
+                stop = max(span[0].x(), minTickPosition)
                 span[0].setX(stop)
         if self.style['stopAxisAtTick'][1] is True:
-            stop = min(span[1].y(), max(map(max, tickPositions)))
+            maxTickPosition = max(map(max, tickPositions))
             if axis == 0:
+                stop = min(span[1].y(), maxTickPosition)
                 span[1].setY(stop)
             else:
+                stop = min(span[1].x(), maxTickPosition)
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
 
