@@ -507,7 +507,6 @@ class PlotCurveItem(GraphicsObject):
         else:
             p.drawPath(path)
         profiler('drawPath')
-        profiler('drawPath')
         
         #print "Render hints:", int(p.renderHints())
         #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
