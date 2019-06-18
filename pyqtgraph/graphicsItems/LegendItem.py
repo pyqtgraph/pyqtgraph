@@ -19,7 +19,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, pen=None, brush=None, labelTextColor=None, **kwargs):
+    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0, pen=None, brush=None, labelTextColor=None, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -31,6 +31,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         offset from the right or bottom. If offset is None, the
                         legend must be anchored manually by calling anchor() or
                         positioned by calling setPos().
+        horSpacing      Specifies the spacing between the line symbol and the label.
+        verSpacing      Specifies the spacing between individual entries of the legend
+                        vertically. (Can also be negative to have them really close)
         pen             Pen to use when drawing legend border. Any single argument 
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         brush           QBrush to use as legend background filling. Any single argument
@@ -46,21 +49,20 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
         self.layout = QtGui.QGraphicsGridLayout()
+        self.layout.setVerticalSpacing(verSpacing)
+        self.layout.setHorizontalSpacing(horSpacing)
         self.setLayout(self.layout)
         self.items = []
         self.size = size
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
         
-        self.layout.setSpacing(0)
-        self.layout.setColumnSpacing(0, 10)
-        self.layout.setContentsMargins(20, 0, 0, 0)
+        self._numItems = 0
 
         self.opts = {
             'pen': fn.mkPen(pen),
             'brush': fn.mkBrush(brush),
-            'labelTextColor': labelTextColor,
-            'box': False,
+            'labelTextColor': fn.mkColor(labelTextColor),
             'offset': offset,
         }
 
@@ -139,11 +141,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = ItemSample(item)        
-        row = self.layout.rowCount()
-        self.items.append((sample, label))
-        self.layout.addItem(sample, row, 0)
-        self.layout.addItem(label, row, 1)
+            sample = ItemSample(item)
+
+        self.legendItems.append((sample, label))
+        self.layout.addItem(sample, self._numItems, 0)
+        self.layout.addItem(label, self._numItems, 1)
+        self._numItems += 1
+        self.updateSize()
 
         height = max(sample.minimumHeight(), label.minimumHeight())
         self.layout.setRowMaximumHeight(row, height)
@@ -160,8 +164,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         item            The item to remove or its name.
         ==============  ========================================================
         """
-        # Thanks, Ulrich!
-        # cycle for a match
         for sample, label in self.items:
             if sample.item is item or label.text == item:
                 self.items.remove( (sample, label) )    # remove from itemlist
@@ -174,17 +176,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     def updateSize(self):
         if self.size is not None:
             return
-            
-        height = 0
-        width = 0
-        #print("-------")
-        for sample, label in self.items:
-            height += max(sample.height(), label.height()) + 3
-            width = max(width, (sample.sizeHint(QtCore.Qt.MinimumSize, sample.size()).width() +
-                                label.sizeHint(QtCore.Qt.MinimumSize, label.size()).width()))
-            #print(width, height)
-        #print width, height
-        self.setGeometry(0, 0, width+25, height)
+
+        self.setGeometry(0, 0, 0, 0)
     
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.width(), self.height())
