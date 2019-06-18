@@ -8,6 +8,46 @@ import numpy as np
 import mmap, tempfile, ctypes, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
+        
+class SerializableWheelEvent:
+    def __init__(self, _pos, _globalPos, _delta, _buttons, _modifiers, _orientation):
+        self._pos = _pos
+        self._globalPos = _globalPos
+        self._delta = _delta
+        self._buttons = _buttons
+        self._modifiers = _modifiers
+        self._orientation = _orientation
+        
+    def pos(self):
+        return self._pos
+
+    def globalPos(self):
+        return self._globalPos
+    
+    def delta(self):
+        return self._delta
+    
+    def orientation(self):
+        return (None, QtCore.Qt.Horizontal, QtCore.Qt.Vertical)[self._orientation]
+    
+    def angleDelta(self):
+        if self._orientation == 1:
+            return QtCore.QPoint(self._delta, 0)
+        elif self._orientation == 2:
+            return QtCore.QPoint(0, self._delta)
+        return QtCore.QPoint(0, 0)
+
+    def buttons(self):
+        return QtCore.Qt.MouseButtons(self._buttons)
+    
+    def modifiers(self):
+        return QtCore.Qt.KeyboardModifiers(self._modifiers)
+    
+    def toQWheelEvent(self):
+        if QT_LIB in ['PyQt4', 'PySide']:
+            return QtGui.QWheelEvent(self.pos(), self.globalPos(), self.delta(), self.buttons(), self.modifiers(), self.orientation())
+        else:
+            return QtGui.QWheelEvent(self.pos(), self.globalPos(), QtCore.QPoint(0,0), self.angleDelta(), self.delta(), self.orientation(), self.buttons(), self.modifiers())
 
 class RemoteGraphicsView(QtGui.QWidget):
     """
@@ -112,7 +152,19 @@ class RemoteGraphicsView(QtGui.QWidget):
         return QtGui.QWidget.mouseMoveEvent(self, ev)
         
     def wheelEvent(self, ev):
-        self._view.wheelEvent(ev.pos(), ev.globalPos(), ev.delta(), int(ev.buttons()), int(ev.modifiers()), int(ev.orientation()), _callSync='off')
+        delta = 0
+        orientation = 1
+        if QT_LIB in ['PyQt4', 'PySide']:
+            delta = ev.delta()
+            orientation = int(ev.orientation())
+        else:
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                orientation = 2
+                delta = ev.angleDelta().y()
+                
+        serializableEvent = SerializableWheelEvent(ev.pos(), ev.globalPos(), delta, int(ev.buttons()), int(ev.modifiers()), orientation)
+        self._view.wheelEvent(serializableEvent, _callSync='off') # TODO Serialize also QT5 wheelEvent
         ev.accept()
         return QtGui.QWidget.wheelEvent(self, ev)
     
@@ -251,12 +303,9 @@ class Renderer(GraphicsView):
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
         return GraphicsView.mouseReleaseEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
-
-    def wheelEvent(self, pos, gpos, d, btns, mods, ori):
-        btns = QtCore.Qt.MouseButtons(btns)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
-        ori = (None, QtCore.Qt.Horizontal, QtCore.Qt.Vertical)[ori]
-        return GraphicsView.wheelEvent(self, QtGui.QWheelEvent(pos, gpos, d, btns, mods, ori))
+    
+    def wheelEvent(self, ev):
+        return GraphicsView.wheelEvent(self, ev.toQWheelEvent())
 
     def keyEvent(self, typ, mods, text, autorep, count):
         typ = QtCore.QEvent.Type(typ)
