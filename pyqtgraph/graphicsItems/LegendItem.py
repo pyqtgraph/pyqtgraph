@@ -62,7 +62,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.opts = {
             'pen': fn.mkPen(pen),
             'brush': fn.mkBrush(brush),
-            'labelTextColor': fn.mkColor(labelTextColor),
+            'labelTextColor': labelTextColor,
             'offset': offset,
         }
 
