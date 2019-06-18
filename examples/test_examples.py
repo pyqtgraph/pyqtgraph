@@ -54,7 +54,8 @@ installedFrontends = sorted([frontend for frontend, isPresent in frontends.items
 
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExampleTests = {
-    "hdf5.py": exceptionCondition(False, reason="Example requires user interaction and is not suitable for testing")
+    "hdf5.py": exceptionCondition(False, reason="Example requires user interaction and is not suitable for testing"),
+    "RemoteSpeedTest.py": exceptionCondition(False, reason="Test is being problematic on CI machines")
 }
 
 
