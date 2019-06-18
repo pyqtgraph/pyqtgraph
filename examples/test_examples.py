@@ -55,7 +55,8 @@ installedFrontends = sorted([frontend for frontend, isPresent in frontends.items
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExampleTests = {
     "hdf5.py": exceptionCondition(False, reason="Example requires user interaction and is not suitable for testing"),
-    "RemoteSpeedTest.py": exceptionCondition(False, reason="Test is being problematic on CI machines")
+    "RemoteSpeedTest.py": exceptionCondition(False, reason="Test is being problematic on CI machines"),
+    "optics_demos.py": exceptionCondition(frontends[Qt.PYSIDE], reason="Test fails due to PySide bug: https://bugreports.qt.io/browse/PYSIDE-671")
 }
 
 
