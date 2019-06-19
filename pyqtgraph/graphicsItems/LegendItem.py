@@ -60,8 +60,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
-        self._numItems = 0
-
         self.opts = {
             'pen': fn.mkPen(pen),
             'brush': fn.mkBrush(brush),
@@ -152,10 +150,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         else:
             sample = ItemSample(item)
 
+        row = self.layout.rowCount()
         self.items.append((sample, label))
-        self.layout.addItem(sample, self._numItems, 0)
-        self.layout.addItem(label, self._numItems, 1)
-        self._numItems += 1
+        self.layout.addItem(sample, row, 0)
+        self.layout.addItem(label, row, 1)
         self.updateSize()
 
     def removeItem(self, item):
