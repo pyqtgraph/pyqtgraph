@@ -8,6 +8,7 @@ from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 __all__ = ['LegendItem']
 
+
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     Displays a legend used for describing the contents of a plot.
@@ -19,12 +20,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0, pen=None, brush=None, labelTextColor=None, **kwargs):
+    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0, pen=None,
+                 brush=None, labelTextColor=None, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
         size            Specifies the fixed size (width, height) of the legend. If
-                        this argument is omitted, the legend will autimatically resize
+                        this argument is omitted, the legend will automatically resize
                         to fit its contents.
         offset          Specifies the offset position relative to the legend's parent.
                         Positive values offset from the left or top; negative values
@@ -34,31 +36,30 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         horSpacing      Specifies the spacing between the line symbol and the label.
         verSpacing      Specifies the spacing between individual entries of the legend
                         vertically. (Can also be negative to have them really close)
-        pen             Pen to use when drawing legend border. Any single argument 
+        pen             Pen to use when drawing legend border. Any single argument
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         brush           QBrush to use as legend background filling. Any single argument
                         accepted by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
-        labelTextColor  Pen to use when drawing legend text. Any single argument 
+        labelTextColor  Pen to use when drawing legend text. Any single argument
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         ==============  ===============================================================
-        
+
         """
-        
-        
+
+
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
         self.layout = QtGui.QGraphicsGridLayout()
-        # self.layout.setContentsMargins(0, 0, 0, 0)        
         self.layout.setVerticalSpacing(verSpacing)
         self.layout.setHorizontalSpacing(horSpacing)
-        
+
         self.setLayout(self.layout)
         self.items = []
         self.size = size
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
-        
+
         self._numItems = 0
 
         self.opts = {
@@ -69,7 +70,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         }
 
         self.opts.update(kwargs)
-       
+
     def offset(self):
         return self.opts['offset']
 
@@ -81,7 +82,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         anchory = 1 if offset[1] <= 0 else 0
         anchor = (anchorx, anchory)
         self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
-        
+
     def pen(self):
         return self.opts['pen']
 
@@ -94,6 +95,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         pen = fn.mkPen(*args, **kargs)
         self.opts['pen'] = pen
 
+        self.paint()
+
     def brush(self):
         return self.opts['brush']
 
@@ -102,6 +105,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if self.opts['brush'] == brush:
             return
         self.opts['brush'] = brush
+
+        self.paint()
 
     def labelTextColor(self):
         return self.opts['labelTextColor']
@@ -115,7 +120,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.opts['labelTextColor'] = fn.mkColor(*args, **kargs)
         for sample, label in self.items:
             label.setAttr('color', self.opts['labelTextColor'])
-        
+
+        self.paint()
+
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
         if self.offset is not None:
@@ -125,10 +132,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             anchor = (anchorx, anchory)
             self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
         return ret
-        
+
     def addItem(self, item, name):
         """
-        Add a new entry to the legend. 
+        Add a new entry to the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -150,10 +157,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.layout.addItem(label, self._numItems, 1)
         self._numItems += 1
         self.updateSize()
-    
+
     def removeItem(self, item):
         """
-        Removes one item from the legend. 
+        Removes one item from the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -162,22 +169,32 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
-                self.items.remove( (sample, label) )    # remove from itemlist
+                self.items.remove((sample, label))      # remove from itemlist
                 self.layout.removeItem(sample)          # remove from layout
                 sample.close()                          # remove from drawing
                 self.layout.removeItem(label)
                 label.close()
                 self.updateSize()                       # redraq box
+                return                                  # return after first match
+
+    def clear(self):
+        """Removes all items from legend."""
+        for sample, label in self.items:
+            self.layout.removeItem(sample)
+            self.layout.removeItem(label)
+
+        self.items = []
+        self.updateSize()
 
     def updateSize(self):
         if self.size is not None:
             return
 
         self.setGeometry(0, 0, 0, 0)
-    
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.width(), self.height())
-    
+
     def paint(self, p, *args):
         p.setPen(self.opts['pen'])
         p.setBrush(self.opts['brush'])
@@ -185,23 +202,16 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def hoverEvent(self, ev):
         ev.acceptDrags(QtCore.Qt.LeftButton)
-        
+
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
             dpos = ev.pos() - ev.lastPos()
             self.autoAnchor(self.pos() + dpos)
 
-    def clear(self):
-        """Clears legend."""
-        for sample, label in self.items:
-            self.layout.removeItem(sample)
-            self.layout.removeItem(label)
-        while len(self.items) > 0:
-            self.items.pop()
 
 class ItemSample(GraphicsWidget):
     """ Class responsible for drawing a single item in a LegendItem (sans label).
-    
+
     This may be subclassed to draw custom graphics in a Legend.
     """
     ## Todo: make this more generic; let each item decide how it should be represented.
@@ -233,7 +243,7 @@ class ItemSample(GraphicsWidget):
 
             p.translate(10, 10)
             path = drawSymbol(p, symbol, size, pen, brush)
-        
-        
-        
-        
+
+
+
+
