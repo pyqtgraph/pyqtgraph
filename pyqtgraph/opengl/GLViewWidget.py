@@ -9,6 +9,8 @@ from .. import functions as fn
 
 ShareWidget = None
 
+GLVersion = glGetString(GL_VERSION).split()[0]
+
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
     Basic widget for displaying 3D data
@@ -193,6 +195,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.drawItemTree(useItemNames=useItemNames)
         
     def drawItemTree(self, item=None, useItemNames=False):
+        global GLVersion
         if item is None:
             items = [x for x in self.items if x.parentItem() is None]
         else:
@@ -213,8 +216,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     from .. import debug
                     debug.printExc()
                     msg = "Error while drawing item %s." % str(item)
-                    ver = glGetString(GL_VERSION)
-                    if ver is not None:
+                    if GLVersion is not None:
                         ver = ver.split()[0]
                         if int(ver.split(b'.')[0]) < 2:
                             print(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
@@ -426,8 +428,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
 
     def checkOpenGLVersion(self, msg):
         ## Only to be called from within exception handler.
-        ver = glGetString(GL_VERSION).split()[0]
-        if int(ver.split('.')[0]) < 2:
+        global GLVersion
+        if int(GLVersion.split('.')[0]) < 2:
             from .. import debug
             debug.printExc()
             raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
