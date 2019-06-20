@@ -9,7 +9,7 @@ from .. import functions as fn
 
 ShareWidget = None
 
-GLVersion = glGetString(GL_VERSION).split()[0]
+GLVersion = None
 
 class GLViewWidget(QtOpenGL.QGLWidget):
     """
@@ -25,13 +25,17 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     """
     
     def __init__(self, parent=None, devicePixelRatio=None):
-        global ShareWidget
+        global ShareWidget, GLVersion
 
         if ShareWidget is None:
             ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
             ShareWidget = QtOpenGL.QGLWidget()
             
         QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
+        
+        self.makeCurrent()
+        
+        GLVersion = glGetString(GL_VERSION).split()[0]
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         
@@ -51,8 +55,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-        
-        self.makeCurrent()
 
     def addItem(self, item):
         self.items.append(item)
