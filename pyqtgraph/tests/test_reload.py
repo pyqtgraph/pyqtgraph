@@ -4,6 +4,7 @@ import pyqtgraph.reload
 
 
 pgpath = os.path.join(os.path.dirname(pg.__file__), '..')
+pgpath_repr = repr(pgpath)
 
 # make temporary directory to write module code
 path = None
@@ -22,7 +23,7 @@ def teardown_module():
 
 code = """
 import sys
-sys.path.append('{path}')
+sys.path.append({path_repr})
 
 import pyqtgraph as pg
 
@@ -47,7 +48,7 @@ def test_reload():
     # write a module
     mod = os.path.join(path, 'reload_test_mod.py')
     print("\nRELOAD FILE:", mod)
-    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version1"))
+    open(mod, 'w').write(code.format(path_repr=pgpath_repr, msg="C.fn() Version1"))
 
     # import the new module
     import reload_test_mod
@@ -63,7 +64,7 @@ def test_reload():
 
 
     # write again and reload
-    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version2"))
+    open(mod, 'w').write(code.format(path_repr=pgpath_repr, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     if py3:
@@ -87,7 +88,7 @@ def test_reload():
 
 
     # write again and reload
-    open(mod, 'w').write(code.format(path=pgpath, msg="C.fn() Version2"))
+    open(mod, 'w').write(code.format(path_repr=pgpath_repr, msg="C.fn() Version2"))
     remove_cache(mod)
     pg.reload.reloadAll(path, debug=True)
     if py3:
