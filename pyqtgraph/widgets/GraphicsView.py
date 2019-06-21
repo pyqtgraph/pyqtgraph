@@ -15,6 +15,7 @@ except ImportError:
 
 from ..Point import Point
 import sys, os
+import warnings
 from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
 import numpy as np
@@ -396,5 +397,9 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
-        
+
+    def __del__(self):
+        if self.isVisible():
+            msg = "Visible window deleted by Python Garbage Collection. To prevent this, store a reference to the window object."
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
