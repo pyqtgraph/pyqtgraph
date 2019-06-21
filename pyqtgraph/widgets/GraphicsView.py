@@ -400,6 +400,6 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def __del__(self):
         if self.isVisible():
-            msg = "Visible window deleted by Python Garbage Collection. To prevent this, store a reference to the window object."
+            msg = "Visible window deleted. To prevent this, store a reference to the window object."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
