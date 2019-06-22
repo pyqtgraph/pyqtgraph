@@ -43,6 +43,23 @@ jobs:
       height: '1080'
     condition: eq(variables['agent.os'], 'Windows_NT' )
 
+  - script: |
+      curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
+      7z x mesa3d-19.1.0-release-msvc.exe
+      cd x64
+      xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
+      xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
+    displayName: "Install Windows-Mesa OpenGL DLL"
+    condition: eq(variables['agent.os'], 'Windows_NT')
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: $(python.version)
@@ -76,7 +93,7 @@ jobs:
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
-        conda install -c conda-forge $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage --yes
+        conda install -c conda-forge $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage --yes --quiet
       else
         pip install $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage
       fi
@@ -108,15 +125,18 @@ jobs:
       artifactName: Distributions
 
   - bash: |
-      sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
+      if [ $(agent.os) == "Linux" ]
+      then
+        sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
+      fi
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
       fi
       pip install pytest-xvfb
-    displayName: "Linux Virtual Display Setup"
+    displayName: "Virtual Display Setup"
     condition: eq(variables['agent.os'], 'Linux' )
-  
+
   - bash: |
       if [ $(install.method) == "conda" ]
       then
@@ -130,13 +150,18 @@ jobs:
       echo pyqtgraph system info
       python -c "import pyqtgraph as pg; pg.systemInfo()"
       echo display information
-      if [ $(agent.os) == 'Linux' ]
+      if [ $(agent.os) != 'Windows_NT' ]
       then
-        export DISPLAY=:99.0
-        Xvfb :99 -screen 0 1920x1080x24 &
+        if [ $(agent.os) == 'Linux' ]
+        then
+          export DISPLAY=:99.0
+          Xvfb :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset &
+        fi
         sleep 3
       fi
       python -m pyqtgraph.util.get_resolution
+      echo openGL information
+      python -c "from pyqtgraph.opengl.glInfo import GLTest"
     displayName: 'Debug Info'
     continueOnError: false
 
