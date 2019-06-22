@@ -428,6 +428,7 @@ class ROI(GraphicsObject):
 
     def handleMoveStarted(self):
         self.preMoveState = self.getState()
+        self.sigRegionChangeStarted.emit(self)
     
     def addTranslateHandle(self, pos, axes=None, item=None, name=None, index=None):
         """
