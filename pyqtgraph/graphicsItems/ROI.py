@@ -1667,7 +1667,7 @@ class MultiRectROI(QtGui.QGraphicsObject):
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim
         sl[axes[1]] = slice(0,ms)
-        rgns = [r[sl] for r in rgns]
+        rgns = [r[tuple(sl)] for r in rgns]
         #print [r.shape for r in rgns], axes
         
         return np.concatenate(rgns, axis=axes[0])
