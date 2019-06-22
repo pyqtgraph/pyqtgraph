@@ -33,7 +33,7 @@ class ParseError(Exception):
             msg = "Error parsing string at line %d:\n" % self.lineNum
         else:
             msg = "Error parsing config file '%s' at line %d:\n" % (self.fileName, self.lineNum)
-        msg += "%s\n%s" % (self.line, self.message)
+        msg += "%s\n%s" % (self.line, Exception.__str__(self))
         return msg
         #raise Exception()
         
