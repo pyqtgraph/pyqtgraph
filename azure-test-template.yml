@@ -125,10 +125,7 @@ jobs:
       artifactName: Distributions
 
   - bash: |
-      if [ $(agent.os) == "Linux" ]
-      then
-        sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
-      fi
+      sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
@@ -150,13 +147,10 @@ jobs:
       echo pyqtgraph system info
       python -c "import pyqtgraph as pg; pg.systemInfo()"
       echo display information
-      if [ $(agent.os) != 'Windows_NT' ]
+      if [ $(agent.os) == 'Linux' ]
       then
-        if [ $(agent.os) == 'Linux' ]
-        then
-          export DISPLAY=:99.0
-          Xvfb :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset &
-        fi
+        export DISPLAY=:99.0
+        Xvfb :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset &
         sleep 3
       fi
       python -m pyqtgraph.util.get_resolution
