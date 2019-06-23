@@ -12,8 +12,7 @@ __all__ = ['HistogramLUTWidget']
 
 class HistogramLUTWidget(GraphicsView):
     
-    def __init__(self, parent=None,  *args, **kargs):
-        background = kargs.get('background', 'default')
+    def __init__(self, parent=None,  *args, background='default', **kargs):
         GraphicsView.__init__(self, parent, useOpenGL=False, background=background)
         self.item = HistogramLUTItem(*args, **kargs)
         self.setCentralItem(self.item)
