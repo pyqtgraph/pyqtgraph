@@ -1094,7 +1094,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1104,7 +1104,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
             
 
