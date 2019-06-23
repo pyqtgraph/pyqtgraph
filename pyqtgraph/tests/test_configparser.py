@@ -6,7 +6,7 @@ def test_longArrays():
     """
     Test config saving and loading of long arrays.
     """
-    tmp = tempfile.mktemp(".py")
+    tmp = tempfile.mktemp(".cfg")
 
     arr = np.arange(20)
     configfile.writeConfigFile({'arr':arr}, tmp)
@@ -20,7 +20,7 @@ def test_multipleParameters():
     """
     Test config saving and loading of multiple parameters.
     """
-    tmp = tempfile.mktemp(".py")
+    tmp = tempfile.mktemp(".cfg")
 
     par1 = [1,2,3]
     par2 = "Test"
