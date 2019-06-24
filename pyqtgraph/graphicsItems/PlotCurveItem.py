@@ -69,7 +69,8 @@ class PlotCurveItem(GraphicsObject):
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
         }
-
+        if 'pen' not in kargs:
+            self.opts['pen'] = fn.mkPen('w')
         self.setClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
 
