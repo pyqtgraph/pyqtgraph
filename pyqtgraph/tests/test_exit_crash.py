@@ -69,10 +69,12 @@ def test_exit_crash():
 def test_pg_exit():
     # test the pg.exit() function
     code = textwrap.dedent("""
+        import sys
+        sys.path.insert(0, '{path}')
         import pyqtgraph as pg
         app = pg.mkQApp()
         pg.plot()
         pg.exit()
-    """)
+    """.format(path=os.path.dirname(pg.__file__)))
     rc = call_with_timeout([sys.executable, '-c', code], timeout=5)
     assert rc == 0
