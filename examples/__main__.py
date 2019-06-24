@@ -9,8 +9,8 @@ import subprocess
 from pyqtgraph.python2_3 import basestring
 from pyqtgraph.Qt import QtGui, QT_LIB
 
+from .utils import buildFileList, path, examples
 
-from .utils import buildFileList, testFile, path, examples
 
 if QT_LIB == 'PySide':
     from .exampleLoaderTemplate_pyside import Ui_Form
@@ -117,30 +117,7 @@ class ExampleLoader(QtGui.QMainWindow):
 def run():
     app = QtGui.QApplication([])
     loader = ExampleLoader()
-
     app.exec_()
 
 if __name__ == '__main__':
-
-    args = sys.argv[1:]
-        
-    if '--test' in args:
-        # get rid of orphaned cache files first
-        pg.renamePyc(path)
-        
-        files = buildFileList(examples)
-        if '--pyside' in args:
-            lib = 'PySide'
-        elif '--pyqt' in args or '--pyqt4' in args:
-            lib = 'PyQt4'
-        elif '--pyqt5' in args:
-            lib = 'PyQt5'
-        else:
-            lib = ''
-            
-        exe = sys.executable
-        print("Running tests:", lib, sys.executable)
-        for f in files:
-            testFile(f[0], f[1], exe, lib)
-    else: 
-        run()
+    run()

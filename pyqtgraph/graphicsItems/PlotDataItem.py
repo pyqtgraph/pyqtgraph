@@ -514,11 +514,13 @@ class PlotDataItem(GraphicsObject):
                 # Ignore the first bin for fft data if we have a logx scale
                 if self.opts['logMode'][0]:
                     x=x[1:]
-                    y=y[1:]                
-            if self.opts['logMode'][0]:
-                x = np.log10(x)
-            if self.opts['logMode'][1]:
-                y = np.log10(y)
+                    y=y[1:]
+                    
+            with np.errstate(divide='ignore'):
+                if self.opts['logMode'][0]:
+                    x = np.log10(x)
+                if self.opts['logMode'][1]:
+                    y = np.log10(y)
                     
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -643,9 +645,9 @@ class PlotDataItem(GraphicsObject):
         #self.yClean = None
         self.xDisp = None
         self.yDisp = None
-        self.curve.setData([])
-        self.scatter.setData([])
-            
+        self.curve.clear()
+        self.scatter.clear()
+
     def appendData(self, *args, **kargs):
         pass
     

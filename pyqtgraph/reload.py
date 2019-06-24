@@ -47,7 +47,7 @@ def reloadAll(prefix=None, debug=False):
             continue
         
         ## Ignore if the file name does not start with prefix
-        if not hasattr(mod, '__file__') or os.path.splitext(mod.__file__)[1] not in ['.py', '.pyc']:
+        if not hasattr(mod, '__file__') or mod.__file__ is None or os.path.splitext(mod.__file__)[1] not in ['.py', '.pyc']:
             continue
         if prefix is not None and mod.__file__[:len(prefix)] != prefix:
             continue

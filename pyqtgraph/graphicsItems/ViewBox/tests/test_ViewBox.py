@@ -31,7 +31,6 @@ def init_viewbox():
     
     g = pg.GridItem()
     vb.addItem(g)
-    
     app.processEvents()
     
 def test_ViewBox():

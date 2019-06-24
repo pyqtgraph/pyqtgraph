@@ -67,11 +67,11 @@ class SignalProxy(QtCore.QObject):
         """If there is a signal queued up, send it now."""
         if self.args is None or self.block:
             return False
-        #self.emit(self.signal, *self.args)
-        self.sigDelayed.emit(self.args)
-        self.args = None
+        args, self.args = self.args, None
         self.timer.stop()
         self.lastFlushTime = time()
+        #self.emit(self.signal, *self.args)
+        self.sigDelayed.emit(args)
         return True
         
     def disconnect(self):

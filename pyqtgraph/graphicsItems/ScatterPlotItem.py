@@ -834,8 +834,8 @@ class ScatterPlotItem(GraphicsObject):
             pts = self.pointsAt(ev.pos())
             if len(pts) > 0:
                 self.ptsClicked = pts
-                self.sigClicked.emit(self, self.ptsClicked)
                 ev.accept()
+                self.sigClicked.emit(self, self.ptsClicked)
             else:
                 #print "no spots"
                 ev.ignore()

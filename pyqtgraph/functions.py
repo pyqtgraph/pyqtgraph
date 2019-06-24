@@ -1057,6 +1057,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
         levels = np.array(levels)
+    levels = levels.astype(np.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -1093,7 +1094,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1103,7 +1104,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
             
 
@@ -1380,7 +1381,7 @@ def gaussianFilter(data, sigma):
         # clip off extra data
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
-        filtered = filtered[sl]
+        filtered = filtered[tuple(sl)]
     return filtered + baseline
     
     

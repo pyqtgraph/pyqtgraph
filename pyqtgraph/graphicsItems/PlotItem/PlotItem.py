@@ -545,9 +545,9 @@ class PlotItem(GraphicsWidget):
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
         """
-        pos = kwds.get('pos', x if x is not None else y)
-        angle = kwds.get('angle', 0 if x is None else 90)
-        line = InfiniteLine(pos, angle, **kwds)
+        kwds['pos'] = kwds.get('pos', x if x is not None else y)
+        kwds['angle'] = kwds.get('angle', 0 if x is None else 90)
+        line = InfiniteLine(**kwds)
         self.addItem(line)
         if z is not None:
             line.setZValue(z)
@@ -986,8 +986,8 @@ class PlotItem(GraphicsWidget):
         self._menuEnabled = enableMenu
         if enableViewBoxMenu is None:
             return
-        if enableViewBoxMenu is 'same':
-            enableViewBoxMenu = enableMenu 
+        if enableViewBoxMenu == 'same':
+            enableViewBoxMenu = enableMenu
         self.vb.setMenuEnabled(enableViewBoxMenu)
     
     def menuEnabled(self):

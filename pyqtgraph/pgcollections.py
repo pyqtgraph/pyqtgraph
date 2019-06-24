@@ -10,15 +10,22 @@ Includes:
   - ThreadsafeDict, ThreadsafeList - Self-mutexed data structures
 """
 
-import threading, sys, copy, collections
-#from debug import *
+import threading
+import sys
+import copy
 
 try:
     from collections import OrderedDict
 except ImportError:
     # fallback: try to use the ordereddict backport when using python 2.6
     from ordereddict import OrderedDict
-        
+
+try:
+    from collections.abc import Sequence
+except ImportError:
+    # fallback for python < 3.3
+    from collections import Sequence
+
 
 class ReverseDict(dict):
     """extends dict so that reverse lookups are possible by requesting the key as a list of length 1:
@@ -326,7 +333,7 @@ class ProtectedDict(dict):
 
 
             
-class ProtectedList(collections.Sequence):
+class ProtectedList(Sequence):
     """
     A class allowing read-only 'view' of a list or dict. 
     The object can be treated like a normal list, but will never modify the original list it points to.
@@ -408,7 +415,7 @@ class ProtectedList(collections.Sequence):
         raise Exception("This is a list. It does not poop.")
 
 
-class ProtectedTuple(collections.Sequence):
+class ProtectedTuple(Sequence):
     """
     A class allowing read-only 'view' of a tuple.
     The object can be treated like a normal tuple, but its contents will be returned as protected objects.
