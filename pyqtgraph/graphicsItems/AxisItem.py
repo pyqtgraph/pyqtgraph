@@ -643,10 +643,9 @@ class AxisItem(GraphicsWidget):
             maxTickCount = size / minSpacing
             if dif / intervals[minorIndex] <= maxTickCount:
                 levels.append((intervals[minorIndex], 0))
-            return levels
-
-
-
+         
+        return levels
+        
         ##### This does not work -- switching between 2/5 confuses the automatic text-level-selection
         ### Determine major/minor tick spacings which flank the optimal spacing.
         #intervals = np.array([1., 2., 5., 10., 20., 50., 100.]) * p10unit
