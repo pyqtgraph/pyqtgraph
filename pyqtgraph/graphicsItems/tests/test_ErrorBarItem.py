@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 import numpy as np
+import time
 
 app = pg.mkQApp()
 
@@ -13,6 +14,8 @@ def test_ErrorBarItem_defer_data():
     curve = pg.PlotCurveItem(x=x, y=x)
     plot.addItem(curve)
     app.processEvents()
+    app.processEvents()
+
     r_no_ebi = plot.viewRect()
 
     # ErrorBarItem with no data shouldn't affect the view rect
