@@ -928,6 +928,7 @@ class ROI(GraphicsObject):
             
             if h['type'] == 'rf':
                 h['item'].setPos(self.mapFromScene(p1))  ## changes ROI coordinates of handle
+                h['pos'] = self.mapFromParent(p1)
                 
         elif h['type'] == 'sr':
             if h['center'][0] == h['pos'][0]:
