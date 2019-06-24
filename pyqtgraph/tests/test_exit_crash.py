@@ -74,5 +74,5 @@ def test_pg_exit():
         pg.plot()
         pg.exit()
     """)
-    rc = call_with_timeout([sys.executable, '-c', code], timeout=5)
+    rc = call_with_timeout([sys.executable, '-c', code], timeout=5, shell=False)
     assert rc == 0
