@@ -498,7 +498,11 @@ class PlotCurveItem(GraphicsObject):
 
         # Avoid constructing a shadow pen if it's not used.
         if self.opts.get('shadowPen') is not None:
-            sp = fn.mkPen(self.opts['shadowPen'])
+            if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
+                sp = self.opts['shadowPen']
+            else:
+                sp = fn.mkPen(self.opts['shadowPen'])
+
             if sp.style() != QtCore.Qt.NoPen:
                 p.setPen(sp)
                 p.drawPath(path)
@@ -507,7 +511,7 @@ class PlotCurveItem(GraphicsObject):
         # (I'm not sure why this mkPen call was added, it was a recent addition.
         # Unless someone is manually manipulating self.opts from outside the class,
         # there should be no way to set opts['pen'] to anything that's not a QPen)
-        if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
+        if isinstance(self.opts.get('pen'), QtGui.QPen):
             cp = self.opts['pen']
         else:
             cp = fn.mkPen(self.opts['pen'])
