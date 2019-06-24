@@ -543,13 +543,25 @@ class PlotDataItem(GraphicsObject):
                     # this option presumes that x-values are in increasing order
                     range = self.viewRect()
                     if range is not None and len(x) > 1:
-                        # clip to visible region extended by downsampling value
-                        idx = np.searchsorted(x, [range.left(), range.right()])
-                        idx = idx + np.array([-2*ds, 2*ds])
-                        idx = np.clip(idx, a_min=0, a_max=len(x))
-
-                        x = x[idx[0]:idx[1]]
-                        y = y[idx[0]:idx[1]]
+                        # clip to visible region extended by downsampling value, assuming
+                        # uniform spacing of x-values, has O(1) performance
+                        dx = float(x[-1]-x[0]) / (len(x)-1)
+                        x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        
+                        # if data has been clipped too strongly (in case of non-uniform 
+                        # spacing of x-values), refine the clipping region as required
+                        # worst case performance: O(log(n))
+                        # best case performance: O(1)
+                        if x[x0] > range.left():
+                            x0 = np.searchsorted(x, range.left()) - 1*ds
+                            x0 = np.clip(x0, a_min=0, a_max=len(x))
+                        if x[x1] < range.right():
+                            x1 = np.searchsorted(x, range.right()) + 2*ds
+                            x1 = np.clip(x1, a_min=0, a_max=len(x))
+                    
+                        x = x[x0:x1]
+                        y = y[x0:x1]
                     
             if ds > 1:
                 if self.opts['downsampleMethod'] == 'subsample':
