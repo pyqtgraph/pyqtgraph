@@ -428,6 +428,7 @@ class ROI(GraphicsObject):
 
     def handleMoveStarted(self):
         self.preMoveState = self.getState()
+        self.sigRegionChangeStarted.emit(self)
     
     def addTranslateHandle(self, pos, axes=None, item=None, name=None, index=None):
         """
@@ -928,6 +929,7 @@ class ROI(GraphicsObject):
             
             if h['type'] == 'rf':
                 h['item'].setPos(self.mapFromScene(p1))  ## changes ROI coordinates of handle
+                h['pos'] = self.mapFromParent(p1)
                 
         elif h['type'] == 'sr':
             if h['center'][0] == h['pos'][0]:
@@ -1667,7 +1669,7 @@ class MultiRectROI(QtGui.QGraphicsObject):
         ms = min([r.shape[axes[1]] for r in rgns])
         sl = [slice(None)] * rgns[0].ndim
         sl[axes[1]] = slice(0,ms)
-        rgns = [r[sl] for r in rgns]
+        rgns = [r[tuple(sl)] for r in rgns]
         #print [r.shape for r in rgns], axes
         
         return np.concatenate(rgns, axis=axes[0])
