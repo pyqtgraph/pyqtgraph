@@ -482,8 +482,6 @@ class PlotCurveItem(GraphicsObject):
             p.fillPath(self.fillPath, self.opts['brush'])
             profiler('draw fill path')
 
-        cp = fn.mkPen(self.opts['pen'])
-
         ## Copy pens and apply alpha adjustment
         #sp = QtGui.QPen(self.opts['shadowPen'])
         #cp = QtGui.QPen(self.opts['pen'])
@@ -495,14 +493,26 @@ class PlotCurveItem(GraphicsObject):
             #pen.setColor(c)
             ##pen.setCosmetic(True)
 
-        if sp is not None and sp.style() != QtCore.Qt.NoPen:
-            p.setPen(sp)
-            p.drawPath(path)
-        p.setPen(cp)
-        if self.fillPath is not None:
-            p.drawPath(self.fillPath)
+
+
+        # Avoid constructing a shadow pen if it's not used.
+        if self.opts.get('shadowPen') is not None:
+            sp = fn.mkPen(self.opts['shadowPen'])
+            if sp.style() != QtCore.Qt.NoPen:
+                p.setPen(sp)
+                p.drawPath(path)
+
+        # Avoid pointless call to mkPen if we already have a pen
+        # (I'm not sure why this mkPen call was added, it was a recent addition.
+        # Unless someone is manually manipulating self.opts from outside the class,
+        # there should be no way to set opts['pen'] to anything that's not a QPen)
+        if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
+            cp = self.opts['pen']
         else:
-            p.drawPath(path)
+            cp = fn.mkPen(self.opts['pen'])
+
+        p.setPen(cp)
+        p.drawPath(path)
         profiler('drawPath')
 
         #print "Render hints:", int(p.renderHints())
