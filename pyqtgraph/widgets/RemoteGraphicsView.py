@@ -172,7 +172,7 @@ class RemoteGraphicsView(QtGui.QWidget):
                 delta = ev.angleDelta().y()
                 
         serializableEvent = SerializableWheelEvent(ev.pos(), ev.globalPos(), delta, int(ev.buttons()), int(ev.modifiers()), orientation)
-        self._view.wheelEvent(serializableEvent, _callSync='off') # TODO Serialize also QT5 wheelEvent
+        self._view.wheelEvent(serializableEvent, _callSync='off')
         ev.accept()
         return QtGui.QWidget.wheelEvent(self, ev)
     
