@@ -194,6 +194,8 @@ class ViewBox(GraphicsWidget):
         self.background.setPen(fn.mkPen(None))
         self.updateBackground()
 
+        self.border = fn.mkPen(border)
+
         self.borderRect = QtGui.QGraphicsRectItem(self.rect())
         self.borderRect.setParentItem(self)
         self.borderRect.setZValue(1e3)
@@ -221,7 +223,6 @@ class ViewBox(GraphicsWidget):
 
         self.setAspectLocked(lockAspect)
 
-        self.border = fn.mkPen(border)
         if enableMenu:
             self.menu = ViewBoxMenu(self)
         else:
