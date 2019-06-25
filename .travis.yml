@@ -128,9 +128,14 @@ before_script:
 script:
 
     - source activate test_env
-    
+
     # Check system info
     - python -c "import pyqtgraph as pg; pg.systemInfo()"
+
+    # Check install works
+    - start_test "install test";
+      python setup.py --quiet install;
+      check_output "install test";
 
     # Run unit tests
     - start_test "unit tests";
@@ -163,11 +168,6 @@ script:
         python setup.py style &&
         check_output "style check";
       fi;
-
-    # Check install works
-    - start_test "install test";
-      python setup.py --quiet install;
-      check_output "install test";
 
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
