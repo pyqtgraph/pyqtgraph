@@ -56,9 +56,16 @@ exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExampleTests = {
     "hdf5.py": exceptionCondition(False, reason="Example requires user interaction and is not suitable for testing"),
     "RemoteSpeedTest.py": exceptionCondition(False, reason="Test is being problematic on CI machines"),
-    "optics_demos.py": exceptionCondition(not frontends[Qt.PYSIDE], reason="Test fails due to PySide bug: https://bugreports.qt.io/browse/PYSIDE-671")
+    "optics_demos.py": exceptionCondition(not frontends[Qt.PYSIDE], reason="Test fails due to PySide bug: https://bugreports.qt.io/browse/PYSIDE-671"),
+    'GLVolumeItem.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLIsosurface.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLSurfacePlot.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLScatterPlotItem.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLshaders.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLLinePlotItem.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLMeshItem.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939"),
+    'GLImageItem.py': exceptionCondition(not(sys.platform == "darwin" and sys.version_info[0] == 2 and (frontends[Qt.PYQT4] or frontends[Qt.PYSIDE])), reason="glClear does not work on macOS + Python2.7 + Qt4: https://github.com/pyqtgraph/pyqtgraph/issues/939")
 }
-
 
 @pytest.mark.parametrize(
 	"frontend, f",
