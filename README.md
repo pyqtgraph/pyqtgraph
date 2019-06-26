@@ -25,6 +25,7 @@ Requirements
   * `numpy`, `scipy`
 * Optional
   * `pyopengl` for 3D graphics
+    * macOS with Python2 and Qt4 bindings (PyQt4 or PySide) do not work with 3D OpenGL graphics
     * `pyqtgraph.opengl` will be depreciated in a future version and replaced with `VisPy`
   * `hdf5` for large hdf5 binary format support
 * Known to run on Windows, Linux, and macOS.
@@ -41,7 +42,8 @@ Below is a table of the configurations we test and have confidence pyqtgraph wil
 | 3.6             | :x:                | :x:                | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | 3.7             | :x:                | :x:                | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
-* pyqtgraph has had some incompatabilities with PySide2-5.6, and we recommend you avoid those bindings if possible.  
+* pyqtgraph has had some incompatabilities with PySide2-5.6, and we recommend you avoid those bindings if possible
+* on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work
 
 Support
 -------
