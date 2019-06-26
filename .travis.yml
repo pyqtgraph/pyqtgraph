@@ -61,7 +61,7 @@ install:
     - if [ "${QT}" == "pyside" ]; then
           conda install pyside --yes;
       fi;
-    - pip install pytest-xdist # multi-thread py.test
+    - pip install pytest-xdist # multi-thread pytest
     - pip install pytest-cov # add coverage stats
     - pip install pytest-faulthandler # activate faulthandler
 
@@ -132,9 +132,15 @@ script:
     # Check system info
     - python -c "import pyqtgraph as pg; pg.systemInfo()"
 
+
+    # Check install works
+    - start_test "install test";
+      python setup.py --quiet install;
+      check_output "install test";
+
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. py.test --cov pyqtgraph -sv;
+      PYTHONPATH=. pytest --cov pyqtgraph -sv;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
@@ -163,11 +169,6 @@ script:
         python setup.py style &&
         check_output "style check";
       fi;
-
-    # Check install works
-    - start_test "install test";
-      python setup.py --quiet install;
-      check_output "install test";
 
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
