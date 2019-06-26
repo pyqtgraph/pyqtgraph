@@ -88,14 +88,15 @@ jobs:
     inputs:
       environmentName: 'test-environment-$(python.version)'
       packageSpecs: 'python=$(python.version)'
+      updateConda: false
 
   - bash: |
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
-        conda install -c conda-forge $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage --yes --quiet
+        conda install -c conda-forge $(qt.bindings) numpy scipy pyopengl pytest six coverage --yes --quiet
       else
-        pip install $(qt.bindings) numpy scipy pyopengl pytest flake8 six coverage
+        pip install $(qt.bindings) numpy scipy pyopengl pytest six coverage
       fi
       pip install pytest-xdist pytest-cov pytest-faulthandler
     displayName: "Install Dependencies"
