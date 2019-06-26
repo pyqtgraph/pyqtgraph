@@ -41,5 +41,4 @@ def testHistogramLUTWidget():
     w.setImageItem(img)
     
     QtGui.QApplication.processEvents()
-    pg.exit()
     
