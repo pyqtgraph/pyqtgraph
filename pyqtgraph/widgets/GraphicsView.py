@@ -398,8 +398,10 @@ class GraphicsView(QtGui.QGraphicsView):
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
 
-    def __del__(self):
+    def _del(self):
         if self.parentWidget() is None and self.isVisible():
             msg = "Visible window deleted. To prevent this, store a reference to the window object."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
+if sys.version_info[0] == 3 and sys.version_info[1] >= 4:
+    GraphicsView.__del__ = GraphicsView._del
