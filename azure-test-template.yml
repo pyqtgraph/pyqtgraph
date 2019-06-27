@@ -26,39 +26,28 @@ jobs:
         python.version: "3.6"
         qt.bindings: "pyside2"
         install.method: "conda"
-      Python37-PyQt-5.12:
+      Python37-PyQt-5.13:
         python.version: '3.7'
         qt.bindings: "PyQt5"
         install.method: "pip"
-      Python37-PySide2-5.12:
+      Python37-PySide2-5.13:
         python.version: "3.7"
         qt.bindings: "PySide2"
         install.method: "pip"
 
   steps:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      source: 'current'
+      artifact: wheel
+      path: 'dist'
+
   - task: ScreenResolutionUtility@1
     inputs:
       displaySettings: 'specific'
       width: '1920'
       height: '1080'
     condition: eq(variables['agent.os'], 'Windows_NT' )
-
-  - script: |
-      curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
-      7z x mesa3d-19.1.0-release-msvc.exe
-      cd x64
-      xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
-      xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
-      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
-    displayName: "Install Windows-Mesa OpenGL DLL"
-    condition: eq(variables['agent.os'], 'Windows_NT')
 
   - task: UsePythonVersion@0
     inputs:
@@ -90,6 +79,23 @@ jobs:
       packageSpecs: 'python=$(python.version)'
       updateConda: false
 
+  - script: |
+      curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
+      7z x mesa3d-19.1.0-release-msvc.exe
+      cd x64
+      xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
+      xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
+    displayName: "Install Windows-Mesa OpenGL DLL"
+    condition: eq(variables['agent.os'], 'Windows_NT')
+
   - bash: |
       if [ $(install.method) == "conda" ]
       then
@@ -105,30 +111,14 @@ jobs:
         export PYTEST_ADDOPTS="--faulthandler-timeout=15"
       fi
     displayName: "Install Dependencies"
-  
+
   - bash: |
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
       fi
-      pip install setuptools wheel
-      python setup.py bdist_wheel
-      pip install dist/*.whl
-    displayName: 'Build Wheel and Install'
-
-  - task: CopyFiles@2
-    inputs:
-      contents: 'dist/**' 
-      targetFolder: $(Build.ArtifactStagingDirectory)
-      cleanTargetFolder: true
-    displayName: "Copy Binary Wheel Distribution To Artifacts"
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Binary Wheel' 
-    condition: always()
-    inputs:
-      pathtoPublish: $(Build.ArtifactStagingDirectory)/dist
-      artifactName: Distributions
+      python -m pip install --no-index --find-links=dist pyqtgraph
+    displayName: 'Install Wheel'
 
   - bash: |
       sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
