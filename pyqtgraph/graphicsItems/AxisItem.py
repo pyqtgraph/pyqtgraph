@@ -448,11 +448,11 @@ class AxisItem(GraphicsWidget):
             if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
                 scale = 1.0
                 prefix = ''
+            self.autoSIPrefixScale = scale
             self.setLabel(unitPrefix=prefix)
         else:
-            scale = 1.0
+            self.autoSIPrefixScale = 1.0
 
-        self.autoSIPrefixScale = scale
         self.picture = None
         self.update()
 
