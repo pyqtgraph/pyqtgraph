@@ -89,27 +89,15 @@ class Dock(QtGui.QWidget, DockDrop):
         The actual size will be determined by comparing this Dock's
         stretch value to the rest of the docks it shares space with.
         """
-        #print "setStretch", self, x, y
-        #self._stretch = (x, y)
         if x is None:
             x = 0
         if y is None:
             y = 0
-        #policy = self.sizePolicy()
-        #policy.setHorizontalStretch(x)
-        #policy.setVerticalStretch(y)
-        #self.setSizePolicy(policy)
         self._stretch = (x, y)
         self.sigStretchChanged.emit()
-        #print "setStretch", self, x, y, self.stretch()
         
     def stretch(self):
-        #policy = self.sizePolicy()
-        #return policy.horizontalStretch(), policy.verticalStretch()
         return self._stretch
-        
-    #def stretch(self):
-        #return self._stretch
 
     def hideTitleBar(self):
         """
@@ -150,7 +138,6 @@ class Dock(QtGui.QWidget, DockDrop):
         By default ('auto'), the orientation is determined
         based on the aspect ratio of the Dock.
         """
-        #print self.name(), "setOrientation", o, force
         if o == 'auto' and self.autoOrient:
             if self.container().type() == 'tab':
                 o = 'horizontal'
@@ -165,19 +152,16 @@ class Dock(QtGui.QWidget, DockDrop):
         
     def updateStyle(self):
         ## updates orientation and appearance of title bar
-        #print self.name(), "update style:", self.orientation, self.moveLabel, self.label.isVisible()
         if self.labelHidden:
             self.widgetArea.setStyleSheet(self.nStyle)
         elif self.orientation == 'vertical':
             self.label.setOrientation('vertical')
             if self.moveLabel:
-                #print self.name(), "reclaim label"
                 self.topLayout.addWidget(self.label, 1, 0)
             self.widgetArea.setStyleSheet(self.vStyle)
         else:
             self.label.setOrientation('horizontal')
             if self.moveLabel:
-                #print self.name(), "reclaim label"
                 self.topLayout.addWidget(self.label, 0, 1)
             self.widgetArea.setStyleSheet(self.hStyle)
 
@@ -203,7 +187,6 @@ class Dock(QtGui.QWidget, DockDrop):
     def startDrag(self):
         self.drag = QtGui.QDrag(self)
         mime = QtCore.QMimeData()
-        #mime.setPlainText("asd")
         self.drag.setMimeData(mime)
         self.widgetArea.setStyleSheet(self.dragStyle)
         self.update()
@@ -220,7 +203,6 @@ class Dock(QtGui.QWidget, DockDrop):
         if self._container is not None:
             # ask old container to close itself if it is no longer needed
             self._container.apoptose()
-        #print self.name(), "container changed"
         self._container = c
         if c is None:
             self.area = None

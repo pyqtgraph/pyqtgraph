@@ -14,3 +14,15 @@ def test_dock():
     assert dock.name() == name
     # no surprises in return type.
     assert type(dock.name()) == type(name)
+
+def test_closable_dock():
+    name = "Test close dock"
+    dock = da.Dock(name=name, closable=True)
+
+    assert dock.label.closeButton != None
+
+def test_hide_title_dock():
+    name = "Test hide title dock"
+    dock = da.Dock(name=name, hideTitle=True)
+
+    assert dock.labelHidden == True
