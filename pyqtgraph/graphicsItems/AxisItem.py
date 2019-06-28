@@ -444,7 +444,11 @@ class AxisItem(GraphicsWidget):
 
     def updateAutoSIPrefix(self):
         if self.label.isVisible():
-            (scale, prefix) = fn.siScale(max(abs(self.range[0]*self.scale), abs(self.range[1]*self.scale)))
+            if self.logMode:
+                _range = 10**np.array(self.range)
+            else:
+                _range = self.range
+            (scale, prefix) = fn.siScale(max(abs(_range[0]*self.scale), abs(_range[1]*self.scale)))
             if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
                 scale = 1.0
                 prefix = ''
@@ -771,7 +775,7 @@ class AxisItem(GraphicsWidget):
         return strings
 
     def logTickStrings(self, values, scale, spacing):
-        return ["%0.1g"%x for x in 10 ** np.array(values).astype(float)]
+        return ["%0.1g"%x for x in 10 ** np.array(values).astype(float) * np.array(scale)]
 
     def generateDrawSpecs(self, p):
         """
