@@ -111,7 +111,7 @@ class TextItem(GraphicsObject):
         
     def setAngle(self, angle):
         self.angle = angle
-        self.updateTransform()
+        self.updateTransform(force=True)
         
     def setAnchor(self, anchor):
         self.anchor = Point(anchor)
@@ -169,7 +169,7 @@ class TextItem(GraphicsObject):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
-    def updateTransform(self):
+    def updateTransform(self, force=False):
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -181,7 +181,7 @@ class TextItem(GraphicsObject):
         else:
             pt = p.sceneTransform()
         
-        if pt == self._lastTransform:
+        if not force and pt == self._lastTransform:
             return
 
         t = pt.inverted()[0]
