@@ -91,6 +91,8 @@ class CtrlNode(Node):
     sigStateChanged = QtCore.Signal(object)
     
     def __init__(self, name, ui=None, terminals=None):
+        Node.__init__(self, name=name, terminals=terminals)
+        
         if ui is None:
             if hasattr(self, 'uiTemplate'):
                 ui = self.uiTemplate
@@ -98,7 +100,6 @@ class CtrlNode(Node):
                 ui = []
         if terminals is None:
             terminals = {'In': {'io': 'in'}, 'Out': {'io': 'out', 'bypass': 'In'}}
-        Node.__init__(self, name=name, terminals=terminals)
         
         self.ui, self.stateGroup, self.ctrls = generateUi(ui)
         self.stateGroup.sigChanged.connect(self.changed)
