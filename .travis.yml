@@ -64,6 +64,11 @@ install:
     - pip install pytest-xdist # multi-thread pytest
     - pip install pytest-cov # add coverage stats
 
+    # faulthandler support not built in to pytest for python 2.7
+    - if [ "${PYTHON}" == "2.7" ]; then
+        pip install pytest-faulthandler;
+      fi;
+
     # Debugging helpers
     - uname -a
     - cat /etc/issue
@@ -139,7 +144,7 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. pytest --cov pyqtgraph -sv;
+      PYTHONPATH=. pytest --cov pyqtgraph -sv -o faulthandler_timeout=15;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd

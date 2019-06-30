@@ -99,6 +99,10 @@ jobs:
         pip install $(qt.bindings) numpy scipy pyopengl pytest six coverage
       fi
       pip install pytest-xdist pytest-cov
+      if [ $(python.version) == "2.7" ]
+      then
+        pip install pytest-faulthandler
+      fi
     displayName: "Install Dependencies"
   
   - bash: |
@@ -170,7 +174,8 @@ jobs:
       # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
       pytest . -sv \
         --junitxml=junit/test-results.xml \
-        -n 1 --cov pyqtgraph --cov-report=xml --cov-report=html
+        -n 1 --cov pyqtgraph --cov-report=xml --cov-report=html \
+        -o faulthandler_timeout=15
     displayName: 'Unit tests' 
     env:
       AZURE: 1
