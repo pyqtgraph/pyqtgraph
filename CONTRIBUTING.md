@@ -45,7 +45,6 @@ Please use the following guidelines when preparing changes:
 * pytest
 * pytest-cov
 * pytest-xdist
-* pytest-faulthandler
 * Optional: pytest-xvfb
 
 ### Tox

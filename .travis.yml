@@ -63,7 +63,6 @@ install:
       fi;
     - pip install pytest-xdist # multi-thread pytest
     - pip install pytest-cov # add coverage stats
-    - pip install pytest-faulthandler # activate faulthandler
 
     # Debugging helpers
     - uname -a

@@ -98,7 +98,7 @@ jobs:
       else
         pip install $(qt.bindings) numpy scipy pyopengl pytest six coverage
       fi
-      pip install pytest-xdist pytest-cov pytest-faulthandler
+      pip install pytest-xdist pytest-cov
     displayName: "Install Dependencies"
   
   - bash: |
