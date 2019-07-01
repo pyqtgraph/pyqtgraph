@@ -174,8 +174,7 @@ jobs:
       # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
       pytest . -sv \
         --junitxml=junit/test-results.xml \
-        -n 1 --cov pyqtgraph --cov-report=xml --cov-report=html \
-        -o faulthandler_timeout=15
+        -n 1 --cov pyqtgraph --cov-report=xml --cov-report=html
     displayName: 'Unit tests' 
     env:
       AZURE: 1

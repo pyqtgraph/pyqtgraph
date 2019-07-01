@@ -47,6 +47,10 @@ Please use the following guidelines when preparing changes:
 * pytest-xdist
 * Optional: pytest-xvfb
 
+If you have pytest < 5, you may also want to install the pytest-faulthandler
+plugin to output extra debugging information in case of test failures. This
+isn't necessary with pytest 5+ as the plugin was merged into core pytest.
+
 ### Tox
 
 As PyQtGraph supports a wide array of Qt-bindings, and python versions, we make use of `tox` to test against most of the configurations in our test matrix.  As some of the qt-bindings are only installable via `conda`, `conda` needs to be in your `PATH`, and we utilize the `tox-conda` plugin.

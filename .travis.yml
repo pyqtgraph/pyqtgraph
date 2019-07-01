@@ -144,7 +144,7 @@ script:
 
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. pytest --cov pyqtgraph -sv -o faulthandler_timeout=15;
+      PYTHONPATH=. pytest --cov pyqtgraph -sv;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
