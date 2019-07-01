@@ -45,8 +45,11 @@ Please use the following guidelines when preparing changes:
 * pytest
 * pytest-cov
 * pytest-xdist
-* pytest-faulthandler
 * Optional: pytest-xvfb
+
+If you have pytest < 5, you may also want to install the pytest-faulthandler
+plugin to output extra debugging information in case of test failures. This
+isn't necessary with pytest 5+ as the plugin was merged into core pytest.
 
 ### Tox
 

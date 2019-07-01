@@ -63,7 +63,12 @@ install:
       fi;
     - pip install pytest-xdist # multi-thread pytest
     - pip install pytest-cov # add coverage stats
-    - pip install pytest-faulthandler # activate faulthandler
+
+    # faulthandler support not built in to pytest for python 2.7
+    - if [ "${PYTHON}" == "2.7" ]; then
+        pip install pytest-faulthandler;
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15";
+      fi;
 
     # Debugging helpers
     - uname -a

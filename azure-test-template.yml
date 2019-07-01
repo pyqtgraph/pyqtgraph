@@ -98,7 +98,12 @@ jobs:
       else
         pip install $(qt.bindings) numpy scipy pyopengl pytest six coverage
       fi
-      pip install pytest-xdist pytest-cov pytest-faulthandler
+      pip install pytest-xdist pytest-cov
+      if [ $(python.version) == "2.7" ]
+      then
+        pip install pytest-faulthandler
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15"
+      fi
     displayName: "Install Dependencies"
   
   - bash: |
