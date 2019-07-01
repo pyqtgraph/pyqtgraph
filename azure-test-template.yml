@@ -102,6 +102,7 @@ jobs:
       if [ $(python.version) == "2.7" ]
       then
         pip install pytest-faulthandler
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15"
       fi
     displayName: "Install Dependencies"
   

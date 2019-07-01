@@ -67,6 +67,7 @@ install:
     # faulthandler support not built in to pytest for python 2.7
     - if [ "${PYTHON}" == "2.7" ]; then
         pip install pytest-faulthandler;
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15";
       fi;
 
     # Debugging helpers
