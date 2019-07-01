@@ -14,10 +14,11 @@ assignees: ''
 <!-- This should summarize the issue. -->
 
 ### Code to reproduce
+<!-- Please provide a minimal working example that reproduces the issue in the code block below.
+     Ideally, this should be a full example someone else could run without additional setup. -->
 ```python
 import pyqtgraph as pg
 import numpy as np
-# This is a placeholder for a minimal working example that reproduces the issue.
 ```
 
 ### Expected behavior
@@ -28,7 +29,7 @@ import numpy as np
 
 ```
 An error occurred?
-Post it inside these 'code fences'!
+Post the full traceback inside these 'code fences'!
 ```
 
 ### Tested environment(s)
@@ -38,5 +39,6 @@ Post it inside these 'code fences'!
  * Python version: 
  * NumPy version: <!-- output of numpy.__version__ -->
  * Operating system: 
+ * Installation method: <!-- e.g. pip, conda, system packages, ... -->
 
 ### Additional context
