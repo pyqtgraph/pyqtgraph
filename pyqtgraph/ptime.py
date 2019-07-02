@@ -7,22 +7,29 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 
 
 import sys
-import time as systime
+
+if sys.version_info[0] < 3:
+    from time import clock
+    from time import time as system_time
+else:
+    from time import perf_counter as clock
+    from time import time as system_time
+
 START_TIME = None
 time = None
 
 def winTime():
     """Return the current time in seconds with high precision (windows version, use Manager.time() to stay platform independent)."""
-    return systime.clock() + START_TIME
+    return clock() - START_TIME
     #return systime.time()
 
 def unixTime():
     """Return the current time in seconds with high precision (unix version, use Manager.time() to stay platform independent)."""
-    return systime.time()
+    return system_time()
 
 if sys.platform.startswith('win'):
-    cstart = systime.clock()  ### Required to start the clock in windows
-    START_TIME = systime.time() - cstart
+    cstart = clock()  ### Required to start the clock in windows
+    START_TIME = system_time() - cstart
     
     time = winTime
 else:
