@@ -2,7 +2,7 @@
 """
 MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 MetaArray is an array class based on numpy.ndarray that allows storage of per-axis meta data
 such as axis values, names, units, column names, etc. It also enables several
