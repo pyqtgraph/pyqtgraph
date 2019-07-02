@@ -2311,13 +2311,61 @@ def invertQTransform(tr):
             raise Exception("Transform is not invertible.")
         return inv[0]
     
+
+def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
+    """Return an array of position values needed to make beeswarm or column scatter plots.
     
-def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
-    """
-    Used for examining the distribution of values in a set. Produces scattering as in beeswarm or column scatter plots.
+    Used for examining the distribution of values in an array.
     
-    Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
+    Given an array of x-values, construct an array of y-values such that an x,y scatter-plot
     will not have overlapping points (it will look similar to a histogram).
+    """
+    if method == 'exact':
+        return _pseudoScatterExact(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+    elif method == 'histogram':
+        return _pseudoScatterHistogram(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+
+
+def _pseudoScatterHistogram(data, spacing=None, shuffle=True, bidir=False):
+    """Works by binning points into a histogram and spreading them out to fill the bin.
+    
+    Faster method, but can produce blocky results.
+    """
+    inds = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(inds)
+        
+    data = data[inds]
+    
+    if spacing is None:
+        spacing = 2.*np.std(data)/len(data)**0.5
+
+    yvals = np.empty(len(data))
+    
+    dmin = data.min()
+    dmax = data.max()
+    nbins = int((dmax-dmin) / spacing) + 1
+    bins = np.linspace(dmin, dmax, nbins)
+    dx = bins[1] - bins[0]
+    dbins = ((data - bins[0]) / dx).astype(int)
+    binCounts = {}
+        
+    for i,j in enumerate(dbins):
+        c = binCounts.get(j, -1) + 1
+        binCounts[j] = c
+        yvals[i] = c
+
+    if bidir is True:
+        for i in range(nbins):
+            yvals[dbins==i] -= binCounts.get(i, 0) * 0.5
+
+    return yvals[np.argsort(inds)]  ## un-shuffle values before returning
+
+
+def _pseudoScatterExact(data, spacing=None, shuffle=True, bidir=False):
+    """Works by stacking points up one at a time, searching for the lowest position available at each point.
+    
+    This method produces nice, smooth results but can be prohibitively slow for large datasets.
     """
     inds = np.arange(len(data))
     if shuffle:
