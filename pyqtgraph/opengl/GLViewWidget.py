@@ -195,6 +195,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setModelview()
         bgcolor = self.opts['bgcolor']
         glClearColor(*bgcolor)
+        glGetError()
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
