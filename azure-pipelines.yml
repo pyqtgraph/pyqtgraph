@@ -35,4 +35,4 @@ jobs:
   - template: azure-test-template.yml
     parameters:
       name: MacOS
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.13'
