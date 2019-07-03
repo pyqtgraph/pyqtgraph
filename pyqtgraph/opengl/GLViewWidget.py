@@ -189,6 +189,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if not self.isValid():
             raise RuntimeError("OpenGL context is invalid")
         
+        self.makeCurrent()
+        
         self.setProjection(region=region)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
