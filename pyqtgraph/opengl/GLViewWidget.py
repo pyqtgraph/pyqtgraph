@@ -4,6 +4,7 @@ import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
+import warnings
 
 ##Vector = QtGui.QVector3D
 
@@ -195,7 +196,12 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setModelview()
         bgcolor = self.opts['bgcolor']
         glClearColor(*bgcolor)
-        glGetError()
+        while True:
+            err = glGetError()
+            if err != GL_NO_ERROR:
+                warnings.warn("GL Error:", err, file=sys.stderr)
+            else:
+                break
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT )
         self.drawItemTree(useItemNames=useItemNames)
         
