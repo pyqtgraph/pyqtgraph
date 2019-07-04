@@ -195,6 +195,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setProjection(region=region)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
+        warnings.warn("BG color:", bgcolor)
         glClearColor(*bgcolor)
         while True:
             err = glGetError()
