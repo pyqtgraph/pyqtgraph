@@ -925,9 +925,7 @@ class PlotItem(GraphicsWidget):
         curves = self.curves[:]
         split = len(curves) - numCurves
         for i in range(len(curves)):
-            if numCurves == -1 or i >= split:
-                curves[i].show()
-            else:
+            if numCurves != -1 and i >= split:
                 if self.ctrl.forgetTracesCheck.isChecked():
                     curves[i].clear()
                     self.removeItem(curves[i])
