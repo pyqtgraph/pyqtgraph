@@ -33,14 +33,13 @@ class SerializableWheelEvent:
         return self._delta
     
     def orientation(self):
-        return (None, QtCore.Qt.Horizontal, QtCore.Qt.Vertical)[self._orientation]
+        return self._orientation
     
     def angleDelta(self):
-        if self._orientation == 1:
-            return QtCore.QPoint(self._delta, 0)
-        elif self._orientation == 2:
+        if self._orientation == QtCore.Qt.Vertical:
             return QtCore.QPoint(0, self._delta)
-        return QtCore.QPoint(0, 0)
+        else:
+            return QtCore.QPoint(self._delta, 0)
 
     def buttons(self):
         return QtCore.Qt.MouseButtons(self._buttons)
@@ -55,7 +54,7 @@ class SerializableWheelEvent:
         if QT_LIB in ['PyQt4', 'PySide']:
             return QtGui.QWheelEvent(self.pos(), self.globalPos(), self.delta(), self.buttons(), self.modifiers(), self.orientation())
         else:
-            return QtGui.QWheelEvent(self.pos(), self.globalPos(), QtCore.QPoint(0,0), self.angleDelta(), self.delta(), self.orientation(), self.buttons(), self.modifiers())
+            return QtGui.QWheelEvent(self.pos(), self.globalPos(), QtCore.QPoint(), self.angleDelta(), self.delta(), self.orientation(), self.buttons(), self.modifiers())
 
 class RemoteGraphicsView(QtGui.QWidget):
     """
@@ -161,17 +160,17 @@ class RemoteGraphicsView(QtGui.QWidget):
         
     def wheelEvent(self, ev):
         delta = 0
-        orientation = 1
+        orientation = QtCore.Qt.Horizontal
         if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
             orientation = int(ev.orientation())
         else:
             delta = ev.angleDelta().x()
             if delta == 0:
-                orientation = 2
+                orientation = QtCore.Qt.Vertical
                 delta = ev.angleDelta().y()
                 
-        serializableEvent = SerializableWheelEvent(ev.pos(), ev.globalPos(), delta, int(ev.buttons()), int(ev.modifiers()), orientation)
+        serializableEvent = SerializableWheelEvent(ev.pos(), ev.pos(), delta, int(ev.buttons()), int(ev.modifiers()), orientation)
         self._view.wheelEvent(serializableEvent, _callSync='off')
         ev.accept()
         return QtGui.QWidget.wheelEvent(self, ev)
