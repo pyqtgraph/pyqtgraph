@@ -82,11 +82,14 @@ p4.shader()['colorMap'] = np.array([0.2, 2, 0.5, 0.2, 1, 1, 0.2, 0, 2])
 p4.translate(10, 10, 0)
 w.addItem(p4)
 
+w.update() # Only necessary if running headless
+
 index = 0
 def update():
     global p4, z, index
     index -= 1
     p4.setData(z=z[index%z.shape[0]])
+    w.update() # Only necessary if running headless
     
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
