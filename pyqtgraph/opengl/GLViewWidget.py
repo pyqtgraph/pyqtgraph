@@ -185,7 +185,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if viewport is None:
             viewport = self.getViewport()
             
-        raise RuntimeError("paintGL called. region={}, viewport={}, useItemNames={}".format(repr(region), repr(viewport), repr(useItemNames))
+        raise RuntimeError("paintGL called. region={}, viewport={}, useItemNames={}".format(repr(region), repr(viewport), repr(useItemNames)))
             
         glViewport(*viewport)
             
