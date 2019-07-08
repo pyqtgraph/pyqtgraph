@@ -195,7 +195,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.setProjection(region=region)
         self.setModelview()
         bgcolor = self.opts['bgcolor']
-        raise RuntimeError("BG color: {}".format(repr(bgcolor))) # This is a debug line and should never be in any official pyqtgraph branch
+        warnings.warn("BG color: {}".format(repr(bgcolor))) # This is a debug line and should never be in any official pyqtgraph branch
         glClearColor(*bgcolor)
         while True:
             err = glGetError()
