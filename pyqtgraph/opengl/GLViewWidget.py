@@ -183,9 +183,11 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         Note that we may use viewport != self.opts['viewport'] when exporting.
         """
         if viewport is None:
-            glViewport(*self.getViewport())
-        else:
-            glViewport(*viewport)
+            viewport = self.getViewport()
+            
+        raise RuntimeError("paintGL called. region={}, viewport={}, useItemNames={}".format(repr(region), repr(viewport), repr(useItemNames))
+            
+        glViewport(*viewport)
             
         if not self.isValid():
             raise RuntimeError("OpenGL context is invalid")
