@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 DESCRIPTION = """\
 PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PyQt5/PySide/PySide2 and
 numpy. 
@@ -12,7 +13,7 @@ setupOpts = dict(
     name='pyqtgraph',
     description='Scientific Graphics and GUI Library for Python',
     long_description=DESCRIPTION,
-    license='MIT',
+    license =  'MIT',
     url='http://www.pyqtgraph.org',
     author='Luke Campagnola',
     author_email='luke.campagnola@gmail.com',
@@ -145,4 +146,3 @@ setup(
         ],
     **setupOpts
 )
-

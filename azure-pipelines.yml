@@ -45,7 +45,6 @@ stages:
         fi;
         echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
         test ${SIZE_DIFF} -lt 100;
-        # python setup.py mergesize
       displayName: 'Diff Size Check'
       continueOnError: "true"
 

@@ -1,6 +1,6 @@
 # Contributing to PyQtGraph
 
-Contributions to pyqtgraph are welcome! 
+Contributions to pyqtgraph are welcome!
 
 Please use the following guidelines when preparing changes:
 
@@ -13,10 +13,12 @@ Please use the following guidelines when preparing changes:
 
 ## Documentation
 
-* Writing proper documentation and unit tests is highly encouraged. PyQtGraph uses nose / pytest style testing, so tests should usually be included in a tests/ directory adjacent to the relevant code. 
+* Writing proper documentation and unit tests is highly encouraged. PyQtGraph uses nose / pytest style testing, so tests should usually be included in a tests/ directory adjacent to the relevant code.
 * Documentation is generated with sphinx; please check that docstring changes compile correctly
 
 ## Style guidelines
+
+### Rules
 
 * PyQtGraph prefers PEP8 for most style issues, but this is not enforced rigorously as long as the code is clean and readable.
 * Use `python setup.py style` to see whether your code follows the mandatory style guidelines checked by flake8.
@@ -33,9 +35,15 @@ Please use the following guidelines when preparing changes:
   ============== ========================================================
   ```
 
-  QObject subclasses that implement new signals should also describe 
+  QObject subclasses that implement new signals should also describe
   these in a similar table.
-  
+
+### Pre-Commit
+
+PyQtGraph developers are highly encouraged to (but not required) to use [`pre-commit`](https://pre-commit.com/).  `pre-commit` does a number of checks when attempting to commit the code to ensure it conforms to various standards, such as `flake8`, utf-8 encoding pragma, line-ending fixers, and so on.  If any of the checks fail, the commit will be rejected, and you will have the opportunity to make the necessary fixes before adding and committing a file again.  This ensures that every commit made conforms to (most) of the styling standards that the library enforces; and you will most likely pass the code style checks by the CI.
+
+To make use of `pre-commit`, have it available in your `$PATH` and run `pre-commit install` from the root directory of PyQtGraph.
+
 ## Testing Setting up a test environment
 
 ### Dependencies
