@@ -55,6 +55,7 @@ class GLGridItem(GLGraphicsItem):
         
     def setColor(self, color):
         self.color = color
+        self.update()
 
     def paint(self):
         self.setupGLState()
