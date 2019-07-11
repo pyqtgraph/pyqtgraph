@@ -3,6 +3,7 @@ import numpy as np
 from OpenGL.GL import *
 from .. GLGraphicsItem import GLGraphicsItem
 from ... import QtGui
+from ... import functions as fn
 
 __all__ = ['GLGridItem']
 
@@ -21,7 +22,7 @@ class GLGridItem(GLGraphicsItem):
             size = QtGui.QVector3D(20,20,1)
         self.setSize(size=size)
         self.setSpacing(1, 1, 1)
-        self.color = color
+        self.setColor(color)
     
     def setSize(self, x=None, y=None, z=None, size=None):
         """
@@ -54,8 +55,11 @@ class GLGridItem(GLGraphicsItem):
         return self.__spacing[:]
         
     def setColor(self, color):
-        self.color = color
+        self.__color = color
         self.update()
+
+    def color(self):
+        return self.__color
 
     def paint(self):
         self.setupGLState()
@@ -72,7 +76,7 @@ class GLGridItem(GLGraphicsItem):
         xs,ys,zs = self.spacing()
         xvals = np.arange(-x/2., x/2. + xs*0.001, xs) 
         yvals = np.arange(-y/2., y/2. + ys*0.001, ys)
-        glColor4f(*self.color)
+        glColor4f(*self.color())
         for x in xvals:
             glVertex3f(x, yvals[0], 0)
             glVertex3f(x,  yvals[-1], 0)
