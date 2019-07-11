@@ -55,6 +55,7 @@ class GLGridItem(GLGraphicsItem):
         return self.__spacing[:]
         
     def setColor(self, color):
+        """Set the color of the grid. Arguments are the same as those accepted by functions.mkColor()"""
         self.__color = fn.Color(color)
         self.update()
 
