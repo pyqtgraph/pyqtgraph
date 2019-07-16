@@ -898,6 +898,12 @@ class PlotItem(GraphicsWidget):
             
         auto = self.ctrl.downsampleCheck.isChecked() and self.ctrl.autoDownsampleCheck.isChecked()
             
+        if auto:
+            self.ctrl.downsampleSpin.setEnabled(True)
+        else:
+            self.ctrl.downsampleSpin.setEnabled(False)
+
+
         if self.ctrl.subsampleRadio.isChecked():
             method = 'subsample' 
         elif self.ctrl.meanRadio.isChecked():
