@@ -61,6 +61,7 @@ class PlotCurveItem(GraphicsObject):
         self.opts = {
             'shadowPen': None,
             'fillLevel': None,
+            'fillOutline': False,
             'brush': None,
             'stepMode': False,
             'name': None,
@@ -291,7 +292,7 @@ class PlotCurveItem(GraphicsObject):
         self.fillPath = None
         self.invalidateBounds()
         self.update()
-
+        
     def setData(self, *args, **kargs):
         """
         =============== ========================================================
@@ -305,6 +306,8 @@ class PlotCurveItem(GraphicsObject):
                         :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         fillLevel       (float or None) Fill the area 'under' the curve to
                         *fillLevel*
+        fillOutline     (bool) If True, an outline surrounding the *fillLevel*
+                        area is drawn.
         brush           QBrush to use when filling. Any single argument accepted
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
@@ -394,6 +397,8 @@ class PlotCurveItem(GraphicsObject):
             self.setShadowPen(kargs['shadowPen'])
         if 'fillLevel' in kargs:
             self.setFillLevel(kargs['fillLevel'])
+        if 'fillOutline' in kargs:
+            self.opts['fillOutline'] = kargs['fillOutline']
         if 'brush' in kargs:
             self.setBrush(kargs['brush'])
         if 'antialias' in kargs:
@@ -501,7 +506,7 @@ class PlotCurveItem(GraphicsObject):
             p.setPen(sp)
             p.drawPath(path)
         p.setPen(cp)
-        if self.fillPath is not None:
+        if self.opts['fillOutline'] and self.fillPath is not None:
             p.drawPath(self.fillPath)
         else:
             p.drawPath(path)
