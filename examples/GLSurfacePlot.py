@@ -11,6 +11,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
+qtest = pg.Qt.QtTest.QTest
 
 ## Create a GL View widget to display data
 app = QtGui.QApplication([])
@@ -91,6 +92,8 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(30)
+
+qtest.qWaitForWindowShown(w)
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
