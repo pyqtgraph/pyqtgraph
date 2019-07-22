@@ -155,10 +155,10 @@ class ColorMapParameter(ptree.types.GroupParameter):
         
         return colors
             
-    def saveState(self):
+    def saveState(self, filter='user'):
         items = OrderedDict()
         for item in self:
-            itemState = item.saveState(filter='user')
+            itemState = item.saveState(filter=filter)
             itemState['field'] = item.fieldName
             items[item.name()] = itemState
         state = {'fields': self.fields, 'items': items}
@@ -245,7 +245,6 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         colors = np.empty((len(data), 4))
         default = np.array(fn.colorTuple(self['Default'])) / 255.
         colors[:] = default
-        
         for v in self.param('Values'):
             mask = data == v.maskValue
             c = np.array(fn.colorTuple(v.value())) / 255.
@@ -258,7 +257,6 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         #nanColor = self['NaN']
         #nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
         #colors[mask] = nanColor
-        
         return colors
 
 

@@ -35,7 +35,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
     """
     sigScatterPlotClicked = QtCore.Signal(object, object)
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, plot=None):
         QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
         self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.addWidget(self.ctrlPanel)
@@ -47,10 +47,14 @@ class ScatterPlotWidget(QtGui.QSplitter):
         self.params = ptree.Parameter.create(name='params', type='group', children=[self.filter, self.colorMap])
         self.ptree.setParameters(self.params, showTop=False)
         
-        self.plot = PlotWidget()
+        if plot is not None:
+            self.plot = plot
+        else:
+            self.plot = PlotWidget()
+            self.addWidget(self.plot)
         self.ctrlPanel.addWidget(self.fieldList)
         self.ctrlPanel.addWidget(self.ptree)
-        self.addWidget(self.plot)
+        
         
         fg = fn.mkColor(getConfigOption('foreground'))
         fg.setAlpha(150)
