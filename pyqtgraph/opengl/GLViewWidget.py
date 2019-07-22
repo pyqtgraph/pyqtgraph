@@ -186,8 +186,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if viewport is None:
             viewport = self.getViewport()
             
-        sys.exit("paintGL called. region={}, viewport={}, useItemNames={}".format(repr(region), repr(viewport), repr(useItemNames)))
-            
+        print("paintGL called. region={}, viewport={}, useItemNames={}\n".format(repr(region), repr(viewport), repr(useItemNames)), )
+        
         glViewport(*viewport)
             
         if not self.isValid():
