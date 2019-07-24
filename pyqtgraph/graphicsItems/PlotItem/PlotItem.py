@@ -126,6 +126,8 @@ class PlotItem(GraphicsWidget):
         """
         
         GraphicsWidget.__init__(self, parent)
+
+        self.headers = []
         
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         
@@ -288,7 +290,12 @@ class PlotItem(GraphicsWidget):
         
         if len(kargs) > 0:
             self.plot(**kargs)
-        
+
+    def set_headers(self, new_headers):
+        self.headers = new_headers
+
+    def get_headers(self):
+        return self.headers
         
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']

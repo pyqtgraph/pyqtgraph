@@ -19,12 +19,12 @@ class CSVExporter(Exporter):
         
     def parameters(self):
         return self.params
-    
+
     def export(self, fileName=None):
-        
+
         if not isinstance(self.item, PlotItem):
             raise Exception("Must have a PlotItem selected for CSV export.")
-        
+
         if fileName is None:
             self.fileSaveDialog(filter=["*.csv", "*.tsv"])
             return
@@ -32,6 +32,9 @@ class CSVExporter(Exporter):
         fd = open(fileName, 'w')
         data = []
         header = []
+
+        headers = self.item.get_headers()
+        new_data = []
 
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
 
@@ -42,39 +45,32 @@ class CSVExporter(Exporter):
             data.append(cd)
             if hasattr(c, 'implements') and c.implements('plotData') and c.name() is not None:
                 name = c.name().replace('"', '""') + '_'
-                xName, yName = '"'+name+'x"', '"'+name+'y"'
+                xName, yName = '"' + name + 'x"', '"' + name + 'y"'
             else:
-                xName = 'x%04d' % i
-                yName = 'y%04d' % i
-            if appendAllX or i == 0:
+                xName = headers[i][0]
+                yName = headers[i][1]
+            if i == 0:
                 header.extend([xName, yName])
+                new_data.append(cd[0])
+                new_data.append(cd[1])
             else:
                 header.extend([yName])
+                new_data.append(cd[1])
 
         if self.params['separator'] == 'comma':
             sep = ','
         else:
             sep = '\t'
-            
+
         fd.write(sep.join(header) + '\n')
         i = 0
         numFormat = '%%0.%dg' % self.params['precision']
-        numRows = max([len(d[0]) for d in data])
+        numColumns = len(header)
+        numRows = len(new_data[0])
+
         for i in range(numRows):
-            for j, d in enumerate(data):
-                # write x value if this is the first column, or if we want x 
-                # for all rows
-                if appendAllX or j == 0:
-                    if d is not None and i < len(d[0]):
-                        fd.write(numFormat % d[0][i] + sep)
-                    else:
-                        fd.write(' %s' % sep)
-                
-                # write y value 
-                if d is not None and i < len(d[1]):
-                    fd.write(numFormat % d[1][i] + sep)
-                else:
-                    fd.write(' %s' % sep)
+            for j in range(numColumns):
+                fd.write(numFormat % new_data[j][i] + sep)
             fd.write('\n')
         fd.close()
 
