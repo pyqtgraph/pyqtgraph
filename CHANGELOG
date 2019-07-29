@@ -56,6 +56,10 @@ pyqtgraph-0.11.0 (in development)
     - #683: Allow data filter entries to be updated after they are created
     - #685: Add option to set enum default values in DataFilterWidget
     - #710: Adds ability to rotate/scale ROIs by mouse drag on the ROI itself (using alt/shift modifiers)
+    - #813,814,817: Performance improvements
+    - #837: Added options for field variables in ColorMapWidget
+    - #840, 932: Improve clipping behavior
+    - #922: Curve fill for fill-patches
 
   API / behavior changes:
     - Deprecated graphicsWindow classes; these have been unnecessary for many years because
@@ -76,6 +80,8 @@ pyqtgraph-0.11.0 (in development)
     - #589: Remove SpiralROI (this was unintentionally added in the first case)
     - #593: Override qAbort on slot exceptions for PyQt>=5.5
     - #657: When a floating Dock window is closed, the dock is now returned home
+    - #771: Suppress RuntimeWarning for arrays containing zeros in logscale
+    - #963: Last image in image-stack can now be selected with the z-slider
 
   Bugfixes:
     - #408: Fix `cleanup` when the running qt application is not a QApplication
@@ -154,13 +160,34 @@ pyqtgraph-0.11.0 (in development)
     - #723: Fix axis ticks when using self.scale
     - #739: Fix handling of 2-axis mouse wheel events
     - #758: Fix remote graphicsview "ValueError: mmap length is greater than file size" on OSX.
+    - #763: Fix OverflowError when using Auto Downsampling.
+    - #767: Fix Image display for images with the same value everywhere.
+    - #770: Fix GLVieWidget.setCameraPosition ignoring first parameter.
+    - #782: Fix missing FileForwarder thread termination.
+    - #815: Fixed mirroring of x-axis with "invert Axis" submenu.
+    - #824: Fix several issues related with mouse movement and GraphicsView.
+    - #832: Fix Permission error in tests due to unclosed filehandle.
+    - #836: Fix tickSpacing bug that lead to axis not being drawn.
+    - #861: Fix crash of PlotWidget if empty ErrorBarItem is added.
+    - #868: Fix segfault on repeated closing of matplotlib exporter.
+    - #875,876,887,934,947,980: Fix deprecation warnings.
+    - #886: Fix flowchart saving on python3.
+    - #888: Fix TreeWidget.topLevelItems in python3.
+    - #935: Fix PlotItem.addLine with 'pos' and 'angle' parameter.
+    - #949: Fix multiline parameters (such as arrays) reading from config files.
+    - #951: Fix event firing from scale handler.
+    - #952: Fix RotateFree handle dragging
+    - #968: Fix Si units in AxisItem leading to an incorrect unit.
+    - #971: Fix a segfault stemming from incorrect signal disconnection
 
   Maintenance:
     - Lots of new unit tests
     - Lots of code cleanup
+    - A lot of work on CI pipelines, test coverage and test passing (see e.g. #903,911)
     - #546: Add check for EINTR during example testing to avoid sporadic test failures on travis
     - #624: TravisCI no longer running python 2.6 tests
     - #695: "dev0" added to version string
+    - #865,873,877 (and more): Implement Azure CI pipelines, fix Travis CI
 
 
 pyqtgraph-0.10.0
