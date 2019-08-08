@@ -448,9 +448,9 @@ class PlotDataItem(GraphicsObject):
         if y is not None and x is None:
             x = np.arange(len(y))
         
-        if isinstance(x, list):
+        if not isinstance(x, np.ndarray):
             x = np.array(x)
-        if isinstance(y, list):
+        if not isinstance(y, np.ndarray):
             y = np.array(y)
         
         self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
