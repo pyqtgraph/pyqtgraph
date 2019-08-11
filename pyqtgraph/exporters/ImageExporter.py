@@ -48,7 +48,7 @@ class ImageExporter(Exporter):
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
             if QT_LIB in ['PySide', 'PySide2']:
-                filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
+                filter = ["*."+str(f, encoding='utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
             else:
                 filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
             preferred = ['*.png', '*.tif', '*.jpg']
@@ -105,7 +105,7 @@ class ImageExporter(Exporter):
         elif toBytes:
             return self.png
         else:
-            self.png.save(fileName)
+            return self.png.save(fileName)
         
 ImageExporter.register()        
         
