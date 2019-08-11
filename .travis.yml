@@ -18,6 +18,8 @@ env:
     # - PYTHON=3.4 QT=pyside TEST=standard # pyside isn't available for 3.4 with conda
     #- PYTHON=3.2 QT=pyqt5 TEST=standard
 
+services:
+    - xvfb
 
 before_install:
     - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
@@ -59,8 +61,14 @@ install:
     - if [ "${QT}" == "pyside" ]; then
           conda install pyside --yes;
       fi;
-    - pip install pytest-xdist # multi-thread py.test
+    - pip install pytest-xdist # multi-thread pytest
     - pip install pytest-cov # add coverage stats
+
+    # faulthandler support not built in to pytest for python 2.7
+    - if [ "${PYTHON}" == "2.7" ]; then
+        pip install pytest-faulthandler;
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15";
+      fi;
 
     # Debugging helpers
     - uname -a
@@ -74,7 +82,6 @@ install:
 before_script:
     # We need to create a (fake) display on Travis, let's use a funny resolution
     - export DISPLAY=:99.0
-    - "sh -e /etc/init.d/xvfb start"
     - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
 
     # Make sure everyone uses the correct python (this is handled by conda)
@@ -130,9 +137,15 @@ script:
     # Check system info
     - python -c "import pyqtgraph as pg; pg.systemInfo()"
 
+
+    # Check install works
+    - start_test "install test";
+      python setup.py --quiet install;
+      check_output "install test";
+
     # Run unit tests
     - start_test "unit tests";
-      PYTHONPATH=. py.test --cov pyqtgraph -sv;
+      PYTHONPATH=. pytest --cov pyqtgraph -sv;
       check_output "unit tests";
     - echo "test script finished. Current directory:"
     - pwd
@@ -161,11 +174,6 @@ script:
         python setup.py style &&
         check_output "style check";
       fi;
-
-    # Check install works
-    - start_test "install test";
-      python setup.py --quiet install;
-      check_output "install test";
 
     # Check double-install fails
     # Note the bash -c is because travis strips off the ! otherwise.
