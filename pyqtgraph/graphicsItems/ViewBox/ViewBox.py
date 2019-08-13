@@ -424,13 +424,20 @@ class ViewBox(GraphicsWidget):
 
     def resizeEvent(self, ev):
         self._matrixNeedsUpdate = True
+        self.updateMatrix()
+        
         self.linkedXChanged()
         self.linkedYChanged()
+        
         self.updateAutoRange()
         self.updateViewRange()
+        
         self._matrixNeedsUpdate = True
+        self.updateMatrix()
+        
         self.background.setRect(self.rect())
         self.borderRect.setRect(self.rect())
+        
         self.sigStateChanged.emit(self)
         self.sigResized.emit(self)
         self.childGroup.prepareGeometryChange()
