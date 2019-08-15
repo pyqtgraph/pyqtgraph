@@ -20,6 +20,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.pxMode = True
         #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
+        self.shader = None
     
     def setData(self, **kwds):
         """
@@ -54,6 +55,8 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.update()
 
     def initializeGL(self):
+        if self.shader is not None:
+            return
         
         ## Generate texture for rendering points
         w = 64
