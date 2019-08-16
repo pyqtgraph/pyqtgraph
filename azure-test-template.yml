@@ -54,31 +54,6 @@ jobs:
       versionSpec: $(python.version)
     condition: eq(variables['install.method'], 'pip')
 
-  - bash: |
-      if [ $(agent.os) == 'Linux' ]
-      then
-        echo '##vso[task.prependpath]/usr/share/miniconda/bin'
-      elif [ $(agent.os) == 'Darwin' ]
-      then
-        echo '##vso[task.prependpath]$CONDA/bin'
-        sudo install -d -m 0777 /usr/local/miniconda/envs
-      elif [ $(agent.os) == 'Windows_NT' ]
-      then
-        echo "##vso[task.prependpath]$env:CONDA\Scripts"
-      else
-        echo 'Just what OS are you using?'
-      fi
-    displayName: 'Add Conda to $PATH' 
-    condition: eq(variables['install.method'], 'conda' )
-
-  - task: CondaEnvironment@0
-    displayName: 'Create Conda Environment' 
-    condition: eq(variables['install.method'], 'conda')
-    inputs:
-      environmentName: 'test-environment-$(python.version)'
-      packageSpecs: 'python=$(python.version)'
-      updateConda: false
-
   - script: |
       curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
       7z x mesa3d-19.1.0-release-msvc.exe
@@ -97,17 +72,59 @@ jobs:
     condition: eq(variables['agent.os'], 'Windows_NT')
 
   - bash: |
+      if [ $(agent.os) == 'Linux' ]
+      then
+        echo "##vso[task.prependpath]$CONDA/bin"
+        if [ $(python.version) == '2.7' ]
+        then
+          echo "Grabbing Older Miniconda"
+          wget https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-Linux-x86_64.sh -O Miniconda.sh
+          bash Miniconda.sh -b -p $CONDA -f
+        fi
+      elif [ $(agent.os) == 'Darwin' ]
+      then
+        sudo chown -R $USER $CONDA  
+        echo "##vso[task.prependpath]$CONDA/bin"
+        if [ $(python.version) == '2.7' ]
+        then
+          echo "Grabbing Older Miniconda"
+          wget https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-MacOSX-x86_64.sh -O Miniconda.sh
+          bash Miniconda.sh -b -p $CONDA -f
+        fi
+      elif [ $(agent.os) == 'Windows_NT' ]
+      then
+        echo "##vso[task.prependpath]$CONDA/Scripts"
+      else
+        echo 'Just what OS are you using?'
+      fi
+    displayName: 'Add Conda To $PATH' 
+    condition: eq(variables['install.method'], 'conda' )
+
+  - bash: |
       if [ $(install.method) == "conda" ]
       then
+        conda create --name test-environment-$(python.version) python=$(python.version) --yes
+        echo "Conda Info:"
+        conda info
+        echo "Installing qt-bindings"
         source activate test-environment-$(python.version)
-        conda install -c conda-forge $(qt.bindings) numpy scipy pyopengl pytest six coverage --yes --quiet
+
+        if [ $(agent.os) == "Linux" ] && [ $(python.version) == "2.7" ]
+        then
+          conda install $(qt.bindings) --yes
+        else
+          conda install -c conda-forge $(qt.bindings) --yes
+        fi
+        echo "Installing remainder of dependencies"
+        conda install -c conda-forge numpy scipy six pyopengl --yes
       else
-        pip install $(qt.bindings) numpy scipy pyopengl pytest six coverage
+        pip install $(qt.bindings) numpy scipy pyopengl six
       fi
-      pip install pytest-xdist pytest-cov
+      echo ""
+      pip install pytest pytest-xdist pytest-cov coverage  
       if [ $(python.version) == "2.7" ]
       then
-        pip install pytest-faulthandler
+        pip install pytest-faulthandler==1.6.0
         export PYTEST_ADDOPTS="--faulthandler-timeout=15"
       fi
     displayName: "Install Dependencies"

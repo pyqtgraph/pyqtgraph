@@ -216,7 +216,7 @@ except:
                                    stderr=subprocess.PIPE,
                                    stdout=subprocess.PIPE)
     process.stdin.write(code.encode('UTF-8'))
-    process.stdin.close()  # ?
+    process.stdin.close()
     output = ''
     fail = False
     while True:
