@@ -67,6 +67,8 @@ class PlotDataItem(GraphicsObject):
             shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    Fill the area between the curve and fillLevel
+            fillOutline  (bool) If True, an outline surrounding the *fillLevel*
+                         area is drawn.
             fillBrush    Fill to use when fillLevel is specified. 
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             stepMode     If True, two orthogonal lines are drawn for each sample
@@ -154,6 +156,7 @@ class PlotDataItem(GraphicsObject):
             'pen': (200,200,200),
             'shadowPen': None,
             'fillLevel': None,
+            'fillOutline': False,
             'fillBrush': None,
             'stepMode': None, 
             
@@ -474,7 +477,7 @@ class PlotDataItem(GraphicsObject):
     def updateItems(self):
         
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
