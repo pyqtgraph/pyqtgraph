@@ -29,8 +29,11 @@ class GLImageItem(GLGraphicsItem):
         GLGraphicsItem.__init__(self)
         self.setData(data)
         self.setGLOptions(glOptions)
+        self.texture = None
         
     def initializeGL(self):
+        if self.texture is not None:
+            return
         glEnable(GL_TEXTURE_2D)
         self.texture = glGenTextures(1)
         
