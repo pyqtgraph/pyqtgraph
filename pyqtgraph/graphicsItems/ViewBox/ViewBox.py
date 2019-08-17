@@ -281,23 +281,10 @@ class ViewBox(GraphicsWidget):
             #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 #scene.sigPrepareForPaint.connect(self.prepareForPaint)
         #return ret
-
-    def checkSceneChange(self):
-        # ViewBox needs to receive sigPrepareForPaint from its scene before
-        # being painted. However, we have no way of being informed when the
-        # scene has changed in order to make this connection. The usual way
-        # to do this is via itemChange(), but bugs prevent this approach
-        # (see above). Instead, we simply check at every paint to see whether
-        # (the scene has changed.
-        scene = self.scene()
-        if scene == self._lastScene:
-            return
-        if self._lastScene is not None and hasattr(self._lastScene, 'sigPrepareForPaint'):
-            self._lastScene.sigPrepareForPaint.disconnect(self.prepareForPaint)
-        if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
-            scene.sigPrepareForPaint.connect(self.prepareForPaint)
+        
+    def update(self, *args, **kwargs):
         self.prepareForPaint()
-        self._lastScene = scene
+        GraphicsWidget.update(self, *args, **kwargs)
 
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
@@ -437,13 +424,20 @@ class ViewBox(GraphicsWidget):
 
     def resizeEvent(self, ev):
         self._matrixNeedsUpdate = True
+        self.updateMatrix()
+        
         self.linkedXChanged()
         self.linkedYChanged()
+        
         self.updateAutoRange()
         self.updateViewRange()
+        
         self._matrixNeedsUpdate = True
+        self.updateMatrix()
+        
         self.background.setRect(self.rect())
         self.borderRect.setRect(self.rect())
+        
         self.sigStateChanged.emit(self)
         self.sigResized.emit(self)
         self.childGroup.prepareGeometryChange()
@@ -529,6 +523,14 @@ class ViewBox(GraphicsWidget):
 
         # Update axes one at a time
         changed = [False, False]
+
+        # Disable auto-range for each axis that was requested to be set
+        if disableAutoRange:
+            xOff = False if setRequested[0] else None
+            yOff = False if setRequested[1] else None
+            self.enableAutoRange(x=xOff, y=yOff)
+            changed.append(True)
+            
         for ax, range in changes.items():
             mn = min(range)
             mx = max(range)
@@ -568,13 +570,6 @@ class ViewBox(GraphicsWidget):
             lockX = False
             lockY = False
         self.updateViewRange(lockX, lockY)
-
-        # Disable auto-range for each axis that was requested to be set
-        if disableAutoRange:
-            xOff = False if setRequested[0] else None
-            yOff = False if setRequested[1] else None
-            self.enableAutoRange(x=xOff, y=yOff)
-            changed.append(True)
 
         # If nothing has changed, we are done.
         if any(changed):
@@ -1548,7 +1543,6 @@ class ViewBox(GraphicsWidget):
     def updateMatrix(self, changed=None):
         if not self._matrixNeedsUpdate:
             return
-
         ## Make the childGroup's transform match the requested viewRange.
         bounds = self.rect()
 
@@ -1577,8 +1571,6 @@ class ViewBox(GraphicsWidget):
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
 
     def paint(self, p, opt, widget):
-        self.checkSceneChange()
-
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)
