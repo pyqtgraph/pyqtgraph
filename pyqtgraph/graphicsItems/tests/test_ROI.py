@@ -153,6 +153,7 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     # allow the roi to be re-used
     roi.scene().removeItem(roi)
 
+    win.hide()
 
 def test_PolyLineROI():
     rois = [
@@ -234,5 +235,6 @@ def test_PolyLineROI():
         r.setState(initState)
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_setstate', 'Reset ROI to initial state.')
         assert len(r.getState()['points']) == 3
-        
+    
+    plt.hide()
     
