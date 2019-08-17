@@ -69,10 +69,11 @@ class ColorMap(object):
         self.pos = np.array(pos)
         order = np.argsort(self.pos)
         self.pos = self.pos[order]
-        self.color = []
-        for color in np.array(color)[order]:
-            self.color.append(mkColor(color).getRgb())
-        self.color = np.array(self.color)
+        self.color = np.apply_along_axis(
+            func1d = lambda x: mkColor(x).getRgb(),
+            axis   = -1,
+            arr    = color,
+            )[order]
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode
