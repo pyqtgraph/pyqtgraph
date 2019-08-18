@@ -21,7 +21,7 @@ class SerializableWheelEvent:
         self._delta = _delta
         self._buttons = _buttons
         self._modifiers = _modifiers
-        self._orientation = _orientation
+        self._orientation_vertical = _orientation == QtCore.Qt.Vertical
         
     def pos(self):
         return self._pos
@@ -33,10 +33,13 @@ class SerializableWheelEvent:
         return self._delta
     
     def orientation(self):
-        return self._orientation
+        if self._orientation_vertical:
+            return QtCore.Qt.Vertical
+        else:
+            return QtCore.Qt.Horizontal
     
     def angleDelta(self):
-        if self._orientation == QtCore.Qt.Vertical:
+        if self._orientation_vertical:
             return QtCore.QPoint(0, self._delta)
         else:
             return QtCore.QPoint(self._delta, 0)
@@ -163,7 +166,7 @@ class RemoteGraphicsView(QtGui.QWidget):
         orientation = QtCore.Qt.Horizontal
         if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
-            orientation = int(ev.orientation())
+            orientation = ev.orientation()
         else:
             delta = ev.angleDelta().x()
             if delta == 0:
