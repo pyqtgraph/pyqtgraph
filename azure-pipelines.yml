@@ -8,7 +8,7 @@ trigger:
 
 # Build only for PRs for master branch
 pr:
-  autoCancel: "true"
+  autoCancel: true
   branches:
     include:
       - master
@@ -16,6 +16,7 @@ pr:
 
 variables:
   OFFICIAL_REPO: 'pyqtgraph/pyqtgraph'
+  DEFAULT_MERGE_BRANCH: 'develop'
 
 stages:
 - stage: "pre_test"
@@ -24,20 +25,25 @@ stages:
     pool:
       vmImage: 'Ubuntu 16.04'
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.7
     - bash: |
-        mkdir ~/repo-clone && cd ~/repo-clone &&
-        git init && git remote add -t $(Build.SourceBranch) origin $(Build.Repository.Uri) &&
-        git fetch origin $(Build.SourceBranch) &&
-        git checkout -qf FETCH_HEAD &&
-        git tag azure-merge-target &&
-        git gc --aggressive &&
-        TARGET_SIZE=`du -s . | sed -e "s/\t.*//"` &&
-        git pull origin $(Build.SourceBranch) &&
-        git gc --aggressive &&
-        MERGE_SIZE=`du -s . | sed -e "s/\t.*//"` &&
+        git config --global advice.detachedHead false
+        mkdir ~/repo-clone && cd ~/repo-clone
+        git init
+
+        git remote add -t $(Build.SourceBranchName) origin $(Build.Repository.Uri)
+        git remote add -t ${DEFAULT_MERGE_BRANCH} upstream https://github.com/${OFFICIAL_REPO}.git
+
+        git fetch origin $(Build.SourceBranchName)
+        git fetch upstream ${DEFAULT_MERGE_BRANCH}
+
+        git checkout $(Build.SourceBranchName)
+        MERGE_SIZE=`du -s . | sed -e "s/\t.*//"`
+        echo -e "Merge Size ${MERGE_SIZE}"
+
+        git checkout ${DEFAULT_MERGE_BRANCH}
+        TARGET_SIZE=`du -s . | sed -e "s/\t.*//"`
+        echo -e "Target Size ${TARGET_SIZE}"
+
         if [ "${MERGE_SIZE}" != "${TARGET_SIZE}" ]; then
           SIZE_DIFF=`expr \( ${MERGE_SIZE} - ${TARGET_SIZE} \)`;
         else
@@ -46,7 +52,7 @@ stages:
         echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
         test ${SIZE_DIFF} -lt 100;
       displayName: 'Diff Size Check'
-      continueOnError: "true"
+      continueOnError: true
 
   - job: "style_check"
     pool:
@@ -59,7 +65,7 @@ stages:
         pip install flake8
         python setup.py style
       displayName: 'flake8 check'
-      continueOnError: "true"
+      continueOnError: true
 
   - job: "build_wheel"
     pool:
@@ -72,7 +78,7 @@ stages:
         python -m pip install setuptools wheel
         python setup.py bdist_wheel --universal
       displayName: "Build Python Wheel"
-      continueOnError: "false"
+      continueOnError: false
     - publish: dist
       artifact: wheel
 
