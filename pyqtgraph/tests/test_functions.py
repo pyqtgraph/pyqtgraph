@@ -206,15 +206,15 @@ def test_makeARGB():
     # lut smaller than maxint
     lut = np.arange(128).astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut)
-    checkImage(im2, np.linspace(0, 127, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(0, 127.5, 256, dtype='ubyte'), alpha, False)
 
     # lut + levels
     lut = np.arange(256)[::-1].astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[-128, 384])
-    checkImage(im2, np.linspace(192, 65.5, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(191.5, 64.5, 256, dtype='ubyte'), alpha, False)
     
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[64, 192])
-    checkImage(im2, np.clip(np.linspace(385.5, -126.5, 256), 0, 255).astype('ubyte'), alpha, False)
+    checkImage(im2, np.clip(np.linspace(384.5, -127.5, 256), 0, 255).astype('ubyte'), alpha, False)
 
     # uint8 data + uint16 LUT
     lut = np.arange(4096)[::-1].astype(np.uint16) // 16
