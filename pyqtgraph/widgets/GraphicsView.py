@@ -327,7 +327,16 @@ class GraphicsView(QtGui.QGraphicsView):
         if not self.mouseEnabled:
             ev.ignore()
             return
-        sc = 1.001 ** ev.delta()
+        
+        delta = 0
+        if QT_LIB in ['PyQt4', 'PySide']:
+            delta = ev.delta()
+        else:
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                delta = ev.angleDelta().y()
+                
+        sc = 1.001 ** delta
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
