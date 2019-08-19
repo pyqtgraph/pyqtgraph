@@ -60,6 +60,7 @@ pyqtgraph-0.11.0 (in development)
     - #837: Added options for field variables in ColorMapWidget
     - #840, 932: Improve clipping behavior
     - #922: Curve fill for fill-patches
+    - #996: Allow the update of LegendItem
 
   API / behavior changes:
     - Deprecated graphicsWindow classes; these have been unnecessary for many years because
@@ -81,7 +82,11 @@ pyqtgraph-0.11.0 (in development)
     - #593: Override qAbort on slot exceptions for PyQt>=5.5
     - #657: When a floating Dock window is closed, the dock is now returned home
     - #771: Suppress RuntimeWarning for arrays containing zeros in logscale
+    - #942: If the visible GraphicsView is garbage collected, a warning is issued.
     - #963: Last image in image-stack can now be selected with the z-slider
+    - #992: Added a setter for GlGridItem.color.
+    - #999: Make outline around fillLevel optional.
+    - #1014: Enable various arguments as color in colormap.
 
   Bugfixes:
     - #408: Fix `cleanup` when the running qt application is not a QApplication
@@ -164,6 +169,8 @@ pyqtgraph-0.11.0 (in development)
     - #767: Fix Image display for images with the same value everywhere.
     - #770: Fix GLVieWidget.setCameraPosition ignoring first parameter.
     - #782: Fix missing FileForwarder thread termination.
+    - #787: Fix encoding errors in checkOpenGLVersion.
+    - #793: Fix wrong default scaling in makeARGB
     - #815: Fixed mirroring of x-axis with "invert Axis" submenu.
     - #824: Fix several issues related with mouse movement and GraphicsView.
     - #832: Fix Permission error in tests due to unclosed filehandle.
@@ -173,12 +180,21 @@ pyqtgraph-0.11.0 (in development)
     - #875,876,887,934,947,980: Fix deprecation warnings.
     - #886: Fix flowchart saving on python3.
     - #888: Fix TreeWidget.topLevelItems in python3.
+    - #924: Fix QWheelEvent in RemoteGraphicsView with pyqt5.
     - #935: Fix PlotItem.addLine with 'pos' and 'angle' parameter.
     - #949: Fix multiline parameters (such as arrays) reading from config files.
     - #951: Fix event firing from scale handler.
     - #952: Fix RotateFree handle dragging
     - #968: Fix Si units in AxisItem leading to an incorrect unit.
-    - #971: Fix a segfault stemming from incorrect signal disconnection
+    - #971: Fix a segfault stemming from incorrect signal disconnection.
+    - #974: Fix recursion error when instancing CtrlNode.
+    - #987: Fix visibility reset when PlotItems are removed.
+    - #998: Fix QtProcess proxy being unable to handle numpy arrays with dtype uint8.
+    - #1010: Fix matplotlib/CSV export.
+    - #1015: Iterators are now converted to NumPy arrays.
+    - #1016: Fix synchronisation of multiple ImageViews with time axis.
+    - #1017: Fix duplicate paint calls emitted by Items on ViewBox.
+    - #1019: Fix disappearing GLGridItems when PlotItems are removed and readded.
 
   Maintenance:
     - Lots of new unit tests
