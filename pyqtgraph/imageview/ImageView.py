@@ -2,7 +2,7 @@
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Widget used for displaying 2D or 3D data. Features:
   - float or int (including 16-bit int) image display via ImageItem
@@ -131,7 +131,7 @@ class ImageView(QtGui.QWidget):
         self.scene = self.ui.graphicsView.scene()
         self.ui.histogram.setLevelMode(levelMode)
         
-        self.ignoreTimeLine = False
+        self.ignorePlaying = False
         
         if view is None:
             self.view = ViewBox()
@@ -498,11 +498,11 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        self.currentIndex = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
-        self.updateImage()
-        self.ignoreTimeLine = True
-        self.timeLine.setValue(self.tVals[self.currentIndex])
-        self.ignoreTimeLine = False
+        index = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
+        self.ignorePlaying = True
+        # Implicitly call timeLineChanged
+        self.timeLine.setValue(self.tVals[index])
+        self.ignorePlaying = False
 
     def jumpFrames(self, n):
         """Move video frame ahead n frames (may be negative)"""
@@ -696,16 +696,13 @@ class ImageView(QtGui.QWidget):
         return norm
         
     def timeLineChanged(self):
-        #(ind, time) = self.timeIndex(self.ui.timeSlider)
-        if self.ignoreTimeLine:
-            return
-        self.play(0)
+        if not self.ignorePlaying:
+            self.play(0)
+
         (ind, time) = self.timeIndex(self.timeLine)
         if ind != self.currentIndex:
             self.currentIndex = ind
             self.updateImage()
-        #self.timeLine.setPos(time)
-        #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
         self.sigTimeChanged.emit(ind, time)
 
     def updateImage(self, autoHistogramRange=True):

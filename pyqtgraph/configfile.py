@@ -2,7 +2,7 @@
 """
 configfile.py - Human-readable text configuration file library 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Used for reading and writing dictionary objects to a python-like configuration
 file format. Data structures may be nested and contain any data type as long

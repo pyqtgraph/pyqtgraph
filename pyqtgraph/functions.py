@@ -2,7 +2,7 @@
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
@@ -1074,7 +1074,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 

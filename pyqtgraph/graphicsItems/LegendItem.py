@@ -101,6 +101,15 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 label.close()
                 self.updateSize()                       # redraq box
 
+    def clear(self):
+        """
+        Removes all items from the legend.
+
+        Useful for reusing and dynamically updating charts and their legends.
+        """
+        while self.items != []:
+            self.removeItem(self.items[0][1].text)
+                
     def updateSize(self):
         if self.size is not None:
             return

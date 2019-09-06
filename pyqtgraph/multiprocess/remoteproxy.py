@@ -458,7 +458,7 @@ class RemoteEventHandler(object):
             ## follow up by sending byte messages
             if byteData is not None:
                 for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
-                    self.conn.send_bytes(obj)
+                    self.conn.send_bytes(bytes(obj))
                 self.debugMsg('  sent %d byte messages', len(byteData))
             
             self.debugMsg('  call sync: %s', callSync)
