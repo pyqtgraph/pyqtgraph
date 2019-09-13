@@ -5,18 +5,20 @@ from numpy.testing import assert_almost_equal, assert_raises
 app = pg.mkQApp()
 
 
-@pytest.mark.parametrize("lock_aspect", [True, False])
-def test_TextItem_setAngle(lock_aspect):
+def test_TextItem_setAngle():
     plt = pg.plot()
-    plt.setXRange(-1, 1)
-    plt.setYRange(-10, 10)
-    plt.setAspectLocked(lock_aspect)
+    plt.setXRange(-10, 10)
+    plt.setYRange(-20, 20)
     item = pg.TextItem(text="test")
     plt.addItem(item)
 
-    assert item.transformAngle() == 0.0
+    t1 = item.transform()
 
-    for angle in [10, -30, 90]:
-        item.setAngle(angle)
-        # negative because transformAngle measures from item to parent
-        assert_almost_equal(-item.transformAngle() % 360, angle % 360)
+    item.setAngle(30)
+    app.processEvents()
+
+    t2 = item.transform()
+
+    assert t1 != t2
+    assert not t1.isRotating()
+    assert t2.isRotating()
