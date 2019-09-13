@@ -1,6 +1,5 @@
 import pytest
 import pyqtgraph as pg
-from numpy.testing import assert_almost_equal, assert_raises
 
 app = pg.mkQApp()
 
