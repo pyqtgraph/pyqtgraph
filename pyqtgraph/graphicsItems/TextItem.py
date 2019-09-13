@@ -110,9 +110,16 @@ class TextItem(GraphicsObject):
         self.updateTextPos()
         
     def setAngle(self, angle):
+        """
+        Set the angle of the text in degrees.
+
+        This sets the rotation angle of the text as a whole, measured
+        counter-clockwise from the x axis of the parent. Note that this rotation
+        angle does not depend on horizontal/vertical scaling of the parent.
+        """
         self.angle = angle
         self.updateTransform(force=True)
-        
+
     def setAnchor(self, anchor):
         self.anchor = Point(anchor)
         self.updateTextPos()
