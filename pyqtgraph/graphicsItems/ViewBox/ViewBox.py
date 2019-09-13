@@ -399,10 +399,12 @@ class ViewBox(GraphicsWidget):
         """
         if item.zValue() < self.zValue():
             item.setZValue(self.zValue()+1)
+            
         scene = self.scene()
         if scene is not None and scene is not item.scene():
             scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
         item.setParentItem(self.childGroup)
+        
         if not ignoreBounds:
             self.addedItems.append(item)
         self.updateAutoRange()
@@ -413,7 +415,12 @@ class ViewBox(GraphicsWidget):
             self.addedItems.remove(item)
         except:
             pass
-        self.scene().removeItem(item)
+        
+        scene = self.scene()
+        if scene is not None:
+            scene.removeItem(item)
+        item.setParentItem(None)
+        
         self.updateAutoRange()
 
     def clear(self):
