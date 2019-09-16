@@ -488,7 +488,7 @@ class ImageItem(GraphicsObject):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]
 
-        if 'auto' == bins:
+        if isinstance(bins, str) and bins == 'auto':
             mn = np.nanmin(stepData)
             mx = np.nanmax(stepData)
             if mx == mn:
