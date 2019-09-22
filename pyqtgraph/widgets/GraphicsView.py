@@ -411,7 +411,11 @@ class GraphicsView(QtGui.QGraphicsView):
         try:
             if self.parentWidget() is None and self.isVisible():
                 msg = "Visible window deleted. To prevent this, store a reference to the window object."
-                warnings.warn(msg, RuntimeWarning, stacklevel=2)
+                try:
+                    warnings.warn(msg, RuntimeWarning, stacklevel=2)
+                except TypeError:
+                    # warnings module not available during interpreter shutdown
+                    pass
         except RuntimeError:
             pass
 
