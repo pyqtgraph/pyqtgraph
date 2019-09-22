@@ -35,3 +35,5 @@ def test_ErrorBarItem_defer_data():
     r_clear_ebi = plot.viewRect()
 
     assert r_clear_ebi == r_no_ebi
+
+    plot.close()

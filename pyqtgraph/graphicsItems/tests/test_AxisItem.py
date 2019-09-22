@@ -28,3 +28,5 @@ def test_AxisItem_stopAxisAtTick(monkeypatch):
     monkeypatch.setattr(left, "drawPicture", test_left)
 
     plot.show()
+    app.processEvents()
+    plot.close()
