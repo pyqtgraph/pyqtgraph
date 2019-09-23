@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 try:
     from ..Qt import QtOpenGL
@@ -570,7 +571,7 @@ class PlotCurveItem(GraphicsObject):
                 gl.glEnable(gl.GL_BLEND)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
                 gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
-                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         finally:
@@ -638,4 +639,3 @@ class ROIPlotItem(PlotCurveItem):
     def roiChangedEvent(self):
         d = self.getRoiData()
         self.updateData(d, self.xVals)
-
