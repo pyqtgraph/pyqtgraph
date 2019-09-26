@@ -110,9 +110,16 @@ class TextItem(GraphicsObject):
         self.updateTextPos()
         
     def setAngle(self, angle):
+        """
+        Set the angle of the text in degrees.
+
+        This sets the rotation angle of the text as a whole, measured
+        counter-clockwise from the x axis of the parent. Note that this rotation
+        angle does not depend on horizontal/vertical scaling of the parent.
+        """
         self.angle = angle
-        self.updateTransform()
-        
+        self.updateTransform(force=True)
+
     def setAnchor(self, anchor):
         self.anchor = Point(anchor)
         self.updateTextPos()
@@ -169,7 +176,7 @@ class TextItem(GraphicsObject):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
-    def updateTransform(self):
+    def updateTransform(self, force=False):
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -181,7 +188,7 @@ class TextItem(GraphicsObject):
         else:
             pt = p.sceneTransform()
         
-        if pt == self._lastTransform:
+        if not force and pt == self._lastTransform:
             return
 
         t = pt.inverted()[0]
