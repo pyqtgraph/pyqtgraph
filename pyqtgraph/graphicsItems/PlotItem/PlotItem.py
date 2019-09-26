@@ -563,8 +563,8 @@ class PlotItem(GraphicsWidget):
         if item in self.dataItems:
             self.dataItems.remove(item)
             
-        if item.scene() is not None:
-            self.vb.removeItem(item)
+        self.vb.removeItem(item)
+        
         if item in self.curves:
             self.curves.remove(item)
             self.updateDecimation()
