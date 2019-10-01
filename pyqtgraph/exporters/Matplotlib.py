@@ -65,8 +65,8 @@ class MatplotlibExporter(Exporter):
             fig = mpw.getFigure()
 
             # get labels from the graphic item
-            xlabel = self.item.axes['bottom']['item'].labelText
-            ylabel = self.item.axes['left']['item'].labelText
+            xlabel = self.item.axes['bottom']['item'].label.toPlainText()
+            ylabel = self.item.axes['left']['item'].label.toPlainText()
             title = self.item.titleLabel.text
 
             # pyqtgraph by default uses scientific notation for large
@@ -136,7 +136,6 @@ class MatplotlibExporter(Exporter):
             raise Exception("Matplotlib export currently only works with plot items")
 
 MatplotlibExporter.register()
-
 
 class MatplotlibWindow(QtGui.QMainWindow):
     def __init__(self):
