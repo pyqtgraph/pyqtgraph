@@ -1492,18 +1492,29 @@ def arrayToQPath(x, y, connect='all'):
     arr[1:-1]['x'] = x
     arr[1:-1]['y'] = y
 
+    non_finite_values = np.logical_not(np.isfinite(x) & np.isfinite(y))
+
+    arr[1:-1]['x'][non_finite_values] = np.roll(x,-1)[non_finite_values]
+    arr[1:-1]['y'][non_finite_values] = np.roll(y,-1)[non_finite_values]
+    
     # decide which points are connected by lines
     if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
-    elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 1
-        arr[1:-1]['c'][1::2] = 0
-    elif eq(connect, 'finite'):
-        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
+        if non_finite_values[-1] and len(non_finite_values) > 1:
+            arr[1:-1]['c'][-2] = 0
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
-        raise Exception('connect argument must be "all", "pairs", "finite", or array')
+        if eq(connect, 'pairs'):
+            arr[1:-1]['c'][::2] = 1
+            arr[1:-1]['c'][1::2] = 0
+        elif eq(connect, 'finite'):
+            arr[1:-1]['c'] = 1
+        else:
+            raise Exception('connect argument must be "all", "pairs", "finite", or array')
+        
+        arr[1:-1]['c'][non_finite_values] = 0
+        arr[1:-1]['c'][np.roll(non_finite_values,-1)] = 0
 
     #profiler('fill array')
     # write last 0
