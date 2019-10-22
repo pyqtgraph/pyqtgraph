@@ -273,7 +273,7 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setShadowPen(self, *args, **kargs):
-        """Set the shadow pen used to draw behind tyhe primary pen.
+        """Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
         pen to be visible.
         """
