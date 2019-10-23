@@ -1494,8 +1494,8 @@ def arrayToQPath(x, y, connect='all'):
 
     non_finite_values = np.logical_not(np.isfinite(x) & np.isfinite(y))
 
-    arr[1:-1]['x'][non_finite_values] = np.roll(x,-1)[non_finite_values]
-    arr[1:-1]['y'][non_finite_values] = np.roll(y,-1)[non_finite_values]
+    arr[1:-1]['x'][non_finite_values] = np.interp(np.flatnonzero(non_finite_values), np.flatnonzero(~non_finite_values), arr[1:-1]['x'][~non_finite_values])
+    arr[1:-1]['y'][non_finite_values] = np.interp(np.flatnonzero(non_finite_values), np.flatnonzero(~non_finite_values), arr[1:-1]['y'][~non_finite_values])
     
     # decide which points are connected by lines
     if eq(connect, 'all'):
