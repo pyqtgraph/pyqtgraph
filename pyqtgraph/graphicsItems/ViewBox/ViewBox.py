@@ -324,7 +324,8 @@ class ViewBox(GraphicsWidget):
         if self.state['enableMenu'] and self.menu is None:
             self.menu = ViewBoxMenu(self)
             self.updateViewLists()
-        else:
+        elif not self.state['enableMenu'] and self.menu is not None:
+            self.menu.setParent(None)
             self.menu = None
 
         self.updateViewRange()
@@ -380,11 +381,10 @@ class ViewBox(GraphicsWidget):
 
     def setMenuEnabled(self, enableMenu=True):
         self.state['enableMenu'] = enableMenu
-        if enableMenu:
-            if self.menu is None:
-                self.menu = ViewBoxMenu(self)
-                self.updateViewLists()
-        else:
+        if enableMenu and self.menu is None:
+            self.menu = ViewBoxMenu(self)
+            self.updateViewLists()
+        elif not enableMenu and self.menu is not None:
             self.menu.setParent(None)
             self.menu = None
         self.sigStateChanged.emit(self)
