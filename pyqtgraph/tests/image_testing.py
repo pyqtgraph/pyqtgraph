@@ -271,7 +271,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     pxdiff = diff.max(axis=2)  # largest value difference per pixel
     mask = np.abs(pxdiff) >= pxThreshold
     if pxCount is not None:
-        assert mask.sum() <= pxCount
+        assert mask.sum() <= pxCount, "Invalid pixels: {} of {} allowed".format(mask.sum(), pxCount)
 
     maskedDiff = diff[mask]
     if maxPxDiff is not None and maskedDiff.size > 0:
