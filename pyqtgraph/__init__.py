@@ -64,7 +64,6 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
