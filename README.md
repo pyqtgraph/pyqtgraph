@@ -22,8 +22,9 @@ Requirements
 * PyQt 4.8+, PySide, PyQt5, or PySide2
 * python 2.7, or 3.x
 * Required
-  * `numpy`, `scipy`
+  * `numpy`
 * Optional
+  * `scipy` for image processing
   * `pyopengl` for 3D graphics
     * macOS with Python2 and Qt4 bindings (PyQt4 or PySide) do not work with 3D OpenGL graphics
     * `pyqtgraph.opengl` will be depreciated in a future version and replaced with `VisPy`
