@@ -2,6 +2,7 @@
 from ..Node import Node
 from ...Qt import QtGui, QtCore
 import numpy as np
+import sys
 from .common import *
 from ...SRTTransform import SRTTransform
 from ...Point import Point
