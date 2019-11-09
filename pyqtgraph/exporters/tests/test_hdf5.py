@@ -10,7 +10,7 @@ import os
 
 @pytest.fixture
 def tmp_h5(tmp_path):
-    yield os.path.join(tmp_path, "data.h5")
+    yield tmp_path / "data.h5"
 
 
 @pytest.mark.parametrize("combine", [False, True])
