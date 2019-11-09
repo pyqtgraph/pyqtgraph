@@ -116,9 +116,9 @@ jobs:
           conda install -c conda-forge $(qt.bindings) --yes
         fi
         echo "Installing remainder of dependencies"
-        conda install -c conda-forge numpy scipy six pyopengl --yes
+        conda install -c conda-forge numpy scipy six pyopengl h5py --yes
       else
-        pip install $(qt.bindings) numpy scipy pyopengl six
+        pip install $(qt.bindings) numpy scipy pyopengl six h5py
       fi
       echo ""
       pip install pytest pytest-xdist pytest-cov coverage  
