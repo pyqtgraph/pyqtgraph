@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-if __name__ == '__main__':
-    import sys, os
-    md = os.path.dirname(os.path.abspath(__file__))
-    sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
 from ..Qt import QtGui, QtCore, QT_LIB
 from ..graphicsItems.ROI import ROI
