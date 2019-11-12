@@ -44,20 +44,27 @@ class HDF5Exporter(Exporter):
         data = []
 
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
-        #print dir(self.item.curves[0])
-        tlen = 0
-        for i, c in enumerate(self.item.curves):
-            d = c.getData()
-            if i > 0 and len(d[0]) != tlen:
-                raise ValueError ("HDF5 Export requires all curves in plot to have same length")
-            if appendAllX or i == 0:
-                data.append(d[0])
-                tlen = len(d[0])
-            data.append(d[1])
+        # Check if the arrays are ragged
+        len_first = len(self.item.curves[0].getData()[0]) if self.item.curves[0] else None
+        ragged = any(len(i.getData()[0]) != len_first for i in self.item.curves)
 
+        if ragged:
+            dgroup = fd.create_group(dsname)
+            for i, c in enumerate(self.item.curves):
+                d = c.getData()
+                fdata = numpy.array([d[0], d[1]]).astype('double')
+                cname = c.name() if c.name() is not None else str(i)
+                dset = dgroup.create_dataset(cname, data=fdata)
+        else:
+            for i, c in enumerate(self.item.curves):
+                d = c.getData()
+                if appendAllX or i == 0:
+                    data.append(d[0])
+                data.append(d[1])
 
-        fdata = numpy.array(data).astype('double')
-        dset = fd.create_dataset(dsname, data=fdata)
+            fdata = numpy.array(data).astype('double')
+            dset = fd.create_dataset(dsname, data=fdata)
+
         fd.close()
 
 if HAVE_HDF5:
