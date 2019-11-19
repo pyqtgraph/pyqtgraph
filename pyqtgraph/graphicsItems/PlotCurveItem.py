@@ -293,7 +293,7 @@ class PlotCurveItem(GraphicsObject):
         self.fillPath = None
         self.invalidateBounds()
         self.update()
-        
+
     def setData(self, *args, **kargs):
         """
         =============== ========================================================
@@ -358,7 +358,7 @@ class PlotCurveItem(GraphicsObject):
                 kargs[k] = data
             if not isinstance(data, np.ndarray) or data.ndim > 1:
                 raise Exception("Plot data must be 1D ndarray.")
-            if 'complex' in str(data.dtype):
+            if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
 
         profiler("data checks")
