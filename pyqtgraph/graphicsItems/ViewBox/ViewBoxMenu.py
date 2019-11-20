@@ -34,6 +34,8 @@ class ViewBoxMenu(QtGui.QMenu):
             w = QtGui.QWidget()
             ui = AxisCtrlTemplate()
             ui.setupUi(w)
+            ui.linkCombo.setVisible(False)
+            ui.label.setVisible(False)
             a = QtGui.QWidgetAction(self)
             a.setDefaultWidget(w)
             m.addAction(a)
