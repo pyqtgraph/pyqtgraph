@@ -125,6 +125,10 @@ class ExportDialog(QtGui.QWidget):
         else:
             self.ui.paramTree.setParameters(params)
         self.currentExporter = exp
+        if "CSV" in self.currentExporter.Name and not isinstance(self.currentExporter.item, PlotItem):
+            self.ui.exportBtn.setEnabled(False)
+        else:
+            self.ui.exportBtn.setEnabled(True)
         self.ui.copyBtn.setEnabled(exp.allowCopy)
         
     def exportClicked(self):
