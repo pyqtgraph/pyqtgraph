@@ -17,7 +17,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -28,6 +28,7 @@ class AxisItem(GraphicsWidget):
                         to be linked to the visible range of a ViewBox.
         showValues      (bool) Whether to display values adjacent to ticks
         pen             (QPen) Pen used when drawing ticks.
+        textPen         (QPen) Pen used when drawing tick labels.
         text            The text (excluding units) to display on the label for this
                         axis.
         units           The units for this axis. Units should generally be given
@@ -96,6 +97,11 @@ class AxisItem(GraphicsWidget):
             self.setPen()
         else:
             self.setPen(pen)
+
+        if textPen is None:
+            self.setTextPen()
+        else:
+            self.setTextPen(pen)
 
         self._linkedView = None
         if linkView is not None:
@@ -402,6 +408,25 @@ class AxisItem(GraphicsWidget):
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
+        self.setLabel()
+        self.update()
+
+    def textPen(self):
+        if self._textPen is None:
+            return fn.mkPen(getConfigOption('foreground'))
+        return fn.mkPen(self._textPen)
+
+    def setTextPen(self, *args, **kwargs):
+        """
+        Set the pen used for drawing text.
+        If no arguments are given, the default foreground color will be used.
+        """
+        self.picture = None
+        if args or kwargs:
+            self._textPen = fn.mkPen(*args, **kwargs)
+        else:
+            self._textPen = fn.mkPen(getConfigOption('foreground'))
+        self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
         self.setLabel()
         self.update()
 
@@ -1048,13 +1073,13 @@ class AxisItem(GraphicsWidget):
             p.drawLine(p1, p2)
         profiler('draw ticks')
 
-        ## Draw all text
+        # Draw all text
         if self.tickFont is not None:
             p.setFont(self.tickFont)
-        p.setPen(self.pen())
+        p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
             p.drawText(rect, flags, text)
-            #p.drawRect(rect)
+
         profiler('draw text')
 
     def show(self):
