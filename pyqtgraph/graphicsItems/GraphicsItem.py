@@ -98,8 +98,9 @@ class GraphicsItem(object):
         Extends deviceTransform to automatically determine the viewportTransform.
         """
         if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
-            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
-            
+            scaler = self._exportOpts['resolutionScale']
+            return self.sceneTransform() * QtGui.QTransform(scaler, 0, 0, scaler, 1, 1)
+
         if viewportTransform is None:
             view = self.getViewWidget()
             if view is None:
