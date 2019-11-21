@@ -11,6 +11,7 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
@@ -424,6 +425,8 @@ def eq(a, b):
     3. When comparing arrays, returns False if the array shapes are not the same.
     4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
     """
     if a is b:
         return True
@@ -439,6 +442,28 @@ def eq(a, b):
     # equal because they may behave differently when computed on.
     if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
         return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
 
     # Test for equivalence. 
     # If the test raises a recognized exception, then return Falase
