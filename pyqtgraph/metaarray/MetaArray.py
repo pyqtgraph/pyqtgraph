@@ -20,7 +20,7 @@ from ..python2_3 import basestring
 ## This can be overridden by setting USE_HDF5 = False
 USE_HDF5 = True
 try:
-    import h5py.highlevel
+    import h5py
     HAVE_HDF5 = True
 except:
     USE_HDF5 = False
