@@ -359,7 +359,10 @@ class MetaArray(object):
             
     def __array__(self, dtype=None):
         ## supports np.array(metaarray_instance) 
-        return self.asarray()
+        if dtype is None:
+            return self.asarray()
+        else:
+            return self.asarray().astype(dtype)
             
     def view(self, typ):
         ## deprecated; kept for backward compatibility
