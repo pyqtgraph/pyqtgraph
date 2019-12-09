@@ -71,6 +71,8 @@ def test_ViewBox():
     size1 = QRectF(0, h, w, -h)
     assertMapping(vb, view1, size1)
 
+    win.close()
+
 
 skipreason = "Skipping this test until someone has time to fix it."
 @pytest.mark.skipif(True, reason=skipreason)

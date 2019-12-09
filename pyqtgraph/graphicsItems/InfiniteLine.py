@@ -314,8 +314,8 @@ class InfiniteLine(GraphicsObject):
         length = br.width()
         left = br.left() + length * self.span[0]
         right = br.left() + length * self.span[1]
-        br.setLeft(left - w)
-        br.setRight(right + w)
+        br.setLeft(left)
+        br.setRight(right)
         br = br.normalized()
         
         vs = self.getViewBox().size()
