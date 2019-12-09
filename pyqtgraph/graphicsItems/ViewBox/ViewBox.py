@@ -282,7 +282,7 @@ class ViewBox(GraphicsWidget):
             #if scene is not None and hasattr(scene, 'sigPrepareForPaint'):
                 #scene.sigPrepareForPaint.connect(self.prepareForPaint)
         #return ret
-        
+
     def update(self, *args, **kwargs):
         self.prepareForPaint()
         GraphicsWidget.update(self, *args, **kwargs)
@@ -400,12 +400,12 @@ class ViewBox(GraphicsWidget):
         """
         if item.zValue() < self.zValue():
             item.setZValue(self.zValue()+1)
-            
+
         scene = self.scene()
         if scene is not None and scene is not item.scene():
             scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
         item.setParentItem(self.childGroup)
-        
+
         if not ignoreBounds:
             self.addedItems.append(item)
         self.updateAutoRange()
@@ -416,12 +416,12 @@ class ViewBox(GraphicsWidget):
             self.addedItems.remove(item)
         except:
             pass
-        
+
         scene = self.scene()
         if scene is not None:
             scene.removeItem(item)
         item.setParentItem(None)
-        
+
         self.updateAutoRange()
 
     def clear(self):
@@ -433,19 +433,19 @@ class ViewBox(GraphicsWidget):
     def resizeEvent(self, ev):
         self._matrixNeedsUpdate = True
         self.updateMatrix()
-        
+
         self.linkedXChanged()
         self.linkedYChanged()
-        
+
         self.updateAutoRange()
         self.updateViewRange()
-        
+
         self._matrixNeedsUpdate = True
         self.updateMatrix()
-        
+
         self.background.setRect(self.rect())
         self.borderRect.setRect(self.rect())
-        
+
         self.sigStateChanged.emit(self)
         self.sigResized.emit(self)
         self.childGroup.prepareGeometryChange()
@@ -538,7 +538,11 @@ class ViewBox(GraphicsWidget):
             yOff = False if setRequested[1] else None
             self.enableAutoRange(x=xOff, y=yOff)
             changed.append(True)
-            
+
+        limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
+        minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
+        maxRng = [self.state['limits']['xRange'][1], self.state['limits']['yRange'][1]]
+
         for ax, range in changes.items():
             mn = min(range)
             mx = max(range)
@@ -565,6 +569,39 @@ class ViewBox(GraphicsWidget):
             p = (mx-mn) * xpad
             mn -= p
             mx += p
+
+            # max range cannot be larger than bounds, if they are given
+            if limits[ax][0] is not None and limits[ax][1] is not None:
+                if maxRng[ax] is not None:
+                    maxRng[ax] = min(maxRng[ax], limits[ax][1] - limits[ax][0])
+                else:
+                    maxRng[ax] = limits[ax][1] - limits[ax][0]
+
+            # If we have limits, we will have at least a max range as well
+            if maxRng[ax] is not None or minRng[ax] is not None:
+                diff = mx - mn
+                if maxRng[ax] is not None and diff > maxRng[ax]:
+                    delta = maxRng[ax] - diff
+                elif minRng[ax] is not None and diff < minRng[ax]:
+                    delta = minRng[ax] - diff
+                else:
+                    delta = 0
+
+                mn -= delta / 2.
+                mx += delta / 2.
+
+            # Make sure our requested area is within limits, if any
+            if limits[ax][0] is not None or limits[ax][1] is not None:
+                lmn, lmx = limits[ax]
+                if lmn is not None and mn < lmn:
+                    delta = lmn - mn  # Shift the requested view to match our lower limit
+                    mn = lmn
+                    mx += delta
+                elif lmx is not None and mx > lmx:
+                    delta = lmx - mx
+                    mx = lmx
+                    mn += delta
+
 
             # Set target range
             if self.state['targetRange'][ax] != [mn, mx]:
@@ -1488,9 +1525,9 @@ class ViewBox(GraphicsWidget):
             # max range cannot be larger than bounds, if they are given
             if limits[axis][0] is not None and limits[axis][1] is not None:
                 if maxRng[axis] is not None:
-                    maxRng[axis] = min(maxRng[axis], limits[axis][1]-limits[axis][0])
+                    maxRng[axis] = min(maxRng[axis], limits[axis][1] - limits[axis][0])
                 else:
-                    maxRng[axis] = limits[axis][1]-limits[axis][0]
+                    maxRng[axis] = limits[axis][1] - limits[axis][0]
 
             #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, limits[axis], minRng[axis], maxRng[axis])
             #print "Starting range:", viewRange[axis]
@@ -1604,13 +1641,13 @@ class ViewBox(GraphicsWidget):
             self.window()
         except RuntimeError:  ## this view has already been deleted; it will probably be collected shortly.
             return
-            
+
         def view_key(view):
             return (view.window() is self.window(), view.name)
-            
+
         ## make a sorted list of all named views
         nv = sorted(ViewBox.NamedViews.values(), key=view_key)
-        
+
         if self in nv:
             nv.remove(self)
 
