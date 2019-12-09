@@ -1479,40 +1479,6 @@ class ViewBox(GraphicsWidget):
         aspect = self.state['aspectLocked']  # size ratio / view ratio
         tr = self.targetRect()
         bounds = self.rect()
-        if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
-
-            ## This is the view range aspect ratio we have requested
-            targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1
-            ## This is the view range aspect ratio we need to obey aspect constraint
-            viewRatio = (bounds.width() / bounds.height() if bounds.height() != 0 else 1) / aspect
-            viewRatio = 1 if viewRatio == 0 else viewRatio
-
-            # Decide which range to keep unchanged
-            #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
-            if forceX:
-                ax = 0
-            elif forceY:
-                ax = 1
-            else:
-                # if we are not required to keep a particular axis unchanged,
-                # then make the entire target range visible
-                ax = 0 if targetRatio > viewRatio else 1
-
-            if ax == 0:
-                ## view range needs to be taller than target
-                dy = 0.5 * (tr.width() / viewRatio - tr.height())
-                if dy != 0:
-                    changed[1] = True
-                viewRange[1] = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
-            else:
-                ## view range needs to be wider than target
-                dx = 0.5 * (tr.height() * viewRatio - tr.width())
-                if dx != 0:
-                    changed[0] = True
-                viewRange[0] = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
-
-
-        # ----------- Make corrections for view limits -----------
 
         limits = (self.state['limits']['xLimits'], self.state['limits']['yLimits'])
         minRng = [self.state['limits']['xRange'][0], self.state['limits']['yRange'][0]]
@@ -1529,39 +1495,54 @@ class ViewBox(GraphicsWidget):
                 else:
                     maxRng[axis] = limits[axis][1] - limits[axis][0]
 
-            #print "\nLimits for axis %d: range=%s min=%s max=%s" % (axis, limits[axis], minRng[axis], maxRng[axis])
-            #print "Starting range:", viewRange[axis]
+        if aspect is not False and 0 not in [aspect, tr.height(), bounds.height(), bounds.width()]:
 
-            # Apply xRange, yRange
-            diff = viewRange[axis][1] - viewRange[axis][0]
-            if maxRng[axis] is not None and diff > maxRng[axis]:
-                delta = maxRng[axis] - diff
-                changed[axis] = True
-            elif minRng[axis] is not None and diff < minRng[axis]:
-                delta = minRng[axis] - diff
-                changed[axis] = True
+            ## This is the view range aspect ratio we have requested
+            targetRatio = tr.width() / tr.height() if tr.height() != 0 else 1
+            ## This is the view range aspect ratio we need to obey aspect constraint
+            viewRatio = (bounds.width() / bounds.height() if bounds.height() != 0 else 1) / aspect
+            viewRatio = 1 if viewRatio == 0 else viewRatio
+
+            # Calculate both the x and y ranges that would be needed to obtain the desired aspect ratio
+            dy = 0.5 * (tr.width() / viewRatio - tr.height())
+            dx = 0.5 * (tr.height() * viewRatio - tr.width())
+
+            rangeY = [self.state['targetRange'][1][0] - dy, self.state['targetRange'][1][1] + dy]
+            rangeX = [self.state['targetRange'][0][0] - dx, self.state['targetRange'][0][1] + dx]
+
+            canidateRange = [rangeX, rangeY]
+
+            # Decide which range to try to keep unchanged
+            #print self.name, "aspect:", aspect, "changed:", changed, "auto:", self.state['autoRange']
+            if forceX:
+                ax = 0
+            elif forceY:
+                ax = 1
             else:
-                delta = 0
+                # if we are not required to keep a particular axis unchanged,
+                # then try to make the entire target range visible
+                ax = 0 if targetRatio > viewRatio else 1
+                target = 0 if ax == 1 else 1
+                # See if this choice would cause out-of-range issues
+                if maxRng is not None or minRng is not None:
+                    diff = canidateRange[target][1] - canidateRange[target][0]
+                    if maxRng[target] is not None and diff > maxRng[target] or \
+                       minRng[target] is not None and diff < minRng[target]:
+                        # tweak the target range down so we can still pan properly
+                        self.state['targetRange'][ax] = canidateRange[ax]
+                        ax = target  # Switch the "fixed" axes
 
-            viewRange[axis][0] -= delta/2.
-            viewRange[axis][1] += delta/2.
+            if ax == 0:
+                ## view range needs to be taller than target
+                if dy != 0:
+                    changed[1] = True
+                viewRange[1] = rangeY
+            else:
+                ## view range needs to be wider than target
+                if dx != 0:
+                    changed[0] = True
+                viewRange[0] = rangeX
 
-            #print "after applying min/max:", viewRange[axis]
-
-            # Apply xLimits, yLimits
-            mn, mx = limits[axis]
-            if mn is not None and viewRange[axis][0] < mn:
-                delta = mn - viewRange[axis][0]
-                viewRange[axis][0] += delta
-                viewRange[axis][1] += delta
-                changed[axis] = True
-            elif mx is not None and viewRange[axis][1] > mx:
-                delta = mx - viewRange[axis][1]
-                viewRange[axis][0] += delta
-                viewRange[axis][1] += delta
-                changed[axis] = True
-
-            #print "after applying edge limits:", viewRange[axis]
 
         changed = [(viewRange[i][0] != self.state['viewRange'][i][0]) or (viewRange[i][1] != self.state['viewRange'][i][1]) for i in (0,1)]
         self.state['viewRange'] = viewRange
