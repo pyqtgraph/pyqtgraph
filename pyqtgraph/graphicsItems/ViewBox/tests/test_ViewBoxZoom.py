@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 import pyqtgraph as pg
+import pytest
 
-
-def setup_module(module):
-    try:
-        app = pg.QtGui.QApplication()
-    except RuntimeError:
-        pass  # QApplication instance already exists
+app = pg.mkQApp()
 
 def test_zoom_normal():
     vb = pg.ViewBox()
