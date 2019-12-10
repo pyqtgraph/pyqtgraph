@@ -149,8 +149,7 @@ class ROI(GraphicsObject):
             pen = (255, 255, 255)
         self.setPen(pen)
         
-        self.handlePen = QtGui.QPen(QtGui.QColor(255, 128, 0))
-        self.handlePen.setWidth(5)
+        self.handlePen = QtGui.QPen(QtGui.QColor(150, 255, 255))
         self.handles = []
         self.state = {'pos': Point(0,0), 'size': Point(1,1), 'angle': 0}  ## angle is in degrees for ease of Qt integration
         self.lastState = None
