@@ -86,3 +86,5 @@ def test_clipping():
 
         assert xDisp[0] <= vr.left()
         assert xDisp[-1] >= vr.right()
+
+    w.close()

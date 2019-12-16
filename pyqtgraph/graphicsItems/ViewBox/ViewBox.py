@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import weakref
 import sys
 from copy import deepcopy
 import numpy as np
 from ...Qt import QtGui, QtCore
-from ...python2_3 import sortList, basestring, cmp
+from ...python2_3 import basestring
 from ...Point import Point
 from ... import functions as fn
 from .. ItemGroup import ItemGroup
@@ -399,10 +400,12 @@ class ViewBox(GraphicsWidget):
         """
         if item.zValue() < self.zValue():
             item.setZValue(self.zValue()+1)
+            
         scene = self.scene()
         if scene is not None and scene is not item.scene():
             scene.addItem(item)  ## Necessary due to Qt bug: https://bugreports.qt-project.org/browse/QTBUG-18616
         item.setParentItem(self.childGroup)
+        
         if not ignoreBounds:
             self.addedItems.append(item)
         self.updateAutoRange()
@@ -413,7 +416,12 @@ class ViewBox(GraphicsWidget):
             self.addedItems.remove(item)
         except:
             pass
-        self.scene().removeItem(item)
+        
+        scene = self.scene()
+        if scene is not None:
+            scene.removeItem(item)
+        item.setParentItem(None)
+        
         self.updateAutoRange()
 
     def clear(self):
@@ -1596,16 +1604,13 @@ class ViewBox(GraphicsWidget):
             self.window()
         except RuntimeError:  ## this view has already been deleted; it will probably be collected shortly.
             return
-
-        def cmpViews(a, b):
-            wins = 100 * cmp(a.window() is self.window(), b.window() is self.window())
-            alpha = cmp(a.name, b.name)
-            return wins + alpha
-
+            
+        def view_key(view):
+            return (view.window() is self.window(), view.name)
+            
         ## make a sorted list of all named views
-        nv = list(ViewBox.NamedViews.values())
-        sortList(nv, cmpViews) ## see pyqtgraph.python2_3.sortList
-
+        nv = sorted(ViewBox.NamedViews.values(), key=view_key)
+        
         if self in nv:
             nv.remove(self)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 try:
     from ..Qt import QtOpenGL
@@ -272,7 +273,7 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setShadowPen(self, *args, **kargs):
-        """Set the shadow pen used to draw behind tyhe primary pen.
+        """Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
         pen to be visible.
         """
@@ -292,7 +293,7 @@ class PlotCurveItem(GraphicsObject):
         self.fillPath = None
         self.invalidateBounds()
         self.update()
-        
+
     def setData(self, *args, **kargs):
         """
         =============== ========================================================
@@ -357,7 +358,7 @@ class PlotCurveItem(GraphicsObject):
                 kargs[k] = data
             if not isinstance(data, np.ndarray) or data.ndim > 1:
                 raise Exception("Plot data must be 1D ndarray.")
-            if 'complex' in str(data.dtype):
+            if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
 
         profiler("data checks")
@@ -570,7 +571,7 @@ class PlotCurveItem(GraphicsObject):
                 gl.glEnable(gl.GL_BLEND)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
                 gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
-                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         finally:
@@ -638,4 +639,3 @@ class ROIPlotItem(PlotCurveItem):
     def roiChangedEvent(self):
         d = self.getRoiData()
         self.updateData(d, self.xVals)
-

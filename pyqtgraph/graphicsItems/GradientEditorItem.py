@@ -1,14 +1,14 @@
+# -*- coding: utf-8 -*-
+import operator
 import weakref
 import numpy as np
 from ..Qt import QtGui, QtCore
-from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 from ..widgets.SpinBox import SpinBox
 from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
-from ..python2_3 import cmp
 
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
@@ -352,8 +352,7 @@ class TickSliderItem(GraphicsWidget):
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
         ## public
-        ticks = list(self.ticks.items())
-        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  ## see pyqtgraph.python2_3.sortList
+        ticks = sorted(self.ticks.items(), key=operator.itemgetter(1))
         return ticks
 
 
@@ -944,4 +943,3 @@ class TickMenu(QtGui.QMenu):
     #    self.fracPosSpin.blockSignals(True)
     #    self.fracPosSpin.setValue(self.sliderItem().tickValue(self.tick()))
     #    self.fracPosSpin.blockSignals(False)
-
