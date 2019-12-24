@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
@@ -123,7 +124,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
-        if self.offset is not None:
+        if self.opts['offset'] is not None:
             offset = Point(self.opts['offset'])
             anchorx = 1 if offset[0] <= 0 else 0
             anchory = 1 if offset[1] <= 0 else 0
@@ -251,7 +252,3 @@ class ItemSample(GraphicsWidget):
 
             p.translate(10, 10)
             path = drawSymbol(p, symbol, size, pen, brush)
-
-
-
-
