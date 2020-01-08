@@ -1134,7 +1134,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
                     maxVal = np.nextafter(maxVal, 2*maxVal)
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
     # apply LUT if given
