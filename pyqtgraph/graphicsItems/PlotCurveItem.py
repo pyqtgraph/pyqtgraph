@@ -32,12 +32,14 @@ class PlotCurveItem(GraphicsObject):
     **Signals:**
     sigPlotChanged(self)  Emitted when the data being plotted has changed
     sigClicked(self)      Emitted when the curve is clicked
+    sigDoubleClicked(self)Emitted when the curve is double clicked
     ====================  ===============================================
     """
     
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object)
-    
+    sigDoubleClicked = QtCore.Signal(object)
+
     def __init__(self, *args, **kargs):
         """
         Forwards all arguments to :func:`setData <pyqtgraph.PlotCurveItem.setData>`.
@@ -577,6 +579,12 @@ class PlotCurveItem(GraphicsObject):
             ev.accept()
             self.sigClicked.emit(self)
             
+    def mouseDoubleClickEvent(self, ev):
+        if not self.clickable or ev.button() != QtCore.Qt.LeftButton:
+            return
+        if self.mouseShape().contains(ev.pos()):
+            ev.accept()
+            self.sigDoubleClicked.emit(self)
 
 
 class ROIPlotItem(PlotCurveItem):
