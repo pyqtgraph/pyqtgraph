@@ -10,11 +10,13 @@ Procedure for unit-testing with images:
 
        $ PYQTGRAPH_AUDIT=1 python pyqtgraph/graphicsItems/tests/test_PlotCurveItem.py
 
-   Any failing tests will
-   display the test results, standard image, and the differences between the
-   two. If the test result is bad, then press (f)ail. If the test result is
-   good, then press (p)ass and the new image will be saved to the test-data
-   directory.
+   Any failing tests will display the test results, standard image, and the
+   differences between the two. If the test result is bad, then press (f)ail.
+   If the test result is good, then press (p)ass and the new image will be
+   saved to the test-data directory.
+   
+   To check all test results regardless of whether the test failed, set the
+   environment variable PYQTGRAPH_AUDIT_ALL=1.
 
 3. After adding or changing test images, create a new commit:
 
@@ -40,8 +42,9 @@ Procedure for unit-testing with images:
 
 # This is the name of a tag in the test-data repository that this version of
 # pyqtgraph should be tested against. When adding or changing test images,
-# create and push a new tag and update this variable.
-testDataTag = 'test-data-3'
+# create and push a new tag and update this variable. To test locally, begin
+# by creating the tag in your ~/.pyqtgraph/test-data repository.
+testDataTag = 'test-data-7'
 
 
 import time
@@ -58,13 +61,37 @@ if sys.version[0] >= '3':
 else:
     import httplib
     import urllib
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QtTest, QT_LIB
 from .. import functions as fn
 from .. import GraphicsLayoutWidget
 from .. import ImageItem, TextItem
 
 
 tester = None
+
+# Convenient stamp used for ensuring image orientation is correct
+axisImg = [
+    "            1         1 1        ",
+    "          1 1         1 1 1 1    ",
+    "            1   1 1 1 1 1 1 1 1 1",
+    "            1         1 1 1 1    ",
+    "    1     1 1 1       1 1        ",
+    "  1   1                          ",
+    "  1   1                          ",
+    "    1                            ",
+    "                                 ",
+    "    1                            ",
+    "    1                            ",
+    "    1                            ",
+    "1 1 1 1 1                        ",
+    "1 1 1 1 1                        ",
+    "  1 1 1                          ",
+    "  1 1 1                          ",
+    "    1                            ",
+    "    1                            ",
+]
+axisImg = np.array([map(int, row[::2].replace(' ', '0')) for row in axisImg])
+
 
 
 def getTester():
@@ -105,11 +132,19 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
     """
     if isinstance(image, QtGui.QWidget):
         w = image
+        
+            # just to be sure the widget size is correct (new window may be resized):
+        QtGui.QApplication.processEvents()
+
+        graphstate = scenegraphState(w, standardFile)
         image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
         qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
+        
+        # transpose BGRA to RGBA
+        image = image[..., [2, 1, 0, 3]]
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
@@ -129,6 +164,8 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
 
     # If the test image does not match, then we go to audit if requested.
     try:
+        if stdImage is None:
+            raise Exception("No reference image saved for this test.")
         if image.shape[2] != stdImage.shape[2]:
             raise Exception("Test result has different channel count than standard image"
                             "(%d vs %d)" % (image.shape[2], stdImage.shape[2]))
@@ -144,22 +181,29 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                     " different than standard image shape %s." %
                                 (ims1, ims2))
             sr = np.round(sr).astype(int)
-            image = downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
+            image = fn.downsample(image, sr[0], axis=(0, 1)).astype(image.dtype)
 
         assertImageMatch(image, stdImage, **kwargs)
+        
+        if bool(os.getenv('PYQTGRAPH_PRINT_TEST_STATE', False)):
+            print(graphstate)
+            
+        if os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
+            raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL evnironment variable.")
     except Exception:
+
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
                   "image %s.\nTo revert this file, run `cd %s; git checkout "
                   "%s`\n" % (stdFileName, dataPath, standardFile))
-        if os.getenv('PYQTGRAPH_AUDIT') == '1':
+        if os.getenv('PYQTGRAPH_AUDIT') == '1' or os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
             sys.excepthook(*sys.exc_info())
             getTester().test(image, stdImage, message)
             stdPath = os.path.dirname(stdFileName)
             print('Saving new standard image to "%s"' % stdFileName)
             if not os.path.isdir(stdPath):
                 os.makedirs(stdPath)
-            img = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+            img = fn.makeQImage(image, alpha=True, transpose=False)
             img.save(stdFileName)
         else:
             if stdImage is None:
@@ -167,12 +211,16 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                 "PYQTGRAPH_AUDIT=1 to add this image." % stdFileName)
             else:
                 if os.getenv('TRAVIS') is not None:
+                    saveFailedTest(image, stdImage, standardFile, upload=True)
+                elif os.getenv('AZURE') is not None:
+                    standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
                     saveFailedTest(image, stdImage, standardFile)
+                print(graphstate)
                 raise
 
 
 def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
-                       pxCount=0, maxPxDiff=None, avgPxDiff=None,
+                       pxCount=-1, maxPxDiff=None, avgPxDiff=None,
                        imgDiff=None):
     """Check that two images match.
 
@@ -194,7 +242,8 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     pxThreshold : float
         Minimum value difference at which two pixels are considered different
     pxCount : int or None
-        Maximum number of pixels that may differ
+        Maximum number of pixels that may differ. Default is 0 for Qt4 and 
+        1% of image size for Qt5.
     maxPxDiff : float or None
         Maximum allowed difference between pixels
     avgPxDiff : float or None
@@ -207,6 +256,14 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     assert im1.shape[2] == 4
     assert im1.dtype == im2.dtype
 
+    if pxCount == -1:
+        if QT_LIB in {'PyQt5', 'PySide2'}:
+            # Qt5 generates slightly different results; relax the tolerance
+            # until test images are updated.
+            pxCount = int(im1.shape[0] * im1.shape[1] * 0.01)
+        else:
+            pxCount = 0
+    
     diff = im1.astype(float) - im2.astype(float)
     if imgDiff is not None:
         assert np.abs(diff).sum() <= imgDiff
@@ -228,15 +285,9 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
         assert corr >= minCorr
 
 
-def saveFailedTest(data, expect, filename):
+def saveFailedTest(data, expect, filename, upload=False):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit, error = runSubprocess(['git', 'rev-parse',  'HEAD'])
-    name = filename.split('/')
-    name.insert(-1, commit.strip())
-    filename = '/'.join(name)
-    host = 'data.pyqtgraph.org'
-
     # concatenate data, expect, and diff into a single image
     ds = data.shape
     es = expect.shape
@@ -253,15 +304,31 @@ def saveFailedTest(data, expect, filename):
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
     png = makePng(img)
-    
+    directory = os.path.dirname(filename)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    with open(filename + ".png", "wb") as png_file:
+        png_file.write(png)
+    print("\nImage comparison failed. Test result: %s %s   Expected result: "
+        "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
+    if upload:
+        uploadFailedTest(filename, png)
+
+
+def uploadFailedTest(filename, png):
+    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
+    name = filename.split(os.path.sep)
+    name.insert(-1, commit.strip())
+    filename = os.path.sep.join(name)
+
+    host = 'data.pyqtgraph.org'
     conn = httplib.HTTPConnection(host)
     req = urllib.urlencode({'name': filename,
                             'data': base64.b64encode(png)})
     conn.request('POST', '/upload.py', req)
     response = conn.getresponse().read()
     conn.close()
-    print("\nImage comparison failed. Test result: %s %s   Expected result: "
-          "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
+
     print("Uploaded to: \nhttp://%s/data/%s" % (host, filename))
     if not response.startswith(b'OK'):
         print("WARNING: Error uploading data to %s" % host)
@@ -272,9 +339,9 @@ def makePng(img):
     """Given an array like (H, W, 4), return a PNG-encoded byte string.
     """
     io = QtCore.QBuffer()
-    qim = fn.makeQImage(img, alpha=False)
-    qim.save(io, format='png')
-    png = io.data().data().encode()
+    qim = fn.makeQImage(img.transpose(1, 0, 2), alpha=False)
+    qim.save(io, 'PNG')
+    png = bytes(io.data().data())
     return png
 
 
@@ -303,7 +370,7 @@ class ImageTester(QtGui.QWidget):
         
         QtGui.QWidget.__init__(self)
         self.resize(1200, 800)
-        self.showFullScreen()
+        #self.showFullScreen()
         
         self.layout = QtGui.QGridLayout()
         self.setLayout(self.layout)
@@ -321,6 +388,8 @@ class ImageTester(QtGui.QWidget):
         self.failBtn = QtGui.QPushButton('Fail')
         self.layout.addWidget(self.passBtn, 2, 0)
         self.layout.addWidget(self.failBtn, 2, 1)
+        self.passBtn.clicked.connect(self.passTest)
+        self.failBtn.clicked.connect(self.failTest)
 
         self.views = (self.view.addViewBox(row=0, col=0),
                       self.view.addViewBox(row=0, col=1),
@@ -329,7 +398,7 @@ class ImageTester(QtGui.QWidget):
         for i, v in enumerate(self.views):
             v.setAspectLocked(1)
             v.invertY()
-            v.image = ImageItem()
+            v.image = ImageItem(axisOrder='row-major')
             v.image.setAutoDownsample(True)
             v.addItem(v.image)
             v.label = TextItem(labelText[i])
@@ -356,9 +425,9 @@ class ImageTester(QtGui.QWidget):
             message += '\nImage1: %s %s   Image2: %s %s' % (im1.shape, im1.dtype, im2.shape, im2.dtype)
         self.label.setText(message)
         
-        self.views[0].image.setImage(im1.transpose(1, 0, 2))
-        self.views[1].image.setImage(im2.transpose(1, 0, 2))
-        diff = makeDiffImage(im1, im2).transpose(1, 0, 2)
+        self.views[0].image.setImage(im1)
+        self.views[1].image.setImage(im2)
+        diff = makeDiffImage(im1, im2)
 
         self.views[2].image.setImage(diff)
         self.views[0].autoRange()
@@ -382,6 +451,12 @@ class ImageTester(QtGui.QWidget):
             self.lastKey = 'esc'
         else:
             self.lastKey = str(event.text()).lower()
+
+    def passTest(self):
+        self.lastKey = 'p'
+
+    def failTest(self):
+        self.lastKey = 'f'
 
 
 def getTestDataRepo():
@@ -434,7 +509,7 @@ def getTestDataRepo():
         if not os.path.isdir(parentPath):
             os.makedirs(parentPath)
 
-        if os.getenv('TRAVIS') is not None:
+        if os.getenv('TRAVIS') is not None or os.getenv('AZURE') is not None:
             # Create a shallow clone of the test-data repository (to avoid
             # downloading more data than is necessary)
             os.makedirs(dataPath)
@@ -531,3 +606,47 @@ def runSubprocess(command, return_code=False, **kwargs):
             raise sp.CalledProcessError(p.returncode, command)
     
     return output
+
+
+def scenegraphState(view, name):
+    """Return information about the scenegraph for debugging test failures.
+    """
+    state = "====== Scenegraph state for %s ======\n" % name
+    state += "view size: %dx%d\n" % (view.width(), view.height())
+    state += "view transform:\n" + indent(transformStr(view.transform()), "  ")
+    for item in view.scene().items():
+        if item.parentItem() is None:
+            state += itemState(item) + '\n'
+    return state
+
+    
+def itemState(root):
+    state = str(root) + '\n'
+    from .. import ViewBox
+    state += 'bounding rect: ' + str(root.boundingRect()) + '\n'
+    if isinstance(root, ViewBox):
+        state += "view range: " + str(root.viewRange()) + '\n'
+    state += "transform:\n" + indent(transformStr(root.transform()).strip(), "  ") + '\n'
+    for item in root.childItems():
+        state += indent(itemState(item).strip(), "    ") + '\n'
+    return state
+
+    
+def transformStr(t):
+    return ("[%0.2f %0.2f %0.2f]\n"*3) % (t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), t.m31(), t.m32(), t.m33())
+
+
+def indent(s, pfx):
+    return '\n'.join([pfx+line for line in s.split('\n')])
+
+
+class TransposedImageItem(ImageItem):
+    # used for testing image axis order; we can test row-major and col-major using
+    # the same test images
+    def __init__(self, *args, **kwds):
+        self.__transpose = kwds.pop('transpose', False)
+        ImageItem.__init__(self, *args, **kwds)
+    def setImage(self, image=None, **kwds):
+        if image is not None and self.__transpose is True:
+            image = np.swapaxes(image, 0, 1)
+        return ImageItem.setImage(self, image, **kwds)

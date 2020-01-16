@@ -1,7 +1,13 @@
-import os, sys, subprocess, tempfile
+# -*- coding: utf-8 -*-
+import os
+import sys
+import subprocess
+import tempfile
 import pyqtgraph as pg
 import six
 import pytest
+import textwrap
+import time
 
 code = """
 import sys
@@ -13,6 +19,25 @@ w = pg.{classname}({args})
 
 skipmessage = ('unclear why this test is failing. skipping until someone has'
                ' time to fix it')
+
+
+def call_with_timeout(*args, **kwargs):
+    """Mimic subprocess.call with timeout for python < 3.3"""
+    wait_per_poll = 0.1
+    try:
+        timeout = kwargs.pop('timeout')
+    except KeyError:
+        timeout = 10
+
+    rc = None
+    p = subprocess.Popen(*args, **kwargs)
+    for i in range(int(timeout/wait_per_poll)):
+        rc = p.poll()
+        if rc is not None:
+            break
+        time.sleep(wait_per_poll)
+    return rc
+
 
 @pytest.mark.skipif(True, reason=skipmessage)
 def test_exit_crash():
@@ -35,8 +60,21 @@ def test_exit_crash():
 
         print(name)
         argstr = initArgs.get(name, "")
-        open(tmp, 'w').write(code.format(path=path, classname=name, args=argstr))
+        with open(tmp, 'w') as f:
+            f.write(code.format(path=path, classname=name, args=argstr))
         proc = subprocess.Popen([sys.executable, tmp])
         assert proc.wait() == 0
 
     os.remove(tmp)
+
+
+def test_pg_exit():
+    # test the pg.exit() function
+    code = textwrap.dedent("""
+        import pyqtgraph as pg
+        app = pg.mkQApp()
+        pg.plot()
+        pg.exit()
+    """)
+    rc = call_with_timeout([sys.executable, '-c', code], timeout=5, shell=False)
+    assert rc == 0

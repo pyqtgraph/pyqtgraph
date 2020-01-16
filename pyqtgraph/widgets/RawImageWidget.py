@@ -3,7 +3,9 @@ try:
     from ..Qt import QtOpenGL
     from OpenGL.GL import *
     HAVE_OPENGL = True
-except ImportError:
+except Exception:
+    # Would prefer `except ImportError` here, but some versions of pyopengl generate
+    # AttributeError upon import
     HAVE_OPENGL = False
 
 from .. import functions as fn
@@ -58,6 +60,7 @@ class RawImageWidget(QtGui.QWidget):
             p.drawImage(QtCore.QPointF(), self.image)
         #p.drawPixmap(self.rect(), self.pixmap)
         p.end()
+
 
 if HAVE_OPENGL:
     class RawImageGLWidget(QtOpenGL.QGLWidget):
@@ -119,7 +122,7 @@ if HAVE_OPENGL:
             if not self.uploaded:
                 self.uploadTexture()
             
-            glViewport(0, 0, self.width(), self.height())
+            glViewport(0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.texture)
             glColor4f(1,1,1,1)

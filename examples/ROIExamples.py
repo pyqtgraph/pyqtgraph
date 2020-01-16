@@ -11,6 +11,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
+pg.setConfigOptions(imageAxisOrder='row-major')
 
 ## Create image to display
 arr = np.ones((100, 100), dtype=float)
@@ -24,10 +25,15 @@ arr[:, 50] = 10
 arr += np.sin(np.linspace(0, 20, 100)).reshape(1, 100)
 arr += np.random.normal(size=(100,100))
 
+# add an arrow for asymmetry
+arr[10, :50] = 10
+arr[9:12, 44:48] = 10
+arr[8:13, 44:46] = 10
+
 
 ## create GUI
 app = QtGui.QApplication([])
-w = pg.GraphicsWindow(size=(1000,800), border=True)
+w = pg.GraphicsLayoutWidget(show=True, size=(1000,800), border=True)
 w.setWindowTitle('pyqtgraph example: ROI Examples')
 
 text = """Data Selection From Image.<br>\n
@@ -132,7 +138,7 @@ label4 = w4.addLabel(text, row=0, col=0)
 v4 = w4.addViewBox(row=1, col=0, lockAspect=True)
 g = pg.GridItem()
 v4.addItem(g)
-r4 = pg.ROI([0,0], [100,100], removable=True)
+r4 = pg.ROI([0,0], [100,100], resizable=False, removable=True)
 r4.addRotateHandle([1,0], [0.5, 0.5])
 r4.addRotateHandle([0,1], [0.5, 0.5])
 img4 = pg.ImageItem(arr)

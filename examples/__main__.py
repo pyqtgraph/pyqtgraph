@@ -7,14 +7,16 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, QT_LIB
+
+from .utils import buildFileList, path, examples
 
 
-from .utils import buildFileList, testFile, path, examples
-
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from .exampleLoaderTemplate_pyside import Ui_Form
-elif USE_PYQT5:
+elif QT_LIB == 'PySide2':
+    from .exampleLoaderTemplate_pyside2 import Ui_Form
+elif QT_LIB == 'PyQt5':
     from .exampleLoaderTemplate_pyqt5 import Ui_Form
 else:
     from .exampleLoaderTemplate_pyqt import Ui_Form
@@ -26,6 +28,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
+        self.setWindowTitle("PyQtGraph Examples")
 
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
@@ -114,30 +117,7 @@ class ExampleLoader(QtGui.QMainWindow):
 def run():
     app = QtGui.QApplication([])
     loader = ExampleLoader()
-
     app.exec_()
 
 if __name__ == '__main__':
-
-    args = sys.argv[1:]
-        
-    if '--test' in args:
-        # get rid of orphaned cache files first
-        pg.renamePyc(path)
-        
-        files = buildFileList(examples)
-        if '--pyside' in args:
-            lib = 'PySide'
-        elif '--pyqt' in args or '--pyqt4' in args:
-            lib = 'PyQt4'
-        elif '--pyqt5' in args:
-            lib = 'PyQt5'
-        else:
-            lib = ''
-            
-        exe = sys.executable
-        print("Running tests:", lib, sys.executable)
-        for f in files:
-            testFile(f[0], f[1], exe, lib)
-    else: 
-        run()
+    run()

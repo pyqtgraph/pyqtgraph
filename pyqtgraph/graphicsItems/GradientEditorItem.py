@@ -1,14 +1,14 @@
+# -*- coding: utf-8 -*-
+import operator
 import weakref
 import numpy as np
 from ..Qt import QtGui, QtCore
-from ..python2_3 import sortList
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 from ..widgets.SpinBox import SpinBox
 from ..pgcollections import OrderedDict
 from ..colormap import ColorMap
-from ..python2_3 import cmp
 
 
 __all__ = ['TickSliderItem', 'GradientEditorItem']
@@ -22,12 +22,18 @@ Gradients = OrderedDict([
     ('cyclic', {'ticks': [(0.0, (255, 0, 4, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'hsv'}),
     ('greyclip', {'ticks': [(0.0, (0, 0, 0, 255)), (0.99, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}),
     ('grey', {'ticks': [(0.0, (0, 0, 0, 255)), (1.0, (255, 255, 255, 255))], 'mode': 'rgb'}),
+    # Perceptually uniform sequential colormaps from Matplotlib 2.0
+    ('viridis', {'ticks': [(0.0, (68, 1, 84, 255)), (0.25, (58, 82, 139, 255)), (0.5, (32, 144, 140, 255)), (0.75, (94, 201, 97, 255)), (1.0, (253, 231, 36, 255))], 'mode': 'rgb'}),
+    ('inferno', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (87, 15, 109, 255)), (0.5, (187, 55, 84, 255)), (0.75, (249, 142, 8, 255)), (1.0, (252, 254, 164, 255))], 'mode': 'rgb'}),
+    ('plasma', {'ticks': [(0.0, (12, 7, 134, 255)), (0.25, (126, 3, 167, 255)), (0.5, (203, 71, 119, 255)), (0.75, (248, 149, 64, 255)), (1.0, (239, 248, 33, 255))], 'mode': 'rgb'}),
+    ('magma', {'ticks': [(0.0, (0, 0, 3, 255)), (0.25, (80, 18, 123, 255)), (0.5, (182, 54, 121, 255)), (0.75, (251, 136, 97, 255)), (1.0, (251, 252, 191, 255))], 'mode': 'rgb'}),
 ])
 
 def addGradientListToDocstring():
     """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
     def dec(fn):
-        fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
+        if fn.__doc__ is not None:
+            fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
         return fn
     return dec
 
@@ -346,8 +352,7 @@ class TickSliderItem(GraphicsWidget):
     def listTicks(self):
         """Return a sorted list of all the Tick objects on the slider."""
         ## public
-        ticks = list(self.ticks.items())
-        sortList(ticks, lambda a,b: cmp(a[1], b[1]))  ## see pyqtgraph.python2_3.sortList
+        ticks = sorted(self.ticks.items(), key=operator.itemgetter(1))
         return ticks
 
 
@@ -938,4 +943,3 @@ class TickMenu(QtGui.QMenu):
     #    self.fracPosSpin.blockSignals(True)
     #    self.fracPosSpin.setValue(self.sliderItem().tickValue(self.tick()))
     #    self.fracPosSpin.blockSignals(False)
-

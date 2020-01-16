@@ -37,9 +37,6 @@ class GraphicsItem(object):
         if register:
             GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
                     
-
-                    
-                    
     def getViewWidget(self):
         """
         Return the view widget for this item. 
@@ -95,15 +92,15 @@ class GraphicsItem(object):
     def forgetViewBox(self):
         self._viewBox = None
         
-        
     def deviceTransform(self, viewportTransform=None):
         """
         Return the transform that converts local item coordinates to device coordinates (usually pixels).
         Extends deviceTransform to automatically determine the viewportTransform.
         """
         if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
-            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
-            
+            scaler = self._exportOpts.get('resolutionScale', 1.0)
+            return self.sceneTransform() * QtGui.QTransform(scaler, 0, 0, scaler, 1, 1)
+
         if viewportTransform is None:
             view = self.getViewWidget()
             if view is None:
@@ -150,7 +147,8 @@ class GraphicsItem(object):
         return parents
     
     def viewRect(self):
-        """Return the bounds (in item coordinates) of this item's ViewBox or GraphicsWidget"""
+        """Return the visible bounds of this item's ViewBox or GraphicsWidget,
+        in the local coordinate system of the item."""
         view = self.getViewBox()
         if view is None:
             return None
@@ -447,6 +445,10 @@ class GraphicsItem(object):
     def _updateView(self):
         ## called to see whether this item has a new view to connect to
         ## NOTE: This is called from GraphicsObject.itemChange or GraphicsWidget.itemChange.
+
+        if not hasattr(self, '_connectedView'):
+            # Happens when Python is shutting down.
+            return
 
         ## It is possible this item has moved to a different ViewBox or widget;
         ## clear out previously determined references to these.

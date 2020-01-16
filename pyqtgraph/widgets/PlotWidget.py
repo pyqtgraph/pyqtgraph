@@ -2,7 +2,7 @@
 """
 PlotWidget.py -  Convenience class--GraphicsView widget displaying a single PlotItem
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from ..Qt import QtCore, QtGui
@@ -76,7 +76,7 @@ class PlotWidget(GraphicsView):
             m = getattr(self.plotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise NameError(attr)
+        raise AttributeError(attr)
     
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)

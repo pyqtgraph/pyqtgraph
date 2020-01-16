@@ -6,6 +6,7 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+    config_options
     functions
     graphicsItems/index
     widgets/index

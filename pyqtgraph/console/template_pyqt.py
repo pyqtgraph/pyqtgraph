@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'template.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/console/template.ui'
 #
-# Created: Fri May 02 18:55:28 2014
-#      by: PyQt4 UI code generator 4.10.4
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(694, 497)
+        Form.resize(739, 497)
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setMargin(0)
         self.gridLayout.setSpacing(0)
@@ -37,7 +36,6 @@ class Ui_Form(object):
         self.layoutWidget = QtGui.QWidget(self.splitter)
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.layoutWidget)
-        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.output = QtGui.QPlainTextEdit(self.layoutWidget)
         font = QtGui.QFont()
@@ -68,8 +66,9 @@ class Ui_Form(object):
         self.exceptionGroup = QtGui.QGroupBox(self.splitter)
         self.exceptionGroup.setObjectName(_fromUtf8("exceptionGroup"))
         self.gridLayout_2 = QtGui.QGridLayout(self.exceptionGroup)
-        self.gridLayout_2.setSpacing(0)
         self.gridLayout_2.setContentsMargins(-1, 0, -1, 0)
+        self.gridLayout_2.setHorizontalSpacing(2)
+        self.gridLayout_2.setVerticalSpacing(0)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.clearExceptionBtn = QtGui.QPushButton(self.exceptionGroup)
         self.clearExceptionBtn.setEnabled(False)
@@ -96,6 +95,7 @@ class Ui_Form(object):
         self.runSelectedFrameCheck.setObjectName(_fromUtf8("runSelectedFrameCheck"))
         self.gridLayout_2.addWidget(self.runSelectedFrameCheck, 3, 0, 1, 7)
         self.exceptionInfoLabel = QtGui.QLabel(self.exceptionGroup)
+        self.exceptionInfoLabel.setWordWrap(True)
         self.exceptionInfoLabel.setObjectName(_fromUtf8("exceptionInfoLabel"))
         self.gridLayout_2.addWidget(self.exceptionInfoLabel, 1, 0, 1, 7)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -116,12 +116,12 @@ class Ui_Form(object):
         self.historyBtn.setText(_translate("Form", "History..", None))
         self.exceptionBtn.setText(_translate("Form", "Exceptions..", None))
         self.exceptionGroup.setTitle(_translate("Form", "Exception Handling", None))
-        self.clearExceptionBtn.setText(_translate("Form", "Clear Exception", None))
+        self.clearExceptionBtn.setText(_translate("Form", "Clear Stack", None))
         self.catchAllExceptionsBtn.setText(_translate("Form", "Show All Exceptions", None))
         self.catchNextExceptionBtn.setText(_translate("Form", "Show Next Exception", None))
         self.onlyUncaughtCheck.setText(_translate("Form", "Only Uncaught Exceptions", None))
         self.runSelectedFrameCheck.setText(_translate("Form", "Run commands in selected stack frame", None))
-        self.exceptionInfoLabel.setText(_translate("Form", "Exception Info", None))
+        self.exceptionInfoLabel.setText(_translate("Form", "Stack Trace", None))
         self.label.setText(_translate("Form", "Filter (regex):", None))
 
 from .CmdInput import CmdInput

@@ -2,7 +2,7 @@
 """
 debug.py - Functions to aid in debugging 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import print_function
@@ -83,8 +83,9 @@ class Tracer(object):
                     funcname = cls.__name__ + "." + funcname
         return "%s: %s %s: %s" % (callline, filename, lineno, funcname)
 
+
 def warnOnException(func):
-    """Decorator which catches/ignores exceptions and prints a stack trace."""
+    """Decorator that catches/ignores exceptions and prints a stack trace."""
     def w(*args, **kwds):
         try:
             func(*args, **kwds)
@@ -92,11 +93,9 @@ def warnOnException(func):
             printExc('Ignored exception:')
     return w
 
+
 def getExc(indent=4, prefix='|  ', skip=1):
-    lines = (traceback.format_stack()[:-skip] 
-            + ["  ---- exception caught ---->\n"] 
-            + traceback.format_tb(sys.exc_info()[2])
-            + traceback.format_exception_only(*sys.exc_info()[:2]))
+    lines = formatException(*sys.exc_info(), skip=skip)
     lines2 = []
     for l in lines:
         lines2.extend(l.strip('\n').split('\n'))
@@ -112,6 +111,7 @@ def printExc(msg='', indent=4, prefix='|'):
     print(" "*indent + prefix + '='*30 + '>>')
     print(exc)
     print(" "*indent + prefix + '='*30 + '<<')
+
     
 def printTrace(msg='', indent=4, prefix='|'):
     """Print an error message followed by an indented stack trace"""
@@ -126,7 +126,30 @@ def printTrace(msg='', indent=4, prefix='|'):
 
 def backtrace(skip=0):
     return ''.join(traceback.format_stack()[:-(skip+1)])    
+
+
+def formatException(exctype, value, tb, skip=0):
+    """Return a list of formatted exception strings.
     
+    Similar to traceback.format_exception, but displays the entire stack trace
+    rather than just the portion downstream of the point where the exception is
+    caught. In particular, unhandled exceptions that occur during Qt signal
+    handling do not usually show the portion of the stack that emitted the
+    signal.
+    """
+    lines = traceback.format_exception(exctype, value, tb)
+    lines = [lines[0]] + traceback.format_stack()[:-(skip+1)] + ['  --- exception caught here ---\n'] + lines[1:]
+    return lines
+
+
+def printException(exctype, value, traceback):
+    """Print an exception with its full traceback.
+    
+    Set `sys.excepthook = printException` to ensure that exceptions caught
+    inside Qt signal handlers are printed with their full stack trace.
+    """
+    print(''.join(formatException(exctype, value, traceback, skip=1)))
+
     
 def listObjs(regex='Q', typ=None):
     """List all objects managed by python gc with class name matching regex.
@@ -487,7 +510,7 @@ class Profiler(object):
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
         except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
         else: # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
@@ -1074,7 +1097,7 @@ def pretty(data, indent=''):
     ind2 = indent + "    "
     if isinstance(data, dict):
         ret = indent+"{\n"
-        for k, v in data.iteritems():
+        for k, v in data.items():
             ret += ind2 + repr(k) + ":  " + pretty(v, ind2).strip() + "\n"
         ret += indent+"}\n"
     elif isinstance(data, list) or isinstance(data, tuple):
@@ -1163,3 +1186,23 @@ class ThreadColor(object):
             c = (len(self.colors) % 15) + 1
             self.colors[tid] = c
         return self.colors[tid]
+
+
+def enableFaulthandler():
+    """ Enable faulthandler for all threads. 
+    
+    If the faulthandler package is available, this function disables and then 
+    re-enables fault handling for all threads (this is necessary to ensure any
+    new threads are handled correctly), and returns True.
+
+    If faulthandler is not available, then returns False.
+    """
+    try:
+        import faulthandler
+        # necessary to disable first or else new threads may not be handled.
+        faulthandler.disable()
+        faulthandler.enable(all_threads=True)
+        return True
+    except ImportError:
+        return False
+

@@ -48,6 +48,7 @@ class TextItem(GraphicsObject):
         self.textItem = QtGui.QGraphicsTextItem()
         self.textItem.setParentItem(self)
         self._lastTransform = None
+        self._lastScene = None
         self._bounds = QtCore.QRectF()
         if html is None:
             self.setColor(color)
@@ -109,9 +110,16 @@ class TextItem(GraphicsObject):
         self.updateTextPos()
         
     def setAngle(self, angle):
+        """
+        Set the angle of the text in degrees.
+
+        This sets the rotation angle of the text as a whole, measured
+        counter-clockwise from the x axis of the parent. Note that this rotation
+        angle does not depend on horizontal/vertical scaling of the parent.
+        """
         self.angle = angle
-        self.updateTransform()
-        
+        self.updateTransform(force=True)
+
     def setAnchor(self, anchor):
         self.anchor = Point(anchor)
         self.updateTextPos()
@@ -149,9 +157,18 @@ class TextItem(GraphicsObject):
         self.updateTransform()
         
     def paint(self, p, *args):
-        # this is not ideal because it causes another update to be scheduled.
+        # this is not ideal because it requires the transform to be updated at every draw.
         # ideally, we would have a sceneTransformChanged event to react to..
-        self.updateTransform()
+        s = self.scene()
+        ls = self._lastScene
+        if s is not ls:
+            if ls is not None:
+                ls.sigPrepareForPaint.disconnect(self.updateTransform)
+            self._lastScene = s
+            if s is not None:
+                s.sigPrepareForPaint.connect(self.updateTransform)
+            self.updateTransform()
+            p.setTransform(self.sceneTransform())
         
         if self.border.style() != QtCore.Qt.NoPen or self.fill.style() != QtCore.Qt.NoBrush:
             p.setPen(self.border)
@@ -159,7 +176,7 @@ class TextItem(GraphicsObject):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
-    def updateTransform(self):
+    def updateTransform(self, force=False):
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -171,7 +188,7 @@ class TextItem(GraphicsObject):
         else:
             pt = p.sceneTransform()
         
-        if pt == self._lastTransform:
+        if not force and pt == self._lastTransform:
             return
 
         t = pt.inverted()[0]
@@ -191,5 +208,3 @@ class TextItem(GraphicsObject):
         self._lastTransform = pt
         
         self.updateTextPos()
-
-        
