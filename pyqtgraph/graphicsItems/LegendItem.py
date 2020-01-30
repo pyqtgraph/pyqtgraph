@@ -5,6 +5,7 @@ from ..Qt import QtGui, QtCore
 from .. import functions as fn
 from ..Point import Point
 from .ScatterPlotItem import ScatterPlotItem, drawSymbol
+from .BarGraphItem import BarGraphItem
 from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 __all__ = ['LegendItem']
@@ -234,21 +235,26 @@ class ItemSample(GraphicsWidget):
     def paint(self, p, *args):
         opts = self.item.opts
 
-        if opts['antialias']:
+        if opts.get('antialias'):
             p.setRenderHint(p.Antialiasing)
 
-        if not isinstance(self.item, ScatterPlotItem):
+        if not isinstance(self.item, (ScatterPlotItem, BarGraphItem)):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(0, 11, 20, 11)
 
-        symbol = opts.get('symbol', None)
+        if isinstance(self.item, BarGraphItem):
+            symbol = "s"
+        else:
+            symbol = opts.get('symbol', None)
+
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
 
             pen = fn.mkPen(opts['pen'])
             brush = fn.mkBrush(opts['brush'])
-            size = opts['size']
+            size = opts.get('size', 10)
 
             p.translate(10, 10)
             path = drawSymbol(p, symbol, size, pen, brush)
+
