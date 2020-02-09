@@ -20,7 +20,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
-from pyside2uic.exceptions import NoSuchWidgetError
+from ..exceptions import NoSuchWidgetError
 
 
 def invoke(driver):

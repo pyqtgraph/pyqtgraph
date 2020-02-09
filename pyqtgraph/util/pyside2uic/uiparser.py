@@ -31,9 +31,9 @@ except ImportError:
     from xml.etree.ElementTree import parse, SubElement
 
 
-from pyside2uic.exceptions import NoSuchWidgetError
-from pyside2uic.objcreator import QObjectCreator
-from pyside2uic.properties import Properties
+from .exceptions import NoSuchWidgetError
+from .objcreator import QObjectCreator
+from .properties import Properties
 
 
 logger = logging.getLogger(__name__)

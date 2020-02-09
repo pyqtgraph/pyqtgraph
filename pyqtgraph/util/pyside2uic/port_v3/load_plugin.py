@@ -20,7 +20,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
-from pyside2uic.exceptions import WidgetPluginError
+from ..exceptions import WidgetPluginError
 
 
 def load_plugin(plugin, plugin_globals, plugin_locals):

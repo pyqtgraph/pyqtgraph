@@ -24,13 +24,13 @@ import logging
 import os.path
 import sys
 
-from pyside2uic.exceptions import UnsupportedPropertyError
-from pyside2uic.icon_cache import IconCache
+from .exceptions import UnsupportedPropertyError
+from .icon_cache import IconCache
 
 if sys.hexversion >= 0x03000000:
-    from pyside2uic.port_v3.ascii_upper import ascii_upper
+    from .port_v3.ascii_upper import ascii_upper
 else:
-    from pyside2uic.port_v2.ascii_upper import ascii_upper
+    from .port_v2.ascii_upper import ascii_upper
 
 logger = logging.getLogger(__name__)
 DEBUG = logger.debug

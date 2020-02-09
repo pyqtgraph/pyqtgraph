@@ -23,12 +23,12 @@
 import sys
 import os.path
 
-from pyside2uic.exceptions import NoSuchWidgetError, WidgetPluginError
+from .exceptions import NoSuchWidgetError, WidgetPluginError
 
 if sys.hexversion >= 0x03000000:
-    from pyside2uic.port_v3.load_plugin import load_plugin
+    from .port_v3.load_plugin import load_plugin
 else:
-    from pyside2uic.port_v2.load_plugin import load_plugin
+    from .port_v2.load_plugin import load_plugin
 
 
 # The list of directories that are searched for widget plugins.  This is

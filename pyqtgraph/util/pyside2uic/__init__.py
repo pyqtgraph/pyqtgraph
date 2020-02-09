@@ -147,4 +147,4 @@ def compileUi(uifile, pyfile, execute=False, indent=4, from_imports=False):
 
 
 # The list of directories that are searched for widget plugins.
-from pyside2uic.objcreator import widgetPluginPath
+from .objcreator import widgetPluginPath
