@@ -10,6 +10,7 @@ from pyqtgraph.python2_3 import basestring
 from pyqtgraph.Qt import QtGui, QT_LIB
 
 from .utils import buildFileList, path, examples
+from .syntax import PythonHighlighter
 
 
 if QT_LIB == 'PySide':
@@ -33,6 +34,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
+        self.hl = PythonHighlighter(self.ui.codeView.document())
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
