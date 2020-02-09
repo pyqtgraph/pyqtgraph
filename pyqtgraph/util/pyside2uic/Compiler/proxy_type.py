@@ -20,7 +20,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
-from pyside2uic.Compiler.misc import Literal, moduleMember
+from .misc import Literal, moduleMember
 
 
 class ProxyType(type):
@@ -42,7 +42,7 @@ class ProxyType(type):
                 raise
 
             # Avoid a circular import.
-            from pyside2uic.Compiler.qtproxies import LiteralProxyClass
+            from .qtproxies import LiteralProxyClass
 
             return type(name, (LiteralProxyClass, ),
                         {"module": moduleMember(type.__getattribute__(cls, "module"),

@@ -28,8 +28,8 @@ try:
 except NameError:
     from sets import Set as set
 
-from pyside2uic.Compiler.indenter import write_code
-from pyside2uic.Compiler.qtproxies import (QtWidgets, QtGui, Literal,
+from .indenter import write_code
+from .qtproxies import (QtWidgets, QtGui, Literal,
                                            strict_getattr)
 
 

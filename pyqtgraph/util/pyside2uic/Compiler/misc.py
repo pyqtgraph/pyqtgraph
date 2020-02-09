@@ -21,7 +21,7 @@
 # 02110-1301 USA
 
 
-from pyside2uic.Compiler.indenter import write_code
+from .indenter import write_code
 
 
 def write_import(module_name, from_imports):

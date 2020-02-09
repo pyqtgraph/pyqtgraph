@@ -24,7 +24,7 @@ __all__ = ("compileUi", "compileUiDir", "widgetPluginPath")
 
 __version__ = ""
 
-from pyside2uic.Compiler import indenter, compiler
+from .Compiler import indenter, compiler
 
 _header = """# -*- coding: utf-8 -*-
 

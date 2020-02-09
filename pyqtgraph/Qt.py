@@ -104,7 +104,10 @@ def _loadUiType(uiFile):
     if QT_LIB == "PYSIDE":
         import pysideuic
     else:
-        import pyside2uic as pysideuic
+        try:
+            import pyside2uic as pysideuic
+        except ImportError:
+            from .util import pyside2uic
     import xml.etree.ElementTree as xml
 
     parsed = xml.parse(uiFile)
