@@ -107,7 +107,7 @@ def _loadUiType(uiFile):
         try:
             import pyside2uic as pysideuic
         except ImportError:
-            from .util import pyside2uic
+            from .util import pyside2uic as pysideuic
     import xml.etree.ElementTree as xml
 
     parsed = xml.parse(uiFile)
