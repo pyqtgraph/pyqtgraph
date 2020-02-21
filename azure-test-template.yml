@@ -22,17 +22,13 @@ jobs:
         python.version: "3.6"
         qt.bindings: "pyqt"
         install.method: "conda"
-      Python36-PySide2-5.9:
-        python.version: "3.6"
-        qt.bindings: "pyside2"
-        install.method: "conda"
-      Python37-PyQt-5.13:
-        python.version: '3.7'
-        qt.bindings: "PyQt5"
-        install.method: "pip"
       Python37-PySide2-5.13:
         python.version: "3.7"
-        qt.bindings: "PySide2"
+        qt.bindings: "pyside2"
+        install.method: "conda"
+      Python38-PyQt-5.14:
+        python.version: '3.8'
+        qt.bindings: "PyQt5"
         install.method: "pip"
 
   steps:
@@ -75,22 +71,10 @@ jobs:
       if [ $(agent.os) == 'Linux' ]
       then
         echo "##vso[task.prependpath]$CONDA/bin"
-        if [ $(python.version) == '2.7' ]
-        then
-          echo "Grabbing Older Miniconda"
-          wget https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-Linux-x86_64.sh -O Miniconda.sh
-          bash Miniconda.sh -b -p $CONDA -f
-        fi
       elif [ $(agent.os) == 'Darwin' ]
       then
         sudo chown -R $USER $CONDA  
         echo "##vso[task.prependpath]$CONDA/bin"
-        if [ $(python.version) == '2.7' ]
-        then
-          echo "Grabbing Older Miniconda"
-          wget https://repo.anaconda.com/miniconda/Miniconda2-4.6.14-MacOSX-x86_64.sh -O Miniconda.sh
-          bash Miniconda.sh -b -p $CONDA -f
-        fi
       elif [ $(agent.os) == 'Windows_NT' ]
       then
         echo "##vso[task.prependpath]$CONDA/Scripts"
@@ -103,25 +87,31 @@ jobs:
   - bash: |
       if [ $(install.method) == "conda" ]
       then
-        conda create --name test-environment-$(python.version) python=$(python.version) --yes
-        echo "Conda Info:"
-        conda info
-        echo "Installing qt-bindings"
+        conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
         source activate test-environment-$(python.version)
-
-        if [ $(agent.os) == "Linux" ] && [ $(python.version) == "2.7" ]
+        conda config --env --set always_yes true
+        if [ $(python.version) == '2.7' ] && [ $(agent.os) != 'Windows_NT' ]
         then
-          conda install $(qt.bindings) --yes
-        else
-          conda install -c conda-forge $(qt.bindings) --yes
+          conda config --set restore_free_channel true
         fi
-        echo "Installing remainder of dependencies"
-        conda install -c conda-forge numpy scipy six pyopengl h5py --yes
+
+        if [ $(qt.bindings) == "pyside2" ] || ([ $(qt.bindings) == 'pyside' ] && [ $(agent.os) == 'Darwin' ])
+        then
+          conda config --prepend channels conda-forge
+        fi      
+        conda info
+        if [ $(python.version) == '2.7' ] && [ $(agent.os) == 'Linux' ]
+        then
+          pip install --upgrade pip==19.3.1
+          conda install setuptools=44.0.0 --yes --quiet
+          conda install nomkl
+        fi
+        conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
       else
-        pip install $(qt.bindings) numpy scipy pyopengl six h5py
+        pip install $(qt.bindings) numpy scipy pyopengl h5py six
       fi
       echo ""
-      pip install pytest pytest-xdist pytest-cov coverage  
+      pip install pytest pytest-cov coverage  
       if [ $(python.version) == "2.7" ]
       then
         pip install pytest-faulthandler==1.6.0
@@ -180,9 +170,9 @@ jobs:
       mkdir -p "$SCREENSHOT_DIR"
       # echo "If Screenshots are generated, they may be downloaded from:"
       # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
-      pytest . -sv \
+      pytest . -v \
         --junitxml=junit/test-results.xml \
-        -n 1 --cov pyqtgraph --cov-report=xml --cov-report=html
+        --cov pyqtgraph --cov-report=xml --cov-report=html
     displayName: 'Unit tests' 
     env:
       AZURE: 1

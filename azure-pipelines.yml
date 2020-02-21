@@ -23,7 +23,7 @@ stages:
   jobs:
   - job: check_diff_size
     pool:
-      vmImage: 'Ubuntu 16.04'
+      vmImage: 'Ubuntu 18.04'
     steps:
     - bash: |
         git config --global advice.detachedHead false
@@ -56,7 +56,7 @@ stages:
 
   - job: "style_check"
     pool:
-      vmImage: "Ubuntu 16.04"
+      vmImage: "Ubuntu 18.04"
     steps:
     - task: UsePythonVersion@0
       inputs:
@@ -69,11 +69,11 @@ stages:
 
   - job: "build_wheel"
     pool:
-      vmImage: 'Ubuntu 16.04'
+      vmImage: 'Ubuntu 18.04'
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.7
+        versionSpec: 3.8
     - script: |
         python -m pip install setuptools wheel
         python setup.py bdist_wheel --universal
@@ -87,12 +87,12 @@ stages:
   - template: azure-test-template.yml
     parameters:
       name: linux
-      vmImage: 'Ubuntu 16.04'
+      vmImage: 'Ubuntu 18.04'
   - template: azure-test-template.yml
     parameters:
       name: windows
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
   - template: azure-test-template.yml
     parameters:
       name: macOS
-      vmImage: 'macOS-10.13'
+      vmImage: 'macOS-10.15'
