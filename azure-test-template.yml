@@ -83,39 +83,35 @@ jobs:
       fi
     displayName: 'Add Conda To $PATH' 
     condition: eq(variables['install.method'], 'conda' )
+    continueOnError: false
 
   - bash: |
       if [ $(install.method) == "conda" ]
       then
+        conda update --all --yes --quiet
         conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
         source activate test-environment-$(python.version)
         conda config --env --set always_yes true
-        if [ $(python.version) == '2.7' ] && [ $(agent.os) != 'Windows_NT' ]
+        if [ $(python.version) == '2.7' ]
         then
           conda config --set restore_free_channel true
         fi
-
         if [ $(qt.bindings) == "pyside2" ] || ([ $(qt.bindings) == 'pyside' ] && [ $(agent.os) == 'Darwin' ])
         then
           conda config --prepend channels conda-forge
         fi      
         conda info
-        if [ $(python.version) == '2.7' ] && [ $(agent.os) == 'Linux' ]
-        then
-          pip install --upgrade pip==19.3.1
-          conda install setuptools=44.0.0 --yes --quiet
-          conda install nomkl
-        fi
         conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
       else
         pip install $(qt.bindings) numpy scipy pyopengl h5py six
       fi
-      echo ""
-      pip install pytest pytest-cov coverage  
+      pip install pytest pytest-cov coverage pytest-xdist
       if [ $(python.version) == "2.7" ]
       then
         pip install pytest-faulthandler==1.6.0
         export PYTEST_ADDOPTS="--faulthandler-timeout=15"
+      else
+        pip install pytest pytest-cov coverage
       fi
     displayName: "Install Dependencies"
 
@@ -171,6 +167,7 @@ jobs:
       # echo "If Screenshots are generated, they may be downloaded from:"
       # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
       pytest . -v \
+        -n 1 \
         --junitxml=junit/test-results.xml \
         --cov pyqtgraph --cov-report=xml --cov-report=html
     displayName: 'Unit tests' 
