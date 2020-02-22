@@ -100,12 +100,6 @@ jobs:
           conda config --prepend channels conda-forge
         fi      
         conda info
-        if [ $(python.version) == '2.7' ] && [ $(agent.os) == 'Linux' ]
-        then
-          pip install --upgrade pip==19.3.1
-          conda install setuptools=44.0.0 --yes --quiet
-          conda install nomkl
-        fi
         conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
       else
         pip install $(qt.bindings) numpy scipy pyopengl h5py six
