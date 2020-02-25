@@ -17,6 +17,7 @@ pr:
 variables:
   OFFICIAL_REPO: 'pyqtgraph/pyqtgraph'
   DEFAULT_MERGE_BRANCH: 'develop'
+  disable.coverage.autogenerate: 'true'
 
 stages:
 - stage: "pre_test"

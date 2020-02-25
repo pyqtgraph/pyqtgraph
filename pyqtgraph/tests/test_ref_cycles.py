@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Test for unwanted reference cycles
 
@@ -9,9 +10,7 @@ import six
 import pytest
 app = pg.mkQApp()
 
-skipreason = ('unclear why test is failing on python 3. skipping until someone '
-              'has time to fix it. Or pyside is being used. This test is '
-              'failing on pyside for an unknown reason too.')
+skipreason = ('This test is failing on pyside for an unknown reason.')
                  
 def assert_alldead(refs):
     for ref in refs:
@@ -37,10 +36,10 @@ def mkrefs(*objs):
         for o in obj:
             allObjs[id(o)] = o
             
-    return map(weakref.ref, allObjs.values())
+    return list(map(weakref.ref, allObjs.values()))
 
 
-@pytest.mark.skipif(six.PY3 or pg.Qt.QT_LIB == 'PySide', reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason=skipreason)
 def test_PlotWidget():
     def mkobjs(*args, **kwds):
         w = pg.PlotWidget(*args, **kwds)
@@ -58,7 +57,7 @@ def test_PlotWidget():
     for i in range(5):
         assert_alldead(mkobjs())
     
-@pytest.mark.skipif(six.PY3 or pg.Qt.QT_LIB == 'PySide', reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason=skipreason)
 def test_ImageView():
     def mkobjs():
         iv = pg.ImageView()
@@ -71,7 +70,7 @@ def test_ImageView():
         assert_alldead(mkobjs())
 
 
-@pytest.mark.skipif(six.PY3 or pg.Qt.QT_LIB == 'PySide', reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason=skipreason)
 def test_GraphicsWindow():
     def mkobjs():
         w = pg.GraphicsWindow()
