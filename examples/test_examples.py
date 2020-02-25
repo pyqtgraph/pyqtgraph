@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import
-from pyqtgraph import Qt
 from . import utils
 from collections import namedtuple
+from pyqtgraph import Qt
 import errno
 import importlib
 import itertools
@@ -150,6 +150,7 @@ conditionalExamples = {
     )
 }
 
+@pytest.mark.skipif(Qt.QT_LIB == "PySide2" and "Qt.QtVersion.startswith('5.14')", reason="new PySide2 doesn't have loadUi functionality")
 @pytest.mark.parametrize(
     "frontend, f",
     [
