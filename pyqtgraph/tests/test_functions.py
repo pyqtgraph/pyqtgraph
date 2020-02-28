@@ -367,8 +367,10 @@ def test_eq():
     d1 = {'x': 1, 'y': np.nan, 3: ['a', np.nan, a3, 7, 2.3], 4: a4}
     d2 = deepcopy(d1)
     assert eq(d1, d2)
-    assert eq(OrderedDict(d1), OrderedDict(d2))
-    assert not eq(OrderedDict(d1), d2)
+    d1_ordered = OrderedDict(d1)
+    d2_ordered = deepcopy(d1_ordered)
+    assert eq(d1_ordered, d2_ordered)
+    assert not eq(d1_ordered, d2)
     items = list(d1.items())
     assert not eq(OrderedDict(items), OrderedDict(reversed(items)))
     
