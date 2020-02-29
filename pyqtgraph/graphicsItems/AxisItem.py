@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import numpy as np
@@ -1078,7 +1079,7 @@ class AxisItem(GraphicsWidget):
             p.setFont(self.tickFont)
         p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
-            p.drawText(rect, flags.__int__(), text)
+            p.drawText(rect, int(flags), text)
 
         profiler('draw text')
 
