@@ -94,7 +94,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         pen = fn.mkPen(*args, **kargs)
         self.opts['pen'] = pen
 
-        self.paint()
+        self.update()
 
     def brush(self):
         return self.opts['brush']
@@ -105,7 +105,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             return
         self.opts['brush'] = brush
 
-        self.paint()
+        self.update()
 
     def labelTextColor(self):
         return self.opts['labelTextColor']
@@ -120,7 +120,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         for sample, label in self.items:
             label.setAttr('color', self.opts['labelTextColor'])
 
-        self.paint()
+        self.update()
 
     def setParentItem(self, p):
         ret = GraphicsWidget.setParentItem(self, p)
