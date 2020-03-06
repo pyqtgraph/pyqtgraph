@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import numpy as np
@@ -921,7 +922,7 @@ class AxisItem(GraphicsWidget):
                     p2[axis] += tickLength*tickDir
                 tickPen = self.pen()
                 color = tickPen.color()
-                color.setAlpha(lineAlpha)
+                color.setAlpha(int(lineAlpha))
                 tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
@@ -1078,7 +1079,7 @@ class AxisItem(GraphicsWidget):
             p.setFont(self.tickFont)
         p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
-            p.drawText(rect, flags, text)
+            p.drawText(rect, int(flags), text)
 
         profiler('draw text')
 

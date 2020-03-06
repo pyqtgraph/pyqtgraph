@@ -153,7 +153,7 @@ class GridItem(UIGraphicsItem):
                     continue
 
                 ppl = dim[ax] / nl[ax]
-                c = np.clip(5.*(ppl-3), 0., 50.)
+                c = np.clip(5 * (ppl-3), 0., 50.).astype(int)
 
                 linePen = self.opts['pen']
                 lineColor = self.opts['pen'].color()

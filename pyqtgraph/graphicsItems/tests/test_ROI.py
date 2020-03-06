@@ -1,13 +1,13 @@
+# -*- coding: utf-8 -*-
 import sys
 import numpy as np
 import pytest
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtTest
 from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick, TransposedImageItem, resizeWindow
-
+import pytest
 
 app = pg.mkQApp()
-
 
 def test_getArrayRegion(transpose=False):
     pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
@@ -33,7 +33,6 @@ def test_getArrayRegion(transpose=False):
         finally:
             pg.setConfigOptions(imageAxisOrder=origMode)
     
-
 def test_getArrayRegion_axisorder():
     test_getArrayRegion(transpose=True)
 
@@ -135,7 +134,7 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
     # on windows, one edge of one ROI handle is shifted slightly; letting this slide with pxCount=10
-    if sys.platform == 'win32' and pg.Qt.QT_LIB in ('PyQt4', 'PySide'):
+    if pg.Qt.QT_LIB in {'PyQt4', 'PySide'}:
         pxCount = 10
     else:
         pxCount=-1
