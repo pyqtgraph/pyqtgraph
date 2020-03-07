@@ -1113,7 +1113,10 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # awkward, but fastest numpy native nan evaluation
     # 
     nanMask = None
-    if data.ndim == 2 and data.dtype.kind == 'f' and np.isnan(data.min()):
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
+        nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
         nanMask = np.isnan(data)
     # Apply levels if given
     if levels is not None:
