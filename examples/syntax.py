@@ -30,17 +30,75 @@ def format(color, style=''):
     return _format
 
 
-# Syntax styles that can be shared by all languages
-STYLES = {
-    'keyword': format('blue'),
-    'operator': format('red'),
-    'brace': format('darkGray'),
-    'defclass': format('black', 'bold'),
-    'string': format('magenta'),
-    'string2': format('darkMagenta'),
-    'comment': format('darkGreen', 'italic'),
-    'self': format('black', 'italic'),
-    'numbers': format('brown'),
+class LightThemeColors:
+
+    Red = "#B71C1C"
+    Pink = "#FCE4EC"
+    Purple = "#4A148C"
+    DeepPurple = "#311B92"
+    Indigo = "#1A237E"
+    Blue = "#0D47A1"
+    LightBlue = "#01579B"
+    Cyan = "#006064"
+    Teal = "#004D40"
+    Green = "#1B5E20"
+    LightGreen = "#33691E"
+    Lime = "#827717"
+    Yellow = "#F57F17"
+    Amber = "#FF6F00"
+    Orange = "#E65100"
+    DeepOrange = "#BF360C"
+    Brown = "#3E2723"
+    Grey = "#212121"
+    BlueGrey = "#263238"
+
+
+class DarkThemeColors:
+
+    Red = "#F44336"
+    Pink = "#F48FB1"
+    Purple = "#CE93D8"
+    DeepPurple = "#B39DDB"
+    Indigo = "#9FA8DA"
+    Blue = "#90CAF9"
+    LightBlue = "#81D4FA"
+    Cyan = "#80DEEA"
+    Teal = "#80CBC4"
+    Green = "#A5D6A7"
+    LightGreen = "#C5E1A5"
+    Lime = "#E6EE9C"
+    Yellow = "#FFF59D"
+    Amber = "#FFE082"
+    Orange = "#FFCC80"
+    DeepOrange = "#FFAB91"
+    Brown = "#BCAAA4"
+    Grey = "#EEEEEE"
+    BlueGrey = "#B0BEC5"
+
+
+LIGHT_STYLES = {
+    'keyword': format(LightThemeColors.Blue, 'bold'),
+    'operator': format(LightThemeColors.Red, 'bold'),
+    'brace': format(LightThemeColors.Purple),
+    'defclass': format(LightThemeColors.Indigo, 'bold'),
+    'string': format(LightThemeColors.Amber),
+    'string2': format(LightThemeColors.DeepPurple),
+    'comment': format(LightThemeColors.Green, 'italic'),
+    'self': format(LightThemeColors.Blue, 'bold'),
+    'numbers': format(LightThemeColors.Teal),
+}
+
+
+DARK_STYLES = {
+    'keyword': format(DarkThemeColors.Blue, 'bold'),
+    'operator': format(DarkThemeColors.Red, 'bold'),
+    'brace': format(DarkThemeColors.Purple),
+    'defclass': format(DarkThemeColors.Indigo, 'bold'),
+    'string': format(DarkThemeColors.Amber),
+    'string2': format(DarkThemeColors.DeepPurple),
+    'comment': format(DarkThemeColors.Green, 'italic'),
+    'self': format(DarkThemeColors.Blue, 'bold'),
+    'numbers': format(DarkThemeColors.Teal),
 }
 
 
@@ -54,7 +112,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         'for', 'from', 'global', 'if', 'import', 'in',
         'is', 'lambda', 'not', 'or', 'pass', 'print',
         'raise', 'return', 'try', 'while', 'yield',
-        'None', 'True', 'False',
+        'None', 'True', 'False', 'async', 'await',
     ]
 
     # Python operators
@@ -81,42 +139,42 @@ class PythonHighlighter(QSyntaxHighlighter):
         # Multi-line strings (expression, flag, style)
         # FIXME: The triple-quotes in these two lines will mess up the
         # syntax highlighting from this point onward
-        self.tri_single = (QRegExp("'''"), 1, STYLES['string2'])
-        self.tri_double = (QRegExp('"""'), 2, STYLES['string2'])
+        self.tri_single = (QRegExp("'''"), 1, 'string2')
+        self.tri_double = (QRegExp('"""'), 2, 'string2')
 
         rules = []
 
         # Keyword, operator, and brace rules
-        rules += [(r'\b%s\b' % w, 0, STYLES['keyword'])
+        rules += [(r'\b%s\b' % w, 0, 'keyword')
                   for w in PythonHighlighter.keywords]
-        rules += [(r'%s' % o, 0, STYLES['operator'])
+        rules += [(r'%s' % o, 0, 'operator')
                   for o in PythonHighlighter.operators]
-        rules += [(r'%s' % b, 0, STYLES['brace'])
+        rules += [(r'%s' % b, 0, 'brace')
                   for b in PythonHighlighter.braces]
 
         # All other rules
         rules += [
 
             # 'self'
-            (r'\bself\b', 0, STYLES['self']),
+            (r'\bself\b', 0, 'self'),
 
             # 'def' followed by an identifier
-            (r'\bdef\b\s*(\w+)', 1, STYLES['defclass']),
+            (r'\bdef\b\s*(\w+)', 1, 'defclass'),
             # 'class' followed by an identifier
-            (r'\bclass\b\s*(\w+)', 1, STYLES['defclass']),
+            (r'\bclass\b\s*(\w+)', 1, 'defclass'),
 
             # Numeric literals
-            (r'\b[+-]?[0-9]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?[0-9]+[lL]?\b', 0, 'numbers'),
+            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, 'numbers'),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, 'numbers'),
 
             # Double-quoted string, possibly containing escape sequences
-            (r'"[^"\\]*(\\.[^"\\]*)*"', 0, STYLES['string']),
+            (r'"[^"\\]*(\\.[^"\\]*)*"', 0, 'string'),
             # Single-quoted string, possibly containing escape sequences
-            (r"'[^'\\]*(\\.[^'\\]*)*'", 0, STYLES['string']),
+            (r"'[^'\\]*(\\.[^'\\]*)*'", 0, 'string'),
 
             # From '#' until a newline
-            (r'#[^\n]*', 0, STYLES['comment']),
+            (r'#[^\n]*', 0, 'comment'),
 
         ]
 
@@ -124,12 +182,18 @@ class PythonHighlighter(QSyntaxHighlighter):
         self.rules = [(QRegExp(pat), index, fmt)
                       for (pat, index, fmt) in rules]
 
+    @property
+    def styles(self):
+        app = QtGui.QApplication.instance()
+        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
         """
         # Do other syntax formatting
         for expression, nth, format in self.rules:
             index = expression.indexIn(text, 0)
+            format = self.styles[format]
 
             while index >= 0:
                 # We actually want the index of the nth match
@@ -175,7 +239,7 @@ class PythonHighlighter(QSyntaxHighlighter):
                 self.setCurrentBlockState(in_state)
                 length = len(text) - start + add
             # Apply formatting
-            self.setFormat(start, length, style)
+            self.setFormat(start, length, self.styles[style])
             # Look for the next match
             start = delimiter.indexIn(text, start + length)
 
