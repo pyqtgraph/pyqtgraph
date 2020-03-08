@@ -44,8 +44,9 @@ class ExampleLoader(QtGui.QMainWindow):
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
-        #self.simulate_black_mode()
         self.hl = PythonHighlighter(self.ui.codeView.document())
+        app = QtGui.QApplication.instance()
+        app.paletteChanged.connect(self.updateTheme)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
@@ -82,6 +83,9 @@ class ExampleLoader(QtGui.QMainWindow):
         # finally, override application automatic detection
         app = QtGui.QApplication.instance()
         app.dark_mode = True
+
+    def updateTheme(self):
+        self.hl = PythonHighlighter(self.ui.codeView.document())
 
     def populateTree(self, root, examples):
         for key, val in examples.items():
