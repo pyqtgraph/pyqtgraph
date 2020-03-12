@@ -97,28 +97,35 @@ class PlotDataItem(GraphicsObject):
 
         **Optimization keyword arguments:**
 
-            ================ =====================================================================
-            antialias        (bool) By default, antialiasing is disabled to improve performance.
-                             Note that in some cases (in particluar, when pxMode=True), points
-                             will be rendered antialiased even if this is set to False.
-            decimate         deprecated.
-            downsample       (int) Reduce the number of samples displayed by this value
-            downsampleMethod 'subsample': Downsample by taking the first of N samples.
-                             This method is fastest and least accurate.
-                             'mean': Downsample by taking the mean of N samples.
-                             'peak': Downsample by drawing a saw wave that follows the min
-                             and max of the original data. This method produces the best
-                             visual representation of the data but is slower.
-            autoDownsample   (bool) If True, resample the data before plotting to avoid plotting
-                             multiple line segments per pixel. This can improve performance when
-                             viewing very high-density data, but increases the initial overhead
-                             and memory usage.
-            clipToView       (bool) If True, only plot data that is visible within the X range of
-                             the containing ViewBox. This can improve performance when plotting
-                             very large data sets where only a fraction of the data is visible
-                             at any time.
-            identical        *deprecated*
-            ================ =====================================================================
+            ================= =====================================================================
+            antialias         (bool) By default, antialiasing is disabled to improve performance.
+                              Note that in some cases (in particluar, when pxMode=True), points
+                              will be rendered antialiased even if this is set to False.
+            decimate          deprecated.
+            downsample        (int) Reduce the number of samples displayed by this value
+            downsampleMethod  'subsample': Downsample by taking the first of N samples.
+                              This method is fastest and least accurate.
+                              'mean': Downsample by taking the mean of N samples.
+                              'peak': Downsample by drawing a saw wave that follows the min
+                              and max of the original data. This method produces the best
+                              visual representation of the data but is slower.
+            autoDownsample    (bool) If True, resample the data before plotting to avoid plotting
+                              multiple line segments per pixel. This can improve performance when
+                              viewing very high-density data, but increases the initial overhead
+                              and memory usage.
+            clipToView        (bool) If True, only plot data that is visible within the X range of
+                              the containing ViewBox. This can improve performance when plotting
+                              very large data sets where only a fraction of the data is visible
+                              at any time.
+            dynamicRangeLimit (float or None) Limit off-screen positions of data points at large
+                              magnification to avoids display errors. Disabled if None.
+        =============== =============================================================
+        **Arguments:**
+        limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
+                        'None' disables the check for a minimal increase in performance. Default is 1E+06.
+
+            identical         *deprecated*
+            ================= =====================================================================
 
         **Meta-info keyword arguments:**
 
@@ -143,7 +150,7 @@ class PlotDataItem(GraphicsObject):
         self.curve.sigClicked.connect(self.curveClicked)
         self.scatter.sigClicked.connect(self.scatterClicked)
 
-
+        self._dataRect = None
         #self.clear()
         self.opts = {
             'connect': 'all',
@@ -174,7 +181,7 @@ class PlotDataItem(GraphicsObject):
             'downsampleMethod': 'peak',
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
             'clipToView': False,
-            'limitDynamicRange': True,
+            'dynamicRangeLimit': 1e6,
 
             'data': None,
         }
@@ -343,10 +350,18 @@ class PlotDataItem(GraphicsObject):
         self.xDisp = self.yDisp = None
         self.updateItems()
 
-    def setLimitDynamicRange(self, limit):
-        if self.opts['limitDynamicRange'] == limit:
+    def setDynamicRangeLimit(self, limit):
+        """
+        Limit the off-screen positions of data points at large magnification
+        This avoids errors with plots not displaying because their visibility is incorrectly determined. The default setting repositions far-off points to be within ±1E+06 times the viewport height.
+        =============== =============================================================
+        **Arguments:**
+        limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
+                        'None' disables the check for a minimal increase in performance. Default is 1E+06.
+        """
+        if self.opts['dynamicRangeLimit'] == limit:
             return
-        self.opts['limitDynamicRange'] = limit
+        self.opts['dynamicRangeLimit'] = limit # can be None
         self.xDisp = self.yDisp = None
         self.updateItems()
 
@@ -463,6 +478,7 @@ class PlotDataItem(GraphicsObject):
 
         self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
         self.yData = y.view(np.ndarray)
+        self._dataRect = None
         self.xClean = self.yClean = None
         self.xDisp = None
         self.yDisp = None
@@ -572,13 +588,20 @@ class PlotDataItem(GraphicsObject):
                         x = x[x0:x1]
                         y = y[x0:x1]
 
-            if self.opts['limitDynamicRange']:
-                range = self.viewRect()
-                if range is not None:
-                    min_val = range.top()    - 1E6*range.height()
-                    max_val = range.bottom() + 1E6*range.height()
-                    # print('dynamic range limits: {:.0f}<--[{:0f}--{:0f}]-->{:.0f}'.format(min_val, range.top(), range.bottom(), max_val))
-                    y = np.clip(y, a_min=min_val, a_max=max_val)
+            if self.opts['dynamicRangeLimit'] is not None:
+                view_range = self.viewRect()
+                if view_range is not None:
+                    data_range = self.dataRect()
+                    if data_range is not None:
+                        view_height = view_range.height()
+                        lim = self.opts['dynamicRangeLimit']
+                        # print('data:', data_range.height(), '  view:', view_height, '  limit:', lim )
+                        if data_range.height() > lim * view_height:
+                            min_val = view_range.top()    - lim * view_height
+                            max_val = view_range.bottom() + lim * view_height
+                            # print('dynamic range limits: {:.0f}<--[{:0f}--{:0f}]-->{:.0f}'.format(
+                            #   min_val, view_range.top(), view_range.bottom(), max_val))
+                            y = np.clip(y, a_min=min_val, a_max=max_val)
 
             if ds > 1:
                 if self.opts['downsampleMethod'] == 'subsample':
@@ -602,6 +625,25 @@ class PlotDataItem(GraphicsObject):
             self.xDisp = x
             self.yDisp = y
         return self.xDisp, self.yDisp
+
+    def dataRect(self):
+        """
+        Returns a bounding rectangle (as QRectF) for the full set of data
+        """
+        if self._dataRect is not None:
+            return self._dataRect
+        if self.xData is None or self.yData is None:
+            return None
+        ymin = np.nanmin(self.yData)
+        if np.isnan( ymin ): return None # most likely case for all-NaN data
+        xmin = np.nanmin(self.xData)
+        if np.isnan( xmin ): return None # less likely case for all-NaN data
+        ymax = np.nanmax(self.yData)
+        xmax = np.nanmax(self.xData)
+        self._dataRect = QtCore.QRectF(
+            QtCore.QPointF(xmin,ymin),
+            QtCore.QPointF(xmax,ymax) )
+        return self._dataRect
 
     def dataBounds(self, ax, frac=1.0, orthoRange=None):
         """
@@ -659,6 +701,7 @@ class PlotDataItem(GraphicsObject):
         #self.yClean = None
         self.xDisp = None
         self.yDisp = None
+        self._dataRect = None
         self.curve.clear()
         self.scatter.clear()
 
@@ -674,7 +717,10 @@ class PlotDataItem(GraphicsObject):
 
     def viewRangeChanged(self):
         # view range has changed; re-plot if needed
-        if self.opts['clipToView'] or self.opts['autoDownsample'] or self.opts['limitDynamicRange']:
+        if( self.opts['clipToView']
+            or self.opts['autoDownsample']
+            or self.opts['dynamicRangeLimit'] is not None
+        ):
             self.xDisp = self.yDisp = None
             self.updateItems()
 
