@@ -353,7 +353,7 @@ class PlotDataItem(GraphicsObject):
     def setDynamicRangeLimit(self, limit):
         """
         Limit the off-screen positions of data points at large magnification
-        This avoids errors with plots not displaying because their visibility is incorrectly determined. The default setting repositions far-off points to be within ±1E+06 times the viewport height.
+        This avoids errors with plots not displaying because their visibility is incorrectly determined. The default setting repositions far-off points to be within +-1E+06 times the viewport height.
         =============== =============================================================
         **Arguments:**
         limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
