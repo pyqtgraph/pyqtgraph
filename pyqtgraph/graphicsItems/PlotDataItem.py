@@ -359,7 +359,7 @@ class PlotDataItem(GraphicsObject):
         limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
                         'None' disables the check for a minimal increase in performance. Default is 1E+06.
         """
-        if self.opts['dynamicRangeLimit'] == limit:
+        if self.opts['dynamicRangeLimit'] is limit:
             return
         self.opts['dynamicRangeLimit'] = limit # can be None
         self.xDisp = self.yDisp = None
@@ -635,9 +635,11 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None or self.yData is None:
             return None
         ymin = np.nanmin(self.yData)
-        if np.isnan( ymin ): return None # most likely case for all-NaN data
+        if np.isnan( ymin ):
+            return None # most likely case for all-NaN data
         xmin = np.nanmin(self.xData)
-        if np.isnan( xmin ): return None # less likely case for all-NaN data
+        if np.isnan( xmin ):
+            return None # less likely case for all-NaN data
         ymax = np.nanmax(self.yData)
         xmax = np.nanmax(self.xData)
         self._dataRect = QtCore.QRectF(
