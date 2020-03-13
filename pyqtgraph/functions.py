@@ -1115,7 +1115,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         nanMask = np.isnan(data)
         if data.ndim > 2:
             nanMask = np.any(nanMask, axis=-1)
-        nanMask = np.isnan(data)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
