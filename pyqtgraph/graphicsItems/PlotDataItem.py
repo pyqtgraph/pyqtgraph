@@ -119,11 +119,6 @@ class PlotDataItem(GraphicsObject):
                               at any time.
             dynamicRangeLimit (float or None) Limit off-screen positions of data points at large
                               magnification to avoids display errors. Disabled if None.
-        =============== =============================================================
-        **Arguments:**
-        limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
-                        'None' disables the check for a minimal increase in performance. Default is 1E+06.
-
             identical         *deprecated*
             ================= =====================================================================
 
@@ -359,8 +354,8 @@ class PlotDataItem(GraphicsObject):
         limit           (float or None) Maximum allowed vertical distance of plotted points in units of viewport height.
                         'None' disables the check for a minimal increase in performance. Default is 1E+06.
         """
-        if self.opts['dynamicRangeLimit'] is limit:
-            return
+        if limit == self.opts['dynamicRangeLimit']:
+            return # avoid update if there is no change
         self.opts['dynamicRangeLimit'] = limit # can be None
         self.xDisp = self.yDisp = None
         self.updateItems()
@@ -588,21 +583,6 @@ class PlotDataItem(GraphicsObject):
                         x = x[x0:x1]
                         y = y[x0:x1]
 
-            if self.opts['dynamicRangeLimit'] is not None:
-                view_range = self.viewRect()
-                if view_range is not None:
-                    data_range = self.dataRect()
-                    if data_range is not None:
-                        view_height = view_range.height()
-                        lim = self.opts['dynamicRangeLimit']
-                        # print('data:', data_range.height(), '  view:', view_height, '  limit:', lim )
-                        if data_range.height() > lim * view_height:
-                            min_val = view_range.top()    - lim * view_height
-                            max_val = view_range.bottom() + lim * view_height
-                            # print('dynamic range limits: {:.0f}<--[{:0f}--{:0f}]-->{:.0f}'.format(
-                            #   min_val, view_range.top(), view_range.bottom(), max_val))
-                            y = np.clip(y, a_min=min_val, a_max=max_val)
-
             if ds > 1:
                 if self.opts['downsampleMethod'] == 'subsample':
                     x = x[::ds]
@@ -622,13 +602,26 @@ class PlotDataItem(GraphicsObject):
                     y1[:,1] = y2.min(axis=1)
                     y = y1.reshape(n*2)
 
+            if self.opts['dynamicRangeLimit'] is not None:
+                view_range = self.viewRect()
+                if view_range is not None:
+                    data_range = self.dataRect()
+                    if data_range is not None:
+                        view_height = view_range.height()
+                        lim = self.opts['dynamicRangeLimit']
+                        if data_range.height() > lim * view_height:
+                            min_val = view_range.top()    - lim * view_height
+                            max_val = view_range.bottom() + lim * view_height
+                            y = np.clip(y, a_min=min_val, a_max=max_val)
+
             self.xDisp = x
             self.yDisp = y
         return self.xDisp, self.yDisp
 
     def dataRect(self):
         """
-        Returns a bounding rectangle (as QRectF) for the full set of data
+        Returns a bounding rectangle (as QRectF) for the full set of data.
+        Will return None if there is no data or if all values (x or y) are NaN.
         """
         if self._dataRect is not None:
             return self._dataRect
