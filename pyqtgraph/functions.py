@@ -934,10 +934,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -2503,6 +2505,3 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
-
-
-

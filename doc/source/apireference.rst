@@ -15,3 +15,4 @@ Contents:
     parametertree/index
     graphicsscene/index
     flowchart/index
+    graphicswindow

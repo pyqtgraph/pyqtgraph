@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -40,25 +41,30 @@ class PlotDataItem(GraphicsObject):
         **Data initialization arguments:** (x,y data only)
         
             =================================== ======================================
-            PlotDataItem(xValues, yValues)      x and y values may be any sequence (including ndarray) of real numbers
-            PlotDataItem(yValues)               y values only -- x will be automatically set to range(len(y))
+            PlotDataItem(xValues, yValues)      x and y values may be any sequence
+                                                (including ndarray) of real numbers
+            PlotDataItem(yValues)               y values only -- x will be
+                                                automatically set to range(len(y))
             PlotDataItem(x=xValues, y=yValues)  x and y given by keyword arguments
-            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where x=data[:,0] and y=data[:,1]
+            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where
+                                                ``x=data[:,0]`` and ``y=data[:,1]``
             =================================== ======================================
         
         **Data initialization arguments:** (x,y data AND may include spot style)
         
-            ===========================   =========================================
-            PlotDataItem(recarray)        numpy array with dtype=[('x', float), ('y', float), ...]
-            PlotDataItem(list-of-dicts)   [{'x': x, 'y': y, ...},   ...] 
-            PlotDataItem(dict-of-lists)   {'x': [...], 'y': [...],  ...}           
-            PlotDataItem(MetaArray)       1D array of Y values with X sepecified as axis values 
-                                          OR 2D array with a column 'y' and extra columns as needed.
-            ===========================   =========================================
+            ============================ =========================================
+            PlotDataItem(recarray)       numpy array with ``dtype=[('x', float),
+                                         ('y', float), ...]``
+            PlotDataItem(list-of-dicts)  ``[{'x': x, 'y': y, ...},   ...]``
+            PlotDataItem(dict-of-lists)  ``{'x': [...], 'y': [...],  ...}``
+            PlotDataItem(MetaArray)      1D array of Y values with X sepecified as
+                                         axis values OR 2D array with a column 'y'
+                                         and extra columns as needed.
+            ============================ =========================================
         
         **Line style keyword arguments:**
 
-            ==========   ==============================================================================
+            ============ ==============================================================================
             connect      Specifies how / whether vertexes should be connected. See
                          :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
             pen          Pen to use for drawing line between points.
@@ -67,15 +73,14 @@ class PlotDataItem(GraphicsObject):
             shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    Fill the area between the curve and fillLevel
-            fillOutline  (bool) If True, an outline surrounding the *fillLevel*
-                         area is drawn.
-            fillBrush    Fill to use when fillLevel is specified. 
+            fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
+            fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             stepMode     If True, two orthogonal lines are drawn for each sample
                          as steps. This is commonly used when drawing histograms.
-                         Note that in this case, `len(x) == len(y) + 1`
+                         Note that in this case, ``len(x) == len(y) + 1``
                          (added in version 0.9.9)
-            ==========   ==============================================================================
+            ============ ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
         
