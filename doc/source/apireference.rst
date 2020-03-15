@@ -13,6 +13,7 @@ Contents:
     3dgraphics/index
     colormap
     parametertree/index
+    dockarea
     graphicsscene/index
     flowchart/index
     graphicswindow
