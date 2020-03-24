@@ -1303,8 +1303,11 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox.scale(r.width(), r.height())
         self.rbScaleBox.show()
 
-    def showAxRect(self, ax):
-        self.setRange(ax.normalized()) # be sure w, h are correct coordinates
+    def showAxRect(self, ax, **kwargs):
+        """Set the visible range to the given rectangle
+        Passes keyword arguments to setRange
+        """
+        self.setRange(ax.normalized(), **kwargs) # be sure w, h are correct coordinates
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def allChildren(self, item=None):
