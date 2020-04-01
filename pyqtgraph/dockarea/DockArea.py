@@ -179,6 +179,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """Removes *dock* from this DockArea and places it in a new window."""
         area = self.addTempArea()
         area.win.resize(dock.size())
+        area.win.setWindowTitle(dock.title())
         area.moveDock(dock, 'top', None)
         
     def removeTempArea(self, area):
@@ -319,7 +320,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
         if self.topContainer is None or self.topContainer.count() == 0:
             self.topContainer = None
-            if self.temporary:
+            if self.temporary and self.home::
                 self.home.removeTempArea(self)
                 #self.close()
                 

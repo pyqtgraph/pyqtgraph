@@ -323,14 +323,16 @@ class DockLabel(VerticalLabel):
             ev.accept()
         
     def mouseMoveEvent(self, ev):
-        if not self.startedDrag and (ev.pos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance():
-            self.dock.startDrag()
+        if ev.button() == QtCore.Qt.LeftButton:
+            if not self.startedDrag and (ev.pos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance():
+                self.dock.startDrag()
         ev.accept()
             
     def mouseReleaseEvent(self, ev):
         ev.accept()
-        if not self.startedDrag:
-            self.sigClicked.emit(self, ev)
+        if ev.button() == QtCore.Qt.LeftButton:
+            if not self.startedDrag:
+                self.sigClicked.emit(self, ev)
         
     def mouseDoubleClickEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
