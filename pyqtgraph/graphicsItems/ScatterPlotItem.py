@@ -781,7 +781,7 @@ class ScatterPlotItem(GraphicsObject):
                 pts = pts[:,viewMask]
                 for i, rec in enumerate(data):
                     p.resetTransform()
-                    p.translate(pts[0,i] + rec['width'], pts[1,i] + rec['width'])
+                    p.translate(pts[0,i] + rec['width']/2, pts[1,i] + rec['width']/2)
                     drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
@@ -834,8 +834,8 @@ class ScatterPlotItem(GraphicsObject):
             pts = self.pointsAt(ev.pos())
             if len(pts) > 0:
                 self.ptsClicked = pts
-                self.sigClicked.emit(self, self.ptsClicked)
                 ev.accept()
+                self.sigClicked.emit(self, self.ptsClicked)
             else:
                 #print "no spots"
                 ev.ignore()

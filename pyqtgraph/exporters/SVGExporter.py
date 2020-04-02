@@ -190,12 +190,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
             ## this is taken care of in generateSvg instead.
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
-
-        if QT_LIB in ['PySide', 'PySide2']:
-            xmlStr = str(arr)
-        else:
-            xmlStr = bytes(arr).decode('utf-8')
-        doc = xml.parseString(xmlStr.encode('utf-8'))
+        doc = xml.parseString(arr.data())
         
     try:
         ## Get top-level group for this item

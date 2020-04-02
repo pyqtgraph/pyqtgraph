@@ -1,10 +1,14 @@
 import pyqtgraph as pg
 import numpy as np
 import sys
+from copy import deepcopy
+from collections import OrderedDict
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
 import pytest
 
+
 np.random.seed(12345)
+
 
 def testSolve3D():
     p1 = np.array([[0,0,0,1],
@@ -206,15 +210,15 @@ def test_makeARGB():
     # lut smaller than maxint
     lut = np.arange(128).astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut)
-    checkImage(im2, np.linspace(0, 127, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(0, 127.5, 256, dtype='ubyte'), alpha, False)
 
     # lut + levels
     lut = np.arange(256)[::-1].astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[-128, 384])
-    checkImage(im2, np.linspace(192, 65.5, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(191.5, 64.5, 256, dtype='ubyte'), alpha, False)
     
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[64, 192])
-    checkImage(im2, np.clip(np.linspace(385.5, -126.5, 256), 0, 255).astype('ubyte'), alpha, False)
+    checkImage(im2, np.clip(np.linspace(384.5, -127.5, 256), 0, 255).astype('ubyte'), alpha, False)
 
     # uint8 data + uint16 LUT
     lut = np.arange(4096)[::-1].astype(np.uint16) // 16
@@ -355,6 +359,31 @@ def test_eq():
     
     assert eq(a4, a4.copy())
     assert not eq(a4, a4.T)
+
+    # test containers
+
+    assert not eq({'a': 1}, {'a': 1, 'b': 2})
+    assert not eq({'a': 1}, {'a': 2})
+    d1 = {'x': 1, 'y': np.nan, 3: ['a', np.nan, a3, 7, 2.3], 4: a4}
+    d2 = deepcopy(d1)
+    assert eq(d1, d2)
+    d1_ordered = OrderedDict(d1)
+    d2_ordered = deepcopy(d1_ordered)
+    assert eq(d1_ordered, d2_ordered)
+    assert not eq(d1_ordered, d2)
+    items = list(d1.items())
+    assert not eq(OrderedDict(items), OrderedDict(reversed(items)))
+    
+    assert not eq([1,2,3], [1,2,3,4])
+    l1 = [d1, np.inf, -np.inf, np.nan]
+    l2 = deepcopy(l1)
+    t1 = tuple(l1)
+    t2 = tuple(l2)
+    assert eq(l1, l2)
+    assert eq(t1, t2)
+
+    assert eq(set(range(10)), set(range(10)))
+    assert not eq(set(range(10)), set(range(9)))
 
     
 if __name__ == '__main__':

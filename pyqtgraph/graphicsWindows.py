@@ -45,10 +45,7 @@ class TabWindow(QtGui.QMainWindow):
         self.show()
         
     def __getattr__(self, attr):
-        if hasattr(self.cw, attr):
-            return getattr(self.cw, attr)
-        else:
-            raise NameError(attr)
+        return getattr(self.cw, attr)
     
 
 class PlotWindow(PlotWidget):

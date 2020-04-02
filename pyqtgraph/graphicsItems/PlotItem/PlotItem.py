@@ -545,9 +545,9 @@ class PlotItem(GraphicsWidget):
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
         """
-        pos = kwds.get('pos', x if x is not None else y)
-        angle = kwds.get('angle', 0 if x is None else 90)
-        line = InfiniteLine(pos, angle, **kwds)
+        kwds['pos'] = kwds.get('pos', x if x is not None else y)
+        kwds['angle'] = kwds.get('angle', 0 if x is None else 90)
+        line = InfiniteLine(**kwds)
         self.addItem(line)
         if z is not None:
             line.setZValue(z)
@@ -563,8 +563,8 @@ class PlotItem(GraphicsWidget):
         if item in self.dataItems:
             self.dataItems.remove(item)
             
-        if item.scene() is not None:
-            self.vb.removeItem(item)
+        self.vb.removeItem(item)
+        
         if item in self.curves:
             self.curves.remove(item)
             self.updateDecimation()
@@ -677,7 +677,6 @@ class PlotItem(GraphicsWidget):
         xRange = rect.left(), rect.right() 
         
         svg = ""
-        fh = open(fileName, 'w')
 
         dx = max(rect.right(),0) - min(rect.left(),0)
         ymn = min(rect.top(), rect.bottom())
@@ -691,52 +690,68 @@ class PlotItem(GraphicsWidget):
             sy *= 1000
         sy *= -1
 
-        fh.write('<svg>\n')
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M%f,0 L%f,0"/>\n' % (rect.left()*sx, rect.right()*sx))
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M0,%f L0,%f"/>\n' % (rect.top()*sy, rect.bottom()*sy))
+        with open(fileName, 'w') as fh:
+            # fh.write('<svg viewBox="%f %f %f %f">\n' % (rect.left() * sx,
+            #                                             rect.top() * sx,
+            #                                             rect.width() * sy,
+            #                                             rect.height()*sy))
+            fh.write('<svg>\n')
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M%f,0 L%f,0"/>\n' % (
+                        rect.left() * sx, rect.right() * sx))
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M0,%f L0,%f"/>\n' % (
+                        rect.top() * sy, rect.bottom() * sy))
 
-        for item in self.curves:
-            if isinstance(item, PlotCurveItem):
-                color = fn.colorStr(item.pen.color())
-                opacity = item.pen.color().alpha() / 255.
-                color = color[:6]
-                x, y = item.getData()
-                mask = (x > xRange[0]) * (x < xRange[1])
-                mask[:-1] += mask[1:]
-                m2 = mask.copy()
-                mask[1:] += m2[:-1]
-                x = x[mask]
-                y = y[mask]
-                
-                x *= sx
-                y *= sy
-                
-                fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                for i in range(1, len(x)):
-                    fh.write('L%f,%f ' % (x[i], y[i]))
-                
-                fh.write('"/>')
-
-        for item in self.dataItems:
-            if isinstance(item, ScatterPlotItem):
-                
-                pRect = item.boundingRect()
-                vRect = pRect.intersected(rect)
-                
-                for point in item.points():
-                    pos = point.pos()
-                    if not rect.contains(pos):
-                        continue
-                    color = fn.colorStr(point.brush.color())
-                    opacity = point.brush.color().alpha() / 255.
+            for item in self.curves:
+                if isinstance(item, PlotCurveItem):
+                    color = fn.colorStr(item.pen.color())
+                    opacity = item.pen.color().alpha() / 255.
                     color = color[:6]
-                    x = pos.x() * sx
-                    y = pos.y() * sy
-                    
-                    fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" stroke="none" fill-opacity="%f"/>\n' % (x, y, color, opacity))
-        
-        fh.write("</svg>\n")
-    
+                    x, y = item.getData()
+                    mask = (x > xRange[0]) * (x < xRange[1])
+                    mask[:-1] += mask[1:]
+                    m2 = mask.copy()
+                    mask[1:] += m2[:-1]
+                    x = x[mask]
+                    y = y[mask]
+
+                    x *= sx
+                    y *= sy
+
+                    # fh.write('<g fill="none" stroke="#%s" '
+                    #          'stroke-opacity="1" stroke-width="1">\n' % (
+                    #           color, ))
+                    fh.write('<path fill="none" stroke="#%s" '
+                             'stroke-opacity="%f" stroke-width="1" '
+                             'd="M%f,%f ' % (color, opacity, x[0], y[0]))
+                    for i in range(1, len(x)):
+                        fh.write('L%f,%f ' % (x[i], y[i]))
+
+                    fh.write('"/>')
+                    # fh.write("</g>")
+
+            for item in self.dataItems:
+                if isinstance(item, ScatterPlotItem):
+                    pRect = item.boundingRect()
+                    vRect = pRect.intersected(rect)
+
+                    for point in item.points():
+                        pos = point.pos()
+                        if not rect.contains(pos):
+                            continue
+                        color = fn.colorStr(point.brush.color())
+                        opacity = point.brush.color().alpha() / 255.
+                        color = color[:6]
+                        x = pos.x() * sx
+                        y = pos.y() * sy
+
+                        fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" '
+                                 'stroke="none" fill-opacity="%f"/>\n' % (
+                                    x, y, color, opacity))
+
+            fh.write("</svg>\n")
+
     def writeSvg(self, fileName=None):
         if fileName is None:
             self._chooseFilenameDialog(handler=self.writeSvg)
@@ -766,22 +781,21 @@ class PlotItem(GraphicsWidget):
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
-        fd = open(fileName, 'w')
         data = [c.getData() for c in self.curves]
-        i = 0
-        while True:
-            done = True
-            for d in data:
-                if i < len(d[0]):
-                    fd.write('%g,%g,'%(d[0][i], d[1][i]))
-                    done = False
-                else:
-                    fd.write(' , ,')
-            fd.write('\n')
-            if done:
-                break
-            i += 1
-        fd.close()
+        with open(fileName, 'w') as fd:
+            i = 0
+            while True:
+                done = True
+                for d in data:
+                    if i < len(d[0]):
+                        fd.write('%g,%g,' % (d[0][i], d[1][i]))
+                        done = False
+                    else:
+                        fd.write(' , ,')
+                fd.write('\n')
+                if done:
+                    break
+                i += 1
 
     def saveState(self):
         state = self.stateGroup.state()
@@ -924,15 +938,13 @@ class PlotItem(GraphicsWidget):
             
         curves = self.curves[:]
         split = len(curves) - numCurves
-        for i in range(len(curves)):
-            if numCurves == -1 or i >= split:
-                curves[i].show()
-            else:
+        for curve in curves[split:]:
+            if numCurves != -1:
                 if self.ctrl.forgetTracesCheck.isChecked():
-                    curves[i].clear()
+                    curve.clear()
                     self.removeItem(curves[i])
                 else:
-                    curves[i].hide()        
+                    curve.hide()        
       
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
@@ -986,8 +998,8 @@ class PlotItem(GraphicsWidget):
         self._menuEnabled = enableMenu
         if enableViewBoxMenu is None:
             return
-        if enableViewBoxMenu is 'same':
-            enableViewBoxMenu = enableMenu 
+        if enableViewBoxMenu == 'same':
+            enableViewBoxMenu = enableMenu
         self.vb.setMenuEnabled(enableViewBoxMenu)
     
     def menuEnabled(self):
