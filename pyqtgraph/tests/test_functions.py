@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -270,6 +271,30 @@ def test_makeARGB():
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=(1, 17))
     checkImage(im2, np.linspace(127.5, 0, 256).astype('ubyte'), alpha, False)
 
+    # nans in image
+
+    # 2d input image, one pixel is nan
+    im1 = np.ones((10, 12))
+    im1[3, 5] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGB input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 3))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGBA input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 4))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1), useRGBA=True)
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
 
     # test sanity checks
     class AssertExc(object):
