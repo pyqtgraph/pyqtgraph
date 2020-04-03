@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
@@ -54,17 +55,17 @@ class LinearRegionItem(GraphicsObject):
                         False, they are static.
         bounds          Optional [min, max] bounding values for the region
         span            Optional [min, max] giving the range over the view to draw
-                        the region. For example, with a vertical line, use span=(0.5, 1)
-                        to draw only on the top half of the view.
+                        the region. For example, with a vertical line, use
+                        ``span=(0.5, 1)`` to draw only on the top half of the
+                        view.
         swapMode        Sets the behavior of the region when the lines are moved such that
-                        their order reverses:
-                        * "block" means the user cannot drag one line past the other
-                        * "push" causes both lines to be moved if one would cross the other
-                        * "sort" means that lines may trade places, but the output of
-                          getRegion always gives the line positions in ascending order.
-                        * None means that no attempt is made to handle swapped line 
-                          positions.
-                        The default is "sort".
+                        their order reverses. "block" means the user cannot drag
+                        one line past the other. "push" causes both lines to be
+                        moved if one would cross the other. "sort" means that
+                        lines may trade places, but the output of getRegion
+                        always gives the line positions in ascending order. None
+                        means that no attempt is made to handle swapped line
+                        positions. The default is "sort".
         ==============  =====================================================================
         """
         
