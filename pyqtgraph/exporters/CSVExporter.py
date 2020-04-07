@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
 from ..parametertree import Parameter
@@ -29,7 +30,6 @@ class CSVExporter(Exporter):
             self.fileSaveDialog(filter=["*.csv", "*.tsv"])
             return
 
-        fd = open(fileName, 'w')
         data = []
         header = []
 
@@ -55,28 +55,29 @@ class CSVExporter(Exporter):
             sep = ','
         else:
             sep = '\t'
-            
-        fd.write(sep.join(header) + '\n')
-        i = 0
-        numFormat = '%%0.%dg' % self.params['precision']
-        numRows = max([len(d[0]) for d in data])
-        for i in range(numRows):
-            for j, d in enumerate(data):
-                # write x value if this is the first column, or if we want x 
-                # for all rows
-                if appendAllX or j == 0:
-                    if d is not None and i < len(d[0]):
-                        fd.write(numFormat % d[0][i] + sep)
+
+        with open(fileName, 'w') as fd:
+            fd.write(sep.join(header) + '\n')
+            i = 0
+            numFormat = '%%0.%dg' % self.params['precision']
+            numRows = max([len(d[0]) for d in data])
+            for i in range(numRows):
+                for j, d in enumerate(data):
+                    # write x value if this is the first column, or if we want
+                    # x for all rows
+                    if appendAllX or j == 0:
+                        if d is not None and i < len(d[0]):
+                            fd.write(numFormat % d[0][i] + sep)
+                        else:
+                            fd.write(' %s' % sep)
+
+                    # write y value
+                    if d is not None and i < len(d[1]):
+                        fd.write(numFormat % d[1][i] + sep)
                     else:
                         fd.write(' %s' % sep)
-                
-                # write y value 
-                if d is not None and i < len(d[1]):
-                    fd.write(numFormat % d[1][i] + sep)
-                else:
-                    fd.write(' %s' % sep)
-            fd.write('\n')
-        fd.close()
+                fd.write('\n')
+
 
 CSVExporter.register()        
                 

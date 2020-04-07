@@ -74,6 +74,14 @@ def test_ViewBox():
     win.close()
 
 
+def test_ViewBox_setMenuEnabled():
+    init_viewbox()
+    vb.setMenuEnabled(True)
+    assert vb.menu is not None
+    vb.setMenuEnabled(False)
+    assert vb.menu is None
+
+
 skipreason = "Skipping this test until someone has time to fix it."
 @pytest.mark.skipif(True, reason=skipreason)
 def test_limits_and_resize():

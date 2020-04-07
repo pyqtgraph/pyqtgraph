@@ -24,6 +24,7 @@ Contents:
     axisitem
     textitem
     errorbaritem
+    bargraphitem
     arrowitem
     fillbetweenitem
     curvepoint
@@ -42,4 +43,3 @@ Contents:
     graphicsitem
     uigraphicsitem
     graphicswidgetanchor
-

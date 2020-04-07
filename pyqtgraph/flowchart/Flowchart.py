@@ -508,7 +508,7 @@ class Flowchart(Node):
         self.sigStateChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):
-        """Load a flowchart (*.fc) file.
+        """Load a flowchart (``*.fc``) file.
         """
         if fileName is None:
             if startDir is None:
@@ -834,9 +834,9 @@ class FlowchartWidget(dockarea.DockArea):
     def buildMenu(self, pos=None):
         def buildSubMenu(node, rootMenu, subMenus, pos=None):
             for section, node in node.items():
-                menu = QtGui.QMenu(section)
-                rootMenu.addMenu(menu)
-                if isinstance(node, OrderedDict): 
+                if isinstance(node, OrderedDict):
+                    menu = QtGui.QMenu(section)
+                    rootMenu.addMenu(menu)
                     buildSubMenu(node, menu, subMenus, pos=pos)
                     subMenus.append(menu)
                 else:
@@ -938,4 +938,3 @@ class FlowchartWidget(dockarea.DockArea):
         
 class FlowchartNode(Node):
     pass
-

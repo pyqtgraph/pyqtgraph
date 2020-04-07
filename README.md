@@ -1,7 +1,6 @@
 
 [![Build Status](https://pyqtgraph.visualstudio.com/pyqtgraph/_apis/build/status/pyqtgraph.pyqtgraph?branchName=develop)](https://pyqtgraph.visualstudio.com/pyqtgraph/_build/latest?definitionId=17&branchName=develop)
 
-
 PyQtGraph
 =========
 
@@ -20,10 +19,12 @@ Requirements
 ------------
 
 * PyQt 4.8+, PySide, PyQt5, or PySide2
-* python 2.7, or 3.x
+  * PySide2 5.14 does not have loadUiType functionality, and thus the example application will not work.  You can follow along with restoring that functionality [here](https://bugreports.qt.io/browse/PYSIDE-1223).
+* Python 2.7, or 3.x
 * Required
-  * `numpy`, `scipy`
+  * `numpy`
 * Optional
+  * `scipy` for image processing
   * `pyopengl` for 3D graphics
     * macOS with Python2 and Qt4 bindings (PyQt4 or PySide) do not work with 3D OpenGL graphics
     * `pyqtgraph.opengl` will be depreciated in a future version and replaced with `VisPy`
@@ -33,14 +34,15 @@ Requirements
 Qt Bindings Test Matrix
 -----------------------
 
-Below is a table of the configurations we test and have confidence pyqtgraph will work with.  All current operating major operating systems (Windows, macOS, Linux) are tested against this configuration.  We recommend using the Qt 5.12 or 5.9 (either PyQt5 or PySide2) bindings.
+The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Python Version  |        PyQt4       | PySide             | PyQt5-5.6          | PySide2-5.6        | PyQt5-5.9          | PySide2-5.9        |      PyQt5-5.12    |  PySide2 5.12      |
-| :-------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
-| 2.7             | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :white_check_mark: |
-| 3.5             | :x:                | :x:                | :white_check_mark: | :x:                | :x:                | :x:                | :white_check_mark: | :white_check_mark: |
-| 3.6             | :x:                | :x:                | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| 3.7             | :x:                | :x:                | :x:                | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Qt-Bindings  | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
+| :----------- | :----------------: | :----------------: | :----------------: | :----------------: |
+| PyQt-4       | :white_check_mark: | :x:                | :x:                | :x:                |
+| PySide1      | :white_check_mark: | :x:                | :x:                | :x:                |
+| PyQt-5.9     | :x:                | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.13 | :x:                | :x:                | :white_check_mark: | :x:                |
+| PyQt-5.14    | :x:                | :x:                | :x:                | :white_check_mark: |
 
 * pyqtgraph has had some incompatabilities with PySide2-5.6, and we recommend you avoid those bindings if possible
 * on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work

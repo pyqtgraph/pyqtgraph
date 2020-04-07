@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import weakref
 import sys
 from copy import deepcopy
 import numpy as np
 from ...Qt import QtGui, QtCore
-from ...python2_3 import sortList, basestring, cmp
+from ...python2_3 import basestring
 from ...Point import Point
 from ... import functions as fn
 from .. ItemGroup import ItemGroup
@@ -321,12 +322,7 @@ class ViewBox(GraphicsWidget):
 
         self.state.update(state)
 
-        if self.state['enableMenu'] and self.menu is None:
-            self.menu = ViewBoxMenu(self)
-            self.updateViewLists()
-        else:
-            self.menu = None
-
+        self._applyMenuEnabled()
         self.updateViewRange()
         self.sigStateChanged.emit(self)
 
@@ -380,17 +376,20 @@ class ViewBox(GraphicsWidget):
 
     def setMenuEnabled(self, enableMenu=True):
         self.state['enableMenu'] = enableMenu
-        if enableMenu:
-            if self.menu is None:
-                self.menu = ViewBoxMenu(self)
-                self.updateViewLists()
-        else:
-            self.menu.setParent(None)
-            self.menu = None
+        self._applyMenuEnabled()
         self.sigStateChanged.emit(self)
 
     def menuEnabled(self):
         return self.state.get('enableMenu', True)
+
+    def _applyMenuEnabled(self):
+        enableMenu = self.state.get("enableMenu", True)
+        if enableMenu and self.menu is None:
+            self.menu = ViewBoxMenu(self)
+            self.updateViewLists()
+        elif not enableMenu and self.menu is not None:
+            self.menu.setParent(None)
+            self.menu = None
 
     def addItem(self, item, ignoreBounds=False):
         """
@@ -1304,8 +1303,11 @@ class ViewBox(GraphicsWidget):
         self.rbScaleBox.scale(r.width(), r.height())
         self.rbScaleBox.show()
 
-    def showAxRect(self, ax):
-        self.setRange(ax.normalized()) # be sure w, h are correct coordinates
+    def showAxRect(self, ax, **kwargs):
+        """Set the visible range to the given rectangle
+        Passes keyword arguments to setRange
+        """
+        self.setRange(ax.normalized(), **kwargs) # be sure w, h are correct coordinates
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def allChildren(self, item=None):
@@ -1603,16 +1605,13 @@ class ViewBox(GraphicsWidget):
             self.window()
         except RuntimeError:  ## this view has already been deleted; it will probably be collected shortly.
             return
-
-        def cmpViews(a, b):
-            wins = 100 * cmp(a.window() is self.window(), b.window() is self.window())
-            alpha = cmp(a.name, b.name)
-            return wins + alpha
-
+            
+        def view_key(view):
+            return (view.window() is self.window(), view.name)
+            
         ## make a sorted list of all named views
-        nv = list(ViewBox.NamedViews.values())
-        sortList(nv, cmpViews) ## see pyqtgraph.python2_3.sortList
-
+        nv = sorted(ViewBox.NamedViews.values(), key=view_key)
+        
         if self in nv:
             nv.remove(self)
 

@@ -64,7 +64,6 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -96,7 +95,8 @@ def systemInfo():
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
         lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            rev = open(lastRevFile, 'r').read().strip()
+            with open(lastRevFile, 'r') as fd:
+                rev = fd.read().strip()
     
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
@@ -261,6 +261,7 @@ from .widgets.LayoutWidget import *
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
 from .widgets.GroupBox import GroupBox
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
 
 from .imageview import *
 from .WidgetGroup import *

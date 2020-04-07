@@ -123,7 +123,7 @@ class GLScatterPlotItem(GLGraphicsItem):
             try:
                 pos = self.pos
                 #if pos.ndim > 2:
-                    #pos = pos.reshape((reduce(lambda a,b: a*b, pos.shape[:-1]), pos.shape[-1]))
+                    #pos = pos.reshape((-1, pos.shape[-1]))
                 glVertexPointerf(pos)
             
                 if isinstance(self.color, np.ndarray):
