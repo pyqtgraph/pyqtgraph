@@ -177,7 +177,7 @@ class DateAxisItem(AxisItem):
 
     """
 
-    def __init__(self, orientation, **kvargs):
+    def __init__(self, orientation='bottom', **kvargs):
         super(DateAxisItem, self).__init__(orientation, **kvargs)
         # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
