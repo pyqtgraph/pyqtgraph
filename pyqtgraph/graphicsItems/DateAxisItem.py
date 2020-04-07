@@ -1,6 +1,7 @@
+import sys
 import numpy as np
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from .AxisItem import AxisItem
 
 __all__ = ['DateAxisItem', 'ZoomLevel']
@@ -13,6 +14,13 @@ DAY_SPACING = 24 * HOUR_SPACING
 WEEK_SPACING = 7 * DAY_SPACING
 MONTH_SPACING = 30 * DAY_SPACING
 YEAR_SPACING = 365 * DAY_SPACING
+
+if sys.platform == 'win32':
+    _epoch = datetime.utcfromtimestamp(0)
+    def utcfromtimestamp(timestamp):
+        return _epoch + timedelta(seconds=timestamp)
+else:
+    utcfromtimestamp = datetime.utcfromtimestamp
 
 def makeMSStepper(stepSize):
     def stepper(val, n):
@@ -28,7 +36,7 @@ def makeSStepper(stepSize):
 
 def makeMStepper(stepSize):
     def stepper(val, n):
-        d = datetime.utcfromtimestamp(val)
+        d = utcfromtimestamp(val)
         base0m = (d.month + n*stepSize - 1)
         d = datetime(d.year + base0m // 12, base0m % 12 + 1, 1)
         return (d - datetime(1970, 1, 1)).total_seconds()
@@ -36,7 +44,7 @@ def makeMStepper(stepSize):
 
 def makeYStepper(stepSize):
     def stepper(val, n):
-        d = datetime.utcfromtimestamp(val)
+        d = utcfromtimestamp(val)
         next_date = datetime((d.year // (n*stepSize) + 1) * (n*stepSize), 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
@@ -188,7 +196,7 @@ class DateAxisItem(AxisItem):
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
-        dates = [datetime.utcfromtimestamp(v - self.utcOffset) for v in values]
+        dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
         formatStrings = []
         for x in dates:
             try:
