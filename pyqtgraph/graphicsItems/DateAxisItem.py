@@ -30,7 +30,7 @@ def makeMStepper(stepSize):
     def stepper(val, n):
         d = datetime.utcfromtimestamp(val)
         base0m = (d.month + n*stepSize - 1)
-        d = datetime(d.year + base0m / 12, base0m % 12 + 1, 1)
+        d = datetime(d.year + base0m // 12, base0m % 12 + 1, 1)
         return (d - datetime(1970, 1, 1)).total_seconds()
     return stepper
 
@@ -209,7 +209,7 @@ class DateAxisItem(AxisItem):
         return values
 
     def setZoomLevelForDensity(self, density):
-        keys = sorted(self.zoomLevels.iterkeys())
+        keys = sorted(self.zoomLevels.keys())
         key = next((k for k in keys if density < k), keys[-1])
         self.zoomLevel = self.zoomLevels[key]
         self.zoomLevel.utcOffset = self.utcOffset
