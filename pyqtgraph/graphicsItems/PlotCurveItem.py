@@ -365,11 +365,12 @@ class PlotCurveItem(GraphicsObject):
 
         #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
+        self.yData = kargs['y'].view(np.ndarray)
+        self.xData = kargs['x'].view(np.ndarray)
+        
         self.invalidateBounds()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
-        self.yData = kargs['y'].view(np.ndarray)
-        self.xData = kargs['x'].view(np.ndarray)
 
         profiler('copy')
 
