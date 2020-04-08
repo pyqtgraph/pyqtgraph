@@ -226,13 +226,14 @@ class DateAxisItem(AxisItem):
         """Add this axis to the given PlotItem
         :param plotItem: (PlotItem)
         """
-        self.setParentItem(plotItem)
+        self.setParentItem(plotItem) 
         viewBox = plotItem.getViewBox()
         self.linkToView(viewBox)
         self._oldAxis = plotItem.axes[self.orientation]['item']
         self._oldAxis.hide()
         plotItem.axes[self.orientation]['item'] = self
         pos = plotItem.axes[self.orientation]['pos']
+        plotItem.layout.removeItem(self._oldAxis)
         plotItem.layout.addItem(self, *pos)
         self.setZValue(-1000)
 
