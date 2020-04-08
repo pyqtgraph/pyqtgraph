@@ -506,7 +506,15 @@ class AxisItem(GraphicsWidget):
             return self._linkedView()
 
     def linkToView(self, view):
-        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view.
+
+        ==============  ============================================================
+        **Arguments:**
+        view            The ViewBox to link.  None to unlink the existing ViewBox.
+        ==============  ============================================================
+
+        To get the existing linked ViewBox, use :func:`linkToView <pyqtgraph.AxisItem.linkedView>`.
+        """
         oldView = self.linkedView()
         if view is None:
             self._linkedView = None
