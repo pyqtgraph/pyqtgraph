@@ -1087,7 +1087,7 @@ class PlotItem(GraphicsWidget):
         self._menuEnabled = enableMenu
         if enableViewBoxMenu is None:
             return
-        if enableViewBoxMenu is 'same':
+        if enableViewBoxMenu == 'same':
             enableViewBoxMenu = enableMenu 
         self.vb.setMenuEnabled(enableViewBoxMenu)
     
