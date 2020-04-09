@@ -1,6 +1,6 @@
 """
 This is how an axis of an already created plot can be assigned
-to display timestamps. Useful for layouts made using QtCreator.
+to display timestamps. Useful for layouts made using QtDesigner.
 
 """
 
