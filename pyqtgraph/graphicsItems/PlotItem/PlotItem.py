@@ -104,7 +104,7 @@ class PlotItem(GraphicsWidget):
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
         Create a new PlotItem. All arguments are optional.
-        Any extra keyword arguments are passed to PlotItem.plot().
+        Any extra keyword arguments are passed to :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
         
         ==============  ==========================================================================================
         **Arguments:**
