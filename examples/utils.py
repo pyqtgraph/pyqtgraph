@@ -17,6 +17,7 @@ examples = OrderedDict([
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
