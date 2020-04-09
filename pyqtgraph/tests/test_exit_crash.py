@@ -30,6 +30,7 @@ def call_with_timeout(*args, **kwargs):
         timeout = 10
 
     rc = None
+    p = subprocess.Popen(*args, **kwargs)
     for i in range(int(timeout/wait_per_poll)):
         rc = p.poll()
         if rc is not None:
