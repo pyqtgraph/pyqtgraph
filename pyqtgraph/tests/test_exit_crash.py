@@ -31,9 +31,7 @@ def call_with_timeout(*args, **kwargs):
 
     rc = None
     p = subprocess.Popen(*args, **kwargs)
-    number_of_attempts = timeout // wait_per_poll
-    assert number_of_attempts > 0, "Need to poll at least once."
-    for i in range(number_of_attempts)):
+    for i in range(max(timeout // wait_per_poll, 1)):  # Poll at least once
         rc = p.poll()
         if rc is not None:
             break
