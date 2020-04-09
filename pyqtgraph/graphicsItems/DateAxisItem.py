@@ -188,7 +188,7 @@ class DateAxisItem(AxisItem):
         Create a new DateAxisItem.
         
         For `orientation` and `**kwargs`, see
-        func:`AxisItem.__init__ <pyqtgraph.AxisItem.__init__>`.
+        :func:`AxisItem.__init__ <pyqtgraph.AxisItem.__init__>`.
         
         """
 
