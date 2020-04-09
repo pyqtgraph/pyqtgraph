@@ -165,20 +165,9 @@ class PlotItem(GraphicsWidget):
         
         self.legend = None
         
-        ## Create and place axis items
-        if axisItems is None:
-            axisItems = {}
+        # Initialize axis items
         self.axes = {}
-        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            if k in axisItems:
-                axis = axisItems[k]
-            else:
-                axis = AxisItem(orientation=k, parent=self)
-            axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
-            axis.setZValue(-1000)
-            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+        self.setAxisItems(axisItems)
         
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
@@ -267,11 +256,6 @@ class PlotItem(GraphicsWidget):
         self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
-        self.hideAxis('right')
-        self.hideAxis('top')
-        self.showAxis('left')
-        self.showAxis('bottom')
-        
         if labels is None:
             labels = {}
         for label in list(self.axes.keys()):
@@ -288,8 +272,8 @@ class PlotItem(GraphicsWidget):
         
         if len(kargs) > 0:
             self.plot(**kargs)
-        
-        
+                
+    
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
 
@@ -317,6 +301,55 @@ class PlotItem(GraphicsWidget):
         
     del _create_method
     
+    
+    def setAxisItems(self, axisItems=None):
+        """
+        Place axis items as given by `axisItems`. Initializes non-existing axis items.
+        
+        ==============  ==========================================================================================
+        **Arguments:**<
+        *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
+                        for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+                        and the values must be instances of AxisItem (or at least compatible with AxisItem).
+        ==============  ==========================================================================================
+        """
+        
+                
+        if axisItems is None:
+            axisItems = {}
+        
+        # Array containing visible axis items
+        # Also containing potentially hidden axes, but they are not touched so it does not matter
+        visibleAxes = ['left', 'bottom']
+        visibleAxes.append(axisItems.keys()) # Note that it does not matter that this adds
+                                             # some values to visibleAxes a second time
+        
+        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
+            if k in self.axes:
+                if k not in axisItems:
+                    continue # Nothing to do here
+                
+                # Remove old axis
+                oldAxis = self.axes[k]['item']
+                self.layout.removeItem(oldAxis)
+                oldAxis.unlinkFromView()
+            
+            # Create new axis
+            if k in axisItems:
+                axis = axisItems[k]
+            else:
+                axis = AxisItem(orientation=k, parent=self)
+            
+            # Set up new axis
+            axis.linkToView(self.vb)
+            self.axes[k] = {'item': axis, 'pos': pos}
+            self.layout.addItem(axis, *pos)
+            axis.setZValue(-1000)
+            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+            
+            axisVisible = k in visibleAxes
+            self.showAxis(k, axisVisible)
+        
     
     def setLogMode(self, x=None, y=None):
         """
