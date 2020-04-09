@@ -31,6 +31,9 @@ def call_with_timeout(*args, **kwargs):
 
     rc = None
     p = subprocess.Popen(*args, **kwargs)
+    assert int(timeout/wait_per_poll) >= 1, (
+        "{timeout}/{wait_per_poll}={timeout/wait_per_poll}"
+    )
     for i in range(int(timeout/wait_per_poll)):
         rc = p.poll()
         if rc is not None:
