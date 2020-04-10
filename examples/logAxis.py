@@ -11,7 +11,7 @@ import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 
-w = pg.GraphicsWindow()
+w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: logAxis')
 p1 = w.addPlot(0,0, title="X Semilog")
 p2 = w.addPlot(1,0, title="Y Semilog")

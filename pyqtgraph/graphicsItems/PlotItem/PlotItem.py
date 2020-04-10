@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-PlotItem.py -  Graphics item implementing a scalable ViewBox with plotting powers.
-Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
-
-This class is one of the workhorses of pyqtgraph. It implements a graphics item with 
-plots, labels, and scales which can be viewed inside a QGraphicsScene. If you want
-a widget that can be added to your GUI, see PlotWidget instead.
-
-This class is very heavily featured:
-  - Automatically creates and manages PlotCurveItems
-  - Fast display and update of plots
-  - Manages zoom/pan ViewBox, scale, and label elements
-  - Automatic scaling when data changes
-  - Control panel with a huge feature set including averaging, decimation,
-    display, power spectrum, svg/png export, plot linking, and more.
-"""
 import sys
 import weakref
 import numpy as np
@@ -41,6 +24,8 @@ elif QT_LIB == 'PySide':
     from .plotConfigTemplate_pyside import *
 elif QT_LIB == 'PyQt5':
     from .plotConfigTemplate_pyqt5 import *
+elif QT_LIB == 'PySide2':
+    from .plotConfigTemplate_pyside2 import *
 
 __all__ = ['PlotItem']
 
@@ -51,17 +36,24 @@ except:
     HAVE_METAARRAY = False
 
 
-
-
 class PlotItem(GraphicsWidget):
-    
-    """
+    """GraphicsWidget implementing a standard 2D plotting area with axes.
+
     **Bases:** :class:`GraphicsWidget <pyqtgraph.GraphicsWidget>`
     
-    Plot graphics item that can be added to any graphics scene. Implements axes, titles, and interactive viewbox. 
-    PlotItem also provides some basic analysis functionality that may be accessed from the context menu.
-    Use :func:`plot() <pyqtgraph.PlotItem.plot>` to create a new PlotDataItem and add it to the view.
-    Use :func:`addItem() <pyqtgraph.PlotItem.addItem>` to add any QGraphicsItem to the view.
+    This class provides the ViewBox-plus-axes that appear when using
+    :func:`pg.plot() <pyqtgraph.plot>`, :class:`PlotWidget <pyqtgraph.PlotWidget>`,
+    and :func:`GraphicsLayoutWidget.addPlot() <pyqtgraph.GraphicsLayoutWidget.addPlot>`.
+
+    It's main functionality is:
+
+    - Manage placement of ViewBox, AxisItems, and LabelItems
+    - Create and manage a list of PlotDataItems displayed inside the ViewBox
+    - Implement a context menu with commonly used display and analysis options
+
+    Use :func:`plot() <pyqtgraph.PlotItem.plot>` to create a new PlotDataItem and
+    add it to the view. Use :func:`addItem() <pyqtgraph.PlotItem.addItem>` to
+    add any QGraphicsItem to the view.
     
     This class wraps several methods from its internal ViewBox:
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
@@ -97,8 +89,7 @@ class PlotItem(GraphicsWidget):
     sigRangeChanged = QtCore.Signal(object, object)    ## Emitted when the ViewBox range has changed
     sigYRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox Y range has changed
     sigXRangeChanged = QtCore.Signal(object, object)   ## Emitted when the ViewBox X range has changed
-    
-    
+        
     lastFileDir = None
     
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
@@ -131,12 +122,9 @@ class PlotItem(GraphicsWidget):
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
-        #self.autoImageFile = os.path.join(path, 'auto.png')
-        #self.lockImageFile = os.path.join(path, 'lock.png')
         self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
-        #self.autoBtn.hide()
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
         self.mouseHovering = False
         
@@ -172,7 +160,6 @@ class PlotItem(GraphicsWidget):
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
         self.setTitle(None)  ## hide
-        
         
         for i in range(4):
             self.layout.setRowPreferredHeight(i, 0)
@@ -271,21 +258,18 @@ class PlotItem(GraphicsWidget):
             self.setTitle(title)
         
         if len(kargs) > 0:
-            self.plot(**kargs)
-                
-    
+            self.plot(**kargs)        
+        
     def implements(self, interface=None):
         return interface in ['ViewBoxWrapper']
 
     def getViewBox(self):
         """Return the :class:`ViewBox <pyqtgraph.ViewBox>` contained within."""
         return self.vb
-
     
     ## Wrap a few methods from viewBox. 
     #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
     #because we had a reference to an instance method (creating wrapper methods at runtime instead).
-    
     for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
               'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
               'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
@@ -300,7 +284,6 @@ class PlotItem(GraphicsWidget):
         locals()[m] = _create_method(m)
         
     del _create_method
-    
     
     def setAxisItems(self, axisItems=None):
         """
@@ -350,7 +333,6 @@ class PlotItem(GraphicsWidget):
             axisVisible = k in visibleAxes
             self.showAxis(k, axisVisible)
         
-    
     def setLogMode(self, x=None, y=None):
         """
         Set log scaling for x and/or y axes.
@@ -389,16 +371,7 @@ class PlotItem(GraphicsWidget):
             v = np.clip(alpha, 0, 1)*self.ctrl.gridAlphaSlider.maximum()
             self.ctrl.gridAlphaSlider.setValue(v)
         
-    #def paint(self, *args):
-        #prof = debug.Profiler()
-        #QtGui.QGraphicsWidget.paint(self, *args)
-        
-    ## bad idea. 
-    #def __getattr__(self, attr):  ## wrap ms
-        #return getattr(self.vb, attr)
-        
     def close(self):
-        #print "delete", self
         ## Most of this crap is needed to avoid PySide trouble. 
         ## The problem seems to be whenever scene.clear() leads to deletion of widgets (either through proxies or qgraphicswidgets)
         ## the solution is to manually remove all widgets before scene.clear() is called
@@ -438,7 +411,6 @@ class PlotItem(GraphicsWidget):
         pos = v.mapToGlobal(v.pos())
         wr.adjust(pos.x(), pos.y(), pos.x(), pos.y())
         return wr
-
 
     def avgToggled(self, b):
         if b:
@@ -580,8 +552,7 @@ class PlotItem(GraphicsWidget):
             #self.plotChanged()
         #name = kargs.get('name', getattr(item, 'opts', {}).get('name', None))
         if name is not None and hasattr(self, 'legend') and self.legend is not None:
-            self.legend.addItem(item, name=name)
-            
+            self.legend.addItem(item, name=name)            
 
     def addDataItem(self, item, *args):
         print("PlotItem.addDataItem is deprecated. Use addItem instead.")
@@ -606,15 +577,13 @@ class PlotItem(GraphicsWidget):
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
         """
-        pos = kwds.get('pos', x if x is not None else y)
-        angle = kwds.get('angle', 0 if x is None else 90)
-        line = InfiniteLine(pos, angle, **kwds)
+        kwds['pos'] = kwds.get('pos', x if x is not None else y)
+        kwds['angle'] = kwds.get('angle', 0 if x is None else 90)
+        line = InfiniteLine(**kwds)
         self.addItem(line)
         if z is not None:
             line.setZValue(z)
-        return line
-        
-        
+        return line        
 
     def removeItem(self, item):
         """
@@ -626,14 +595,15 @@ class PlotItem(GraphicsWidget):
         if item in self.dataItems:
             self.dataItems.remove(item)
             
-        if item.scene() is not None:
-            self.vb.removeItem(item)
+        self.vb.removeItem(item)
+        
         if item in self.curves:
             self.curves.remove(item)
             self.updateDecimation()
             self.updateParamList()
-            #item.connect(item, QtCore.SIGNAL('plotChanged'), self.plotChanged)
-            #item.sigPlotChanged.connect(self.plotChanged)
+
+        if self.legend is not None:
+            self.legend.removeItem(item)
 
     def clear(self):
         """
@@ -646,8 +616,7 @@ class PlotItem(GraphicsWidget):
     def clearPlots(self):
         for i in self.curves[:]:
             self.removeItem(i)
-        self.avgCurves = {}
-        
+        self.avgCurves = {}        
     
     def plot(self, *args, **kargs):
         """
@@ -658,8 +627,6 @@ class PlotItem(GraphicsWidget):
             clear    - clear all plots before displaying new data
             params   - meta-parameters to associate with this data
         """
-        
-        
         clear = kargs.get('clear', False)
         params = kargs.get('params', None)
           
@@ -679,9 +646,13 @@ class PlotItem(GraphicsWidget):
         Create a new LegendItem and anchor it over the internal ViewBox.
         Plots will be automatically displayed in the legend if they
         are created with the 'name' argument.
+
+        If a LegendItem has already been created using this method, that
+        item will be returned rather than creating a new one.
         """
-        self.legend = LegendItem(size, offset)
-        self.legend.setParentItem(self.vb)
+        if self.legend is None:
+            self.legend = LegendItem(size, offset)
+            self.legend.setParentItem(self.vb)
         return self.legend
         
     def scatterPlot(self, *args, **kargs):
@@ -724,20 +695,11 @@ class PlotItem(GraphicsWidget):
                     
                 self.paramList[p] = (i.checkState() == QtCore.Qt.Checked)
 
-
-    ## Qt's SVG-writing capabilities are pretty terrible. 
     def writeSvgCurves(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeSvg)
+            self._chooseFilenameDialog(handler=self.writeSvg)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
+
         if isinstance(fileName, tuple):
             raise Exception("Not implemented yet..")
         fileName = str(fileName)
@@ -747,7 +709,6 @@ class PlotItem(GraphicsWidget):
         xRange = rect.left(), rect.right() 
         
         svg = ""
-        fh = open(fileName, 'w')
 
         dx = max(rect.right(),0) - min(rect.left(),0)
         ymn = min(rect.top(), rect.bottom())
@@ -761,60 +722,73 @@ class PlotItem(GraphicsWidget):
             sy *= 1000
         sy *= -1
 
-        #fh.write('<svg viewBox="%f %f %f %f">\n' % (rect.left()*sx, rect.top()*sx, rect.width()*sy, rect.height()*sy))
-        fh.write('<svg>\n')
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M%f,0 L%f,0"/>\n' % (rect.left()*sx, rect.right()*sx))
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M0,%f L0,%f"/>\n' % (rect.top()*sy, rect.bottom()*sy))
+        with open(fileName, 'w') as fh:
+            # fh.write('<svg viewBox="%f %f %f %f">\n' % (rect.left() * sx,
+            #                                             rect.top() * sx,
+            #                                             rect.width() * sy,
+            #                                             rect.height()*sy))
+            fh.write('<svg>\n')
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M%f,0 L%f,0"/>\n' % (
+                        rect.left() * sx, rect.right() * sx))
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M0,%f L0,%f"/>\n' % (
+                        rect.top() * sy, rect.bottom() * sy))
 
-
-        for item in self.curves:
-            if isinstance(item, PlotCurveItem):
-                color = fn.colorStr(item.pen.color())
-                opacity = item.pen.color().alpha() / 255.
-                color = color[:6]
-                x, y = item.getData()
-                mask = (x > xRange[0]) * (x < xRange[1])
-                mask[:-1] += mask[1:]
-                m2 = mask.copy()
-                mask[1:] += m2[:-1]
-                x = x[mask]
-                y = y[mask]
-                
-                x *= sx
-                y *= sy
-                
-                #fh.write('<g fill="none" stroke="#%s" stroke-opacity="1" stroke-width="1">\n' % color)
-                fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                for i in range(1, len(x)):
-                    fh.write('L%f,%f ' % (x[i], y[i]))
-                
-                fh.write('"/>')
-                #fh.write("</g>")
-        for item in self.dataItems:
-            if isinstance(item, ScatterPlotItem):
-                
-                pRect = item.boundingRect()
-                vRect = pRect.intersected(rect)
-                
-                for point in item.points():
-                    pos = point.pos()
-                    if not rect.contains(pos):
-                        continue
-                    color = fn.colorStr(point.brush.color())
-                    opacity = point.brush.color().alpha() / 255.
+            for item in self.curves:
+                if isinstance(item, PlotCurveItem):
+                    color = fn.colorStr(item.pen.color())
+                    opacity = item.pen.color().alpha() / 255.
                     color = color[:6]
-                    x = pos.x() * sx
-                    y = pos.y() * sy
-                    
-                    fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" stroke="none" fill-opacity="%f"/>\n' % (x, y, color, opacity))
-        
-        fh.write("</svg>\n")
-        
-        
-    
+                    x, y = item.getData()
+                    mask = (x > xRange[0]) * (x < xRange[1])
+                    mask[:-1] += mask[1:]
+                    m2 = mask.copy()
+                    mask[1:] += m2[:-1]
+                    x = x[mask]
+                    y = y[mask]
+
+                    x *= sx
+                    y *= sy
+
+                    # fh.write('<g fill="none" stroke="#%s" '
+                    #          'stroke-opacity="1" stroke-width="1">\n' % (
+                    #           color, ))
+                    fh.write('<path fill="none" stroke="#%s" '
+                             'stroke-opacity="%f" stroke-width="1" '
+                             'd="M%f,%f ' % (color, opacity, x[0], y[0]))
+                    for i in range(1, len(x)):
+                        fh.write('L%f,%f ' % (x[i], y[i]))
+
+                    fh.write('"/>')
+                    # fh.write("</g>")
+
+            for item in self.dataItems:
+                if isinstance(item, ScatterPlotItem):
+                    pRect = item.boundingRect()
+                    vRect = pRect.intersected(rect)
+
+                    for point in item.points():
+                        pos = point.pos()
+                        if not rect.contains(pos):
+                            continue
+                        color = fn.colorStr(point.brush.color())
+                        opacity = point.brush.color().alpha() / 255.
+                        color = color[:6]
+                        x = pos.x() * sx
+                        y = pos.y() * sy
+
+                        fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" '
+                                 'stroke="none" fill-opacity="%f"/>\n' % (
+                                    x, y, color, opacity))
+
+            fh.write("</svg>\n")
+
     def writeSvg(self, fileName=None):
         if fileName is None:
-            fileName = QtGui.QFileDialog.getSaveFileName()
+            self._chooseFilenameDialog(handler=self.writeSvg)
+            return
+
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
@@ -824,59 +798,36 @@ class PlotItem(GraphicsWidget):
         
     def writeImage(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeImage)
+            self._chooseFilenameDialog(handler=self.writeImage)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
-        if isinstance(fileName, tuple):
-            raise Exception("Not implemented yet..")
-        fileName = str(fileName)
-        PlotItem.lastFileDir = os.path.dirname(fileName)
-        self.png = QtGui.QImage(int(self.size().width()), int(self.size().height()), QtGui.QImage.Format_ARGB32)
-        painter = QtGui.QPainter(self.png)
-        painter.setRenderHints(painter.Antialiasing | painter.TextAntialiasing)
-        self.scene().render(painter, QtCore.QRectF(), self.mapRectToScene(self.boundingRect()))
-        painter.end()
-        self.png.save(fileName)
+
+        from ...exporters import ImageExporter
+        ex = ImageExporter(self)
+        ex.export(fileName)
         
     def writeCsv(self, fileName=None):
         if fileName is None:
-            self.fileDialog = FileDialog()
-            if PlotItem.lastFileDir is not None:
-                self.fileDialog.setDirectory(PlotItem.lastFileDir)
-            self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
-            self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
-            self.fileDialog.show()
-            self.fileDialog.fileSelected.connect(self.writeCsv)
+            self._chooseFilenameDialog(handler=self.writeCsv)
             return
-        #if fileName is None:
-            #fileName = QtGui.QFileDialog.getSaveFileName()
+
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
-        fd = open(fileName, 'w')
         data = [c.getData() for c in self.curves]
-        i = 0
-        while True:
-            done = True
-            for d in data:
-                if i < len(d[0]):
-                    fd.write('%g,%g,'%(d[0][i], d[1][i]))
-                    done = False
-                else:
-                    fd.write(' , ,')
-            fd.write('\n')
-            if done:
-                break
-            i += 1
-        fd.close()
-
+        with open(fileName, 'w') as fd:
+            i = 0
+            while True:
+                done = True
+                for d in data:
+                    if i < len(d[0]):
+                        fd.write('%g,%g,' % (d[0][i], d[1][i]))
+                        done = False
+                    else:
+                        fd.write(' , ,')
+                fd.write('\n')
+                if done:
+                    break
+                i += 1
 
     def saveState(self):
         state = self.stateGroup.state()
@@ -912,7 +863,6 @@ class PlotItem(GraphicsWidget):
                 'viewRange': r,
             }
         self.vb.setState(state['view'])
-        
 
     def widgetGroupInterface(self):
         return (None, PlotItem.saveState, PlotItem.restoreState)
@@ -1011,9 +961,7 @@ class PlotItem(GraphicsWidget):
         
     def clipToViewMode(self):
         return self.ctrl.clipToViewCheck.isChecked()
-        
-        
-        
+
     def updateDecimation(self):
         if self.ctrl.maxTracesCheck.isChecked():
             numCurves = self.ctrl.maxTracesSpin.value()
@@ -1022,16 +970,13 @@ class PlotItem(GraphicsWidget):
             
         curves = self.curves[:]
         split = len(curves) - numCurves
-        for i in range(len(curves)):
-            if numCurves == -1 or i >= split:
-                curves[i].show()
-            else:
+        for curve in curves[split:]:
+            if numCurves != -1:
                 if self.ctrl.forgetTracesCheck.isChecked():
-                    curves[i].clear()
+                    curve.clear()
                     self.removeItem(curves[i])
                 else:
-                    curves[i].hide()
-        
+                    curve.hide()        
       
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
@@ -1058,7 +1003,6 @@ class PlotItem(GraphicsWidget):
         else:
             mode = False
         return mode
-        
 
     def resizeEvent(self, ev):
         if self.autoBtn is None:  ## already closed down
@@ -1066,7 +1010,6 @@ class PlotItem(GraphicsWidget):
         btnRect = self.mapRectFromItem(self.autoBtn, self.autoBtn.boundingRect())
         y = self.size().height() - btnRect.height()
         self.autoBtn.setPos(0, y)
-    
     
     def getMenu(self):
         return self.ctrlMenu
@@ -1088,7 +1031,7 @@ class PlotItem(GraphicsWidget):
         if enableViewBoxMenu is None:
             return
         if enableViewBoxMenu == 'same':
-            enableViewBoxMenu = enableMenu 
+            enableViewBoxMenu = enableMenu
         self.vb.setMenuEnabled(enableViewBoxMenu)
     
     def menuEnabled(self):
@@ -1101,7 +1044,6 @@ class PlotItem(GraphicsWidget):
             self.mouseHovering = False
             
         self.updateButtons()
-    
 
     def getLabel(self, key):
         pass
@@ -1149,7 +1091,6 @@ class PlotItem(GraphicsWidget):
                 if isinstance(v, basestring):
                     v = (v,)
                 self.setLabel(k, *v)
-        
         
     def showLabel(self, axis, show=True):
         """
@@ -1223,8 +1164,6 @@ class PlotItem(GraphicsWidget):
             raise Exception("X array must be 1D to plot (shape is %s)" % x.shape)
         c = PlotCurveItem(arr, x=x, **kargs)
         return c
-            
-        
         
     def _plotMetaArray(self, arr, x=None, autoLabel=True, **kargs):
         inf = arr.infoCopy()
@@ -1251,13 +1190,16 @@ class PlotItem(GraphicsWidget):
             self.setLabel('left', text=name, units=units)
             
         return c
-
       
     def setExportMode(self, export, opts=None):
         GraphicsWidget.setExportMode(self, export, opts)
         self.updateButtons()
-        #if export:
-            #self.autoBtn.hide()
-        #else:
-            #self.autoBtn.show()
     
+    def _chooseFilenameDialog(self, handler):
+        self.fileDialog = FileDialog()
+        if PlotItem.lastFileDir is not None:
+            self.fileDialog.setDirectory(PlotItem.lastFileDir)
+        self.fileDialog.setFileMode(QtGui.QFileDialog.AnyFile)
+        self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        self.fileDialog.show()
+        self.fileDialog.fileSelected.connect(handler)

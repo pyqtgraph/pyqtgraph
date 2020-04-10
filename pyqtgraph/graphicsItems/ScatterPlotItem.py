@@ -5,7 +5,7 @@ except ImportError:
     imap = map
 import numpy as np
 import weakref
-from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsItem import GraphicsItem
@@ -126,7 +126,7 @@ class SymbolAtlas(object):
         keyi = None
         sourceRecti = None
         for i, rec in enumerate(opts):
-            key = (rec[3], rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
+            key = (id(rec[3]), rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
             if key == keyi:
                 sourceRect[i] = sourceRecti
             else:
@@ -136,6 +136,7 @@ class SymbolAtlas(object):
                     newRectSrc = QtCore.QRectF()
                     newRectSrc.pen = rec['pen']
                     newRectSrc.brush = rec['brush']
+                    newRectSrc.symbol = rec[3]
                     self.symbolMap[key] = newRectSrc
                     self.atlasValid = False
                     sourceRect[i] = newRectSrc
@@ -151,7 +152,7 @@ class SymbolAtlas(object):
         images = []
         for key, sourceRect in self.symbolMap.items():
             if sourceRect.width() == 0:
-                img = renderSymbol(key[0], key[1], sourceRect.pen, sourceRect.brush)
+                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
                 images.append(img)  ## we only need this to prevent the images being garbage collected immediately
                 arr = fn.imageToArray(img, copy=False, transpose=False)
             else:
@@ -251,6 +252,7 @@ class ScatterPlotItem(GraphicsObject):
             'pxMode': True,
             'useCache': True,  ## If useCache is False, symbols are re-drawn on every paint.
             'antialias': getConfigOption('antialias'),
+            'compositionMode': None,
             'name': None,
         }
 
@@ -299,6 +301,8 @@ class ScatterPlotItem(GraphicsObject):
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
+        *compositionMode*      If specified, this sets the composition mode used when drawing the
+                               scatter plot (see QPainter::CompositionMode in the Qt documentation).
         *name*                 The name of this item. Names are used for automatically
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
@@ -645,6 +649,9 @@ class ScatterPlotItem(GraphicsObject):
             d = d[mask]
             d2 = d2[mask]
 
+            if d.size == 0:
+                return (None, None)
+
         if frac >= 1.0:
             self.bounds[ax] = (np.nanmin(d) - self._maxSpotWidth*0.7072, np.nanmax(d) + self._maxSpotWidth*0.7072)
             return self.bounds[ax]
@@ -697,16 +704,12 @@ class ScatterPlotItem(GraphicsObject):
         GraphicsObject.setExportMode(self, *args, **kwds)
         self.invalidate()
 
-
     def mapPointsToDevice(self, pts):
         # Map point locations to device
         tr = self.deviceTransform()
         if tr is None:
             return None
 
-        #pts = np.empty((2,len(self.data['x'])))
-        #pts[0] = self.data['x']
-        #pts[1] = self.data['y']
         pts = fn.transformCoordinates(tr, pts)
         pts -= self.data['width']
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
@@ -727,10 +730,11 @@ class ScatterPlotItem(GraphicsObject):
                 (pts[1] - w < viewBounds.bottom())) ## remove out of view points
         return mask
 
-
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
-
+        cmode = self.opts.get('compositionMode', None)
+        if cmode is not None:
+            p.setCompositionMode(cmode)
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.boundingRect())
 
@@ -752,8 +756,6 @@ class ScatterPlotItem(GraphicsObject):
 
             # Cull points that are outside view
             viewMask = self.getViewMask(pts)
-            #pts = pts[:,mask]
-            #data = self.data[mask]
 
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
@@ -767,10 +769,10 @@ class ScatterPlotItem(GraphicsObject):
                     self.data['targetRect'][updateMask] = list(imap(QtCore.QRectF, updatePts[0,:], updatePts[1,:], width, width))
 
                 data = self.data[viewMask]
-                if USE_PYSIDE or USE_PYQT5:
-                    list(imap(p.drawPixmap, data['targetRect'], repeat(atlas), data['sourceRect']))
-                else:
+                if QT_LIB == 'PyQt4':
                     p.drawPixmapFragments(data['targetRect'].tolist(), data['sourceRect'].tolist(), atlas)
+                else:
+                    list(imap(p.drawPixmap, data['targetRect'], repeat(atlas), data['sourceRect']))
             else:
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
@@ -779,7 +781,7 @@ class ScatterPlotItem(GraphicsObject):
                 pts = pts[:,viewMask]
                 for i, rec in enumerate(data):
                     p.resetTransform()
-                    p.translate(pts[0,i] + rec['width'], pts[1,i] + rec['width'])
+                    p.translate(pts[0,i] + rec['width']/2, pts[1,i] + rec['width']/2)
                     drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
@@ -798,9 +800,9 @@ class ScatterPlotItem(GraphicsObject):
             self.picture.play(p)
 
     def points(self):
-        for rec in self.data:
+        for i,rec in enumerate(self.data):
             if rec['item'] is None:
-                rec['item'] = SpotItem(rec, self)
+                rec['item'] = SpotItem(rec, self, i)
         return self.data['item']
 
     def pointsAt(self, pos):
@@ -832,8 +834,8 @@ class ScatterPlotItem(GraphicsObject):
             pts = self.pointsAt(ev.pos())
             if len(pts) > 0:
                 self.ptsClicked = pts
-                self.sigClicked.emit(self, self.ptsClicked)
                 ev.accept()
+                self.sigClicked.emit(self, self.ptsClicked)
             else:
                 #print "no spots"
                 ev.ignore()
@@ -848,17 +850,25 @@ class SpotItem(object):
     by connecting to the ScatterPlotItem's click signals.
     """
 
-    def __init__(self, data, plot):
-        #GraphicsItem.__init__(self, register=False)
+    def __init__(self, data, plot, index):
         self._data = data
-        self._plot = plot
-        #self.setParentItem(plot)
-        #self.setPos(QtCore.QPointF(data['x'], data['y']))
-        #self.updateItem()
+        self._index = index
+        # SpotItems are kept in plot.data["items"] numpy object array which
+        # does not support cyclic garbage collection (numpy issue 6581).
+        # Keeping a strong ref to plot here would leak the cycle
+        self.__plot_ref = weakref.ref(plot)
+
+    @property
+    def _plot(self):
+        return self.__plot_ref()
 
     def data(self):
         """Return the user data associated with this spot."""
         return self._data['data']
+
+    def index(self):
+        """Return the index of this point as given in the scatter plot data."""
+        return self._index
 
     def size(self):
         """Return the size of this spot.
@@ -943,37 +953,3 @@ class SpotItem(object):
         self._data['sourceRect'] = None
         self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
-
-#class PixmapSpotItem(SpotItem, QtGui.QGraphicsPixmapItem):
-    #def __init__(self, data, plot):
-        #QtGui.QGraphicsPixmapItem.__init__(self)
-        #self.setFlags(self.flags() | self.ItemIgnoresTransformations)
-        #SpotItem.__init__(self, data, plot)
-
-    #def setPixmap(self, pixmap):
-        #QtGui.QGraphicsPixmapItem.setPixmap(self, pixmap)
-        #self.setOffset(-pixmap.width()/2.+0.5, -pixmap.height()/2.)
-
-    #def updateItem(self):
-        #symbolOpts = (self._data['pen'], self._data['brush'], self._data['size'], self._data['symbol'])
-
-        ### If all symbol options are default, use default pixmap
-        #if symbolOpts == (None, None, -1, ''):
-            #pixmap = self._plot.defaultSpotPixmap()
-        #else:
-            #pixmap = makeSymbolPixmap(size=self.size(), pen=self.pen(), brush=self.brush(), symbol=self.symbol())
-        #self.setPixmap(pixmap)
-
-
-#class PathSpotItem(SpotItem, QtGui.QGraphicsPathItem):
-    #def __init__(self, data, plot):
-        #QtGui.QGraphicsPathItem.__init__(self)
-        #SpotItem.__init__(self, data, plot)
-
-    #def updateItem(self):
-        #QtGui.QGraphicsPathItem.setPath(self, Symbols[self.symbol()])
-        #QtGui.QGraphicsPathItem.setPen(self, self.pen())
-        #QtGui.QGraphicsPathItem.setBrush(self, self.brush())
-        #size = self.size()
-        #self.resetTransform()
-        #self.scale(size, size)

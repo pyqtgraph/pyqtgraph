@@ -28,6 +28,7 @@ def test_plotscene():
     ex.export(fileName=tempfilename)
     # clean up after the test is done
     os.unlink(tempfilename)
+    w.close()
 
 def test_simple():
     tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name

@@ -4,13 +4,13 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.10.0'
+__version__ = '0.11.0.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui
+from .Qt import QtGui, mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -28,9 +28,6 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 
 ## helpers for 2/3 compatibility
 from . import python2_3
-
-## install workarounds for numpy bugs
-from . import numpy_fix
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -67,7 +64,6 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -99,7 +95,8 @@ def systemInfo():
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
         lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            rev = open(lastRevFile, 'r').read().strip()
+            with open(lastRevFile, 'r') as fd:
+                rev = fd.read().strip()
     
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
@@ -259,10 +256,13 @@ from .widgets.VerticalLabel import *
 from .widgets.FeedbackButton import * 
 from .widgets.ColorButton import * 
 from .widgets.DataTreeWidget import * 
+from .widgets.DiffTreeWidget import * 
 from .widgets.GraphicsView import * 
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
+from .widgets.GroupBox import GroupBox
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
 
 from .imageview import *
 from .WidgetGroup import *
@@ -304,7 +304,10 @@ def cleanup():
     ## ALL QGraphicsItems must have a scene before they are deleted.
     ## This is potentially very expensive, but preferred over crashing.
     ## Note: this appears to be fixed in PySide as of 2012.12, but it should be left in for a while longer..
-    if QtGui.QApplication.instance() is None:
+    app = QtGui.QApplication.instance()
+    if app is None or not isinstance(app, QtGui.QApplication):
+        # app was never constructed is already deleted or is an
+        # QCoreApplication/QGuiApplication and not a full QApplication
         return
     import gc
     s = QtGui.QGraphicsScene()
@@ -317,7 +320,7 @@ def cleanup():
                         'are properly called before app shutdown (%s)\n' % (o,))
                 
                 s.addItem(o)
-        except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
+        except (RuntimeError, ReferenceError):  ## occurs if a python wrapper no longer has its underlying C++ object
             continue
     _cleanupCalled = True
 
@@ -365,8 +368,12 @@ def exit():
     ## close file handles
     if sys.platform == 'darwin':
         for fd in range(3, 4096):
-            if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+            if fd in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+                continue
+            try:
                 os.close(fd)
+            except OSError:
+                pass
     else:
         os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
 
@@ -444,14 +451,22 @@ def dbg(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def stack(*args, **kwds):
+    """
+    Create a console window and show the current stack trace.
     
-    
-def mkQApp():
-    global QAPP
-    inst = QtGui.QApplication.instance()
-    if inst is None:
-        QAPP = QtGui.QApplication([])
-    else:
-        QAPP = inst
-    return QAPP
-        
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
+    """
+    mkQApp()
+    from . import console
+    c = console.ConsoleWidget(*args, **kwds)
+    c.setStack()
+    c.show()
+    global consoles
+    try:
+        consoles.append(c)
+    except NameError:
+        consoles = [c]
+    return c

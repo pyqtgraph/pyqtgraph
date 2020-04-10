@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 import weakref
 from ..Qt import QtCore, QtGui
-from ..python2_3 import sortList, cmp
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
@@ -36,6 +36,18 @@ class GraphicsScene(QtGui.QGraphicsScene):
        This lets us indicate unambiguously to the user which item they are about to click/drag on
     *  Eats mouseMove events that occur too soon after a mouse press.
     *  Reimplements items() and itemAt() to circumvent PyQt bug
+
+    ====================== ==================================================================
+    **Signals**
+    sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
+                           get the click position relative to the item that was clicked on,
+                           or ev.scenePos() to get the click position in scene coordinates.
+                           See :class:`pyqtgraph.GraphicsScene.MouseClickEvent`.                        
+    sigMouseMoved(pos)     Emitted when the mouse cursor moves over the scene. The position
+                           is given in scene coordinates.
+    sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
+                           of items under the cursor.
+    ====================== ==================================================================
     
     Mouse interaction is as follows:
     
@@ -171,12 +183,14 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     if int(ev.buttons() & btn) == 0:
                         continue
                     if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
-                        cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
-                        dist = Point(ev.scenePos() - cev.scenePos()).length()
-                        if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
-                            continue
-                        init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
-                        self.dragButtons.append(int(btn))
+                        cev = [e for e in self.clickEvents if int(e.button()) == int(btn)]
+                        if cev:
+                            cev = cev[0]
+                            dist = Point(ev.scenePos() - cev.scenePos()).length()
+                            if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
+                                continue
+                            init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
+                            self.dragButtons.append(int(btn))
                         
                 ## If we have dragged buttons, deliver a drag event
                 if len(self.dragButtons) > 0:
@@ -196,10 +210,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 self.dragButtons.remove(ev.button())
             else:
                 cev = [e for e in self.clickEvents if int(e.button()) == int(ev.button())]
-                if self.sendClickEvent(cev[0]):
-                    #print "sent click event"
-                    ev.accept()
-                self.clickEvents.remove(cev[0])
+                if cev:
+                    if self.sendClickEvent(cev[0]):
+                        #print "sent click event"
+                        ev.accept()
+                    self.clickEvents.remove(cev[0])
                 
         if int(ev.buttons()) == 0:
             self.dragItem = None
@@ -251,7 +266,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in prevItems:
             event.currentItem = item
             try:
-                item.hoverEvent(event)
+                if item.scene() is self:
+                    item.hoverEvent(event)
             except:
                 debug.printExc("Error sending hover exit event:")
             finally:
@@ -276,7 +292,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             else:
                 acceptedItem = None
                 
-            if acceptedItem is not None:
+            if acceptedItem is not None and acceptedItem.scene() is self:
                 #print "Drag -> pre-selected item:", acceptedItem
                 self.dragItem = acceptedItem
                 event.currentItem = self.dragItem
@@ -423,6 +439,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in items:
             if hoverable and not hasattr(item, 'hoverEvent'):
                 continue
+            if item.scene() is not self:
+                continue
             shape = item.shape() # Note: default shape() returns boundingRect()
             if shape is None:
                 continue
@@ -436,7 +454,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 return 0
             return item.zValue() + absZValue(item.parentItem())
         
-        sortList(items2, lambda a,b: cmp(absZValue(b), absZValue(a)))
+        items2.sort(key=absZValue, reverse=True)
         
         return items2
         
@@ -545,6 +563,3 @@ class GraphicsScene(QtGui.QGraphicsScene):
     @staticmethod
     def translateGraphicsItems(items):
         return list(map(GraphicsScene.translateGraphicsItem, items))
-
-
-
