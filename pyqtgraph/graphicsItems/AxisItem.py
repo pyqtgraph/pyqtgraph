@@ -507,16 +507,21 @@ class AxisItem(GraphicsWidget):
 
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
-        self.unlinkFromView()
-
+        oldView = self.linkedView()
         self._linkedView = weakref.ref(view)
         if self.orientation in ['right', 'left']:
+            if oldView is not None:
+                oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
+            if oldView is not None:
+                oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
             view.sigXRangeChanged.connect(self.linkedViewChanged)
-        
+
+        if oldView is not None:
+            oldView.sigResized.disconnect(self.linkedViewChanged)
         view.sigResized.connect(self.linkedViewChanged)
-        
+    
     def unlinkFromView(self):
         """Unlink this axis from a ViewBox."""
         oldView = self.linkedView()
@@ -527,11 +532,9 @@ class AxisItem(GraphicsWidget):
         else:
             if oldView is not None:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
-            view.sigXRangeChanged.connect(self.linkedViewChanged)
-
+        
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
-        view.sigResized.connect(self.linkedViewChanged)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
