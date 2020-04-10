@@ -19,7 +19,7 @@ w = pg.PlotWidget()
 
 # Add the Date-time axis
 axis = pg.DateAxisItem()
-axis.attachToPlotItem(w.getPlotItem())
+w.setAxisItems({'bottom': axis})
 
 # plot some random data with timestamps in the last hour
 now = time.time()

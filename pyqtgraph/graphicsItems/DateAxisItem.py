@@ -166,19 +166,33 @@ MS_ZOOM_LEVEL = ZoomLevel([
 
 
 class DateAxisItem(AxisItem):
-    """ An AxisItem that displays dates from unix timestamps
+    """
+    **Bases:** :class:`AxisItem <pyqtgraph.AxisItem>`
+    
+    An AxisItem that displays dates from unix timestamps.
 
     The display format is adjusted automatically depending on the current time
     density (seconds/point) on the axis.
     You can customize the behaviour by specifying a different set of zoom levels
-    than the default one. The zoomLevels variable is a dictionary with the
-    maximum number of seconds/point which are allowed for each ZoomLevel
+    than the default one. The `zoomLevels` variable is a dictionary with the
+    maximum number of seconds/point which are allowed for each zoom level
     before the axis switches to the next coarser level.
+    
+    Can be added to an existing plot e.g. via 
+    :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
 
     """
 
-    def __init__(self, orientation='bottom', **kvargs):
-        super(DateAxisItem, self).__init__(orientation, **kvargs)
+    def __init__(self, orientation='bottom', **kwargs):
+        """
+        Create a new DateAxisItem.
+        
+        For `orientation` and `**kwargs`, see
+        :func:`AxisItem.__init__ <pyqtgraph.AxisItem.__init__>`.
+        
+        """
+
+        super(DateAxisItem, self).__init__(orientation, **kwargs)
         # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
@@ -221,19 +235,3 @@ class DateAxisItem(AxisItem):
         key = next((k for k in keys if density < k), keys[-1])
         self.zoomLevel = self.zoomLevels[key]
         self.zoomLevel.utcOffset = self.utcOffset
-
-    def attachToPlotItem(self, plotItem):
-        """Add this axis to the given PlotItem
-        :param plotItem: (PlotItem)
-        """
-        self.setParentItem(plotItem) 
-        viewBox = plotItem.getViewBox()
-        self.linkToView(viewBox)
-        self._oldAxis = plotItem.axes[self.orientation]['item']
-        self._oldAxis.hide()
-        plotItem.axes[self.orientation]['item'] = self
-        pos = plotItem.axes[self.orientation]['pos']
-        plotItem.layout.removeItem(self._oldAxis)
-        plotItem.layout.addItem(self, *pos)
-        self.setZValue(-1000)
-
