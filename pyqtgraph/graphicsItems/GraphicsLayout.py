@@ -134,6 +134,8 @@ class GraphicsLayout(GraphicsWidget):
         item.geometryChanged.connect(self._updateItemBorder)
 
         self.layout.addItem(item, row, col, rowspan, colspan)
+        QtGui.QApplication.processEvents() # Process events, propagating element sizes
+        
         self.nextColumn()
 
     def getItem(self, row, col):
