@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 GraphicsWidget displaying an image histogram along with gradient editor. Can be used to adjust the appearance of images.
 """
@@ -32,22 +33,20 @@ class HistogramLUTItem(GraphicsWidget):
     - Movable region over histogram to select black/white levels
     - Gradient editor to define color lookup table for single-channel images
     
-    Parameters
-    ----------
-    image : ImageItem or None
-        If *image* is provided, then the control will be automatically linked to
-        the image and changes to the control will be immediately reflected in
-        the image's appearance.
-    fillHistogram : bool
-        By default, the histogram is rendered with a fill.
-        For performance, set *fillHistogram* = False.    
-    rgbHistogram : bool
-        Sets whether the histogram is computed once over all channels of the
-        image, or once per channel.
-    levelMode : 'mono' or 'rgba'
-        If 'mono', then only a single set of black/whilte level lines is drawn,
-        and the levels apply to all channels in the image. If 'rgba', then one
-        set of levels is drawn for each channel.
+    ================ ===========================================================
+    image            (:class:`~pyqtgraph.ImageItem` or ``None``) If *image* is
+                     provided, then the control will be automatically linked to
+                     the image and changes to the control will be immediately
+                     reflected in the image's appearance.
+    fillHistogram    (bool) By default, the histogram is rendered with a fill.
+                     For performance, set ``fillHistogram=False``
+    rgbHistogram     (bool) Sets whether the histogram is computed once over all
+                     channels of the image, or once per channel.
+    levelMode        'mono' or 'rgba'. If 'mono', then only a single set of
+                     black/white level lines is drawn, and the levels apply to
+                     all channels in the image. If 'rgba', then one set of
+                     levels is drawn for each channel.
+    ================ ===========================================================
     """
     
     sigLookupTableChanged = QtCore.Signal(object)

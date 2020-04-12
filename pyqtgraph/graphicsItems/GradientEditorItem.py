@@ -438,8 +438,14 @@ class GradientEditorItem(TickSliderItem):
             label = QtGui.QLabel()
             label.setPixmap(px)
             label.setContentsMargins(1, 1, 1, 1)
+            labelName = QtGui.QLabel(g)
+            hbox = QtGui.QHBoxLayout()
+            hbox.addWidget(labelName)
+            hbox.addWidget(label)
+            widget = QtGui.QWidget()
+            widget.setLayout(hbox)
             act = QtGui.QWidgetAction(self)
-            act.setDefaultWidget(label)
+            act.setDefaultWidget(widget)
             act.triggered.connect(self.contextMenuClicked)
             act.name = g
             self.menu.addAction(act)
@@ -654,7 +660,7 @@ class GradientEditorItem(TickSliderItem):
             s = s1 * (1.-f) + s2 * f
             v = v1 * (1.-f) + v2 * f
             c = QtGui.QColor()
-            c.setHsv(h,s,v)
+            c.setHsv(*map(int, [h,s,v]))
             if toQColor:
                 return c
             else:

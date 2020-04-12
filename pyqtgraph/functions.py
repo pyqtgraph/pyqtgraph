@@ -11,6 +11,7 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
@@ -424,6 +425,8 @@ def eq(a, b):
     3. When comparing arrays, returns False if the array shapes are not the same.
     4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
     """
     if a is b:
         return True
@@ -439,6 +442,28 @@ def eq(a, b):
     # equal because they may behave differently when computed on.
     if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
         return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
 
     # Test for equivalence. 
     # If the test raises a recognized exception, then return Falase
@@ -909,10 +934,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -1088,6 +1115,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     nanMask = None
     if data.dtype.kind == 'f' and np.isnan(data.min()):
         nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1109,7 +1138,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
                     maxVal = np.nextafter(maxVal, 2*maxVal)
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
     # apply LUT if given
@@ -2476,6 +2507,3 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
-
-
-
