@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module exists to smooth out some of the differences between PySide and PyQt4:
 
@@ -329,7 +330,7 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 
 
 QAPP = None
-def mkQApp(name="pyqtgraph", qt_args=[]):
+def mkQApp(name="pyqtgraph", qt_args=None):
     """
     Creates new QApplication or returns current instance if existing.
     
@@ -342,5 +343,8 @@ def mkQApp(name="pyqtgraph", qt_args=[]):
     global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication([name] + qt_args)
+        args = [name]
+        if qt_args is not None:
+            args.extend(qt_args)
+        QAPP = QtGui.QApplication(args)
     return QAPP
