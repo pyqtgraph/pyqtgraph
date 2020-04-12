@@ -329,9 +329,18 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 
 
 QAPP = None
-def mkQApp():
-    global QAPP    
+def mkQApp(name="pyqtgraph", qt_args=[]):
+    """
+    Creates new QApplication or returns current instance if existing.
+    
+    ==============  =================================================================================
+    **Arguments:**
+    name            Application name, passed to Qt
+    qt_args         Array of command line arguments passed to Qt
+    ==============  =================================================================================
+    """
+    global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication([])
+        QAPP = QtGui.QApplication([name] + qt_args)
     return QAPP
