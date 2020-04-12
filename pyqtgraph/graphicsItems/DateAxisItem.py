@@ -42,13 +42,23 @@ def makeMStepper(stepSize):
         return (d - datetime(1970, 1, 1)).total_seconds()
     return stepper
 
+MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
+MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
+SEC_PER_YEAR = 365.25*24*3600
+
 def makeYStepper(stepSize):
     def stepper(val, n):
+        if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
+            year = val // SEC_PER_YEAR
+            next_year = (year // (n*stepSize) + 1) * (n*stepSize)
+            return next_year * SEC_PER_YEAR
         d = utcfromtimestamp(val)
-        next_date = datetime((d.year // (n*stepSize) + 1) * (n*stepSize), 1, 1)
+        next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
+        if next_year < 1 or next_year > 9999:
+            return next_year * SEC_PER_YEAR
+        next_date = datetime(next_year, 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
-
 
 class TickSpec:
     """ Specifies the properties for a set of date ticks and computes ticks
@@ -88,14 +98,14 @@ class TickSpec:
     def skipFactor(self, minSpc):
         if self.autoSkip is None or minSpc < self.spacing:
             return 1
-        factors = np.array(self.autoSkip)
+        factors = np.array(self.autoSkip, dtype=np.float)
         while True:
             for f in factors:
                 spc = self.spacing * f
                 if spc > minSpc:
-                    return f
+                    return int(f)
             factors *= 10
-
+        
 
 class ZoomLevel:
     """ Generates the ticks which appear in a specific zoom level """
@@ -210,7 +220,11 @@ class DateAxisItem(AxisItem):
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
-        dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
+        try:
+            dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
+        except OverflowError:
+            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR) for v in values]
+            
         formatStrings = []
         for x in dates:
             try:
