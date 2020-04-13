@@ -22,8 +22,15 @@ if sys.platform == 'win32':
 else:
     utcfromtimestamp = datetime.utcfromtimestamp
 
+MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
+MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
+SEC_PER_YEAR = 365.25*24*3600
+
 def makeMSStepper(stepSize):
     def stepper(val, n):
+        if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
+            return np.inf
+        
         val *= 1000
         f = stepSize * 1000
         return (val // (n*f) + 1) * (n*f) / 1000.0
@@ -31,20 +38,22 @@ def makeMSStepper(stepSize):
 
 def makeSStepper(stepSize):
     def stepper(val, n):
+        if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
+            return np.inf
+        
         return (val // (n*stepSize) + 1) * (n*stepSize)
     return stepper
 
 def makeMStepper(stepSize):
     def stepper(val, n):
+        if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
+            return np.inf
+        
         d = utcfromtimestamp(val)
         base0m = (d.month + n*stepSize - 1)
         d = datetime(d.year + base0m // 12, base0m % 12 + 1, 1)
         return (d - datetime(1970, 1, 1)).total_seconds()
     return stepper
-
-MIN_REGULAR_TIMESTAMP = (datetime(1, 1, 1) - datetime(1970,1,1)).total_seconds()
-MAX_REGULAR_TIMESTAMP = (datetime(9999, 1, 1) - datetime(1970,1,1)).total_seconds()
-SEC_PER_YEAR = 365.25*24*3600
 
 def makeYStepper(stepSize):
     def stepper(val, n):
@@ -222,8 +231,8 @@ class DateAxisItem(AxisItem):
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
         try:
             dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
-        except OverflowError:
-            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR) for v in values]
+        except (OverflowError, ValueError, OSError):
+            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR + 1970) for v in values]
             
         formatStrings = []
         for x in dates:
@@ -249,3 +258,15 @@ class DateAxisItem(AxisItem):
         key = next((k for k in keys if density < k), keys[-1])
         self.zoomLevel = self.zoomLevels[key]
         self.zoomLevel.utcOffset = self.utcOffset
+        
+    def linkToView(self, view):
+        super(DateAxisItem, self).linkToView(view)
+        
+        # Set default limits
+        _min = -1e12*SEC_PER_YEAR
+        _max =  1e12*SEC_PER_YEAR
+        
+        if self.orientation in ['right', 'left']:
+            view.setLimits(yMin=_min, yMax=_max)
+        else:
+            view.setLimits(xMin=_min, xMax=_max)
