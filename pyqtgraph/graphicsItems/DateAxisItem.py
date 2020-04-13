@@ -249,3 +249,15 @@ class DateAxisItem(AxisItem):
         key = next((k for k in keys if density < k), keys[-1])
         self.zoomLevel = self.zoomLevels[key]
         self.zoomLevel.utcOffset = self.utcOffset
+        
+    def linkToView(self, view):
+        super(DateAxisItem, self).linkToView(view)
+        
+        # Set default limits
+        _min = -1e12*SEC_PER_YEAR
+        _max =  1e12*SEC_PER_YEAR
+        
+        if self.orientation in ['right', 'left']:
+            view.setLimits(yMin=_min, yMax=_max)
+        else:
+            view.setLimits(xMin=_min, xMax=_max)
