@@ -134,6 +134,9 @@ class GraphicsLayout(GraphicsWidget):
         item.geometryChanged.connect(self._updateItemBorder)
 
         self.layout.addItem(item, row, col, rowspan, colspan)
+        self.layout.activate() # Update layout, recalculating bounds.
+                               # Allows some PyQtGraph features to also work without Qt event loop.
+        
         self.nextColumn()
 
     def getItem(self, row, col):
