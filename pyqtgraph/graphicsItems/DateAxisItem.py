@@ -191,11 +191,8 @@ class DateAxisItem(AxisItem):
     An AxisItem that displays dates from unix timestamps.
 
     The display format is adjusted automatically depending on the current time
-    density (seconds/point) on the axis.
-    You can customize the behaviour by specifying a different set of zoom levels
-    than the default one. The `zoomLevels` variable is a dictionary with the
-    maximum number of seconds/point which are allowed for each zoom level
-    before the axis switches to the next coarser level.
+    density (seconds/point) on the axis. For more details on changing this
+    behaviour, see :func:`updateZoomLevels() <pyqtgraph.DateAxisItem.updateZoomLevels>`.
     
     Can be added to an existing plot e.g. via 
     :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
@@ -215,15 +212,39 @@ class DateAxisItem(AxisItem):
         # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
-        # we need about 60pt for our largest label
-        self.maxTicksPerPt = 1/60.0
+    
+    def updateZoomLevels(self):
+        """
+        The display format is adjusted automatically depending on the current time
+        density (seconds/point) on the axis.
+        
+        You can customize the behaviour by specifying a different set of zoom levels
+        than the default one. The `zoomLevels` variable is a dictionary with the
+        maximum number of seconds/point which are allowed for each zoom level
+        before the axis switches to the next coarser level. To create custom
+        zoom levels, override this function and provide custom `zoomLevelWidths` and
+        `zoomLevels`.
+        """
+        
+        def sizeOf(text, padding):
+            return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        
+        self.zoomLevelWidths = {
+            MS_ZOOM_LEVEL:          sizeOf("99.999", 10),
+            HMS_ZOOM_LEVEL:         sizeOf("99:99:99", 10),
+            HOUR_MINUTE_ZOOM_LEVEL: sizeOf("99:99", 10),
+            DAY_HOUR_ZOOM_LEVEL:    sizeOf("99:99", 10),
+            MONTH_DAY_ZOOM_LEVEL:   sizeOf("Jan", 10),
+            YEAR_MONTH_ZOOM_LEVEL:  sizeOf("-5.00000e+06", 10),
+            }
+        
         self.zoomLevels = {
-            self.maxTicksPerPt:               MS_ZOOM_LEVEL,
-            30 * self.maxTicksPerPt:          HMS_ZOOM_LEVEL,
-            15 * 60 * self.maxTicksPerPt:     HOUR_MINUTE_ZOOM_LEVEL,
-            6 * 3600 * self.maxTicksPerPt:    DAY_HOUR_ZOOM_LEVEL,
-            5 * 3600*24 * self.maxTicksPerPt: MONTH_DAY_ZOOM_LEVEL,
-            3600*24*30 * self.maxTicksPerPt:  YEAR_MONTH_ZOOM_LEVEL
+                          1/self.zoomLevelWidths[MS_ZOOM_LEVEL]:          MS_ZOOM_LEVEL,
+            30 *          1/self.zoomLevelWidths[HMS_ZOOM_LEVEL]:         HMS_ZOOM_LEVEL,
+            15 * 60 *     1/self.zoomLevelWidths[HOUR_MINUTE_ZOOM_LEVEL]: HOUR_MINUTE_ZOOM_LEVEL,
+            6 * 3600 *    1/self.zoomLevelWidths[DAY_HOUR_ZOOM_LEVEL]:    DAY_HOUR_ZOOM_LEVEL,
+            5 * 3600*24 * 1/self.zoomLevelWidths[MONTH_DAY_ZOOM_LEVEL]:   MONTH_DAY_ZOOM_LEVEL,
+            3600*24*30 *  1/self.zoomLevelWidths[YEAR_MONTH_ZOOM_LEVEL]:  YEAR_MONTH_ZOOM_LEVEL
         }
 
     def tickStrings(self, values, scale, spacing):
@@ -248,8 +269,9 @@ class DateAxisItem(AxisItem):
 
     def tickValues(self, minVal, maxVal, size):
         density = (maxVal - minVal) / size
+        self.updateZoomLevels()
         self.setZoomLevelForDensity(density)
-        minSpacing = density / self.maxTicksPerPt
+        minSpacing = density * self.zoomLevelWidths[self.zoomLevel]
         values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=minSpacing)
         return values
 
@@ -270,3 +292,19 @@ class DateAxisItem(AxisItem):
             view.setLimits(yMin=_min, yMax=_max)
         else:
             view.setLimits(xMin=_min, xMax=_max)
+    
+    def paint(self, p, opt, widget):
+        # Get font scale factor by current window resolution
+        self.fontScaleFactor = widget.window().windowHandle().screen().logicalDotsPerInchX() / 96
+        return super(DateAxisItem, self).paint(p, opt, widget)
+        
+    def generateDrawSpecs(self, p):
+        # Get font metrics from QPainter
+        # Not happening in "paint", as the QPainter p there is a different one from the one here,
+        # so changing that font could cause unwanted side effects
+        if self.tickFont is not None:
+            p.setFont(self.tickFont)
+        
+        self.fontMetrics = p.fontMetrics()
+        
+        return super(DateAxisItem, self).generateDrawSpecs(p)
