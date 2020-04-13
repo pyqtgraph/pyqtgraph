@@ -222,7 +222,7 @@ class DateAxisItem(AxisItem):
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
         try:
             dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
-        except (OverflowError, ValueError):
+        except (OverflowError, ValueError, OSError):
             return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR + 1970) for v in values]
             
         formatStrings = []
