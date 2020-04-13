@@ -82,7 +82,6 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
-        self.tickFont = None
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -205,7 +204,11 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def setTickFont(self, font):
-        self.tickFont = font
+        """
+        (QFont or None) Determines the font used for tick values. 
+        Use None for the default font.
+        """
+        self.style['tickFont'] = font
         self.picture = None
         self.prepareGeometryChange()
         ## Need to re-allocate space depending on font size?
@@ -1075,8 +1078,8 @@ class AxisItem(GraphicsWidget):
         profiler('draw ticks')
 
         # Draw all text
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
