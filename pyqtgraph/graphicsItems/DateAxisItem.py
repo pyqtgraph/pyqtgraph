@@ -223,7 +223,7 @@ class DateAxisItem(AxisItem):
         try:
             dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
         except (OverflowError, ValueError):
-            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR) for v in values]
+            return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR + 1970) for v in values]
             
         formatStrings = []
         for x in dates:
