@@ -146,10 +146,12 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
-        #print opts
         if 'visible' in opts:
             self.setHidden(not opts['visible'])
         
+        if 'expanded' in opts:
+            self.setExpanded(opts['expanded'])
+    
     def editName(self):
         self.treeWidget().editItem(self, 0)
         
