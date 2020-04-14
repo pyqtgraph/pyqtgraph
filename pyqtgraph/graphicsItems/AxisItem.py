@@ -1098,23 +1098,26 @@ class AxisItem(GraphicsWidget):
             self._updateHeight()
 
     def wheelEvent(self, ev):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            self.linkedView().wheelEvent(ev, axis=1)
+            lv.wheelEvent(ev, axis=1)
         else:
-            self.linkedView().wheelEvent(ev, axis=0)
+            lv.wheelEvent(ev, axis=0)
         ev.accept()
 
     def mouseDragEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            return self.linkedView().mouseDragEvent(event, axis=1)
+            return lv.mouseDragEvent(event, axis=1)
         else:
-            return self.linkedView().mouseDragEvent(event, axis=0)
+            return lv.mouseDragEvent(event, axis=0)
 
     def mouseClickEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
-        return self.linkedView().mouseClickEvent(event)
+        return lv.mouseClickEvent(event)
