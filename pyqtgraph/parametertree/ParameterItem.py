@@ -34,19 +34,20 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         param.sigOptionsChanged.connect(self.optsChanged)
         param.sigParentChanged.connect(self.parentChanged)
         
-        opts = param.opts
+        self.updateFlags()
         
-        ## Generate context menu for renaming/removing parameter
-        self.contextMenu = QtGui.QMenu()
-        self.contextMenu.addSeparator()
+        ## flag used internally during name editing
+        self.ignoreNameColumnChange = False
+    
+    def updateFlags(self):
+        ## called when Parameter opts changed
+        opts = self.param.opts
+        
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         if opts.get('renamable', False):
-            if param.opts.get('title', None) is not None:
+            if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
             flags |= QtCore.Qt.ItemIsEditable
-            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
-        if opts.get('removable', False):
-            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
@@ -54,9 +55,6 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         if opts.get('dropEnabled', False):
             flags |= QtCore.Qt.ItemIsDropEnabled
         self.setFlags(flags)
-        
-        ## flag used internally during name editing
-        self.ignoreNameColumnChange = False
     
     
     def valueChanged(self, param, val):
@@ -108,7 +106,15 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def contextMenuEvent(self, ev):
         if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False):
             return
-            
+        
+        ## Generate context menu for renaming/removing parameter
+        self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
+        self.contextMenu.addSeparator()
+        if self.param.opts.get('renamable', False):
+            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
+        if self.param.opts.get('removable', False):
+            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+        
         self.contextMenu.popup(ev.globalPos())
         
     def columnChangedEvent(self, col):
@@ -157,6 +163,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if self.param.opts['syncExpanded']:
                 if self.isExpanded() != opts['expanded']:
                     self.setExpanded(opts['expanded'])
+        
+        self.updateFlags()
     
     def editName(self):
         self.treeWidget().editItem(self, 0)
