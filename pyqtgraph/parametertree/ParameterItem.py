@@ -129,6 +129,10 @@ class ParameterItem(QtGui.QTreeWidgetItem):
                 self.nameChanged(self, newName)  ## If the parameter rejects the name change, we need to set it back.
             finally:
                 self.ignoreNameColumnChange = False
+    
+    def expandedChangedEvent(self, expanded):
+        if self.param.opts['syncExpanded']:
+            self.param.setOpts(expanded=expanded)
                 
     def nameChanged(self, param, name):
         ## called when the parameter's name has changed.
@@ -150,7 +154,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.setHidden(not opts['visible'])
         
         if 'expanded' in opts:
-            self.setExpanded(opts['expanded'])
+            if self.param.opts['syncExpanded']:
+                if self.isExpanded() != opts['expanded']:
+                    self.setExpanded(opts['expanded'])
     
     def editName(self):
         self.treeWidget().editItem(self, 0)
