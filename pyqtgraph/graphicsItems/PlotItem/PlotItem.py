@@ -315,11 +315,15 @@ class PlotItem(GraphicsWidget):
                 # Remove old axis
                 oldAxis = self.axes[k]['item']
                 self.layout.removeItem(oldAxis)
+                oldAxis.scene().removeItem(oldAxis)
                 oldAxis.unlinkFromView()
             
             # Create new axis
             if k in axisItems:
                 axis = axisItems[k]
+                if axis.scene() is not None:
+                    if axis != self.axes[k]["item"]:
+                        raise RuntimeError("Can't add an axis to multiple plots.")
             else:
                 axis = AxisItem(orientation=k, parent=self)
             
