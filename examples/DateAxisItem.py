@@ -14,13 +14,14 @@ from pyqtgraph.Qt import QtGui
 
 app = QtGui.QApplication([])
 
-# Create a plot with the date-time axis
+# Create a plot with a date-time axis
 w = pg.PlotWidget(axisItems = {'bottom': pg.DateAxisItem()})
+w.showGrid(x=True, y=True)
 
-# Plot some random data with timestamps in the last hour
+# Plot sin(1/x^2) with timestamps in the last 100 years
 now = time.time()
-timestamps = np.linspace(now - 3600, now, 100)
-w.plot(x=timestamps, y=np.random.rand(100), symbol='o')
+x = np.linspace(2*np.pi, 1000*2*np.pi, 8301)
+w.plot(now-(2*np.pi/x)**2*100*np.pi*1e7, np.sin(x), symbol='o')
 
 w.show()
 
