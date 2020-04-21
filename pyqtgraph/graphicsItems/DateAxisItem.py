@@ -58,9 +58,9 @@ def makeMStepper(stepSize):
 def makeYStepper(stepSize):
     def stepper(val, n):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
-            year = val // SEC_PER_YEAR
+            year = val // SEC_PER_YEAR + 1970
             next_year = (year // (n*stepSize) + 1) * (n*stepSize)
-            return next_year * SEC_PER_YEAR
+            return (next_year - 1970) * SEC_PER_YEAR
         d = utcfromtimestamp(val)
         next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
         if next_year < 1 or next_year > 9999:
