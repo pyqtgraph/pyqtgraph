@@ -295,11 +295,6 @@ class DateAxisItem(AxisItem):
             view.setLimits(yMin=_min, yMax=_max)
         else:
             view.setLimits(xMin=_min, xMax=_max)
-    
-    def paint(self, p, opt, widget):
-        # Get font scale factor by current window resolution
-        self.fontScaleFactor = widget.window().windowHandle().screen().logicalDotsPerInchX() / 96
-        return super(DateAxisItem, self).paint(p, opt, widget)
         
     def generateDrawSpecs(self, p):
         # Get font metrics from QPainter
@@ -309,5 +304,8 @@ class DateAxisItem(AxisItem):
             p.setFont(self.tickFont)
         
         self.fontMetrics = p.fontMetrics()
+        
+        # Get font scale factor by current window resolution
+        self.fontScaleFactor = p.device().logicalDpiX() / 96
         
         return super(DateAxisItem, self).generateDrawSpecs(p)
