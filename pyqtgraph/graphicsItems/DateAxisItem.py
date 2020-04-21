@@ -282,7 +282,7 @@ class DateAxisItem(AxisItem):
         
         # Calculate minimal spacing of items on the axis
         size = sizeOf(zoomLevel.exampleText)
-        self.minSpacing = np.ceil(density*size)
+        self.minSpacing = density*size
         
     def linkToView(self, view):
         super(DateAxisItem, self).linkToView(view)
