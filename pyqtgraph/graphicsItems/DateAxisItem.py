@@ -118,7 +118,7 @@ class TickSpec:
 
 class ZoomLevel:
     """ Generates the ticks which appear in a specific zoom level """
-    def __init__(self, tickSpecs):
+    def __init__(self, tickSpecs, exampleText, maximalSpacing):
         """
         ============= ==========================================================
         tickSpecs     a list of one or more TickSpec objects with decreasing
@@ -128,6 +128,8 @@ class ZoomLevel:
         """
         self.tickSpecs = tickSpecs
         self.utcOffset = 0
+        self.exampleText = exampleText
+        self.maximalSpacing = maximalSpacing
 
     def tickValues(self, minVal, maxVal, minSpc):
         # return tick values for this format in the range minVal, maxVal
@@ -159,30 +161,29 @@ class ZoomLevel:
 YEAR_MONTH_ZOOM_LEVEL = ZoomLevel([
     TickSpec(YEAR_SPACING, makeYStepper(1), '%Y', autoSkip=[1, 5, 10, 25]),
     TickSpec(MONTH_SPACING, makeMStepper(1), '%b')
-])
+], "-5.00000e+06", np.inf)
 MONTH_DAY_ZOOM_LEVEL = ZoomLevel([
     TickSpec(MONTH_SPACING, makeMStepper(1), '%b'),
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d', autoSkip=[1, 5])
-])
+], "MMM", 5 * 3600*24)
 DAY_HOUR_ZOOM_LEVEL = ZoomLevel([
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
     TickSpec(HOUR_SPACING, makeSStepper(HOUR_SPACING), '%H:%M', autoSkip=[1, 6])
-])
+], "MMM 00", 6 * 3600)
 HOUR_MINUTE_ZOOM_LEVEL = ZoomLevel([
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%a %d'),
     TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M',
              autoSkip=[1, 5, 15])
-])
+], "MMM 00", 15 * 60)
 HMS_ZOOM_LEVEL = ZoomLevel([
     TickSpec(SECOND_SPACING, makeSStepper(SECOND_SPACING), '%H:%M:%S',
              autoSkip=[1, 5, 15, 30])
-])
+], "99:99:99", 30)
 MS_ZOOM_LEVEL = ZoomLevel([
     TickSpec(MINUTE_SPACING, makeSStepper(MINUTE_SPACING), '%H:%M:%S'),
     TickSpec(MS_SPACING, makeMSStepper(MS_SPACING), '%S.%f',
              autoSkip=[1, 5, 10, 25])
-])
-
+], "99:99:99", 1)
 
 class DateAxisItem(AxisItem):
     """
@@ -192,7 +193,7 @@ class DateAxisItem(AxisItem):
 
     The display format is adjusted automatically depending on the current time
     density (seconds/point) on the axis. For more details on changing this
-    behaviour, see :func:`updateZoomLevels() <pyqtgraph.DateAxisItem.updateZoomLevels>`.
+    behaviour, see :func:`setZoomLevelForDensity() <pyqtgraph.DateAxisItem.setZoomLevelForDensity>`.
     
     Can be added to an existing plot e.g. via 
     :func:`setAxisItems({'bottom':axis}) <pyqtgraph.PlotItem.setAxisItems>`.
@@ -211,42 +212,16 @@ class DateAxisItem(AxisItem):
         super(DateAxisItem, self).__init__(orientation, **kwargs)
         # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
-        self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
+        
+        self.zoomLevels = [
+            YEAR_MONTH_ZOOM_LEVEL,
+            MONTH_DAY_ZOOM_LEVEL,
+            DAY_HOUR_ZOOM_LEVEL,
+            HOUR_MINUTE_ZOOM_LEVEL,
+            HMS_ZOOM_LEVEL,
+            MS_ZOOM_LEVEL,
+            ]
     
-    def updateZoomLevels(self):
-        """
-        The display format is adjusted automatically depending on the current time
-        density (seconds/point) on the axis.
-        
-        You can customize the behaviour by specifying a different set of zoom levels
-        than the default one. The `zoomLevels` variable is a dictionary with the
-        maximum number of seconds/point which are allowed for each zoom level
-        before the axis switches to the next coarser level. To create custom
-        zoom levels, override this function and provide custom `zoomLevelWidths` and
-        `zoomLevels`.
-        """
-        
-        def sizeOf(text, padding):
-            return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
-        
-        self.zoomLevelWidths = {
-            MS_ZOOM_LEVEL:          sizeOf("99.999", 10),
-            HMS_ZOOM_LEVEL:         sizeOf("99:99:99", 10),
-            HOUR_MINUTE_ZOOM_LEVEL: sizeOf("99:99", 10),
-            DAY_HOUR_ZOOM_LEVEL:    sizeOf("99:99", 10),
-            MONTH_DAY_ZOOM_LEVEL:   sizeOf("Jan", 10),
-            YEAR_MONTH_ZOOM_LEVEL:  sizeOf("-5.00000e+06", 10),
-            }
-        
-        self.zoomLevels = {
-                          1/self.zoomLevelWidths[MS_ZOOM_LEVEL]:          MS_ZOOM_LEVEL,
-            30 *          1/self.zoomLevelWidths[HMS_ZOOM_LEVEL]:         HMS_ZOOM_LEVEL,
-            15 * 60 *     1/self.zoomLevelWidths[HOUR_MINUTE_ZOOM_LEVEL]: HOUR_MINUTE_ZOOM_LEVEL,
-            6 * 3600 *    1/self.zoomLevelWidths[DAY_HOUR_ZOOM_LEVEL]:    DAY_HOUR_ZOOM_LEVEL,
-            5 * 3600*24 * 1/self.zoomLevelWidths[MONTH_DAY_ZOOM_LEVEL]:   MONTH_DAY_ZOOM_LEVEL,
-            3600*24*30 *  1/self.zoomLevelWidths[YEAR_MONTH_ZOOM_LEVEL]:  YEAR_MONTH_ZOOM_LEVEL
-        }
-
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
         tickSpec = next((s for s in tickSpecs if s.spacing == spacing), None)
@@ -269,17 +244,42 @@ class DateAxisItem(AxisItem):
 
     def tickValues(self, minVal, maxVal, size):
         density = (maxVal - minVal) / size
-        self.updateZoomLevels()
         self.setZoomLevelForDensity(density)
-        minSpacing = density * self.zoomLevelWidths[self.zoomLevel]
-        values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=minSpacing)
+        values = self.zoomLevel.tickValues(minVal, maxVal, minSpc=self.minSpacing)
         return values
 
     def setZoomLevelForDensity(self, density):
-        keys = sorted(self.zoomLevels.keys())
-        key = next((k for k in keys if density < k), keys[-1])
-        self.zoomLevel = self.zoomLevels[key]
+        """
+        Setting zoomLevel and maximalSpacing based on given density of seconds per pixel
+        
+        The display format is adjusted automatically depending on the current time
+        density (seconds/point) on the axis. You can customize the behaviour by 
+        overriding this function.
+        """
+        padding = 10
+        
+        # Size in pixels a specific tick label will take
+        def sizeOf(text):
+            return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        
+        # Fallback zoom level: Years/Months
+        self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
+        for zoomLevel in self.zoomLevels:
+            size = sizeOf(zoomLevel.exampleText)
+            maximalSpacing = zoomLevel.maximalSpacing
+
+            # Test if zoom level is too fine grained
+            if maximalSpacing/size < density:
+                break
+            
+            self.zoomLevel = zoomLevel
+        
+        # Set up zoomLevel
         self.zoomLevel.utcOffset = self.utcOffset
+        
+        # Calculate minimal spacing of items on the axis
+        size = sizeOf(zoomLevel.exampleText)
+        self.minSpacing = np.ceil(density*size)
         
     def linkToView(self, view):
         super(DateAxisItem, self).linkToView(view)
