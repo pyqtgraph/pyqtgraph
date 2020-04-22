@@ -64,7 +64,7 @@ def makeYStepper(stepSize):
         d = utcfromtimestamp(val)
         next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
         if next_year < 1 or next_year > 9999:
-            return next_year * SEC_PER_YEAR
+            return (next_year - 1970) * SEC_PER_YEAR
         next_date = datetime(next_year, 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
@@ -288,8 +288,8 @@ class DateAxisItem(AxisItem):
         super(DateAxisItem, self).linkToView(view)
         
         # Set default limits
-        _min = -1e12*SEC_PER_YEAR
-        _max =  1e12*SEC_PER_YEAR
+        _min = -1e10*SEC_PER_YEAR
+        _max =  1e10*SEC_PER_YEAR
         
         if self.orientation in ['right', 'left']:
             view.setLimits(yMin=_min, yMax=_max)
