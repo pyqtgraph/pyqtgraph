@@ -265,8 +265,12 @@ class DateAxisItem(AxisItem):
         padding = 10
         
         # Size in pixels a specific tick label will take
-        def sizeOf(text):
-            return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        if self.orientation in ['bottom', 'top']:
+            def sizeOf(text):
+                return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        else:
+            def sizeOf(text):
+                return self.fontMetrics.boundingRect(text).height() + padding*self.fontScaleFactor
         
         # Fallback zoom level: Years/Months
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
