@@ -58,13 +58,12 @@ def makeMStepper(stepSize):
 def makeYStepper(stepSize):
     def stepper(val, n):
         if val < MIN_REGULAR_TIMESTAMP or val > MAX_REGULAR_TIMESTAMP:
-            year = val // SEC_PER_YEAR + 1970
-            next_year = (year // (n*stepSize) + 1) * (n*stepSize)
-            return (next_year - 1970) * SEC_PER_YEAR
+            return np.inf
+        
         d = utcfromtimestamp(val)
         next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
-        if next_year < 1 or next_year > 9999:
-            return (next_year - 1970) * SEC_PER_YEAR
+        if next_year > 9999:
+            return np.inf
         next_date = datetime(next_year, 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
@@ -160,7 +159,7 @@ class ZoomLevel:
 YEAR_MONTH_ZOOM_LEVEL = ZoomLevel([
     TickSpec(YEAR_SPACING, makeYStepper(1), '%Y', autoSkip=[1, 5, 10, 25]),
     TickSpec(MONTH_SPACING, makeMStepper(1), '%b')
-], "-5.00000e+06")
+], "YYYY")
 MONTH_DAY_ZOOM_LEVEL = ZoomLevel([
     TickSpec(MONTH_SPACING, makeMStepper(1), '%b'),
     TickSpec(DAY_SPACING, makeSStepper(DAY_SPACING), '%d', autoSkip=[1, 5])
@@ -227,16 +226,19 @@ class DateAxisItem(AxisItem):
         try:
             dates = [utcfromtimestamp(v - self.utcOffset) for v in values]
         except (OverflowError, ValueError, OSError):
+            # should not normally happen
             return ['%g' % ((v-self.utcOffset)//SEC_PER_YEAR + 1970) for v in values]
             
         formatStrings = []
         for x in dates:
             try:
+                s = x.strftime(tickSpec.format)
                 if '%f' in tickSpec.format:
                     # we only support ms precision
-                    formatStrings.append(x.strftime(tickSpec.format)[:-3])
-                else:
-                    formatStrings.append(x.strftime(tickSpec.format))
+                    s = s[:-3]
+                elif '%Y' in tickSpec.format:
+                    s = s.lstrip('0')
+                formatStrings.append(s)
             except ValueError:  # Windows can't handle dates before 1970
                 formatStrings.append('')
         return formatStrings
@@ -281,15 +283,15 @@ class DateAxisItem(AxisItem):
         self.zoomLevel.utcOffset = self.utcOffset
         
         # Calculate minimal spacing of items on the axis
-        size = sizeOf(zoomLevel.exampleText)
+        size = sizeOf(self.zoomLevel.exampleText)
         self.minSpacing = density*size
         
     def linkToView(self, view):
         super(DateAxisItem, self).linkToView(view)
         
         # Set default limits
-        _min = -1e10*SEC_PER_YEAR
-        _max =  1e10*SEC_PER_YEAR
+        _min = MIN_REGULAR_TIMESTAMP
+        _max = MAX_REGULAR_TIMESTAMP
         
         if self.orientation in ['right', 'left']:
             view.setLimits(yMin=_min, yMax=_max)
