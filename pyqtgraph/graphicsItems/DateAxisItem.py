@@ -288,8 +288,8 @@ class DateAxisItem(AxisItem):
         super(DateAxisItem, self).linkToView(view)
         
         # Set default limits
-        _min = -1e12*SEC_PER_YEAR
-        _max =  1e12*SEC_PER_YEAR
+        _min = -1e10*SEC_PER_YEAR
+        _max =  1e10*SEC_PER_YEAR
         
         if self.orientation in ['right', 'left']:
             view.setLimits(yMin=_min, yMax=_max)
