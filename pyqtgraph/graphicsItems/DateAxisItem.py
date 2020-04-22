@@ -64,7 +64,7 @@ def makeYStepper(stepSize):
         d = utcfromtimestamp(val)
         next_year = (d.year // (n*stepSize) + 1) * (n*stepSize)
         if next_year < 1 or next_year > 9999:
-            return next_year * SEC_PER_YEAR
+            return (next_year - 1970) * SEC_PER_YEAR
         next_date = datetime(next_year, 1, 1)
         return (next_date - datetime(1970, 1, 1)).total_seconds()
     return stepper
