@@ -2,7 +2,9 @@ import sys
 import numpy as np
 import time
 from datetime import datetime, timedelta
+
 from .AxisItem import AxisItem
+from ..pgcollections import OrderedDict
 
 __all__ = ['DateAxisItem', 'ZoomLevel']
 
@@ -211,14 +213,14 @@ class DateAxisItem(AxisItem):
         # Set the zoom level to use depending on the time density on the axis
         self.utcOffset = time.timezone
         
-        self.zoomLevels = {
-            np.inf:      YEAR_MONTH_ZOOM_LEVEL,
-            5 * 3600*24: MONTH_DAY_ZOOM_LEVEL,
-            6 * 3600:    DAY_HOUR_ZOOM_LEVEL,
-            15 * 60:     HOUR_MINUTE_ZOOM_LEVEL,
-            30:          HMS_ZOOM_LEVEL,
-            1:           MS_ZOOM_LEVEL,
-            }
+        self.zoomLevels = OrderedDict([
+            (np.inf,      YEAR_MONTH_ZOOM_LEVEL),
+            (5 * 3600*24, MONTH_DAY_ZOOM_LEVEL),
+            (6 * 3600,    DAY_HOUR_ZOOM_LEVEL),
+            (15 * 60,     HOUR_MINUTE_ZOOM_LEVEL),
+            (30,          HMS_ZOOM_LEVEL),
+            (1,           MS_ZOOM_LEVEL),
+            ])
     
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
@@ -265,8 +267,12 @@ class DateAxisItem(AxisItem):
         padding = 10
         
         # Size in pixels a specific tick label will take
-        def sizeOf(text):
-            return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        if self.orientation in ['bottom', 'top']:
+            def sizeOf(text):
+                return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+        else:
+            def sizeOf(text):
+                return self.fontMetrics.boundingRect(text).height() + padding*self.fontScaleFactor
         
         # Fallback zoom level: Years/Months
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
