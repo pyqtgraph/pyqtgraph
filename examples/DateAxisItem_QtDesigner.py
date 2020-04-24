@@ -38,6 +38,7 @@ app = QtWidgets.QApplication(sys.argv)
 app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
 app.setPalette(QtWidgets.QApplication.style().standardPalette())
 window = ExampleApp()
+window.setWindowTitle('pyqtgraph example: DateAxisItem_QtDesigner')
 window.show()
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
