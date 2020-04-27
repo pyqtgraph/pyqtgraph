@@ -308,8 +308,8 @@ class DateAxisItem(AxisItem):
         # Get font metrics from QPainter
         # Not happening in "paint", as the QPainter p there is a different one from the one here,
         # so changing that font could cause unwanted side effects
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         
         self.fontMetrics = p.fontMetrics()
         
