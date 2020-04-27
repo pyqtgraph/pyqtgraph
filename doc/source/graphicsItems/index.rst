@@ -43,3 +43,4 @@ Contents:
     graphicsitem
     uigraphicsitem
     graphicswidgetanchor
+    dateaxisitem
