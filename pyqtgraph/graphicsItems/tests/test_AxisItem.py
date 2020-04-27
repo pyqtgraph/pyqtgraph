@@ -37,7 +37,7 @@ def test_AxisItem_viewUnlink(monkeypatch):
     view = plot.plotItem.getViewBox()
     axis = plot.getAxis("bottom")
     assert axis.linkedView() == view
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert axis.linkedView() is None
 
 
@@ -69,7 +69,7 @@ def test_AxisItem_bottomRelink(monkeypatch):
     assert fake_view.sigYRangeChanged.calls == []
     assert fake_view.sigXRangeChanged.calls == ['connect']
     assert fake_view.sigResized.calls == ['connect']
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert fake_view.sigYRangeChanged.calls == []
     assert fake_view.sigXRangeChanged.calls == ['connect', 'disconnect']
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
@@ -83,7 +83,7 @@ def test_AxisItem_leftRelink(monkeypatch):
     assert fake_view.sigYRangeChanged.calls == ['connect']
     assert fake_view.sigXRangeChanged.calls == []
     assert fake_view.sigResized.calls == ['connect']
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert fake_view.sigYRangeChanged.calls == ['connect', 'disconnect']
     assert fake_view.sigXRangeChanged.calls == []
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
