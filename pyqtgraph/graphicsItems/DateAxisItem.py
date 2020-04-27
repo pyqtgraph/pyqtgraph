@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from .AxisItem import AxisItem
 from ..pgcollections import OrderedDict
 
-__all__ = ['DateAxisItem', 'ZoomLevel']
+__all__ = ['DateAxisItem']
 
 MS_SPACING = 1/1000.0
 SECOND_SPACING = 1
