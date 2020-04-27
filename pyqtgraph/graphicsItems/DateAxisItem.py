@@ -260,9 +260,8 @@ class DateAxisItem(AxisItem):
         overriding this function or setting a different set of zoom levels
         than the default one. The `zoomLevels` variable is a dictionary with the
         maximal distance of ticks in seconds which are allowed for each zoom level
-        before the axis switches to the next coarser level. To create custom
-        zoom levels, override this function and provide custom `zoomLevelWidths` and
-        `zoomLevels`.
+        before the axis switches to the next coarser level. To customize the zoom level
+        selection, override this function.
         """
         padding = 10
         
