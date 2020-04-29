@@ -24,6 +24,7 @@ class PlotWidget(GraphicsView):
     :func:`addItem <pyqtgraph.PlotItem.addItem>`, 
     :func:`removeItem <pyqtgraph.PlotItem.removeItem>`, 
     :func:`clear <pyqtgraph.PlotItem.clear>`, 
+    :func:`setAxisItems <pyqtgraph.PlotItem.setAxisItems>`,
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
@@ -55,7 +56,7 @@ class PlotWidget(GraphicsView):
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
         ## NOTE: If you change this list, update the documentation above as well.
-        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 
+        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setAxisItems', 'setXRange', 
                   'setYRange', 'setRange', 'setAspectLocked', 'setMouseEnabled', 
                   'setXLink', 'setYLink', 'enableAutoRange', 'disableAutoRange', 
                   'setLimits', 'register', 'unregister', 'viewRect']:
