@@ -122,26 +122,35 @@ class SymbolAtlas(object):
         """
         Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
         """
-        sourceRect = np.empty(len(opts), dtype=object)
+
+        sourceRect = []
         keyi = None
         sourceRecti = None
-        for i, rec in enumerate(opts):
-            key = (id(rec[3]), rec[2], id(rec[4]), id(rec[5]))   # TODO: use string indexes?
+        symbol_map = self.symbolMap
+
+        for i, rec in enumerate(opts.tolist()):
+            size, symbol, pen, brush = rec[2: 6]
+
+            key = id(symbol), size, id(pen), id(brush)
             if key == keyi:
-                sourceRect[i] = sourceRecti
+                sourceRect.append(sourceRecti)
             else:
                 try:
-                    sourceRect[i] = self.symbolMap[key]
+                    sourceRect.append(symbol_map[key])
                 except KeyError:
                     newRectSrc = QtCore.QRectF()
-                    newRectSrc.pen = rec['pen']
-                    newRectSrc.brush = rec['brush']
-                    newRectSrc.symbol = rec[3]
-                    self.symbolMap[key] = newRectSrc
+                    newRectSrc.pen = pen
+                    newRectSrc.brush = brush
+                    newRectSrc.symbol = symbol
+
+                    symbol_map[key] = newRectSrc
                     self.atlasValid = False
-                    sourceRect[i] = newRectSrc
+                    sourceRect.append(newRectSrc)
+
                     keyi = key
                     sourceRecti = newRectSrc
+
+        sourceRect = np.array(sourceRect, dtype=object)
         return sourceRect
 
     def buildAtlas(self):
