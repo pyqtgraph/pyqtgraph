@@ -133,15 +133,12 @@ class SymbolAtlas(object):
         pens = opts['pen'].tolist()
         brushes = opts['brush'].tolist()
 
-        cnt = 0
-
         for symbol, size, pen, brush in zip(symbols, sizes, pens, brushes):
 
             key = symbol, size, id(pen), id(brush)
             if key == keyi:
                 sourceRect.append(sourceRecti)
             else:
-                cnt += 1
                 try:
                     sourceRect.append(symbol_map[key])
                 except KeyError:
