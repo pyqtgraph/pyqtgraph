@@ -15,7 +15,6 @@ from ..pgcollections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
 
-from time import perf_counter as pc
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
@@ -592,7 +591,6 @@ class ScatterPlotItem(GraphicsObject):
         if invalidate:
             self.invalidate()
 
-
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
             rec = recs
@@ -618,8 +616,6 @@ class ScatterPlotItem(GraphicsObject):
             recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
             return recs
 
-
-
     def measureSpotSizes(self, dataSet):
         for rec in dataSet:
             ## keep track of the maximum spot size and pixel size
@@ -637,7 +633,6 @@ class ScatterPlotItem(GraphicsObject):
             self._maxSpotWidth = max(self._maxSpotWidth, width)
             self._maxSpotPxWidth = max(self._maxSpotPxWidth, pxWidth)
         self.bounds = [None, None]
-
 
     def clear(self):
         """Remove all spots from the scatter plot"""
