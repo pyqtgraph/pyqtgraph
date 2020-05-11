@@ -15,6 +15,8 @@ from ..pgcollections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
 
+from time import perf_counter as pc
+
 __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
@@ -135,7 +137,7 @@ class SymbolAtlas(object):
 
         for symbol, size, pen, brush in zip(symbols, sizes, pens, brushes):
 
-            key = symbol, size, id(pen), id(brush)
+            key = id(symbol), size, id(pen), id(brush)
             if key == keyi:
                 sourceRect.append(sourceRecti)
             else:
@@ -564,6 +566,40 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def updateSpots(self, dataSet=None):
+
+        if dataSet is None:
+            dataSet = self.data
+
+        invalidate = False
+        if self.opts['pxMode']:
+            invalidate = True
+
+            size, symbol, pen, brush = self.opts['size'], self.opts['symbol'],  fn.mkPen(self.opts['pen']), fn.mkBrush(self.opts['brush'])
+            newRectSrc = QtCore.QRectF()
+            newRectSrc.pen = pen
+            newRectSrc.brush = brush
+            newRectSrc.symbol = symbol
+
+            self.fragmentAtlas.symbolMap[(symbol, size, id(pen), id(brush))] = newRectSrc
+            self.fragmentAtlas.atlasValid = False
+
+            dataSet['sourceRect'] = np.array([newRectSrc for i in range(len(dataSet))], dtype='O')
+
+            self.fragmentAtlas.getAtlas() # generate atlas so source widths are available.
+
+            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
+            dataSet['targetRect'] = None
+            self._maxSpotPxWidth = self.fragmentAtlas.max_width
+        else:
+            self._maxSpotWidth = 0
+            self._maxSpotPxWidth = 0
+            self.measureSpotSizes(dataSet)
+
+        if invalidate:
+            self.invalidate()
+
+    def updateSpotsOriginal(self, dataSet=None):
+
         if dataSet is None:
             dataSet = self.data
 
@@ -588,6 +624,7 @@ class ScatterPlotItem(GraphicsObject):
 
         if invalidate:
             self.invalidate()
+
 
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
