@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import weakref
+import warnings
+
 from ..Qt import QtCore, QtGui
 from ..Point import Point
 from .. import functions as fn
@@ -88,15 +90,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
     
     @classmethod
     def registerObject(cls, obj):
-        """
-        Workaround for PyQt bug in qgraphicsscene.items()
-        All subclasses of QGraphicsObject must register themselves with this function.
-        (otherwise, mouse interaction with those objects will likely fail)
-        """
-        if HAVE_SIP and isinstance(obj, sip.wrapper):
-            cls._addressCache[sip.unwrapinstance(sip.cast(obj, QtGui.QGraphicsItem))] = obj
-            
-            
+        warnings.warn(
+            "'registerObject' is deprecated and does nothing.",
+            DeprecationWarning, stacklevel=2
+        )
+
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
@@ -368,46 +366,15 @@ class GraphicsScene(QtGui.QGraphicsScene):
         return ev.isAccepted()
         
     def items(self, *args):
-        #print 'args:', args
         items = QtGui.QGraphicsScene.items(self, *args)
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        items2 = list(map(self.translateGraphicsItem, items))
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #items2 = []
-            #for i in items:
-                #addr = sip.unwrapinstance(sip.cast(i, QtGui.QGraphicsItem))
-                #i2 = GraphicsScene._addressCache.get(addr, i)
-                ##print i, "==>", i2
-                #items2.append(i2)
-        #print 'items:', items
-        return items2
+        return self.translateGraphicsItems(items)
     
     def selectedItems(self, *args):
         items = QtGui.QGraphicsScene.selectedItems(self, *args)
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #items2 = []
-            #for i in items:
-                #addr = sip.unwrapinstance(sip.cast(i, QtGui.QGraphicsItem))
-                #i2 = GraphicsScene._addressCache.get(addr, i)
-                ##print i, "==>", i2
-                #items2.append(i2)
-        items2 = list(map(self.translateGraphicsItem, items))
-
-        #print 'items:', items
-        return items2
+        return self.translateGraphicsItems(items)
 
     def itemAt(self, *args):
         item = QtGui.QGraphicsScene.itemAt(self, *args)
-        
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(item, QtGui.QGraphicsItem))
-            #item = GraphicsScene._addressCache.get(addr, item)
-        #return item
         return self.translateGraphicsItem(item)
 
     def itemsNearEvent(self, event, selMode=QtCore.Qt.IntersectsItemShape, sortOrder=QtCore.Qt.DescendingOrder, hoverable=False):
@@ -554,10 +521,14 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     @staticmethod
     def translateGraphicsItem(item):
-        ## for fixing pyqt bugs where the wrong item is returned
+        # This function is intended as a workaround for a problem with older
+        # versions of PyQt (< 4.9?), where methods returning 'QGraphicsItem *'
+        # lose the type of the QGraphicsObject subclasses and instead return
+        # generic QGraphicsItem wrappers.
         if HAVE_SIP and isinstance(item, sip.wrapper):
-            addr = sip.unwrapinstance(sip.cast(item, QtGui.QGraphicsItem))
-            item = GraphicsScene._addressCache.get(addr, item)
+            obj = item.toGraphicsObject()
+            if obj is not None:
+                item = obj
         return item
 
     @staticmethod
