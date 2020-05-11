@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from .AxisItem import AxisItem
 from ..pgcollections import OrderedDict
 
-__all__ = ['DateAxisItem', 'ZoomLevel']
+__all__ = ['DateAxisItem']
 
 MS_SPACING = 1/1000.0
 SECOND_SPACING = 1
@@ -260,9 +260,8 @@ class DateAxisItem(AxisItem):
         overriding this function or setting a different set of zoom levels
         than the default one. The `zoomLevels` variable is a dictionary with the
         maximal distance of ticks in seconds which are allowed for each zoom level
-        before the axis switches to the next coarser level. To create custom
-        zoom levels, override this function and provide custom `zoomLevelWidths` and
-        `zoomLevels`.
+        before the axis switches to the next coarser level. To customize the zoom level
+        selection, override this function.
         """
         padding = 10
         
@@ -308,8 +307,8 @@ class DateAxisItem(AxisItem):
         # Get font metrics from QPainter
         # Not happening in "paint", as the QPainter p there is a different one from the one here,
         # so changing that font could cause unwanted side effects
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         
         self.fontMetrics = p.fontMetrics()
         

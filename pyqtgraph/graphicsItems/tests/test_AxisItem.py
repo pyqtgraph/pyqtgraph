@@ -30,3 +30,60 @@ def test_AxisItem_stopAxisAtTick(monkeypatch):
     plot.show()
     app.processEvents()
     plot.close()
+
+
+def test_AxisItem_viewUnlink():
+    plot = pg.PlotWidget()
+    view = plot.plotItem.getViewBox()
+    axis = plot.getAxis("bottom")
+    assert axis.linkedView() == view
+    axis.unlinkFromView()
+    assert axis.linkedView() is None
+
+
+class FakeSignal:
+
+    def __init__(self):
+        self.calls = []
+
+    def connect(self, *args, **kwargs):
+        self.calls.append('connect')
+
+    def disconnect(self, *args, **kwargs):
+        self.calls.append('disconnect')
+
+
+class FakeView:
+
+    def __init__(self):
+        self.sigYRangeChanged = FakeSignal()
+        self.sigXRangeChanged = FakeSignal()
+        self.sigResized = FakeSignal()
+
+
+def test_AxisItem_bottomRelink():
+    axis = pg.AxisItem('bottom')
+    fake_view = FakeView()
+    axis.linkToView(fake_view)
+    assert axis.linkedView() == fake_view
+    assert fake_view.sigYRangeChanged.calls == []
+    assert fake_view.sigXRangeChanged.calls == ['connect']
+    assert fake_view.sigResized.calls == ['connect']
+    axis.unlinkFromView()
+    assert fake_view.sigYRangeChanged.calls == []
+    assert fake_view.sigXRangeChanged.calls == ['connect', 'disconnect']
+    assert fake_view.sigResized.calls == ['connect', 'disconnect']
+
+
+def test_AxisItem_leftRelink():
+    axis = pg.AxisItem('left')
+    fake_view = FakeView()
+    axis.linkToView(fake_view)
+    assert axis.linkedView() == fake_view
+    assert fake_view.sigYRangeChanged.calls == ['connect']
+    assert fake_view.sigXRangeChanged.calls == []
+    assert fake_view.sigResized.calls == ['connect']
+    axis.unlinkFromView()
+    assert fake_view.sigYRangeChanged.calls == ['connect', 'disconnect']
+    assert fake_view.sigXRangeChanged.calls == []
+    assert fake_view.sigResized.calls == ['connect', 'disconnect']
