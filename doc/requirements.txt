@@ -1,0 +1,6 @@
+pyside2
+numpy
+scipy
+h5py
+sphinx
+sphinx_rtd_theme
