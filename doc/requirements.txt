@@ -2,5 +2,7 @@ pyside2
 numpy
 scipy
 h5py
+matplotlib
+pyopengl
 sphinx
 sphinx_rtd_theme
