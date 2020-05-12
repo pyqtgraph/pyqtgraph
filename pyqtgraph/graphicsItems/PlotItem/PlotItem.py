@@ -290,7 +290,7 @@ class PlotItem(GraphicsWidget):
         Place axis items as given by `axisItems`. Initializes non-existing axis items.
         
         ==============  ==========================================================================================
-        **Arguments:**<
+        **Arguments:**
         *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
                         for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
                         and the values must be instances of AxisItem (or at least compatible with AxisItem).
