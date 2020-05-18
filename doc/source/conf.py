@@ -89,6 +89,11 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 autodoc_inherit_docstrings = False
+autodoc_mock_imports = [
+    "scipy",
+    "h5py",
+    "matplotlib",
+]
 
 # -- Options for HTML output ---------------------------------------------------
 
