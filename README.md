@@ -1,5 +1,6 @@
 
 [![Build Status](https://pyqtgraph.visualstudio.com/pyqtgraph/_apis/build/status/pyqtgraph.pyqtgraph?branchName=develop)](https://pyqtgraph.visualstudio.com/pyqtgraph/_build/latest?definitionId=17&branchName=develop)
+[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
 PyQtGraph
 =========
@@ -72,4 +73,4 @@ Documentation
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` for a menu.
 
-The official documentation lives at http://pyqtgraph.org/documentation
+The official documentation lives at https://pyqtgraph.readthedocs.io
