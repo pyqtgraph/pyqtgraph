@@ -595,7 +595,13 @@ class ImageView(QtGui.QWidget):
         if self.axes['t'] is None:
             # Average across y-axis of ROI
             data = data.mean(axis=axes[1])
-            coords = coords[:,:,0] - coords[:,0:1,0]
+
+            if axes == (0,1): ## there's probably a better way to do this slicing dynamically, but I'm not sure what it is.
+                coords = coords[:,:,0] - coords[:,0:1,0] 
+            elif axes == (1,0): ## we're in row-major order mode
+                coords = coords[:,0,:] - coords[:,0,0:1]
+            else:
+                raise Exception("Need to implement a better way to handle these axes: %s" %str(self.axes))
             xvals = (coords**2).sum(axis=0) ** 0.5
         else:
             # Average data within entire ROI for each frame
