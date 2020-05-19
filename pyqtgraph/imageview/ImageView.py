@@ -586,7 +586,8 @@ class ImageView(QtGui.QWidget):
         # Extract image data from ROI
         axes = (self.axes['x'], self.axes['y'])
 
-        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
+        #data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
+        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, returnMappedCoords=True)
         if data is None:
             return
 
