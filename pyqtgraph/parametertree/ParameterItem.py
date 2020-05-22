@@ -47,6 +47,17 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.contextMenu.addAction('Rename').triggered.connect(self.editName)
         if opts.get('removable', False):
             self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+
+        # context menu
+        context = opts.get('context', None)
+        if isinstance(context, list):
+            for name in context:
+                self.contextMenu.addAction(name).triggered.connect(
+                    self.contextMenuTriggered(name))
+        elif isinstance(context, dict):
+            for name, title in context.items():
+                self.contextMenu.addAction(title).triggered.connect(
+                    self.contextMenuTriggered(name))
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
@@ -57,7 +68,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         
         ## flag used internally during name editing
         self.ignoreNameColumnChange = False
-    
+
     
     def valueChanged(self, param, val):
         ## called when the parameter's value has changed
@@ -106,7 +117,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         pass
                 
     def contextMenuEvent(self, ev):
-        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False):
+        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False)\
+                and "context" not in self.param.opts:
             return
             
         self.contextMenu.popup(ev.globalPos())
@@ -149,7 +161,12 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         #print opts
         if 'visible' in opts:
             self.setHidden(not opts['visible'])
-        
+
+    def contextMenuTriggered(self, name):
+        def trigger():
+            self.param.contextMenu(name)
+        return trigger
+
     def editName(self):
         self.treeWidget().editItem(self, 0)
         
