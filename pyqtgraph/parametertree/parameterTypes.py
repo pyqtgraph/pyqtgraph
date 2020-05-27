@@ -437,8 +437,10 @@ class GroupParameterItem(ParameterItem):
         else:
             ParameterItem.addChild(self, child)
             
-    def optsChanged(self, param, changed):
-        if 'addList' in changed:
+    def optsChanged(self, param, opts):
+        ParameterItem.optsChanged(self, param, opts)
+        
+        if 'addList' in opts:
             self.updateAddList()
                 
     def updateAddList(self):
