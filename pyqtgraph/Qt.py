@@ -138,12 +138,6 @@ def _loadUiType(uiFile):
     return form_class, base_class
 
 
-def _pyside2uic(uiFile):
-    glob = {}
-    mod = exec(uipy, globals=glob)
-
-
-
 if QT_LIB == PYSIDE:
     from PySide import QtGui, QtCore
 
