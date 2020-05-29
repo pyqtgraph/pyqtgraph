@@ -82,7 +82,6 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
-        self.tickFont = None
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -205,7 +204,11 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def setTickFont(self, font):
-        self.tickFont = font
+        """
+        (QFont or None) Determines the font used for tick values. 
+        Use None for the default font.
+        """
+        self.style['tickFont'] = font
         self.picture = None
         self.prepareGeometryChange()
         ## Need to re-allocate space depending on font size?
@@ -506,35 +509,30 @@ class AxisItem(GraphicsWidget):
             return self._linkedView()
 
     def linkToView(self, view):
-        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view.
+        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+        self.unlinkFromView()
 
-        ==============  ============================================================
-        **Arguments:**
-        view            The ViewBox to link.  None to unlink the existing ViewBox.
-        ==============  ============================================================
-
-        To get the existing linked ViewBox, use :func:`linkToView <pyqtgraph.AxisItem.linkedView>`.
-        """
-        oldView = self.linkedView()
-        if view is None:
-            self._linkedView = None
+        self._linkedView = weakref.ref(view)
+        if self.orientation in ['right', 'left']:
+            view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
-            self._linkedView = weakref.ref(view)
+            view.sigXRangeChanged.connect(self.linkedViewChanged)
+        
+        view.sigResized.connect(self.linkedViewChanged)
+        
+    def unlinkFromView(self):
+        """Unlink this axis from a ViewBox."""
+        oldView = self.linkedView()
+        self._linkedView = None
         if self.orientation in ['right', 'left']:
             if oldView is not None:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
-            if view is not None:
-                view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             if oldView is not None:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
-            if view is not None:
-                view.sigXRangeChanged.connect(self.linkedViewChanged)
 
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
-        if view is not None:
-            view.sigResized.connect(self.linkedViewChanged)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
@@ -1089,8 +1087,8 @@ class AxisItem(GraphicsWidget):
         profiler('draw ticks')
 
         # Draw all text
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)

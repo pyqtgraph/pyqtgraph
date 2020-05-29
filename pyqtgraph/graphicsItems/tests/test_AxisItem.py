@@ -32,12 +32,12 @@ def test_AxisItem_stopAxisAtTick(monkeypatch):
     plot.close()
 
 
-def test_AxisItem_viewUnlink(monkeypatch):
+def test_AxisItem_viewUnlink():
     plot = pg.PlotWidget()
     view = plot.plotItem.getViewBox()
     axis = plot.getAxis("bottom")
     assert axis.linkedView() == view
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert axis.linkedView() is None
 
 
@@ -61,7 +61,7 @@ class FakeView:
         self.sigResized = FakeSignal()
 
 
-def test_AxisItem_bottomRelink(monkeypatch):
+def test_AxisItem_bottomRelink():
     axis = pg.AxisItem('bottom')
     fake_view = FakeView()
     axis.linkToView(fake_view)
@@ -69,13 +69,13 @@ def test_AxisItem_bottomRelink(monkeypatch):
     assert fake_view.sigYRangeChanged.calls == []
     assert fake_view.sigXRangeChanged.calls == ['connect']
     assert fake_view.sigResized.calls == ['connect']
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert fake_view.sigYRangeChanged.calls == []
     assert fake_view.sigXRangeChanged.calls == ['connect', 'disconnect']
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
 
 
-def test_AxisItem_leftRelink(monkeypatch):
+def test_AxisItem_leftRelink():
     axis = pg.AxisItem('left')
     fake_view = FakeView()
     axis.linkToView(fake_view)
@@ -83,7 +83,7 @@ def test_AxisItem_leftRelink(monkeypatch):
     assert fake_view.sigYRangeChanged.calls == ['connect']
     assert fake_view.sigXRangeChanged.calls == []
     assert fake_view.sigResized.calls == ['connect']
-    axis.linkToView(None)
+    axis.unlinkFromView()
     assert fake_view.sigYRangeChanged.calls == ['connect', 'disconnect']
     assert fake_view.sigXRangeChanged.calls == []
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
