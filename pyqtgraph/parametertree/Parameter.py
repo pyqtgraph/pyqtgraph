@@ -55,6 +55,7 @@ class Parameter(QtCore.QObject):
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
     sigNameChanged(self, name)           Emitted when this parameter's name has changed
     sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
+    sigContextMenu(self, name)           Emitted when a context menu was clicked
     ===================================  =========================================================
     """
     ## name, type, limits, etc.
@@ -81,7 +82,8 @@ class Parameter(QtCore.QObject):
     ## (but only if monitorChildren() is called)
     sigTreeStateChanged = QtCore.Signal(object, object)  # self, changes
                                                          # changes = [(param, change, info), ...]
-    
+    sigContextMenu = QtCore.Signal(object, object)       # self, name
+
     # bad planning.
     #def __new__(cls, *args, **opts):
         #try:
@@ -203,12 +205,18 @@ class Parameter(QtCore.QObject):
         self.sigDefaultChanged.connect(lambda param, data: self.emitStateChanged('default', data))
         self.sigNameChanged.connect(lambda param, data: self.emitStateChanged('name', data))
         self.sigOptionsChanged.connect(lambda param, data: self.emitStateChanged('options', data))
+        self.sigContextMenu.connect(lambda param, data: self.emitStateChanged('contextMenu', data))
+
         
         #self.watchParam(self)  ## emit treechange signals if our own state changes
         
     def name(self):
         """Return the name of this Parameter."""
         return self.opts['name']
+
+    def contextMenu(self, name):
+        """"A context menu entry was clicked"""
+        self.sigContextMenu.emit(self, name)
 
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 

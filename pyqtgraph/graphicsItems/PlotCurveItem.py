@@ -167,7 +167,7 @@ class PlotCurveItem(GraphicsObject):
             b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
 
         ## adjust for fill level
-        if ax == 1 and self.opts['fillLevel'] is not None:
+        if ax == 1 and self.opts['fillLevel'] not in [None, 'enclosed']:
             b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))
 
         ## Add pen width only if it is non-cosmetic.
@@ -480,9 +480,10 @@ class PlotCurveItem(GraphicsObject):
                 if x is None:
                     x,y = self.getData()
                 p2 = QtGui.QPainterPath(self.path)
-                p2.lineTo(x[-1], self.opts['fillLevel'])
-                p2.lineTo(x[0], self.opts['fillLevel'])
-                p2.lineTo(x[0], y[0])
+                if self.opts['fillLevel'] != 'enclosed':
+                    p2.lineTo(x[-1], self.opts['fillLevel'])
+                    p2.lineTo(x[0], self.opts['fillLevel'])
+                    p2.lineTo(x[0], y[0])
                 p2.closeSubpath()
                 self.fillPath = p2
 

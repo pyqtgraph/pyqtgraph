@@ -82,7 +82,6 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
-        self.tickFont = None
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -205,7 +204,11 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def setTickFont(self, font):
-        self.tickFont = font
+        """
+        (QFont or None) Determines the font used for tick values. 
+        Use None for the default font.
+        """
+        self.style['tickFont'] = font
         self.picture = None
         self.prepareGeometryChange()
         ## Need to re-allocate space depending on font size?
@@ -507,20 +510,29 @@ class AxisItem(GraphicsWidget):
 
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
-        oldView = self.linkedView()
+        self.unlinkFromView()
+
         self._linkedView = weakref.ref(view)
+        if self.orientation in ['right', 'left']:
+            view.sigYRangeChanged.connect(self.linkedViewChanged)
+        else:
+            view.sigXRangeChanged.connect(self.linkedViewChanged)
+        
+        view.sigResized.connect(self.linkedViewChanged)
+        
+    def unlinkFromView(self):
+        """Unlink this axis from a ViewBox."""
+        oldView = self.linkedView()
+        self._linkedView = None
         if self.orientation in ['right', 'left']:
             if oldView is not None:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
-            view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             if oldView is not None:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
-            view.sigXRangeChanged.connect(self.linkedViewChanged)
 
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
-        view.sigResized.connect(self.linkedViewChanged)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
@@ -1075,8 +1087,8 @@ class AxisItem(GraphicsWidget):
         profiler('draw ticks')
 
         # Draw all text
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
@@ -1098,23 +1110,26 @@ class AxisItem(GraphicsWidget):
             self._updateHeight()
 
     def wheelEvent(self, ev):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            self.linkedView().wheelEvent(ev, axis=1)
+            lv.wheelEvent(ev, axis=1)
         else:
-            self.linkedView().wheelEvent(ev, axis=0)
+            lv.wheelEvent(ev, axis=0)
         ev.accept()
 
     def mouseDragEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            return self.linkedView().mouseDragEvent(event, axis=1)
+            return lv.mouseDragEvent(event, axis=1)
         else:
-            return self.linkedView().mouseDragEvent(event, axis=0)
+            return lv.mouseDragEvent(event, axis=0)
 
     def mouseClickEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
-        return self.linkedView().mouseClickEvent(event)
+        return lv.mouseClickEvent(event)

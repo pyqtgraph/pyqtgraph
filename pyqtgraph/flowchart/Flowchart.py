@@ -763,6 +763,9 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         item = self.items[node]
         self.ui.ctrlList.setCurrentItem(item)
 
+    def clearSelection(self):
+        self.ui.ctrlList.selectionModel().clearSelection()
+
 
 class FlowchartWidget(dockarea.DockArea):
     """Includes the actual graphical flowchart and debugging interface"""
@@ -890,7 +893,10 @@ class FlowchartWidget(dockarea.DockArea):
             item = items[0]
             if hasattr(item, 'node') and isinstance(item.node, Node):
                 n = item.node
-                self.ctrl.select(n)
+                if n in self.ctrl.items:
+                    self.ctrl.select(n)
+                else:
+                    self.ctrl.clearSelection()
                 data = {'outputs': n.outputValues(), 'inputs': n.inputValues()}
                 self.selNameLabel.setText(n.name())
                 if hasattr(n, 'nodeName'):

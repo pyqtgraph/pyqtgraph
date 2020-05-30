@@ -129,7 +129,7 @@ jobs:
       then
         source activate test-environment-$(python.version)
       fi
-      pip install pytest-xvfb
+      pip install PyVirtualDisplay==0.2.5 pytest-xvfb
     displayName: "Virtual Display Setup"
     condition: eq(variables['agent.os'], 'Linux' )
 

@@ -35,10 +35,10 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         param.sigParentChanged.connect(self.parentChanged)
         
         self.updateFlags()
-        
+
         ## flag used internally during name editing
         self.ignoreNameColumnChange = False
-    
+
     def updateFlags(self):
         ## called when Parameter opts changed
         opts = self.param.opts
@@ -55,7 +55,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         if opts.get('dropEnabled', False):
             flags |= QtCore.Qt.ItemIsDropEnabled
         self.setFlags(flags)
-    
+
     
     def valueChanged(self, param, val):
         ## called when the parameter's value has changed
@@ -104,7 +104,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         pass
                 
     def contextMenuEvent(self, ev):
-        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False):
+        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False)\
+                and "context" not in self.param.opts:
             return
         
         ## Generate context menu for renaming/removing parameter
@@ -114,6 +115,17 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.contextMenu.addAction('Rename').triggered.connect(self.editName)
         if self.param.opts.get('removable', False):
             self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+        
+        # context menu
+        context = opts.get('context', None)
+        if isinstance(context, list):
+            for name in context:
+                self.contextMenu.addAction(name).triggered.connect(
+                    self.contextMenuTriggered(name))
+        elif isinstance(context, dict):
+            for name, title in context.items():
+                self.contextMenu.addAction(title).triggered.connect(
+                    self.contextMenuTriggered(name))
         
         self.contextMenu.popup(ev.globalPos())
         
@@ -135,7 +147,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
                 self.nameChanged(self, newName)  ## If the parameter rejects the name change, we need to set it back.
             finally:
                 self.ignoreNameColumnChange = False
-    
+
     def expandedChangedEvent(self, expanded):
         if self.param.opts['syncExpanded']:
             self.param.setOpts(expanded=expanded)
@@ -158,14 +170,20 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         name, value, default, or limits"""
         if 'visible' in opts:
             self.setHidden(not opts['visible'])
-        
+
         if 'expanded' in opts:
             if self.param.opts['syncExpanded']:
                 if self.isExpanded() != opts['expanded']:
                     self.setExpanded(opts['expanded'])
-        
+
         self.updateFlags()
-    
+
+
+    def contextMenuTriggered(self, name):
+        def trigger():
+            self.param.contextMenu(name)
+        return trigger
+
     def editName(self):
         self.treeWidget().editItem(self, 0)
         
