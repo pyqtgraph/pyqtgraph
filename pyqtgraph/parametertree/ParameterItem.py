@@ -34,30 +34,20 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         param.sigOptionsChanged.connect(self.optsChanged)
         param.sigParentChanged.connect(self.parentChanged)
         
-        opts = param.opts
+        self.updateFlags()
+
+        ## flag used internally during name editing
+        self.ignoreNameColumnChange = False
+
+    def updateFlags(self):
+        ## called when Parameter opts changed
+        opts = self.param.opts
         
-        ## Generate context menu for renaming/removing parameter
-        self.contextMenu = QtGui.QMenu()
-        self.contextMenu.addSeparator()
         flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         if opts.get('renamable', False):
-            if param.opts.get('title', None) is not None:
+            if opts.get('title', None) is not None:
                 raise Exception("Cannot make parameter with both title != None and renamable == True.")
             flags |= QtCore.Qt.ItemIsEditable
-            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
-        if opts.get('removable', False):
-            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
-
-        # context menu
-        context = opts.get('context', None)
-        if isinstance(context, list):
-            for name in context:
-                self.contextMenu.addAction(name).triggered.connect(
-                    self.contextMenuTriggered(name))
-        elif isinstance(context, dict):
-            for name, title in context.items():
-                self.contextMenu.addAction(title).triggered.connect(
-                    self.contextMenuTriggered(name))
         
         ## handle movable / dropEnabled options
         if opts.get('movable', False):
@@ -65,9 +55,6 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         if opts.get('dropEnabled', False):
             flags |= QtCore.Qt.ItemIsDropEnabled
         self.setFlags(flags)
-        
-        ## flag used internally during name editing
-        self.ignoreNameColumnChange = False
 
     
     def valueChanged(self, param, val):
@@ -120,7 +107,26 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False)\
                 and "context" not in self.param.opts:
             return
-            
+        
+        ## Generate context menu for renaming/removing parameter
+        self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
+        self.contextMenu.addSeparator()
+        if self.param.opts.get('renamable', False):
+            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
+        if self.param.opts.get('removable', False):
+            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+        
+        # context menu
+        context = opts.get('context', None)
+        if isinstance(context, list):
+            for name in context:
+                self.contextMenu.addAction(name).triggered.connect(
+                    self.contextMenuTriggered(name))
+        elif isinstance(context, dict):
+            for name, title in context.items():
+                self.contextMenu.addAction(title).triggered.connect(
+                    self.contextMenuTriggered(name))
+        
         self.contextMenu.popup(ev.globalPos())
         
     def columnChangedEvent(self, col):
@@ -141,6 +147,10 @@ class ParameterItem(QtGui.QTreeWidgetItem):
                 self.nameChanged(self, newName)  ## If the parameter rejects the name change, we need to set it back.
             finally:
                 self.ignoreNameColumnChange = False
+
+    def expandedChangedEvent(self, expanded):
+        if self.param.opts['syncExpanded']:
+            self.param.setOpts(expanded=expanded)
                 
     def nameChanged(self, param, name):
         ## called when the parameter's name has changed.
@@ -158,9 +168,21 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
-        #print opts
         if 'visible' in opts:
             self.setHidden(not opts['visible'])
+
+        if 'expanded' in opts:
+            if self.param.opts['syncExpanded']:
+                if self.isExpanded() != opts['expanded']:
+                    self.setExpanded(opts['expanded'])
+        
+        if 'syncExpanded' in opts:
+            if opts['syncExpanded']:
+                if self.isExpanded() != self.param.opts['expanded']:
+                    self.setExpanded(self.param.opts['expanded'])
+
+        self.updateFlags()
+
 
     def contextMenuTriggered(self, name):
         def trigger():

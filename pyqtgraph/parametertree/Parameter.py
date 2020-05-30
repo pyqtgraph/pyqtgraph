@@ -137,9 +137,12 @@ class Parameter(QtCore.QObject):
                                      (default=False)
         removable                    If True, the user may remove this Parameter.
                                      (default=False)
-        expanded                     If True, the Parameter will appear expanded when
-                                     displayed in a ParameterTree (its children will be
-                                     visible). (default=True)
+        expanded                     If True, the Parameter will initially be expanded in
+                                     ParameterTrees: Its children will be visible.
+                                     (default=True)
+        syncExpanded                 If True, the `expanded` state of this Parameter is
+                                     synchronized with all ParameterTrees it is displayed in.
+                                     (default=False)
         title                        (str or None) If specified, then the parameter will be 
                                      displayed to the user using this string as its name. 
                                      However, the parameter will still be referred to 
@@ -161,6 +164,7 @@ class Parameter(QtCore.QObject):
             'removable': False,
             'strictNaming': False,  # forces name to be usable as a python variable
             'expanded': True,
+            'syncExpanded': False,
             'title': None,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
@@ -461,7 +465,7 @@ class Parameter(QtCore.QObject):
         Set any arbitrary options on this parameter.
         The exact behavior of this function will depend on the parameter type, but
         most parameters will accept a common set of options: value, name, limits,
-        default, readonly, removable, renamable, visible, enabled, and expanded.
+        default, readonly, removable, renamable, visible, enabled, expanded and syncExpanded.
         
         See :func:`Parameter.__init__ <pyqtgraph.parametertree.Parameter.__init__>`
         for more information on default options.

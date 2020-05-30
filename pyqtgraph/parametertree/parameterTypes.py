@@ -44,10 +44,6 @@ class WidgetParameterItem(ParameterItem):
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
         
-        opts = self.param.opts
-        if 'tip' in opts:
-            w.setToolTip(opts['tip'])
-        
         self.defaultBtn = QtGui.QPushButton()
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
@@ -73,6 +69,7 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanging.connect(self.widgetValueChanging)
             
         ## update value shown in widget. 
+        opts = self.param.opts
         if opts.get('value', None) is not None:
             self.valueChanged(self, opts['value'], force=True)
         else:
@@ -80,6 +77,8 @@ class WidgetParameterItem(ParameterItem):
             self.widgetValueChanged()
 
         self.updateDefaultBtn()
+        
+        self.optsChanged(self.param, self.param.opts)
 
     def makeWidget(self):
         """
@@ -279,6 +278,9 @@ class WidgetParameterItem(ParameterItem):
             self.updateDefaultBtn()
             if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
                 self.widget.setEnabled(not opts['readonly'])
+        
+        if 'tip' in opts:
+            self.widget.setToolTip(opts['tip'])
         
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
