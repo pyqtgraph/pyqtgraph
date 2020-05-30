@@ -426,10 +426,13 @@ class GroupParameterItem(ParameterItem):
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self, True)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+        tw.setFirstItemColumnSpanned(self, True)
         if self.addItem is not None:
-            self.treeWidget().setItemWidget(self.addItem, 0, self.addWidgetBox)
-            self.treeWidget().setFirstItemColumnSpanned(self.addItem, True)
+            tw.setItemWidget(self.addItem, 0, self.addWidgetBox)
+            tw.setFirstItemColumnSpanned(self.addItem, True)
         
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
@@ -664,8 +667,12 @@ class TextParameterItem(WidgetParameterItem):
         ## TODO: fix so that superclass method can be called
         ## (WidgetParameter should just natively support this style)
         #WidgetParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self.subItem, True)
-        self.treeWidget().setItemWidget(self.subItem, 0, self.textBox)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+
+        tw.setFirstItemColumnSpanned(self.subItem, True)
+        tw.setItemWidget(self.subItem, 0, self.textBox)
         
         # for now, these are copied from ParameterItem.treeWidgetChanged
         self.setHidden(not self.param.opts.get('visible', True))
