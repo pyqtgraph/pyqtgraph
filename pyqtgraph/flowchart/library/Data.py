@@ -2,6 +2,7 @@
 from ..Node import Node
 from ...Qt import QtGui, QtCore
 import numpy as np
+import sys
 from .common import *
 from ...SRTTransform import SRTTransform
 from ...Point import Point
@@ -238,7 +239,12 @@ class EvalNode(Node):
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
             text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
-            exec(text)
+            if sys.version_info.major == 2:
+                exec(text)
+            elif sys.version_info.major == 3:
+                ldict = locals()
+                exec(text, globals(), ldict)
+                output = ldict['output']
         except:
             print("Error processing node: %s" % self.name())
             raise
