@@ -175,6 +175,11 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             if self.param.opts['syncExpanded']:
                 if self.isExpanded() != opts['expanded']:
                     self.setExpanded(opts['expanded'])
+        
+        if 'syncExpanded' in opts:
+            if opts['syncExpanded']:
+                if self.isExpanded() != self.param.opts['expanded']:
+                    self.setExpanded(self.param.opts['expanded'])
 
         self.updateFlags()
 
