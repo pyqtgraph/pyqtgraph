@@ -10,7 +10,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import os, sys, re, time, subprocess
+import os, sys, re, time, subprocess, warnings
 
 from .python2_3 import asUnicode
 
@@ -119,6 +119,8 @@ def _loadUiType(uiFile):
 
     # convert ui file to python code
     if pysideuic is None:
+        if PySide2.__version__[:5].split('.')[:2] == ['5', '14']:
+            warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
         uipy = subprocess.check_output(['pyside2-uic', uiFile])
     else:
         o = _StringIO()
