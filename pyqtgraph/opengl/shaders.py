@@ -140,9 +140,9 @@ def initShaders():
         ## colors fragments by z-value.
         ## This is useful for coloring surface plots by height.
         ## This shader uses a uniform called "colorMap" to determine how to map the colors:
-        ##    red   = pow(z * colorMap[0] + colorMap[1], colorMap[2])
-        ##    green = pow(z * colorMap[3] + colorMap[4], colorMap[5])
-        ##    blue  = pow(z * colorMap[6] + colorMap[7], colorMap[8])
+        ##    red   = pow(colorMap[0]*(z + colorMap[1]), colorMap[2])
+        ##    green = pow(colorMap[3]*(z + colorMap[4]), colorMap[5])
+        ##    blue  = pow(colorMap[6]*(z + colorMap[7]), colorMap[8])
         ## (set the values like this: shader['uniformMap'] = array([...])
         ShaderProgram('heightColor', [
             VertexShader("""

@@ -2,7 +2,7 @@
 """
 PlotWidget.py -  Convenience class--GraphicsView widget displaying a single PlotItem
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from ..Qt import QtCore, QtGui
@@ -24,6 +24,7 @@ class PlotWidget(GraphicsView):
     :func:`addItem <pyqtgraph.PlotItem.addItem>`, 
     :func:`removeItem <pyqtgraph.PlotItem.removeItem>`, 
     :func:`clear <pyqtgraph.PlotItem.clear>`, 
+    :func:`setAxisItems <pyqtgraph.PlotItem.setAxisItems>`,
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
@@ -55,7 +56,7 @@ class PlotWidget(GraphicsView):
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
         ## NOTE: If you change this list, update the documentation above as well.
-        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 
+        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setAxisItems', 'setXRange', 
                   'setYRange', 'setRange', 'setAspectLocked', 'setMouseEnabled', 
                   'setXLink', 'setYLink', 'enableAutoRange', 'disableAutoRange', 
                   'setLimits', 'register', 'unregister', 'viewRect']:
@@ -76,7 +77,7 @@ class PlotWidget(GraphicsView):
             m = getattr(self.plotItem, attr)
             if hasattr(m, '__call__'):
                 return m
-        raise NameError(attr)
+        raise AttributeError(attr)
     
     def viewRangeChanged(self, view, range):
         #self.emit(QtCore.SIGNAL('viewChanged'), *args)

@@ -1,8 +1,8 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from ..Qt import QtGui, QtCore, QT_LIB
 import matplotlib
 
-if not USE_PYQT5:
-    if USE_PYSIDE:
+if QT_LIB != 'PyQt5':
+    if QT_LIB == 'PySide':
         matplotlib.rcParams['backend.qt4']='PySide'
 
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas

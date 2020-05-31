@@ -1,4 +1,4 @@
-from ..Qt import QtGui, USE_PYQT5, USE_PYQT4, USE_PYSIDE
+from ..Qt import QtGui
 from .. import functions as fn
 from .PlotDataItem import PlotDataItem
 from .PlotCurveItem import PlotCurveItem
