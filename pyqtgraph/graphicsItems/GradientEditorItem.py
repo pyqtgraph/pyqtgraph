@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import weakref
 import numpy as np
 from ..Qt import QtGui, QtCore
@@ -864,8 +865,8 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
                 self.view().tickMoveFinished(self)
 
     def mouseClickEvent(self, ev):
-        if  ev.button() == QtCore.Qt.RightButton and self.moving:
-            ev.accept()
+        ev.accept()
+        if ev.button() == QtCore.Qt.RightButton and self.moving:
             self.setPos(self.startPosition)
             self.view().tickMoved(self, self.startPosition)
             self.moving = False
@@ -873,8 +874,6 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
             self.sigMoved.emit(self)
         else:
             self.view().tickClicked(self, ev)
-            ##remove
-        ev.accept()
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
@@ -940,4 +939,3 @@ class TickMenu(QtGui.QMenu):
     #    self.fracPosSpin.blockSignals(True)
     #    self.fracPosSpin.setValue(self.sliderItem().tickValue(self.tick()))
     #    self.fracPosSpin.blockSignals(False)
-
