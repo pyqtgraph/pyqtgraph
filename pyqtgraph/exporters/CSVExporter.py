@@ -3,6 +3,7 @@ from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
 from ..parametertree import Parameter
 from .. import PlotItem
+from ..python2_3 import asUnicode
 
 __all__ = ['CSVExporter']
     
@@ -57,7 +58,7 @@ class CSVExporter(Exporter):
             sep = '\t'
 
         with open(fileName, 'w') as fd:
-            fd.write(sep.join(header) + '\n')
+            fd.write(sep.join(map(asUnicode, header)) + '\n')
             i = 0
             numFormat = '%%0.%dg' % self.params['precision']
             numRows = max([len(d[0]) for d in data])
