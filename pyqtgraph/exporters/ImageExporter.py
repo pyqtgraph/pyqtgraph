@@ -1,6 +1,6 @@
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from .. import functions as fn
 import numpy as np
 
@@ -47,10 +47,7 @@ class ImageExporter(Exporter):
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
-            if USE_PYSIDE:
-                filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
-            else:
-                filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
+            filter    = ["*."+f.data().decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
             preferred = ['*.png', '*.tif', '*.jpg']
             for p in preferred[::-1]:
                 if p in filter:
@@ -58,17 +55,17 @@ class ImageExporter(Exporter):
                     filter.insert(0, p)
             self.fileSaveDialog(filter=filter)
             return
-            
-        targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
-        sourceRect = self.getSourceRect()
-        
-        
-        #self.png = QtGui.QImage(targetRect.size(), QtGui.QImage.Format_ARGB32)
-        #self.png.fill(pyqtgraph.mkColor(self.params['background']))
-        w, h = self.params['width'], self.params['height']
+
+        w = int(self.params['width'])
+        h = int(self.params['height'])
         if w == 0 or h == 0:
-            raise Exception("Cannot export image with size=0 (requested export size is %dx%d)" % (w,h))
-        bg = np.empty((self.params['height'], self.params['width'], 4), dtype=np.ubyte)
+            raise Exception("Cannot export image with size=0 (requested "
+                            "export size is %dx%d)" % (w, h))
+
+        targetRect = QtCore.QRect(0, 0, w, h)
+        sourceRect = self.getSourceRect()
+
+        bg = np.empty((h, w, 4), dtype=np.ubyte)
         color = self.params['background']
         bg[:,:,0] = color.blue()
         bg[:,:,1] = color.green()
@@ -105,7 +102,7 @@ class ImageExporter(Exporter):
         elif toBytes:
             return self.png
         else:
-            self.png.save(fileName)
+            return self.png.save(fileName)
         
 ImageExporter.register()        
         

@@ -1,6 +1,7 @@
 import os, time, sys, traceback, weakref
 import numpy as np
 import threading
+import warnings
 try:
     import __builtin__ as builtins
     import cPickle as pickle
@@ -21,6 +22,9 @@ class NoResultError(Exception):
     because the call has not yet returned."""
     pass
 
+class RemoteExceptionWarning(UserWarning):
+    """Emitted when a request to a remote object results in an Exception """
+    pass
     
 class RemoteEventHandler(object):
     """
@@ -454,7 +458,7 @@ class RemoteEventHandler(object):
             ## follow up by sending byte messages
             if byteData is not None:
                 for obj in byteData:  ## Remote process _must_ be prepared to read the same number of byte messages!
-                    self.conn.send_bytes(obj)
+                    self.conn.send_bytes(bytes(obj))
                 self.debugMsg('  sent %d byte messages', len(byteData))
             
             self.debugMsg('  call sync: %s', callSync)
@@ -499,9 +503,9 @@ class RemoteEventHandler(object):
             #print ''.join(result)
             exc, excStr = result
             if exc is not None:
-                print("===== Remote process raised exception on request: =====")
-                print(''.join(excStr))
-                print("===== Local Traceback to request follows: =====")
+                warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
+                warnings.warn(''.join(excStr), RemoteExceptionWarning)
+                warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
                 raise exc
             else:
                 print(''.join(excStr))
@@ -545,7 +549,7 @@ class RemoteEventHandler(object):
         
         if autoProxy is True:
             args = [self.autoProxy(v, noProxyTypes) for v in args]
-            for k, v in kwds.iteritems():
+            for k, v in kwds.items():
                 opts[k] = self.autoProxy(v, noProxyTypes)
         
         byteMsgs = []

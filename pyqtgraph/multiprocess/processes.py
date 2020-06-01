@@ -6,7 +6,7 @@ except ImportError:
     import pickle
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
-from ..Qt import USE_PYSIDE
+from ..Qt import QT_LIB
 from ..util import cprint  # color printing for debugging
 
 
@@ -39,7 +39,7 @@ class Process(RemoteEventHandler):
     """
     _process_count = 1  # just used for assigning colors to each process for debugging
 
-    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None):
+    def __init__(self, name=None, target=None, executable=None, copySysPath=True, debug=False, timeout=20, wrapStdout=None, pyqtapis=None):
         """
         ==============  =============================================================
         **Arguments:**
@@ -47,7 +47,7 @@ class Process(RemoteEventHandler):
                         from the remote process.
         target          Optional function to call after starting remote process.
                         By default, this is startEventLoop(), which causes the remote
-                        process to process requests from the parent process until it
+                        process to handle requests from the parent process until it
                         is asked to quit. If you wish to specify a different target,
                         it must be picklable (bound methods are not).
         copySysPath     If True, copy the contents of sys.path to the remote process.
@@ -61,6 +61,8 @@ class Process(RemoteEventHandler):
                         for a python bug: http://bugs.python.org/issue3905
                         but has the side effect that child output is significantly
                         delayed relative to the parent output.
+        pyqtapis        Optional dictionary of PyQt API version numbers to set before
+                        importing pyqtgraph in the remote process.
         ==============  =============================================================
         """
         if target is None:
@@ -129,8 +131,9 @@ class Process(RemoteEventHandler):
             ppid=pid, 
             targetStr=targetStr, 
             path=sysPath, 
-            pyside=USE_PYSIDE,
-            debug=procDebug
+            qt_lib=QT_LIB,
+            debug=procDebug,
+            pyqtapis=pyqtapis,
             )
         pickle.dump(data, self.proc.stdin)
         self.proc.stdin.close()
@@ -162,6 +165,15 @@ class Process(RemoteEventHandler):
                 if timeout is not None and time.time() - start > timeout:
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
+        self.conn.close()
+
+        # Close remote polling threads, otherwise they will spin continuously
+        if hasattr(self, "_stdoutForwarder"):
+            self._stdoutForwarder.finish.set()
+            self._stderrForwarder.finish.set()
+            self._stdoutForwarder.join()
+            self._stderrForwarder.join()
+
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
 
     def debugMsg(self, msg, *args):
@@ -247,7 +259,7 @@ class ForkedProcess(RemoteEventHandler):
         
         proxyIDs = {}
         if preProxy is not None:
-            for k, v in preProxy.iteritems():
+            for k, v in preProxy.items():
                 proxyId = LocalObjectProxy.registerObject(v)
                 proxyIDs[k] = proxyId
         
@@ -296,7 +308,7 @@ class ForkedProcess(RemoteEventHandler):
             RemoteEventHandler.__init__(self, remoteConn, name+'_child', pid=ppid)
             
             self.forkedProxies = {}
-            for name, proxyId in proxyIDs.iteritems():
+            for name, proxyId in proxyIDs.items():
                 self.forkedProxies[name] = ObjectProxy(ppid, proxyId=proxyId, typeStr=repr(preProxy[name]))
             
             if target is not None:
@@ -338,6 +350,7 @@ class ForkedProcess(RemoteEventHandler):
         except OSError:  ## probably remote process has already quit
             pass
         
+        self.conn.close()  # don't leak file handles!
         self.hasJoined = True
 
     def kill(self):
@@ -468,23 +481,24 @@ class FileForwarder(threading.Thread):
         self.lock = threading.Lock()
         self.daemon = True
         self.color = color
+        self.finish = threading.Event()
         self.start()
 
     def run(self):
         if self.output == 'stdout' and self.color is not False:
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
                     cprint.cout(self.color, line, -1)
         elif self.output == 'stderr' and self.color is not False:
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
                     cprint.cerr(self.color, line, -1)
         else:
             if isinstance(self.output, str):
                 self.output = getattr(sys, self.output)
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    self.output.write(line)
+                    self.output.write(line.decode('utf8'))

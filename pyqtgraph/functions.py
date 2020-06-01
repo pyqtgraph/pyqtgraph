@@ -2,7 +2,7 @@
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
@@ -11,11 +11,13 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
-from . import debug
-
+from . import debug, reload
+from .reload import getPreviousVersion 
+from .metaarray import MetaArray
 
 
 Colors = {
@@ -77,7 +79,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     p = .001**m
     
-    return (p, pref)    
+    return (p, pref)
 
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
@@ -110,7 +112,7 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
 
 
-def siParse(s, regex=FLOAT_REGEX):
+def siParse(s, regex=FLOAT_REGEX, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
     Example::
@@ -118,6 +120,12 @@ def siParse(s, regex=FLOAT_REGEX):
         siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
     s = asUnicode(s)
+    s = s.strip()
+    if suffix is not None and len(suffix) > 0:
+        if s[-len(suffix):] != suffix:
+            raise ValueError("String '%s' does not have the expected suffix '%s'" % (s, suffix))
+        s = s[:-len(suffix)] + 'X'  # add a fake suffix so the regex still picks up the si prefix
+        
     m = regex.match(s)
     if m is None:
         raise ValueError('Cannot parse number "%s"' % s)
@@ -126,15 +134,18 @@ def siParse(s, regex=FLOAT_REGEX):
     except IndexError:
         sip = ''
     
-    try:
-        suf = m.group('suffix')
-    except IndexError:
-        suf = ''
+    if suffix is None:
+        try:
+            suf = m.group('suffix')
+        except IndexError:
+            suf = ''
+    else:
+        suf = suffix
     
     return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
 
 
-def siEval(s, typ=float, regex=FLOAT_REGEX):
+def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
     """
     Convert a value written in SI notation to its equivalent prefixless value.
 
@@ -142,9 +153,9 @@ def siEval(s, typ=float, regex=FLOAT_REGEX):
     
         siEval("100 μV")  # returns 0.0001
     """
-    val, siprefix, suffix = siParse(s, regex)
+    val, siprefix, suffix = siParse(s, regex, suffix=suffix)
     v = typ(val)
-    return siApply(val, siprefix)
+    return siApply(v, siprefix)
 
     
 def siApply(val, siprefix):
@@ -414,10 +425,48 @@ def eq(a, b):
     3. When comparing arrays, returns False if the array shapes are not the same.
     4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
     """
     if a is b:
         return True
-        
+
+    # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
+    aIsArr = isinstance(a, (np.ndarray, MetaArray))
+    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    if (aIsArr or bIsArr) and type(a) != type(b):
+        return False
+
+    # If both inputs are arrays, we can speeed up comparison if shapes / dtypes don't match
+    # NOTE: arrays of dissimilar type should be considered unequal even if they are numerically
+    # equal because they may behave differently when computed on.
+    if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
+        return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
+
+    # Test for equivalence. 
+    # If the test raises a recognized exception, then return Falase
     try:
         try:
             # Sometimes running catch_warnings(module=np) generates AttributeError ???
@@ -733,26 +782,17 @@ def subArray(data, offset, shape, stride):
     the input in the example above to have shape (10, 7) would cause the
     output to have shape (2, 3, 7).
     """
-    #data = data.flatten()
-    data = data[offset:]
+    data = np.ascontiguousarray(data)[offset:]
     shape = tuple(shape)
-    stride = tuple(stride)
     extraShape = data.shape[1:]
-    #print data.shape, offset, shape, stride
-    for i in range(len(shape)):
-        mask = (slice(None),) * i + (slice(None, shape[i] * stride[i]),)
-        newShape = shape[:i+1]
-        if i < len(shape)-1:
-            newShape += (stride[i],)
-        newShape += extraShape 
-        #print i, mask, newShape
-        #print "start:\n", data.shape, data
-        data = data[mask]
-        #print "mask:\n", data.shape, data
-        data = data.reshape(newShape)
-        #print "reshape:\n", data.shape, data
+
+    strides = list(data.strides[::-1])
+    itemsize = strides[-1]
+    for s in stride[1::-1]:
+        strides.append(itemsize * s)
+    strides = tuple(strides[::-1])
     
-    return data
+    return np.ndarray(buffer=data, shape=shape+extraShape, strides=strides, dtype=data.dtype)
 
 
 def transformToArray(tr):
@@ -894,10 +934,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -1020,7 +1062,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
-
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
@@ -1042,6 +1083,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
         levels = np.array(levels)
+    levels = levels.astype(np.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -1058,7 +1100,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 
@@ -1067,7 +1109,14 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.ubyte
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
-            
+
+    # awkward, but fastest numpy native nan evaluation
+    # 
+    nanMask = None
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
+        nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1078,20 +1127,22 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
-            
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
-
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1134,7 +1185,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         imgData[..., 3] = 255
     else:
         alpha = True
-        
+
+    # apply nan mask through alpha channel
+    if nanMask is not None:
+        alpha = True
+        imgData[nanMask, 3] = 0
+
     profile()
     return imgData, alpha
 
@@ -1203,7 +1259,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         
         # Bug in PySide + Python 3 causes refcount for image data to be improperly 
@@ -1261,7 +1317,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())
@@ -1363,7 +1419,7 @@ def gaussianFilter(data, sigma):
         # clip off extra data
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
-        filtered = filtered[sl]
+        filtered = filtered[tuple(sl)]
     return filtered + baseline
     
     
@@ -2156,7 +2212,7 @@ def isosurface(data, level):
             ## compute lookup table of index: vertexes mapping
             faceTableI = np.zeros((len(triTable), i*3), dtype=np.ubyte)
             faceTableInds = np.argwhere(nTableFaces == i)
-            faceTableI[faceTableInds[:,0]] = np.array([triTable[j] for j in faceTableInds])
+            faceTableI[faceTableInds[:,0]] = np.array([triTable[j[0]] for j in faceTableInds])
             faceTableI = faceTableI.reshape((len(triTable), i, 3))
             faceShiftTables.append(edgeShifts[faceTableI])
             
@@ -2412,3 +2468,42 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
         sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
         sorted.append(n)
     return sorted
+
+
+def disconnect(signal, slot):
+    """Disconnect a Qt signal from a slot.
+
+    This method augments Qt's Signal.disconnect():
+
+    * Return bool indicating whether disconnection was successful, rather than
+      raising an exception
+    * Attempt to disconnect prior versions of the slot when using pg.reload    
+    """
+    while True:
+        try:
+            signal.disconnect(slot)
+            return True
+        except (TypeError, RuntimeError):
+            slot = reload.getPreviousVersion(slot)
+            if slot is None:
+                return False
+
+
+class SignalBlock(object):
+    """Class used to temporarily block a Qt signal connection::
+
+        with SignalBlock(signal, slot):
+            # do something that emits a signal; it will
+            # not be delivered to slot
+    """
+    def __init__(self, signal, slot):
+        self.signal = signal
+        self.slot = slot
+
+    def __enter__(self):
+        self.reconnect = disconnect(self.signal, self.slot)
+        return self
+
+    def __exit__(self, *args):
+        if self.reconnect:
+            self.signal.connect(self.slot)

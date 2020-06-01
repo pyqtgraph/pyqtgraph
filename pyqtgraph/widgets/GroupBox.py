@@ -1,5 +1,7 @@
 from ..Qt import QtGui, QtCore
 from .PathButton import PathButton
+from ..python2_3 import basestring
+
 
 class GroupBox(QtGui.QGroupBox):
     """Subclass of QGroupBox that implements collapse handle.

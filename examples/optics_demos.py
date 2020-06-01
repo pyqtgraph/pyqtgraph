@@ -17,7 +17,7 @@ from pyqtgraph import Point
 
 app = pg.QtGui.QApplication([])
 
-w = pg.GraphicsWindow(border=0.5)
+w = pg.GraphicsLayoutWidget(show=True, border=0.5)
 w.resize(1000, 900)
 w.show()
 
