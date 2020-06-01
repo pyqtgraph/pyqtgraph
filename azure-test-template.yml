@@ -26,7 +26,7 @@ jobs:
         python.version: "3.7"
         qt.bindings: "pyside2"
         install.method: "conda"
-      Python38-PyQt-5.14:
+      Python38-PyQt-Latest:
         python.version: '3.8'
         qt.bindings: "PyQt5"
         install.method: "pip"
@@ -125,6 +125,7 @@ jobs:
 
   - bash: |
       sudo apt-get install -y libxkbcommon-x11-dev 
+      # workaround for QTBUG-84489
       sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
       if [ $(install.method) == "conda" ]
       then
