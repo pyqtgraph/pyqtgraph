@@ -233,6 +233,17 @@ class ViewBox(GraphicsWidget):
         if name is None:
             self.updateViewLists()
 
+    def getAspectRatio(self):
+        '''return the current aspect ratio'''
+        rect = self.rect()
+        vr = self.viewRect()
+        if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
+            currentRatio = 1.0
+        else:
+            currentRatio = (rect.width()/float(rect.height())) / (
+                                                vr.width()/vr.height())
+        return currentRatio
+
     def register(self, name):
         """
         Add this ViewBox to the registered list of views.
@@ -1134,12 +1145,7 @@ class ViewBox(GraphicsWidget):
                 return
             self.state['aspectLocked'] = False
         else:
-            rect = self.rect()
-            vr = self.viewRect()
-            if rect.height() == 0 or vr.width() == 0 or vr.height() == 0:
-                currentRatio = 1.0
-            else:
-                currentRatio = (rect.width()/float(rect.height())) / (vr.width()/vr.height())
+            currentRatio = self.getAspectRatio()
             if ratio is None:
                 ratio = currentRatio
             if self.state['aspectLocked'] == ratio: # nothing to change
