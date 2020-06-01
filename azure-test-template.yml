@@ -134,6 +134,7 @@ jobs:
     condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
+      export QT_DEBUG_PLUGINS=1
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
