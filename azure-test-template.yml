@@ -124,7 +124,8 @@ jobs:
     displayName: 'Install Wheel'
 
   - bash: |
-      sudo apt-get install -y libxkbcommon-x11-dev libxcb-xfixes0
+      sudo apt-get install -y libxkbcommon-x11-dev 
+      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
