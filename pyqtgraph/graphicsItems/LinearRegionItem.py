@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
@@ -54,8 +55,9 @@ class LinearRegionItem(GraphicsObject):
                         False, they are static.
         bounds          Optional [min, max] bounding values for the region
         span            Optional [min, max] giving the range over the view to draw
-                        the region. For example, with a vertical line, use span=(0.5, 1)
-                        to draw only on the top half of the view.
+                        the region. For example, with a vertical line, use
+                        ``span=(0.5, 1)`` to draw only on the top half of the
+                        view.
         swapMode        Sets the behavior of the region when the lines are moved such that
                         their order reverses:
                         * "block" means the user cannot drag one line past the other

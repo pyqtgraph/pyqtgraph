@@ -15,11 +15,10 @@ from .widgets.GraphicsView import GraphicsView
 
 class GraphicsWindow(GraphicsLayoutWidget):
     """
-    (deprecated; use GraphicsLayoutWidget instead)
+    (deprecated; use :class:`~pyqtgraph.GraphicsLayoutWidget` instead)
     
-    Convenience subclass of :class:`GraphicsLayoutWidget 
-    <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from 
-    the interactive python prompt.
+    Convenience subclass of :class:`~pyqtgraph.GraphicsLayoutWidget`. This class
+    is intended for use from the interactive python prompt.
     """
     def __init__(self, title=None, size=(800,600), **kargs):
         mkQApp()
@@ -45,15 +44,12 @@ class TabWindow(QtGui.QMainWindow):
         self.show()
         
     def __getattr__(self, attr):
-        if hasattr(self.cw, attr):
-            return getattr(self.cw, attr)
-        else:
-            raise NameError(attr)
+        return getattr(self.cw, attr)
     
 
 class PlotWindow(PlotWidget):
     """
-    (deprecated; use PlotWidget instead)
+    (deprecated; use :class:`~pyqtgraph.PlotWidget` instead)
     """
     def __init__(self, title=None, **kargs):
         mkQApp()
@@ -69,7 +65,7 @@ class PlotWindow(PlotWidget):
 
 class ImageWindow(ImageView):
     """
-    (deprecated; use ImageView instead)
+    (deprecated; use :class:`~pyqtgraph.ImageView` instead)
     """
     def __init__(self, *args, **kargs):
         mkQApp()

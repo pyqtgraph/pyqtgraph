@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module exists to smooth out some of the differences between PySide and PyQt4:
 
@@ -100,10 +101,13 @@ def _loadUiType(uiFile):
     how to make PyQt4 and pyside look the same...
         http://stackoverflow.com/a/8717832
     """
-    import pysideuic
+
+    if QT_LIB == "PYSIDE":
+        import pysideuic
+    else:
+        import pyside2uic as pysideuic
     import xml.etree.ElementTree as xml
-    #from io import StringIO
-    
+
     parsed = xml.parse(uiFile)
     widget_class = parsed.find('widget').get('class')
     form_class = parsed.find('class').text
@@ -216,8 +220,12 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    isQObjectAlive = _isQObjectAlive
-    
+    try:
+        import shiboken2
+        isQObjectAlive = shiboken2.isValid
+    except ImportError:
+        # use approximate version
+        isQObjectAlive = _isQObjectAlive    
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
@@ -322,9 +330,19 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 
 
 QAPP = None
-def mkQApp():
-    global QAPP    
+def mkQApp(name=None):
+    """
+    Creates new QApplication or returns current instance if existing.
+    
+    ============== ========================================================
+    **Arguments:**
+    name           (str) Application name, passed to Qt
+    ============== ========================================================
+    """
+    global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication([])
+        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+    if name is not None:
+        QAPP.setApplicationName(name)
     return QAPP

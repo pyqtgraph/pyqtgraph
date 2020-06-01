@@ -2,7 +2,7 @@
 """
 configfile.py - Human-readable text configuration file library 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Used for reading and writing dictionary objects to a python-like configuration
 file format. Data structures may be nested and contain any data type as long
@@ -33,17 +33,16 @@ class ParseError(Exception):
             msg = "Error parsing string at line %d:\n" % self.lineNum
         else:
             msg = "Error parsing config file '%s' at line %d:\n" % (self.fileName, self.lineNum)
-        msg += "%s\n%s" % (self.line, self.message)
+        msg += "%s\n%s" % (self.line, Exception.__str__(self))
         return msg
-        #raise Exception()
         
 
 def writeConfigFile(data, fname):
     s = genString(data)
-    fd = open(fname, 'w')
-    fd.write(s)
-    fd.close()
-    
+    with open(fname, 'w') as fd:
+        fd.write(s)
+
+
 def readConfigFile(fname):
     #cwd = os.getcwd()
     global GLOBAL_PATH
@@ -56,9 +55,8 @@ def readConfigFile(fname):
         
     try:
         #os.chdir(newDir)  ## bad.
-        fd = open(fname)
-        s = asUnicode(fd.read())
-        fd.close()
+        with open(fname) as fd:
+            s = asUnicode(fd.read())
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
         data = parseString(s)[1]
@@ -74,9 +72,8 @@ def readConfigFile(fname):
 
 def appendConfigFile(data, fname):
     s = genString(data)
-    fd = open(fname, 'a')
-    fd.write(s)
-    fd.close()
+    with open(fname, 'a') as fd:
+        fd.write(s)
 
 
 def genString(data, indent=''):
@@ -93,13 +90,14 @@ def genString(data, indent=''):
             s += indent + sk + ':\n'
             s += genString(data[k], indent + '    ')
         else:
-            s += indent + sk + ': ' + repr(data[k]) + '\n'
+            s += indent + sk + ': ' + repr(data[k]).replace("\n", "\\\n") + '\n'
     return s
     
 def parseString(lines, start=0):
     
     data = OrderedDict()
     if isinstance(lines, basestring):
+        lines = lines.replace("\\\n", "")
         lines = lines.split('\n')
         lines = [l for l in lines if re.search(r'\S', l) and not re.match(r'\s*#', l)]  ## remove empty lines
         
@@ -194,8 +192,6 @@ def measureIndent(s):
     
 if __name__ == '__main__':
     import tempfile
-    fn = tempfile.mktemp()
-    tf = open(fn, 'w')
     cf = """
 key: 'value'
 key2:              ##comment
@@ -205,8 +201,9 @@ key2:              ##comment
     key22: [1,2,3]
     key23: 234  #comment
     """
-    tf.write(cf)
-    tf.close()
+    fn = tempfile.mktemp()
+    with open(fn, 'w') as tf:
+        tf.write(cf)
     print("=== Test:===")
     num = 1
     for line in cf.split('\n'):

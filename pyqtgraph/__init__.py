@@ -29,9 +29,6 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 ## helpers for 2/3 compatibility
 from . import python2_3
 
-## install workarounds for numpy bugs
-from . import numpy_fix
-
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -67,7 +64,6 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -99,7 +95,8 @@ def systemInfo():
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
         lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            rev = open(lastRevFile, 'r').read().strip()
+            with open(lastRevFile, 'r') as fd:
+                rev = fd.read().strip()
     
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
@@ -222,6 +219,7 @@ from .graphicsItems.ViewBox import *
 from .graphicsItems.ArrowItem import * 
 from .graphicsItems.ImageItem import * 
 from .graphicsItems.AxisItem import * 
+from .graphicsItems.DateAxisItem import *
 from .graphicsItems.LabelItem import * 
 from .graphicsItems.CurvePoint import * 
 from .graphicsItems.GraphicsWidgetAnchor import * 
@@ -264,6 +262,7 @@ from .widgets.LayoutWidget import *
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
 from .widgets.GroupBox import GroupBox
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
 
 from .imageview import *
 from .WidgetGroup import *
@@ -369,8 +368,12 @@ def exit():
     ## close file handles
     if sys.platform == 'darwin':
         for fd in range(3, 4096):
-            if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+            if fd in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+                continue
+            try:
                 os.close(fd)
+            except OSError:
+                pass
     else:
         os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
 

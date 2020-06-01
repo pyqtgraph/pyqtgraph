@@ -12,11 +12,9 @@ Contents:
 
     plotwidget
     imageview
-    dockarea
     spinbox
     gradientwidget
     histogramlutwidget
-    parametertree
     consolewidget
     colormapwidget
     scatterplotwidget

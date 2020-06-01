@@ -22,7 +22,7 @@ class ExportDialog(QtGui.QWidget):
         self.shown = False
         self.currentExporter = None
         self.scene = scene
-            
+
         self.selectBox = QtGui.QGraphicsRectItem()
         self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.DashLine))
         self.selectBox.hide()
@@ -121,7 +121,9 @@ class ExportDialog(QtGui.QWidget):
             return
         expClass = self.exporterClasses[str(item.text())]
         exp = expClass(item=self.ui.itemTree.currentItem().gitem)
+
         params = exp.parameters()
+
         if params is None:
             self.ui.paramTree.clear()
         else:
