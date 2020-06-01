@@ -124,7 +124,7 @@ jobs:
     displayName: 'Install Wheel'
 
   - bash: |
-      sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
+      sudo apt-get install -y libxcb-glx0-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-sync-dev libxcb-xinerama0-dev libxcb-xinput-dev libxcb-xkb-dev libxkbcommon-x11-dev
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
