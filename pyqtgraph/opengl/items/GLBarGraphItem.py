@@ -8,7 +8,7 @@ class GLBarGraphItem(GLMeshItem):
         pos is (...,3) array of the bar positions (the corner of each bar)
         size is (...,3) array of the sizes of each bar
         """
-        nCubes = reduce(lambda a,b: a*b, pos.shape[:-1])
+        nCubes = np.prod(pos.shape[:-1])
         cubeVerts = np.mgrid[0:2,0:2,0:2].reshape(3,8).transpose().reshape(1,8,3)
         cubeFaces = np.array([
             [0,1,2], [3,2,1],
@@ -22,8 +22,5 @@ class GLBarGraphItem(GLMeshItem):
         verts = cubeVerts * size + pos
         faces = cubeFaces + (np.arange(nCubes) * 8).reshape(nCubes,1,1)
         md = MeshData(verts.reshape(nCubes*8,3), faces.reshape(nCubes*12,3))
-        
-        GLMeshItem.__init__(self, meshdata=md, shader='shaded', smooth=False)
 
-        
-        
+        GLMeshItem.__init__(self, meshdata=md, shader='shaded', smooth=False)

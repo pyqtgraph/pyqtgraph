@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 Script for compiling Qt Designer .ui files to .py
 
@@ -9,18 +10,27 @@ import os, sys, subprocess, tempfile
 pyqtuic = 'pyuic4'
 pysideuic = 'pyside-uic'
 pyqt5uic = 'pyuic5'
+pyside2uic = 'pyside2-uic'
 
 usage = """Compile .ui files to .py for all supported pyqt/pyside versions.
 
-  Usage: python rebuildUi.py [.ui files|search paths]
+  Usage: python rebuildUi.py [--force] [.ui files|search paths]
 
   May specify a list of .ui files and/or directories to search recursively for .ui files.
 """
 
 args = sys.argv[1:]
+
+if '--force' in args:
+    force = True
+    args.remove('--force')
+else:
+    force = False
+
 if len(args) == 0:
     print(usage)
     sys.exit(-1)
+
     
 uifiles = []
 for arg in args:
@@ -40,9 +50,9 @@ for arg in args:
 # rebuild all requested ui files
 for ui in uifiles:
     base, _ = os.path.splitext(ui)
-    for compiler, ext in [(pyqtuic, '_pyqt.py'), (pysideuic, '_pyside.py'), (pyqt5uic, '_pyqt5.py')]:
+    for compiler, ext in [(pyqtuic, '_pyqt.py'), (pysideuic, '_pyside.py'), (pyqt5uic, '_pyqt5.py'), (pyside2uic, '_pyside2.py')]:
         py = base + ext
-        if os.path.exists(py) and os.stat(ui).st_mtime <= os.stat(py).st_mtime:
+        if not force and os.path.exists(py) and os.stat(ui).st_mtime <= os.stat(py).st_mtime:
             print("Skipping %s; already compiled." % py)
         else:
             cmd = '%s %s > %s' % (compiler, ui, py)
