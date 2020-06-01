@@ -874,8 +874,8 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
                 self.view().tickMoveFinished(self)
 
     def mouseClickEvent(self, ev):
-        if  ev.button() == QtCore.Qt.RightButton and self.moving:
-            ev.accept()
+        ev.accept()
+        if ev.button() == QtCore.Qt.RightButton and self.moving:
             self.setPos(self.startPosition)
             self.view().tickMoved(self, self.startPosition)
             self.moving = False
@@ -883,7 +883,6 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
             self.sigMoved.emit(self)
         else:
             self.view().tickClicked(self, ev)
-            ##remove
 
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
