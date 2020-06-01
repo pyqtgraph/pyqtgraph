@@ -47,12 +47,12 @@ class ImageExporter(Exporter):
 
     @staticmethod
     def getSupportedImageFormats():
-            filter    = ["*."+f.data().decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
-            preferred = ['*.png', '*.tif', '*.jpg']
-            for p in preferred[::-1]:
-                if p in filter:
-                    filter.remove(p)
-                    filter.insert(0, p)
+        filter    = ["*."+f.data().decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
+        preferred = ['*.png', '*.tif', '*.jpg']
+        for p in preferred[::-1]:
+            if p in filter:
+                filter.remove(p)
+                filter.insert(0, p)
         return filter  
 
     def export(self, fileName=None, toBytes=False, copy=False):
