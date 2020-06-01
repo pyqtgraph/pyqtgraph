@@ -32,8 +32,6 @@ class ChainSim(pg.QtCore.QObject):
         if self.initialized:
             return
         
-        assert None not in [self.pos, self.mass, self.links, self.lengths]
-        
         if self.fixed is None:
             self.fixed = np.zeros(self.pos.shape[0], dtype=bool)
         if self.push is None:

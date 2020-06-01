@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>694</width>
+    <width>739</width>
     <height>497</height>
    </rect>
   </property>
@@ -86,7 +86,10 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <property name="spacing">
+       <property name="horizontalSpacing">
+        <number>2</number>
+       </property>
+       <property name="verticalSpacing">
         <number>0</number>
        </property>
        <item row="0" column="6">
@@ -95,7 +98,7 @@
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Clear Exception</string>
+          <string>Clear Stack</string>
          </property>
         </widget>
        </item>
@@ -149,7 +152,10 @@
        <item row="1" column="0" colspan="7">
         <widget class="QLabel" name="exceptionInfoLabel">
          <property name="text">
-          <string>Exception Info</string>
+          <string>Stack Trace</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

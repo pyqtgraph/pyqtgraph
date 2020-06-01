@@ -102,7 +102,7 @@ class ComboBox(QtGui.QComboBox):
     @blockIfUnchanged
     def setItems(self, items):
         """
-        *items* may be a list or a dict. 
+        *items* may be a list, a tuple, or a dict. 
         If a dict is given, then the keys are used to populate the combo box
         and the values will be used for both value() and setValue().
         """
@@ -191,13 +191,13 @@ class ComboBox(QtGui.QComboBox):
     @ignoreIndexChange
     @blockIfUnchanged
     def addItems(self, items):
-        if isinstance(items, list):
+        if isinstance(items, list) or isinstance(items, tuple):
             texts = items
             items = dict([(x, x) for x in items])
         elif isinstance(items, dict):
             texts = list(items.keys())
         else:
-            raise TypeError("items argument must be list or dict (got %s)." % type(items))
+            raise TypeError("items argument must be list or dict or tuple (got %s)." % type(items))
         
         for t in texts:
             if t in self._items:
@@ -216,3 +216,30 @@ class ComboBox(QtGui.QComboBox):
         QtGui.QComboBox.clear(self)
         self.itemsChanged()
         
+    def saveState(self):
+        ind = self.currentIndex()
+        data = self.itemData(ind)
+        #if not data.isValid():
+        if data is not None:
+            try:
+                if not data.isValid():
+                    data = None
+                else:
+                    data = data.toInt()[0]
+            except AttributeError:
+                pass
+        if data is None:
+            return asUnicode(self.itemText(ind))
+        else:
+            return data
+        
+    def restoreState(self, v):
+        if type(v) is int:
+            ind = self.findData(v)
+            if ind > -1:
+                self.setCurrentIndex(ind)
+                return
+        self.setCurrentIndex(self.findText(str(v)))
+
+    def widgetGroupInterface(self):
+        return (self.currentIndexChanged, self.saveState, self.restoreState)
