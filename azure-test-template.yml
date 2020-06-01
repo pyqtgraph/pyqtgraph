@@ -125,12 +125,12 @@ jobs:
 
   - bash: |
       sudo apt-get install -y libxkbcommon-x11-dev 
-      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4
+      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
       fi
-      pip install PyVirtualDisplay==1.1 pytest-xvfb
+      pip install PyVirtualDisplay==0.2.5 pytest-xvfb
     displayName: "Virtual Display Setup"
     condition: eq(variables['agent.os'], 'Linux' )
 
