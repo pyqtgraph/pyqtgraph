@@ -125,7 +125,7 @@ jobs:
 
   - bash: |
       sudo apt-get install -y libxkbcommon-x11-dev 
-      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0
+      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
