@@ -124,12 +124,12 @@ jobs:
     displayName: 'Install Wheel'
 
   - bash: |
-      sudo apt-get install -y libxcb-glx0-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-sync-dev libxcb-xinerama0-dev libxcb-xinput-dev libxcb-xkb-dev libxkbcommon-x11-dev
+      sudo apt-get install -y libxkbcommon-x11-dev libxcb-xfixes0
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
       fi
-      pip install PyVirtualDisplay==1.3 pytest-xvfb
+      pip install PyVirtualDisplay==1.1 pytest-xvfb
     displayName: "Virtual Display Setup"
     condition: eq(variables['agent.os'], 'Linux' )
 
