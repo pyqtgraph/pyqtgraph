@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 pg.mkQApp()
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: ScaleBar')
 
 vb = win.addViewBox()

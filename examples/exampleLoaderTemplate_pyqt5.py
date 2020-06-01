@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
 #
-# Created: Sat Feb 28 10:28:50 2015
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -37,6 +36,7 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.graphicsSystemCombo, 2, 1, 1, 1)
         self.qtLibCombo = QtWidgets.QComboBox(self.widget)
         self.qtLibCombo.setObjectName("qtLibCombo")
+        self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
@@ -87,6 +87,7 @@ class Ui_Form(object):
         self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4"))
         self.qtLibCombo.setItemText(2, _translate("Form", "PySide"))
         self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5"))
+        self.qtLibCombo.setItemText(4, _translate("Form", "PySide2"))
         self.label_2.setText(_translate("Form", "Graphics System:"))
         self.label.setText(_translate("Form", "Qt Library:"))
         self.loadBtn.setText(_translate("Form", "Run Example"))

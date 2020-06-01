@@ -22,28 +22,28 @@ def checkLru(lru):
     set([2, 1]) == set(lru.values())
 
     #Iterates from the used in the last access to others based on access time.
-    assert [(2, 2), (1, 1)] == list(lru.iteritems(accessTime=True))
+    assert [(2, 2), (1, 1)] == list(lru.items(accessTime=True))
     lru[2] = 2
-    assert [(1, 1), (2, 2)] == list(lru.iteritems(accessTime=True))
+    assert [(1, 1), (2, 2)] == list(lru.items(accessTime=True))
 
     del lru[2]
-    assert [(1, 1), ] == list(lru.iteritems(accessTime=True))
+    assert [(1, 1), ] == list(lru.items(accessTime=True))
 
     lru[2] = 2
-    assert [(1, 1), (2, 2)] == list(lru.iteritems(accessTime=True))
+    assert [(1, 1), (2, 2)] == list(lru.items(accessTime=True))
 
     _a = lru[1]
-    assert [(2, 2), (1, 1)] == list(lru.iteritems(accessTime=True))
+    assert [(2, 2), (1, 1)] == list(lru.items(accessTime=True))
 
     _a = lru[2]
-    assert [(1, 1), (2, 2)] == list(lru.iteritems(accessTime=True))
+    assert [(1, 1), (2, 2)] == list(lru.items(accessTime=True))
 
     assert lru.get(2) == 2
     assert lru.get(3) == None
-    assert [(1, 1), (2, 2)] == list(lru.iteritems(accessTime=True))
+    assert [(1, 1), (2, 2)] == list(lru.items(accessTime=True))
 
     lru.clear()
-    assert [] == list(lru.iteritems())
+    assert [] == list(lru.items())
 
 
 if __name__ == '__main__':
