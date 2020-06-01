@@ -89,11 +89,11 @@ stages:
     parameters:
       name: linux
       vmImage: 'Ubuntu 18.04'
-  - template: azure-test-template.yml
-    parameters:
-      name: windows
-      vmImage: 'windows-2019'
-  - template: azure-test-template.yml
-    parameters:
-      name: macOS
-      vmImage: 'macOS-10.15'
+  # - template: azure-test-template.yml
+  #   parameters:
+  #     name: windows
+  #     vmImage: 'windows-2019'
+  # - template: azure-test-template.yml
+  #   parameters:
+  #     name: macOS
+  #     vmImage: 'macOS-10.15'
