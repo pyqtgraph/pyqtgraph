@@ -1261,30 +1261,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
-        
-        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
-        # incremented, which leads to leaked memory. As a workaround, we manually
-        # reset the reference count after creating the QImage.
-        # See: https://bugreports.qt.io/browse/PYSIDE-140
-        
-        # Get initial reference count (PyObject struct has ob_refcnt as first element)
-        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
-        if sys.version[0] == '3':
-            # Reset refcount only on python 3. Technically this would have no effect
-            # on python 2, but this is a nasty hack, and checking for version here 
-            # helps to mitigate possible unforseen consequences.
-            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
-        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        #addr = ctypes.c_char.from_buffer(imgData, 0)
-        #try:
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        #except TypeError:  
-            #addr = ctypes.addressof(addr)
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
             img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
         except:
@@ -1297,16 +1277,6 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 
     img.data = imgData
     return img
-    #try:
-        #buf = imgData.data
-    #except AttributeError:  ## happens when image data is non-contiguous
-        #buf = imgData.data
-        
-    #profiler()
-    #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    #profiler()
-    #qimage.data = imgData
-    #return qimage
 
 def imageToArray(img, copy=False, transpose=True):
     """
