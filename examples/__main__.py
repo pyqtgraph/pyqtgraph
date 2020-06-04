@@ -7,17 +7,30 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 import pyqtgraph as pg
 import subprocess
 from pyqtgraph.python2_3 import basestring
-from pyqtgraph.Qt import QtGui, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, QT_LIB
+
+from .utils import buildFileList, path, examples
+from .syntax import PythonHighlighter
 
 
-from .utils import buildFileList, testFile, path, examples
-
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     from .exampleLoaderTemplate_pyside import Ui_Form
-elif USE_PYQT5:
+elif QT_LIB == 'PySide2':
+    from .exampleLoaderTemplate_pyside2 import Ui_Form
+elif QT_LIB == 'PyQt5':
     from .exampleLoaderTemplate_pyqt5 import Ui_Form
 else:
     from .exampleLoaderTemplate_pyqt import Ui_Form
+
+class App(QtGui.QApplication):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.paletteChanged.connect(self.onPaletteChange)
+        self.onPaletteChange(self.palette())
+
+    def onPaletteChange(self, palette):
+        self.dark_mode = palette.base().color().name().lower() != "#ffffff"
 
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
@@ -26,10 +39,14 @@ class ExampleLoader(QtGui.QMainWindow):
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
+        self.setWindowTitle("PyQtGraph Examples")
 
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
+        self.hl = PythonHighlighter(self.ui.codeView.document())
+        app = QtGui.QApplication.instance()
+        app.paletteChanged.connect(self.updateTheme)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
@@ -47,6 +64,28 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.exampleTree.itemDoubleClicked.connect(self.loadFile)
         self.ui.codeView.textChanged.connect(self.codeEdited)
         self.codeBtn.clicked.connect(self.runEditedCode)
+
+    def simulate_black_mode(self):
+        """
+        used to simulate MacOS "black mode" on other platforms
+        intended for debug only, as it manage only the QPlainTextEdit
+        """
+        # first, a dark background
+        c = QtGui.QColor('#171717')
+        p = self.ui.codeView.palette()
+        p.setColor(QtGui.QPalette.Active, QtGui.QPalette.Base, c)
+        p.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Base, c)
+        self.ui.codeView.setPalette(p)
+        # then, a light font
+        f = QtGui.QTextCharFormat()
+        f.setForeground(QtGui.QColor('white'))
+        self.ui.codeView.setCurrentCharFormat(f)
+        # finally, override application automatic detection
+        app = QtGui.QApplication.instance()
+        app.dark_mode = True
+
+    def updateTheme(self):
+        self.hl = PythonHighlighter(self.ui.codeView.document())
 
     def populateTree(self, root, examples):
         for key, val in examples.items():
@@ -112,32 +151,9 @@ class ExampleLoader(QtGui.QMainWindow):
         self.loadFile(edited=True)
 
 def run():
-    app = QtGui.QApplication([])
+    app = App([])
     loader = ExampleLoader()
-
     app.exec_()
 
 if __name__ == '__main__':
-
-    args = sys.argv[1:]
-        
-    if '--test' in args:
-        # get rid of orphaned cache files first
-        pg.renamePyc(path)
-        
-        files = buildFileList(examples)
-        if '--pyside' in args:
-            lib = 'PySide'
-        elif '--pyqt' in args or '--pyqt4' in args:
-            lib = 'PyQt4'
-        elif '--pyqt5' in args:
-            lib = 'PyQt5'
-        else:
-            lib = ''
-            
-        exe = sys.executable
-        print("Running tests:", lib, sys.executable)
-        for f in files:
-            testFile(f[0], f[1], exe, lib)
-    else: 
-        run()
+    run()

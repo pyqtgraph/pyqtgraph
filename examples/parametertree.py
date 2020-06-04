@@ -96,6 +96,16 @@ params = [
         {'name': 'Renamable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'renamable': True},
         {'name': 'Removable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'removable': True},
     ]},
+    {'name': 'Custom context menu', 'type': 'group', 'children': [
+        {'name': 'List contextMenu', 'type': 'float', 'value': 0, 'context': [
+            'menu1',
+            'menu2'
+        ]},
+        {'name': 'Dict contextMenu', 'type': 'float', 'value': 0, 'context': {
+            'changeName': 'Title',
+            'internal': 'What the user sees',
+        }},
+    ]},
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
     ScalableGroup(name="Expandable Parameter Group", children=[
         {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
