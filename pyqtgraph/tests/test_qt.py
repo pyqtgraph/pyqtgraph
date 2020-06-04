@@ -15,7 +15,12 @@ def test_isQObjectAlive():
 
 @pytest.mark.skipif(pg.Qt.QT_LIB == 'PySide', reason='pysideuic does not appear to be '
                                                      'packaged with conda')
-@pytest.mark.skipif(pg.Qt.QT_LIB == "PySide2" and "pg.Qt.QtVersion.startswith('5.14')", reason="new PySide2 doesn't have loadUi functionality")
+@pytest.mark.skipif(
+    pg.Qt.QT_LIB == "PySide2"
+    and tuple(map(int, pg.Qt.PySide2.__version__.split("."))) >= (5, 14) 
+    and tuple(map(int, pg.Qt.PySide2.__version__.split("."))) < (5, 14, 2, 2), 
+    reason="new PySide2 doesn't have loadUi functionality"
+)
 def test_loadUiType():
     path = os.path.dirname(__file__)
     formClass, baseClass = pg.Qt.loadUiType(os.path.join(path, 'uictest.ui'))
