@@ -37,15 +37,16 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings  | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
-| :----------- | :----------------: | :----------------: | :----------------: | :----------------: |
-| PyQt-4       | :white_check_mark: | :x:                | :x:                | :x:                |
-| PySide1      | :white_check_mark: | :x:                | :x:                | :x:                |
-| PyQt-5.9     | :x:                | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.13 | :x:                | :x:                | :white_check_mark: | :x:                |
-| PyQt-5.14    | :x:                | :x:                | :x:                | :white_check_mark: |
+| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
+| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
+| PyQt-4         | :white_check_mark: | :x:                | :x:                | :x:                |
+| PySide1        | :white_check_mark: | :x:                | :x:                | :x:                |
+| PyQt5-5.9      | :x:                | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.13   | :x:                | :x:                | :white_check_mark: | :x:                |
+| PyQt5-Latest   | :x:                | :x:                | :x:                | :white_check_mark: |
+| PySide2-Latest | :x:                | :x:                | :x:                | :white_check_mark: |
 
-* pyqtgraph has had some incompatabilities with PySide2-5.6, and we recommend you avoid those bindings if possible
+* pyqtgraph has had some incompatibilities with PySide2-5.6, and we recommend you avoid those bindings if possible
 * on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work
 
 Support
