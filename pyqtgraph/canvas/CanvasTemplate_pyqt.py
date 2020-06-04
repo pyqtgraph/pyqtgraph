@@ -91,7 +91,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.autoRangeBtn.setText(_translate("Form", "Auto Range", None))
         self.redirectCheck.setToolTip(_translate("Form", "Check to display all local items in a remote canvas.", None))
         self.redirectCheck.setText(_translate("Form", "Redirect", None))

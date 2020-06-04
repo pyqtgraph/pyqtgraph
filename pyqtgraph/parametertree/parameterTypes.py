@@ -44,10 +44,6 @@ class WidgetParameterItem(ParameterItem):
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
         
-        opts = self.param.opts
-        if 'tip' in opts:
-            w.setToolTip(opts['tip'])
-        
         self.defaultBtn = QtGui.QPushButton()
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
@@ -73,6 +69,7 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanging.connect(self.widgetValueChanging)
             
         ## update value shown in widget. 
+        opts = self.param.opts
         if opts.get('value', None) is not None:
             self.valueChanged(self, opts['value'], force=True)
         else:
@@ -80,6 +77,8 @@ class WidgetParameterItem(ParameterItem):
             self.widgetValueChanged()
 
         self.updateDefaultBtn()
+        
+        self.optsChanged(self.param, self.param.opts)
 
     def makeWidget(self):
         """
@@ -280,6 +279,9 @@ class WidgetParameterItem(ParameterItem):
             if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
                 self.widget.setEnabled(not opts['readonly'])
         
+        if 'tip' in opts:
+            self.widget.setToolTip(opts['tip'])
+        
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
             # send only options supported by spinbox
@@ -426,10 +428,13 @@ class GroupParameterItem(ParameterItem):
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self, True)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+        tw.setFirstItemColumnSpanned(self, True)
         if self.addItem is not None:
-            self.treeWidget().setItemWidget(self.addItem, 0, self.addWidgetBox)
-            self.treeWidget().setFirstItemColumnSpanned(self.addItem, True)
+            tw.setItemWidget(self.addItem, 0, self.addWidgetBox)
+            tw.setFirstItemColumnSpanned(self.addItem, True)
         
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
@@ -664,8 +669,12 @@ class TextParameterItem(WidgetParameterItem):
         ## TODO: fix so that superclass method can be called
         ## (WidgetParameter should just natively support this style)
         #WidgetParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self.subItem, True)
-        self.treeWidget().setItemWidget(self.subItem, 0, self.textBox)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+
+        tw.setFirstItemColumnSpanned(self.subItem, True)
+        tw.setItemWidget(self.subItem, 0, self.textBox)
         
         # for now, these are copied from ParameterItem.treeWidgetChanged
         self.setHidden(not self.param.opts.get('visible', True))

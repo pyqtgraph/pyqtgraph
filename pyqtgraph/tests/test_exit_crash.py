@@ -67,7 +67,7 @@ def test_exit_crash():
 
     os.remove(tmp)
 
-
+@pytest.mark.skipif(pg.Qt.QtVersion.startswith("5.9"), reason="Functionality not well supported, failing only on this config")
 def test_pg_exit():
     # test the pg.exit() function
     code = textwrap.dedent("""

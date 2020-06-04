@@ -96,7 +96,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
         try:
             self.fieldList.clearSelection()
             for f in fields:
-                i = self.fields.keys().index(f)
+                i = list(self.fields.keys()).index(f)
                 item = self.fieldList.item(i)
                 item.setSelected(True)
         finally:

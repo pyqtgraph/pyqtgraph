@@ -128,16 +128,19 @@ jobs:
     displayName: 'Install Wheel'
 
   - bash: |
-      sudo apt-get install -y libxkbcommon-x11-0  # herbstluftwm
+      sudo apt-get install -y libxkbcommon-x11-dev 
+      # workaround for QTBUG-84489
+      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
       fi
-      pip install pytest-xvfb
+      pip install PyVirtualDisplay==0.2.5 pytest-xvfb
     displayName: "Virtual Display Setup"
     condition: eq(variables['agent.os'], 'Linux' )
 
   - bash: |
+      export QT_DEBUG_PLUGINS=1
       if [ $(install.method) == "conda" ]
       then
         source activate test-environment-$(python.version)
