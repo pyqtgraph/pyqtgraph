@@ -119,7 +119,8 @@ def _loadUiType(uiFile):
 
     # convert ui file to python code
     if pysideuic is None:
-        if PySide2.__version__[:5].split('.')[:2] == ['5', '14']:
+        pyside2version = tuple(map(int, PySide2.__version__.split(".")))
+        if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
             warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
         uipy = subprocess.check_output(['pyside2-uic', uiFile])
     else:
