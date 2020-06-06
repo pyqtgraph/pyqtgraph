@@ -13,10 +13,13 @@ __all__ = ['LegendItem']
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
     """
     Displays a legend used for describing the contents of a plot.
-    LegendItems are most commonly created by calling PlotItem.addLegend().
 
-    Note that this item should not be added directly to a PlotItem. Instead,
-    Make it a direct descendant of the PlotItem::
+    LegendItems are most commonly created by calling :meth:`PlotItem.addLegend
+    <pyqtgraph.PlotItem.addLegend>`.
+
+    Note that this item should *not* be added directly to a PlotItem (via
+    :meth:`PlotItem.addItem <pyqtgraph.PlotItem.addItem>`). Instead, make it a
+    direct descendant of the PlotItem::
 
         legend.setParentItem(plotItem)
 
@@ -46,8 +49,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         ==============  ===============================================================
 
         """
-
-
         GraphicsWidget.__init__(self)
         GraphicsWidgetAnchor.__init__(self)
         self.setFlag(self.ItemIgnoresTransformations)
@@ -71,9 +72,11 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.opts.update(kwargs)
 
     def offset(self):
+        """Get the offset position relative to the parent."""
         return self.opts['offset']
 
     def setOffset(self, offset):
+        """Set the offset position relative to the parent."""
         self.opts['offset'] = offset
 
         offset = Point(self.opts['offset'])
@@ -83,13 +86,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.anchor(itemPos=anchor, parentPos=anchor, offset=offset)
 
     def pen(self):
+        """Get the QPen used to draw the border around the legend."""
         return self.opts['pen']
 
     def setPen(self, *args, **kargs):
-        """
-        Sets the pen used to draw lines between points.
-        *pen* can be a QPen or any argument accepted by
-        :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
+        """Set the pen used to draw a border around the legend.
+
+        Accepts the same arguments as :func:`~pyqtgraph.mkPen`.
         """
         pen = fn.mkPen(*args, **kargs)
         self.opts['pen'] = pen
@@ -97,9 +100,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.update()
 
     def brush(self):
+        """Get the QBrush used to draw the legend background."""
         return self.opts['brush']
 
     def setBrush(self, *args, **kargs):
+        """Set the brush used to draw the legend background.
+
+        Accepts the same arguments as :func:`~pyqtgraph.mkBrush`.
+        """
         brush = fn.mkBrush(*args, **kargs)
         if self.opts['brush'] == brush:
             return
@@ -108,13 +116,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.update()
 
     def labelTextColor(self):
+        """Get the QColor used for the item labels."""
         return self.opts['labelTextColor']
 
     def setLabelTextColor(self, *args, **kargs):
-        """
-        Sets the color of the label text.
-        *pen* can be a QPen or any argument accepted by
-        :func:`pyqtgraph.mkColor() <pyqtgraph.mkPen>`
+        """Set the color of the item labels.
+
+        Accepts the same arguments as :func:`~pyqtgraph.mkColor`.
         """
         self.opts['labelTextColor'] = fn.mkColor(*args, **kargs)
         for sample, label in self.items:
@@ -123,6 +131,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.update()
 
     def setParentItem(self, p):
+        """Set the parent."""
         ret = GraphicsWidget.setParentItem(self, p)
         if self.opts['offset'] is not None:
             offset = Point(self.opts['offset'])
@@ -138,10 +147,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
         ==============  ========================================================
         **Arguments:**
-        item            A PlotDataItem from which the line and point style
-                        of the item will be determined or an instance of
-                        ItemSample (or a subclass), allowing the item display
-                        to be customized.
+        item            A :class:`~pyqtgraph.PlotDataItem` from which the line
+                        and point style of the item will be determined or an
+                        instance of ItemSample (or a subclass), allowing the
+                        item display to be customized.
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
@@ -177,7 +186,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 return                                  # return after first match
 
     def clear(self):
-        """Removes all items from legend."""
+        """Remove all items from the legend."""
         for sample, label in self.items:
             self.layout.removeItem(sample)
             self.layout.removeItem(label)
@@ -185,15 +194,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.items = []
         self.updateSize()
 
-    def clear(self):
-        """
-        Removes all items from the legend.
-
-        Useful for reusing and dynamically updating charts and their legends.
-        """
-        while self.items != []:
-            self.removeItem(self.items[0][1].text)
-                
     def updateSize(self):
         if self.size is not None:
             return
@@ -234,7 +234,7 @@ class ItemSample(GraphicsWidget):
     def paint(self, p, *args):
         opts = self.item.opts
 
-        if opts['antialias']:
+        if opts.get('antialias'):
             p.setRenderHint(p.Antialiasing)
 
         if not isinstance(self.item, ScatterPlotItem):
