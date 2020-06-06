@@ -104,16 +104,18 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         pass
                 
     def contextMenuEvent(self, ev):
-        if not self.param.opts.get('removable', False) and not self.param.opts.get('renamable', False)\
-                and "context" not in self.param.opts:
+        opts = self.param.opts
+        
+        if not opts.get('removable', False) and not opts.get('renamable', False)\
+                and "context" not in opts:
             return
         
         ## Generate context menu for renaming/removing parameter
         self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
-        if self.param.opts.get('renamable', False):
+        if opts.get('renamable', False):
             self.contextMenu.addAction('Rename').triggered.connect(self.editName)
-        if self.param.opts.get('removable', False):
+        if opts.get('removable', False):
             self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
         
         # context menu
