@@ -117,7 +117,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
         
         # context menu
-        context = opts.get('context', None)
+        context = self.param.opts.get('context', None)
         if isinstance(context, list):
             for name in context:
                 self.contextMenu.addAction(name).triggered.connect(
