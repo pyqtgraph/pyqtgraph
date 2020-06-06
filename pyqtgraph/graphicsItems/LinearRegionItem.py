@@ -212,10 +212,11 @@ class LinearRegionItem(GraphicsObject):
             self.clipItem = None
 
         else:
-            vb = item.getViewBox()
-            if vb is not self.getViewBox():
-                raise RuntimeError('Item {} ViewBox is not the same as '
-                                   'here!')
+            item_vb = item.getViewBox()
+            vb = self.getViewBox()
+            if vb is not None and item_vb is not vb:
+                raise RuntimeError('ViewBox of item to clip is not the same as '
+                                   'here: {}'.format(item))
             self.clipItem = item
 
         self.update()
@@ -225,6 +226,8 @@ class LinearRegionItem(GraphicsObject):
             else self.viewRect()
 
         # br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
+
+        # TODO: enforce item bounding rect from clipItem
 
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):

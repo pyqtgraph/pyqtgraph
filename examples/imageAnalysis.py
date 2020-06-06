@@ -27,6 +27,10 @@ p1 = win.addPlot(title="")
 img = pg.ImageItem()
 p1.addItem(img)
 
+lr = pg.LinearRegionItem(values=(1.5, 2.5), clipItem=img)
+p1.addItem(lr)
+# lr.setClipItem(item=img)   # this is an alternate way
+
 # Custom ROI for selecting an image region
 roi = pg.ROI([-8, 14], [6, 5])
 roi.addScaleHandle([0.5, 1], [0.5, 0.5])
