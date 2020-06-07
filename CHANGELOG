@@ -115,7 +115,7 @@ pyqtgraph-0.11.0 (in development)
     - #1188: Added support for plot curve to handle both fill and connect args
     - #801: Remove use of GraphicsScene._addressCache in translateGraphicsItem 
         - Deprecates registerObject meethod of GraphicsScene
-	- Deprecates regstar argument to GraphicsScene.__init__
+        - Deprecates regstar argument to GraphicsScene.__init__
     - #1166: pg.mkQApp: Pass non-empty string array to QApplication() as default
     - #1199: Pass non-empty sys.argv to QApplication
     - #1090: dump ExportDialog.exporterParameters
