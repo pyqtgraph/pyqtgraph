@@ -65,6 +65,10 @@ pyqtgraph-0.11.0 (in development)
     - #996: Allow the update of LegendItem
     - #1023: Add bookkeeping exporter parameters
     - #1072: HDF5Exporter handling of ragged curves with tests
+    - #1124: Syntax highlighting for examples. 
+    - #1154: Date axis item
+    - #393: NEW show/hide gradient ticks NEW link gradientEditor to others
+    - #1211: Add support for running pyside2-uic binary to dynamically compile ui files
 
   API / behavior changes:
     - Deprecated graphicsWindow classes; these have been unnecessary for many years because
@@ -102,6 +106,32 @@ pyqtgraph-0.11.0 (in development)
     - #1076: Reset currentRow and currentCol on GraphicsLayout.clear()
     - #1079: Improve performance of updateData PlotCurveItem
     - #1082: Allow MetaArray.__array__ to accept an optional dtype arg
+    - #841: set color of tick-labels separately
+    - #1111: Add name label to GradientEditorItem
+    - #1145: Pass showAxRect keyword arguments to setRange
+    - #1184: improve SymbolAtlas.getSymbolCoords performance
+    - #1198: improve SymbolAtlas.getSymbolCoords and ScatterPlotItem.plot performance
+    - #1197: Disable remove ROI menu action in handle context menu
+    - #1188: Added support for plot curve to handle both fill and connect args
+    - #801: Remove use of GraphicsScene._addressCache in translateGraphicsItem 
+        - Deprecates registerObject meethod of GraphicsScene
+        - Deprecates regstar argument to GraphicsScene.__init__
+    - #1166: pg.mkQApp: Pass non-empty string array to QApplication() as default
+    - #1199: Pass non-empty sys.argv to QApplication
+    - #1090: dump ExportDialog.exporterParameters
+    - #1173: GraphicsLayout: Always call layout.activate() after adding items
+    - #1097: pretty-print log-scale axes labels
+    - #755: Check lastDownsample in viewTransformChanged
+    - #1216: Add cache for mapRectFromView
+    - #444: Fix duplicate menus in GradientEditorItem
+    - #151: Optionally provide custom PlotItem to PlotWidget
+    - #1093: Fix aspectRatio and zoom range issues when zooming
+    - #390: moved some functionality from method 'export' to new method
+    - #391: changed structure to redefine axis via plotitem.setAxes
+    - #468: Patch/window handling
+    - #392: new method 'getAxpectRatio' with code taken from 'setAspectLocked'
+    - #1206: Added context menu option to parametertree
+    - #1228: Minor improvements to LegendItem
 
   Bugfixes:
     - #88: Fixed image scatterplot export
@@ -227,6 +257,33 @@ pyqtgraph-0.11.0 (in development)
     - #1073: Fix Python3 compatibility
     - #1083: Fix SVG export of scatter plots
     - #1085: Fix ofset when drawing symbol
+    - #1101: Fix small oversight in LegendItem
+    - #1113: Correctly call hasFaceIndexedData function
+    - #1139: Bug fix in LegendItem for `setPen`, `setBrush` etc (Call update instead of paint)
+    - #1110: fix for makeARGB error after #955
+    - #1063: Fix: AttributeError in ViewBox.setEnableMenu
+    - #1151: ImageExporter py2-pyside fix with test
+    - #1133: compatibility-fix for py2/pyside
+    - #1152: Nanmask fix in makeARGB
+    - #1159: Fix: Update axes after data is set
+    - #1156: SVGExporter: Correct image pixelation
+    - #1169: Replace default list arg with None
+    - #770: Do not ignore pos argument of setCameraPosition
+    - #1180: Fix: AxisItem tickFont is defined in two places while only one is used
+    - #1168: GroupParameterItem: Did not pass changed options to ParameterItem
+    - #1174: Fixed a possible race condition with linked views
+    - #809: Fix selection of FlowchartWidget input/output nodes
+    - #1071: Fix py3 execution in flowchart
+    - #1212: Fix PixelVectors cache
+    - #1161: Correctly import numpy where needed
+    - #1218: Fix ParameterTree.clear()
+    - #1175: Fix: Parameter tree ignores user-set 'expanded' state
+    - #1219: Encode csv export header as unicode
+    - #507: Fix Dock close event QLabel still running with no parent
+    - #1222: py3 fix for ScatterPlotWidget.setSelectedFields
+    - #1203: Image axis order bugfix
+    - #1225: ParameterTree: Fix custom context menu
+
 
   Maintenance:
     - Lots of new unit tests
@@ -240,6 +297,17 @@ pyqtgraph-0.11.0 (in development)
     - #1042: Close windows at the end of test functions
     - #1046: Establish minimum numpy version, remove legacy workarounds
     - #1067: Make scipy dependency optional
+    - #1114: doc: Fix small mistake in introduction
+    - #1131: Update CI/tox and Enable More Tests 
+    - #1142: Miscellaneous doc fixups
+    - #1179: DateAxisItem: AxisItem unlinking tests and doc fixed
+    - #1201: Get readthedocs working
+    - #1214: Pin PyVirtualDisplay Version
+    - #1215: Skip test when on qt 5.9
+    - #1221: Identify pyqt5 5.15 ci issue
+    - #1223: Remove workaround for memory leak in QImage
+    - #1217: Get docs version and copyright year dynamically
+    - #1229: Wrap text in tables in docs
 
 
 pyqtgraph-0.10.0
