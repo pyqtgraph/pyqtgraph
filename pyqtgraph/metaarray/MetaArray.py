@@ -12,10 +12,9 @@ More info at http://www.scipy.org/Cookbook/MetaArray
 
 import types, copy, threading, os, re
 import pickle
-from functools import reduce
 import numpy as np
 from ..python2_3 import basestring
-#import traceback
+
 
 ## By default, the library will use HDF5 when writing files.
 ## This can be overridden by setting USE_HDF5 = False
@@ -103,7 +102,7 @@ class MetaArray(object):
         since the actual values are described (name and units) in the column info for the first axis.
     """
   
-    version = '2'
+    version = u'2'
 
     # Default hdf5 compression to use when writing
     #   'gzip' is widely available and somewhat slow
@@ -358,9 +357,12 @@ class MetaArray(object):
         else:
             return np.array(self._data)
             
-    def __array__(self):
+    def __array__(self, dtype=None):
         ## supports np.array(metaarray_instance) 
-        return self.asarray()
+        if dtype is None:
+            return self.asarray()
+        else:
+            return self.asarray().astype(dtype)
             
     def view(self, typ):
         ## deprecated; kept for backward compatibility
@@ -741,14 +743,13 @@ class MetaArray(object):
         ## decide which read function to use
         with open(filename, 'rb') as fd:
             magic = fd.read(8)
-            if magic == '\x89HDF\r\n\x1a\n':
+            if magic == b'\x89HDF\r\n\x1a\n':
                 fd.close()
                 self._readHDF5(filename, **kwargs)
                 self._isHDF = True
             else:
                 fd.seek(0)
                 meta = MetaArray._readMeta(fd)
-
                 if not kwargs.get("readAllData", True):
                     self._data = np.empty(meta['shape'], dtype=meta['type'])
                 if 'version' in meta:
@@ -767,7 +768,7 @@ class MetaArray(object):
         """Read meta array from the top of a file. Read lines until a blank line is reached.
         This function should ideally work for ALL versions of MetaArray.
         """
-        meta = ''
+        meta = u''
         ## Read meta information until the first blank line
         while True:
             line = fd.readline().strip()
@@ -777,7 +778,7 @@ class MetaArray(object):
         ret = eval(meta)
         #print ret
         return ret
-
+    
     def _readData1(self, fd, meta, mmap=False, **kwds):
         ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
@@ -845,7 +846,7 @@ class MetaArray(object):
             frames = []
             frameShape = list(meta['shape'])
             frameShape[dynAxis] = 1
-            frameSize = reduce(lambda a,b: a*b, frameShape)
+            frameSize = np.prod(frameShape)
             n = 0
             while True:
                 ## Extract one non-blank line
@@ -887,10 +888,8 @@ class MetaArray(object):
                     newSubset = list(subset[:])
                     newSubset[dynAxis] = slice(dStart, dStop)
                     if dStop > dStart:
-                        #print n, data.shape, " => ", newSubset, data[tuple(newSubset)].shape
                         frames.append(data[tuple(newSubset)].copy())
                 else:
-                    #data = data[subset].copy()  ## what's this for??
                     frames.append(data)
                 
                 n += inf['numFrames']
@@ -901,12 +900,8 @@ class MetaArray(object):
                 ax['values'] = np.array(xVals, dtype=ax['values_type'])
             del ax['values_len']
             del ax['values_type']
-        #subarr = subarr.view(subtype)
-        #subarr._info = meta['info']
         self._info = meta['info']
         self._data = subarr
-        #raise Exception()  ## stress-testing
-        #return subarr
 
     def _readHDF5(self, fileName, readAllData=None, writable=False, **kargs):
         if 'close' in kargs and readAllData is None: ## for backward compatibility
@@ -936,6 +931,10 @@ class MetaArray(object):
         f = h5py.File(fileName, mode)
         
         ver = f.attrs['MetaArray']
+        try:
+            ver = ver.decode('utf-8')
+        except:
+            pass
         if ver > MetaArray.version:
             print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
@@ -965,11 +964,6 @@ class MetaArray(object):
         ma = MetaArray._h5py_metaarray.MetaArray(file=fileName)
         self._data = ma.asarray()._getValue()
         self._info = ma._info._getValue()
-        #print MetaArray._hdf5Process
-        #import inspect
-        #print MetaArray, id(MetaArray), inspect.getmodule(MetaArray)
-        
-        
 
     @staticmethod
     def mapHDF5Array(data, writable=False):
@@ -981,9 +975,6 @@ class MetaArray(object):
         if off is None:
             raise Exception("This dataset uses chunked storage; it can not be memory-mapped. (store using mappable=True)")
         return np.memmap(filename=data.file.filename, offset=off, dtype=data.dtype, shape=data.shape, mode=mode)
-        
-
-
 
     @staticmethod
     def readHDF5Meta(root, mmap=False):
@@ -992,6 +983,8 @@ class MetaArray(object):
         ## Pull list of values from attributes and child objects
         for k in root.attrs:
             val = root.attrs[k]
+            if isinstance(val, bytes):
+                val = val.decode()
             if isinstance(val, basestring):  ## strings need to be re-evaluated to their original types
                 try:
                     val = eval(val)
@@ -1012,6 +1005,10 @@ class MetaArray(object):
             data[k] = val
         
         typ = root.attrs['_metaType_']
+        try:
+            typ = typ.decode('utf-8')
+        except:
+            pass
         del data['_metaType_']
         
         if typ == 'dict':
@@ -1025,20 +1022,21 @@ class MetaArray(object):
             return d2
         else:
             raise Exception("Don't understand metaType '%s'" % typ)
-        
 
     def write(self, fileName, **opts):
         """Write this object to a file. The object can be restored by calling MetaArray(file=fileName)
         opts:
             appendAxis: the name (or index) of the appendable axis. Allows the array to grow.
+            appendKeys: a list of keys (other than "values") for metadata to append to on the appendable axis.
             compression: None, 'gzip' (good compression), 'lzf' (fast compression), etc.
             chunks: bool or tuple specifying chunk shape
-        """
-        
-        if USE_HDF5 and HAVE_HDF5:
+        """        
+        if USE_HDF5 is False:
+            return self.writeMa(fileName, **opts)
+        elif HAVE_HDF5 is True:
             return self.writeHDF5(fileName, **opts)
         else:
-            return self.writeMa(fileName, **opts)
+            raise Exception("h5py is required for writing .ma hdf5 files, but it could not be imported.")
 
     def writeMeta(self, fileName):
         """Used to re-write meta info to the given file.
@@ -1050,7 +1048,6 @@ class MetaArray(object):
         
         self.writeHDF5Meta(f, 'info', self._info)
         f.close()
-
 
     def writeHDF5(self, fileName, **opts):
         ## default options for writing datasets
@@ -1087,8 +1084,7 @@ class MetaArray(object):
         ## update options if they were passed in
         for k in dsOpts:
             if k in opts:
-                dsOpts[k] = opts[k]
-        
+                dsOpts[k] = opts[k]        
         
         ## If mappable is in options, it disables chunking/compression
         if opts.get('mappable', False):
@@ -1096,7 +1092,6 @@ class MetaArray(object):
                 'chunks': None,
                 'compression': None
             }
-        
             
         ## set maximum shape to allow expansion along appendAxis
         append = False
@@ -1125,14 +1120,19 @@ class MetaArray(object):
             data[tuple(sl)] = self.view(np.ndarray)
             
             ## add axis values if they are present.
+            axKeys = ["values"]
+            axKeys.extend(opts.get("appendKeys", []))
             axInfo = f['info'][str(ax)]
-            if 'values' in axInfo:
-                v = axInfo['values']
-                v2 = self._info[ax]['values']
-                shape = list(v.shape)
-                shape[0] += v2.shape[0]
-                v.resize(shape)
-                v[-v2.shape[0]:] = v2
+            for key in axKeys:
+                if key in axInfo:
+                    v = axInfo[key]
+                    v2 = self._info[ax][key]
+                    shape = list(v.shape)
+                    shape[0] += v2.shape[0]
+                    v.resize(shape)
+                    v[-v2.shape[0]:] = v2
+                else:
+                    raise TypeError('Cannot append to axis info key "%s"; this key is not present in the target file.' % key)
             f.close()
         else:
             f = h5py.File(fileName, 'w')
@@ -1294,7 +1294,7 @@ class MetaArray(object):
             #frames = []
             #frameShape = list(meta['shape'])
             #frameShape[dynAxis] = 1
-            #frameSize = reduce(lambda a,b: a*b, frameShape)
+            #frameSize = np.prod(frameShape)
             #n = 0
             #while True:
                 ### Extract one non-blank line

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
 #
-# Created: Sat Feb 28 10:30:29 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -35,7 +34,6 @@ class Ui_Form(object):
         self.widget = QtGui.QWidget(self.splitter)
         self.widget.setObjectName(_fromUtf8("widget"))
         self.gridLayout = QtGui.QGridLayout(self.widget)
-        self.gridLayout.setMargin(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.exampleTree = QtGui.QTreeWidget(self.widget)
         self.exampleTree.setObjectName(_fromUtf8("exampleTree"))
@@ -55,6 +53,7 @@ class Ui_Form(object):
         self.qtLibCombo.addItem(_fromUtf8(""))
         self.qtLibCombo.addItem(_fromUtf8(""))
         self.qtLibCombo.addItem(_fromUtf8(""))
+        self.qtLibCombo.addItem(_fromUtf8(""))
         self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
         self.label_2 = QtGui.QLabel(self.widget)
         self.label_2.setObjectName(_fromUtf8("label_2"))
@@ -68,7 +67,6 @@ class Ui_Form(object):
         self.widget1 = QtGui.QWidget(self.splitter)
         self.widget1.setObjectName(_fromUtf8("widget1"))
         self.verticalLayout = QtGui.QVBoxLayout(self.widget1)
-        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.loadedFileLabel = QtGui.QLabel(self.widget1)
         font = QtGui.QFont()
@@ -91,7 +89,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.graphicsSystemCombo.setItemText(0, _translate("Form", "default", None))
         self.graphicsSystemCombo.setItemText(1, _translate("Form", "native", None))
         self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster", None))
@@ -100,6 +98,7 @@ class Ui_Form(object):
         self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4", None))
         self.qtLibCombo.setItemText(2, _translate("Form", "PySide", None))
         self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5", None))
+        self.qtLibCombo.setItemText(4, _translate("Form", "PySide2", None))
         self.label_2.setText(_translate("Form", "Graphics System:", None))
         self.label.setText(_translate("Form", "Qt Library:", None))
         self.loadBtn.setText(_translate("Form", "Run Example", None))

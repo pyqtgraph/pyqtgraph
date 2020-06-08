@@ -69,7 +69,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.loadBtn.setText(_translate("Form", "Load..", None))
         self.saveBtn.setText(_translate("Form", "Save", None))
         self.saveAsBtn.setText(_translate("Form", "As..", None))
