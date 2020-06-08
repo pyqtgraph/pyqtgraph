@@ -1,4 +1,6 @@
-pyqtgraph-0.11.0 (in development)
+pyqtgraph-0.11.0
+
+  NOTICE: This is the _last_ feature release to support Python 2 and Qt 4 (PyQt4 or pyside 1)
 
   New Features:
     - #101: GridItem formatting options
@@ -127,7 +129,6 @@ pyqtgraph-0.11.0 (in development)
     - #151: Optionally provide custom PlotItem to PlotWidget
     - #1093: Fix aspectRatio and zoom range issues when zooming
     - #390: moved some functionality from method 'export' to new method
-    - #391: changed structure to redefine axis via plotitem.setAxes
     - #468: Patch/window handling
     - #392: new method 'getAxpectRatio' with code taken from 'setAspectLocked'
     - #1206: Added context menu option to parametertree
@@ -308,6 +309,7 @@ pyqtgraph-0.11.0 (in development)
     - #1223: Remove workaround for memory leak in QImage
     - #1217: Get docs version and copyright year dynamically
     - #1229: Wrap text in tables in docs
+    - #1231: Update readme for 0.11 release
 
 
 pyqtgraph-0.10.0
