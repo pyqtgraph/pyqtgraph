@@ -77,7 +77,8 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    p = .001**m
+    m1 = -3*m
+    p = 10.**m1
     
     return (p, pref)
 
