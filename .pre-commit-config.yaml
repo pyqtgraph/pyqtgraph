@@ -1,0 +1,11 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    sha: master
+    hooks:
+    -   id: check-added-large-files
+        args: ['--maxkb=100']
+    -   id: check-case-conflict
+    -   id: end-of-file-fixer
+    -   id: fix-encoding-pragma
+    -   id: mixed-line-ending
+        args: [--fix=lf]

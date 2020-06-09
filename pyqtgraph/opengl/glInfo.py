@@ -6,10 +6,10 @@ class GLTest(QtOpenGL.QGLWidget):
     def __init__(self):
         QtOpenGL.QGLWidget.__init__(self)
         self.makeCurrent()
-        print("GL version:" + glGetString(GL_VERSION))
+        print("GL version:" + glGetString(GL_VERSION).decode("utf-8"))
         print("MAX_TEXTURE_SIZE: %d" % glGetIntegerv(GL_MAX_TEXTURE_SIZE))
         print("MAX_3D_TEXTURE_SIZE: %d" % glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE))
-        print("Extensions: " + glGetString(GL_EXTENSIONS))
+        print("Extensions: " + glGetString(GL_EXTENSIONS).decode("utf-8").replace(" ", "\n"))
 
 GLTest()
 
