@@ -1,8 +1,16 @@
-Basic display widgets
-=====================
+Deprecated Window Classes
+=========================
 
- - GraphicsWindow
- - GraphicsView
- - GraphicsLayoutItem
- - ViewBox
+.. automodule:: pyqtgraph.graphicsWindows
 
+.. autoclass:: pyqtgraph.GraphicsWindow
+    :members:
+
+.. autoclass:: pyqtgraph.TabWindow
+    :members:
+
+.. autoclass:: pyqtgraph.PlotWindow
+    :members:
+
+.. autoclass:: pyqtgraph.ImageWindow
+    :members:

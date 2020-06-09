@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 import numpy as np
+import sys
+from copy import deepcopy
+from collections import OrderedDict
 from numpy.testing import assert_array_almost_equal, assert_almost_equal
 import pytest
 
+
 np.random.seed(12345)
+
 
 def testSolve3D():
     p1 = np.array([[0,0,0,1],
@@ -205,15 +211,15 @@ def test_makeARGB():
     # lut smaller than maxint
     lut = np.arange(128).astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut)
-    checkImage(im2, np.linspace(0, 127, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(0, 127.5, 256, dtype='ubyte'), alpha, False)
 
     # lut + levels
     lut = np.arange(256)[::-1].astype(np.uint8)
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[-128, 384])
-    checkImage(im2, np.linspace(192, 65.5, 256).astype('ubyte'), alpha, False)
+    checkImage(im2, np.linspace(191.5, 64.5, 256, dtype='ubyte'), alpha, False)
     
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=[64, 192])
-    checkImage(im2, np.clip(np.linspace(385.5, -126.5, 256), 0, 255).astype('ubyte'), alpha, False)
+    checkImage(im2, np.clip(np.linspace(384.5, -127.5, 256), 0, 255).astype('ubyte'), alpha, False)
 
     # uint8 data + uint16 LUT
     lut = np.arange(4096)[::-1].astype(np.uint16) // 16
@@ -265,6 +271,30 @@ def test_makeARGB():
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=(1, 17))
     checkImage(im2, np.linspace(127.5, 0, 256).astype('ubyte'), alpha, False)
 
+    # nans in image
+
+    # 2d input image, one pixel is nan
+    im1 = np.ones((10, 12))
+    im1[3, 5] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGB input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 3))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGBA input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 4))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1), useRGBA=True)
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
 
     # test sanity checks
     class AssertExc(object):
@@ -292,6 +322,93 @@ def test_makeARGB():
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=[(1,2)]*4)
     with AssertExc():  # 3d levels not allowed
         pg.makeARGB(np.zeros((2,2,3), dtype='float'), levels=np.zeros([3, 2, 2]))
+
+
+def test_eq():
+    eq = pg.functions.eq
+    
+    zeros = [0, 0.0, np.float(0), np.int(0)]
+    if sys.version[0] < '3':
+        zeros.append(long(0))
+    for i,x in enumerate(zeros):
+        for y in zeros[i:]:
+            assert eq(x, y)
+            assert eq(y, x)
+    
+    assert eq(np.nan, np.nan)
+    
+    # test 
+    class NotEq(object):
+        def __eq__(self, x):
+            return False
+        
+    noteq = NotEq()
+    assert eq(noteq, noteq) # passes because they are the same object
+    assert not eq(noteq, NotEq())
+
+
+    # Should be able to test for equivalence even if the test raises certain
+    # exceptions
+    class NoEq(object):
+        def __init__(self, err):
+            self.err = err
+        def __eq__(self, x):
+            raise self.err
+        
+    noeq1 = NoEq(AttributeError())
+    noeq2 = NoEq(ValueError())
+    noeq3 = NoEq(Exception())
+    
+    assert eq(noeq1, noeq1)
+    assert not eq(noeq1, noeq2)
+    assert not eq(noeq2, noeq1)
+    with pytest.raises(Exception):
+        eq(noeq3, noeq2)
+
+    # test array equivalence
+    # note that numpy has a weird behavior here--np.all() always returns True
+    # if one of the arrays has size=0; eq() will only return True if both arrays
+    # have the same shape.
+    a1 = np.zeros((10, 20)).astype('float')
+    a2 = a1 + 1
+    a3 = a2.astype('int')
+    a4 = np.empty((0, 20))
+    assert not eq(a1, a2)  # same shape/dtype, different values
+    assert not eq(a1, a3)  # same shape, different dtype and values
+    assert not eq(a1, a4)  # different shape (note: np.all gives True if one array has size 0)
+
+    assert not eq(a2, a3)  # same values, but different dtype
+    assert not eq(a2, a4)  # different shape
+    
+    assert not eq(a3, a4)  # different shape and dtype
+    
+    assert eq(a4, a4.copy())
+    assert not eq(a4, a4.T)
+
+    # test containers
+
+    assert not eq({'a': 1}, {'a': 1, 'b': 2})
+    assert not eq({'a': 1}, {'a': 2})
+    d1 = {'x': 1, 'y': np.nan, 3: ['a', np.nan, a3, 7, 2.3], 4: a4}
+    d2 = deepcopy(d1)
+    assert eq(d1, d2)
+    d1_ordered = OrderedDict(d1)
+    d2_ordered = deepcopy(d1_ordered)
+    assert eq(d1_ordered, d2_ordered)
+    assert not eq(d1_ordered, d2)
+    items = list(d1.items())
+    assert not eq(OrderedDict(items), OrderedDict(reversed(items)))
+    
+    assert not eq([1,2,3], [1,2,3,4])
+    l1 = [d1, np.inf, -np.inf, np.nan]
+    l2 = deepcopy(l1)
+    t1 = tuple(l1)
+    t2 = tuple(l2)
+    assert eq(l1, l2)
+    assert eq(t1, t2)
+
+    assert eq(set(range(10)), set(range(10)))
+    assert not eq(set(range(10)), set(range(9)))
 
     
 if __name__ == '__main__':

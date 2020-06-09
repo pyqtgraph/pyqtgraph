@@ -13,7 +13,7 @@ from pyqtgraph.Point import Point
 
 #generate layout
 app = QtGui.QApplication([])
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: crosshair')
 label = pg.LabelItem(justify='right')
 win.addItem(label)

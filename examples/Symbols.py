@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 app = QtGui.QApplication([])
-win = pg.GraphicsWindow(title="Scatter Plot Symbols")
+win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")
 win.resize(1000,600)
 
 pg.setConfigOptions(antialias=True)
