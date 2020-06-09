@@ -142,6 +142,7 @@ class HistogramLUTItem(GraphicsWidget):
         p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
         p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
         gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
         for pen in [fn.mkPen((0, 0, 0, 100), width=3), pen]:
             p.setPen(pen)
             p.drawLine(p1 + Point(0, 5), gradRect.bottomLeft())
