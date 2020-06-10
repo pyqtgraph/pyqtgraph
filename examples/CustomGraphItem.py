@@ -12,7 +12,7 @@ import numpy as np
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
 
-w = pg.GraphicsWindow()
+w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: CustomGraphItem')
 v = w.addViewBox()
 v.setAspectLocked()

@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-if __name__ == '__main__':
-    import sys, os
-    md = os.path.dirname(os.path.abspath(__file__))
-    sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
 from ..Qt import QtGui, QtCore, QT_LIB
 from ..graphicsItems.ROI import ROI
@@ -13,14 +9,18 @@ if QT_LIB == 'PySide':
     from .CanvasTemplate_pyside import *
 elif QT_LIB == 'PyQt4':
     from .CanvasTemplate_pyqt import *
+elif QT_LIB == 'PySide2':
+    from .CanvasTemplate_pyside2 import *
 elif QT_LIB == 'PyQt5':
     from .CanvasTemplate_pyqt5 import *
     
 import numpy as np
 from .. import debug
 import weakref
+import gc
 from .CanvasManager import CanvasManager
 from .CanvasItem import CanvasItem, GroupCanvasItem
+
 
 class Canvas(QtGui.QWidget):
     
@@ -32,7 +32,6 @@ class Canvas(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        #self.view = self.ui.view
         self.view = ViewBox()
         self.ui.view.setCentralItem(self.view)
         self.itemList = self.ui.itemList
@@ -49,9 +48,7 @@ class Canvas(QtGui.QWidget):
         self.redirect = None  ## which canvas to redirect items to
         self.items = []
         
-        #self.view.enableMouse()
         self.view.setAspectLocked(True)
-        #self.view.invertY()
         
         grid = GridItem()
         self.grid = CanvasItem(grid, name='Grid', movable=False)
@@ -69,8 +66,6 @@ class Canvas(QtGui.QWidget):
         self.ui.itemList.sigItemMoved.connect(self.treeItemMoved)
         self.ui.itemList.itemSelectionChanged.connect(self.treeItemSelected)
         self.ui.autoRangeBtn.clicked.connect(self.autoRange)
-        #self.ui.storeSvgBtn.clicked.connect(self.storeSvg)
-        #self.ui.storePngBtn.clicked.connect(self.storePng)
         self.ui.redirectCheck.toggled.connect(self.updateRedirect)
         self.ui.redirectCombo.currentIndexChanged.connect(self.updateRedirect)
         self.multiSelectBox.sigRegionChanged.connect(self.multiSelectBoxChanged)
@@ -88,21 +83,11 @@ class Canvas(QtGui.QWidget):
             self.ui.redirectCombo.setHostName(self.registeredName)
             
         self.menu = QtGui.QMenu()
-        #self.menu.setTitle("Image")
         remAct = QtGui.QAction("Remove item", self.menu)
         remAct.triggered.connect(self.removeClicked)
         self.menu.addAction(remAct)
         self.menu.remAct = remAct
         self.ui.itemList.contextMenuEvent = self.itemListContextMenuEvent
-            
-
-    #def storeSvg(self):
-        #from pyqtgraph.GraphicsScene.exportDialog import ExportDialog
-        #ex = ExportDialog(self.ui.view)
-        #ex.show()
-
-    #def storePng(self):
-        #self.ui.view.writeImage()
 
     def splitterMoved(self):
         self.resizeEvent()
@@ -135,7 +120,6 @@ class Canvas(QtGui.QWidget):
             s = min(self.width(), max(100, min(200, self.width()*0.25)))
             s2 = self.width()-s
             self.ui.splitter.setSizes([s2, s])
-
     
     def updateRedirect(self, *args):
         ### Decide whether/where to redirect items and make it so
@@ -154,7 +138,6 @@ class Canvas(QtGui.QWidget):
             self.reclaimItems()
         else:
             self.redirectItems(redirect)
-
     
     def redirectItems(self, canvas):
         for i in self.items:
@@ -171,12 +154,9 @@ class Canvas(QtGui.QWidget):
             else:
                 parent.removeChild(li)
             canvas.addItem(i)
-            
 
     def reclaimItems(self):
         items = self.items
-        #self.items = {'Grid': items['Grid']}
-        #del items['Grid']
         self.items = [self.grid]
         items.remove(self.grid)
         
@@ -185,9 +165,6 @@ class Canvas(QtGui.QWidget):
             self.addItem(i)
 
     def treeItemChanged(self, item, col):
-        #gi = self.items.get(item.name, None)
-        #if gi is None:
-            #return
         try:
             citem = item.canvasItem()
         except AttributeError:
@@ -203,25 +180,16 @@ class Canvas(QtGui.QWidget):
 
     def treeItemSelected(self):
         sel = self.selectedItems()
-        #sel = []
-        #for listItem in self.itemList.selectedItems():
-            #if hasattr(listItem, 'canvasItem') and listItem.canvasItem is not None:
-                #sel.append(listItem.canvasItem)
-        #sel = [self.items[item.name] for item in sel]
-        
+
         if len(sel) == 0:
-            #self.selectWidget.hide()
             return
             
         multi = len(sel) > 1
         for i in self.items:
-            #i.ctrlWidget().hide()
             ## updated the selected state of every item
             i.selectionChanged(i in sel, multi)
             
         if len(sel)==1:
-            #item = sel[0]
-            #item.ctrlWidget().show()
             self.multiSelectBox.hide()
             self.ui.mirrorSelectionBtn.hide()
             self.ui.reflectSelectionBtn.hide()
@@ -229,14 +197,6 @@ class Canvas(QtGui.QWidget):
         elif len(sel) > 1:
             self.showMultiSelectBox()
         
-        #if item.isMovable():
-            #self.selectBox.setPos(item.item.pos())
-            #self.selectBox.setSize(item.item.sceneBoundingRect().size())
-            #self.selectBox.show()
-        #else:
-            #self.selectBox.hide()
-        
-        #self.emit(QtCore.SIGNAL('itemSelected'), self, item)
         self.sigSelectionChanged.emit(self, sel)
         
     def selectedItems(self):
@@ -245,19 +205,9 @@ class Canvas(QtGui.QWidget):
         """
         return [item.canvasItem() for item in self.itemList.selectedItems() if item.canvasItem() is not None]
         
-    #def selectedItem(self):
-        #sel = self.itemList.selectedItems()
-        #if sel is None or len(sel) < 1:
-            #return
-        #return self.items.get(sel[0].name, None)
-
     def selectItem(self, item):
         li = item.listItem
-        #li = self.getListItem(item.name())
-        #print "select", li
         self.itemList.setCurrentItem(li)
-
-        
         
     def showMultiSelectBox(self):
         ## Get list of selected canvas items
@@ -281,7 +231,6 @@ class Canvas(QtGui.QWidget):
         self.ui.mirrorSelectionBtn.show()
         self.ui.reflectSelectionBtn.show()
         self.ui.resetTransformsBtn.show()
-        #self.multiSelectBoxBase = self.multiSelectBox.getState().copy()
 
     def mirrorSelectionClicked(self):
         for ci in self.selectedItems():
@@ -312,7 +261,6 @@ class Canvas(QtGui.QWidget):
             ci.setTemporaryTransform(transform)
             ci.sigTransformChanged.emit(ci)
         
-
     def addGraphicsItem(self, item, **opts):
         """Add a new GraphicsItem to the scene at pos.
         Common options are name, pos, scale, and z
@@ -321,13 +269,11 @@ class Canvas(QtGui.QWidget):
         item._canvasItem = citem
         self.addItem(citem)
         return citem
-            
 
     def addGroup(self, name, **kargs):
         group = GroupCanvasItem(name=name)
         self.addItem(group, **kargs)
         return group
-        
 
     def addItem(self, citem):
         """
@@ -363,7 +309,6 @@ class Canvas(QtGui.QWidget):
         #name = newname
             
         ## find parent and add item to tree
-        #currentNode = self.itemList.invisibleRootItem()
         insertLocation = 0
         #print "Inserting node:", name
         
@@ -413,11 +358,7 @@ class Canvas(QtGui.QWidget):
             node.setCheckState(0, QtCore.Qt.Unchecked)
         
         node.name = name
-        #if citem.opts['parent'] != None:
-            ## insertLocation is incorrect in this case
         parent.insertChild(insertLocation, node)
-        #else:    
-            #root.insertChild(insertLocation, node)
         
         citem.name = name
         citem.listItem = node
@@ -435,36 +376,6 @@ class Canvas(QtGui.QWidget):
         if len(self.items) == 2:
             self.autoRange()
             
-        
-        #for n in name:
-            #nextnode = None
-            #for x in range(currentNode.childCount()):
-                #ch = currentNode.child(x)
-                #if hasattr(ch, 'name'):    ## check Z-value of current item to determine insert location
-                    #zval = ch.canvasItem.zValue()
-                    #if zval > z:
-                        ###print "  ->", x
-                        #insertLocation = x+1
-                #if n == ch.text(0):
-                    #nextnode = ch
-                    #break
-            #if nextnode is None:  ## If name doesn't exist, create it
-                #nextnode = QtGui.QTreeWidgetItem([n])
-                #nextnode.setFlags((nextnode.flags() | QtCore.Qt.ItemIsUserCheckable) & ~QtCore.Qt.ItemIsDropEnabled)
-                #nextnode.setCheckState(0, QtCore.Qt.Checked)
-                ### Add node to correct position in list by Z-value
-                ###print "  ==>", insertLocation
-                #currentNode.insertChild(insertLocation, nextnode)
-                
-                #if n == name[-1]:   ## This is the leaf; add some extra properties.
-                    #nextnode.name = name
-                
-                #if n == name[0]:   ## This is the root; make the item movable
-                    #nextnode.setFlags(nextnode.flags() | QtCore.Qt.ItemIsDragEnabled)
-                #else:
-                    #nextnode.setFlags(nextnode.flags() & ~QtCore.Qt.ItemIsDragEnabled)
-                    
-            #currentNode = nextnode
         return citem
 
     def treeItemMoved(self, item, parent, index):
@@ -481,31 +392,6 @@ class Canvas(QtGui.QWidget):
         for i in range(len(siblings)):
             item = siblings[i]
             item.setZValue(zvals[i])
-            #item = self.itemList.topLevelItem(i)
-            
-            ##ci = self.items[item.name]
-            #ci = item.canvasItem
-            #if ci is None:
-                #continue
-            #if ci.zValue() != zvals[i]:
-                #ci.setZValue(zvals[i])
-        
-        #if self.itemList.topLevelItemCount() < 2:
-            #return
-        #name = item.name
-        #gi = self.items[name]
-        #if index == 0:   
-            #next = self.itemList.topLevelItem(1)
-            #z = self.items[next.name].zValue()+1
-        #else:
-            #prev = self.itemList.topLevelItem(index-1)
-            #z = self.items[prev.name].zValue()-1
-        #gi.setZValue(z)
-
-
-
-
-
         
     def itemVisibilityChanged(self, item):
         listItem = item.listItem
@@ -521,7 +407,6 @@ class Canvas(QtGui.QWidget):
         if isinstance(item, QtGui.QTreeWidgetItem):
             item = item.canvasItem()
             
-            
         if isinstance(item, CanvasItem):
             item.setCanvas(None)
             listItem = item.listItem
@@ -532,25 +417,24 @@ class Canvas(QtGui.QWidget):
             ctrl = item.ctrlWidget()
             ctrl.hide()
             self.ui.ctrlLayout.removeWidget(ctrl)
+            ctrl.setParent(None)
         else:
             if hasattr(item, '_canvasItem'):
                 self.removeItem(item._canvasItem)
             else:
                 self.view.removeItem(item)
-        
-        ## disconnect signals, remove from list, etc..
+                
+        gc.collect()
         
     def clear(self):
         while len(self.items) > 0:
             self.removeItem(self.items[0])
-        
 
     def addToScene(self, item):
         self.view.addItem(item)
         
     def removeFromScene(self, item):
         self.view.removeItem(item)
-
     
     def listItems(self):
         """Return a dictionary of name:item pairs"""
@@ -559,15 +443,10 @@ class Canvas(QtGui.QWidget):
     def getListItem(self, name):
         return self.items[name]
         
-    #def scene(self):
-        #return self.view.scene()
-        
     def itemTransformChanged(self, item):
-        #self.emit(QtCore.SIGNAL('itemTransformChanged'), self, item)
         self.sigItemTransformChanged.emit(self, item)
     
     def itemTransformChangeFinished(self, item):
-        #self.emit(QtCore.SIGNAL('itemTransformChangeFinished'), self, item)
         self.sigItemTransformChangeFinished.emit(self, item)
         
     def itemListContextMenuEvent(self, ev):
@@ -575,12 +454,12 @@ class Canvas(QtGui.QWidget):
         self.menu.popup(ev.globalPos())
         
     def removeClicked(self):
-        #self.removeItem(self.menuItem)
         for item in self.selectedItems():
             self.removeItem(item)
         self.menuItem = None
         import gc
         gc.collect()
+
 
 class SelectBox(ROI):
     def __init__(self, scalable=False):
@@ -593,14 +472,3 @@ class SelectBox(ROI):
             self.addScaleHandle([0, 0], center, lockAspect=True)
         self.addRotateHandle([0, 1], center)
         self.addRotateHandle([1, 0], center)
-
-
-
-
-
-
-
-
-
-
-    

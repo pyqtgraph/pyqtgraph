@@ -26,6 +26,8 @@ elif 'pyqt' in sys.argv:
     from PyQt4 import QtGui
 elif 'pyqt5' in sys.argv: 
     from PyQt5 import QtGui
+elif 'pyside2' in sys.argv: 
+    from PySide2 import QtGui
 else:
     from pyqtgraph.Qt import QtGui
 
