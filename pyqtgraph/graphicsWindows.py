@@ -15,11 +15,10 @@ from .widgets.GraphicsView import GraphicsView
 
 class GraphicsWindow(GraphicsLayoutWidget):
     """
-    (deprecated; use GraphicsLayoutWidget instead)
+    (deprecated; use :class:`~pyqtgraph.GraphicsLayoutWidget` instead)
     
-    Convenience subclass of :class:`GraphicsLayoutWidget 
-    <pyqtgraph.GraphicsLayoutWidget>`. This class is intended for use from 
-    the interactive python prompt.
+    Convenience subclass of :class:`~pyqtgraph.GraphicsLayoutWidget`. This class
+    is intended for use from the interactive python prompt.
     """
     def __init__(self, title=None, size=(800,600), **kargs):
         mkQApp()
@@ -45,45 +44,43 @@ class TabWindow(QtGui.QMainWindow):
         self.show()
         
     def __getattr__(self, attr):
-        if hasattr(self.cw, attr):
-            return getattr(self.cw, attr)
-        else:
-            raise NameError(attr)
+        return getattr(self.cw, attr)
     
 
 class PlotWindow(PlotWidget):
+    sigClosed = QtCore.Signal(object)
+
     """
-    (deprecated; use PlotWidget instead)
+    (deprecated; use :class:`~pyqtgraph.PlotWidget` instead)
     """
     def __init__(self, title=None, **kargs):
         mkQApp()
-        self.win = QtGui.QMainWindow()
         PlotWidget.__init__(self, **kargs)
-        self.win.setCentralWidget(self)
-        for m in ['resize']:
-            setattr(self, m, getattr(self.win, m))
         if title is not None:
-            self.win.setWindowTitle(title)
-        self.win.show()
+            self.setWindowTitle(title)
+        self.show()
+
+    def closeEvent(self, event):
+        PlotWidget.closeEvent(self, event)
+        self.sigClosed.emit(self)
 
 
 class ImageWindow(ImageView):
+    sigClosed = QtCore.Signal(object)
+
     """
-    (deprecated; use ImageView instead)
+    (deprecated; use :class:`~pyqtgraph.ImageView` instead)
     """
     def __init__(self, *args, **kargs):
         mkQApp()
-        self.win = QtGui.QMainWindow()
-        self.win.resize(800,600)
+        ImageView.__init__(self)
         if 'title' in kargs:
-            self.win.setWindowTitle(kargs['title'])
+            self.setWindowTitle(kargs['title'])
             del kargs['title']
-        ImageView.__init__(self, self.win)
         if len(args) > 0 or len(kargs) > 0:
             self.setImage(*args, **kargs)
-        self.win.setCentralWidget(self)
-        for m in ['resize']:
-            setattr(self, m, getattr(self.win, m))
-        #for m in ['setImage', 'autoRange', 'addItem', 'removeItem', 'blackLevel', 'whiteLevel', 'imageItem']:
-            #setattr(self, m, getattr(self.cw, m))
-        self.win.show()
+        self.show()
+
+    def closeEvent(self, event):
+        ImageView.closeEvent(self, event)
+        self.sigClosed.emit(self)

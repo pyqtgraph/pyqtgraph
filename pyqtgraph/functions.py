@@ -2,7 +2,7 @@
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
@@ -11,6 +11,7 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
@@ -76,9 +77,10 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    p = .001**m
+    m1 = -3*m
+    p = 10.**m1
     
-    return (p, pref)    
+    return (p, pref)
 
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
@@ -424,6 +426,8 @@ def eq(a, b):
     3. When comparing arrays, returns False if the array shapes are not the same.
     4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
     """
     if a is b:
         return True
@@ -439,6 +443,28 @@ def eq(a, b):
     # equal because they may behave differently when computed on.
     if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
         return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
 
     # Test for equivalence. 
     # If the test raises a recognized exception, then return Falase
@@ -909,10 +935,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -1035,7 +1063,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
-
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
@@ -1057,6 +1084,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
         levels = np.array(levels)
+    levels = levels.astype(np.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -1073,7 +1101,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 
@@ -1082,7 +1110,14 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.ubyte
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
-            
+
+    # awkward, but fastest numpy native nan evaluation
+    # 
+    nanMask = None
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
+        nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1093,7 +1128,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1103,12 +1138,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
-            
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
-
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1151,7 +1186,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         imgData[..., 3] = 255
     else:
         alpha = True
-        
+
+    # apply nan mask through alpha channel
+    if nanMask is not None:
+        alpha = True
+        imgData[nanMask, 3] = 0
+
     profile()
     return imgData, alpha
 
@@ -1222,30 +1262,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
-        
-        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
-        # incremented, which leads to leaked memory. As a workaround, we manually
-        # reset the reference count after creating the QImage.
-        # See: https://bugreports.qt.io/browse/PYSIDE-140
-        
-        # Get initial reference count (PyObject struct has ob_refcnt as first element)
-        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
-        if sys.version[0] == '3':
-            # Reset refcount only on python 3. Technically this would have no effect
-            # on python 2, but this is a nasty hack, and checking for version here 
-            # helps to mitigate possible unforseen consequences.
-            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
-        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        #addr = ctypes.c_char.from_buffer(imgData, 0)
-        #try:
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        #except TypeError:  
-            #addr = ctypes.addressof(addr)
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
             img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
         except:
@@ -1258,16 +1278,6 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 
     img.data = imgData
     return img
-    #try:
-        #buf = imgData.data
-    #except AttributeError:  ## happens when image data is non-contiguous
-        #buf = imgData.data
-        
-    #profiler()
-    #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    #profiler()
-    #qimage.data = imgData
-    #return qimage
 
 def imageToArray(img, copy=False, transpose=True):
     """
@@ -1380,7 +1390,7 @@ def gaussianFilter(data, sigma):
         # clip off extra data
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
-        filtered = filtered[sl]
+        filtered = filtered[tuple(sl)]
     return filtered + baseline
     
     
@@ -2468,6 +2478,3 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
-
-
-

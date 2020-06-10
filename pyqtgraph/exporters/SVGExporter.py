@@ -69,6 +69,13 @@ xmlHeader = """\
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.2" baseProfile="tiny">
 <title>pyqtgraph SVG export</title>
 <desc>Generated with Qt and pyqtgraph</desc>
+<style>
+    image {
+        image-rendering: crisp-edges;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: pixelated;
+    }
+</style>
 """
 
 def generateSvg(item, options={}):
@@ -190,12 +197,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
             ## this is taken care of in generateSvg instead.
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
-
-        if QT_LIB in ['PySide', 'PySide2']:
-            xmlStr = str(arr)
-        else:
-            xmlStr = bytes(arr).decode('utf-8')
-        doc = xml.parseString(xmlStr.encode('utf-8'))
+        doc = xml.parseString(arr.data())
         
     try:
         ## Get top-level group for this item

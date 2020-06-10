@@ -27,6 +27,7 @@ from .. import configfile as configfile
 from .. import dockarea as dockarea
 from . import FlowchartGraphicsView
 from .. import functions as fn
+from ..python2_3 import asUnicode
 
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
@@ -502,12 +503,12 @@ class Flowchart(Node):
         finally:
             self.blockSignals(False)
             
-        self.sigChartLoaded.emit()
         self.outputChanged()
+        self.sigChartLoaded.emit()
         self.sigStateChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):
-        """Load a flowchart (*.fc) file.
+        """Load a flowchart (``*.fc``) file.
         """
         if fileName is None:
             if startDir is None:
@@ -519,12 +520,12 @@ class Flowchart(Node):
             self.fileDialog.fileSelected.connect(self.loadFile)
             return
             ## NOTE: was previously using a real widget for the file dialog's parent, but this caused weird mouse event bugs..
-        fileName = unicode(fileName)
+        fileName = asUnicode(fileName)
         state = configfile.readConfigFile(fileName)
         self.restoreState(state, clear=True)
         self.viewBox.autoRange()
         self.sigFileLoaded.emit(fileName)
-        
+
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
         """Save this flowchart to a .fc file
         """
@@ -534,11 +535,12 @@ class Flowchart(Node):
             if startDir is None:
                 startDir = '.'
             self.fileDialog = FileDialog(None, "Save Flowchart..", startDir, "Flowchart (*.fc)")
+            self.fileDialog.setDefaultSuffix("fc")
             self.fileDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave) 
             self.fileDialog.show()
             self.fileDialog.fileSelected.connect(self.saveFile)
             return
-        fileName = unicode(fileName)
+        fileName = asUnicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
 
@@ -662,7 +664,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
         
     def fileSaved(self, fileName):
-        self.setCurrentFile(unicode(fileName))
+        self.setCurrentFile(asUnicode(fileName))
         self.ui.saveBtn.success("Saved.")
         
     def saveClicked(self):
@@ -691,7 +693,7 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         #self.setCurrentFile(newFile)
             
     def setCurrentFile(self, fileName):
-        self.currentFileName = unicode(fileName)
+        self.currentFileName = asUnicode(fileName)
         if fileName is None:
             self.ui.fileNameLabel.setText("<b>[ new ]</b>")
         else:
@@ -760,6 +762,9 @@ class FlowchartCtrlWidget(QtGui.QWidget):
     def select(self, node):
         item = self.items[node]
         self.ui.ctrlList.setCurrentItem(item)
+
+    def clearSelection(self):
+        self.ui.ctrlList.selectionModel().clearSelection()
 
 
 class FlowchartWidget(dockarea.DockArea):
@@ -832,9 +837,9 @@ class FlowchartWidget(dockarea.DockArea):
     def buildMenu(self, pos=None):
         def buildSubMenu(node, rootMenu, subMenus, pos=None):
             for section, node in node.items():
-                menu = QtGui.QMenu(section)
-                rootMenu.addMenu(menu)
-                if isinstance(node, OrderedDict): 
+                if isinstance(node, OrderedDict):
+                    menu = QtGui.QMenu(section)
+                    rootMenu.addMenu(menu)
                     buildSubMenu(node, menu, subMenus, pos=pos)
                     subMenus.append(menu)
                 else:
@@ -888,7 +893,10 @@ class FlowchartWidget(dockarea.DockArea):
             item = items[0]
             if hasattr(item, 'node') and isinstance(item.node, Node):
                 n = item.node
-                self.ctrl.select(n)
+                if n in self.ctrl.items:
+                    self.ctrl.select(n)
+                else:
+                    self.ctrl.clearSelection()
                 data = {'outputs': n.outputValues(), 'inputs': n.inputValues()}
                 self.selNameLabel.setText(n.name())
                 if hasattr(n, 'nodeName'):
@@ -936,4 +944,3 @@ class FlowchartWidget(dockarea.DockArea):
         
 class FlowchartNode(Node):
     pass
-

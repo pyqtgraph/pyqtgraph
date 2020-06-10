@@ -201,7 +201,7 @@ class TreeWidget(QtGui.QTreeWidget):
         return item
 
     def topLevelItems(self):
-        return map(self.topLevelItem, xrange(self.topLevelItemCount()))
+        return [self.topLevelItem(i) for i in range(self.topLevelItemCount())]
         
     def clear(self):
         items = self.topLevelItems()

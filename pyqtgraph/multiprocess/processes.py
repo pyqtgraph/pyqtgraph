@@ -166,6 +166,14 @@ class Process(RemoteEventHandler):
                     raise Exception('Timed out waiting for remote process to end.')
                 time.sleep(0.05)
         self.conn.close()
+
+        # Close remote polling threads, otherwise they will spin continuously
+        if hasattr(self, "_stdoutForwarder"):
+            self._stdoutForwarder.finish.set()
+            self._stderrForwarder.finish.set()
+            self._stdoutForwarder.join()
+            self._stderrForwarder.join()
+
         self.debugMsg('Child process exited. (%d)' % self.proc.returncode)
 
     def debugMsg(self, msg, *args):
@@ -473,23 +481,24 @@ class FileForwarder(threading.Thread):
         self.lock = threading.Lock()
         self.daemon = True
         self.color = color
+        self.finish = threading.Event()
         self.start()
 
     def run(self):
         if self.output == 'stdout' and self.color is not False:
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
                     cprint.cout(self.color, line, -1)
         elif self.output == 'stderr' and self.color is not False:
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
                     cprint.cerr(self.color, line, -1)
         else:
             if isinstance(self.output, str):
                 self.output = getattr(sys, self.output)
-            while True:
+            while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    self.output.write(line)
+                    self.output.write(line.decode('utf8'))

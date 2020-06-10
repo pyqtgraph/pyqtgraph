@@ -103,6 +103,7 @@ def mkData():
                 dt = np.float
                 loc = 1.0
                 scale = 0.1
+                mx = 1.0
             
             if ui.rgbCheck.isChecked():
                 data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)

@@ -371,7 +371,7 @@ class MeshData(object):
         #pass
         
     def _computeEdges(self):
-        if not self.hasFaceIndexedData:
+        if not self.hasFaceIndexedData():
             ## generate self._edges from self._faces
             nf = len(self._faces)
             edges = np.empty(nf*3, dtype=[('i', np.uint, 2)])
