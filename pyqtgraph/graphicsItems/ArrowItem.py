@@ -40,7 +40,6 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         
         self.setStyle(**defaultOpts)
         
-        self.rotate(self.opts['angle'])
         self.moveBy(*self.opts['pos'])
     
     def setStyle(self, **opts):
@@ -73,7 +72,10 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         self.opts.update(opts)
         
         opt = dict([(k,self.opts[k]) for k in ['headLen', 'headWidth', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
-        self.path = fn.makeArrowPath(**opt)
+        tr = QtGui.QTransform()
+        tr.rotate(self.opts['angle'])
+        self.path = tr.map(fn.makeArrowPath(**opt))
+
         self.setPath(self.path)
         
         self.setPen(fn.mkPen(self.opts['pen']))
@@ -83,7 +85,8 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
-        
+
+
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         QtGui.QGraphicsPathItem.paint(self, p, *args)

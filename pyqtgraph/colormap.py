@@ -1,6 +1,7 @@
 import numpy as np
 from .Qt import QtGui, QtCore
 from .python2_3 import basestring
+from .functions import mkColor
 
 
 class ColorMap(object):
@@ -56,9 +57,9 @@ class ColorMap(object):
         ===============     ==============================================================
         **Arguments:**
         pos                 Array of positions where each color is defined
-        color               Array of RGBA colors.
-                            Integer data types are interpreted as 0-255; float data types
-                            are interpreted as 0.0-1.0
+        color               Array of colors.
+                            Values are interpreted via 
+                            :func:`mkColor() <pyqtgraph.mkColor>`.
         mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
                             indicating the color space that should be used when
                             interpolating between stops. Note that the last mode value is
@@ -68,7 +69,11 @@ class ColorMap(object):
         self.pos = np.array(pos)
         order = np.argsort(self.pos)
         self.pos = self.pos[order]
-        self.color = np.array(color)[order]
+        self.color = np.apply_along_axis(
+            func1d = lambda x: mkColor(x).getRgb(),
+            axis   = -1,
+            arr    = color,
+            )[order]
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode
@@ -141,7 +146,7 @@ class ColorMap(object):
         
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(zip(pos, color))
+        g.setStops(list(zip(pos, color)))
         
         #if self.colorMode == 'rgb':
             #ticks = self.listTicks()
@@ -225,7 +230,7 @@ class ColorMap(object):
         x = np.linspace(start, stop, nPts)
         table = self.map(x, mode)
         
-        if not alpha:
+        if not alpha and mode != self.QCOLOR:
             return table[:,:3]
         else:
             return table

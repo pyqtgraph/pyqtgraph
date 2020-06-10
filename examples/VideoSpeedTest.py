@@ -10,14 +10,16 @@ is used by the view widget
 import initExample ## Add path to library (just for examples; you do not need this)
 
 
-from pyqtgraph.Qt import QtGui, QtCore, USE_PYSIDE, USE_PYQT5
+from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 
-if USE_PYSIDE:
+if QT_LIB == 'PySide':
     import VideoTemplate_pyside as VideoTemplate
-elif USE_PYQT5:
+elif QT_LIB == 'PySide2':
+    import VideoTemplate_pyside2 as VideoTemplate
+elif QT_LIB == 'PyQt5':
     import VideoTemplate_pyqt5 as VideoTemplate
 else:
     import VideoTemplate_pyqt as VideoTemplate
@@ -101,6 +103,7 @@ def mkData():
                 dt = np.float
                 loc = 1.0
                 scale = 0.1
+                mx = 1.0
             
             if ui.rgbCheck.isChecked():
                 data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
