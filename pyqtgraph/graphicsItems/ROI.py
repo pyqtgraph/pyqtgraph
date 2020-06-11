@@ -590,13 +590,13 @@ class ROI(GraphicsObject):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
             h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen, parent=self)
-            h.setPos(info['pos'] * self.state['size'])
             info['item'] = h
         else:
             h = info['item']
             if info['pos'] is None:
                 info['pos'] = h.pos()
-            
+        h.setPos(info['pos'] * self.state['size'])
+
         ## connect the handle to this ROI
         #iid = len(self.handles)
         h.connectROI(self)
@@ -1273,11 +1273,12 @@ class Handle(UIGraphicsItem):
     sigClicked = QtCore.Signal(object, object)   # self, event
     sigRemoveRequested = QtCore.Signal(object)   # self
     
-    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None, deletable=False):
+    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None, deletable=False, activePen=(255, 255, 0)):
         self.rois = []
         self.radius = radius
         self.typ = typ
         self.pen = fn.mkPen(pen)
+        self.activePen = fn.mkPen(activePen)
         self.currentPen = self.pen
         self.pen.setWidth(0)
         self.pen.setCosmetic(True)
@@ -1321,7 +1322,7 @@ class Handle(UIGraphicsItem):
                     hover=True
                     
         if hover:
-            self.currentPen = fn.mkPen(255, 255,0)
+            self.currentPen = self.activePen
         else:
             self.currentPen = self.pen
         self.update()
@@ -1374,15 +1375,19 @@ class Handle(UIGraphicsItem):
                 for r in self.rois:
                     r.stateChangeFinished()
             self.isMoving = False
+            self.currentPen = self.pen
+            self.update()
         elif ev.isStart():
             for r in self.rois:
                 r.handleMoveStarted()
             self.isMoving = True
             self.startPos = self.scenePos()
             self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
+            self.currentPen = self.activePen
             
         if self.isMoving:  ## note: isMoving may become False in mid-drag due to right-click.
             pos = ev.scenePos() + self.cursorOffset
+            self.currentPen = self.activePen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
     def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
