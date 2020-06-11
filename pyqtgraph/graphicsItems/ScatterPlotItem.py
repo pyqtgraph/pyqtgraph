@@ -267,8 +267,8 @@ class ScatterPlotItem(GraphicsObject):
 
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
-
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('width', float)])
+        
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('width', float), ('visible', bool)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -390,6 +390,7 @@ class ScatterPlotItem(GraphicsObject):
 
         newData = self.data[len(oldData):]
         newData['size'] = -1  ## indicates to use default size
+        newData['visible'] = True
 
         if 'spots' in kargs:
             spots = kargs['spots']
@@ -549,6 +550,28 @@ class ScatterPlotItem(GraphicsObject):
         if update:
             self.updateSpots(dataSet)
 
+
+    def setPointsVisible(self, visible, update=True, dataSet=None, mask=None):
+        """Set whether or not each spot is visible.
+        If a list or array is provided, then the visibility for each spot will be set separately.
+        Otherwise, the argument will be used for all spots."""
+        if dataSet is None:
+            dataSet = self.data
+
+        if isinstance(visible, np.ndarray) or isinstance(visible, list):
+            visibilities = visible
+            if mask is not None:
+                visibilities = visibilities[mask]
+            if len(visibilities) != len(dataSet):
+                raise Exception("Number of visibilities does not match number of points (%d != %d)" % (len(visibilities), len(dataSet)))
+            dataSet['visible'] = visibilities
+        else:
+            dataSet['visible'] = visible
+
+        dataSet['sourceRect'] = None
+        if update:
+            self.updateSpots(dataSet)
+        
     def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
@@ -750,6 +773,8 @@ class ScatterPlotItem(GraphicsObject):
                 (pts[0] - w < viewBounds.right()) &
                 (pts[1] + w > viewBounds.top()) &
                 (pts[1] - w < viewBounds.bottom())) ## remove out of view points
+
+        mask &= self.data['visible']
         return mask
 
     @debug.warnOnException  ## raising an exception here causes crash
@@ -975,6 +1000,15 @@ class SpotItem(object):
         self._data['brush'] = None  ## Note this is NOT the same as calling setBrush(None)
         self.updateItem()
 
+
+    def isVisible(self):
+        return self._data['visible']
+
+    def setVisible(self, visible):
+        """Set whether or not this spot is visible."""
+        self._data['visible'] = visible
+        self.updateItem()
+    
     def setData(self, data):
         """Set the user-data associated with this spot"""
         self._data['data'] = data
