@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from itertools import starmap, repeat
 try:
     from itertools import imap
@@ -20,7 +21,9 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 
 
 ## Build all symbol paths
-Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in ['o', 's', 't', 't1', 't2', 't3','d', '+', 'x', 'p', 'h', 'star']])
+name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
+             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left']
+Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 coords = {
@@ -41,7 +44,11 @@ coords = {
     'star': [(0, -0.5), (-0.1123, -0.1545), (-0.4755, -0.1545),
              (-0.1816, 0.059), (-0.2939, 0.4045), (0, 0.1910),
              (0.2939, 0.4045), (0.1816, 0.059), (0.4755, -0.1545),
-             (0.1123, -0.1545)]
+             (0.1123, -0.1545)],
+    'arrow_down': [
+        (-0.125, 0.125), (0, 0), (0.125, 0.125),
+        (0.05, 0.125), (0.05, 0.5), (-0.05, 0.5), (-0.05, 0.125)
+    ]
 }
 for k, c in coords.items():
     Symbols[k].moveTo(*c[0])
@@ -51,7 +58,10 @@ for k, c in coords.items():
 tr = QtGui.QTransform()
 tr.rotate(45)
 Symbols['x'] = tr.map(Symbols['+'])
-
+tr.rotate(45)
+Symbols['arrow_right'] = tr.map(Symbols['arrow_down'])
+Symbols['arrow_up'] = tr.map(Symbols['arrow_right'])
+Symbols['arrow_left'] = tr.map(Symbols['arrow_up'])
 
 def drawSymbol(painter, symbol, size, pen, brush):
     if symbol is None:
