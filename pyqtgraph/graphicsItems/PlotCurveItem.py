@@ -613,7 +613,7 @@ class PlotCurveItem(GraphicsObject):
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()
-            self.sigClicked.emit(self)
+            self.sigClicked.emit(self, ev)
 
 
 
