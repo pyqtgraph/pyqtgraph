@@ -379,6 +379,9 @@ class ScatterPlotItem(GraphicsObject):
             kargs['y'] = []
             numPts = 0
 
+        ## Clear current SpotItems since the data references they contain will no longer be current
+        self.data['item'][...] = None
+
         ## Extend record array
         oldData = self.data
         self.data = np.empty(len(oldData)+numPts, dtype=self.data.dtype)
