@@ -31,7 +31,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        
+        self.opts = {
+            'devicePixelRatio': devicePixelRatio
+        }
         self.reset()
         self.items = []
         
@@ -46,16 +48,13 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         """
         Initialize the widget state or reset the current state to the original state.
         """
-        self.opts = {
-            'center': Vector(0,0,0),  ## will always appear at the center of the widget
-            'distance': 10.0,         ## distance of camera from center
-            'fov':  60,               ## horizontal field of view in degrees
-            'elevation':  30,         ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 
-                                      ## (rotation around z-axis 0 points along x-axis)
-            'viewport': None,         ## glViewport params; None == whole widget
-            'devicePixelRatio': devicePixelRatio,
-        }
+        self.opts['center'] = Vector(0,0,0)  ## will always appear at the center of the widget
+        self.opts['distance'] = 10.0         ## distance of camera from center
+        self.opts['fov'] = 60                ## horizontal field of view in degrees
+        self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
+        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
+                                             ## (rotation around z-axis 0 points along x-axis)
+        self.opts['viewport'] = None         ## glViewport params; None == whole widget
         self.setBackgroundColor('k')        
 
     def addItem(self, item):
