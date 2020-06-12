@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ...Qt import QtCore, QtGui, QT_LIB
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
@@ -8,7 +9,9 @@ elif QT_LIB == 'PySide':
     from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-    
+elif QT_LIB == 'PySide2':
+    from .axisCtrlTemplate_pyside2 import Ui_Form as AxisCtrlTemplate
+
 import weakref 
 
 class ViewBoxMenu(QtGui.QMenu):
@@ -46,8 +49,8 @@ class ViewBoxMenu(QtGui.QMenu):
             connects = [
                 (ui.mouseCheck.toggled, 'MouseToggled'),
                 (ui.manualRadio.clicked, 'ManualClicked'),
-                (ui.minText.editingFinished, 'MinTextChanged'),
-                (ui.maxText.editingFinished, 'MaxTextChanged'),
+                (ui.minText.editingFinished, 'RangeTextChanged'),
+                (ui.maxText.editingFinished, 'RangeTextChanged'),
                 (ui.autoRadio.clicked, 'AutoClicked'),
                 (ui.autoPercentSpin.valueChanged, 'AutoSpinChanged'),
                 (ui.linkCombo.currentIndexChanged, 'LinkComboChanged'),
@@ -160,14 +163,10 @@ class ViewBoxMenu(QtGui.QMenu):
     def xManualClicked(self):
         self.view().enableAutoRange(ViewBox.XAxis, False)
         
-    def xMinTextChanged(self):
+    def xRangeTextChanged(self):
         self.ctrl[0].manualRadio.setChecked(True)
-        self.view().setXRange(float(self.ctrl[0].minText.text()), float(self.ctrl[0].maxText.text()), padding=0)
+        self.view().setXRange(*self._validateRangeText(0), padding=0)
 
-    def xMaxTextChanged(self):
-        self.ctrl[0].manualRadio.setChecked(True)
-        self.view().setXRange(float(self.ctrl[0].minText.text()), float(self.ctrl[0].maxText.text()), padding=0)
-        
     def xAutoClicked(self):
         val = self.ctrl[0].autoPercentSpin.value() * 0.01
         self.view().enableAutoRange(ViewBox.XAxis, val)
@@ -192,13 +191,9 @@ class ViewBoxMenu(QtGui.QMenu):
     def yManualClicked(self):
         self.view().enableAutoRange(ViewBox.YAxis, False)
         
-    def yMinTextChanged(self):
+    def yRangeTextChanged(self):
         self.ctrl[1].manualRadio.setChecked(True)
-        self.view().setYRange(float(self.ctrl[1].minText.text()), float(self.ctrl[1].maxText.text()), padding=0)
-        
-    def yMaxTextChanged(self):
-        self.ctrl[1].manualRadio.setChecked(True)
-        self.view().setYRange(float(self.ctrl[1].minText.text()), float(self.ctrl[1].maxText.text()), padding=0)
+        self.view().setYRange(*self._validateRangeText(1), padding=0)
         
     def yAutoClicked(self):
         val = self.ctrl[1].autoPercentSpin.value() * 0.01
@@ -263,6 +258,20 @@ class ViewBoxMenu(QtGui.QMenu):
             if changed:
                 c.setCurrentIndex(0)
                 c.currentIndexChanged.emit(c.currentIndex())
+
+    def _validateRangeText(self, axis):
+        """Validate range text inputs. Return current value(s) if invalid."""
+        inputs = (self.ctrl[axis].minText.text(),
+                  self.ctrl[axis].maxText.text())
+        vals = self.view().viewRange()[axis]
+        for i, text in enumerate(inputs):
+            try:
+                vals[i] = float(text)
+            except ValueError:
+                # could not convert string to float
+                pass
+        return vals
+
         
 from .ViewBox import ViewBox
         

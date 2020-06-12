@@ -11,6 +11,7 @@ import initExample
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
+from collections import namedtuple
 
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
@@ -32,8 +33,8 @@ print("Generating data, this takes a few seconds...")
 ## There are a few different ways we can draw scatter plots; each is optimized for different types of data:
 
 
-## 1) All spots identical and transform-invariant (top-left plot). 
-## In this case we can get a huge performance boost by pre-rendering the spot 
+## 1) All spots identical and transform-invariant (top-left plot).
+## In this case we can get a huge performance boost by pre-rendering the spot
 ## image and just drawing that image repeatedly.
 
 n = 300
@@ -57,21 +58,41 @@ s1.sigClicked.connect(clicked)
 
 
 
-## 2) Spots are transform-invariant, but not identical (top-right plot). 
-## In this case, drawing is almsot as fast as 1), but there is more startup 
-## overhead and memory usage since each spot generates its own pre-rendered 
+## 2) Spots are transform-invariant, but not identical (top-right plot).
+## In this case, drawing is almsot as fast as 1), but there is more startup
+## overhead and memory usage since each spot generates its own pre-rendered
 ## image.
+
+TextSymbol = namedtuple("TextSymbol", "label symbol scale")
+
+def createLabel(label, angle):
+    symbol = QtGui.QPainterPath()
+    #symbol.addText(0, 0, QFont("San Serif", 10), label)
+    f = QtGui.QFont()
+    f.setPointSize(10)
+    symbol.addText(0, 0, f, label)
+    br = symbol.boundingRect()
+    scale = min(1. / br.width(), 1. / br.height())
+    tr = QtGui.QTransform()
+    tr.scale(scale, scale)
+    tr.rotate(angle)
+    tr.translate(-br.x() - br.width()/2., -br.y() - br.height()/2.)
+    return TextSymbol(label, tr.map(symbol), 0.1 / scale)
+
+random_str = lambda : (''.join([chr(np.random.randint(ord('A'),ord('z'))) for i in range(np.random.randint(1,5))]), np.random.randint(0, 360))
 
 s2 = pg.ScatterPlotItem(size=10, pen=pg.mkPen('w'), pxMode=True)
 pos = np.random.normal(size=(2,n), scale=1e-5)
-spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': i%5, 'size': 5+i/10.} for i in range(n)]
+spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': i%10, 'size': 5+i/10.} for i in range(n)]
+s2.addPoints(spots)
+spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(i, n), 'symbol': label[1], 'size': label[2]*(5+i/10.)} for (i, label) in [(i, createLabel(*random_str())) for i in range(n)]]
 s2.addPoints(spots)
 w2.addItem(s2)
 s2.sigClicked.connect(clicked)
 
 
-## 3) Spots are not transform-invariant, not identical (bottom-left). 
-## This is the slowest case, since all spots must be completely re-drawn 
+## 3) Spots are not transform-invariant, not identical (bottom-left).
+## This is the slowest case, since all spots must be completely re-drawn
 ## every time because their apparent transformation may have changed.
 
 s3 = pg.ScatterPlotItem(pxMode=False)   ## Set pxMode=False to allow spots to transform with the view
@@ -99,4 +120,3 @@ if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-
