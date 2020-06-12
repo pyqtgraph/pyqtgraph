@@ -55,10 +55,14 @@ class PlotWindow(PlotWidget):
     """
     def __init__(self, title=None, **kargs):
         mkQApp()
+        self.win = QtGui.QMainWindow()
         PlotWidget.__init__(self, **kargs)
+        self.win.setCentralWidget(self)
+        for m in ['resize']:
+            setattr(self, m, getattr(self.win, m))
         if title is not None:
-            self.setWindowTitle(title)
-        self.show()
+            self.win.setWindowTitle(title)
+        self.win.show()
 
     def closeEvent(self, event):
         PlotWidget.closeEvent(self, event)
@@ -73,14 +77,20 @@ class ImageWindow(ImageView):
     """
     def __init__(self, *args, **kargs):
         mkQApp()
-        ImageView.__init__(self)
+        self.win = QtGui.QMainWindow()
+        self.win.resize(800,600)
         if 'title' in kargs:
-            self.setWindowTitle(kargs['title'])
+            self.win.setWindowTitle(kargs['title'])
             del kargs['title']
+        ImageView.__init__(self, self.win)
         if len(args) > 0 or len(kargs) > 0:
             self.setImage(*args, **kargs)
-        self.show()
-
+        
+        self.win.setCentralWidget(self)
+        for m in ['resize']:
+            setattr(self, m, getattr(self.win, m))
+        self.win.show()
+    
     def closeEvent(self, event):
         ImageView.closeEvent(self, event)
         self.sigClosed.emit(self)
