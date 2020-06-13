@@ -16,7 +16,7 @@ x = np.arange(1000, dtype=float)
 y = np.random.normal(size=1000)
 y += 5 * np.sin(x/100) 
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: ____')
 win.resize(1000, 800)
 win.ci.setBorder((50, 50, 100))

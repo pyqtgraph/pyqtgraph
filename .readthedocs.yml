@@ -1,0 +1,12 @@
+# Read the Docs configuration file
+# https://docs.readthedocs.io/en/stable/config-file/v2.html
+
+version: 2
+
+python:
+  version: 3
+  install:
+    - requirements: doc/requirements.txt
+
+sphinx:
+  fail_on_warning: true

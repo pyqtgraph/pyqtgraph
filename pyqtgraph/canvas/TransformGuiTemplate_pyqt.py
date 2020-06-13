@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/canvas/TransformGuiTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/canvas/TransformGuiTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:52 2013
-#      by: PyQt4 UI code generator 4.10
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -33,8 +32,8 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
         Form.setSizePolicy(sizePolicy)
         self.verticalLayout = QtGui.QVBoxLayout(Form)
-        self.verticalLayout.setSpacing(1)
         self.verticalLayout.setMargin(0)
+        self.verticalLayout.setSpacing(1)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.translateLabel = QtGui.QLabel(Form)
         self.translateLabel.setObjectName(_fromUtf8("translateLabel"))
@@ -60,7 +59,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.translateLabel.setText(_translate("Form", "Translate:", None))
         self.rotateLabel.setText(_translate("Form", "Rotate:", None))
         self.scaleLabel.setText(_translate("Form", "Scale:", None))

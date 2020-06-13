@@ -41,7 +41,7 @@ There are several classes invloved in displaying plot data. Most of these classe
     * :class:`AxisItem <pyqtgraph.AxisItem>`  - Displays axis values, ticks, and labels. Most commonly used with PlotItem.
 * Container Classes (subclasses of QWidget; may be embedded in PyQt GUIs)
     * :class:`PlotWidget <pyqtgraph.PlotWidget>`  - A subclass of GraphicsView with a single PlotItem displayed. Most of the methods provided by PlotItem are also available through PlotWidget.
-    * :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>` - QWidget subclass displaying a single GraphicsLayoutItem. Most of the methods provided by GraphicsLayoutItem are also available through GraphicsLayoutWidget.
+    * :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>` - QWidget subclass displaying a single :class:`~pyqtgraph.GraphicsLayout`. Most of the methods provided by :class:`~pyqtgraph.GraphicsLayout` are also available through GraphicsLayoutWidget.
     
 .. image:: images/plottingClasses.png
 
@@ -69,5 +69,3 @@ Create/show a plot widget, display three data curves::
     for i in range(3):
         plotWidget.plot(x, y[i], pen=(i,3))  ## setting pen=(i,3) automaticaly creates three different-colored pens
     
-
-
