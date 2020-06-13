@@ -42,7 +42,7 @@ Procedure for unit-testing with images:
 # pyqtgraph should be tested against. When adding or changing test images,
 # create and push a new tag and update this variable. To test locally, begin
 # by creating the tag in your ~/.pyqtgraph/test-data repository.
-testDataTag = 'test-data-6'
+testDataTag = 'test-data-8'
 
 
 import time
