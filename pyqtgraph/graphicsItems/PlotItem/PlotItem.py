@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import warnings
 import weakref
 import numpy as np
 import os
@@ -514,6 +515,9 @@ class PlotItem(GraphicsWidget):
         If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
         be included in analysis performed by the PlotItem.
         """
+        if item in self.items:
+            warnings.warn('Item already added to PlotItem, ignoring.')
+            return
         self.items.append(item)
         vbargs = {}
         if 'ignoreBounds' in kargs:

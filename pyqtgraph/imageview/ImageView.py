@@ -176,6 +176,7 @@ class ImageView(QtGui.QWidget):
         self.keysPressed = {}
         self.playTimer = QtCore.QTimer()
         self.playRate = 0
+        self.fps = 1 # 1 Hz by default
         self.lastPlayTime = 0
         
         self.normRgn = LinearRegionItem()
@@ -368,11 +369,14 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.imageItem.clear()
         
-    def play(self, rate):
+    def play(self, rate=None):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""
         #print "play:", rate
+        if rate is None: 
+            rate = self.fps
         self.playRate = rate
+
         if rate == 0:
             self.playTimer.stop()
             return
@@ -421,9 +425,7 @@ class ImageView(QtGui.QWidget):
         #print ev.key()
         if ev.key() == QtCore.Qt.Key_Space:
             if self.playRate == 0:
-                fps = (self.getProcessedImage().shape[0]-1) / (self.tVals[-1] - self.tVals[0])
-                self.play(fps)
-                #print fps
+                self.play()
             else:
                 self.play(0)
             ev.accept()

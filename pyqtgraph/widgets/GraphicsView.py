@@ -325,7 +325,6 @@ class GraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, ev):
         QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
         
         delta = 0
