@@ -853,8 +853,8 @@ class AxisItem(GraphicsWidget):
         interpreted by drawPicture().
         """
         profiler = debug.Profiler()
-
-        #bounds = self.boundingRect()
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         bounds = self.mapRectFromParent(self.geometry())
 
         linkedView = self.linkedView()
