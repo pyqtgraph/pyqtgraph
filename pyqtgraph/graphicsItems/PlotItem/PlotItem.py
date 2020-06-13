@@ -660,6 +660,7 @@ class PlotItem(GraphicsWidget):
 
         Accepts the same arguments as :meth:`~pyqtgraph.LegendItem`.
         """
+
         if self.legend is None:
             self.legend = LegendItem(offset=offset, **kwargs)
             self.legend.setParentItem(self.vb)
