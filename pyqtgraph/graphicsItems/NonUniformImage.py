@@ -49,7 +49,7 @@ class NonUniformImage(GraphicsObject):
         if autoLevel:
             _, _, z = self.data
             f = z[np.isfinite(z)]
-            lut.setLevels(mn=f.min(), mx=f.max())
+            lut.setLevels(f.min(), f.max())
 
         self.generatePicture()
 
