@@ -1,6 +1,6 @@
 from .Exporter import Exporter
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from .. import functions as fn
 import numpy as np
 
@@ -27,6 +27,7 @@ class ImageExporter(Exporter):
             {'name': 'height', 'type': 'int', 'value': int(tr.height()), 'limits': (0, None)},
             {'name': 'antialias', 'type': 'bool', 'value': True},
             {'name': 'background', 'type': 'color', 'value': bg},
+            {'name': 'invertValue', 'type': 'bool', 'value': False}
         ])
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
         self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -43,37 +44,41 @@ class ImageExporter(Exporter):
         
     def parameters(self):
         return self.params
-    
+
+    @staticmethod
+    def getSupportedImageFormats():
+        filter    = ["*."+f.data().decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
+        preferred = ['*.png', '*.tif', '*.jpg']
+        for p in preferred[::-1]:
+            if p in filter:
+                filter.remove(p)
+                filter.insert(0, p)
+        return filter  
+
     def export(self, fileName=None, toBytes=False, copy=False):
         if fileName is None and not toBytes and not copy:
-            if USE_PYSIDE:
-                filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
-            else:
-                filter = ["*."+bytes(f).decode('utf-8') for f in QtGui.QImageWriter.supportedImageFormats()]
-            preferred = ['*.png', '*.tif', '*.jpg']
-            for p in preferred[::-1]:
-                if p in filter:
-                    filter.remove(p)
-                    filter.insert(0, p)
+            filter = self.getSupportedImageFormats()
             self.fileSaveDialog(filter=filter)
             return
-            
-        targetRect = QtCore.QRect(0, 0, self.params['width'], self.params['height'])
-        sourceRect = self.getSourceRect()
-        
-        
-        #self.png = QtGui.QImage(targetRect.size(), QtGui.QImage.Format_ARGB32)
-        #self.png.fill(pyqtgraph.mkColor(self.params['background']))
-        w, h = self.params['width'], self.params['height']
+
+        w = int(self.params['width'])
+        h = int(self.params['height'])
         if w == 0 or h == 0:
-            raise Exception("Cannot export image with size=0 (requested export size is %dx%d)" % (w,h))
-        bg = np.empty((self.params['width'], self.params['height'], 4), dtype=np.ubyte)
+            raise Exception("Cannot export image with size=0 (requested "
+                            "export size is %dx%d)" % (w, h))
+
+        targetRect = QtCore.QRect(0, 0, w, h)
+        sourceRect = self.getSourceRect()
+
+        bg = np.empty((h, w, 4), dtype=np.ubyte)
         color = self.params['background']
         bg[:,:,0] = color.blue()
         bg[:,:,1] = color.green()
         bg[:,:,2] = color.red()
         bg[:,:,3] = color.alpha()
-        self.png = fn.makeQImage(bg, alpha=True)
+
+        self.png = fn.makeQImage(bg, alpha=True, copy=False, transpose=False)
+        self.bg = bg
         
         ## set resolution of image:
         origTargetRect = self.getTargetRect()
@@ -91,12 +96,18 @@ class ImageExporter(Exporter):
             self.setExportMode(False)
         painter.end()
         
+        if self.params['invertValue']:
+            mn = bg[...,:3].min(axis=2)
+            mx = bg[...,:3].max(axis=2)
+            d = (255 - mx) - mn
+            bg[...,:3] += d[...,np.newaxis]
+        
         if copy:
             QtGui.QApplication.clipboard().setImage(self.png)
         elif toBytes:
             return self.png
         else:
-            self.png.save(fileName)
+            return self.png.save(fileName)
         
 ImageExporter.register()        
         

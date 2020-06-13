@@ -18,6 +18,8 @@ def test_spinbox_formatting():
         (12345678955, '12345678955', dict(int=True, decimals=100)),
         (1.45e-9, '1.45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False)),
         (1.45e-9, '1.45 nA', dict(int=False, decimals=6, suffix='A', siPrefix=True)),
+        (1.45, '1.45 PSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
+        (1.45e-3, '1.45 mPSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
         (-2500.3427, '$-2500.34', dict(int=False, format='${value:0.02f}')),
     ]
     
@@ -26,3 +28,14 @@ def test_spinbox_formatting():
         sb.setValue(value)
         assert sb.value() == value
         assert pg.asUnicode(sb.text()) == text
+
+        # test setting value
+        if not opts.get('int', False):
+            suf = sb.opts['suffix']
+            sb.lineEdit().setText('0.1' + suf)
+            sb.editingFinishedEvent()
+            assert sb.value() == 0.1
+            if suf != '':
+                sb.lineEdit().setText('0.1 m' + suf)
+                sb.editingFinishedEvent()
+                assert sb.value() == 0.1e-3

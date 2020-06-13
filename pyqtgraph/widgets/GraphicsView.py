@@ -2,10 +2,10 @@
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
+from ..Qt import QtCore, QtGui, QT_LIB
 
 try:
     from ..Qt import QtOpenGL
@@ -15,6 +15,7 @@ except ImportError:
 
 from ..Point import Point
 import sys, os
+import warnings
 from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
 import numpy as np
@@ -115,7 +116,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         ## Workaround for PySide crash
         ## This ensures that the scene will outlive the view.
-        if USE_PYSIDE:
+        if QT_LIB == 'PySide':
             self.sceneObj._view_ref_workaround = self
         
         ## by default we set up a central widget with a grid layout.
@@ -227,12 +228,12 @@ class GraphicsView(QtGui.QGraphicsView):
             else:
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
-        self.sigDeviceRangeChanged.emit(self, self.range)
-        self.sigDeviceTransformChanged.emit(self)
-        
         if propagate:
             for v in self.lockedViewports:
                 v.setXRange(self.range, padding=0)
+
+        self.sigDeviceRangeChanged.emit(self, self.range)
+        self.sigDeviceTransformChanged.emit(self)
         
     def viewRect(self):
         """Return the boundaries of the view in scene coordinates"""
@@ -261,7 +262,6 @@ class GraphicsView(QtGui.QGraphicsView):
         w = self.range.width()  / scale[0]
         h = self.range.height() / scale[1]
         self.range = QtCore.QRectF(center.x() - (center.x()-self.range.left()) / scale[0], center.y() - (center.y()-self.range.top())  /scale[1], w, h)
-        
         
         self.updateMatrix()
         self.sigScaleChanged.emit(self)
@@ -325,9 +325,17 @@ class GraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, ev):
         QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
-        sc = 1.001 ** ev.delta()
+        
+        delta = 0
+        if QT_LIB in ['PyQt4', 'PySide']:
+            delta = ev.delta()
+        else:
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                delta = ev.angleDelta().y()
+                
+        sc = 1.001 ** delta
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
@@ -362,7 +370,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def mouseMoveEvent(self, ev):
         if self.lastMousePos is None:
             self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - self.lastMousePos)
+        delta = Point(ev.pos() - QtCore.QPoint(*self.lastMousePos))
         self.lastMousePos = Point(ev.pos())
 
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)
@@ -397,5 +405,18 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
-        
 
+    def _del(self):
+        try:
+            if self.parentWidget() is None and self.isVisible():
+                msg = "Visible window deleted. To prevent this, store a reference to the window object."
+                try:
+                    warnings.warn(msg, RuntimeWarning, stacklevel=2)
+                except TypeError:
+                    # warnings module not available during interpreter shutdown
+                    pass
+        except RuntimeError:
+            pass
+
+if sys.version_info[0] == 3 and sys.version_info[1] >= 4:
+    GraphicsView.__del__ = GraphicsView._del

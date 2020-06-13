@@ -30,7 +30,7 @@ p2 = cw.addPlot(row=1, col=0)
 ## variety of arrow shapes
 a1 = pg.ArrowItem(angle=-160, tipAngle=60, headLen=40, tailLen=40, tailWidth=20, pen={'color': 'w', 'width': 3})
 a2 = pg.ArrowItem(angle=-120, tipAngle=30, baseAngle=20, headLen=40, tailLen=40, tailWidth=8, pen=None, brush='y')
-a3 = pg.ArrowItem(angle=-60, tipAngle=30, baseAngle=20, headLen=40, tailLen=None, brush=None)
+a3 = pg.ArrowItem(angle=-60, baseAngle=20, headLen=40, headWidth=20, tailLen=None, brush=None)
 a4 = pg.ArrowItem(angle=-20, tipAngle=30, baseAngle=-30, headLen=40, tailLen=None)
 a2.setPos(10,0)
 a3.setPos(20,0)

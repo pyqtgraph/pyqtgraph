@@ -1,7 +1,7 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QT_LIB
 import weakref
 from .GraphicsObject import GraphicsObject
-if not USE_PYSIDE:
+if QT_LIB in ['PyQt4', 'PyQt5']:
     import sip
 
 __all__ = ['UIGraphicsItem']
@@ -49,7 +49,7 @@ class UIGraphicsItem(GraphicsObject):
             
         ## workaround for pyqt bug:
         ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
-        if not USE_PYSIDE and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
+        if QT_LIB in ['PyQt4', 'PyQt5'] and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
         
         if change == self.ItemScenePositionHasChanged:
