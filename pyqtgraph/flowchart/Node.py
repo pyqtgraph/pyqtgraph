@@ -222,7 +222,7 @@ class Node(QtCore.QObject):
         for t in self.inputs().values():
             nodes |= set([i.node() for i in t.inputTerminals()])
         return nodes
-        #return set([t.inputTerminals().node() for t in self.listInputs().itervalues()])
+        #return set([t.inputTerminals().node() for t in self.listInputs().values()])
         
     def __repr__(self):
         return "<Node %s @%x>" % (self.name(), id(self))
@@ -373,7 +373,7 @@ class Node(QtCore.QObject):
         pos = self.graphicsItem().pos()
         state = {'pos': (pos.x(), pos.y()), 'bypass': self.isBypassed()}
         termsEditable = self._allowAddInput | self._allowAddOutput
-        for term in self._inputs.values() + self._outputs.values():
+        for term in list(self._inputs.values()) + list(self._outputs.values()):
             termsEditable |= term._renamable | term._removable | term._multiable
         if termsEditable:
             state['terminals'] = self.saveTerminals()
@@ -477,7 +477,7 @@ class NodeGraphicsItem(GraphicsObject):
         #self.node.sigTerminalRenamed.connect(self.updateActionMenu)
         
     #def setZValue(self, z):
-        #for t, item in self.terminals.itervalues():
+        #for t, item in self.terminals.values():
             #item.setZValue(z+1)
         #GraphicsObject.setZValue(self, z)
         

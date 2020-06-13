@@ -50,11 +50,11 @@ class ColorButton(QtGui.QPushButton):
     def setColor(self, color, finished=True):
         """Sets the button's color and emits both sigColorChanged and sigColorChanging."""
         self._color = functions.mkColor(color)
+        self.update()
         if finished:
             self.sigColorChanged.emit(self)
         else:
             self.sigColorChanging.emit(self)
-        self.update()
         
     def selectColor(self):
         self.origColor = self.color()

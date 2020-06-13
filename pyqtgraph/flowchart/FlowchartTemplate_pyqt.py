@@ -62,7 +62,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
 
 from ..flowchart.FlowchartGraphicsView import FlowchartGraphicsView
 from ..widgets.DataTreeWidget import DataTreeWidget

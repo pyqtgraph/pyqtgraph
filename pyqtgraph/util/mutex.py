@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore
 import traceback
+from ..Qt import QtCore
+
 
 class Mutex(QtCore.QMutex):
     """
@@ -17,7 +18,7 @@ class Mutex(QtCore.QMutex):
         QtCore.QMutex.__init__(self, *args)
         self.l = QtCore.QMutex()  ## for serializing access to self.tb
         self.tb = []
-        self.debug = True ## True to enable debugging functions
+        self.debug = kargs.pop('debug', False) ## True to enable debugging functions
 
     def tryLock(self, timeout=None, id=None):
         if timeout is None:
@@ -72,6 +73,16 @@ class Mutex(QtCore.QMutex):
             finally:
                 self.l.unlock()
 
+    def acquire(self, blocking=True):
+        """Mimics threading.Lock.acquire() to allow this class as a drop-in replacement.
+        """
+        return self.tryLock()
+        
+    def release(self): 
+        """Mimics threading.Lock.release() to allow this class as a drop-in replacement.
+        """
+        self.unlock()
+
     def depth(self):
         self.l.lock()
         n = len(self.tb)
@@ -92,3 +103,12 @@ class Mutex(QtCore.QMutex):
     def __enter__(self):
         self.lock()
         return self
+
+
+class RecursiveMutex(Mutex):
+    """Mimics threading.RLock class.
+    """
+    def __init__(self, **kwds):
+        kwds['recursive'] = True
+        Mutex.__init__(self, **kwds)
+

@@ -10,11 +10,13 @@ Procedure for unit-testing with images:
 
        $ PYQTGRAPH_AUDIT=1 python pyqtgraph/graphicsItems/tests/test_PlotCurveItem.py
 
-   Any failing tests will
-   display the test results, standard image, and the differences between the
-   two. If the test result is bad, then press (f)ail. If the test result is
-   good, then press (p)ass and the new image will be saved to the test-data
-   directory.
+   Any failing tests will display the test results, standard image, and the
+   differences between the two. If the test result is bad, then press (f)ail.
+   If the test result is good, then press (p)ass and the new image will be
+   saved to the test-data directory.
+   
+   To check all test results regardless of whether the test failed, set the
+   environment variable PYQTGRAPH_AUDIT_ALL=1.
 
 3. After adding or changing test images, create a new commit:
 
@@ -162,6 +164,8 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
 
     # If the test image does not match, then we go to audit if requested.
     try:
+        if stdImage is None:
+            raise Exception("No reference image saved for this test.")
         if image.shape[2] != stdImage.shape[2]:
             raise Exception("Test result has different channel count than standard image"
                             "(%d vs %d)" % (image.shape[2], stdImage.shape[2]))
@@ -187,6 +191,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         if os.getenv('PYQTGRAPH_AUDIT_ALL') == '1':
             raise Exception("Image test passed, but auditing due to PYQTGRAPH_AUDIT_ALL evnironment variable.")
     except Exception:
+
         if stdFileName in gitStatus(dataPath):
             print("\n\nWARNING: unit test failed against modified standard "
                   "image %s.\nTo revert this file, run `cd %s; git checkout "
@@ -206,6 +211,9 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
                                 "PYQTGRAPH_AUDIT=1 to add this image." % stdFileName)
             else:
                 if os.getenv('TRAVIS') is not None:
+                    saveFailedTest(image, stdImage, standardFile, upload=True)
+                elif os.getenv('AZURE') is not None:
+                    standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
                     saveFailedTest(image, stdImage, standardFile)
                 print(graphstate)
                 raise
@@ -249,7 +257,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     assert im1.dtype == im2.dtype
 
     if pxCount == -1:
-        if QT_LIB == 'PyQt5':
+        if QT_LIB in {'PyQt5', 'PySide2'}:
             # Qt5 generates slightly different results; relax the tolerance
             # until test images are updated.
             pxCount = int(im1.shape[0] * im1.shape[1] * 0.01)
@@ -277,15 +285,9 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
         assert corr >= minCorr
 
 
-def saveFailedTest(data, expect, filename):
+def saveFailedTest(data, expect, filename, upload=False):
     """Upload failed test images to web server to allow CI test debugging.
     """
-    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
-    name = filename.split('/')
-    name.insert(-1, commit.strip())
-    filename = '/'.join(name)
-    host = 'data.pyqtgraph.org'
-
     # concatenate data, expect, and diff into a single image
     ds = data.shape
     es = expect.shape
@@ -302,15 +304,31 @@ def saveFailedTest(data, expect, filename):
     img[2:2+diff.shape[0], -diff.shape[1]-2:-2] = diff
 
     png = makePng(img)
-    
+    directory = os.path.dirname(filename)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    with open(filename + ".png", "wb") as png_file:
+        png_file.write(png)
+    print("\nImage comparison failed. Test result: %s %s   Expected result: "
+        "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
+    if upload:
+        uploadFailedTest(filename, png)
+
+
+def uploadFailedTest(filename, png):
+    commit = runSubprocess(['git', 'rev-parse',  'HEAD'])
+    name = filename.split(os.path.sep)
+    name.insert(-1, commit.strip())
+    filename = os.path.sep.join(name)
+
+    host = 'data.pyqtgraph.org'
     conn = httplib.HTTPConnection(host)
     req = urllib.urlencode({'name': filename,
                             'data': base64.b64encode(png)})
     conn.request('POST', '/upload.py', req)
     response = conn.getresponse().read()
     conn.close()
-    print("\nImage comparison failed. Test result: %s %s   Expected result: "
-          "%s %s" % (data.shape, data.dtype, expect.shape, expect.dtype))
+
     print("Uploaded to: \nhttp://%s/data/%s" % (host, filename))
     if not response.startswith(b'OK'):
         print("WARNING: Error uploading data to %s" % host)
@@ -491,7 +509,7 @@ def getTestDataRepo():
         if not os.path.isdir(parentPath):
             os.makedirs(parentPath)
 
-        if os.getenv('TRAVIS') is not None:
+        if os.getenv('TRAVIS') is not None or os.getenv('AZURE') is not None:
             # Create a shallow clone of the test-data repository (to avoid
             # downloading more data than is necessary)
             os.makedirs(dataPath)

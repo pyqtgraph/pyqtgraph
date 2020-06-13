@@ -146,7 +146,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.roiBtn.setText(_translate("Form", "ROI", None))
         self.menuBtn.setText(_translate("Form", "Menu", None))
         self.normGroup.setTitle(_translate("Form", "Normalization", None))

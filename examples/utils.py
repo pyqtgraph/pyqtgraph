@@ -1,8 +1,5 @@
 from __future__ import division, print_function, absolute_import
-import subprocess
-import time
 import os
-import sys
 from pyqtgraph.pgcollections import OrderedDict
 from pyqtgraph.python2_3 import basestring
 
@@ -17,7 +14,9 @@ examples = OrderedDict([
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
+    ('ViewBox Features', 'ViewBoxFeatures.py'),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
@@ -31,6 +30,7 @@ examples = OrderedDict([
         ('Optics', 'optics_demos.py'),
         ('Special relativity', 'relativity_demo.py'),
         ('Verlet chain', 'verlet_chain_demo.py'),
+        ('Koch Fractal', 'fractal.py'),
     ])),
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
@@ -49,7 +49,7 @@ examples = OrderedDict([
         ('Text Item', 'text.py'),
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
-        ('ViewBox', 'ViewBox.py'),
+        ('ViewBox', 'ViewBoxFeatures.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
     ])),
@@ -84,7 +84,6 @@ examples = OrderedDict([
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', 'JoystickButton.py'),
     ])),
-
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
 ])
@@ -101,66 +100,3 @@ def buildFileList(examples, files=None):
         else:
             buildFileList(val, files)
     return files
-
-def testFile(name, f, exe, lib, graphicsSystem=None):
-    global path
-    fn = os.path.join(path,f)
-    #print "starting process: ", fn
-    os.chdir(path)
-    sys.stdout.write(name)
-    sys.stdout.flush()
-
-    import1 = "import %s" % lib if lib != '' else ''
-    import2 = os.path.splitext(os.path.split(fn)[1])[0]
-    graphicsSystem = '' if graphicsSystem is None else "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
-    code = """
-try:
-    %s
-    import initExample
-    import pyqtgraph as pg
-    %s
-    import %s
-    import sys
-    print("test complete")
-    sys.stdout.flush()
-    import time
-    while True:  ## run a little event loop
-        pg.QtGui.QApplication.processEvents()
-        time.sleep(0.01)
-except:
-    print("test failed")
-    raise
-
-""" % (import1, graphicsSystem, import2)
-
-    if sys.platform.startswith('win'):
-        process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close()
-    else:
-        process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close() ##?
-    output = ''
-    fail = False
-    while True:
-        c = process.stdout.read(1).decode()
-        output += c
-        #sys.stdout.write(c)
-        #sys.stdout.flush()
-        if output.endswith('test complete'):
-            break
-        if output.endswith('test failed'):
-            fail = True
-            break
-    time.sleep(1)
-    process.kill()
-    #res = process.communicate()
-    res = (process.stdout.read(), process.stderr.read())
-
-    if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
-        print('.' * (50-len(name)) + 'FAILED')
-        print(res[0].decode())
-        print(res[1].decode())
-    else:
-        print('.' * (50-len(name)) + 'passed')
