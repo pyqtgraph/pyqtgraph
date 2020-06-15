@@ -87,3 +87,30 @@ def test_AxisItem_leftRelink():
     assert fake_view.sigYRangeChanged.calls == ['connect', 'disconnect']
     assert fake_view.sigXRangeChanged.calls == []
     assert fake_view.sigResized.calls == ['connect', 'disconnect']
+
+
+def test_AxisItem_tickFont(monkeypatch):
+    def collides(textSpecs):
+        fontMetrics = pg.Qt.QtGui.QFontMetrics(font)
+        for rect, _, text in textSpecs:
+            br = fontMetrics.tightBoundingRect(text)
+            if rect.height() < br.height() or rect.width() < br.width():
+                return True
+        return False
+
+    def test_collision(p, axisSpec, tickSpecs, textSpecs):
+        assert not collides(textSpecs)
+
+    plot = pg.PlotWidget()
+    bottom = plot.getAxis("bottom")
+    left = plot.getAxis("left")
+    font = bottom.linkedView().font()
+    font.setPointSize(25)
+    bottom.setStyle(tickFont=font)
+    left.setStyle(tickFont=font)
+    monkeypatch.setattr(bottom, "drawPicture", test_collision)
+    monkeypatch.setattr(left, "drawPicture", test_collision)
+
+    plot.show()
+    app.processEvents()
+    plot.close()

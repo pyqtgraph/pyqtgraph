@@ -576,6 +576,8 @@ class AxisItem(GraphicsWidget):
             try:
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
+                if self.style["tickFont"]:
+                    painter.setFont(self.style["tickFont"])
                 specs = self.generateDrawSpecs(painter)
                 profiler('generate specs')
                 if specs is not None:
