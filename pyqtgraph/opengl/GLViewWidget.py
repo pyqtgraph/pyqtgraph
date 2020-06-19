@@ -427,7 +427,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def checkOpenGLVersion(self, msg):
         ## Only to be called from within exception handler.
         ver = glGetString(GL_VERSION).split()[0]
-        ver = None
         try:
             verNumber = int(ver.split(b'.')[0]) < 2
         except ValueError:
