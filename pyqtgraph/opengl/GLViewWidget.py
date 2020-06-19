@@ -427,16 +427,19 @@ class GLViewWidget(QtOpenGL.QGLWidget):
     def checkOpenGLVersion(self, msg):
         ## Only to be called from within exception handler.
         ver = glGetString(GL_VERSION).split()[0]
+        ver = None
         try:
-            if int(ver.split(b'.')[0]) < 2:
-                from .. import debug
-                debug.printExc()
-                raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
-            else:
-                raise
+            verNumber = int(ver.split(b'.')[0]) < 2
         except ValueError:
-            raise Exception("pyqtgraph requires OpenGL 2.0 (non-ES) for its 3D Features in GLViewWidget. Please check that you are not using OpenGL ES")
-            
+            raise Exception("pyqtgraph.opengl: Requires > OpenGL 2.0 (not ES); Found %s" % glGetString(GL_VERSION)) from None
+
+        if verNumber < 2:
+            from .. import debug
+            debug.printExc()
+            raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
+        else:
+            raise
+ 
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
