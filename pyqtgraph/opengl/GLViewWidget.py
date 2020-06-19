@@ -4,6 +4,7 @@ import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
+from future_utils import raise_from
 
 ##Vector = QtGui.QVector3D
 
@@ -429,8 +430,8 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         ver = glGetString(GL_VERSION).split()[0]
         try:
             verNumber = int(ver.split(b'.')[0]) < 2
-        except ValueError:
-            raise Exception("pyqtgraph.opengl: Requires > OpenGL 2.0 (not ES); Found %s" % glGetString(GL_VERSION)) from None
+        except ValueError as exc:
+            raise_from(Exception("pyqtgraph.opengl: Requires > OpenGL 2.0 (not ES); Found %s" % glGetString(GL_VERSION)), exc)
 
         if verNumber < 2:
             from .. import debug
