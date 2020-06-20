@@ -11,6 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import time
 import sys
 import os
 from datetime import datetime
@@ -46,7 +47,10 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'pyqtgraph'
-copyright = '2011 - {}, Luke Campagnola'.format(datetime.now().year)
+now = datetime.utcfromtimestamp(
+    int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))
+)
+copyright = '2011 - {}, Luke Campagnola'.format(now.year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
