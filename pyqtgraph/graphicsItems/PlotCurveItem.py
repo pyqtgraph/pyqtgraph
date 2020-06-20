@@ -29,15 +29,15 @@ class PlotCurveItem(GraphicsObject):
     - Fill under curve
     - Mouse interaction
 
-    ====================  ===============================================
+    =====================  ===============================================
     **Signals:**
-    sigPlotChanged(self)  Emitted when the data being plotted has changed
-    sigClicked(self)      Emitted when the curve is clicked
-    ====================  ===============================================
+    sigPlotChanged(self)   Emitted when the data being plotted has changed
+    sigClicked(self, ev)   Emitted when the curve is clicked
+    =====================  ===============================================
     """
 
     sigPlotChanged = QtCore.Signal(object)
-    sigClicked = QtCore.Signal(object)
+    sigClicked = QtCore.Signal(object, object)
 
     def __init__(self, *args, **kargs):
         """
