@@ -163,6 +163,7 @@ class ImageView(QtGui.QWidget):
         self.normRoi.setZValue(20)
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
+        self.roiCurves = []
         self.roiCurve = self.ui.roiPlot.plot()
         self.timeLine = InfiniteLine(0, movable=True)
         if getConfigOption('background')=='w':
