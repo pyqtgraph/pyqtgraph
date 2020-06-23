@@ -189,7 +189,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """Remove all items from the legend."""
         for sample, label in self.items:
             self.layout.removeItem(sample)
+            sample.close()
             self.layout.removeItem(label)
+            label.close()
 
         self.items = []
         self.updateSize()
