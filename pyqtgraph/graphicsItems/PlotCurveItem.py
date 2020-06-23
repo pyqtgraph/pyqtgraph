@@ -389,21 +389,21 @@ class PlotCurveItem(GraphicsObject):
         self._mouseShape = None
         #self.xDisp = self.yDisp = None
 
-        if 'name' in kargs:
+        if kargs.get("name") is not None:
             self.opts['name'] = kargs['name']
-        if 'connect' in kargs:
+        if kargs.get("connect") is not None:
             self.opts['connect'] = kargs['connect']
-        if 'pen' in kargs:
+        if kargs.get("pen") is not None:
             self.setPen(kargs['pen'])
-        if 'shadowPen' in kargs:
+        if kargs.get("shadowPen") is not None:
             self.setShadowPen(kargs['shadowPen'])
-        if 'fillLevel' in kargs:
+        if kargs.get("fillLevel") is not None:
             self.setFillLevel(kargs['fillLevel'])
-        if 'fillOutline' in kargs:
-            self.opts['fillOutline'] = kargs['fillOutline']
-        if 'brush' in kargs:
+        if kargs.get("brush") is not None:
             self.setBrush(kargs['brush'])
-        if 'antialias' in kargs:
+        if kargs.get("fillOutline") is not None:
+            self.opts['fillOutline'] = kargs['fillOutline']
+        if kargs.get("antialias") is not None:
             self.opts['antialias'] = kargs['antialias']
 
 
@@ -491,9 +491,6 @@ class PlotCurveItem(GraphicsObject):
             p.fillPath(self.fillPath, self.opts['brush'])
             profiler('draw fill path')
 
-        sp = self.opts['shadowPen']
-        cp = self.opts['pen']
-
         ## Copy pens and apply alpha adjustment
         #sp = QtGui.QPen(self.opts['shadowPen'])
         #cp = QtGui.QPen(self.opts['pen'])
@@ -505,14 +502,28 @@ class PlotCurveItem(GraphicsObject):
             #pen.setColor(c)
             ##pen.setCosmetic(True)
 
-        if sp is not None and sp.style() != QtCore.Qt.NoPen:
-            p.setPen(sp)
-            p.drawPath(path)
-        p.setPen(cp)
-        if self.opts['fillOutline'] and self.fillPath is not None:
-            p.drawPath(self.fillPath)
+        # Avoid constructing a shadow pen if it's not used.
+        if self.opts.get('shadowPen') is not None:
+            if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
+                sp = self.opts['shadowPen']
+            else:
+                sp = fn.mkPen(self.opts['shadowPen'])
+
+            if sp.style() != QtCore.Qt.NoPen:
+                p.setPen(sp)
+                p.drawPath(path)
+
+        # Avoid pointless call to mkPen if we already have a pen
+        # (I'm not sure why this mkPen call was added, it was a recent addition.
+        # Unless someone is manually manipulating self.opts from outside the class,
+        # there should be no way to set opts['pen'] to anything that's not a QPen)
+        if isinstance(self.opts.get('pen'), QtGui.QPen):
+            cp = self.opts['pen']
         else:
-            p.drawPath(path)
+            cp = fn.mkPen(self.opts['pen'])
+
+        p.setPen(cp)
+        p.drawPath(path)
         profiler('drawPath')
 
         #print "Render hints:", int(p.renderHints())
