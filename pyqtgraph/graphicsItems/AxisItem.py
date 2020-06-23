@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
 from .. import debug as debug
+import sys
 import weakref
 from .. import functions as fn
 from .. import getConfigOption
@@ -17,7 +19,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -28,13 +30,14 @@ class AxisItem(GraphicsWidget):
                         to be linked to the visible range of a ViewBox.
         showValues      (bool) Whether to display values adjacent to ticks
         pen             (QPen) Pen used when drawing ticks.
+        textPen         (QPen) Pen used when drawing tick labels.
         text            The text (excluding units) to display on the label for this
                         axis.
         units           The units for this axis. Units should generally be given
                         without any scaling prefix (eg, 'V' instead of 'mV'). The
                         scaling prefix will be automatically prepended based on the
                         range of data displayed.
-        **args          All extra keyword arguments become CSS style options for
+        args            All extra keyword arguments become CSS style options for
                         the <span> tag which will surround the axis label and units.
         ==============  ===============================================================
         """
@@ -80,7 +83,6 @@ class AxisItem(GraphicsWidget):
         self.labelUnitPrefix = unitPrefix
         self.labelStyle = args
         self.logMode = False
-        self.tickFont = None
 
         self._tickLevels = None  ## used to override the automatic ticking system with explicit ticks
         self._tickSpacing = None  # used to override default tickSpacing method
@@ -96,6 +98,11 @@ class AxisItem(GraphicsWidget):
             self.setPen()
         else:
             self.setPen(pen)
+
+        if textPen is None:
+            self.setTextPen()
+        else:
+            self.setTextPen(pen)
 
         self._linkedView = None
         if linkView is not None:
@@ -198,7 +205,11 @@ class AxisItem(GraphicsWidget):
         self.update()
 
     def setTickFont(self, font):
-        self.tickFont = font
+        """
+        (QFont or None) Determines the font used for tick values. 
+        Use None for the default font.
+        """
+        self.style['tickFont'] = font
         self.picture = None
         self.prepareGeometryChange()
         ## Need to re-allocate space depending on font size?
@@ -249,7 +260,7 @@ class AxisItem(GraphicsWidget):
                         without any scaling prefix (eg, 'V' instead of 'mV'). The
                         scaling prefix will be automatically prepended based on the
                         range of data displayed.
-        **args          All extra keyword arguments become CSS style options for
+        args            All extra keyword arguments become CSS style options for
                         the <span> tag which will surround the axis label and units.
         ==============  =============================================================
 
@@ -405,6 +416,25 @@ class AxisItem(GraphicsWidget):
         self.setLabel()
         self.update()
 
+    def textPen(self):
+        if self._textPen is None:
+            return fn.mkPen(getConfigOption('foreground'))
+        return fn.mkPen(self._textPen)
+
+    def setTextPen(self, *args, **kwargs):
+        """
+        Set the pen used for drawing text.
+        If no arguments are given, the default foreground color will be used.
+        """
+        self.picture = None
+        if args or kwargs:
+            self._textPen = fn.mkPen(*args, **kwargs)
+        else:
+            self._textPen = fn.mkPen(getConfigOption('foreground'))
+        self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
+        self.setLabel()
+        self.update()
+
     def setScale(self, scale=None):
         """
         Set the value scaling for this axis.
@@ -444,15 +474,19 @@ class AxisItem(GraphicsWidget):
 
     def updateAutoSIPrefix(self):
         if self.label.isVisible():
-            (scale, prefix) = fn.siScale(max(abs(self.range[0]*self.scale), abs(self.range[1]*self.scale)))
+            if self.logMode:
+                _range = 10**np.array(self.range)
+            else:
+                _range = self.range
+            (scale, prefix) = fn.siScale(max(abs(_range[0]*self.scale), abs(_range[1]*self.scale)))
             if self.labelUnits == '' and prefix in ['k', 'm']:  ## If we are not showing units, wait until 1e6 before scaling.
                 scale = 1.0
                 prefix = ''
+            self.autoSIPrefixScale = scale
             self.setLabel(unitPrefix=prefix)
         else:
-            scale = 1.0
+            self.autoSIPrefixScale = 1.0
 
-        self.autoSIPrefixScale = scale
         self.picture = None
         self.update()
 
@@ -477,20 +511,29 @@ class AxisItem(GraphicsWidget):
 
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
-        oldView = self.linkedView()
+        self.unlinkFromView()
+
         self._linkedView = weakref.ref(view)
+        if self.orientation in ['right', 'left']:
+            view.sigYRangeChanged.connect(self.linkedViewChanged)
+        else:
+            view.sigXRangeChanged.connect(self.linkedViewChanged)
+        
+        view.sigResized.connect(self.linkedViewChanged)
+        
+    def unlinkFromView(self):
+        """Unlink this axis from a ViewBox."""
+        oldView = self.linkedView()
+        self._linkedView = None
         if self.orientation in ['right', 'left']:
             if oldView is not None:
                 oldView.sigYRangeChanged.disconnect(self.linkedViewChanged)
-            view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             if oldView is not None:
                 oldView.sigXRangeChanged.disconnect(self.linkedViewChanged)
-            view.sigXRangeChanged.connect(self.linkedViewChanged)
 
         if oldView is not None:
             oldView.sigResized.disconnect(self.linkedViewChanged)
-        view.sigResized.connect(self.linkedViewChanged)
 
     def linkedViewChanged(self, view, newRange=None):
         if self.orientation in ['right', 'left']:
@@ -533,6 +576,8 @@ class AxisItem(GraphicsWidget):
             try:
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
+                if self.style["tickFont"]:
+                    painter.setFont(self.style["tickFont"])
                 specs = self.generateDrawSpecs(painter)
                 profiler('generate specs')
                 if specs is not None:
@@ -771,7 +816,37 @@ class AxisItem(GraphicsWidget):
         return strings
 
     def logTickStrings(self, values, scale, spacing):
-        return ["%0.1g"%x for x in 10 ** np.array(values).astype(float)]
+        estrings = ["%0.1g"%x for x in 10 ** np.array(values).astype(float) * np.array(scale)]
+
+        if sys.version_info < (3, 0):
+            # python 2 does not support unicode strings like that
+            return estrings
+        else:  # python 3+
+            convdict = {"0": "⁰",
+                        "1": "¹",
+                        "2": "²",
+                        "3": "³",
+                        "4": "⁴",
+                        "5": "⁵",
+                        "6": "⁶",
+                        "7": "⁷",
+                        "8": "⁸",
+                        "9": "⁹",
+                        }
+            dstrings = []
+            for e in estrings:
+                if e.count("e"):
+                    v, p = e.split("e")
+                    sign = "⁻" if p[0] == "-" else ""
+                    pot = "".join([convdict[pp] for pp in p[1:].lstrip("0")])
+                    if v == "1":
+                        v = ""
+                    else:
+                        v = v + "·"
+                    dstrings.append(v + "10" + sign + pot)
+                else:
+                    dstrings.append(e)
+            return dstrings
 
     def generateDrawSpecs(self, p):
         """
@@ -780,8 +855,8 @@ class AxisItem(GraphicsWidget):
         interpreted by drawPicture().
         """
         profiler = debug.Profiler()
-
-        #bounds = self.boundingRect()
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         bounds = self.mapRectFromParent(self.geometry())
 
         linkedView = self.linkedView()
@@ -892,7 +967,7 @@ class AxisItem(GraphicsWidget):
                     p2[axis] += tickLength*tickDir
                 tickPen = self.pen()
                 color = tickPen.color()
-                color.setAlpha(lineAlpha)
+                color.setAlpha(int(lineAlpha))
                 tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
         profiler('compute ticks')
@@ -1044,13 +1119,13 @@ class AxisItem(GraphicsWidget):
             p.drawLine(p1, p2)
         profiler('draw ticks')
 
-        ## Draw all text
-        if self.tickFont is not None:
-            p.setFont(self.tickFont)
-        p.setPen(self.pen())
+        # Draw all text
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
+        p.setPen(self.textPen())
         for rect, flags, text in textSpecs:
-            p.drawText(rect, flags, text)
-            #p.drawRect(rect)
+            p.drawText(rect, int(flags), text)
+
         profiler('draw text')
 
     def show(self):
@@ -1068,23 +1143,26 @@ class AxisItem(GraphicsWidget):
             self._updateHeight()
 
     def wheelEvent(self, ev):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            self.linkedView().wheelEvent(ev, axis=1)
+            lv.wheelEvent(ev, axis=1)
         else:
-            self.linkedView().wheelEvent(ev, axis=0)
+            lv.wheelEvent(ev, axis=0)
         ev.accept()
 
     def mouseDragEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
         if self.orientation in ['left', 'right']:
-            return self.linkedView().mouseDragEvent(event, axis=1)
+            return lv.mouseDragEvent(event, axis=1)
         else:
-            return self.linkedView().mouseDragEvent(event, axis=0)
+            return lv.mouseDragEvent(event, axis=0)
 
     def mouseClickEvent(self, event):
-        if self.linkedView() is None:
+        lv = self.linkedView()
+        if lv is None:
             return
-        return self.linkedView().mouseClickEvent(event)
+        return lv.mouseClickEvent(event)

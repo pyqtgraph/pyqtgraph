@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 try:
     from ..Qt import QtOpenGL
@@ -28,15 +29,15 @@ class PlotCurveItem(GraphicsObject):
     - Fill under curve
     - Mouse interaction
 
-    ====================  ===============================================
+    =====================  ===============================================
     **Signals:**
-    sigPlotChanged(self)  Emitted when the data being plotted has changed
-    sigClicked(self)      Emitted when the curve is clicked
-    ====================  ===============================================
+    sigPlotChanged(self)   Emitted when the data being plotted has changed
+    sigClicked(self, ev)   Emitted when the curve is clicked
+    =====================  ===============================================
     """
 
     sigPlotChanged = QtCore.Signal(object)
-    sigClicked = QtCore.Signal(object)
+    sigClicked = QtCore.Signal(object, object)
 
     def __init__(self, *args, **kargs):
         """
@@ -61,6 +62,7 @@ class PlotCurveItem(GraphicsObject):
         self.opts = {
             'shadowPen': None,
             'fillLevel': None,
+            'fillOutline': False,
             'brush': None,
             'stepMode': False,
             'name': None,
@@ -165,7 +167,7 @@ class PlotCurveItem(GraphicsObject):
             b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
 
         ## adjust for fill level
-        if ax == 1 and self.opts['fillLevel'] is not None:
+        if ax == 1 and self.opts['fillLevel'] not in [None, 'enclosed']:
             b = (min(b[0], self.opts['fillLevel']), max(b[1], self.opts['fillLevel']))
 
         ## Add pen width only if it is non-cosmetic.
@@ -271,7 +273,7 @@ class PlotCurveItem(GraphicsObject):
         self.update()
 
     def setShadowPen(self, *args, **kargs):
-        """Set the shadow pen used to draw behind tyhe primary pen.
+        """Set the shadow pen used to draw behind the primary pen.
         This pen must have a larger width than the primary
         pen to be visible.
         """
@@ -305,6 +307,8 @@ class PlotCurveItem(GraphicsObject):
                         :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         fillLevel       (float or None) Fill the area 'under' the curve to
                         *fillLevel*
+        fillOutline     (bool) If True, an outline surrounding the *fillLevel*
+                        area is drawn.
         brush           QBrush to use when filling. Any single argument accepted
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
@@ -354,18 +358,19 @@ class PlotCurveItem(GraphicsObject):
                 kargs[k] = data
             if not isinstance(data, np.ndarray) or data.ndim > 1:
                 raise Exception("Plot data must be 1D ndarray.")
-            if 'complex' in str(data.dtype):
+            if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
 
         profiler("data checks")
 
         #self.setCacheMode(QtGui.QGraphicsItem.NoCache)  ## Disabling and re-enabling the cache works around a bug in Qt 4.6 causing the cached results to display incorrectly
                                                         ##    Test this bug with test_PlotWidget and zoom in on the animated plot
+        self.yData = kargs['y'].view(np.ndarray)
+        self.xData = kargs['x'].view(np.ndarray)
+        
         self.invalidateBounds()
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
-        self.yData = kargs['y'].view(np.ndarray)
-        self.xData = kargs['x'].view(np.ndarray)
 
         profiler('copy')
 
@@ -396,6 +401,8 @@ class PlotCurveItem(GraphicsObject):
             self.setFillLevel(kargs['fillLevel'])
         if kargs.get("brush") is not None:
             self.setBrush(kargs['brush'])
+        if kargs.get("fillOutline") is not None:
+            self.opts['fillOutline'] = kargs['fillOutline']
         if kargs.get("antialias") is not None:
             self.opts['antialias'] = kargs['antialias']
 
@@ -473,9 +480,10 @@ class PlotCurveItem(GraphicsObject):
                 if x is None:
                     x,y = self.getData()
                 p2 = QtGui.QPainterPath(self.path)
-                p2.lineTo(x[-1], self.opts['fillLevel'])
-                p2.lineTo(x[0], self.opts['fillLevel'])
-                p2.lineTo(x[0], y[0])
+                if self.opts['fillLevel'] != 'enclosed':
+                    p2.lineTo(x[-1], self.opts['fillLevel'])
+                    p2.lineTo(x[0], self.opts['fillLevel'])
+                    p2.lineTo(x[0], y[0])
                 p2.closeSubpath()
                 self.fillPath = p2
 
@@ -493,8 +501,6 @@ class PlotCurveItem(GraphicsObject):
             #c.setAlpha(c.alpha() * self.opts['alphaHint'])
             #pen.setColor(c)
             ##pen.setCosmetic(True)
-
-
 
         # Avoid constructing a shadow pen if it's not used.
         if self.opts.get('shadowPen') is not None:
@@ -578,7 +584,7 @@ class PlotCurveItem(GraphicsObject):
                 gl.glEnable(gl.GL_BLEND)
                 gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
                 gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
-                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, pos.size / pos.shape[-1])
+                gl.glDrawArrays(gl.GL_LINE_STRIP, 0, int(pos.size / pos.shape[-1]))
             finally:
                 gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         finally:
@@ -618,7 +624,7 @@ class PlotCurveItem(GraphicsObject):
             return
         if self.mouseShape().contains(ev.pos()):
             ev.accept()
-            self.sigClicked.emit(self)
+            self.sigClicked.emit(self, ev)
 
 
 
@@ -646,4 +652,3 @@ class ROIPlotItem(PlotCurveItem):
     def roiChangedEvent(self):
         d = self.getRoiData()
         self.updateData(d, self.xVals)
-

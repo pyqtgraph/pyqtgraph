@@ -3,8 +3,7 @@
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-
-from scipy import random
+import numpy as np
 from numpy import linspace
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -22,7 +21,7 @@ pw = MultiPlotWidget()
 mw.setCentralWidget(pw)
 mw.show()
 
-data = random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
+data = np.random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
 ma = MetaArray(data, info=[
     {'name': 'Signal', 'cols': [
         {'name': 'Col1', 'units': 'V'}, 

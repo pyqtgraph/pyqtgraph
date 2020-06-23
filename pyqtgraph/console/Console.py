@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys, re, os, time, traceback, subprocess
 import pickle
 
@@ -98,12 +99,14 @@ class ConsoleWidget(QtGui.QWidget):
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
         if self.historyFile is not None:
-            return pickle.load(open(self.historyFile, 'rb'))
+            with open(self.historyFile, 'rb') as pf:
+                return pickle.load(pf)
         
     def saveHistory(self, history):
         """Store the list of previously-invoked command strings."""
         if self.historyFile is not None:
-            pickle.dump(open(self.historyFile, 'wb'), history)
+            with open(self.historyFile, 'wb') as pf:
+                pickle.dump(pf, history)
         
     def runCmd(self, cmd):
         self.stdout = sys.stdout

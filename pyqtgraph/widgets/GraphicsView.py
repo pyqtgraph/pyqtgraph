@@ -2,7 +2,7 @@
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from ..Qt import QtCore, QtGui, QT_LIB
@@ -15,6 +15,7 @@ except ImportError:
 
 from ..Point import Point
 import sys, os
+import warnings
 from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
 import numpy as np
@@ -324,9 +325,17 @@ class GraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, ev):
         QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
-        sc = 1.001 ** ev.delta()
+        
+        delta = 0
+        if QT_LIB in ['PyQt4', 'PySide']:
+            delta = ev.delta()
+        else:
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                delta = ev.angleDelta().y()
+                
+        sc = 1.001 ** delta
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
@@ -396,5 +405,18 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
-        
 
+    def _del(self):
+        try:
+            if self.parentWidget() is None and self.isVisible():
+                msg = "Visible window deleted. To prevent this, store a reference to the window object."
+                try:
+                    warnings.warn(msg, RuntimeWarning, stacklevel=2)
+                except TypeError:
+                    # warnings module not available during interpreter shutdown
+                    pass
+        except RuntimeError:
+            pass
+
+if sys.version_info[0] == 3 and sys.version_info[1] >= 4:
+    GraphicsView.__del__ = GraphicsView._del

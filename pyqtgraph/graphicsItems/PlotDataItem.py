@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -40,25 +41,30 @@ class PlotDataItem(GraphicsObject):
         **Data initialization arguments:** (x,y data only)
         
             =================================== ======================================
-            PlotDataItem(xValues, yValues)      x and y values may be any sequence (including ndarray) of real numbers
-            PlotDataItem(yValues)               y values only -- x will be automatically set to range(len(y))
+            PlotDataItem(xValues, yValues)      x and y values may be any sequence
+                                                (including ndarray) of real numbers
+            PlotDataItem(yValues)               y values only -- x will be
+                                                automatically set to range(len(y))
             PlotDataItem(x=xValues, y=yValues)  x and y given by keyword arguments
-            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where x=data[:,0] and y=data[:,1]
+            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where
+                                                ``x=data[:,0]`` and ``y=data[:,1]``
             =================================== ======================================
         
         **Data initialization arguments:** (x,y data AND may include spot style)
         
-            ===========================   =========================================
-            PlotDataItem(recarray)        numpy array with dtype=[('x', float), ('y', float), ...]
-            PlotDataItem(list-of-dicts)   [{'x': x, 'y': y, ...},   ...] 
-            PlotDataItem(dict-of-lists)   {'x': [...], 'y': [...],  ...}           
-            PlotDataItem(MetaArray)       1D array of Y values with X sepecified as axis values 
-                                          OR 2D array with a column 'y' and extra columns as needed.
-            ===========================   =========================================
+            ============================ =========================================
+            PlotDataItem(recarray)       numpy array with ``dtype=[('x', float),
+                                         ('y', float), ...]``
+            PlotDataItem(list-of-dicts)  ``[{'x': x, 'y': y, ...},   ...]``
+            PlotDataItem(dict-of-lists)  ``{'x': [...], 'y': [...],  ...}``
+            PlotDataItem(MetaArray)      1D array of Y values with X sepecified as
+                                         axis values OR 2D array with a column 'y'
+                                         and extra columns as needed.
+            ============================ =========================================
         
         **Line style keyword arguments:**
 
-            ==========   ==============================================================================
+            ============ ==============================================================================
             connect      Specifies how / whether vertexes should be connected. See
                          :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
             pen          Pen to use for drawing line between points.
@@ -67,13 +73,14 @@ class PlotDataItem(GraphicsObject):
             shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    Fill the area between the curve and fillLevel
-            fillBrush    Fill to use when fillLevel is specified. 
+            fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
+            fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
             stepMode     If True, two orthogonal lines are drawn for each sample
                          as steps. This is commonly used when drawing histograms.
-                         Note that in this case, `len(x) == len(y) + 1`
+                         Note that in this case, ``len(x) == len(y) + 1``
                          (added in version 0.9.9)
-            ==========   ==============================================================================
+            ============ ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
         
@@ -154,6 +161,7 @@ class PlotDataItem(GraphicsObject):
             'pen': (200,200,200),
             'shadowPen': None,
             'fillLevel': None,
+            'fillOutline': False,
             'fillBrush': None,
             'stepMode': None, 
             
@@ -448,9 +456,9 @@ class PlotDataItem(GraphicsObject):
         if y is not None and x is None:
             x = np.arange(len(y))
         
-        if isinstance(x, list):
+        if not isinstance(x, np.ndarray):
             x = np.array(x)
-        if isinstance(y, list):
+        if not isinstance(y, np.ndarray):
             y = np.array(y)
         
         self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
@@ -474,7 +482,7 @@ class PlotDataItem(GraphicsObject):
     def updateItems(self):
         
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
         
         scatterArgs = {}
@@ -542,13 +550,26 @@ class PlotDataItem(GraphicsObject):
             if self.opts['clipToView']:
                 view = self.getViewBox()
                 if view is None or not view.autoRangeEnabled()[0]:
-                    # this option presumes that x-values have uniform spacing
+                    # this option presumes that x-values are in increasing order
                     range = self.viewRect()
                     if range is not None and len(x) > 1:
+                        # clip to visible region extended by downsampling value, assuming
+                        # uniform spacing of x-values, has O(1) performance
                         dx = float(x[-1]-x[0]) / (len(x)-1)
-                        # clip to visible region extended by downsampling value
-                        x0 = np.clip(int((range.left()-x[0])/dx)-1*ds , 0, len(x)-1)
-                        x1 = np.clip(int((range.right()-x[0])/dx)+2*ds , 0, len(x)-1)
+                        x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        
+                        # if data has been clipped too strongly (in case of non-uniform 
+                        # spacing of x-values), refine the clipping region as required
+                        # worst case performance: O(log(n))
+                        # best case performance: O(1)
+                        if x[x0] > range.left():
+                            x0 = np.searchsorted(x, range.left()) - 1*ds
+                            x0 = np.clip(x0, a_min=0, a_max=len(x))
+                        if x[x1] < range.right():
+                            x1 = np.searchsorted(x, range.right()) + 2*ds
+                            x1 = np.clip(x1, a_min=0, a_max=len(x))
+                    
                         x = x[x0:x1]
                         y = y[x0:x1]
                     

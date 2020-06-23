@@ -81,7 +81,7 @@ class SignalProxy(QtCore.QObject):
         except:
             pass
         try:
-            self.sigDelayed.disconnect(self.slot())
+            self.sigDelayed.disconnect(self.slot)
         except:
             pass
    

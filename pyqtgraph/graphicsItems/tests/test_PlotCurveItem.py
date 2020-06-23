@@ -27,7 +27,8 @@ def test_PlotCurveItem():
     
     c.setData(data, connect=np.array([1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0]))
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
-    
+
+    p.close()
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 """
 ImageView.py -  Widget for basic image dispay and analysis
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Widget used for displaying 2D or 3D data. Features:
   - float or int (including 16-bit int) image display via ImageItem
@@ -131,7 +131,7 @@ class ImageView(QtGui.QWidget):
         self.scene = self.ui.graphicsView.scene()
         self.ui.histogram.setLevelMode(levelMode)
         
-        self.ignoreTimeLine = False
+        self.ignorePlaying = False
         
         if view is None:
             self.view = ViewBox()
@@ -176,6 +176,7 @@ class ImageView(QtGui.QWidget):
         self.keysPressed = {}
         self.playTimer = QtCore.QTimer()
         self.playRate = 0
+        self.fps = 1 # 1 Hz by default
         self.lastPlayTime = 0
         
         self.normRgn = LinearRegionItem()
@@ -368,11 +369,14 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.imageItem.clear()
         
-    def play(self, rate):
+    def play(self, rate=None):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""
         #print "play:", rate
+        if rate is None: 
+            rate = self.fps
         self.playRate = rate
+
         if rate == 0:
             self.playTimer.stop()
             return
@@ -411,11 +415,9 @@ class ImageView(QtGui.QWidget):
         
     def close(self):
         """Closes the widget nicely, making sure to clear the graphics scene and release memory."""
-        self.ui.roiPlot.close()
-        self.ui.graphicsView.close()
-        self.scene.clear()
-        del self.image
-        del self.imageDisp
+        self.clear()
+        self.imageDisp = None
+        self.imageItem.setParent(None)
         super(ImageView, self).close()
         self.setParent(None)
         
@@ -423,9 +425,7 @@ class ImageView(QtGui.QWidget):
         #print ev.key()
         if ev.key() == QtCore.Qt.Key_Space:
             if self.playRate == 0:
-                fps = (self.getProcessedImage().shape[0]-1) / (self.tVals[-1] - self.tVals[0])
-                self.play(fps)
-                #print fps
+                self.play()
             else:
                 self.play(0)
             ev.accept()
@@ -498,11 +498,11 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        self.currentIndex = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
-        self.updateImage()
-        self.ignoreTimeLine = True
-        self.timeLine.setValue(self.tVals[self.currentIndex])
-        self.ignoreTimeLine = False
+        index = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
+        self.ignorePlaying = True
+        # Implicitly call timeLineChanged
+        self.timeLine.setValue(self.tVals[index])
+        self.ignorePlaying = False
 
     def jumpFrames(self, n):
         """Move video frame ahead n frames (may be negative)"""
@@ -586,7 +586,7 @@ class ImageView(QtGui.QWidget):
         # Extract image data from ROI
         axes = (self.axes['x'], self.axes['y'])
 
-        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
+        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, returnMappedCoords=True)
         if data is None:
             return
 
@@ -594,7 +594,10 @@ class ImageView(QtGui.QWidget):
         if self.axes['t'] is None:
             # Average across y-axis of ROI
             data = data.mean(axis=axes[1])
-            coords = coords[:,:,0] - coords[:,0:1,0]
+            if axes == (1,0): ## we're in row-major order mode -- there's probably a better way to do this slicing dynamically, but I've not figured it out yet.
+                coords = coords[:,0,:] - coords[:,0,0:1]
+            else: #default to old way
+                coords = coords[:,:,0] - coords[:,0:1,0] 
             xvals = (coords**2).sum(axis=0) ** 0.5
         else:
             # Average data within entire ROI for each frame
@@ -696,16 +699,13 @@ class ImageView(QtGui.QWidget):
         return norm
         
     def timeLineChanged(self):
-        #(ind, time) = self.timeIndex(self.ui.timeSlider)
-        if self.ignoreTimeLine:
-            return
-        self.play(0)
+        if not self.ignorePlaying:
+            self.play(0)
+
         (ind, time) = self.timeIndex(self.timeLine)
         if ind != self.currentIndex:
             self.currentIndex = ind
             self.updateImage()
-        #self.timeLine.setPos(time)
-        #self.emit(QtCore.SIGNAL('timeChanged'), ind, time)
         self.sigTimeChanged.emit(ind, time)
 
     def updateImage(self, autoHistogramRange=True):
@@ -740,7 +740,7 @@ class ImageView(QtGui.QWidget):
             return (0,0)
         
         t = slider.value()
-        
+
         xv = self.tVals
         if xv is None:
             ind = int(t)
@@ -748,7 +748,7 @@ class ImageView(QtGui.QWidget):
             if len(xv) < 2:
                 return (0,0)
             totTime = xv[-1] + (xv[-1]-xv[-2])
-            inds = np.argwhere(xv < t)
+            inds = np.argwhere(xv <= t)
             if len(inds) < 1:
                 return (0,t)
             ind = inds[-1,0]
