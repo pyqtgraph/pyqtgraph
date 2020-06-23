@@ -11,6 +11,7 @@ GraphicsWidget
 GridItem
 HistogramLUTItem
 ImageItem
+pColorMeshItem
 InfiniteLine
 LabelItem
 LinearRegionItem
