@@ -56,6 +56,7 @@ class AxisItem(GraphicsWidget):
             'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
+            'autoReduceTextSpace': True,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
             'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
@@ -125,6 +126,7 @@ class AxisItem(GraphicsWidget):
         tickTextHeight      (int) Vertical space reserved for tick text in px
         autoExpandTextSpace (bool) Automatically expand text space if the tick
                             strings become too long.
+        autoReduceTextSpace (bool) Automatically shrink the axis if necessary 
         tickFont            (QFont or None) Determines the font used for tick
                             values. Use None for the default font.
         stopAxisAtTick      (tuple: (bool min, bool max)) If True, the axis
@@ -314,19 +316,26 @@ class AxisItem(GraphicsWidget):
         ## changed; we use this to decide whether the item needs to be resized
         ## to accomodate.
         if self.orientation in ['left', 'right']:
-            mx = max(self.textWidth, x)
-            if mx > self.textWidth or mx < self.textWidth-10:
-                self.textWidth = mx
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateWidth()
-                    #return True  ## size has changed
+            if self.style["autoReduceTextSpace"]:
+                if x > self.textWidth or x < self.textWidth - 10:
+                    self.textWidth = x
+            else:
+                mx = max(self.textWidth, x)
+                if mx > self.textWidth or mx < self.textWidth - 10:
+                    self.textWidth = mx
+            if self.style['autoExpandTextSpace']:
+                self._updateWidth()
+        
         else:
-            mx = max(self.textHeight, x)
-            if mx > self.textHeight or mx < self.textHeight-10:
-                self.textHeight = mx
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateHeight()
-                    #return True  ## size has changed
+            if self.style['autoReduceTextSpace']:
+                if x > self.textHeight or x < self.textHeight - 10:
+                    self.textHeight = x
+            else:
+                mx = max(self.textHeight, x)
+                if mx > self.textHeight or mx < self.textHeight - 10:
+                    self.textHeight = mx
+            if self.style['autoExpandTextSpace']:
+                self._updateHeight()
 
     def _adjustSize(self):
         if self.orientation in ['left', 'right']:
@@ -1001,6 +1010,7 @@ class AxisItem(GraphicsWidget):
             #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
 
         textSize2 = 0
+        lastTextSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
 
@@ -1062,6 +1072,8 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
+            
+            lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
@@ -1097,7 +1109,7 @@ class AxisItem(GraphicsWidget):
         profiler('compute text')
 
         ## update max text size if needed.
-        self._updateMaxTextSize(textSize2)
+        self._updateMaxTextSize(lastTextSize2)
 
         return (axisSpec, tickSpecs, textSpecs)
 
