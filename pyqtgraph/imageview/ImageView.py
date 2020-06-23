@@ -164,11 +164,22 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        self.timeLine = InfiniteLine(0, movable=True, markers=[('^', 0), ('v', 1)])
-        self.timeLine.setPen((255, 255, 0, 200))
+        self.roiCurve = self.ui.roiPlot.plot()
+        self.timeLine = InfiniteLine(0, movable=True)
+        if getConfigOption('background')=='w':
+            self.timeLine.setPen((20, 80,80, 200))
+        else:
+            self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+        
+        # make splitter an unchangeable small grey line:
+        s = self.ui.splitter
+        s.handle(1).setEnabled(False)
+        s.setStyleSheet("QSplitter::handle{background-color: grey}")
+        s.setHandleWidth(2)
+
         self.ui.roiPlot.hideAxis('left')
         self.frameTicks = VTickGroup(yrange=[0.8, 1], pen=0.4)
         self.ui.roiPlot.addItem(self.frameTicks, ignoreBounds=True)
@@ -550,8 +561,8 @@ class ImageView(QtGui.QWidget):
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
-            for c in self.roiCurves:
-                c.show()
+            self.ui.splitter.handle(1).setEnabled(True)
+            self.roiCurve.show()
             self.roiChanged()
             self.ui.roiPlot.showAxis('left')
         else:
@@ -571,6 +582,7 @@ class ImageView(QtGui.QWidget):
             self.ui.roiPlot.show()
             if not self.ui.roiBtn.isChecked():
                 self.ui.splitter.setSizes([self.height()-35, 35])
+                self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
             #self.ui.roiPlot.hide()
