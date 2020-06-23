@@ -16,7 +16,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Axis/grid display
         - Export options
 
-
     High-DPI displays: Qt5 should automatically detect the correct resolution.
     For Qt4, specify the ``devicePixelRatio`` argument when initializing the
     widget (usually this value is 1-2).
@@ -32,25 +31,31 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        
         self.opts = {
-            'center': Vector(0,0,0),  ## will always appear at the center of the widget
-            'distance': 10.0,         ## distance of camera from center
-            'fov':  60,               ## horizontal field of view in degrees
-            'elevation':  30,         ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 
-                                      ## (rotation around z-axis 0 points along x-axis)
-            'viewport': None,         ## glViewport params; None == whole widget
-            'devicePixelRatio': devicePixelRatio,
+            'devicePixelRatio': devicePixelRatio
         }
-        self.setBackgroundColor('k')
+        self.reset()
         self.items = []
+        
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
         
         self.makeCurrent()
+        
+    def reset(self):
+        """
+        Initialize the widget state or reset the current state to the original state.
+        """
+        self.opts['center'] = Vector(0,0,0)  ## will always appear at the center of the widget
+        self.opts['distance'] = 10.0         ## distance of camera from center
+        self.opts['fov'] = 60                ## horizontal field of view in degrees
+        self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
+        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
+                                             ## (rotation around z-axis 0 points along x-axis)
+        self.opts['viewport'] = None         ## glViewport params; None == whole widget
+        self.setBackgroundColor('k')        
 
     def addItem(self, item):
         self.items.append(item)
@@ -66,10 +71,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.update()
         
     def removeItem(self, item):
+        """
+        Remove the item from the scene.
+        """
         self.items.remove(item)
         item._setView(None)
         self.update()
-        
+
+    def clear(self):
+        """
+        Remove all items from the scene.
+        """
+        for item in self.items:
+            item._setView(None)
+        self.items = []
+        self.update()        
         
     def initializeGL(self):
         self.resizeGL(self.width(), self.height())
@@ -370,7 +386,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #self.paintGL(region=region)
         #self.swapBuffers()
         
-        
     def wheelEvent(self, ev):
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
@@ -532,6 +547,4 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glfbo.glDeleteFramebuffers([fb])
             
         return output
-        
-        
-        
+ 
