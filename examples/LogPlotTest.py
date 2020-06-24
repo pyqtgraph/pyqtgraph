@@ -12,7 +12,7 @@ import pyqtgraph as pg
 
 app = QtGui.QApplication([])
 
-win = pg.GraphicsWindow(title="Basic plotting examples")
+win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
 win.resize(1000,600)
 win.setWindowTitle('pyqtgraph example: LogPlotTest')
 

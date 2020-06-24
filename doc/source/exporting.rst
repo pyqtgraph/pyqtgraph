@@ -30,8 +30,13 @@ Export Formats
   for export.
 * Printer - Exports to the operating system's printing service. This exporter is provided for completeness, 
   but is not well supported due to problems with Qt's printing system.
+* HDF5 - Exports data from a :class:`~pyqtgraph.PlotItem` to a HDF5 file if
+  h5py_ is installed. This exporter supports :class:`~pyqtgraph.PlotItem`
+  objects containing multiple curves, stacking the data into a single HDF5
+  dataset based on the ``columnMode`` parameter. If data items aren't the same
+  size, each one is given its own dataset.
 
-
+.. _h5py: https://www.h5py.org/
 
 Exporting from the API
 ----------------------

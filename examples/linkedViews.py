@@ -20,7 +20,7 @@ app = QtGui.QApplication([])
 x = np.linspace(-50, 50, 1000)
 y = np.sin(x) / x
 
-win = pg.GraphicsWindow(title="pyqtgraph example: Linked Views")
+win = pg.GraphicsLayoutWidget(show=True, title="pyqtgraph example: Linked Views")
 win.resize(800,600)
 
 win.addLabel("Linked Views", colspan=2)
