@@ -9,9 +9,9 @@ from ..python2_3 import basestring
 
 
 class DockArea(Container, QtGui.QWidget, DockDrop):
-    def __init__(self, temporary=False, home=None):
+    def __init__(self, parent=None, temporary=False, home=None):
         Container.__init__(self, self)
-        QtGui.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self, parent=parent)
         DockDrop.__init__(self, allowedAreas=['left', 'right', 'top', 'bottom'])
         self.layout = QtGui.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
@@ -46,6 +46,10 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         """
         if dock is None:
             dock = Dock(**kwds)
+            
+        # store original area that the dock will return to when un-floated
+        if not self.temporary:
+            dock.orig_area = self
         
         
         ## Determine the container to insert this dock into.
@@ -371,5 +375,11 @@ class TempAreaWindow(QtGui.QWidget):
         self.layout.addWidget(area)
 
     def closeEvent(self, *args):
+        # restore docks to their original area
+        docks = self.dockarea.findAll()[1]
+        for dock in docks.values():
+            if hasattr(dock, 'orig_area'):
+                dock.orig_area.addDock(dock, )
+        # clear dock area, and close remaining docks
         self.dockarea.clear()
         QtGui.QWidget.closeEvent(self, *args)

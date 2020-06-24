@@ -26,7 +26,7 @@ spins = [
     ("Float with SI-prefixed units<br>(n, u, m, k, M, etc)", 
      pg.SpinBox(value=0.9, suffix='V', siPrefix=True)),
     ("Float with SI-prefixed units,<br>dec step=0.1, minStep=0.1", 
-     pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.1, minStep=0.1)),
+     pg.SpinBox(value=1.0, suffix='PSI', siPrefix=True, dec=True, step=0.1, minStep=0.1)),
     ("Float with SI-prefixed units,<br>dec step=0.5, minStep=0.01", 
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.5, minStep=0.01)),
     ("Float with SI-prefixed units,<br>dec step=1.0, minStep=0.001", 

@@ -2,7 +2,7 @@
 """
 debug.py - Functions to aid in debugging 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import print_function
@@ -510,7 +510,7 @@ class Profiler(object):
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
         except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
         else: # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
@@ -1097,7 +1097,7 @@ def pretty(data, indent=''):
     ind2 = indent + "    "
     if isinstance(data, dict):
         ret = indent+"{\n"
-        for k, v in data.iteritems():
+        for k, v in data.items():
             ret += ind2 + repr(k) + ":  " + pretty(v, ind2).strip() + "\n"
         ret += indent+"}\n"
     elif isinstance(data, list) or isinstance(data, tuple):

@@ -106,11 +106,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.skipValidate = False
         self.setCorrectionMode(self.CorrectToPreviousValue)
         self.setKeyboardTracking(False)
+        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
         self.setOpts(**kwargs)
         self._updateHeight()
         
         self.editingFinished.connect(self.editingFinishedEvent)
-        self.proxy = SignalProxy(self.sigValueChanging, slot=self.delayedChange, delay=self.opts['delay'])
 
     def event(self, ev):
         ret = QtGui.QAbstractSpinBox.event(self, ev)
@@ -509,8 +509,14 @@ class SpinBox(QtGui.QAbstractSpinBox):
     def fixup(self, strn):
         # fixup is called when the spinbox loses focus with an invalid or intermediate string
         self.updateText()
-        strn.clear()
-        strn.append(self.lineEdit().text())
+
+        # support both PyQt APIs (for Python 2 and 3 respectively)
+        # http://pyqt.sourceforge.net/Docs/PyQt4/python_v3.html#qvalidator
+        try:
+            strn.clear()
+            strn.append(self.lineEdit().text())
+        except AttributeError:
+            return self.lineEdit().text()
 
     def interpret(self):
         """Return value of text or False if text is invalid."""
@@ -518,7 +524,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         # tokenize into numerical value, si prefix, and suffix
         try:
-            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'])
+            val, siprefix, suffix = fn.siParse(strn, self.opts['regex'], suffix=self.opts['suffix'])
         except Exception:
             return False
             
