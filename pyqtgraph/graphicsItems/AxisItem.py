@@ -359,7 +359,7 @@ class AxisItem(GraphicsWidget):
             if self.fixedHeight is None:
                 if not self.style['showValues']:
                     h = 0
-                elif self.style['autoExpandTextSpace'] is True:
+                elif self.style['autoExpandTextSpace']:
                     h = self.textHeight
                 else:
                     h = self.style['tickTextHeight']
@@ -390,7 +390,7 @@ class AxisItem(GraphicsWidget):
             if self.fixedWidth is None:
                 if not self.style['showValues']:
                     w = 0
-                elif self.style['autoExpandTextSpace'] is True:
+                elif self.style['autoExpandTextSpace']:
                     w = self.textWidth
                 else:
                     w = self.style['tickTextWidth']
