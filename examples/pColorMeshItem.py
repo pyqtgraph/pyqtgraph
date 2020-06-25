@@ -37,7 +37,7 @@ z = np.array([[1,2,3],
               [13,14,15]])
 
 ## Create image item
-pcmi = pg.pColorMeshItem(x, y, z)
+pcmi = pg.PColorMeshItem(x, y, z)
 view.addItem(pcmi)
 
 

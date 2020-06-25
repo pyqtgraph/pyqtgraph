@@ -7,6 +7,8 @@ from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 from ..Point import Point
 from .. import getConfigOption
+from .GradientEditorItem import Gradients
+from ..colormap import ColorMap
 
 try:
     from collections.abc import Callable
@@ -14,14 +16,10 @@ except ImportError:
     # fallback for python < 3.3
     from collections import Callable
 
-__all__ = ['pColorMeshItem']
+__all__ = ['PColorMeshItem']
 
 
-import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
-
-
-class pColorMeshItem(GraphicsObject):
+class PColorMeshItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
 
@@ -32,7 +30,7 @@ class pColorMeshItem(GraphicsObject):
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
 
-    def __init__(self, x=None, y=None, z=None, cmap=None):
+    def __init__(self, x=None, y=None, z=None, cmap='viridis'):
         """
         See :func:`setImage <pyqtgraph.ImageItem.setImage>` for all allowed initialization arguments.
         """
@@ -45,9 +43,10 @@ class pColorMeshItem(GraphicsObject):
 
         self.axisOrder = getConfigOption('imageAxisOrder')
 
-
-        if cmap is None:
-            self.cmap = plt.cm.viridis
+        if cmap in list(Gradients.keys()):
+            self.cmap = cmap
+        else:
+            raise NameError('Undefined colormap')
 
         if x is not None and y is not None and z is not None:
             self.setData(x, y, z)
@@ -62,10 +61,16 @@ class pColorMeshItem(GraphicsObject):
         p = QtGui.QPainter(self.qpicture)
         p.setPen(fn.mkPen('w'))
         
+
+        # Prepare colormap
+        pos = [i[0] for i in Gradients[self.cmap]['ticks']]
+        color = [i[1] for i in Gradients[self.cmap]['ticks']]
+        cmap = ColorMap(pos, color)
+        lut =  cmap.getLookupTable(0.0, 1.0, 256)
+        norm = ((z - z.min())/z.max()*len(lut)).astype(int)
+
         xfn = z.shape[0]
         yfn = z.shape[1]
-
-        norm = Normalize(vmin=z.min(), vmax=z.max())
         for xi in range(xfn):
             for yi in range(yfn):
                 
@@ -74,8 +79,8 @@ class pColorMeshItem(GraphicsObject):
                                     QtCore.QPointF(x[xi+1][yi+1], y[xi+1][yi+1]),
                                     QtCore.QPointF(x[xi][yi+1],   y[xi][yi+1]))
 
-                c = self.cmap(norm(z[xi][yi]))[:-1]
-                p.setBrush(QtGui.QColor(c[0]*255, c[1]*255, c[2]*255))
+                c = lut[norm[xi][yi]]
+                p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
         p.end()
 
         self.update()

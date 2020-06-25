@@ -218,7 +218,7 @@ from .graphicsItems.BarGraphItem import *
 from .graphicsItems.ViewBox import * 
 from .graphicsItems.ArrowItem import * 
 from .graphicsItems.ImageItem import * 
-from .graphicsItems.pColorMeshItem import * 
+from .graphicsItems.PColorMeshItem import * 
 from .graphicsItems.AxisItem import * 
 from .graphicsItems.DateAxisItem import *
 from .graphicsItems.LabelItem import * 
