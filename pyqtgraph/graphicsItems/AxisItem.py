@@ -69,6 +69,7 @@ class AxisItem(GraphicsWidget):
             'tickLength': maxTickLength,
             'maxTickLevel': 2,
             'maxTextLevel': 2,
+            'tickAlpha': None,  ## If not none, use this alpha for all ticks.
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -150,6 +151,11 @@ class AxisItem(GraphicsWidget):
 
         showValues          (bool) indicates whether text is displayed adjacent
                             to ticks.
+        tickAlpha           (float or int or None) If None, pyqtgraph will draw the
+                            ticks with the alpha it deems appropriate.  Otherwise, 
+                            the alpha will be fixed at the value passed.  With int, 
+                            accepted values are [0..255].  With vaule of type
+                            float, accepted values are from [0..1].
         =================== =======================================================
 
         Added in version 0.9.9
@@ -955,10 +961,21 @@ class AxisItem(GraphicsWidget):
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
-
-            lineAlpha = 255 / (i+1)
-            if self.grid is not False:
-                lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                
+            lineAlpha = self.style["tickAlpha"]
+            if lineAlpha is None:
+                lineAlpha = 255 / (i+1)
+                if self.grid is not False:
+                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+            elif isinstance(lineAlpha, float):
+                lineAlpha *= 255
+                lineAlpha = max(0, int(round(lineAlpha)))
+                lineAlpha = min(255, int(round(lineAlpha)))
+            elif isinstance(lineAlpha, int):
+                if (lineAlpha > 255) or (lineAlpha < 0):
+                    raise ValueError("lineAlpha should be [0..255]")
+            else:
+                raise TypeError("Line Alpha should be of type None, float or int")
 
             for v in ticks:
                 ## determine actual position to draw this tick
