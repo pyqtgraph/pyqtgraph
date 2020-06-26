@@ -274,9 +274,9 @@ class ImageView(QtGui.QWidget):
         """
         profiler = debug.Profiler()
 
-        if autoLevels == None:
+        if autoLevels is None:
             autoLevels = self.opts['autoLevels']
-        if autoRange == None:
+        if autoRange is None:
             autoRange = self.opts['autoRange']
 
         if hasattr(img, 'implements') and img.implements('MetaArray'):
@@ -580,7 +580,6 @@ class ImageView(QtGui.QWidget):
         # Implicitly call timeLineChanged
         self.timeLine.setValue(self.tVals[index])
         self.ignoreTimeLine = False
-        self.ignorePlaying = False
 
     def jumpFrames(self, n):
         """Move video frame ahead n frames (may be negative)"""
@@ -778,7 +777,7 @@ class ImageView(QtGui.QWidget):
         return norm
         
     def timeLineChanged(self):
-        if not self.ignorePlaying:
+        if not self.ignoreTimeLine:
             self.play(0)
 
         (ind, time) = self.timeIndex(self.timeLine)
