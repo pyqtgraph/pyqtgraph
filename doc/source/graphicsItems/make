@@ -2,6 +2,7 @@ files = """ArrowItem
 AxisItem
 ButtonItem
 CurvePoint
+DateAxisItem
 GradientEditorItem
 GradientLegend
 GraphicsLayout

@@ -71,4 +71,7 @@ class GradientWidget(GraphicsView):
         ### wrap methods from GradientEditorItem
         return getattr(self.item, attr)
 
+    def widgetGroupInterface(self):
+        return (self.sigGradientChanged, self.saveState, self.restoreState)
+
 

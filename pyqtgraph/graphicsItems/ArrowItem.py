@@ -28,6 +28,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             'angle': -150,   ## If the angle is 0, the arrow points left
             'pos': (0,0),
             'headLen': 20,
+            'headWidth': None,
             'tipAngle': 25,
             'baseAngle': 0,
             'tailLen': None,
@@ -39,7 +40,6 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         
         self.setStyle(**defaultOpts)
         
-        self.rotate(self.opts['angle'])
         self.moveBy(*self.opts['pos'])
     
     def setStyle(self, **opts):
@@ -53,10 +53,10 @@ class ArrowItem(QtGui.QGraphicsPathItem):
                                 0; arrow pointing to the left.
         headLen                 Length of the arrow head, from tip to base.
                                 default=20
-        headWidth               Width of the arrow head at its base.
+        headWidth               Width of the arrow head at its base. If
+                                headWidth is specified, it overrides tipAngle.
         tipAngle                Angle of the tip of the arrow in degrees. Smaller
-                                values make a 'sharper' arrow. If tipAngle is
-                                specified, ot overrides headWidth. default=25
+                                values make a 'sharper' arrow. default=25
         baseAngle               Angle of the base of the arrow head. Default is
                                 0, which means that the base of the arrow head
                                 is perpendicular to the arrow tail.
@@ -71,8 +71,11 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         """
         self.opts.update(opts)
         
-        opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
-        self.path = fn.makeArrowPath(**opt)
+        opt = dict([(k,self.opts[k]) for k in ['headLen', 'headWidth', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
+        tr = QtGui.QTransform()
+        tr.rotate(self.opts['angle'])
+        self.path = tr.map(fn.makeArrowPath(**opt))
+
         self.setPath(self.path)
         
         self.setPen(fn.mkPen(self.opts['pen']))
@@ -82,7 +85,8 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
-        
+
+
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         QtGui.QGraphicsPathItem.paint(self, p, *args)

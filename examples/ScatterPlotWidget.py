@@ -28,7 +28,7 @@ pg.mkQApp()
 # Make up some tabular data with structure
 data = np.empty(1000, dtype=[('x_pos', float), ('y_pos', float), 
                              ('count', int), ('amplitude', float), 
-                             ('decay', float), ('type', 'S10')])
+                             ('decay', float), ('type', 'U10')])
 strings = ['Type-A', 'Type-B', 'Type-C', 'Type-D', 'Type-E']
 typeInds = np.random.randint(5, size=1000)
 data['type'] = np.array(strings)[typeInds]
