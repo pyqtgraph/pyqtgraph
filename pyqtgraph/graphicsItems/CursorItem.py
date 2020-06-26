@@ -25,8 +25,8 @@ class CursorItem(UIGraphicsItem):
     =============================== ===================================================
     """
 
-    sigPositionChanged = QtCore.pyqtSignal(object)  # self
-    sigPositionChangeFinished = QtCore.pyqtSignal(object)  # self
+    sigPositionChanged = QtCore.Signal(object)  # self
+    sigPositionChangeFinished = QtCore.Signal(object)  # self
 
     def __init__(self, pos=None, radius=5, cursor='s', pen=None, brush=None,
                  movable=True, hoverPen=None, hoverBrush=None, label=None,
