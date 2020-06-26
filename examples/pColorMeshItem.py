@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Demonstrates very basic use of pColorMeshItem
+Demonstrates very basic use of PColorMeshItem
 """
 
 ## Add path to library (just for examples; you do not need this)
