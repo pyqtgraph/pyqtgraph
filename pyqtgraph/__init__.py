@@ -235,6 +235,7 @@ from .graphicsItems.FillBetweenItem import *
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
 from .graphicsItems.ItemGroup import * 
+from .graphicsItems.CursorItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.ScatterPlotWidget import * 
