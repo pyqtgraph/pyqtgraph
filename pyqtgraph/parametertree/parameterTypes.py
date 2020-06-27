@@ -45,6 +45,7 @@ class WidgetParameterItem(ParameterItem):
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
         
         self.defaultBtn = QtGui.QPushButton()
+        self.defaultBtn.setAutoDefault(False)
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
         modDir = os.path.dirname(__file__)
