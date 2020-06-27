@@ -46,6 +46,10 @@ cursorLabel = pg.CursorItem(pos=[20,-20], radius=3, cursor='c', pen=(0, 0, 255),
                             labelOpts={'color': (200, 200, 200), 'fill': (20, 20, 20, 20)})
 p1.addItem(cursorLabel)
 
+target = pg.TargetItem()
+target.setLabel("test")
+p1.addItem(target)
+
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys
