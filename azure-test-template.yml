@@ -105,9 +105,9 @@ jobs:
           conda config --prepend channels conda-forge
         fi      
         conda info
-        conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
+        conda install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib --yes --quiet
       else
-        pip install $(qt.bindings) numpy scipy pyopengl h5py six
+        pip install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib
       fi
       pip install pytest pytest-cov coverage pytest-xdist
       if [ $(python.version) == "2.7" ]
