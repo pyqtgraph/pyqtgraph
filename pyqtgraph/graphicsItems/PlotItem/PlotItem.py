@@ -230,6 +230,8 @@ class PlotItem(GraphicsWidget):
         c.fftCheck.toggled.connect(self.updateSpectrumMode)
         c.logXCheck.toggled.connect(self.updateLogMode)
         c.logYCheck.toggled.connect(self.updateLogMode)
+        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
+        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -898,6 +900,23 @@ class PlotItem(GraphicsWidget):
         self.getAxis('right').setLogMode(y)
         self.enableAutoRange()
         self.recomputeAverages()
+    
+    def updateDerivativeMode(self):
+        d = self.ctrl.derivativeCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setDerivativeMode'):
+                i.setDerivativeMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
+    def updatePhasemapMode(self):
+        d = self.ctrl.phasemapCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setPhasemapMode'):
+                i.setPhasemapMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+        
         
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.

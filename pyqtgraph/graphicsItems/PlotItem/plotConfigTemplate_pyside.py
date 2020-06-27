@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
+# Form implementation generated from reading ui file 'plotConfigTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:52 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Fri Jun 26 23:50:06 2020
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -70,19 +70,27 @@ class Ui_Form(object):
         self.downsampleSpin.setObjectName("downsampleSpin")
         self.gridLayout_4.addWidget(self.downsampleSpin, 1, 1, 1, 1)
         self.transformGroup = QtGui.QFrame(Form)
-        self.transformGroup.setGeometry(QtCore.QRect(0, 0, 154, 79))
+        self.transformGroup.setGeometry(QtCore.QRect(10, 10, 171, 101))
         self.transformGroup.setObjectName("transformGroup")
         self.gridLayout = QtGui.QGridLayout(self.transformGroup)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName("gridLayout")
-        self.fftCheck = QtGui.QCheckBox(self.transformGroup)
-        self.fftCheck.setObjectName("fftCheck")
-        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
-        self.logXCheck = QtGui.QCheckBox(self.transformGroup)
-        self.logXCheck.setObjectName("logXCheck")
-        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
         self.logYCheck = QtGui.QCheckBox(self.transformGroup)
         self.logYCheck.setObjectName("logYCheck")
         self.gridLayout.addWidget(self.logYCheck, 2, 0, 1, 1)
+        self.logXCheck = QtGui.QCheckBox(self.transformGroup)
+        self.logXCheck.setObjectName("logXCheck")
+        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
+        self.fftCheck = QtGui.QCheckBox(self.transformGroup)
+        self.fftCheck.setObjectName("fftCheck")
+        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
+        self.derivativeCheck = QtGui.QCheckBox(self.transformGroup)
+        self.derivativeCheck.setObjectName("derivativeCheck")
+        self.gridLayout.addWidget(self.derivativeCheck, 3, 0, 1, 1)
+        self.phasemapCheck = QtGui.QCheckBox(self.transformGroup)
+        self.phasemapCheck.setObjectName("phasemapCheck")
+        self.gridLayout.addWidget(self.phasemapCheck, 4, 0, 1, 1)
         self.pointsGroup = QtGui.QGroupBox(Form)
         self.pointsGroup.setGeometry(QtCore.QRect(10, 550, 234, 58))
         self.pointsGroup.setCheckable(True)
@@ -155,9 +163,11 @@ class Ui_Form(object):
         self.autoDownsampleCheck.setText(QtGui.QApplication.translate("Form", "Auto", None, QtGui.QApplication.UnicodeUTF8))
         self.downsampleSpin.setToolTip(QtGui.QApplication.translate("Form", "Downsample data before plotting. (plot every Nth sample)", None, QtGui.QApplication.UnicodeUTF8))
         self.downsampleSpin.setSuffix(QtGui.QApplication.translate("Form", "x", None, QtGui.QApplication.UnicodeUTF8))
-        self.fftCheck.setText(QtGui.QApplication.translate("Form", "Power Spectrum (FFT)", None, QtGui.QApplication.UnicodeUTF8))
-        self.logXCheck.setText(QtGui.QApplication.translate("Form", "Log X", None, QtGui.QApplication.UnicodeUTF8))
         self.logYCheck.setText(QtGui.QApplication.translate("Form", "Log Y", None, QtGui.QApplication.UnicodeUTF8))
+        self.logXCheck.setText(QtGui.QApplication.translate("Form", "Log X", None, QtGui.QApplication.UnicodeUTF8))
+        self.fftCheck.setText(QtGui.QApplication.translate("Form", "Power Spectrum (FFT)", None, QtGui.QApplication.UnicodeUTF8))
+        self.derivativeCheck.setText(QtGui.QApplication.translate("Form", "dy/dx", None, QtGui.QApplication.UnicodeUTF8))
+        self.phasemapCheck.setText(QtGui.QApplication.translate("Form", "Y vs. Y\'", None, QtGui.QApplication.UnicodeUTF8))
         self.pointsGroup.setTitle(QtGui.QApplication.translate("Form", "Points", None, QtGui.QApplication.UnicodeUTF8))
         self.autoPointsCheck.setText(QtGui.QApplication.translate("Form", "Auto", None, QtGui.QApplication.UnicodeUTF8))
         self.xGridCheck.setText(QtGui.QApplication.translate("Form", "Show X Grid", None, QtGui.QApplication.UnicodeUTF8))
