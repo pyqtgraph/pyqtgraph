@@ -31,7 +31,7 @@ class PColorMeshItem(GraphicsObject):
 
 
     def __init__(self, x=None, y=None, z=None,
-                 cmap='viridis'):
+                 cmap='viridis', edgecolors=None):
         """
 
 
@@ -44,8 +44,13 @@ class PColorMeshItem(GraphicsObject):
             colors.
         cmap : str, default 'viridis
             Colormap used to map the z value to colors.
+        edgecolors : dict , default None
+            The color of the edges of the polygons.
+            Default None means no edges.
+            The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>.
+            Example:
+                mkPen(color='w', width=2)
         """
-
         GraphicsObject.__init__(self)
 
         self.x = x
@@ -56,6 +61,7 @@ class PColorMeshItem(GraphicsObject):
         
         self.axisOrder = getConfigOption('imageAxisOrder')
 
+        self.edgecolors = edgecolors
         if cmap in Gradients.keys():
             self.cmap = cmap
         else:
@@ -84,7 +90,10 @@ class PColorMeshItem(GraphicsObject):
         p = QtGui.QPainter(self.qpicture)
         
         # We set the pen of all polygons once
-        p.setPen(QtGui.QColor(0, 0, 0, 0))
+        if self.edgecolors is None:
+            p.setPen(QtGui.QColor(0, 0, 0, 0))
+        else:
+            p.setPen(fn.mkPen(self.edgecolors))
 
         ## Prepare colormap
         # First we get the LookupTable

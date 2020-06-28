@@ -33,7 +33,9 @@ y = np.tile(np.arange(1, yn+1), xn).reshape(xn, yn)
 z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
 
 ## Create image item
-pcmi = pg.PColorMeshItem()
+edgecolors = None
+# edgecolors = {'color':'w', 'width':2} # May be uncommened to see edgecolor effect
+pcmi = pg.PColorMeshItem(edgecolors=edgecolors)
 view.addItem(pcmi)
 
 
