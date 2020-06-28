@@ -73,7 +73,8 @@ class MatplotlibExporter(Exporter):
         ylabel = yax.label.toPlainText()
         title = self.item.titleLabel.text
 
-        # if axes use autoSIPrefix, scale the data before exporting
+        # if axes use autoSIPrefix, scale the data so mpl doesn't add its own
+        # scale factor label
         xscale = yscale = 1.0
         if xax.autoSIPrefix:
             xscale = xax.autoSIPrefixScale
@@ -83,11 +84,8 @@ class MatplotlibExporter(Exporter):
         ax = fig.add_subplot(111, title=title)
         ax.clear()
         self.cleanAxes(ax)
-        #ax.grid(True)
         for item in self.item.curves:
             x, y = item.getData()
-
-            # account for SI prefix scaling
             x = x * xscale
             y = y * yscale
 
