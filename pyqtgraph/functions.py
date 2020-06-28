@@ -1471,12 +1471,14 @@ def arrayToQPath(x, y, connect='all'):
 
     ## Speed this up using >> operator
     ## Format is:
-    ##    numVerts(i4)   0(i4)
-    ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
-    ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
+    ##    numVerts(i4)
+    ##    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    ##    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
     ##    ...
-    ##    0(i4)
+    ##    cStart(i4)   fillRule(i4)
     ##
+    ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
     ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
 
     path = QtGui.QPainterPath()
@@ -1484,12 +1486,12 @@ def arrayToQPath(x, y, connect='all'):
     #profiler = debug.Profiler()
     n = x.shape[0]
     # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
     # write first two integers
     #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
-    byteview[:12] = 0
-    byteview.data[12:20] = struct.pack('>ii', n, 0)
+    byteview[:16] = 0
+    byteview.data[16:20] = struct.pack('>i', n)
     #profiler('pack header')
     # Fill array with vertex values
     arr[1:-1]['x'] = x
@@ -1508,17 +1510,18 @@ def arrayToQPath(x, y, connect='all'):
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
+    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
+
     #profiler('fill array')
-    # write last 0
-    lastInd = 20*(n+1)
-    byteview.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
+    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
     #profiler('footer')
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
     #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
 
-    path.strn = byteview.data[12:lastInd+4] # make sure data doesn't run away
+    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
     try:
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
