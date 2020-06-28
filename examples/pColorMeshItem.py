@@ -21,40 +21,45 @@ view = win.addViewBox()
 
 
 ## Create data
-x = np.array([[1,1,1,1],
-              [2,2,2,2],
-              [3,3,3,3],
-              [4,4,4,4],
-              [5,5,5,5]])
-y = np.array([[4,8,12,16],
-              [2,4,6,8],
-              [3,6,9,12],
-              [5,10,15,20],
-              [6,12,18,24]])
-z = np.array([[1,2,3],
-              [5,6,7],
-              [9,10,11],
-              [13,14,15]])
+
+# x and y being the coordinates of the polygons, they share the same shape
+# However the shape can be different in both dimension
+xn = 50 # nb points along x
+yn = 40 # nb points along y
+x = np.repeat(np.arange(1, xn+1), yn).reshape(xn, yn)
+y = np.tile(np.arange(1, yn+1), xn).reshape(xn, yn)
+
+# z being the color of the polygons its shape must be decreased by one in each dimension
+z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
 
 ## Create image item
-pcmi = pg.PColorMeshItem(x, y, z)
+pcmi = pg.PColorMeshItem()
 view.addItem(pcmi)
 
 
+## Set the animation
+fps = 25 # Frame per second of the animation
 
-fps = 1
-i = 0
+# Wave parameters
+wave_amplitude  = 3
+wave_speed      = 0.3
+wave_length     = 10
+color_speed     = 0.3
 
+i=0
 def updateData():
-    global pcmi, x, y, z, i
-
-    ## Display the data
-    pcmi.setData(x-i, y, z)
-
-    QtCore.QTimer.singleShot(fps*1000, updateData)
-    i += 1
-    print(i)
+    global i
     
+    ## Display the new data set
+    new_x = x
+    new_y = y+wave_amplitude*np.cos(x/wave_length+i)
+    new_z = np.exp(-(x-np.cos(i*color_speed)*xn)**2/1000)[:-1,:-1]
+    pcmi.setData(new_x,
+                 new_y,
+                 new_z)
+
+    i += wave_speed
+    QtCore.QTimer.singleShot(1000/fps, updateData)
 
 updateData()
 

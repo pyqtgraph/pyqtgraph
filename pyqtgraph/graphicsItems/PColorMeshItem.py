@@ -23,66 +23,97 @@ class PColorMeshItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
 
-    TODO
+    Create a pseudocolor plot with convex polygons.
     """
 
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
 
-    def __init__(self, x=None, y=None, z=None, cmap='viridis'):
+    def __init__(self, x=None, y=None, z=None,
+                 cmap='viridis'):
         """
-        See :func:`setImage <pyqtgraph.ImageItem.setImage>` for all allowed initialization arguments.
+
+
+        Parameters
+        ----------
+        x, y : np.ndarray
+            2D array containing the coordinates of the polygons
+        z : np.ndarray
+            2D array containing the value which will be maped into the polygons
+            colors.
+        cmap : str, default 'viridis
+            Colormap used to map the z value to colors.
         """
+
         GraphicsObject.__init__(self)
 
         self.x = x
         self.y = y
         self.z = z
-        self.qpicture = None  ## rendered image for display
 
+        self.qpicture = None  ## rendered image for display
+        
         self.axisOrder = getConfigOption('imageAxisOrder')
 
-        if cmap in list(Gradients.keys()):
+        if cmap in Gradients.keys():
             self.cmap = cmap
         else:
             raise NameError('Undefined colormap')
-
+            
+        # If some data have been sent we directly display it
         if x is not None and y is not None and z is not None:
             self.setData(x, y, z)
 
 
     def setData(self, x, y, z):
-        ## pre-computing a QPicture object allows paint() to run much more quickly, 
-        ## rather than re-drawing the shapes every time.
+        
+
+        # We test of the view has changed
+        if np.any(self.x != x) or np.any(self.y != y) or np.any(self.z != z):
+            self.informViewBoundsChanged()
+
+        # Replace data
+        self.x = x
+        self.y = y
+        self.z = z
+
         profile = debug.Profiler()
 
         self.qpicture = QtGui.QPicture()
         p = QtGui.QPainter(self.qpicture)
-        p.setPen(fn.mkPen('w'))
         
+        # We set the pen of all polygons once
+        p.setPen(QtGui.QColor(0, 0, 0, 0))
 
-        # Prepare colormap
-        pos = [i[0] for i in Gradients[self.cmap]['ticks']]
+        ## Prepare colormap
+        # First we get the LookupTable
+        pos   = [i[0] for i in Gradients[self.cmap]['ticks']]
         color = [i[1] for i in Gradients[self.cmap]['ticks']]
-        cmap = ColorMap(pos, color)
-        lut =  cmap.getLookupTable(0.0, 1.0, 256)
-        norm = ((z - z.min())/z.max()*len(lut)).astype(int)
-
-        xfn = z.shape[0]
-        yfn = z.shape[1]
-        for xi in range(xfn):
-            for yi in range(yfn):
+        cmap  = ColorMap(pos, color)
+        lut   = cmap.getLookupTable(0.0, 1.0, 256)
+        # Second we associate each z value, that we normalize, to the lut
+        norm  = z - z.min()
+        norm = norm/norm.max()
+        norm  = (norm*(len(lut)-1)).astype(int)
+        
+        # Go through all the data and draw the polygons accordingly
+        for xi in range(z.shape[0]):
+            for yi in range(z.shape[1]):
                 
+                # Set the color of the polygon first
+                # print(xi, yi, norm[xi][yi])
+                c = lut[norm[xi][yi]]
+                p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
+
+                # DrawConvexPlygon is faster
                 p.drawConvexPolygon(QtCore.QPointF(x[xi][yi],     y[xi][yi]),
                                     QtCore.QPointF(x[xi+1][yi],   y[xi+1][yi]),
                                     QtCore.QPointF(x[xi+1][yi+1], y[xi+1][yi+1]),
                                     QtCore.QPointF(x[xi][yi+1],   y[xi][yi+1]))
 
-                c = lut[norm[xi][yi]]
-                p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
-        p.end()
 
+        p.end()
         self.update()
 
 
@@ -106,14 +137,14 @@ class PColorMeshItem(GraphicsObject):
     def width(self):
         if self.x is None:
             return None
-        return len(self.x)
+        return np.max(self.x)
 
 
 
     def height(self):
         if self.y is None:
             return None
-        return len(self.y)
+        return np.max(self.y)
 
 
 
