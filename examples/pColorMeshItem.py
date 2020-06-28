@@ -22,12 +22,23 @@ view = win.addViewBox()
 
 ## Create data
 
-# x and y being the coordinates of the polygons, they share the same shape
+# To enhance the non-grid meshing, we randomize the polygon vertices per and 
+# certain amount
+randomness = 5
+
+# x and y being the vertices of the polygons, they share the same shape
 # However the shape can be different in both dimension
 xn = 50 # nb points along x
 yn = 40 # nb points along y
-x = np.repeat(np.arange(1, xn+1), yn).reshape(xn, yn)
-y = np.tile(np.arange(1, yn+1), xn).reshape(xn, yn)
+
+
+x = np.repeat(np.arange(1, xn+1), yn).reshape(xn, yn)\
+    + np.random.random((xn, yn))*randomness
+y = np.tile(np.arange(1, yn+1), xn).reshape(xn, yn)\
+    + np.random.random((xn, yn))*randomness
+x.sort(axis=0)
+y.sort(axis=0)
+
 
 # z being the color of the polygons its shape must be decreased by one in each dimension
 z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
