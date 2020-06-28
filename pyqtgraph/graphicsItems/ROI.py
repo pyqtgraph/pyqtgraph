@@ -1662,6 +1662,15 @@ class MultiRectROI(QtGui.QGraphicsObject):
         return pos
         
     def getArrayRegion(self, arr, img=None, axes=(0,1), **kwds):
+        """
+        Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` for each rect
+        in the chain concatenated into a single ndarray.
+
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
+        arguments.
+
+        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
+        """
         rgns = []
         for l in self.lines:
             rgn = l.getArrayRegion(arr, img, axes=axes, **kwds)
@@ -1775,8 +1784,13 @@ class EllipseROI(ROI):
         
     def getArrayRegion(self, arr, img=None, axes=(0, 1), **kwds):
         """
-        Return the result of ROI.getArrayRegion() masked by the elliptical shape
-        of the ROI. Regions outside the ellipse are set to 0.
+        Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` masked by the
+        elliptical shape of the ROI. Regions outside the ellipse are set to 0.
+
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
+        arguments.
+
+        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
         """
         # Note: we could use the same method as used by PolyLineROI, but this
         # implementation produces a nicer mask.
@@ -2059,8 +2073,13 @@ class PolyLineROI(ROI):
 
     def getArrayRegion(self, data, img, axes=(0,1), **kwds):
         """
-        Return the result of ROI.getArrayRegion(), masked by the shape of the 
-        ROI. Values outside the ROI shape are set to 0.
+        Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
+        the shape of the ROI. Values outside the ROI shape are set to 0.
+
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
+        arguments.
+
+        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
         """
         br = self.boundingRect()
         if br.width() > 1000:
@@ -2179,7 +2198,8 @@ class LineSegmentROI(ROI):
         Since this pulls 1D data from a 2D coordinate system, the return value 
         will have ndim = data.ndim-1
         
-        See ROI.getArrayRegion() for a description of the arguments.
+        See :meth:`~pytqgraph.ROI.getArrayRegion` for a description of the
+        arguments.
         """
         imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
         rgns = []
