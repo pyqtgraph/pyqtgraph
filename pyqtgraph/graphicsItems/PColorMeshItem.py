@@ -7,7 +7,7 @@ from .. import debug as debug
 from .GraphicsObject import GraphicsObject
 from ..Point import Point
 from .. import getConfigOption
-from .GradientEditorItem import Gradients
+from .GradientEditorItem import Gradients # List of colormaps
 from ..colormap import ColorMap
 
 try:
@@ -22,26 +22,40 @@ __all__ = ['PColorMeshItem']
 class PColorMeshItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
-
-    Create a pseudocolor plot with convex polygons.
     """
 
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
 
-    def __init__(self, x=None, y=None, z=None,
-                 cmap='viridis', edgecolors=None):
+    def __init__(self, *args,
+                 cmap='viridis', edgecolors=None, ):
         """
+        Create a pseudocolor plot with convex polygons.
 
+        Call signature:
+
+        pcolor([x, y,] c, **kwargs)
+
+        x and Y can be used to specify the corners of the quadrilaterals.
 
         Parameters
         ----------
-        x, y : np.ndarray
+        x, y : np.ndarray, optional, default None
             2D array containing the coordinates of the polygons
         z : np.ndarray
             2D array containing the value which will be maped into the polygons
             colors.
+            If x and y is None, the polygons will be displaced on a grid
+            otherwise x and y will be used as polygons vertices coordinates as:
+
+            (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                +---------+
+                                | z[i, j] |
+                                +---------+
+                (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
+            "ASCII from: https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html".
         cmap : str, default 'viridis
             Colormap used to map the z value to colors.
         edgecolors : dict , default None
@@ -53,11 +67,7 @@ class PColorMeshItem(GraphicsObject):
         """
         GraphicsObject.__init__(self)
 
-        self.x = x
-        self.y = y
-        self.z = z
-
-        self.qpicture = None  ## rendered image for display
+        self.qpicture = None  ## rendered picture for display
         
         self.axisOrder = getConfigOption('imageAxisOrder')
 
@@ -65,24 +75,89 @@ class PColorMeshItem(GraphicsObject):
         if cmap in Gradients.keys():
             self.cmap = cmap
         else:
-            raise NameError('Undefined colormap')
-            
-        # If some data have been sent we directly display it
-        if x is not None and y is not None and z is not None:
-            self.setData(x, y, z)
-
-
-    def setData(self, x, y, z):
+            raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
         
+        # If some data have been sent we directly display it
+        if len(args)>0:
+            self.setData(*args)
 
-        # We test of the view has changed
-        if np.any(self.x != x) or np.any(self.y != y) or np.any(self.z != z):
-            self.informViewBoundsChanged()
 
-        # Replace data
-        self.x = x
-        self.y = y
-        self.z = z
+    def _prepareData(self, args):
+        """
+        Check the shape of the data.
+        Return a set of 2d array x, y, z ready to be used to draw the picture.
+        """
+
+        # User didn't specified data
+        if len(args)==0:
+
+            self.x = None
+            self.y = None
+            self.z = None
+            
+        # User only specified z
+        elif len(args)==1:
+            # If x and y is None, the polygons will be displaced on a grid
+            x = np.arange(0, args[0].shape[0]+1, 1)
+            y = np.arange(0, args[0].shape[1]+1, 1)
+            self.x, self.y = np.meshgrid(x, y, indexing='ij')
+            self.z = args[0]
+
+        # User specified x, y, z
+        elif len(args)==3:
+
+            # Shape checking
+            if args[0].shape[0] != args[2].shape[0]+1 or args[0].shape[1] != args[2].shape[1]+1:
+                raise ValueError('The dimension of x should be one greater than the one of z')
+            
+            if args[1].shape[0] != args[2].shape[0]+1 or args[1].shape[1] != args[2].shape[1]+1:
+                raise ValueError('The dimension of y should be one greater than the one of z')
+        
+            self.x = args[0]
+            self.y = args[1]
+            self.z = args[2]
+
+        else:
+            ValueError('Data must been sent as (z) or (x, y, z)')
+
+
+    def setData(self, *args):
+        """
+        Set the data to be drawn.
+
+        Parameters
+        ----------
+        x, y : np.ndarray, optional, default None
+            2D array containing the coordinates of the polygons
+        z : np.ndarray
+            2D array containing the value which will be maped into the polygons
+            colors.
+            If x and y is None, the polygons will be displaced on a grid
+            otherwise x and y will be used as polygons vertices coordinates as:
+
+            (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                +---------+
+                                | z[i, j] |
+                                +---------+
+                (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
+            "ASCII from: https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html".
+
+        """
+
+        # Prepare data
+        cd = self._prepareData(args)
+
+        # Has the view bounds changed
+        shapeChanged = False
+        if self.qpicture is None:
+            shapeChanged = True
+        elif len(args)==1:
+            if args[0].shape[0] != self.x[:,1][-1] or args[0].shape[1] != self.y[0][-1]:
+                shapeChanged = True
+        elif len(args)==3:
+            if np.any(self.x != args[0]) or np.any(self.y != args[1]):
+                shapeChanged = True
 
         profile = debug.Profiler()
 
@@ -102,13 +177,13 @@ class PColorMeshItem(GraphicsObject):
         cmap  = ColorMap(pos, color)
         lut   = cmap.getLookupTable(0.0, 1.0, 256)
         # Second we associate each z value, that we normalize, to the lut
-        norm  = z - z.min()
+        norm  = self.z - self.z.min()
         norm = norm/norm.max()
         norm  = (norm*(len(lut)-1)).astype(int)
         
         # Go through all the data and draw the polygons accordingly
-        for xi in range(z.shape[0]):
-            for yi in range(z.shape[1]):
+        for xi in range(self.z.shape[0]):
+            for yi in range(self.z.shape[1]):
                 
                 # Set the color of the polygon first
                 # print(xi, yi, norm[xi][yi])
@@ -116,14 +191,17 @@ class PColorMeshItem(GraphicsObject):
                 p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
 
                 # DrawConvexPlygon is faster
-                p.drawConvexPolygon(QtCore.QPointF(x[xi][yi],     y[xi][yi]),
-                                    QtCore.QPointF(x[xi+1][yi],   y[xi+1][yi]),
-                                    QtCore.QPointF(x[xi+1][yi+1], y[xi+1][yi+1]),
-                                    QtCore.QPointF(x[xi][yi+1],   y[xi][yi+1]))
+                p.drawConvexPolygon(QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
+                                    QtCore.QPointF(self.x[xi+1][yi],   self.y[xi+1][yi]),
+                                    QtCore.QPointF(self.x[xi+1][yi+1], self.y[xi+1][yi+1]),
+                                    QtCore.QPointF(self.x[xi][yi+1],   self.y[xi][yi+1]))
 
 
         p.end()
         self.update()
+
+        if shapeChanged:
+            self.informViewBoundsChanged()
 
 
 
@@ -159,7 +237,6 @@ class PColorMeshItem(GraphicsObject):
 
 
     def boundingRect(self):
-
-        if self.z is None:
+        if self.qpicture is None:
             return QtCore.QRectF(0., 0., 0., 0.)
         return QtCore.QRectF(0., 0., float(self.width()), float(self.height()))
