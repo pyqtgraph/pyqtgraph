@@ -105,7 +105,8 @@ jobs:
           conda config --prepend channels conda-forge
         fi      
         conda info
-        conda install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib --yes --quiet
+        conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
+        pip install matplotlib
       else
         pip install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib
       fi
