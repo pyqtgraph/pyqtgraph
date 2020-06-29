@@ -1483,6 +1483,15 @@ def arrayToQPath(x, y, connect='all'):
 
     path = QtGui.QPainterPath()
 
+    if eq(connect, 'finite'):
+        # convert connect='finite' to connect=ndarray
+        msk = np.isfinite(x) & np.isfinite(y)
+        connect = np.ones_like(msk)
+        connect[np.where(~msk)[0] + 1] = 0
+        x = x[msk]
+        y = y[msk]
+        connect = connect[msk]
+
     #profiler = debug.Profiler()
     n = x.shape[0]
     # create empty array, pad with extra space on either end
@@ -1503,12 +1512,6 @@ def arrayToQPath(x, y, connect='all'):
     elif eq(connect, 'pairs'):
         arr[1:-1]['c'][::2] = 0
         arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
-    elif eq(connect, 'finite'):
-        # Let's call a point with either x or y being nan is an invalid point.
-        # A point will anyway not connect to an invalid point regardless of the
-        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
-        # the next point of an invalid point.
-        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
