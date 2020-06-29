@@ -86,10 +86,12 @@ class ROI(GraphicsObject):
                      is generally not necessary to specify the parent.
     pen              (QPen or argument to pg.mkPen) The pen to use when drawing
                      the shape of the ROI.
-    handlePen        (QPen or argument to pg.mkpen) The pen to use when drawing
+    hoverPen         (QPen or argument to mkPen) The pen to use while the
+                     mouse is hovering over the ROI shape.
+    handlePen        (QPen or argument to mkPen) The pen to use when drawing
                      the ROI handles.
-    hoverPen         (QPen or argument to pg.mkpen) The pen to use while the
-                     mouse is hovering over the ROI shape or its handles.
+    handleHoverPen   (QPen or argument to mkPen) The pen to use while the mouse
+                     is hovering over an ROI handle.
     movable          (bool) If True, the ROI can be moved by dragging anywhere 
                      inside the ROI. Default is True.
     rotatable        (bool) If True, the ROI can be rotated by mouse drag + ALT
@@ -135,8 +137,8 @@ class ROI(GraphicsObject):
     def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False,
                  maxBounds=None, snapSize=1.0, scaleSnap=False,
                  translateSnap=False, rotateSnap=False, parent=None, pen=None,
-                 handlePen=None, hoverPen=None, movable=True, rotatable=True,
-                 resizable=True, removable=False):
+                 hoverPen=None, handlePen=None, handleHoverPen=None,
+                 movable=True, rotatable=True, resizable=True, removable=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
@@ -150,17 +152,20 @@ class ROI(GraphicsObject):
         
         self.freeHandleMoved = False ## keep track of whether free handles have moved since last change signal was emitted.
         self.mouseHovering = False
+
         if pen is None:
             pen = (255, 255, 255)
         self.setPen(pen)
-
         if hoverPen is None:
             hoverPen = (255, 255, 0)
         self.hoverPen = fn.mkPen(hoverPen)
-
         if handlePen is None:
             handlePen = (150, 255, 255)
         self.handlePen = fn.mkPen(handlePen)
+        if handleHoverPen is None:
+            handleHoverPen = (255, 255, 0)
+        self.handleHoverPen = handleHoverPen
+
         self.handles = []
         self.state = {'pos': Point(0,0), 'size': Point(1,1), 'angle': 0}  ## angle is in degrees for ease of Qt integration
         self.lastState = None
@@ -600,8 +605,8 @@ class ROI(GraphicsObject):
     def addHandle(self, info, index=None):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
-            h = Handle(self.handleSize, typ=info['type'],
-                       pen=self.handlePen, activePen=self.hoverPen, parent=self)
+            h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen,
+                       hoverPen=self.handleHoverPen, parent=self)
             info['item'] = h
         else:
             h = info['item']
@@ -1285,12 +1290,13 @@ class Handle(UIGraphicsItem):
     sigClicked = QtCore.Signal(object, object)   # self, event
     sigRemoveRequested = QtCore.Signal(object)   # self
     
-    def __init__(self, radius, typ=None, pen=(200, 200, 220), parent=None, deletable=False, activePen=(255, 255, 0)):
+    def __init__(self, radius, typ=None, pen=(200, 200, 220),
+                 hoverPen=(255, 255, 0), parent=None, deletable=False):
         self.rois = []
         self.radius = radius
         self.typ = typ
         self.pen = fn.mkPen(pen)
-        self.activePen = fn.mkPen(activePen)
+        self.hoverPen = fn.mkPen(hoverPen)
         self.currentPen = self.pen
         self.pen.setWidth(0)
         self.pen.setCosmetic(True)
@@ -1320,7 +1326,7 @@ class Handle(UIGraphicsItem):
             self.setAcceptedMouseButtons(self.acceptedMouseButtons() | QtCore.Qt.RightButton)
         else:
             self.setAcceptedMouseButtons(self.acceptedMouseButtons() & ~QtCore.Qt.RightButton)
-            
+
     def removeClicked(self):
         self.sigRemoveRequested.emit(self)
 
@@ -1334,7 +1340,7 @@ class Handle(UIGraphicsItem):
                     hover=True
                     
         if hover:
-            self.currentPen = self.activePen
+            self.currentPen = self.hoverPen
         else:
             self.currentPen = self.pen
         self.update()
@@ -1395,11 +1401,11 @@ class Handle(UIGraphicsItem):
             self.isMoving = True
             self.startPos = self.scenePos()
             self.cursorOffset = self.scenePos() - ev.buttonDownScenePos()
-            self.currentPen = self.activePen
+            self.currentPen = self.hoverPen
             
         if self.isMoving:  ## note: isMoving may become False in mid-drag due to right-click.
             pos = ev.scenePos() + self.cursorOffset
-            self.currentPen = self.activePen
+            self.currentPen = self.hoverPen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
     def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
