@@ -37,18 +37,18 @@ lr = pg.LinearRegionItem(values=[70, 80])
 p1.addItem(lr)
 label = pg.InfLineLabel(lr.lines[1], "region 1", position=0.95, rotateAxis=(1,0), anchor=(1, 1))
 
-# Add a cursor (without label)
-cursor = pg.CursorItem(pos=[50, 20])
-p1.addItem(cursor)
-
 # Add a cursor (with label)
-cursorLabel = pg.CursorItem(pos=[20,-20], radius=3, cursor='c', pen=(0, 0, 255), label='x={:.3f}\ny={:.3f}',
+cursorLabel = pg.CursorItem(pos=[20,-20], radius=3, cursor='s', pen=(0, 0, 255), label='x={:.3f}\ny={:.3f}',
                             labelOpts={'color': (200, 200, 200), 'fill': (20, 20, 20, 20)})
 p1.addItem(cursorLabel)
 
-target = pg.TargetItem()
-target.setLabel("test")
-p1.addItem(target)
+targetLabel = pg.TargetItem(pos=[40, -20], radius=3, symbol='star', pen=(0, 0, 255), label='x={:.3f}\ny={:.3f}',
+	     labelOpts={'color': (200, 200, 200), 'fill': (20, 20, 20, 20)})
+p1.addItem(targetLabel)
+
+# target = pg.TargetItem()
+# target.setLabel("test")
+# p1.addItem(target)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
