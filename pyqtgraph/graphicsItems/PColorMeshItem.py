@@ -28,7 +28,8 @@ class PColorMeshItem(GraphicsObject):
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
 
-    def __init__(self, *args, cmap='viridis', edgecolors=None, ):
+    def __init__(self, *args,
+                 cmap='viridis', edgecolors=None, ):
         """
         Create a pseudocolor plot with convex polygons.
 
