@@ -86,6 +86,10 @@ class ROI(GraphicsObject):
                      is generally not necessary to specify the parent.
     pen              (QPen or argument to pg.mkPen) The pen to use when drawing
                      the shape of the ROI.
+    handlePen        (QPen or argument to pg.mkpen) The pen to use when drawing
+                     the ROI handles.
+    hoverPen         (QPen or argument to pg.mkpen) The pen to use while the
+                     mouse is hovering over the ROI shape or its handles.
     movable          (bool) If True, the ROI can be moved by dragging anywhere 
                      inside the ROI. Default is True.
     rotatable        (bool) If True, the ROI can be rotated by mouse drag + ALT
@@ -128,10 +132,11 @@ class ROI(GraphicsObject):
     sigClicked = QtCore.Signal(object, object)
     sigRemoveRequested = QtCore.Signal(object)
     
-    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False, maxBounds=None, 
-                 snapSize=1.0, scaleSnap=False, translateSnap=False, rotateSnap=False, 
-                 parent=None, pen=None, movable=True, rotatable=True, resizable=True, 
-                 removable=False):
+    def __init__(self, pos, size=Point(1, 1), angle=0.0, invertible=False,
+                 maxBounds=None, snapSize=1.0, scaleSnap=False,
+                 translateSnap=False, rotateSnap=False, parent=None, pen=None,
+                 handlePen=None, hoverPen=None, movable=True, rotatable=True,
+                 resizable=True, removable=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
@@ -148,8 +153,14 @@ class ROI(GraphicsObject):
         if pen is None:
             pen = (255, 255, 255)
         self.setPen(pen)
-        
-        self.handlePen = QtGui.QPen(QtGui.QColor(150, 255, 255))
+
+        if hoverPen is None:
+            hoverPen = (255, 255, 0)
+        self.hoverPen = fn.mkPen(hoverPen)
+
+        if handlePen is None:
+            handlePen = (150, 255, 255)
+        self.handlePen = fn.mkPen(handlePen)
         self.handles = []
         self.state = {'pos': Point(0,0), 'size': Point(1,1), 'angle': 0}  ## angle is in degrees for ease of Qt integration
         self.lastState = None
@@ -589,7 +600,8 @@ class ROI(GraphicsObject):
     def addHandle(self, info, index=None):
         ## If a Handle was not supplied, create it now
         if 'item' not in info or info['item'] is None:
-            h = Handle(self.handleSize, typ=info['type'], pen=self.handlePen, parent=self)
+            h = Handle(self.handleSize, typ=info['type'],
+                       pen=self.handlePen, activePen=self.hoverPen, parent=self)
             info['item'] = h
         else:
             h = info['item']
@@ -735,7 +747,7 @@ class ROI(GraphicsObject):
     def _makePen(self):
         # Generate the pen color for this ROI based on its current state.
         if self.mouseHovering:
-            return fn.mkPen(255, 255, 0)
+            return self.hoverPen
         else:
             return self.pen
 
