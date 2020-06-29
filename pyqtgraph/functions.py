@@ -1501,10 +1501,14 @@ def arrayToQPath(x, y, connect='all'):
     if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
     elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 1
-        arr[1:-1]['c'][1::2] = 0
+        arr[1:-1]['c'][::2] = 0
+        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
-        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
+        # Let's call a point with either x or y being nan is an invalid point.
+        # A point will anyway not connect to an invalid point regardless of the
+        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
+        # the next point of an invalid point.
+        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
