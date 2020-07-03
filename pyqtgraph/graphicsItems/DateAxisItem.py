@@ -221,6 +221,7 @@ class DateAxisItem(AxisItem):
             (30,          HMS_ZOOM_LEVEL),
             (1,           MS_ZOOM_LEVEL),
             ])
+        self.autoSIPrefix = False
     
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
