@@ -23,10 +23,11 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             opts['headLen'] = opts['size']
         if 'width' in opts:
             opts['headWidth'] = opts['width']
+        pos = opts.pop('pos', (0, 0))
+
         defaultOpts = {
             'pxMode': True,
             'angle': -150,   ## If the angle is 0, the arrow points left
-            'pos': (0,0),
             'headLen': 20,
             'headWidth': None,
             'tipAngle': 25,
@@ -39,8 +40,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         defaultOpts.update(opts)
         
         self.setStyle(**defaultOpts)
-        
-        self.moveBy(*self.opts['pos'])
+
+        # for backward compatibility
+        self.setPos(*pos)
     
     def setStyle(self, **opts):
         """
@@ -67,11 +69,25 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         tailWidth               Width of the tail. default=3
         pen                     The pen used to draw the outline of the arrow.
         brush                   The brush used to fill the arrow.
+        pxMode                  If True, then the arrow is drawn as a fixed size
+                                regardless of the scale of its parents (including
+                                the ViewBox zoom level). 
         ======================  =================================================
         """
-        self.opts.update(opts)
+        arrowOpts = ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth', 'headWidth']
+        allowedOpts = ['angle', 'pen', 'brush', 'pxMode'] + arrowOpts
+        needUpdate = False
+        for k,v in opts.items():
+            if k not in allowedOpts:
+                raise KeyError('Invalid arrow style option "%s"' % k)
+            if self.opts.get(k) != v:
+                needUpdate = True
+            self.opts[k] = v
+
+        if not needUpdate:
+            return
         
-        opt = dict([(k,self.opts[k]) for k in ['headLen', 'headWidth', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
+        opt = dict([(k,self.opts[k]) for k in arrowOpts if k in self.opts])
         tr = QtGui.QTransform()
         tr.rotate(self.opts['angle'])
         self.path = tr.map(fn.makeArrowPath(**opt))
@@ -85,7 +101,6 @@ class ArrowItem(QtGui.QGraphicsPathItem):
             self.setFlags(self.flags() | self.ItemIgnoresTransformations)
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
-
 
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
