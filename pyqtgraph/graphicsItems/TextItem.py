@@ -67,26 +67,33 @@ class TextItem(GraphicsObject):
         """
         if color is not None:
             self.setColor(color)
-        self.textItem.setPlainText(text)
-        self.updateTextPos()
-        
-    def setPlainText(self, *args):
+        self.setPlainText(text)
+
+    def setPlainText(self, text):
         """
         Set the plain text to be rendered by this item. 
         
         See QtGui.QGraphicsTextItem.setPlainText().
         """
-        self.textItem.setPlainText(*args)
-        self.updateTextPos()
+        if text != self.toPlainText():
+            self.textItem.setPlainText(text)
+            self.updateTextPos()
+
+    def toPlainText(self):
+        return self.textItem.toPlainText()
         
-    def setHtml(self, *args):
+    def setHtml(self, html):
         """
         Set the HTML code to be rendered by this item. 
         
         See QtGui.QGraphicsTextItem.setHtml().
         """
-        self.textItem.setHtml(*args)
-        self.updateTextPos()
+        if self.toHtml() != html:
+            self.textItem.setHtml(html)
+            self.updateTextPos()
+        
+    def toHtml(self):
+        return self.textItem.toHtml()
         
     def setTextWidth(self, *args):
         """
@@ -176,7 +183,15 @@ class TextItem(GraphicsObject):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
+    def setVisible(self, v):
+        GraphicsObject.setVisible(self, v)
+        if v:
+            self.updateTransform()
+    
     def updateTransform(self, force=False):
+        if not self.isVisible():
+            return
+
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
