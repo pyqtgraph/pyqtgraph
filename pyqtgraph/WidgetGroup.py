@@ -23,7 +23,7 @@ def restoreSplitter(w, s):
     if type(s) is list:
         w.setSizes(s)
     elif type(s) is str:
-        w.restoreState(QtCore.QByteArray.fromPercentEncoding(s))
+        w.restoreState(QtCore.QByteArray.fromPercentEncoding(s.encode()))
     else:
         print("Can't configure QSplitter using object of type", type(s))
     if w.count() > 0:   ## make sure at least one item is not collapsed

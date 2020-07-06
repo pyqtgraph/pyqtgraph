@@ -1,3 +1,4 @@
+from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
