@@ -16,7 +16,6 @@ from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
 from . import debug, reload
-from .reload import getPreviousVersion 
 from .metaarray import MetaArray
 
 
@@ -415,7 +414,7 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     path.lineTo(0,0)
     return path
     
-    
+
 def eq(a, b):
     """The great missing equivalence function: Guaranteed evaluation to a single bool value.
     

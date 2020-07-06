@@ -33,7 +33,7 @@ def addGradientListToDocstring():
     """Decorator to add list of current pre-defined gradients to the end of a function docstring."""
     def dec(fn):
         if fn.__doc__ is not None:
-            fn.__doc__ = fn.__doc__ + str(Gradients.keys()).strip('[').strip(']')
+            fn.__doc__ = fn.__doc__ + str(list(Gradients.keys())).strip('[').strip(']')
         return fn
     return dec
 
