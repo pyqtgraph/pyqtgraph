@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
 #
-# Created: Mon Dec 23 10:10:51 2013
-#      by: PyQt4 UI code generator 4.10
+# Created: Fri Mar 31 10:35:34 2017
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -84,19 +84,27 @@ class Ui_Form(object):
         self.downsampleSpin.setObjectName(_fromUtf8("downsampleSpin"))
         self.gridLayout_4.addWidget(self.downsampleSpin, 1, 1, 1, 1)
         self.transformGroup = QtGui.QFrame(Form)
-        self.transformGroup.setGeometry(QtCore.QRect(0, 0, 154, 79))
+        self.transformGroup.setGeometry(QtCore.QRect(10, 10, 171, 101))
         self.transformGroup.setObjectName(_fromUtf8("transformGroup"))
         self.gridLayout = QtGui.QGridLayout(self.transformGroup)
+        self.gridLayout.setMargin(0)
+        self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.fftCheck = QtGui.QCheckBox(self.transformGroup)
-        self.fftCheck.setObjectName(_fromUtf8("fftCheck"))
-        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
-        self.logXCheck = QtGui.QCheckBox(self.transformGroup)
-        self.logXCheck.setObjectName(_fromUtf8("logXCheck"))
-        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
         self.logYCheck = QtGui.QCheckBox(self.transformGroup)
         self.logYCheck.setObjectName(_fromUtf8("logYCheck"))
         self.gridLayout.addWidget(self.logYCheck, 2, 0, 1, 1)
+        self.logXCheck = QtGui.QCheckBox(self.transformGroup)
+        self.logXCheck.setObjectName(_fromUtf8("logXCheck"))
+        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
+        self.fftCheck = QtGui.QCheckBox(self.transformGroup)
+        self.fftCheck.setObjectName(_fromUtf8("fftCheck"))
+        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
+        self.derivativeCheck = QtGui.QCheckBox(self.transformGroup)
+        self.derivativeCheck.setObjectName(_fromUtf8("derivativeCheck"))
+        self.gridLayout.addWidget(self.derivativeCheck, 3, 0, 1, 1)
+        self.phasemapCheck = QtGui.QCheckBox(self.transformGroup)
+        self.phasemapCheck.setObjectName(_fromUtf8("phasemapCheck"))
+        self.gridLayout.addWidget(self.phasemapCheck, 4, 0, 1, 1)
         self.pointsGroup = QtGui.QGroupBox(Form)
         self.pointsGroup.setGeometry(QtCore.QRect(10, 550, 234, 58))
         self.pointsGroup.setCheckable(True)
@@ -148,7 +156,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph", None))
         self.averageGroup.setToolTip(_translate("Form", "Display averages of the curves displayed in this plot. The parameter list allows you to choose parameters to average over (if any are available).", None))
         self.averageGroup.setTitle(_translate("Form", "Average", None))
         self.clipToViewCheck.setToolTip(_translate("Form", "Plot only the portion of each curve that is visible. This assumes X values are uniformly spaced.", None))
@@ -169,9 +177,11 @@ class Ui_Form(object):
         self.autoDownsampleCheck.setText(_translate("Form", "Auto", None))
         self.downsampleSpin.setToolTip(_translate("Form", "Downsample data before plotting. (plot every Nth sample)", None))
         self.downsampleSpin.setSuffix(_translate("Form", "x", None))
-        self.fftCheck.setText(_translate("Form", "Power Spectrum (FFT)", None))
-        self.logXCheck.setText(_translate("Form", "Log X", None))
         self.logYCheck.setText(_translate("Form", "Log Y", None))
+        self.logXCheck.setText(_translate("Form", "Log X", None))
+        self.fftCheck.setText(_translate("Form", "Power Spectrum (FFT)", None))
+        self.derivativeCheck.setText(_translate("Form", "dy/dx", None))
+        self.phasemapCheck.setText(_translate("Form", "Y vs. Y\'", None))
         self.pointsGroup.setTitle(_translate("Form", "Points", None))
         self.autoPointsCheck.setText(_translate("Form", "Auto", None))
         self.xGridCheck.setText(_translate("Form", "Show X Grid", None))

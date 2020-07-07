@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.0.dev0'
+__version__ = '0.11.0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -28,9 +28,6 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 
 ## helpers for 2/3 compatibility
 from . import python2_3
-
-## install workarounds for numpy bugs
-from . import numpy_fix
 
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
@@ -59,6 +56,7 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
+    'mouseRateLimit': 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
     'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.
                                  # For 'col-major', image data is expected in reversed (col, row) order.
                                  # The default is 'col-major' for backward compatibility, but this may
@@ -67,7 +65,6 @@ CONFIG_OPTIONS = {
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -99,7 +96,8 @@ def systemInfo():
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
         lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            rev = open(lastRevFile, 'r').read().strip()
+            with open(lastRevFile, 'r') as fd:
+                rev = fd.read().strip()
     
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
@@ -222,6 +220,7 @@ from .graphicsItems.ViewBox import *
 from .graphicsItems.ArrowItem import * 
 from .graphicsItems.ImageItem import * 
 from .graphicsItems.AxisItem import * 
+from .graphicsItems.DateAxisItem import *
 from .graphicsItems.LabelItem import * 
 from .graphicsItems.CurvePoint import * 
 from .graphicsItems.GraphicsWidgetAnchor import * 
@@ -264,6 +263,7 @@ from .widgets.LayoutWidget import *
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
 from .widgets.GroupBox import GroupBox
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
 
 from .imageview import *
 from .WidgetGroup import *
@@ -369,8 +369,12 @@ def exit():
     ## close file handles
     if sys.platform == 'darwin':
         for fd in range(3, 4096):
-            if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+            if fd in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+                continue
+            try:
                 os.close(fd)
+            except OSError:
+                pass
     else:
         os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
 
@@ -410,12 +414,20 @@ def plot(*args, **kargs):
             dataArgs[k] = kargs[k]
         
     w = PlotWindow(**pwArgs)
+    w.sigClosed.connect(_plotWindowClosed)
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
-    
+
+def _plotWindowClosed(w):
+    w.close()
+    try:
+        plots.remove(w)
+    except ValueError:
+        pass
+
 def image(*args, **kargs):
     """
     Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
@@ -426,10 +438,18 @@ def image(*args, **kargs):
     """
     mkQApp()
     w = ImageWindow(*args, **kargs)
+    w.sigClosed.connect(_imageWindowClosed)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
+
+def _imageWindowClosed(w):
+    w.close()
+    try:
+        images.remove(w)
+    except ValueError:
+        pass
 
 def dbg(*args, **kwds):
     """

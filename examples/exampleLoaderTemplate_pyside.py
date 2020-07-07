@@ -78,7 +78,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "PyQtGraph", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(0, QtGui.QApplication.translate("Form", "default", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(1, QtGui.QApplication.translate("Form", "native", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(2, QtGui.QApplication.translate("Form", "raster", None, QtGui.QApplication.UnicodeUTF8))

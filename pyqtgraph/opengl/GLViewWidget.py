@@ -28,6 +28,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         rotationMethod   (str): Mechanimsm to drive the rotation method, options are 
                          'euler' and 'quaternion'. Defaults to 'euler'.
         """
+
         global ShareWidget
 
         if ShareWidget is None:
@@ -53,14 +54,28 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             'devicePixelRatio': devicePixelRatio,
             'rotationMethod': rotationMethod
         }
-        self.setBackgroundColor('k')
+        self.reset()
         self.items = []
+        
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
         
         self.makeCurrent()
+        
+    def reset(self):
+        """
+        Initialize the widget state or reset the current state to the original state.
+        """
+        self.opts['center'] = Vector(0,0,0)  ## will always appear at the center of the widget
+        self.opts['distance'] = 10.0         ## distance of camera from center
+        self.opts['fov'] = 60                ## horizontal field of view in degrees
+        self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
+        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
+                                             ## (rotation around z-axis 0 points along x-axis)
+        self.opts['viewport'] = None         ## glViewport params; None == whole widget
+        self.setBackgroundColor('k')        
 
     def addItem(self, item):
         self.items.append(item)
@@ -76,10 +91,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.update()
         
     def removeItem(self, item):
+        """
+        Remove the item from the scene.
+        """
         self.items.remove(item)
         item._setView(None)
         self.update()
-        
+
+    def clear(self):
+        """
+        Remove all items from the scene.
+        """
+        for item in self.items:
+            item._setView(None)
+        self.items = []
+        self.update()        
         
     def initializeGL(self):
         self.resizeGL(self.width(), self.height())
@@ -251,10 +277,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             
     def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
         if pos is not None:
-            self.opts['pos'] = pos
+            self.opts['center'] = pos
         if distance is not None:
             self.opts['distance'] = distance
-
         if rotation is not None:
             # set with quaternion
             self.opts['rotation'] = rotation
@@ -414,7 +439,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #self.paintGL(region=region)
         #self.swapBuffers()
         
-        
     def wheelEvent(self, ev):
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
@@ -469,15 +493,35 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             self.keyTimer.stop()
 
     def checkOpenGLVersion(self, msg):
-        ## Only to be called from within exception handler.
-        ver = glGetString(GL_VERSION).split()[0]
-        if int(ver.split('.')[0]) < 2:
-            from .. import debug
-            pyqtgraph.debug.printExc()
-            raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
-        else:
-            raise
-            
+        """
+        Give exception additional context about version support.
+
+        Only to be called from within exception handler.
+        As this check is only performed on error,
+        unsupported versions might still work!
+        """
+
+        # Check for unsupported version
+        verString = glGetString(GL_VERSION)
+        ver = verString.split()[0]
+        # If not OpenGL ES...
+        if str(ver.split(b'.')[0]).isdigit():
+            verNumber = int(ver.split(b'.')[0])
+            # ...and version is supported:
+            if verNumber >= 2:
+                # OpenGL version is fine, raise the original exception
+                raise
+
+        # Print original exception
+        from .. import debug
+        debug.printExc()
+
+        # Notify about unsupported version
+        raise Exception(
+            msg + "\n" + \
+            "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
+        )
+ 
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -556,6 +600,4 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glfbo.glDeleteFramebuffers([fb])
             
         return output
-        
-        
-        
+ 

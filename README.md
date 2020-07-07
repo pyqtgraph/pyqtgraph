@@ -1,12 +1,13 @@
-[![Build Status](https://travis-ci.org/pyqtgraph/pyqtgraph.svg?branch=develop)](https://travis-ci.org/pyqtgraph/pyqtgraph)
-[![codecov.io](http://codecov.io/github/pyqtgraph/pyqtgraph/coverage.svg?branch=develop)](http://codecov.io/github/pyqtgraph/pyqtgraph?branch=develop)
+
+[![Build Status](https://pyqtgraph.visualstudio.com/pyqtgraph/_apis/build/status/pyqtgraph.pyqtgraph?branchName=develop)](https://pyqtgraph.visualstudio.com/pyqtgraph/_build/latest?definitionId=17&branchName=develop)
+[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
 PyQtGraph
 =========
 
-A pure-Python graphics library for PyQt/PySide
+A pure-Python graphics library for PyQt/PySide/PyQt5/PySide2
 
-Copyright 2017 Luke Campagnola, University of North Carolina at Chapel Hill
+Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
 
 <http://www.pyqtgraph.org>
 
@@ -15,15 +16,34 @@ Despite being written entirely in python, the library is fast due to its
 heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 2D display, and OpenGL for 3D display.
 
-
 Requirements
 ------------
 
-* PyQt 4.7+, PySide, PyQt5, or PySide2
-* python 2.7, or 3.x
-* NumPy
-* For 3D graphics: pyopengl and qt-opengl
-* Known to run on Windows, Linux, and Mac.
+* Python 2.7, or 3.x
+* Required
+  * PyQt 4.8+, PySide, PyQt5, or PySide2
+  * `numpy`
+* Optional
+  * `scipy` for image processing
+  * `pyopengl` for 3D graphics
+  * `hdf5` for large hdf5 binary format support
+
+Qt Bindings Test Matrix
+-----------------------
+
+The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
+
+| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
+| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
+| PyQt-4         | :white_check_mark: | :x:                | :x:                | :x:                |
+| PySide1        | :white_check_mark: | :x:                | :x:                | :x:                |
+| PyQt5-5.9      | :x:                | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.13   | :x:                | :x:                | :white_check_mark: | :x:                |
+| PyQt5-Latest   | :x:                | :x:                | :x:                | :white_check_mark: |
+| PySide2-Latest | :x:                | :x:                | :x:                | :white_check_mark: |
+
+* pyqtgraph has had some incompatibilities with PySide2 versions 5.6-5.11, and we recommend you avoid those versions if possible
+* on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work reliably
 
 Support
 -------
@@ -36,29 +56,17 @@ Installation Methods
 
 * From PyPI:  
   * Last released version: `pip install pyqtgraph`
-  * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph`
+  * Latest development version: `pip install git+https://github.com/pyqtgraph/pyqtgraph@master`
+* From conda
+  * Last released version: `conda install -c conda-forge pyqtgraph`
 * To install system-wide from source distribution: `python setup.py install`
 * Many linux package repositories have release versions.
 * To use with a specific project, simply copy the pyqtgraph subdirectory
   anywhere that is importable from your project.
-* For installation packages, see the website (pyqtgraph.org)
 
 Documentation
 -------------
 
-The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` for a menu.
+The official documentation lives at https://pyqtgraph.readthedocs.io
 
-The official documentation lives at http://pyqtgraph.org/documentation
-
-Testing
--------
-
-To test the pyqtgraph library, clone the repository, and run `pytest pyqtgraph`.  For more thurough testing, you can use `tox`, however the [tox-conda](https://github.com/tox-dev/tox-conda) plugin is required.  Running `tox` on its own will run `pytest pyqtgraph -vv` on it's own, however if you want to run a specific test, you can run `tox -- pyqtgraph/exporters/tests/test_svg::test_plotscene` for example.
-
-Dependencies include:
-
-* pytest
-* pytest-cov
-* pytest-xdist
-* tox
-* tox-conda
+The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  

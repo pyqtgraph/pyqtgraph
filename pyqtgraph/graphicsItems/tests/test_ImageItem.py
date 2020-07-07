@@ -121,7 +121,7 @@ def test_ImageItem(transpose=False):
     assertImageApproved(w, 'imageitem/resolution_with_downsampling_y', 'Resolution test with downsampling across y axis.')
     assert img._lastDownsample == (1, 4)
     
-    view.hide()
+    w.hide()
 
 def test_ImageItem_axisorder():
     # All image tests pass again using the opposite axis order

@@ -64,3 +64,27 @@ def test_clear_in_step_mode():
     c = pg.PlotDataItem([1,4,2,3], [5,7,6], stepMode=True)
     w.addItem(c)
     c.clear()
+
+def test_clipping():
+    y = np.random.normal(size=150)
+    x = np.exp2(np.linspace(5, 10, 150))  # non-uniform spacing
+
+    w = pg.PlotWidget(autoRange=True, downsample=5)
+    c = pg.PlotDataItem(x, y)
+    w.addItem(c)
+    w.show()
+
+    c.setClipToView(True)
+
+    w.setXRange(200, 600)
+
+    for x_min in range(100, 2**10 - 100, 100):
+        w.setXRange(x_min, x_min + 100)
+
+        xDisp, _ = c.getData()
+        vr = c.viewRect()
+
+        assert xDisp[0] <= vr.left()
+        assert xDisp[-1] >= vr.right()
+
+    w.close()

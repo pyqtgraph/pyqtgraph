@@ -47,7 +47,7 @@ def reloadAll(prefix=None, debug=False):
             continue
         
         ## Ignore if the file name does not start with prefix
-        if not hasattr(mod, '__file__') or os.path.splitext(mod.__file__)[1] not in ['.py', '.pyc']:
+        if not hasattr(mod, '__file__') or mod.__file__ is None or os.path.splitext(mod.__file__)[1] not in ['.py', '.pyc']:
             continue
         if prefix is not None and mod.__file__[:len(prefix)] != prefix:
             continue
@@ -306,7 +306,8 @@ if __name__ == '__main__':
     import os
     if not os.path.isdir('test1'):
         os.mkdir('test1')
-    open('test1/__init__.py', 'w')
+    with open('test1/__init__.py', 'w'):
+        pass
     modFile1 = "test1/test1.py"
     modCode1 = """
 import sys
@@ -345,8 +346,10 @@ def fn():
     print("fn: %s")
 """ 
 
-    open(modFile1, 'w').write(modCode1%(1,1))
-    open(modFile2, 'w').write(modCode2%"message 1")
+    with open(modFile1, 'w') as f:
+        f.write(modCode1 % (1, 1))
+    with open(modFile2, 'w') as f:
+        f.write(modCode2 % ("message 1", ))
     import test1.test1 as test1
     import test2
     print("Test 1 originals:")
@@ -382,7 +385,8 @@ def fn():
     c1.fn()
     
     os.remove(modFile1+'c')
-    open(modFile1, 'w').write(modCode1%(2,2))
+    with open(modFile1, 'w') as f:
+        f.write(modCode1 %(2, 2))
     print("\n----RELOAD test1-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)
     
@@ -393,7 +397,8 @@ def fn():
     
     
     os.remove(modFile2+'c')
-    open(modFile2, 'w').write(modCode2%"message 2")
+    with open(modFile2, 'w') as f:
+        f.write(modCode2 % ("message 2", ))
     print("\n----RELOAD test2-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)
 
@@ -429,8 +434,10 @@ def fn():
 
     os.remove(modFile1+'c')
     os.remove(modFile2+'c')
-    open(modFile1, 'w').write(modCode1%(3,3))
-    open(modFile2, 'w').write(modCode2%"message 3")
+    with open(modFile1, 'w') as f:
+        f.write(modCode1 % (3, 3))
+    with open(modFile2, 'w') as f:
+        f.write(modCode2 % ("message 3", ))
     
     print("\n----RELOAD-----\n")
     reloadAll(os.path.abspath(__file__)[:10], debug=True)

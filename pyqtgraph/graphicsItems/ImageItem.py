@@ -51,6 +51,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
+        self._lastDownsample = (1, 1)
 
         self.axisOrder = getConfigOption('imageAxisOrder')
 
@@ -488,7 +489,7 @@ class ImageItem(GraphicsObject):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]
 
-        if bins == 'auto':
+        if isinstance(bins, str) and bins == 'auto':
             mn = np.nanmin(stepData)
             mx = np.nanmax(stepData)
             if mx == mn:
@@ -551,8 +552,19 @@ class ImageItem(GraphicsObject):
 
     def viewTransformChanged(self):
         if self.autoDownsample:
-            self.qimage = None
-            self.update()
+            o = self.mapToDevice(QtCore.QPointF(0,0))
+            x = self.mapToDevice(QtCore.QPointF(1,0))
+            y = self.mapToDevice(QtCore.QPointF(0,1))
+            w = Point(x-o).length()
+            h = Point(y-o).length()
+            if w == 0 or h == 0:
+                self.qimage = None
+                return
+            xds = max(1, int(1.0 / w))
+            yds = max(1, int(1.0 / h))
+            if (xds, yds) != self._lastDownsample:
+                self.qimage = None
+                self.update()
 
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.LeftButton:

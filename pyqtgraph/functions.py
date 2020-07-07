@@ -2,7 +2,7 @@
 """
 functions.py -  Miscellaneous functions with no other home
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
@@ -11,11 +11,11 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
 from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
 from . import debug, reload
-from .reload import getPreviousVersion 
 from .metaarray import MetaArray
 
 
@@ -76,9 +76,10 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    p = .001**m
+    m1 = -3*m
+    p = 10.**m1
     
-    return (p, pref)    
+    return (p, pref)
 
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
@@ -387,14 +388,15 @@ def glColor(*args, **kargs):
 
     
 
-def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
+def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
     """
     Construct a path outlining an arrow with the given dimensions.
     The arrow points in the -x direction with tip positioned at 0,0.
-    If *tipAngle* is supplied (in degrees), it overrides *headWidth*.
+    If *headWidth* is supplied, it overrides *tipAngle* (in degrees).
     If *tailLen* is None, no tail will be drawn.
     """
-    headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+    if headWidth is None:
+        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
@@ -412,7 +414,7 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     path.lineTo(0,0)
     return path
     
-    
+
 def eq(a, b):
     """The great missing equivalence function: Guaranteed evaluation to a single bool value.
     
@@ -424,6 +426,8 @@ def eq(a, b):
     3. When comparing arrays, returns False if the array shapes are not the same.
     4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
     """
     if a is b:
         return True
@@ -439,6 +443,28 @@ def eq(a, b):
     # equal because they may behave differently when computed on.
     if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
         return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
 
     # Test for equivalence. 
     # If the test raises a recognized exception, then return Falase
@@ -909,10 +935,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -1035,7 +1063,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
-
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
@@ -1074,7 +1101,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 
@@ -1083,7 +1110,14 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.ubyte
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
-            
+
+    # awkward, but fastest numpy native nan evaluation
+    # 
+    nanMask = None
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
+        nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1094,7 +1128,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1104,12 +1138,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
-            
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
-
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1152,7 +1186,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         imgData[..., 3] = 255
     else:
         alpha = True
-        
+
+    # apply nan mask through alpha channel
+    if nanMask is not None:
+        alpha = True
+        imgData[nanMask, 3] = 0
+
     profile()
     return imgData, alpha
 
@@ -1223,30 +1262,10 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
-        
-        # Bug in PySide + Python 3 causes refcount for image data to be improperly 
-        # incremented, which leads to leaked memory. As a workaround, we manually
-        # reset the reference count after creating the QImage.
-        # See: https://bugreports.qt.io/browse/PYSIDE-140
-        
-        # Get initial reference count (PyObject struct has ob_refcnt as first element)
-        rcount = ctypes.c_long.from_address(id(ch)).value
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
-        if sys.version[0] == '3':
-            # Reset refcount only on python 3. Technically this would have no effect
-            # on python 2, but this is a nasty hack, and checking for version here 
-            # helps to mitigate possible unforseen consequences.
-            ctypes.c_long.from_address(id(ch)).value = rcount
     else:
-        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        #addr = ctypes.c_char.from_buffer(imgData, 0)
-        #try:
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        #except TypeError:  
-            #addr = ctypes.addressof(addr)
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
             img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
         except:
@@ -1259,16 +1278,6 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 
     img.data = imgData
     return img
-    #try:
-        #buf = imgData.data
-    #except AttributeError:  ## happens when image data is non-contiguous
-        #buf = imgData.data
-        
-    #profiler()
-    #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    #profiler()
-    #qimage.data = imgData
-    #return qimage
 
 def imageToArray(img, copy=False, transpose=True):
     """
@@ -1461,12 +1470,14 @@ def arrayToQPath(x, y, connect='all'):
 
     ## Speed this up using >> operator
     ## Format is:
-    ##    numVerts(i4)   0(i4)
-    ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
-    ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
+    ##    numVerts(i4)
+    ##    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    ##    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
     ##    ...
-    ##    0(i4)
+    ##    cStart(i4)   fillRule(i4)
     ##
+    ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
     ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
 
     path = QtGui.QPainterPath()
@@ -1474,12 +1485,12 @@ def arrayToQPath(x, y, connect='all'):
     #profiler = debug.Profiler()
     n = x.shape[0]
     # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
     # write first two integers
     #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
-    byteview[:12] = 0
-    byteview.data[12:20] = struct.pack('>ii', n, 0)
+    byteview[:16] = 0
+    byteview.data[16:20] = struct.pack('>i', n)
     #profiler('pack header')
     # Fill array with vertex values
     arr[1:-1]['x'] = x
@@ -1489,26 +1500,31 @@ def arrayToQPath(x, y, connect='all'):
     if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
     elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 1
-        arr[1:-1]['c'][1::2] = 0
+        arr[1:-1]['c'][::2] = 0
+        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
-        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
+        # Let's call a point with either x or y being nan is an invalid point.
+        # A point will anyway not connect to an invalid point regardless of the
+        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
+        # the next point of an invalid point.
+        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
+    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
+
     #profiler('fill array')
-    # write last 0
-    lastInd = 20*(n+1)
-    byteview.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
+    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
     #profiler('footer')
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
     #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
 
-    path.strn = byteview.data[12:lastInd+4] # make sure data doesn't run away
+    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
     try:
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
@@ -2312,13 +2328,61 @@ def invertQTransform(tr):
             raise Exception("Transform is not invertible.")
         return inv[0]
     
+
+def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
+    """Return an array of position values needed to make beeswarm or column scatter plots.
     
-def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
-    """
-    Used for examining the distribution of values in a set. Produces scattering as in beeswarm or column scatter plots.
+    Used for examining the distribution of values in an array.
     
-    Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
+    Given an array of x-values, construct an array of y-values such that an x,y scatter-plot
     will not have overlapping points (it will look similar to a histogram).
+    """
+    if method == 'exact':
+        return _pseudoScatterExact(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+    elif method == 'histogram':
+        return _pseudoScatterHistogram(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+
+
+def _pseudoScatterHistogram(data, spacing=None, shuffle=True, bidir=False):
+    """Works by binning points into a histogram and spreading them out to fill the bin.
+    
+    Faster method, but can produce blocky results.
+    """
+    inds = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(inds)
+        
+    data = data[inds]
+    
+    if spacing is None:
+        spacing = 2.*np.std(data)/len(data)**0.5
+
+    yvals = np.empty(len(data))
+    
+    dmin = data.min()
+    dmax = data.max()
+    nbins = int((dmax-dmin) / spacing) + 1
+    bins = np.linspace(dmin, dmax, nbins)
+    dx = bins[1] - bins[0]
+    dbins = ((data - bins[0]) / dx).astype(int)
+    binCounts = {}
+        
+    for i,j in enumerate(dbins):
+        c = binCounts.get(j, -1) + 1
+        binCounts[j] = c
+        yvals[i] = c
+
+    if bidir is True:
+        for i in range(nbins):
+            yvals[dbins==i] -= binCounts.get(i, 0) * 0.5
+
+    return yvals[np.argsort(inds)]  ## un-shuffle values before returning
+
+
+def _pseudoScatterExact(data, spacing=None, shuffle=True, bidir=False):
+    """Works by stacking points up one at a time, searching for the lowest position available at each point.
+    
+    This method produces nice, smooth results but can be prohibitively slow for large datasets.
     """
     inds = np.arange(len(data))
     if shuffle:
@@ -2469,6 +2533,3 @@ class SignalBlock(object):
     def __exit__(self, *args):
         if self.reconnect:
             self.signal.connect(self.slot)
-
-
-

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys, re, os, time, traceback, subprocess
 import pickle
 
@@ -98,16 +99,20 @@ class ConsoleWidget(QtGui.QWidget):
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
         if self.historyFile is not None:
-            return pickle.load(open(self.historyFile, 'rb'))
+            with open(self.historyFile, 'rb') as pf:
+                return pickle.load(pf)
         
     def saveHistory(self, history):
         """Store the list of previously-invoked command strings."""
         if self.historyFile is not None:
-            pickle.dump(open(self.historyFile, 'wb'), history)
+            with open(self.historyFile, 'wb') as pf:
+                pickle.dump(pf, history)
         
     def runCmd(self, cmd):
-        self.stdout = sys.stdout
-        self.stderr = sys.stderr
+        #cmd = str(self.input.lastCmd)
+
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
         encCmd = re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', cmd))
         encCmd = re.sub(r' ', '&nbsp;', encCmd)
         
@@ -129,8 +134,8 @@ class ConsoleWidget(QtGui.QWidget):
                 self.write("</div>\n", html=True, scrollToBottom=True)
                 
         finally:
-            sys.stdout = self.stdout
-            sys.stderr = self.stderr
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
             
             sb = self.ui.historyList.verticalScrollBar()
             sb.setValue(sb.maximum())
@@ -175,7 +180,6 @@ class ConsoleWidget(QtGui.QWidget):
             self.displayException()
             
     def execMulti(self, nextLine):
-        #self.stdout.write(nextLine+"\n")
         if nextLine.strip() != '':
             self.multiline += "\n" + nextLine
             return
@@ -211,7 +215,7 @@ class ConsoleWidget(QtGui.QWidget):
         """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if not isGuiThread:
-            self.stdout.write(strn)
+            sys.__stdout__.write(strn)
             return
 
         sb = self.output.verticalScrollBar()
@@ -233,6 +237,11 @@ class ConsoleWidget(QtGui.QWidget):
             sb.setValue(sb.maximum())
         else:
             sb.setValue(scroll)
+
+    
+    def fileno(self):
+        # Need to implement this since we temporarily occlude sys.stdout, and someone may be looking for it (faulthandler, for example)
+        return 1
 
     def displayException(self):
         """
@@ -316,8 +325,8 @@ class ConsoleWidget(QtGui.QWidget):
         if editor is None:
             return
         tb = self.currentFrame()
-        lineNum = tb.tb_lineno
-        fileName = tb.tb_frame.f_code.co_filename
+        lineNum = tb.f_lineno
+        fileName = tb.f_code.co_filename
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
         
     def updateSysTrace(self):

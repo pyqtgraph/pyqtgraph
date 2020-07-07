@@ -73,7 +73,7 @@ How does it compare to...
   such as image interaction, volumetric rendering, parameter trees,
   flowcharts, etc.
 
-* pyqwt5: About as fast as pyqwt5, but not quite as complete for plotting
+* pyqwt5: About as fast as pyqtgraph, but not quite as complete for plotting
   functionality. Image handling in pyqtgraph is much more complete (again, no
   ROI widgets in qwt). Also, pyqtgraph is written in pure python, so it is
   more portable than pyqwt, which often lags behind pyqt in development (I
