@@ -249,7 +249,9 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                     glMatrixMode(GL_MODELVIEW)
                     glPopMatrix()
             
-    def setCameraPosition(self, distance=None, elevation=None, azimuth=None, rotation=None):
+    def setCameraPosition(self, pos=None, distance=None, elevation=None, azimuth=None, rotation=None):
+        if pos is not None:
+            self.opts['pos'] = pos
         if distance is not None:
             self.opts['distance'] = distance
 
