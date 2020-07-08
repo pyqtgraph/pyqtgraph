@@ -268,6 +268,8 @@ from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
+from .debug import *
+from .reload import *
 
 # indirect imports used within library
 from .GraphicsScene import GraphicsScene
