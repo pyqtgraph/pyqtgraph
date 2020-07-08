@@ -278,6 +278,7 @@ from .SignalProxy import *
 from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
+from .ThreadsafeTimer import *
 
 
 ##############################################################
