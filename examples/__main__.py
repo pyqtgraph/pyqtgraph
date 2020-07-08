@@ -25,12 +25,20 @@ else:
 class App(QtGui.QApplication):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(QtGui.QApplication, self).__init__(*args, **kwargs)
+        # if QT_LIB in ['PyQt5', 'PySide2']:
+            # qt4 does not have paletteChanged signal!
         self.paletteChanged.connect(self.onPaletteChange)
         self.onPaletteChange(self.palette())
 
     def onPaletteChange(self, palette):
-        self.dark_mode = palette.base().color().name().lower() != "#ffffff"
+        if QT_LIB in ['PyQt4', 'PySide']:
+            # Qt4 this is a QString
+            color = str(palette.base().color().name())
+        else:
+            # Qt5 has this as a str
+            color = palette.base().color.name()
+        self.dark_mode = color.lower() != "#ffffff"
 
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
@@ -46,7 +54,9 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtGui.QApplication.instance()
-        app.paletteChanged.connect(self.updateTheme)
+        if QT_LIB in ['PyQt5', 'PySide2']:
+            # Qt4 does not have a paletteChanged signal
+            app.paletteChanged.connect(self.updateTheme)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
