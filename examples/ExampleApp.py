@@ -1,17 +1,13 @@
 import os
 import sys
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, parent_dir)
-if __name__ == "__main__" and (__package__ is None or __package__==''):
-    import examples
-    __package__ = "examples"
-path = os.path.abspath(os.path.dirname(__file__))
 import subprocess
 import pyqtgraph as pg
 from pyqtgraph.python2_3 import basestring
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 from pyqtgraph.pgcollections import OrderedDict
 
+path = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, path)
 app = pg.mkQApp()
 
 if QT_LIB == 'PySide':
