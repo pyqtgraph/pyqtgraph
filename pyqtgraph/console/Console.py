@@ -447,7 +447,7 @@ class ConsoleWidget(QtGui.QWidget):
         filterStr = str(self.ui.filterText.text())
         if filterStr != '':
             if isinstance(exc, Exception):
-                msg = exc.message
+                msg = traceback.format_exception_only(type(exc), exc)
             elif isinstance(exc, basestring):
                 msg = exc
             else:
