@@ -34,9 +34,13 @@ py3 = sys.version_info >= (3,)
 
 
 def reloadAll(prefix=None, debug=False):
-    """Automatically reload everything whose __file__ begins with prefix.
-    - Skips reload if the file has not been updated (if .pyc is newer than .py)
-    - if prefix is None, checks all loaded modules
+    """Automatically reload all modules whose __file__ begins with *prefix*.
+
+    Skips reload if the file has not been updated (if .pyc is newer than .py)
+    If *prefix* is None, then all loaded modules are checked.
+
+    Returns a dictionary {moduleName: (reloaded, reason)} describing actions taken
+    for each module.
     """
     failed = []
     changed = []
