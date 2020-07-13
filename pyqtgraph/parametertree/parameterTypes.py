@@ -5,11 +5,11 @@ from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
 from ..colormap import ColorMap
-#from ..widgets.GradientWidget import GradientWidget ## creates import loop
 from .. import pixmaps as pixmaps
 from .. import functions as fn
 import os, sys
 from ..pgcollections import OrderedDict
+
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -348,8 +348,7 @@ class SimpleParameter(Parameter):
         if not isinstance(v, ColorMap):
             raise TypeError("Cannot set colormap parameter from object %r" % v)
         return v
-            
-        
+
     
 registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)
@@ -357,8 +356,6 @@ registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
 registerParameterType('colormap', SimpleParameter, override=True)
-
-
 
 
 class GroupParameterItem(ParameterItem):
@@ -463,7 +460,8 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.addItem(t)
         finally:
             self.addWidget.blockSignals(False)
-            
+
+
 class GroupParameter(Parameter):
     """
     Group parameters are used mainly as a generic parent item that holds (and groups!) a set
@@ -491,12 +489,8 @@ class GroupParameter(Parameter):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
 
-    
 
 registerParameterType('group', GroupParameter, override=True)
-
-
-
 
 
 class ListParameterItem(WidgetParameterItem):
@@ -507,7 +501,6 @@ class ListParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         self.targetValue = None
         WidgetParameterItem.__init__(self, param, depth)
-        
         
     def makeWidget(self):
         opts = self.param.opts
@@ -556,7 +549,6 @@ class ListParameterItem(WidgetParameterItem):
                     self.updateDisplayLabel()
         finally:
             self.widget.blockSignals(False)
-            
 
 
 class ListParameter(Parameter):
@@ -566,7 +558,7 @@ class ListParameter(Parameter):
         self.forward = OrderedDict()  ## {name: value, ...}
         self.reverse = ([], [])       ## ([value, ...], [name, ...])
         
-        ## Parameter uses 'limits' option to define the set of allowed values
+        # Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
             opts['limits'] = opts['values']
         if opts.get('limits', None) is None:
@@ -581,24 +573,9 @@ class ListParameter(Parameter):
         if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
             self.setValue(self.reverse[0][0])
             
-    #def addItem(self, name, value=None):
-        #if name in self.forward:
-            #raise Exception("Name '%s' is already in use for this parameter" % name)
-        #limits = self.opts['limits']
-        #if isinstance(limits, dict):
-            #limits = limits.copy()
-            #limits[name] = value
-            #self.setLimits(limits)
-        #else:
-            #if value is not None:
-                #raise Exception  ## raise exception or convert to dict?
-            #limits = limits[:]
-            #limits.append(name)
-        ## what if limits == None?
-            
     @staticmethod
     def mapping(limits):
-        ## Return forward and reverse mapping objects given a limit specification
+        # Return forward and reverse mapping objects given a limit specification
         forward = OrderedDict()  ## {name: value, ...}
         reverse = ([], [])       ## ([value, ...], [name, ...])
         if isinstance(limits, dict):
@@ -663,7 +640,6 @@ class ActionParameter(Parameter):
 registerParameterType('action', ActionParameter, override=True)
 
 
-
 class TextParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         WidgetParameterItem.__init__(self, param, depth)
@@ -698,7 +674,6 @@ class TextParameterItem(WidgetParameterItem):
 class TextParameter(Parameter):
     """Editable string; displayed as large text box in the tree."""
     itemClass = TextParameterItem
-
     
     
 registerParameterType('text', TextParameter, override=True)
