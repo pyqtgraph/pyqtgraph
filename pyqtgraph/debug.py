@@ -1151,7 +1151,22 @@ class ThreadTrace(object):
             for id, frame in sys._current_frames().items():
                 if id == threading.current_thread().ident:
                     continue
-                print("<< thread %d >>" % id)
+
+                # try to determine a thread name
+                try:
+                    name = threading._active.get(id, None)
+                except:
+                    name = None
+                if name is None:
+                    try:
+                        # QThread._names must be manually set by thread creators.
+                        name = QtCore.QThread._names.get(id)
+                    except:
+                        name = None
+                if name is None:
+                    name = "???"
+
+                print("<< thread %d \"%s\" >>" % (id, name))
                 traceback.print_stack(frame)
             print("===============================================\n")
             
