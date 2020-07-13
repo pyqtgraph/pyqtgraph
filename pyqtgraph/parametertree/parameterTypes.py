@@ -38,7 +38,6 @@ class WidgetParameterItem(ParameterItem):
         self.hideWidget = True  ## hide edit widget, replace with label when not selected
                                 ## set this to False to keep the editor widget always visible
         
-        
         ## build widget into column 1 with a display label and default button.
         w = self.makeWidget()  
         self.widget = w
@@ -162,8 +161,6 @@ class WidgetParameterItem(ParameterItem):
                 self.focusNext(forward=False)
                 return True ## don't let anyone else see this event
             
-        #elif ev.type() == ev.FocusOut:
-            #self.hideEditor()
         return False
         
     def setFocus(self):
@@ -272,7 +269,6 @@ class WidgetParameterItem(ParameterItem):
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
-        #print "opts changed:", opts
         ParameterItem.optsChanged(self, param, opts)
         
         if 'readonly' in opts:
@@ -349,7 +345,7 @@ class SimpleParameter(Parameter):
             raise TypeError("Cannot set colormap parameter from object %r" % v)
         return v
 
-    
+
 registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
@@ -385,7 +381,6 @@ class GroupParameterItem(ParameterItem):
             w.setLayout(l)
             l.addWidget(self.addWidget)
             l.addStretch()
-            #l.addItem(QtGui.QSpacerItem(200, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
             self.addWidgetBox = w
             self.addItem = QtGui.QTreeWidgetItem([])
             self.addItem.setFlags(QtCore.Qt.ItemIsEnabled)
