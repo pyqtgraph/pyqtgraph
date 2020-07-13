@@ -98,6 +98,19 @@ def check_interpolateArray(order):
 
     assert_array_almost_equal(r1, r2)
     
+def test_subArray():
+    a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
+    b = pg.subArray(a, offset=2, shape=(2,2,3), stride=(10,4,1))
+    c = np.array([[[111,112,113], [121,122,123]], [[211,212,213], [221,222,223]]])
+    assert np.all(b == c)
+    
+    # operate over first axis; broadcast over the rest
+    aa = np.vstack([a, a/100.]).T
+    cc = np.empty(c.shape + (2,))
+    cc[..., 0] = c
+    cc[..., 1] = c / 100.
+    bb = pg.subArray(aa, offset=2, shape=(2,2,3), stride=(10,4,1))
+    assert np.all(bb == cc)
     
 def test_subArray():
     a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
