@@ -62,11 +62,10 @@ def test_reload():
         v1 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, reload_test_mod.C.fn.__func__, c.sig, c.fn, c.fn.__func__)
 
 
-
     # write again and reload
     open(mod, 'w').write(code.format(path_repr=pgpath_repr, msg="C.fn() Version2"))
     remove_cache(mod)
-    pg.reload.reloadAll(path, debug=True)
+    result1 = pg.reload.reloadAll(path, debug=True)
     if py3:
         v2 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
     else:
@@ -90,7 +89,7 @@ def test_reload():
     # write again and reload
     open(mod, 'w').write(code.format(path_repr=pgpath_repr, msg="C.fn() Version2"))
     remove_cache(mod)
-    pg.reload.reloadAll(path, debug=True)
+    result2 = pg.reload.reloadAll(path, debug=True)
     if py3:
         v3 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
     else:
