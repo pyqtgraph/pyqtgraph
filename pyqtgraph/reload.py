@@ -46,26 +46,32 @@ def reloadAll(prefix=None, debug=False):
         if modName == '__main__':
             continue
         
-        ## Ignore if the file name does not start with prefix
+        # Ignore modules without a __file__ that is .py or .pyc
         if not hasattr(mod, '__file__') or mod.__file__ is None or os.path.splitext(mod.__file__)[1] not in ['.py', '.pyc']:
             continue
+
+        # Ignore if the file name does not start with prefix
         if prefix is not None and mod.__file__[:len(prefix)] != prefix:
             continue
         
-        ## ignore if the .pyc is newer than the .py (or if there is no pyc or py)
         py = os.path.splitext(mod.__file__)[0] + '.py'
-        pyc = py + 'c'
-        if py not in changed and os.path.isfile(pyc) and os.path.isfile(py) and os.stat(pyc).st_mtime >= os.stat(py).st_mtime:
-            #if debug:
-                #print "Ignoring module %s; unchanged" % str(mod)
+        if not os.path.isfile(py):
+            # skip modules that lie about their __file__
             continue
-        changed.append(py)  ## keep track of which modules have changed to insure that duplicate-import modules get reloaded.
+
+        # if source file is newer than cache file, then it needs to be reloaded.
+        pyc = getattr(mod, '__cached__', py + 'c')
+        if not os.path.isfile(pyc):
+            continue
         
-        try:
-            reload(mod, debug=debug)
-        except:
-            printExc("Error while reloading module %s, skipping\n" % mod)
-            failed.append(mod.__name__)
+        if py not in changed and os.stat(pyc).st_mtime < os.stat(py).st_mtime:
+            changed.append(py)  ## keep track of which modules have changed to insure that duplicate-import modules get reloaded.
+
+            try:
+                reload(mod, debug=debug)
+            except:
+                printExc("Error while reloading module %s, skipping\n" % mod)
+                failed.append(mod.__name__)
         
     if len(failed) > 0:
         raise Exception("Some modules failed to reload: %s" % ', '.join(failed))
