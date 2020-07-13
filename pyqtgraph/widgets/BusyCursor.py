@@ -31,4 +31,5 @@ class BusyCursor(object):
     def __exit__(self, *args):
         if self._active:
             BusyCursor.active.pop(-1)
-            QtGui.QApplication.restoreOverrideCursor()
+            if len(BusyCursor.active) == 0:
+                QtGui.QApplication.restoreOverrideCursor()
