@@ -367,10 +367,10 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     indh = ind % hues
     indv = ind // hues
     if values > 1:
-        v = minValue + indv * ((maxValue-minValue) / (values-1))
+        v = minValue + indv * ((maxValue-minValue) // (values-1))
     else:
         v = maxValue
-    h = minHue + (indh * (maxHue-minHue)) / hues
+    h = minHue + (indh * (maxHue-minHue)) // hues
     
     c = QtGui.QColor()
     c.setHsv(h, sat, v)
