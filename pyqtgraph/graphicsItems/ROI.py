@@ -2003,7 +2003,8 @@ class PolyLineROI(ROI):
         self.setPoints(state['points'], closed=state['closed'])
         
     def addSegment(self, h1, h2, index=None):
-        seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, parent=self, movable=False)
+        seg = _PolyLineSegment(handles=(h1, h2), pen=self.pen, hoverPen=self.hoverPen,
+                               parent=self, movable=False)
         if index is None:
             self.segments.append(seg)
         else:
@@ -2244,7 +2245,7 @@ class _PolyLineSegment(LineSegmentROI):
         
     def _makePen(self):
         if self.mouseHovering or self._parentHovering:
-            return fn.mkPen(255, 255, 0)
+            return self.hoverPen
         else:
             return self.pen
         
