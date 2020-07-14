@@ -32,6 +32,9 @@ p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)
 
+targetItem = pg.TargetItem()
+p1.addItem(targetItem)
+
 # Add a linear region with a label
 lr = pg.LinearRegionItem(values=[70, 80])
 p1.addItem(lr)

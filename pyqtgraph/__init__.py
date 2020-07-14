@@ -234,7 +234,8 @@ from .graphicsItems.LinearRegionItem import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.TargetItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.ScatterPlotWidget import * 
