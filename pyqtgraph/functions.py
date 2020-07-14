@@ -1486,11 +1486,11 @@ def arrayToQPath(x, y, connect='all'):
     if eq(connect, 'finite'):
         # convert connect='finite' to connect=ndarray
         msk = np.isfinite(x) & np.isfinite(y)
-        connect = np.ones(len(msk)+1, dtype=bool)
-        connect[np.where(~msk)[0] + 1] = 0
+        connect = np.zeros(len(msk)+1, dtype=bool)
+        connect[1:] = msk
+        connect = connect[:-1][msk]
         x = x[msk]
         y = y[msk]
-        connect = connect[0:-1][msk]
 
     #profiler = debug.Profiler()
     n = x.shape[0]
