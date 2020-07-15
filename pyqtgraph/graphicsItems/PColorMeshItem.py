@@ -28,15 +28,16 @@ class PColorMeshItem(GraphicsObject):
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
 
-    def __init__(self, *args, cmap='viridis', edgecolors=None):
+    def __init__(self, *args, **kwargs):
         """
         Create a pseudocolor plot with convex polygons.
 
         Call signature:
 
-        pcolor([x, y,] c, **kwargs)
+        PColorMeshItem([x, y,] z, **kwargs)
 
-        x and Y can be used to specify the corners of the quadrilaterals.
+        x and y can be used to specify the corners of the quadrilaterals.
+        z must be used to specified to color of the quadrilaterals.
 
         Parameters
         ----------
@@ -70,11 +71,18 @@ class PColorMeshItem(GraphicsObject):
         
         self.axisOrder = getConfigOption('imageAxisOrder')
 
-        self.edgecolors = edgecolors
-        if cmap in Gradients.keys():
-            self.cmap = cmap
+        if 'edgecolors' in kwargs.keys():
+            self.edgecolors = kwargs['edgecolors']
         else:
-            raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
+            self.edgecolors = None
+        
+        if 'cmap' in kwargs.keys():
+            if kwargs['cmap'] in Gradients.keys():
+                self.cmap = kwargs['cmap']
+            else:
+                raise NameError('Undefined colormap, should be one of the following: '+', '.join(['"'+i+'"' for i in Gradients.keys()])+'.')
+        else:
+            self.cmap = 'viridis'
         
         # If some data have been sent we directly display it
         if len(args)>0:
