@@ -78,8 +78,11 @@ def reloadAll(prefix=None, debug=False):
 
         # if source file is newer than cache file, then it needs to be reloaded.
         pyc = getattr(mod, '__cached__', py + 'c')
-        
-        if os.path.isfile(pyc) and os.stat(pyc).st_mtime < os.stat(py).st_mtime:
+        if not os.path.isfile(pyc):
+            ret[modName] = (False, 'code has no pyc file to compare')
+            continue
+
+        if os.stat(pyc).st_mtime > os.stat(py).st_mtime:
             ret[modName] = (False, 'code has not changed since compile')
             continue
 
