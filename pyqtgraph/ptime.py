@@ -20,8 +20,7 @@ time = None
 
 def winTime():
     """Return the current time in seconds with high precision (windows version, use Manager.time() to stay platform independent)."""
-    return clock() - START_TIME
-    #return systime.time()
+    return clock() + START_TIME
 
 def unixTime():
     """Return the current time in seconds with high precision (unix version, use Manager.time() to stay platform independent)."""
