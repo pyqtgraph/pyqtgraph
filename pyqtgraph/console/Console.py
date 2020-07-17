@@ -166,15 +166,20 @@ class ConsoleWidget(QtGui.QWidget):
         try:
             output = eval(cmd, self.globals(), self.locals())
             self.write(repr(output) + '\n')
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-            except:
+            pass
+        except:
+            self.displayException()
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
         except:
             self.displayException()
@@ -190,22 +195,28 @@ class ConsoleWidget(QtGui.QWidget):
             output = eval(cmd, self.globals(), self.locals())
             self.write(str(output) + '\n')
             self.multiline = None
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-                self.multiline = None
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-                    self.multiline = None
-            except:
+            pass
+        except:
+            self.displayException()
+            self.multiline = None
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+            self.multiline = None
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
                 self.multiline = None
         except:
             self.displayException()
             self.multiline = None
+
 
     def write(self, strn, html=False, scrollToBottom='auto'):
         """Write a string into the console.
