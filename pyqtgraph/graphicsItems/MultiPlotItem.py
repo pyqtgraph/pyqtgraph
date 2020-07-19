@@ -4,8 +4,8 @@ MultiPlotItem.py -  Graphics item used for displaying an array of PlotItems
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-
 from numpy import ndarray
+from ..Qt import QtGui
 from . import GraphicsLayout
 from ..metaarray import *
 
@@ -18,10 +18,20 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     def __init__(self, *args, **kwds):
         GraphicsLayout.GraphicsLayout.__init__(self, *args, **kwds)
         self.plots = []
-        
 
-    def plot(self, data):
+
+    def plot(self, data, **kwargs):
         #self.layout.clear()
+        # extra plot parameters
+        extra_params = {}
+
+        # if 'pen' provided, add it as an extra param
+        if 'pen' in kwargs:
+            pen = kwargs['pen']
+            if not isinstance(pen, QtGui.QPen):
+                raise TypeError("Keyword argument 'pen' must be an instance of QtGui.QPen")
+            extra_params['pen'] = pen
+
 
         if hasattr(data, 'implements') and data.implements('MetaArray'):
             if data.ndim != 2:
@@ -38,7 +48,7 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
                 self.nextRow()
                 sl = [slice(None)] * 2
                 sl[ax] = i
-                pi.plot(data[tuple(sl)])
+                pi.plot(data[tuple(sl)], **extra_params)
                 #self.layout.addItem(pi, i, 0)
                 self.plots.append((pi, i, 0))
                 info = ic[ax]['cols'][i]
