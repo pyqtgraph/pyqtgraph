@@ -23,14 +23,14 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     def plot(self, data, **kwargs):
         #self.layout.clear()
         # extra plot parameters
-        extra_params = {}
+        extraParams = {}
 
         # if 'pen' provided, add it as an extra param
         if 'pen' in kwargs:
             pen = kwargs['pen']
             if not isinstance(pen, QtGui.QPen):
                 raise TypeError("Keyword argument 'pen' must be an instance of QtGui.QPen")
-            extra_params['pen'] = pen
+            extraParams['pen'] = pen
 
 
         if hasattr(data, 'implements') and data.implements('MetaArray'):
@@ -48,7 +48,7 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
                 self.nextRow()
                 sl = [slice(None)] * 2
                 sl[ax] = i
-                pi.plot(data[tuple(sl)], **extra_params)
+                pi.plot(data[tuple(sl)], **extraParams)
                 #self.layout.addItem(pi, i, 0)
                 self.plots.append((pi, i, 0))
                 info = ic[ax]['cols'][i]
