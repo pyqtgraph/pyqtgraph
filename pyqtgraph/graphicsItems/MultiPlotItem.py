@@ -4,22 +4,33 @@ MultiPlotItem.py -  Graphics item used for displaying an array of PlotItems
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-from numpy import ndarray
 from . import GraphicsLayout
 from ..metaarray import *
 
-
 __all__ = ['MultiPlotItem']
+
+
 class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     """
-    Automatically generates a grid of plots from a multi-dimensional array
+    :class:`~pyqtgraph.GraphicsLayout` that automatically generates a grid of
+    plots from a MetaArray.
+
+    .. seealso:: :class:`~pyqtgraph.MultiPlotWidget`: Widget containing a MultiPlotItem
     """
+
     def __init__(self, *args, **kwds):
         GraphicsLayout.GraphicsLayout.__init__(self, *args, **kwds)
         self.plots = []
 
-
     def plot(self, data, **plotArgs):
+        """Plot the data from a MetaArray with each array column as a separate
+        :class:`~pyqtgraph.PlotItem`.
+
+        Axis labels are automatically extracted from the array info.
+
+        ``plotArgs`` are passed to :meth:`PlotItem.plot
+        <pyqtgraph.PlotItem.plot>`.
+        """
         #self.layout.clear()
 
         if hasattr(data, 'implements') and data.implements('MetaArray'):
