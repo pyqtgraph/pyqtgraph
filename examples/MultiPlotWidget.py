@@ -30,7 +30,7 @@ ma = MetaArray(data, info=[
         ]}, 
     {'name': 'Time', 'values': linspace(0., 1., 1000), 'units': 's'}
     ])
-pw.plot(ma)
+pw.plot(ma, pen='y')
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':

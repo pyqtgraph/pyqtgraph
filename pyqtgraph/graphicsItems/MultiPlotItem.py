@@ -4,7 +4,6 @@ MultiPlotItem.py -  Graphics item used for displaying an array of PlotItems
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-
 from numpy import ndarray
 from . import GraphicsLayout
 from ..metaarray import *
@@ -18,9 +17,9 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
     def __init__(self, *args, **kwds):
         GraphicsLayout.GraphicsLayout.__init__(self, *args, **kwds)
         self.plots = []
-        
 
-    def plot(self, data):
+
+    def plot(self, data, **plotArgs):
         #self.layout.clear()
 
         if hasattr(data, 'implements') and data.implements('MetaArray'):
@@ -38,7 +37,7 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
                 self.nextRow()
                 sl = [slice(None)] * 2
                 sl[ax] = i
-                pi.plot(data[tuple(sl)])
+                pi.plot(data[tuple(sl)], **plotArgs)
                 #self.layout.addItem(pi, i, 0)
                 self.plots.append((pi, i, 0))
                 info = ic[ax]['cols'][i]
@@ -57,6 +56,3 @@ class MultiPlotItem(GraphicsLayout.GraphicsLayout):
             p[0].close()
         self.plots = None
         self.clear()
-
-
-
