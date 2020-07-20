@@ -157,7 +157,7 @@ class AxisItem(GraphicsWidget):
                             the alpha will be fixed at the value passed.  With int, 
                             accepted values are [0..255].  With vaule of type
                             float, accepted values are from [0..1].
-        nudge               (int) sets the axis label offset (default to 5).
+        nudge               (int|float) sets the axis label offset (default to 5).
         =================== =======================================================
 
         Added in version 0.9.9
@@ -166,9 +166,13 @@ class AxisItem(GraphicsWidget):
             if kwd not in self.style:
                 raise NameError("%s is not a valid style argument." % kwd)
 
-            if kwd in ('tickLength', 'tickTextOffset', 'tickTextWidth', 'tickTextHeight', 'nudge'):
+            if kwd in ('tickLength', 'tickTextOffset', 'tickTextWidth', 'tickTextHeight'):
                 if not isinstance(value, int):
                     raise ValueError("Argument '%s' must be int" % kwd)
+
+            if kwd == 'nudge':
+                if not isinstance(value, (int, float)):
+                    raise ValueError("Argument '%s' must be int or float" % kwd)
 
             if kwd == 'tickTextOffset':
                 if self.orientation in ('left', 'right'):

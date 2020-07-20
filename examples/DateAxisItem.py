@@ -17,7 +17,7 @@ app = QtGui.QApplication([])
 # Create a plot with a date-time axis
 bax = pg.DateAxisItem()
 bax.setLabel('Usage of DateAxisItem')
-bax.setStyle(nudge=6)
+bax.setStyle(nudge=5.45)
 w = pg.PlotWidget(axisItems={'bottom': bax})
 w.showGrid(x=True, y=True)
 
