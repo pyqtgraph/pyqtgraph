@@ -15,7 +15,10 @@ from pyqtgraph.Qt import QtGui
 app = QtGui.QApplication([])
 
 # Create a plot with a date-time axis
-w = pg.PlotWidget(axisItems = {'bottom': pg.DateAxisItem()})
+bax = pg.DateAxisItem()
+bax.setLabel('Usage of DateAxisItem')
+bax.setStyle(nudge=6)
+w = pg.PlotWidget(axisItems={'bottom': bax})
 w.showGrid(x=True, y=True)
 
 # Plot sin(1/x^2) with timestamps in the last 100 years

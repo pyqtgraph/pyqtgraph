@@ -70,6 +70,7 @@ class AxisItem(GraphicsWidget):
             'maxTickLevel': 2,
             'maxTextLevel': 2,
             'tickAlpha': None,  ## If not none, use this alpha for all ticks.
+            'nudge': 5 ## axis label offset
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -156,6 +157,7 @@ class AxisItem(GraphicsWidget):
                             the alpha will be fixed at the value passed.  With int, 
                             accepted values are [0..255].  With vaule of type
                             float, accepted values are from [0..1].
+        nudge               (int) sets the axis label offset (default to 5).
         =================== =======================================================
 
         Added in version 0.9.9
@@ -164,7 +166,7 @@ class AxisItem(GraphicsWidget):
             if kwd not in self.style:
                 raise NameError("%s is not a valid style argument." % kwd)
 
-            if kwd in ('tickLength', 'tickTextOffset', 'tickTextWidth', 'tickTextHeight'):
+            if kwd in ('tickLength', 'tickTextOffset', 'tickTextWidth', 'tickTextHeight', 'nudge'):
                 if not isinstance(value, int):
                     raise ValueError("Argument '%s' must be int" % kwd)
 
@@ -228,7 +230,7 @@ class AxisItem(GraphicsWidget):
         #s = self.size()
 
         ## Set the position of the label
-        nudge = 5
+        nudge = self.style['nudge']
         br = self.label.boundingRect()
         p = QtCore.QPointF(0, 0)
         if self.orientation == 'left':
