@@ -197,11 +197,15 @@ class PColorMeshItem(GraphicsObject):
                 c = lut[norm[xi][yi]]
                 p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
 
+                polygon = QtGui.QPolygonF(
+                    [QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
+                     QtCore.QPointF(self.x[xi+1][yi],   self.y[xi+1][yi]),
+                     QtCore.QPointF(self.x[xi+1][yi+1], self.y[xi+1][yi+1]),
+                     QtCore.QPointF(self.x[xi][yi+1],   self.y[xi][yi+1])]
+                )
+
                 # DrawConvexPlygon is faster
-                p.drawConvexPolygon(QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
-                                    QtCore.QPointF(self.x[xi+1][yi],   self.y[xi+1][yi]),
-                                    QtCore.QPointF(self.x[xi+1][yi+1], self.y[xi+1][yi+1]),
-                                    QtCore.QPointF(self.x[xi][yi+1],   self.y[xi][yi+1]))
+                p.drawConvexPolygon(polygon)
 
 
         p.end()
