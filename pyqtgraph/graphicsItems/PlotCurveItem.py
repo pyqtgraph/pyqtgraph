@@ -16,8 +16,6 @@ from .. import debug
 
 __all__ = ['PlotCurveItem']
 class PlotCurveItem(GraphicsObject):
-
-
     """
     Class representing a single plot curve. Instances of this class are created
     automatically as part of PlotDataItem; these rarely need to be instantiated
@@ -389,23 +387,20 @@ class PlotCurveItem(GraphicsObject):
         self._mouseShape = None
         #self.xDisp = self.yDisp = None
 
-        if kargs.get("name") is not None:
+        if 'name' in kargs:
             self.opts['name'] = kargs['name']
-        if kargs.get("connect") is not None:
+        if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
-        if kargs.get("pen") is not None:
+        if 'pen' in kargs:
             self.setPen(kargs['pen'])
-        if kargs.get("shadowPen") is not None:
+        if 'shadowPen' in kargs and kargs['shadowPen'] is not None:
             self.setShadowPen(kargs['shadowPen'])
-        if kargs.get("fillLevel") is not None:
+        if 'fillLevel' in kargs and kargs['fillLevel'] is not None:
             self.setFillLevel(kargs['fillLevel'])
-        if kargs.get("brush") is not None:
+        if 'brush' in kargs and kargs['brush'] is not None:
             self.setBrush(kargs['brush'])
-        if kargs.get("fillOutline") is not None:
-            self.opts['fillOutline'] = kargs['fillOutline']
-        if kargs.get("antialias") is not None:
+        if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
-
 
         profiler('set')
         self.update()
@@ -491,17 +486,6 @@ class PlotCurveItem(GraphicsObject):
             p.fillPath(self.fillPath, self.opts['brush'])
             profiler('draw fill path')
 
-        ## Copy pens and apply alpha adjustment
-        #sp = QtGui.QPen(self.opts['shadowPen'])
-        #cp = QtGui.QPen(self.opts['pen'])
-        #for pen in [sp, cp]:
-            #if pen is None:
-                #continue
-            #c = pen.color()
-            #c.setAlpha(c.alpha() * self.opts['alphaHint'])
-            #pen.setColor(c)
-            ##pen.setCosmetic(True)
-
         # Avoid constructing a shadow pen if it's not used.
         if self.opts.get('shadowPen') is not None:
             if isinstance(self.opts.get('shadowPen'), QtGui.QPen):
@@ -513,10 +497,6 @@ class PlotCurveItem(GraphicsObject):
                 p.setPen(sp)
                 p.drawPath(path)
 
-        # Avoid pointless call to mkPen if we already have a pen
-        # (I'm not sure why this mkPen call was added, it was a recent addition.
-        # Unless someone is manually manipulating self.opts from outside the class,
-        # there should be no way to set opts['pen'] to anything that's not a QPen)
         if isinstance(self.opts.get('pen'), QtGui.QPen):
             cp = self.opts['pen']
         else:
@@ -525,10 +505,6 @@ class PlotCurveItem(GraphicsObject):
         p.setPen(cp)
         p.drawPath(path)
         profiler('drawPath')
-
-        #print "Render hints:", int(p.renderHints())
-        #p.setPen(QtGui.QPen(QtGui.QColor(255,0,0)))
-        #p.drawRect(self.boundingRect())
 
     def paintGL(self, p, opt, widget):
         p.beginNativePainting()
