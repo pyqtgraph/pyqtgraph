@@ -83,6 +83,20 @@ stages:
     - publish: dist
       artifact: wheel
 
+  - job: "build_docs"
+    pool:
+      vmImage: 'Ubuntu 18.04'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+    - script: |
+        cd doc
+        python -m pip install -r requirements.txt
+        make html
+      displayName: "Build docs"
+      continueOnError: true
+
 - stage: "test"
   jobs:
   - template: azure-test-template.yml
