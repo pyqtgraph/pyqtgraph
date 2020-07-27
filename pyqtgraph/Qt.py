@@ -320,7 +320,10 @@ if QT_LIB in [PYSIDE, PYSIDE2]:
 if QT_LIB in [PYQT4, PYQT5]:
     QtVersion = QtCore.QT_VERSION_STR
     
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)
     

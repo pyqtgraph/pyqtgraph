@@ -1083,7 +1083,10 @@ def listQThreads():
     """Prints Thread IDs (Qt's, not OS's) for all QThreads."""
     thr = findObj('[Tt]hread')
     thr = [t for t in thr if isinstance(t, QtCore.QThread)]
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
     for t in thr:
         print("--> ", t)
         print("     Qt ID: 0x%x" % sip.unwrapinstance(t))

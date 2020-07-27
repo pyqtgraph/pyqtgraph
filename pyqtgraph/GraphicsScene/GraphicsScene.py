@@ -16,7 +16,10 @@ getMillis = lambda: int(round(time.time() * 1000))
 
 if hasattr(QtCore, 'PYQT_VERSION'):
     try:
-        import sip
+        try:
+            from PyQt5 import sip
+        except ImportError:
+            import sip
         HAVE_SIP = True
     except ImportError:
         HAVE_SIP = False
