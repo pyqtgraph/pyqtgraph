@@ -17,7 +17,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
+        QtGui.QGraphicsPathItem.__init__(self, opts.pop('parent', None))
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
