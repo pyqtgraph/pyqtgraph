@@ -21,7 +21,7 @@ class AxisItem(GraphicsWidget):
 
     def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
-        ==============  ===============================================================
+        =============== ===============================================================
         **Arguments:**
         orientation     one of 'left', 'right', 'top', or 'bottom'
         maxTickLength   (px) maximum length of ticks to draw. Negative values draw
