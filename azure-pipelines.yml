@@ -93,7 +93,7 @@ stages:
     - script: |
         cd doc
         python -m pip install -r requirements.txt
-        make html
+        make html SPHINXOPTS='-W -v'
       displayName: "Build docs"
       continueOnError: true
 
