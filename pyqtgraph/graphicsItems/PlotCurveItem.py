@@ -162,6 +162,8 @@ class PlotCurveItem(GraphicsObject):
             # include a percentile of data range
             mask = np.isfinite(d)
             d = d[mask]
+            if len(d) == 0:
+                return (None, None)
             b = np.percentile(d, [50 * (1 - frac), 50 * (1 + frac)])
 
         ## adjust for fill level
@@ -194,8 +196,10 @@ class PlotCurveItem(GraphicsObject):
     def boundingRect(self):
         if self._boundingRect is None:
             (xmn, xmx) = self.dataBounds(ax=0)
+            if xmn is None or xmx is None:
+                return QtCore.QRectF()
             (ymn, ymx) = self.dataBounds(ax=1)
-            if xmn is None or ymn is None:
+            if ymn is None or ymx is None:
                 return QtCore.QRectF()
 
             px = py = 0.0
