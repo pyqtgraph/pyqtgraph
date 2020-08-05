@@ -26,22 +26,22 @@ class Vector(QtGui.QVector3D):
              * 1 QPointF (`0` assumed for z)
              * Any other valid QVector3D init args.
         """
-        init_args = args
+        initArgs = args
         if len(args) == 1:
             if isinstance(args[0], QtCore.QSizeF):
-                init_args = (float(args[0].width()), float(args[0].height()), 0)
+                initArgs = (float(args[0].width()), float(args[0].height()), 0)
             elif isinstance(args[0], QtCore.QPoint) or isinstance(args[0], QtCore.QPointF):
-                init_args = (float(args[0].x()), float(args[0].y()), 0)
+                initArgs = (float(args[0].x()), float(args[0].y()), 0)
             elif hasattr(args[0], '__getitem__') and not isinstance(args[0], QtGui.QVector3D):
                 vals = list(args[0])
                 if len(vals) == 2:
                     vals.append(0)
                 if len(vals) != 3:
                     raise Exception('Cannot init Vector with sequence of length %d' % len(args[0]))
-                init_args = vals
+                initArgs = vals
         elif len(args) == 2:
-            init_args = (args[0], args[1], 0)
-        QtGui.QVector3D.__init__(self, *init_args)
+            initArgs = (args[0], args[1], 0)
+        QtGui.QVector3D.__init__(self, *initArgs)
 
     def __len__(self):
         return 3
