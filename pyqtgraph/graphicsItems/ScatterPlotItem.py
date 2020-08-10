@@ -835,11 +835,14 @@ class ScatterPlotItem(GraphicsObject):
             else:
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
+                
+                vb = self.getViewBox()
+                offset = vb.parentItem().pos() if vb.parentItem() else vb.pos()
 
                 pts = pts[:,viewMask]
                 for i, rec in enumerate(data[viewMask]):
                     p.resetTransform()
-                    p.translate(pts[0,i] + rec['width']/2, pts[1,i] + rec['width']/2)
+                    p.translate(pts[0,i] + rec['width'], pts[1,i] + rec['width'])
                     drawSymbol(p, *self.getSpotOpts(rec, scale))
         else:
             if self.picture is None:
