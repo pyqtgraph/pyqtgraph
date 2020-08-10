@@ -15,16 +15,17 @@ class Vector(QtGui.QVector3D):
         """
         Handle additional constructions of a Vector
 
-        Parameters
-        ----------
-        args
-            Could be any of:
-             * 3 numerics
-             * 2 numerics (`0` assumed for z)
-             * Either of the previous in a list-like collection
-             * 1 QSizeF (`0` assumed for z)
-             * 1 QPointF (`0` assumed for z)
-             * Any other valid QVector3D init args.
+        ==============  ================================================================================================
+        **Arguments:**
+        *args*      Could be any of:
+                     * 3 numerics
+                     * 2 numerics (`0` assumed for z)
+                     * Either of the previous in a list-like collection
+                     * 1 QSizeF (`0` assumed for z)
+                     * 1 QPointF (`0` assumed for z)
+                     * Any other valid QVector3D init args.
+        ----------------------------------------------------------------------------------------------------------------
+        ==============  ================================================================================================
         """
         initArgs = args
         if len(args) == 1:
