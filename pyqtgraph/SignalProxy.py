@@ -84,8 +84,8 @@ class SignalProxy(QtCore.QObject):
             self.sigDelayed.disconnect(self.slot)
         except:
             pass
-   
-    def block(self):
+
+    def signalBlockingContext(self):
         """Return a SignalBlocker that temporarily blocks input signals to this proxy.
         """
         return SignalBlock(self.signal, self.signalReceived)
