@@ -11,13 +11,13 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     """
     
     
-    def __init__(self, **opts):
+    def __init__(self, parent=None, **opts):
         """
         Arrows can be initialized with any keyword arguments accepted by 
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, opts.pop('parent', None))
+        QtGui.QGraphicsPathItem.__init__(self, parent)
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
