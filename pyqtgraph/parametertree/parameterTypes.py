@@ -605,6 +605,7 @@ class ActionParameterItem(ParameterItem):
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
+        self.ignoreNameColumnChange = True ## the name for action items is displayed on the button, not in the column
         param.sigNameChanged.connect(self.paramRenamed)
         self.setText(0, '')
         
