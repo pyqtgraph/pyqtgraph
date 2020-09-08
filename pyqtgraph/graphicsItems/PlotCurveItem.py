@@ -315,9 +315,14 @@ class PlotCurveItem(GraphicsObject):
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
-        stepMode        If True, two orthogonal lines are drawn for each sample
-                        as steps. This is commonly used when drawing histograms.
-                        Note that in this case, len(x) == len(y) + 1
+        stepMode        If True, a step is drawn using the x values as
+                        boundaries and the y value is assumed to be at the mid
+                        point of the boundaries. This is commonly used when
+                        drawing histograms. Note that in this case,
+                        len(x) == len(y) + 1.
+                        If "lstep" or "rstep", the step is drawn assuming that
+                        the y value is associated to the left or right boundary,
+                        respectively. In this case len(x) == len(y)
         connect         Argument specifying how vertexes should be connected
                         by line segments. Default is "all", indicating full
                         connection. "pairs" causes only even-numbered segments
@@ -415,8 +420,17 @@ class PlotCurveItem(GraphicsObject):
     def generatePath(self, x, y):
         if self.opts['stepMode']:
             ## each value in the x/y arrays generates 2 points.
-            x2 = np.empty((len(x),2), dtype=x.dtype)
-            x2[:] = x[:,np.newaxis]
+            if self.opts['stepMode'] == "rstep":
+                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+                x2[:-1] = x[:, np.newaxis]
+                x2[-1] = x2[-2]
+            elif self.opts['stepMode'] == "lstep":
+                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+                x2[1:] = x[:, np.newaxis]
+                x2[0] = x2[1]
+            else:
+                x2 = np.empty((len(x),2), dtype=x.dtype)
+                x2[:] = x[:, np.newaxis]
             if self.opts['fillLevel'] is None:
                 x = x2.reshape(x2.size)[1:-1]
                 y2 = np.empty((len(y),2), dtype=y.dtype)
