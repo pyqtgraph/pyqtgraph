@@ -628,6 +628,7 @@ class NodeGraphicsItem(GraphicsObject):
         return self.menu
     
     def raiseContextMenu(self, ev):
+        self.buildMenu()  # rebuild the menu, to avoid duplicate items
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))
