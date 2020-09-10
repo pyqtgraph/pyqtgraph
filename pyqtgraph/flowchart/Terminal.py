@@ -352,6 +352,7 @@ class TerminalGraphicsItem(GraphicsObject):
             
     def raiseContextMenu(self, ev):
         ## only raise menu if this terminal is removable
+        self.menu = None  # Prevent duplicated items
         menu = self.getMenu()
         menu = self.scene().addParentContextMenus(self, menu, ev)
         pos = ev.screenPos()
