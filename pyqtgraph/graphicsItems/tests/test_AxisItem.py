@@ -122,24 +122,3 @@ def test_AxisItem_label_visibility():
     assert axis.labelText == ''
     assert axis.labelUnits == ''
     assert not axis.label.isVisible()
-
-    axis.setLabel(text='Visible')
-    assert axis.label.isVisible()
-    assert axis.labelText == 'Visible'
-    assert axis.labelUnits == ''
-
-    axis.setLabel(text='')
-    assert not axis.label.isVisible()
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
-
-    axis.setLabel(units='m')
-    assert axis.label.isVisible()
-    assert axis.labelText == ''
-    assert axis.labelUnits == 'm'
-
-    axis.setLabel(units='')
-    assert not axis.label.isVisible()
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
-    assert not axis.label.isVisible()
