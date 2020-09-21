@@ -325,7 +325,7 @@ class PlotItem(GraphicsWidget):
             if k in axisItems:
                 axis = axisItems[k]
                 if axis.scene() is not None:
-                    if self.axes.get(k) is None or axis != self.axes[k]["item"]:
+                    if k not in self.axes or axis != self.axes[k]["item"]:
                         raise RuntimeError(
                             "Can't add an axis to multiple plots. Shared axes"
                             " can be achieved with multiple AxisItem instances"
