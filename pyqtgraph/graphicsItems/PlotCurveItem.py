@@ -320,7 +320,7 @@ class PlotCurveItem(GraphicsObject):
                         point of the boundaries. This is commonly used when
                         drawing histograms. Note that in this case,
                         len(x) == len(y) + 1.
-                        If "lstep" or "rstep", the step is drawn assuming that
+                        If "left" or "right", the step is drawn assuming that
                         the y value is associated to the left or right boundary,
                         respectively. In this case len(x) == len(y)
         connect         Argument specifying how vertexes should be connected
@@ -420,11 +420,11 @@ class PlotCurveItem(GraphicsObject):
     def generatePath(self, x, y):
         if self.opts['stepMode']:
             ## each value in the x/y arrays generates 2 points.
-            if self.opts['stepMode'] == "rstep":
+            if self.opts['stepMode'] == "right":
                 x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
                 x2[:-1] = x[:, np.newaxis]
                 x2[-1] = x2[-2]
-            elif self.opts['stepMode'] == "lstep":
+            elif self.opts['stepMode'] == "left":
                 x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
                 x2[1:] = x[:, np.newaxis]
                 x2[0] = x2[1]
