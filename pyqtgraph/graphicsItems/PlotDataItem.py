@@ -526,7 +526,7 @@ class PlotDataItem(GraphicsObject):
             self.curve.hide()
         
         if scatterArgs['symbol'] is not None:
-            
+            ## use mid points only when stepMode **is** True (strictly)
             if self.opts.get('stepMode', False) is True:
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)

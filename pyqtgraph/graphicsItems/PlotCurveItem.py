@@ -384,10 +384,10 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] is True:
+        if self.opts['stepMode'] is True:   ## if mode strictly **is** True
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
-        else:
+        else:  ## mode may be `False` or `left` or `right`
             if self.xData.shape != self.yData.shape:  ## allow difference of 1 for step mode plots
                 raise Exception("X and Y arrays must be the same shape--got %s and %s." % (self.xData.shape, self.yData.shape))
 
