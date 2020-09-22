@@ -85,6 +85,7 @@ class PlotDataItem(GraphicsObject):
                          the y value is associated to the left or right boundary,
                          respectively. In this case len(x) == len(y)
                          (added in version 0.9.9)
+                         ("left" and "right" modes added in version 0.12.0)
             ============ ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
