@@ -76,9 +76,14 @@ class PlotDataItem(GraphicsObject):
             fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
             fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            stepMode     If True, two orthogonal lines are drawn for each sample
-                         as steps. This is commonly used when drawing histograms.
-                         Note that in this case, ``len(x) == len(y) + 1``
+            stepMode     If True, a step is drawn using the x values as
+                         boundaries and the given y values are associated to the
+                         mid-points between the boundaries of each step.
+                         This is commonly used when drawing histograms. Note that
+                         in this case, len(x) == len(y) + 1.
+                         If "left" or "right", the step is drawn assuming that
+                         the y value is associated to the left or right boundary,
+                         respectively. In this case len(x) == len(y)
                          (added in version 0.9.9)
             ============ ==============================================================================
         

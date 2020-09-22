@@ -316,10 +316,10 @@ class PlotCurveItem(GraphicsObject):
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
         stepMode        If True, a step is drawn using the x values as
-                        boundaries and the y value is assumed to be at the mid
-                        point of the boundaries. This is commonly used when
-                        drawing histograms. Note that in this case,
-                        len(x) == len(y) + 1.
+                        boundaries and the given y values are associated to the
+                        mid-points between the boundaries of each step.
+                        This is commonly used when drawing histograms. Note that
+                        in this case, len(x) == len(y) + 1.
                         If "left" or "right", the step is drawn assuming that
                         the y value is associated to the left or right boundary,
                         respectively. In this case len(x) == len(y)
