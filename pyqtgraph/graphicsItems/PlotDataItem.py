@@ -76,16 +76,19 @@ class PlotDataItem(GraphicsObject):
             fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
             fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            stepMode     If True, a step is drawn using the x values as
-                         boundaries and the given y values are associated to the
-                         mid-points between the boundaries of each step.
-                         This is commonly used when drawing histograms. Note that
-                         in this case, len(x) == len(y) + 1.
+            stepMode     (str or None) If "mid", a step is drawn using the x 
+                         values as boundaries and the given y values are
+                         associated to the mid-points between the boundaries of
+                         each step. This is commonly used when drawing
+                         histograms. Note that in this case, len(x) == len(y) + 1
                          If "left" or "right", the step is drawn assuming that
                          the y value is associated to the left or right boundary,
                          respectively. In this case len(x) == len(y)
+                         If not passed or an empty string or None is passed, the
+                         step mode is not enabled.
+                         Passing True is a deprecated equivalent to "mid".
                          (added in version 0.9.9)
-                         ("left" and "right" modes added in version 0.12.0)
+                         (str modes added in version 0.12.0)
             ============ ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
@@ -526,8 +529,8 @@ class PlotDataItem(GraphicsObject):
             self.curve.hide()
         
         if scatterArgs['symbol'] is not None:
-            ## use mid points only when stepMode **is** True (strictly)
-            if self.opts.get('stepMode', False) is True:
+            ## check against `True` too for backwards compatibility
+            if self.opts.get('stepMode', False) in ("mid", True):
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()

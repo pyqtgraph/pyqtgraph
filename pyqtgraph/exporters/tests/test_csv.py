@@ -28,7 +28,7 @@ def test_CSVExporter():
     
     y3 = [1,5,2,3,4,6,1,2,4,2,3,5,3]
     x3 = pg.np.linspace(0, 1.0, len(y3)+1)
-    plt.plot(x=x3, y=y3, stepMode=True)
+    plt.plot(x=x3, y=y3, stepMode="mid")
     
     ex = pg.exporters.CSVExporter(plt.plotItem)
     ex.export(fileName=tempfilename)
