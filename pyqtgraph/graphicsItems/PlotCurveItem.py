@@ -421,19 +421,22 @@ class PlotCurveItem(GraphicsObject):
         profiler('emit')
 
     def generatePath(self, x, y):
-        if self.opts['stepMode']:
+        stepMode = self.opts['stepMode']
+        if stepMode:
             ## each value in the x/y arrays generates 2 points.
-            if self.opts['stepMode'] == "right":
+            if stepMode == "right":
                 x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
                 x2[:-1] = x[:, np.newaxis]
                 x2[-1] = x2[-2]
-            elif self.opts['stepMode'] == "left":
+            elif stepMode == "left":
                 x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
                 x2[1:] = x[:, np.newaxis]
                 x2[0] = x2[1]
-            else:  # stepMode is "mid" (or True)
+            elif stepMode in ("mid", True):  ## support True for back-compat
                 x2 = np.empty((len(x),2), dtype=x.dtype)
                 x2[:] = x[:, np.newaxis]
+            else:
+                raise ValueError("Unsupported stepMode %s" % stepMode)
             if self.opts['fillLevel'] is None:
                 x = x2.reshape(x2.size)[1:-1]
                 y2 = np.empty((len(y),2), dtype=y.dtype)
