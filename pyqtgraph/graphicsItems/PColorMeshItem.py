@@ -24,9 +24,6 @@ class PColorMeshItem(GraphicsObject):
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
     """
 
-    sigImageChanged = QtCore.Signal()
-    sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
-
 
     def __init__(self, *args, **kwargs):
         """
@@ -47,13 +44,13 @@ class PColorMeshItem(GraphicsObject):
             2D array containing the value which will be maped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
-            otherwise x and y will be used as polygons vertices coordinates as:
+            otherwise x and y will be used as polygons vertices coordinates as::
 
-            (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
-                                +---------+
-                                | z[i, j] |
-                                +---------+
-                (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
+                (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                    +---------+
+                                    | z[i, j] |
+                                    +---------+
+                    (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
             "ASCII from: https://matplotlib.org/3.2.1/api/_as_gen/
                          matplotlib.pyplot.pcolormesh.html".
         cmap : str, default 'viridis
@@ -213,6 +210,7 @@ class PColorMeshItem(GraphicsObject):
 
         if shapeChanged:
             self.informViewBoundsChanged()
+            self.prepareGeometryChange()
 
 
 
@@ -250,4 +248,4 @@ class PColorMeshItem(GraphicsObject):
     def boundingRect(self):
         if self.qpicture is None:
             return QtCore.QRectF(0., 0., 0., 0.)
-        return QtCore.QRectF(0., 0., float(self.width()), float(self.height()))
+        return QtCore.QRectF(self.qpicture.boundingRect())
