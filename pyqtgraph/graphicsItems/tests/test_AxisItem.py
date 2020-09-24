@@ -118,27 +118,27 @@ def test_AxisItem_tickFont(monkeypatch):
 
 
 def test_AxisItem_label_visibility():
-    """Test the visibility of the axis item"""
-    axis = pg.AxisItem('left')
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
+    """Test the visibility of the axis item using `setLabel`"""
+    axis = pg.AxisItem("left")
+    assert axis.labelText == ""
+    assert axis.labelUnits == ""
     assert not axis.label.isVisible()
     axis.setLabel(text="Position", units="mm")
-    assert axis.labelText == 'Position'
-    assert axis.labelUnits == 'mm'
+    assert axis.labelText == "Position"
+    assert axis.labelUnits == "mm"
     assert axis.label.isVisible()
     # XXX: `None` is converted to empty strings.
     axis.setLabel(text=None, units=None)
-    assert axis.labelText == ''
-    assert axis.labelUnits == ''
+    assert axis.labelText == ""
+    assert axis.labelUnits == ""
     assert not axis.label.isVisible()
     axis.setLabel(text="Current", units=None)
-    assert axis.labelText == 'Current'
-    assert axis.labelUnits == ''
+    assert axis.labelText == "Current"
+    assert axis.labelUnits == ""
     assert axis.label.isVisible()
     axis.setLabel(text=None, units=None)
     assert not axis.label.isVisible()
     axis.setLabel(text="", units="V")
-    assert axis.labelText == ''
-    assert axis.labelUnits == 'V'
+    assert axis.labelText == ""
+    assert axis.labelUnits == "V"
     assert axis.label.isVisible()
