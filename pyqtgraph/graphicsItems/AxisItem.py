@@ -283,19 +283,19 @@ class AxisItem(GraphicsWidget):
             axis.setLabel('label text', units='V', **labelStyle)
 
         """
-        show_label = False
-        # Account empty string and `None` for units and text
-        if text:
-            self.labelText = text
-            show_label = True
-        if units:
-            self.labelUnits = units
-            show_label = True
-        self.showLabel(show_label)
-        if unitPrefix is not None:
-            self.labelUnitPrefix = unitPrefix
+        # `None` input is kept for backward compatibility!
+        self.labelText = text or ""
+        self.labelUnits = units or ""
+        self.labelUnitPrefix = unitPrefix or ""
         if len(args) > 0:
             self.labelStyle = args
+        # Account empty string and `None` for units and text
+        visible = True if (text or units) else False
+        self.showLabel(visible)
+        self._updateLabel()
+
+    def _updateLabel(self):
+        """Internal method to update the label according to the text"""
         self.label.setHtml(self.labelString())
         self._adjustSize()
         self.picture = None
@@ -428,8 +428,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def textPen(self):
         if self._textPen is None:
@@ -447,8 +446,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -465,9 +463,7 @@ class AxisItem(GraphicsWidget):
 
         if scale != self.scale:
             self.scale = scale
-            self.setLabel()
-            self.picture = None
-            self.update()
+            self._updateLabel()
 
     def enableAutoSIPrefix(self, enable=True):
         """
@@ -498,13 +494,11 @@ class AxisItem(GraphicsWidget):
                 scale = 1.0
                 prefix = ''
             self.autoSIPrefixScale = scale
-            self.setLabel(unitPrefix=prefix)
+            self.labelUnitPrefix = prefix
         else:
             self.autoSIPrefixScale = 1.0
 
-        self.picture = None
-        self.update()
-
+        self._updateLabel()
 
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
@@ -513,9 +507,11 @@ class AxisItem(GraphicsWidget):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoSIPrefix:
+            # XXX: Will already update once!
             self.updateAutoSIPrefix()
-        self.picture = None
-        self.update()
+        else:
+            self.picture = None
+            self.update()
 
     def linkedView(self):
         """Return the ViewBox this axis is linked to"""
