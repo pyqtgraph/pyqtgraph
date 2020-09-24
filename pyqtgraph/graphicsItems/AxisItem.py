@@ -284,14 +284,14 @@ class AxisItem(GraphicsWidget):
 
         """
         show_label = False
-        if text is not None:
+        # Account empty string and `None` for units and text
+        if text:
             self.labelText = text
             show_label = True
-        if units is not None:
+        if units:
             self.labelUnits = units
             show_label = True
-        if show_label:
-            self.showLabel()
+        self.showLabel(show_label)
         if unitPrefix is not None:
             self.labelUnitPrefix = unitPrefix
         if len(args) > 0:

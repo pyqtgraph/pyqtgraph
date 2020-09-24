@@ -2,6 +2,7 @@ import pyqtgraph as pg
 
 app = pg.mkQApp()
 
+
 def test_AxisItem_stopAxisAtTick(monkeypatch):
     def test_bottom(p, axisSpec, tickSpecs, textSpecs):
         assert view.mapToView(axisSpec[1]).x() == 0.25
@@ -114,3 +115,31 @@ def test_AxisItem_tickFont(monkeypatch):
     plot.show()
     app.processEvents()
     plot.close()
+
+
+def test_AxisItem_label_visibility():
+    axis = pg.AxisItem('left')
+    assert axis.labelText == ''
+    assert axis.labelUnits == ''
+    assert not axis.label.isVisible()
+
+    axis.setLabel(text='Visible')
+    assert axis.label.isVisible()
+    assert axis.labelText == 'Visible'
+    assert axis.labelUnits == ''
+
+    axis.setLabel(text='')
+    assert not axis.label.isVisible()
+    assert axis.labelText == ''
+    assert axis.labelUnits == ''
+
+    axis.setLabel(units='m')
+    assert axis.label.isVisible()
+    assert axis.labelText == ''
+    assert axis.labelUnits == 'm'
+
+    axis.setLabel(units='')
+    assert not axis.label.isVisible()
+    assert axis.labelText == ''
+    assert axis.labelUnits == ''
+    assert not axis.label.isVisible()
