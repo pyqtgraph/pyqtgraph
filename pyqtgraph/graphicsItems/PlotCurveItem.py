@@ -315,7 +315,7 @@ class PlotCurveItem(GraphicsObject):
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
-        stepMode        (str or None) If "mid", a step is drawn using the x
+        stepMode        (str or None) If "center", a step is drawn using the x
                         values as boundaries and the given y values are
                         associated to the mid-points between the boundaries of
                         each step. This is commonly used when drawing
@@ -325,7 +325,7 @@ class PlotCurveItem(GraphicsObject):
                         respectively. In this case len(x) == len(y)
                         If not passed or an empty string or None is passed, the
                         step mode is not enabled.
-                        Passing True is a deprecated equivalent to "mid".
+                        Passing True is a deprecated equivalent to "center".
         connect         Argument specifying how vertexes should be connected
                         by line segments. Default is "all", indicating full
                         connection. "pairs" causes only even-numbered segments
@@ -387,7 +387,7 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] in ("mid", True):  ## check against True for backwards compatibility
+        if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
@@ -432,7 +432,7 @@ class PlotCurveItem(GraphicsObject):
                 x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
                 x2[1:] = x[:, np.newaxis]
                 x2[0] = x2[1]
-            elif stepMode in ("mid", True):  ## support True for back-compat
+            elif stepMode in ("center", True):  ## support True for back-compat
                 x2 = np.empty((len(x),2), dtype=x.dtype)
                 x2[:] = x[:, np.newaxis]
             else:
