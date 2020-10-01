@@ -56,6 +56,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                            is given in scene coordinates.
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
                            of items under the cursor.
+    sigItemAdded(item)     Emitted when an item is added via addItem(). The item is given.
     ====================== ==================================================================
     
     Mouse interaction is as follows:
@@ -90,6 +91,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
     sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
+
+    sigItemAdded = QtCore.Signal(object)  ## emits the item object just added
     
     _addressCache = weakref.WeakValueDictionary()
     
@@ -393,6 +396,12 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             break
         self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
+
+    def addItem(self, item):
+        # extend QGraphicsScene.addItem to emit a sigItemAdded signal
+        ret = QtGui.QGraphicsScene.addItem(self, item)
+        self.sigItemAdded.emit(item)
+        return ret
         
     def items(self, *args):
         items = QtGui.QGraphicsScene.items(self, *args)
