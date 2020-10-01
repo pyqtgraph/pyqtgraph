@@ -255,11 +255,11 @@ def checkMergeSize(
         sourceRepo = '..'
 
     if targetBranch is None:
-        if sourceBranch == 'develop':
-            targetBranch = 'develop'
+        if sourceBranch == 'master':
+            targetBranch = 'master'
             targetRepo = 'https://github.com/pyqtgraph/pyqtgraph.git'
         else:
-            targetBranch = 'develop'
+            targetBranch = 'master'
             targetRepo = '..'
 
     workingDir = '__merge-test-clone'
