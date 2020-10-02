@@ -78,6 +78,7 @@ class LinearRegionItem(GraphicsObject):
         self.span = span
         self.swapMode = swapMode
         self._bounds = None
+        self._cachedView = None
         
         # note LinearRegionItem.Horizontal and LinearRegionItem.Vertical
         # are kept for backward compatibility.
@@ -189,6 +190,16 @@ class LinearRegionItem(GraphicsObject):
         self.lines[0].setSpan(mn, mx)
         self.lines[1].setSpan(mn, mx)
         self.update()
+
+    def viewRect(self):
+        if self._cachedView is not None:
+            return self._cachedView
+
+        self._cachedView = GraphicsObject.viewRect(self)
+        return self._cachedView
+
+    def viewTransformChanged(self):
+        self._cachedView = None
 
     def boundingRect(self):
         br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
