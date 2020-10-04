@@ -93,8 +93,10 @@ class SignalProxy(QtCore.QObject):
             if self.slot is not None:
                 slot = self.slot()
                 self.sigDelayed.disconnect(slot)
-        except:
+        except Exception as e:
             pass
+        finally:
+            self.slot = None
 
     def block(self):
         """Return a SignalBlocker that temporarily blocks input signals to

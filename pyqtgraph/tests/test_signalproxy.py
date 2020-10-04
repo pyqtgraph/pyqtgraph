@@ -65,8 +65,11 @@ def test_signal_proxy_disconnect_slot(qapp):
     assert proxy is not None
     assert sender is not None
     assert receiver is not None
+    assert proxy.slot is not None
 
     proxy.disconnect()
+    assert proxy.slot is None
+
     sender.signalSend.emit()
     proxy.flush()
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
