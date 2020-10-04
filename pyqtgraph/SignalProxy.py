@@ -40,9 +40,11 @@ class SignalProxy(QtCore.QObject):
         self.timer.timeout.connect(self.flush)
         self.blockSignal = False
         self.lastFlushTime = None
-        self.slot = weakref.ref(slot) if slot is not None else None
         if slot is not None:
             self.sigDelayed.connect(slot)
+            self.slot = weakref.ref(slot)
+        else:
+            self.slot = None
 
     def setDelay(self, delay):
         self.delay = delay
