@@ -95,7 +95,7 @@ class SignalProxy(QtCore.QObject):
             if self.slot is not None:
                 slot = self.slot()
                 self.sigDelayed.disconnect(slot)
-        except Exception as e:
+        except:
             pass
         finally:
             self.slot = None
