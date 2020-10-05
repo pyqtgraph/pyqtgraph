@@ -73,6 +73,7 @@ def test_signal_proxy_disconnect_slot(qapp):
 
     proxy.disconnect()
     assert proxy.slot is None
+    assert proxy.blockSignal is True
 
     sender.signalSend.emit()
     proxy.flush()
@@ -81,6 +82,7 @@ def test_signal_proxy_disconnect_slot(qapp):
     assert receiver.counter == 0
 
     proxy.connectSlot(receiver.slotReceive)
+    assert proxy.blockSignal is False
     sender.signalSend.emit()
     proxy.flush()
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
@@ -98,7 +100,7 @@ def test_signal_proxy_no_slot_start(qapp):
     receiver = Receiver(parent=qapp)
     proxy = SignalProxy(sender.signalSend, delay=0.0, rateLimit=0.6)
 
-    assert proxy.blockSignal is False
+    assert proxy.blockSignal is True
     assert proxy is not None
     assert sender is not None
     assert receiver is not None
@@ -110,6 +112,7 @@ def test_signal_proxy_no_slot_start(qapp):
 
     # Start a connect
     proxy.connectSlot(receiver.slotReceive)
+    assert proxy.blockSignal is False
     sender.signalSend.emit()
     proxy.flush()
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
