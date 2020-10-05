@@ -3,6 +3,7 @@ import pytest
 
 from ..Qt import QtCore
 from ..Qt import QtGui
+from ..Qt import QT_LIB, PYSIDE
 
 from ..SignalProxy import SignalProxy
 
@@ -57,6 +58,8 @@ def test_signal_proxy_slot(qapp):
     del receiver
 
 
+@pytest.mark.skipif(QT_LIB == PYSIDE and sys.version_info < (2, 8),
+                    reason="Crashing on PySide and Python 2.7")
 def test_signal_proxy_disconnect_slot(qapp):
     """Test the disconnect of SignalProxy with `signal` and `slot`"""
     sender = Sender(parent=qapp)
