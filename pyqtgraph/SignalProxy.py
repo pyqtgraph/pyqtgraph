@@ -79,7 +79,7 @@ class SignalProxy(QtCore.QObject):
         self.sigDelayed.emit(args)
         return True
 
-    def connect(self, slot):
+    def connectSignal(self, slot):
         """Connect the `SignalProxy` to an external slot"""
         assert self.slot is None, "Slot was already connected!"
         self.slot = weakref.ref(slot)

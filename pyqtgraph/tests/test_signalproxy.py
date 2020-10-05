@@ -94,7 +94,7 @@ def test_signal_proxy_no_slot_start(qapp):
     assert receiver.counter == 0
 
     # Start a connect
-    proxy.connect(receiver.slotReceive)
+    proxy.connectSignal(receiver.slotReceive)
     sender.signalSend.emit()
     proxy.flush()
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
@@ -102,7 +102,7 @@ def test_signal_proxy_no_slot_start(qapp):
 
     # An additional connect should raise an AssertionError
     with pytest.raises(AssertionError):
-        proxy.connect(receiver.slotReceive)
+        proxy.connectSignal(receiver.slotReceive)
 
 
 def test_signal_proxy_slot_block(qapp):
