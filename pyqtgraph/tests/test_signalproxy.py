@@ -80,14 +80,6 @@ def test_signal_proxy_disconnect_slot(qapp):
 
     assert receiver.counter == 0
 
-    proxy.connectSlot(receiver.slotReceive)
-    assert proxy.blockSignal is False
-    sender.signalSend.emit()
-    proxy.flush()
-    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
-
-    assert receiver.counter > 0
-
     del proxy
     del sender
     del receiver

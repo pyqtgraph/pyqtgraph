@@ -38,9 +38,9 @@ class SignalProxy(QtCore.QObject):
         self.timer.timeout.connect(self.flush)
         self.lastFlushTime = None
         self.signal = signal
+        self.signal.connect(self.signalReceived)
         if slot is not None:
             self.blockSignal = False
-            self.signal.connect(self.signalReceived)
             self.sigDelayed.connect(slot)
             self.slot = weakref.ref(slot)
         else:
@@ -87,7 +87,9 @@ class SignalProxy(QtCore.QObject):
         except:
             pass
         try:
-            self.sigDelayed.disconnect()
+            # XXX: This is a weakref, however segfaulting on PySide and
+            # Python 2. We come back later
+            self.sigDelayed.disconnect(self.slot)
         except:
             pass
         finally:
@@ -98,7 +100,6 @@ class SignalProxy(QtCore.QObject):
         assert self.slot is None, "Slot was already connected!"
         self.slot = weakref.ref(slot)
         self.sigDelayed.connect(slot)
-        self.signal.connect(self.signalReceived)
         self.blockSignal = False
 
     def block(self):
