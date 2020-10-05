@@ -31,8 +31,6 @@ class SignalProxy(QtCore.QObject):
         """
 
         QtCore.QObject.__init__(self)
-        signal.connect(self.signalReceived)
-        self.signal = signal
         self.delay = delay
         self.rateLimit = rateLimit
         self.args = None
@@ -40,7 +38,9 @@ class SignalProxy(QtCore.QObject):
         self.timer.timeout.connect(self.flush)
         self.blockSignal = False
         self.lastFlushTime = None
+        self.signal = signal
         if slot is not None:
+            self.signal.connect(self.signalReceived)
             self.sigDelayed.connect(slot)
             self.slot = weakref.ref(slot)
         else:
@@ -79,12 +79,6 @@ class SignalProxy(QtCore.QObject):
         self.sigDelayed.emit(args)
         return True
 
-    def connectSignal(self, slot):
-        """Connect the `SignalProxy` to an external slot"""
-        assert self.slot is None, "Slot was already connected!"
-        self.slot = weakref.ref(slot)
-        self.sigDelayed.connect(slot)
-
     def disconnect(self):
         self.blockSignal = True
         try:
@@ -92,13 +86,19 @@ class SignalProxy(QtCore.QObject):
         except:
             pass
         try:
-            if self.slot is not None:
-                slot = self.slot()
-                self.sigDelayed.disconnect(slot)
+            self.sigDelayed.disconnect()
         except:
             pass
         finally:
             self.slot = None
+
+    def connectSlot(self, slot):
+        """Connect the `SignalProxy` to an external slot"""
+        assert self.slot is None, "Slot was already connected!"
+        self.slot = weakref.ref(slot)
+        self.sigDelayed.connect(slot)
+        self.signal.connect(self.signalReceived)
+        self.blockSignal = False
 
     def block(self):
         """Return a SignalBlocker that temporarily blocks input signals to

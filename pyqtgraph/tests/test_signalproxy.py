@@ -53,6 +53,10 @@ def test_signal_proxy_slot(qapp):
 
     assert receiver.counter == 1
 
+    del proxy
+    del sender
+    del receiver
+
 
 def test_signal_proxy_disconnect_slot(qapp):
     """Test the disconnect of SignalProxy with `signal` and `slot`"""
@@ -76,6 +80,17 @@ def test_signal_proxy_disconnect_slot(qapp):
 
     assert receiver.counter == 0
 
+    proxy.connectSlot(receiver.slotReceive)
+    sender.signalSend.emit()
+    proxy.flush()
+    qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
+
+    assert receiver.counter == 1
+
+    del proxy
+    del sender
+    del receiver
+
 
 def test_signal_proxy_no_slot_start(qapp):
     """Test the connect mode of SignalProxy without slot at start`"""
@@ -94,7 +109,7 @@ def test_signal_proxy_no_slot_start(qapp):
     assert receiver.counter == 0
 
     # Start a connect
-    proxy.connectSignal(receiver.slotReceive)
+    proxy.connectSlot(receiver.slotReceive)
     sender.signalSend.emit()
     proxy.flush()
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
@@ -102,7 +117,11 @@ def test_signal_proxy_no_slot_start(qapp):
 
     # An additional connect should raise an AssertionError
     with pytest.raises(AssertionError):
-        proxy.connectSignal(receiver.slotReceive)
+        proxy.connectSlot(receiver.slotReceive)
+
+    del proxy
+    del sender
+    del receiver
 
 
 def test_signal_proxy_slot_block(qapp):
@@ -131,3 +150,7 @@ def test_signal_proxy_slot_block(qapp):
     qapp.processEvents(QtCore.QEventLoop.AllEvents, 10)
 
     assert receiver.counter == 1
+
+    del proxy
+    del sender
+    del receiver
