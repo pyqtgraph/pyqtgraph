@@ -8,7 +8,7 @@ from ..SignalProxy import SignalProxy
 
 
 class Sender(QtCore.QObject):
-    signalSend = QtCore.pyqtSignal()
+    signalSend = QtCore.Signal()
 
     def __init__(self, parent=None):
         super(Sender, self).__init__(parent)
