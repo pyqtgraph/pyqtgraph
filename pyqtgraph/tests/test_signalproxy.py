@@ -24,7 +24,7 @@ class Receiver(QtCore.QObject):
         self.counter += 1
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def qapp():
     app = QtGui.QApplication.instance()
     if app is None:
