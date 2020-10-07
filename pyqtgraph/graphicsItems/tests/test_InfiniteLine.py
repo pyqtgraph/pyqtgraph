@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtTest
 from pyqtgraph.tests import mouseDrag, mouseMove
@@ -50,10 +51,12 @@ def test_InfiniteLine():
     
 
 def test_mouseInteraction():
+    # disable delay of mouse move events because events is called immediately in test
+    pg.setConfigOption('mouseRateLimit', -1)
+
     plt = pg.plot()
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
     vline = plt.addLine(x=0, movable=True)
-    plt.addItem(vline)
     hline = plt.addLine(y=0, movable=True)
     hline2 = plt.addLine(y=-1, movable=False)
     plt.setXRange(-10, 10)

@@ -543,11 +543,6 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x=x[1:]
                     y=y[1:]
-            else:          
-                if self.opts['logMode'][0]:
-                    x = np.log10(x)
-                if self.opts['logMode'][1]:
-                    y = np.log10(y)
             if self.opts['derivativeMode']:  # plot dV/dt
                 y = np.diff(self.yData)/np.diff(self.xData)
                 x = x[:-1]

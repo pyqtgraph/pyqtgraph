@@ -228,7 +228,6 @@ from .graphicsItems.PlotCurveItem import *
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
 from .graphicsItems.MultiPlotItem import * 
-from .widgets.MultiAxisPlotWidget import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
 from .graphicsItems.LinearRegionItem import * 
@@ -238,6 +237,7 @@ from .graphicsItems.ScatterPlotItem import *
 from .graphicsItems.ItemGroup import * 
 
 from .widgets.MultiPlotWidget import * 
+from .widgets.MultiAxisPlotWidget import *
 from .widgets.ScatterPlotWidget import * 
 from .widgets.ColorMapWidget import * 
 from .widgets.FileDialog import * 

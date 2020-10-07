@@ -429,7 +429,7 @@ class QtProcess(Process):
         This allows signals to be connected from the child process to the parent.
         """
         self.timer.timeout.connect(self.processRequests)
-        self.timer.start(interval*1000)
+        self.timer.start(int(interval*1000))
         
     def stopRequestProcessing(self):
         self.timer.stop()

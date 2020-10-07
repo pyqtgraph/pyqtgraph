@@ -214,9 +214,11 @@ class Flowchart(Node):
     def nodeClosed(self, node):
         del self._nodes[node.name()]
         self.widget().removeNode(node)
-        for signal in ['sigClosed', 'sigRenamed', 'sigOutputChanged']:
+        for signal, slot in [('sigClosed', self.nodeClosed),
+                             ('sigRenamed', self.nodeRenamed),
+                             ('sigOutputChanged', self.nodeOutputChanged)]:
             try:
-                getattr(node, signal).disconnect(self.nodeClosed)
+                getattr(node, signal).disconnect(slot)
             except (TypeError, RuntimeError):
                 pass
         self.sigChartChanged.emit(self, 'remove', node)
