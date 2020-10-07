@@ -3,12 +3,10 @@ __all__ = ["MultiAxisPlotWidget"]
 
 import weakref
 
-from ..functions import mkBrush, mkPen
 from ..graphicsItems.AxisItem import AxisItem
 from ..graphicsItems.PlotDataItem import PlotDataItem
 from ..graphicsItems.PlotItem.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QtCore
 from ..widgets.PlotWidget import PlotWidget
 
 
@@ -35,30 +33,17 @@ class MultiAxisPlotWidget(PlotWidget):
 
     def addAxis(self, name, position, label=None, units=None, **kwargs):
         axis = AxisItem(position, **kwargs)
+        axis.autorange = True
         axis.setLabel(label, units)
         self.axis[name] = axis
         self.axis_connections[name] = []
 
-    def addChart(self, name, x_axis=None, y_axis=None, set_color=False, show_grid=False, **kwargs):
+    def addChart(self, name, x_axis=None, y_axis=None, **kwargs):
         # CHART
-        color = self.colors[len(self.charts)]
-        # ACTUAL XY GRAPH
         chart = PlotDataItem(
             connect="all",
             # symbol="+",
             symbol=None,
-            pen=mkPen(
-                color=color,
-                width=2,
-                s=QtCore.Qt.SolidLine,
-                # brush=brush,
-                c=QtCore.Qt.RoundCap,
-                j=QtCore.Qt.RoundJoin
-            ),
-            # brush=mkBrush(
-            #     color=color,
-            #     bs=QtCore.Qt.SolidPattern,
-            # ),
             downsampleMethod="peak",
             autoDownsample=True,
             clipToView=True
@@ -104,18 +89,6 @@ class MultiAxisPlotWidget(PlotWidget):
             # resize plotitem according to the master one
             # resizing it's view doesn't work for some reason
             self.vb.sigResized.connect(lambda vb: plotitem.setGeometry(vb.sceneBoundingRect()))
-        if set_color:
-            # match y axis color
-            y.setPen(mkPen(color=color))
-        if show_grid is not False:
-            if show_grid is True:
-                x.setGrid(int(0.3 * 255))
-                y.setGrid(int(0.3 * 255))
-            else:
-                if "x" in show_grid and show_grid["x"] is not False:
-                    x.setGrid(int(show_grid["x"] * 255))
-                if "y" in show_grid and show_grid["y"] is not False:
-                    y.setGrid(int(show_grid["y"] * 255))
         plotitem.addItem(chart)
         # keep plotitem inside chart
         chart.plotItem = plotitem
@@ -126,8 +99,6 @@ class MultiAxisPlotWidget(PlotWidget):
         # create a mapping for this chart and his axis
         self.axis_connections[x_axis].append(name)
         self.axis_connections[y_axis].append(name)
-        # data keep for the chart to add support for adding data
-        self.parsed_data[name] = []
 
     def clearLayout(self):
         while self.layout.count() > 0:
@@ -135,8 +106,6 @@ class MultiAxisPlotWidget(PlotWidget):
             self.layout.removeAt(0)
             self.scene().removeItem(item)
             del item
-        # clear plotItem
-        self.pi.clear()
 
     def linkAxisToView(self, axis_name, view):
         axis = self.axis[axis_name]
@@ -154,15 +123,16 @@ class MultiAxisPlotWidget(PlotWidget):
         if axis_view is not view:
             # FROM ViewBox.linkView
             # connext axis's view changes to view since axis acts just like a proxy to it
-            if axis.orientation in ["right", "left"]:
-                axis_view.sigYRangeChanged.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
-                axis_view.sigResized.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
-                axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
-            elif axis.orientation in ["top", "bottom"]:
+            if axis.orientation in ["top", "bottom"]:
                 axis_view.sigXRangeChanged.connect(lambda v: view.linkedViewChanged(v, ViewBox.XAxis))
                 axis_view.sigResized.connect(lambda v: view.linkedViewChanged(v, ViewBox.XAxis))
+                # disable autorange on manual movements
                 axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
-            # disable autorange on manual movements
+            elif axis.orientation in ["right", "left"]:
+                axis_view.sigYRangeChanged.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
+                axis_view.sigResized.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
+                # disable autorange on manual movements
+                axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
 
     def makeLayout(self, axis=None, charts=None):
         self.clearLayout()
@@ -191,10 +161,10 @@ class MultiAxisPlotWidget(PlotWidget):
             if a is not None:
                 a.show()
                 self.layout.addItem(a, vy, x)
-        for y, a in enumerate(lo["top"] + [None] + lo["bottom"]):
+        for y, a in enumerate([None] + lo["top"] + [None] + lo["bottom"]):
             if a is not None:
                 a.show()
-                self.layout.addItem(a, y + 1, vx)
+                self.layout.addItem(a, y, vx)
         # SELECT CHARTS
         if charts is None:
             charts = list(self.charts)
