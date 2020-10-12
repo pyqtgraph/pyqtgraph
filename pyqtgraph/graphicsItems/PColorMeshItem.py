@@ -61,6 +61,9 @@ class PColorMeshItem(GraphicsObject):
             The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>.
             Example:
                 mkPen(color='w', width=2)
+        antialiasing : bool , default False
+            Whether to draw edgelines with antialiasing.
+            Note that if edgecolors is None, antialiasing is always False.
         """
         GraphicsObject.__init__(self)
 
@@ -72,6 +75,11 @@ class PColorMeshItem(GraphicsObject):
             self.edgecolors = kwargs['edgecolors']
         else:
             self.edgecolors = None
+
+        if 'antialiasing' in kwargs.keys():
+            self.antialiasing = kwargs['antialiasing']
+        else:
+            self.antialiasing = False
         
         if 'cmap' in kwargs.keys():
             if kwargs['cmap'] in Gradients.keys():
@@ -163,16 +171,16 @@ class PColorMeshItem(GraphicsObject):
             if np.any(self.x != args[0]) or np.any(self.y != args[1]):
                 shapeChanged = True
 
-        profile = debug.Profiler()
-
         self.qpicture = QtGui.QPicture()
         p = QtGui.QPainter(self.qpicture)
-        
         # We set the pen of all polygons once
         if self.edgecolors is None:
-            p.setPen(QtGui.QColor(0, 0, 0, 0))
+            p.setPen(fn.mkPen(QtGui.QColor(0, 0, 0, 0)))
         else:
             p.setPen(fn.mkPen(self.edgecolors))
+            if self.antialiasing:
+                p.setRenderHint(QtGui.QPainter.Antialiasing)
+                
 
         ## Prepare colormap
         # First we get the LookupTable
@@ -190,9 +198,8 @@ class PColorMeshItem(GraphicsObject):
             for yi in range(self.z.shape[1]):
                 
                 # Set the color of the polygon first
-                # print(xi, yi, norm[xi][yi])
                 c = lut[norm[xi][yi]]
-                p.setBrush(QtGui.QColor(c[0], c[1], c[2]))
+                p.setBrush(fn.mkBrush(QtGui.QColor(c[0], c[1], c[2])))
 
                 polygon = QtGui.QPolygonF(
                     [QtCore.QPointF(self.x[xi][yi],     self.y[xi][yi]),
@@ -208,18 +215,16 @@ class PColorMeshItem(GraphicsObject):
         p.end()
         self.update()
 
+        self.prepareGeometryChange()
         if shapeChanged:
             self.informViewBoundsChanged()
-            self.prepareGeometryChange()
 
 
 
     def paint(self, p, *args):
-        profile = debug.Profiler()
         if self.z is None:
             return
 
-        profile('p.drawPicture')
         p.drawPicture(0, 0, self.qpicture)
 
 

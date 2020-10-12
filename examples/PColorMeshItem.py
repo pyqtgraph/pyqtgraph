@@ -44,9 +44,11 @@ y.sort(axis=0)
 z = np.exp(-(x*xn)**2/1000)[:-1,:-1]
 
 ## Create image item
-edgecolors = None
+edgecolors   = None
+antialiasing = False
 # edgecolors = {'color':'w', 'width':2} # May be uncommened to see edgecolor effect
-pcmi = pg.PColorMeshItem(edgecolors=edgecolors)
+# antialiasing = True # May be uncommened to see antialiasing effect
+pcmi = pg.PColorMeshItem(edgecolors=edgecolors, antialiasing=antialiasing)
 view.addItem(pcmi)
 
 
@@ -72,7 +74,7 @@ def updateData():
                  new_z)
 
     i += wave_speed
-    QtCore.QTimer.singleShot(1000/fps, updateData)
+    QtCore.QTimer.singleShot(1000//fps, updateData)
 
 updateData()
 
