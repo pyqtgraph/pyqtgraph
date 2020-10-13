@@ -384,7 +384,7 @@ class PlotDataItem(GraphicsObject):
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
         #self.clear()
-        if kargs.get("stepMode", default=None) == True:
+        if kargs.get("stepMode", None) is True:
             import warnings
             warnings.warn(
                 'stepMode=True is deprecated, use stepMode="center" instead',
