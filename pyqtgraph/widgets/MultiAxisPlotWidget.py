@@ -207,7 +207,7 @@ class MultiAxisPlotWidget(PlotWidget):
             a = self.axis[axis]
             vb = a.linkedView()
             if a.orientation in ["top", "bottom"]:  # IS X AXIS
-                vb.getViewBox().setXRange(*range, **kwargs)
+                vb.setXRange(*range, **kwargs)
             elif a.orientation in ["left", "right"]:  # IS Y AXIS
                 vb.setYRange(*range, **kwargs)
 
