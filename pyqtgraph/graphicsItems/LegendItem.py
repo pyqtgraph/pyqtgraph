@@ -29,7 +29,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
-                 rowCount=1, colCount=1, **kwargs):
+                 labelTextSize='9pt', rowCount=1, colCount=1, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -50,6 +50,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         accepted by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         labelTextColor  Pen to use when drawing legend text. Any single argument
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
+        labelTextSize   Size to use when drawing legend text. Accepts CSS style
+                        string arguments, e.g. '9pt'.
         ==============  ===============================================================
 
         """
@@ -75,6 +77,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             'pen': fn.mkPen(pen),
             'brush': fn.mkBrush(brush),
             'labelTextColor': labelTextColor,
+            'labelTextSize': labelTextSize,
             'offset': offset,
         }
 
@@ -139,6 +142,24 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
         self.update()
 
+    def labelTextSize(self):
+        """Get the `labelTextSize` used for the item labels."""
+        return self.opts['labelTextSize']
+
+    def setLabelTextSize(self, size):
+        """Set the `size` of the item labels.
+
+        Accepts the CSS style string arguments, e.g. '8pt'.
+        """
+        msg = "Size must be of type 'str', got {} instead".format(type(size))
+        assert isinstance(size, str), msg
+
+        self.opts['labelTextSize'] = size
+        for _, label in self.items:
+            label.setAttr('size', self.opts['labelTextSize'])
+
+        self.update()
+
     def setParentItem(self, p):
         """Set the parent."""
         ret = GraphicsWidget.setParentItem(self, p)
@@ -164,7 +185,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         ==============  ========================================================
         """
         label = LabelItem(name, color=self.opts['labelTextColor'],
-                          justify='left')
+                          justify='left', size=self.opts['labelTextSize'])
         if isinstance(item, ItemSample):
             sample = item
         else:
