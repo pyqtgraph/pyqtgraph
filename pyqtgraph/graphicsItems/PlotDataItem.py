@@ -88,7 +88,6 @@ class PlotDataItem(GraphicsObject):
                          step mode is not enabled.
                          Passing True is a deprecated equivalent to "center".
                          (added in version 0.9.9)
-                         (str modes added in version 0.12.0)
             ============ ==============================================================================
         
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
