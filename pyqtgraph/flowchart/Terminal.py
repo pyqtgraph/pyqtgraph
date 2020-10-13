@@ -267,6 +267,11 @@ class Terminal(object):
     def saveState(self):
         return {'io': self._io, 'multi': self._multi, 'optional': self._optional, 'renamable': self._renamable, 'removable': self._removable, 'multiable': self._multiable}
 
+    def __lt__(self, other):
+        """When the terminal is multi value, the data passed to the DatTreeWidget for each input or output, is {Terminal: value}.
+        To make this sortable, we provide the < operator.
+        """
+        return self._name < other._name
 
 class TerminalGraphicsItem(GraphicsObject):
     

@@ -291,7 +291,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         **Arguments:**
         *dx*            Distance to pan in x direction
         *dy*            Distance to pan in y direction
-        *dx*            Distance to pan in z direction
+        *dz*            Distance to pan in z direction
         *relative*      String that determines the direction of dx,dy,dz. 
                         If "global", then the global coordinate system is used.
                         If "view", then the z axis is aligned with the view

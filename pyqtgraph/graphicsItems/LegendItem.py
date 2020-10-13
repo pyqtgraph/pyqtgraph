@@ -8,6 +8,7 @@ from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 from .BarGraphItem import BarGraphItem
+
 __all__ = ['LegendItem']
 
 
@@ -25,8 +26,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         legend.setParentItem(plotItem)
 
     """
-    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0, pen=None,
-                 brush=None, labelTextColor=None, frame=True, rowCount=1, colCount=1, **kwargs):
+
+    def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
+                 pen=None, brush=None, labelTextColor=None, frame=True,
+                 rowCount=1, colCount=1, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -160,11 +163,12 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         title           The title to display for this item. Simple HTML allowed.
         ==============  ========================================================
         """
-        label = LabelItem(name, color=self.opts['labelTextColor'], justify='left')
+        label = LabelItem(name, color=self.opts['labelTextColor'],
+                          justify='left')
         if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = ItemSample(item)    
+            sample = ItemSample(item)
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
@@ -174,45 +178,45 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         row = self.layout.rowCount()
         if row:
             row -= 1
-        nCol = self.columnCount*2
-        #FIRST ROW FULL
+        nCol = self.columnCount * 2
+        # FIRST ROW FULL
         if col == nCol:
-            for col in range(0,nCol,2):
-                #FIND RIGHT COLUMN
+            for col in range(0, nCol, 2):
+                # FIND RIGHT COLUMN
                 if not self.layout.itemAt(row, col):
                     break
-            if col+2 == nCol:
-                #MAKE NEW ROW
+            if col + 2 == nCol:
+                # MAKE NEW ROW
                 col = 0
                 row += 1
         self.layout.addItem(sample, row, col)
-        self.layout.addItem(label, row, col+1)
+        self.layout.addItem(label, row, col + 1)
 
     def setColumnCount(self, columnCount):
-        '''
-        change the orientation of all items of the legend 
-        '''
+        """change the orientation of all items of the legend
+        """
         if columnCount != self.columnCount:
             self.columnCount = columnCount
-            self.rowCount = int(len(self.items)/columnCount)
-            for i in range(self.layout.count()-1,-1,-1):
-                self.layout.removeAt(i)  #clear layout
+            self.rowCount = int(len(self.items) / columnCount)
+            for i in range(self.layout.count() - 1, -1, -1):
+                self.layout.removeAt(i)  # clear layout
             for sample, label in self.items:
-                self._addItemToLayout(sample, label) 
+                self._addItemToLayout(sample, label)
             self.updateSize()
-    
+
     def getLabel(self, plotItem):
+        """Return the labelItem inside the legend for a given plotItem
+
+        The label-text can be changed via labenItem.setText
         """
-        return the labelItem inside the legend for a given plotItem
-        the label-text can be changed via labenItem.setText
-        """
-        out = [(it, lab) for it, lab in self.items if it.item==plotItem]
-        try: return out[0][1]
-        except IndexError: return None
+        out = [(it, lab) for it, lab in self.items if it.item == plotItem]
+        try:
+            return out[0][1]
+        except IndexError:
+            return None
 
     def removeItem(self, item):
-        """
-        Removes one item from the legend.
+        """Removes one item from the legend.
 
         ==============  ========================================================
         **Arguments:**
@@ -221,13 +225,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         for sample, label in self.items:
             if sample.item is item or label.text == item:
-                self.items.remove((sample, label))      # remove from itemlist
-                self.layout.removeItem(sample)          # remove from layout
-                sample.close()                          # remove from drawing
+                self.items.remove((sample, label))  # remove from itemlist
+                self.layout.removeItem(sample)  # remove from layout
+                sample.close()  # remove from drawing
                 self.layout.removeItem(label)
                 label.close()
-                self.updateSize()                       # redraq box
-                return                                  # return after first match
+                self.updateSize()  # redraq box
+                return  # return after first match
 
     def clear(self):
         """Remove all items from the legend."""
@@ -246,7 +250,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         height = 0
         width = 0
         for row in range(self.layout.rowCount()):
-            row_height = 0 
+            row_height = 0
             col_witdh = 0
             for col in range(self.layout.columnCount()):
                 item = self.layout.itemAt(row, col)
@@ -278,11 +282,12 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
 
 class ItemSample(GraphicsWidget):
-    """ Class responsible for drawing a single item in a LegendItem (sans label).
+    """Class responsible for drawing a single item in a LegendItem (sans label)
 
     This may be subclassed to draw custom graphics in a Legend.
     """
-    ## Todo: make this more generic; let each item decide how it should be represented.
+
+    # TODO: make this more generic; let items decide how it should be look.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
@@ -300,18 +305,21 @@ class ItemSample(GraphicsWidget):
             p.setPen(fn.mkPen(opts['pen']))
             p.drawLine(0, 11, 20, 11)
 
-            if opts.get('fillLevel', None) is not None and opts.get('fillBrush', None) is not None:
+            if (opts.get('fillLevel', None) is not None and
+                    opts.get('fillBrush', None) is not None):
                 p.setBrush(fn.mkBrush(opts['fillBrush']))
                 p.setPen(fn.mkPen(opts['fillBrush']))
-                p.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(2, 18), QtCore.QPointF(18, 2), QtCore.QPointF(18, 18)]))
-
+                p.drawPolygon(QtGui.QPolygonF(
+                    [QtCore.QPointF(2, 18), QtCore.QPointF(18, 2),
+                     QtCore.QPointF(18, 18)]))
 
         symbol = opts.get('symbol', None)
         if symbol is not None:
             if isinstance(self.item, PlotDataItem):
                 opts = self.item.scatter.opts
             p.translate(10, 10)
-            drawSymbol(p, symbol, opts['size'], fn.mkPen(opts['pen']), fn.mkBrush(opts['brush']))
+            drawSymbol(p, symbol, opts['size'], fn.mkPen(opts['pen']),
+                       fn.mkBrush(opts['brush']))
 
         if isinstance(self.item, BarGraphItem):
             p.setBrush(fn.mkBrush(opts['brush']))

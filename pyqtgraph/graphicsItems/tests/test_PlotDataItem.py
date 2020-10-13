@@ -61,7 +61,7 @@ def test_clear():
 
 def test_clear_in_step_mode():
     w = pg.PlotWidget()
-    c = pg.PlotDataItem([1,4,2,3], [5,7,6], stepMode=True)
+    c = pg.PlotDataItem([1,4,2,3], [5,7,6], stepMode="center")
     w.addItem(c)
     c.clear()
 

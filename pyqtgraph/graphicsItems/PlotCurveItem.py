@@ -62,7 +62,7 @@ class PlotCurveItem(GraphicsObject):
             'fillLevel': None,
             'fillOutline': False,
             'brush': None,
-            'stepMode': False,
+            'stepMode': None,
             'name': None,
             'antialias': getConfigOption('antialias'),
             'connect': 'all',
@@ -315,9 +315,17 @@ class PlotCurveItem(GraphicsObject):
                         by :func:`mkBrush <pyqtgraph.mkBrush>` is allowed.
         antialias       (bool) Whether to use antialiasing when drawing. This
                         is disabled by default because it decreases performance.
-        stepMode        If True, two orthogonal lines are drawn for each sample
-                        as steps. This is commonly used when drawing histograms.
-                        Note that in this case, len(x) == len(y) + 1
+        stepMode        (str or None) If "center", a step is drawn using the x
+                        values as boundaries and the given y values are
+                        associated to the mid-points between the boundaries of
+                        each step. This is commonly used when drawing
+                        histograms. Note that in this case, len(x) == len(y) + 1
+                        If "left" or "right", the step is drawn assuming that
+                        the y value is associated to the left or right boundary,
+                        respectively. In this case len(x) == len(y)
+                        If not passed or an empty string or None is passed, the
+                        step mode is not enabled.
+                        Passing True is a deprecated equivalent to "center".
         connect         Argument specifying how vertexes should be connected
                         by line segments. Default is "all", indicating full
                         connection. "pairs" causes only even-numbered segments
@@ -379,7 +387,10 @@ class PlotCurveItem(GraphicsObject):
         if 'stepMode' in kargs:
             self.opts['stepMode'] = kargs['stepMode']
 
-        if self.opts['stepMode'] is True:
+        if self.opts['stepMode'] in ("center", True):  ## check against True for backwards compatibility
+            if self.opts['stepMode'] is True:
+                import warnings
+                warnings.warn('stepMode=True is deprecated, use stepMode="center" instead', DeprecationWarning, stacklevel=3)
             if len(self.xData) != len(self.yData)+1:  ## allow difference of 1 for step mode plots
                 raise Exception("len(X) must be len(Y)+1 since stepMode=True (got %s and %s)" % (self.xData.shape, self.yData.shape))
         else:
@@ -413,10 +424,22 @@ class PlotCurveItem(GraphicsObject):
         profiler('emit')
 
     def generatePath(self, x, y):
-        if self.opts['stepMode']:
+        stepMode = self.opts['stepMode']
+        if stepMode:
             ## each value in the x/y arrays generates 2 points.
-            x2 = np.empty((len(x),2), dtype=x.dtype)
-            x2[:] = x[:,np.newaxis]
+            if stepMode == "right":
+                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+                x2[:-1] = x[:, np.newaxis]
+                x2[-1] = x2[-2]
+            elif stepMode == "left":
+                x2 = np.empty((len(x) + 1, 2), dtype=x.dtype)
+                x2[1:] = x[:, np.newaxis]
+                x2[0] = x2[1]
+            elif stepMode in ("center", True):  ## support True for back-compat
+                x2 = np.empty((len(x),2), dtype=x.dtype)
+                x2[:] = x[:, np.newaxis]
+            else:
+                raise ValueError("Unsupported stepMode %s" % stepMode)
             if self.opts['fillLevel'] is None:
                 x = x2.reshape(x2.size)[1:-1]
                 y2 = np.empty((len(y),2), dtype=y.dtype)

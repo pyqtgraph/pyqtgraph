@@ -76,9 +76,17 @@ class PlotDataItem(GraphicsObject):
             fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
             fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            stepMode     If True, two orthogonal lines are drawn for each sample
-                         as steps. This is commonly used when drawing histograms.
-                         Note that in this case, ``len(x) == len(y) + 1``
+            stepMode     (str or None) If "center", a step is drawn using the x
+                         values as boundaries and the given y values are
+                         associated to the mid-points between the boundaries of
+                         each step. This is commonly used when drawing
+                         histograms. Note that in this case, len(x) == len(y) + 1
+                         If "left" or "right", the step is drawn assuming that
+                         the y value is associated to the left or right boundary,
+                         respectively. In this case len(x) == len(y)
+                         If not passed or an empty string or None is passed, the
+                         step mode is not enabled.
+                         Passing True is a deprecated equivalent to "center".
                          (added in version 0.9.9)
             ============ ==============================================================================
         
@@ -376,6 +384,12 @@ class PlotDataItem(GraphicsObject):
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
         #self.clear()
+        if kargs.get("stepMode", None) is True:
+            import warnings
+            warnings.warn(
+                'stepMode=True is deprecated, use stepMode="center" instead',
+                DeprecationWarning, stacklevel=3
+            )
         profiler = debug.Profiler()
         y = None
         x = None
@@ -520,8 +534,8 @@ class PlotDataItem(GraphicsObject):
             self.curve.hide()
         
         if scatterArgs['symbol'] is not None:
-            
-            if self.opts.get('stepMode', False) is True:
+            ## check against `True` too for backwards compatibility
+            if self.opts.get('stepMode', False) in ("center", True):
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
@@ -543,11 +557,6 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x=x[1:]
                     y=y[1:]
-            else:          
-                if self.opts['logMode'][0]:
-                    x = np.log10(x)
-                if self.opts['logMode'][1]:
-                    y = np.log10(y)
             if self.opts['derivativeMode']:  # plot dV/dt
                 y = np.diff(self.yData)/np.diff(self.xData)
                 x = x[:-1]
