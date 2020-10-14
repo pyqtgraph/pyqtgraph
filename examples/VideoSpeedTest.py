@@ -9,7 +9,7 @@ is used by the view widget
 
 import initExample ## Add path to library (just for examples; you do not need this)
 
-
+import sys, argparse
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 import numpy as np
 import pyqtgraph as pg
@@ -23,7 +23,18 @@ elif QT_LIB == 'PyQt5':
     import VideoTemplate_pyqt5 as VideoTemplate
 else:
     import VideoTemplate_pyqt as VideoTemplate
-    
+
+
+parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
+parser.add_argument('--frames', default=3, type=int, help="Number of image frames to generate (default=3)")
+parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
+parser.add_argument('--dtype', default='uint8', choices=['uint8', 'uint16', 'float'], help="Image dtype (uint8, uint16, or float)")
+parser.add_argument('--image-mode', default='mono', choices=['mono', 'rgb'], help="Image data mode (mono or rgb)", dest='image_mode')
+parser.add_argument('--levels', default=None, type=lambda s: tuple([float(x) for x in s.split(',')]), help="min,max levels to scale monochromatic image dynamic range, or rmin,rmax,gmin,gmax,bmin,bmax to scale rgb")
+parser.add_argument('--lut', default=False, action='store_true', help="Use color lookup table")
+parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use alpha color lookup table", dest='lut_alpha')
+args = parser.parse_args(sys.argv[1:])
+
 
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
@@ -43,8 +54,33 @@ else:
     ui.rawGLImg = RawImageGLWidget()
     ui.stack.addWidget(ui.rawGLImg)
 
+# read in CLI args
+ui.framesSpin.setValue(args.frames)
+ui.widthSpin.setValue(args.size[0])
+ui.heightSpin.setValue(args.size[1])
+ui.dtypeCombo.setCurrentText(args.dtype)
+ui.rgbCheck.setChecked(args.image_mode=='rgb')
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
+levelSpins = [ui.minSpin1, ui.maxSpin1, ui.minSpin2, ui.maxSpin2, ui.minSpin3, ui.maxSpin3]
+if args.levels is None:
+    ui.scaleCheck.setChecked(False)
+    ui.rgbLevelsCheck.setChecked(False)
+else:
+    ui.scaleCheck.setChecked(True)
+    if len(args.levels) == 2:
+        ui.rgbLevelsCheck.setChecked(False)
+        ui.minSpin1.setValue(args.levels[0])
+        ui.maxSpin1.setValue(args.levels[1])
+    elif len(args.levels) == 6:
+        ui.rgbLevelsCheck.setChecked(True)
+        for spin,val in zip(levelSpins, args.levels):
+            spin.setValue(val)
+    else:
+        raise ValueError("levels argument must be 2 or 6 comma-separated values (got %r)" % (args.levels,))
+ui.lutCheck.setChecked(args.lut)
+ui.alphaCheck.setChecked(args.lut_alpha)
+
 
 #ui.graphicsView.useOpenGL()  ## buggy, but you can try it if you need extra speed.
 
@@ -53,7 +89,8 @@ ui.graphicsView.setCentralItem(vb)
 vb.setAspectLocked()
 img = pg.ImageItem()
 vb.addItem(img)
-vb.setRange(QtCore.QRectF(0, 0, 512, 512))
+
+
 
 LUT = None
 def updateLUT():
@@ -70,14 +107,16 @@ updateLUT()
 ui.alphaCheck.toggled.connect(updateLUT)
 
 def updateScale():
-    global ui
-    spins = [ui.minSpin1, ui.maxSpin1, ui.minSpin2, ui.maxSpin2, ui.minSpin3, ui.maxSpin3]
+    global ui, levelSpins
     if ui.rgbLevelsCheck.isChecked():
-        for s in spins[2:]:
+        for s in levelSpins[2:]:
             s.setEnabled(True)
     else:
-        for s in spins[2:]:
+        for s in levelSpins[2:]:
             s.setEnabled(False)
+
+updateScale()
+
 ui.rgbLevelsCheck.toggled.connect(updateScale)
     
 cache = {}
@@ -124,13 +163,14 @@ def mkData():
         updateSize()
 
 def updateSize():
-    global ui
+    global ui, vb
     frames = ui.framesSpin.value()
     width = ui.widthSpin.value()
     height = ui.heightSpin.value()
     dtype = np.dtype(str(ui.dtypeCombo.currentText()))
     rgb = 3 if ui.rgbCheck.isChecked() else 1
     ui.sizeLabel.setText('%d MB' % (frames * width * height * rgb * dtype.itemsize / 1e6))
+    vb.setRange(QtCore.QRectF(0, 0, width, height))
     
 
 mkData()

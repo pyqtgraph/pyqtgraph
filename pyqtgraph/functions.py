@@ -1096,7 +1096,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         raise Exception("levels argument must be 1D or 2D (got shape=%s)." % repr(levels.shape))
 
-    profile()
+    profile('check inputs')
 
     # Decide on maximum scaled value
     if scale is None:
@@ -1143,7 +1143,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                 rng = 1 if rng == 0 else rng
                 data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
-    profile()
+    profile('apply levels')
+
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1151,12 +1152,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         if data.dtype is not np.ubyte:
             data = np.clip(data, 0, 255).astype(np.ubyte)
 
-    profile()
+    profile('apply lut')
 
     # this will be the final image array
     imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
 
-    profile()
+    profile('allocate')
 
     # decide channel order
     if useRGBA:
@@ -1178,7 +1179,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         for i in range(0, data.shape[2]):
             imgData[..., i] = data[..., order[i]] 
         
-    profile()
+    profile('reorder channels')
     
     # add opaque alpha channel if needed
     if data.ndim == 2 or data.shape[2] == 3:
@@ -1192,7 +1193,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         alpha = True
         imgData[nanMask, 3] = 0
 
-    profile()
+    profile('alpha channel')
     return imgData, alpha
 
 
