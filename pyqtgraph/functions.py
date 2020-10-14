@@ -1022,7 +1022,7 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrder='rgba'): 
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrder='rgba', output=None):
     """ 
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
@@ -1157,7 +1157,10 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
     profile('apply lut')
 
     # this will be the final image array
-    imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
+    if output is None:
+        imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
+    else:
+        imgData = output
 
     profile('allocate')
 
