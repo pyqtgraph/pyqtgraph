@@ -319,7 +319,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
         if self.topContainer is None or self.topContainer.count() == 0:
             self.topContainer = None
-            if self.temporary and self.home:
+            if self.temporary and self.home is not None:
                 self.home.removeTempArea(self)
                 #self.close()
                 
