@@ -10,6 +10,7 @@ import pytest
 app = pg.mkQApp()
 pg.setConfigOption("mouseRateLimit", 0)
 
+
 def test_getArrayRegion(transpose=False):
     pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
     pr.setPos(1, 1)
