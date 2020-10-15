@@ -31,7 +31,7 @@ class PColorMeshItem(GraphicsObject):
 
         Call signature:
 
-        PColorMeshItem([x, y,] z, **kwargs)
+        ``PColorMeshItem([x, y,] z, **kwargs)``
 
         x and y can be used to specify the corners of the quadrilaterals.
         z must be used to specified to color of the quadrilaterals.
@@ -51,20 +51,24 @@ class PColorMeshItem(GraphicsObject):
                                     | z[i, j] |
                                     +---------+
                     (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
-            "ASCII from: https://matplotlib.org/3.2.1/api/_as_gen/
-                         matplotlib.pyplot.pcolormesh.html".
+
+            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html>".
         cmap : str, default 'viridis
             Colormap used to map the z value to colors.
-        edgecolors : dict , default None
+        edgecolors : dict, default None
             The color of the edges of the polygons.
             Default None means no edges.
-            The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>.
+            The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
             Example:
-                mkPen(color='w', width=2)
-        antialiasing : bool , default False
+
+                ``mkPen(color='w', width=2)``
+
+        antialiasing : bool, default False
             Whether to draw edgelines with antialiasing.
             Note that if edgecolors is None, antialiasing is always False.
         """
+
         GraphicsObject.__init__(self)
 
         self.qpicture = None  ## rendered picture for display
@@ -145,16 +149,16 @@ class PColorMeshItem(GraphicsObject):
             2D array containing the value which will be maped into the polygons
             colors.
             If x and y is None, the polygons will be displaced on a grid
-            otherwise x and y will be used as polygons vertices coordinates as:
+            otherwise x and y will be used as polygons vertices coordinates as::
+                
+                (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                    +---------+
+                                    | z[i, j] |
+                                    +---------+
+                    (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
 
-            (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
-                                +---------+
-                                | z[i, j] |
-                                +---------+
-                (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
-            "ASCII from: https://matplotlib.org/3.2.1/api/_as_gen/
-                         matplotlib.pyplot.pcolormesh.html".
-
+            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html>".
         """
 
         # Prepare data
