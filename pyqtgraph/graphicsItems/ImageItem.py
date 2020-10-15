@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 from ..Qt import QtGui, QtCore
@@ -51,6 +52,7 @@ class ImageItem(GraphicsObject):
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
+        self._lastDownsample = (1, 1)
 
         self.axisOrder = getConfigOption('imageAxisOrder')
 
@@ -369,22 +371,11 @@ class ImageItem(GraphicsObject):
             lut = None
 
         if self.autoDownsample:
-            # reduce dimensions of image based on screen resolution
-            o = self.mapToDevice(QtCore.QPointF(0,0))
-            x = self.mapToDevice(QtCore.QPointF(1,0))
-            y = self.mapToDevice(QtCore.QPointF(0,1))
-
-            # Check if graphics view is too small to render anything
-            if o is None or x is None or y is None:
-                return
-
-            w = Point(x-o).length()
-            h = Point(y-o).length()
-            if w == 0 or h == 0:
+            xds, yds = self._computeDownsampleFactors()
+            if xds is None:
                 self.qimage = None
                 return
-            xds = max(1, int(1.0 / w))
-            yds = max(1, int(1.0 / h))
+
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
             image = fn.downsample(self.image, xds, axis=axes[0])
             image = fn.downsample(image, yds, axis=axes[1])
@@ -551,8 +542,27 @@ class ImageItem(GraphicsObject):
 
     def viewTransformChanged(self):
         if self.autoDownsample:
-            self.qimage = None
-            self.update()
+            xds, yds = self._computeDownsampleFactors()
+            if xds is None:
+                self.qimage = None
+                return
+            if (xds, yds) != self._lastDownsample:
+                self.qimage = None
+                self.update()
+
+    def _computeDownsampleFactors(self):
+        # reduce dimensions of image based on screen resolution
+        o = self.mapToDevice(QtCore.QPointF(0, 0))
+        x = self.mapToDevice(QtCore.QPointF(1, 0))
+        y = self.mapToDevice(QtCore.QPointF(0, 1))
+        # scene may not be available yet
+        if o is None:
+            return None, None
+        w = Point(x - o).length()
+        h = Point(y - o).length()
+        if w == 0 or h == 0:
+            return None, None
+        return max(1, int(1.0 / w)), max(1, int(1.0 / h))
 
     def mouseDragEvent(self, ev):
         if ev.button() != QtCore.Qt.LeftButton:

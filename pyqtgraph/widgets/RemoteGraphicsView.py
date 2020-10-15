@@ -1,6 +1,9 @@
 from ..Qt import QtGui, QtCore, QT_LIB
 if QT_LIB in ['PyQt4', 'PyQt5']:
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 from .. import CONFIG_OPTIONS

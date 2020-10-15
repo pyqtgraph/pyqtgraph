@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .GraphicsObject import GraphicsObject
@@ -160,7 +161,8 @@ class InfiniteLine(GraphicsObject):
         ============= =========================================================
         **Arguments**
         marker        String indicating the style of marker to add:
-                      '<|', '|>', '>|', '|<', '<|>', '>|<', '^', 'v', 'o'
+                      ``'<|'``, ``'|>'``, ``'>|'``, ``'|<'``, ``'<|>'``,
+                      ``'>|<'``, ``'^'``, ``'v'``, ``'o'``
         position      Position (0.0-1.0) along the visible extent of the line
                       to place the marker. Default is 0.5.
         size          Size of the marker in pixels. Default is 10.0.
@@ -220,8 +222,8 @@ class InfiniteLine(GraphicsObject):
 
     def setPos(self, pos):
 
-        if type(pos) in [list, tuple]:
-            newPos = pos
+        if type(pos) in [list, tuple, np.ndarray]:
+            newPos = list(pos)
         elif isinstance(pos, QtCore.QPointF):
             newPos = [pos.x(), pos.y()]
         else:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -97,6 +98,19 @@ def check_interpolateArray(order):
 
     assert_array_almost_equal(r1, r2)
     
+def test_subArray():
+    a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
+    b = pg.subArray(a, offset=2, shape=(2,2,3), stride=(10,4,1))
+    c = np.array([[[111,112,113], [121,122,123]], [[211,212,213], [221,222,223]]])
+    assert np.all(b == c)
+    
+    # operate over first axis; broadcast over the rest
+    aa = np.vstack([a, a/100.]).T
+    cc = np.empty(c.shape + (2,))
+    cc[..., 0] = c
+    cc[..., 1] = c / 100.
+    bb = pg.subArray(aa, offset=2, shape=(2,2,3), stride=(10,4,1))
+    assert np.all(bb == cc)
     
 def test_subArray():
     a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
@@ -270,6 +284,30 @@ def test_makeARGB():
     im2, alpha = pg.makeARGB(im1, lut=lut, levels=(1, 17))
     checkImage(im2, np.linspace(127.5, 0, 256).astype('ubyte'), alpha, False)
 
+    # nans in image
+
+    # 2d input image, one pixel is nan
+    im1 = np.ones((10, 12))
+    im1[3, 5] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGB input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 3))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1))
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
+    assert im2[0, 0, 3] == 255  # doesn't affect other pixels
+
+    # 3d RGBA input image, any color channel of a pixel is nan
+    im1 = np.ones((10, 12, 4))
+    im1[3, 5, 1] = np.nan
+    im2, alpha = pg.makeARGB(im1, levels=(0, 1), useRGBA=True)
+    assert alpha
+    assert im2[3, 5, 3] == 0    # nan pixel is transparent
 
     # test sanity checks
     class AssertExc(object):

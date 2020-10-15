@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
+from .. import ptime
 
 __all__ = ['ProgressDialog']
 
@@ -40,7 +41,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         nested         (bool) If True, then this progress bar will be displayed inside
                        any pre-existing progress dialogs that also allow nesting.
         ============== ================================================================
-        """    
+        """
         # attributes used for nesting dialogs
         self.nestedLayout = None
         self._nestableWidgets = None
@@ -48,6 +49,9 @@ class ProgressDialog(QtGui.QProgressDialog):
         self._topDialog = None
         self._subBars = []
         self.nested = nested
+
+        # for rate-limiting Qt event processing during progress bar update
+        self._lastProcessEvents = None
         
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
@@ -203,7 +207,10 @@ class ProgressDialog(QtGui.QProgressDialog):
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
         if self.windowModality() == QtCore.Qt.WindowModal:
-            QtGui.QApplication.processEvents()
+            now = ptime.time()
+            if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
+                QtGui.QApplication.processEvents()
+                self._lastProcessEvents = now
         
     def setLabelText(self, val):
         if self.disabled:

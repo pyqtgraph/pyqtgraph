@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -40,25 +41,31 @@ class PlotDataItem(GraphicsObject):
         **Data initialization arguments:** (x,y data only)
 
             =================================== ======================================
-            PlotDataItem(xValues, yValues)      x and y values may be any sequence (including ndarray) of real numbers
-            PlotDataItem(yValues)               y values only -- x will be automatically set to range(len(y))
+            PlotDataItem(xValues, yValues)      x and y values may be any sequence
+                                                (including ndarray) of real numbers
+            PlotDataItem(yValues)               y values only -- x will be
+                                                automatically set to range(len(y))
             PlotDataItem(x=xValues, y=yValues)  x and y given by keyword arguments
-            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where x=data[:,0] and y=data[:,1]
+            PlotDataItem(ndarray(Nx2))          numpy array with shape (N, 2) where
+                                                ``x=data[:,0]`` and ``y=data[:,1]``
             =================================== ======================================
 
         **Data initialization arguments:** (x,y data AND may include spot style)
 
-            ===========================   =========================================
-            PlotDataItem(recarray)        numpy array with dtype=[('x', float), ('y', float), ...]
-            PlotDataItem(list-of-dicts)   [{'x': x, 'y': y, ...},   ...]
-            PlotDataItem(dict-of-lists)   {'x': [...], 'y': [...],  ...}
-            PlotDataItem(MetaArray)       1D array of Y values with X sepecified as axis values
-                                          OR 2D array with a column 'y' and extra columns as needed.
-            ===========================   =========================================
-
+        
+            ============================ =========================================
+            PlotDataItem(recarray)       numpy array with ``dtype=[('x', float),
+                                         ('y', float), ...]``
+            PlotDataItem(list-of-dicts)  ``[{'x': x, 'y': y, ...},   ...]``
+            PlotDataItem(dict-of-lists)  ``{'x': [...], 'y': [...],  ...}``
+            PlotDataItem(MetaArray)      1D array of Y values with X sepecified as
+                                         axis values OR 2D array with a column 'y'
+                                         and extra columns as needed.
+            ============================ =========================================
+        
         **Line style keyword arguments:**
 
-            ==========   ==============================================================================
+            ============ ==============================================================================
             connect      Specifies how / whether vertexes should be connected. See
                          :func:`arrayToQPath() <pyqtgraph.arrayToQPath>`
             pen          Pen to use for drawing line between points.
@@ -67,16 +74,25 @@ class PlotDataItem(GraphicsObject):
             shadowPen    Pen for secondary line to draw behind the primary line. disabled by default.
                          May be any single argument accepted by :func:`mkPen() <pyqtgraph.mkPen>`
             fillLevel    Fill the area between the curve and fillLevel
-            fillOutline  (bool) If True, an outline surrounding the *fillLevel*
-                         area is drawn.
+
+            fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
             fillBrush    Fill to use when fillLevel is specified.
                          May be any single argument accepted by :func:`mkBrush() <pyqtgraph.mkBrush>`
-            stepMode     If True, two orthogonal lines are drawn for each sample
-                         as steps. This is commonly used when drawing histograms.
-                         Note that in this case, `len(x) == len(y) + 1`
+            stepMode     (str or None) If "center", a step is drawn using the x
+                         values as boundaries and the given y values are
+                         associated to the mid-points between the boundaries of
+                         each step. This is commonly used when drawing
+                         histograms. Note that in this case, len(x) == len(y) + 1
+                         If "left" or "right", the step is drawn assuming that
+                         the y value is associated to the left or right boundary,
+                         respectively. In this case len(x) == len(y)
+                         If not passed or an empty string or None is passed, the
+                         step mode is not enabled.
+                         Passing True is a deprecated equivalent to "center".
                          (added in version 0.9.9)
-            ==========   ==============================================================================
 
+            ============ ==============================================================================
+        
         **Point style keyword arguments:**  (see :func:`ScatterPlotItem.setData() <pyqtgraph.ScatterPlotItem.setData>` for more information)
 
             ============   =====================================================
@@ -152,6 +168,8 @@ class PlotDataItem(GraphicsObject):
 
             'fftMode': False,
             'logMode': [False, False],
+            'derivativeMode': False,
+            'phasemapMode': False,
             'alphaHint': 1.0,
             'alphaMode': False,
 
@@ -215,6 +233,25 @@ class PlotDataItem(GraphicsObject):
         if self.opts['logMode'] == [xMode, yMode]:
             return
         self.opts['logMode'] = [xMode, yMode]
+        self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
+        self.updateItems()
+        self.informViewBoundsChanged()
+
+
+    def setDerivativeMode(self, mode):
+        if self.opts['derivativeMode'] == mode:
+            return
+        self.opts['derivativeMode'] = mode
+        self.xDisp = self.yDisp = None
+        self.xClean = self.yClean = None
+        self.updateItems()
+        self.informViewBoundsChanged()
+
+    def setPhasemapMode(self, mode):
+        if self.opts['phasemapMode'] == mode:
+            return
+        self.opts['phasemapMode'] = mode
         self.xDisp = self.yDisp = None
         self.xClean = self.yClean = None
         self.updateItems()
@@ -366,6 +403,12 @@ class PlotDataItem(GraphicsObject):
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         """
         #self.clear()
+        if kargs.get("stepMode", None) is True:
+            import warnings
+            warnings.warn(
+                'stepMode=True is deprecated, use stepMode="center" instead',
+                DeprecationWarning, stacklevel=3
+            )
         profiler = debug.Profiler()
         y = None
         x = None
@@ -512,8 +555,9 @@ class PlotDataItem(GraphicsObject):
 
         if scatterArgs['symbol'] is not None:
 
-            if self.opts.get('stepMode', False) is True:
-                x = 0.5 * (x[:-1] + x[1:])
+            ## check against `True` too for backwards compatibility
+            if self.opts.get('stepMode', False) in ("center", True):
+                x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
         else:
@@ -535,6 +579,13 @@ class PlotDataItem(GraphicsObject):
                     x=x[1:]
                     y=y[1:]
 
+            if self.opts['derivativeMode']:  # plot dV/dt
+                y = np.diff(self.yData)/np.diff(self.xData)
+                x = x[:-1]
+            if self.opts['phasemapMode']:  # plot dV/dt vs V
+                x = self.yData[:-1]
+                y = np.diff(self.yData)/np.diff(self.xData)
+                    
             with np.errstate(divide='ignore'):
                 if self.opts['logMode'][0]:
                     x = np.log10(x)

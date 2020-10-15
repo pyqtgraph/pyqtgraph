@@ -78,7 +78,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph"))
         self.graphicsSystemCombo.setItemText(0, _translate("Form", "default"))
         self.graphicsSystemCombo.setItemText(1, _translate("Form", "native"))
         self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster"))

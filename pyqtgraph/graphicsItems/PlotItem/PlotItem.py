@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import warnings
 import weakref
 import numpy as np
 import os
@@ -95,7 +96,7 @@ class PlotItem(GraphicsWidget):
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
         Create a new PlotItem. All arguments are optional.
-        Any extra keyword arguments are passed to PlotItem.plot().
+        Any extra keyword arguments are passed to :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
         
         ==============  ==========================================================================================
         **Arguments:**
@@ -153,20 +154,9 @@ class PlotItem(GraphicsWidget):
         
         self.legend = None
         
-        ## Create and place axis items
-        if axisItems is None:
-            axisItems = {}
+        # Initialize axis items
         self.axes = {}
-        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            if k in axisItems:
-                axis = axisItems[k]
-            else:
-                axis = AxisItem(orientation=k, parent=self)
-            axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
-            axis.setZValue(-1000)
-            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+        self.setAxisItems(axisItems)
         
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
@@ -240,6 +230,8 @@ class PlotItem(GraphicsWidget):
         c.fftCheck.toggled.connect(self.updateSpectrumMode)
         c.logXCheck.toggled.connect(self.updateLogMode)
         c.logYCheck.toggled.connect(self.updateLogMode)
+        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
+        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -253,11 +245,6 @@ class PlotItem(GraphicsWidget):
         
         self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
-        
-        self.hideAxis('right')
-        self.hideAxis('top')
-        self.showAxis('left')
-        self.showAxis('bottom')
         
         if labels is None:
             labels = {}
@@ -300,6 +287,61 @@ class PlotItem(GraphicsWidget):
         locals()[m] = _create_method(m)
         
     del _create_method
+    
+    def setAxisItems(self, axisItems=None):
+        """
+        Place axis items as given by `axisItems`. Initializes non-existing axis items.
+        
+        ==============  ==========================================================================================
+        **Arguments:**
+        *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
+                        for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+                        and the values must be instances of AxisItem (or at least compatible with AxisItem).
+        ==============  ==========================================================================================
+        """
+        
+                
+        if axisItems is None:
+            axisItems = {}
+        
+        # Array containing visible axis items
+        # Also containing potentially hidden axes, but they are not touched so it does not matter
+        visibleAxes = ['left', 'bottom']
+        visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
+                                             # some values to visibleAxes a second time
+        
+        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
+            if k in self.axes:
+                if k not in axisItems:
+                    continue # Nothing to do here
+                
+                # Remove old axis
+                oldAxis = self.axes[k]['item']
+                self.layout.removeItem(oldAxis)
+                oldAxis.scene().removeItem(oldAxis)
+                oldAxis.unlinkFromView()
+            
+            # Create new axis
+            if k in axisItems:
+                axis = axisItems[k]
+                if axis.scene() is not None:
+                    if k not in self.axes or axis != self.axes[k]["item"]:
+                        raise RuntimeError(
+                            "Can't add an axis to multiple plots. Shared axes"
+                            " can be achieved with multiple AxisItem instances"
+                            " and set[X/Y]Link.")
+            else:
+                axis = AxisItem(orientation=k, parent=self)
+            
+            # Set up new axis
+            axis.linkToView(self.vb)
+            self.axes[k] = {'item': axis, 'pos': pos}
+            self.layout.addItem(axis, *pos)
+            axis.setZValue(-1000)
+            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+            
+            axisVisible = k in visibleAxes
+            self.showAxis(k, axisVisible)
         
     def setLogMode(self, x=None, y=None):
         """
@@ -478,6 +520,9 @@ class PlotItem(GraphicsWidget):
         If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
         be included in analysis performed by the PlotItem.
         """
+        if item in self.items:
+            warnings.warn('Item already added to PlotItem, ignoring.')
+            return
         self.items.append(item)
         vbargs = {}
         if 'ignoreBounds' in kargs:
@@ -609,17 +654,20 @@ class PlotItem(GraphicsWidget):
         
         return item
 
-    def addLegend(self, size=None, offset=(30, 30)):
+    def addLegend(self, offset=(30, 30), **kwargs):
         """
-        Create a new LegendItem and anchor it over the internal ViewBox.
-        Plots will be automatically displayed in the legend if they
-        are created with the 'name' argument.
+        Create a new :class:`~pyqtgraph.LegendItem` and anchor it over the
+        internal ViewBox. Plots will be automatically displayed in the legend
+        if they are created with the 'name' argument.
 
         If a LegendItem has already been created using this method, that
         item will be returned rather than creating a new one.
+
+        Accepts the same arguments as :meth:`~pyqtgraph.LegendItem`.
         """
+
         if self.legend is None:
-            self.legend = LegendItem(size, offset)
+            self.legend = LegendItem(offset=offset, **kwargs)
             self.legend.setParentItem(self.vb)
         return self.legend
         
@@ -855,6 +903,23 @@ class PlotItem(GraphicsWidget):
         self.getAxis('right').setLogMode(y)
         self.enableAutoRange()
         self.recomputeAverages()
+    
+    def updateDerivativeMode(self):
+        d = self.ctrl.derivativeCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setDerivativeMode'):
+                i.setDerivativeMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
+    def updatePhasemapMode(self):
+        d = self.ctrl.phasemapCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setPhasemapMode'):
+                i.setPhasemapMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+        
         
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.

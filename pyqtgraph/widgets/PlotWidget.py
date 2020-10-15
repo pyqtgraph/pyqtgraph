@@ -24,6 +24,7 @@ class PlotWidget(GraphicsView):
     :func:`addItem <pyqtgraph.PlotItem.addItem>`, 
     :func:`removeItem <pyqtgraph.PlotItem.removeItem>`, 
     :func:`clear <pyqtgraph.PlotItem.clear>`, 
+    :func:`setAxisItems <pyqtgraph.PlotItem.setAxisItems>`,
     :func:`setXRange <pyqtgraph.ViewBox.setXRange>`,
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
@@ -43,7 +44,7 @@ class PlotWidget(GraphicsView):
     For all 
     other methods, use :func:`getPlotItem <pyqtgraph.PlotWidget.getPlotItem>`.
     """
-    def __init__(self, parent=None, background='default', **kargs):
+    def __init__(self, parent=None, background='default', plotItem=None, **kargs):
         """When initializing PlotWidget, *parent* and *background* are passed to 
         :func:`GraphicsWidget.__init__() <pyqtgraph.GraphicsWidget.__init__>`
         and all others are passed
@@ -51,11 +52,14 @@ class PlotWidget(GraphicsView):
         GraphicsView.__init__(self, parent, background=background)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.enableMouse(False)
-        self.plotItem = PlotItem(**kargs)
+        if plotItem is None:
+            self.plotItem = PlotItem(**kargs)
+        else:
+            self.plotItem = plotItem
         self.setCentralItem(self.plotItem)
         ## Explicitly wrap methods from plotItem
         ## NOTE: If you change this list, update the documentation above as well.
-        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setXRange', 
+        for m in ['addItem', 'removeItem', 'autoRange', 'clear', 'setAxisItems', 'setXRange', 
                   'setYRange', 'setRange', 'setAspectLocked', 'setMouseEnabled', 
                   'setXLink', 'setYLink', 'enableAutoRange', 'disableAutoRange', 
                   'setLimits', 'register', 'unregister', 'viewRect']:

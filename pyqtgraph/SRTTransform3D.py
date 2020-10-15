@@ -224,9 +224,9 @@ class SRTTransform3D(Transform3D):
             raise Exception("Argument 'nd' must be 2 or 3")
         
 if __name__ == '__main__':
-    import widgets
+    from . import widgets
     import GraphicsView
-    from functions import *
+    from .functions import *
     app = QtGui.QApplication([])
     win = QtGui.QMainWindow()
     win.show()

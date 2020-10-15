@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
 from pyqtgraph.Qt import QtCore, QtGui
@@ -117,20 +118,20 @@ class PythonHighlighter(QSyntaxHighlighter):
 
     # Python operators
     operators = [
-        '=',
+        r'=',
         # Comparison
-        '==', '!=', '<', '<=', '>', '>=',
+        r'==', r'!=', r'<', r'<=', r'>', r'>=',
         # Arithmetic
-        '\+', '-', '\*', '/', '//', '\%', '\*\*',
+        r'\+', r'-', r'\*', r'/', r'//', r'\%', r'\*\*',
         # In-place
-        '\+=', '-=', '\*=', '/=', '\%=',
+        r'\+=', r'-=', r'\*=', r'/=', r'\%=',
         # Bitwise
-        '\^', '\|', '\&', '\~', '>>', '<<',
+        r'\^', r'\|', r'\&', r'\~', r'>>', r'<<',
     ]
 
     # Python braces
     braces = [
-        '\{', '\}', '\(', '\)', '\[', '\]',
+        r'\{', r'\}', r'\(', r'\)', r'\[', r'\]',
     ]
 
     def __init__(self, document):

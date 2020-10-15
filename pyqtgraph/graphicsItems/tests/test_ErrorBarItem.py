@@ -21,19 +21,19 @@ def test_ErrorBarItem_defer_data():
     app.processEvents()
     r_empty_ebi = plot.viewRect()
 
-    assert r_no_ebi == r_empty_ebi
+    assert r_no_ebi.height() == r_empty_ebi.height()
 
     err.setData(x=x, y=x, bottom=x, top=x)
     app.processEvents()
     r_ebi = plot.viewRect()
 
-    assert r_empty_ebi != r_ebi
+    assert r_ebi.height() > r_empty_ebi.height()
 
     # unset data, ErrorBarItem disappears and view rect goes back to original
     err.setData(x=None, y=None)
     app.processEvents()
     r_clear_ebi = plot.viewRect()
 
-    assert r_clear_ebi == r_no_ebi
+    assert r_clear_ebi.height() == r_empty_ebi.height()
 
     plot.close()

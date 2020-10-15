@@ -150,7 +150,12 @@ conditionalExamples = {
     )
 }
 
-@pytest.mark.skipif(Qt.QT_LIB == "PySide2" and "Qt.QtVersion.startswith('5.14')", reason="new PySide2 doesn't have loadUi functionality")
+@pytest.mark.skipif(
+    Qt.QT_LIB == "PySide2"
+    and tuple(map(int, Qt.PySide2.__version__.split("."))) >= (5, 14) 
+    and tuple(map(int, Qt.PySide2.__version__.split("."))) < (5, 14, 2, 2), 
+    reason="new PySide2 doesn't have loadUi functionality"
+)
 @pytest.mark.parametrize(
     "frontend, f",
     [
