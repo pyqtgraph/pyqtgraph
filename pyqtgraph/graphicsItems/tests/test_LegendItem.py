@@ -54,9 +54,6 @@ def test_legend_item_basics():
     assert legend.labelTextSize() == text_size
     assert legend.opts['labelTextSize'] == text_size
 
-    with pytest.raises(AssertionError):
-        legend.setLabelTextSize(12)
-
     # Add items
     # ----------------------------------------------------
 
