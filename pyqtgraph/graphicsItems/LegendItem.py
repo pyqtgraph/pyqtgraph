@@ -151,9 +151,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
         Accepts the CSS style string arguments, e.g. '8pt'.
         """
-        msg = "Size must be of type 'str', got {} instead".format(type(size))
-        assert isinstance(size, str), msg
-
         self.opts['labelTextSize'] = size
         for _, label in self.items:
             label.setAttr('size', self.opts['labelTextSize'])
