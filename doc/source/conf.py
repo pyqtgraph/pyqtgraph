@@ -139,7 +139,7 @@ html_static_path = ['_static']
 
 # add the theme customizations
 def setup(app):
-    app.add_stylesheet("custom.css")
+    app.add_css_file("custom.css")
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
