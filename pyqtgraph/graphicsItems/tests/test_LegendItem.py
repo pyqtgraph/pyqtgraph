@@ -102,5 +102,3 @@ def test_legend_item_basics():
 
     legend.clear()
     assert legend.items == []
-
-    app.deleteLater()
