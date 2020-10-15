@@ -14,7 +14,8 @@ __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, and can automatically synchronize its displayed scale with ViewBox items.
+    Can be configured to fit on any side of a plot, 
+    Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
     """
@@ -39,7 +40,7 @@ class AxisItem(GraphicsWidget):
                         range of data displayed.
         args            All extra keyword arguments become CSS style options for
                         the <span> tag which will surround the axis label and units.
-        ==============  ===============================================================
+        =============== ===============================================================
         """
 
         GraphicsWidget.__init__(self, parent)
