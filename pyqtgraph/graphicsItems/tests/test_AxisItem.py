@@ -2,6 +2,7 @@ import pyqtgraph as pg
 
 app = pg.mkQApp()
 
+
 def test_AxisItem_stopAxisAtTick(monkeypatch):
     def test_bottom(p, axisSpec, tickSpecs, textSpecs):
         assert view.mapToView(axisSpec[1]).x() == 0.25
@@ -114,3 +115,30 @@ def test_AxisItem_tickFont(monkeypatch):
     plot.show()
     app.processEvents()
     plot.close()
+
+
+def test_AxisItem_label_visibility():
+    """Test the visibility of the axis item using `setLabel`"""
+    axis = pg.AxisItem('left')
+    assert axis.labelText == ''
+    assert axis.labelUnits == ''
+    assert not axis.label.isVisible()
+    axis.setLabel(text='Position', units='mm')
+    assert axis.labelText == 'Position'
+    assert axis.labelUnits == 'mm'
+    assert axis.label.isVisible()
+    # XXX: `None` is converted to empty strings.
+    axis.setLabel(text=None, units=None)
+    assert axis.labelText == ''
+    assert axis.labelUnits == ''
+    assert not axis.label.isVisible()
+    axis.setLabel(text='Current', units=None)
+    assert axis.labelText == 'Current'
+    assert axis.labelUnits == ''
+    assert axis.label.isVisible()
+    axis.setLabel(text=None, units=None)
+    assert not axis.label.isVisible()
+    axis.setLabel(text='', units='V')
+    assert axis.labelText == ''
+    assert axis.labelUnits == 'V'
+    assert axis.label.isVisible()
