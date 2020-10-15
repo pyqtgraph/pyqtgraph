@@ -53,7 +53,6 @@ stages:
         echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
         test ${SIZE_DIFF} -lt 100;
       displayName: 'Diff Size Check'
-      continueOnError: true
 
   - job: "style_check"
     pool:
@@ -66,7 +65,6 @@ stages:
         pip install flake8
         python setup.py style
       displayName: 'flake8 check'
-      continueOnError: true
 
   - job: "build_wheel"
     pool:
@@ -95,9 +93,9 @@ stages:
         python -m pip install -r requirements.txt
         make html SPHINXOPTS='-W -v'
       displayName: "Build docs"
-      continueOnError: true
 
 - stage: "test"
+  condition: succeededOrFailed()
   jobs:
   - template: azure-test-template.yml
     parameters:
