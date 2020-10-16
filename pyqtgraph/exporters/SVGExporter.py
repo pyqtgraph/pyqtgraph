@@ -18,7 +18,18 @@ class SVGExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
+
+        if isinstance(item, QtGui.QGraphicsItem):
+            scene = item.scene()
+        else:
+            scene = item
+        bgbrush = scene.views()[0].backgroundBrush()
+        bg = bgbrush.color()
+        if bgbrush.style() == QtCore.Qt.NoBrush:
+            bg.setAlpha(0)
+
         self.params = Parameter(name='params', type='group', children=[
+            {'name': 'background', 'type': 'color', 'value': bg},
             {'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
             {'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
@@ -51,6 +62,7 @@ class SVGExporter(Exporter):
         ## Instead, we will use Qt to generate SVG for each item independently,
         ## then manually reconstruct the entire document.
         options = {ch.name():ch.value() for ch in self.params.children()}
+        options['background'] = self.params['background']
         options['width'] = self.params['width']
         options['height'] = self.params['height']
         xml = generateSvg(self.item, options)
@@ -103,7 +115,9 @@ def generateSvg(item, options={}):
         defsXml += d.toprettyxml(indent='    ')
     defsXml += "</defs>\n"
     svgAttributes = f' viewBox ="0 0 {options["width"]} {options["height"]}"'
-    return (xmlHeader % svgAttributes) + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
+    c = options['background']
+    backgroundtag = f'<rect width="100%" height="100%" style="fill:rgba({c.red()}, {c.blue()}, {c.green()}, {c.alpha()/255.0})" />\n'
+    return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 
 def _generateItemSvg(item, nodes=None, root=None, options={}):
