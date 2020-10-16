@@ -1030,12 +1030,13 @@ def jitMakeARGB(data, lut, levels, output):
     # todo scale?
     # todo clip?
     # todo dtype?
-    if levels is not None:
+    # todo levels.ndim == 2
+    if levels is not None and levels.ndim == 1:
         valmin, valmax = levels
         if lut is not None:
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    val = min(valmin, max(valmax, lut[data[i, j]]))
+                    val = max(valmin, min(valmax, lut[data[i, j]]))
                     output[i, j, 0] = val
                     output[i, j, 1] = val
                     output[i, j, 2] = val
@@ -1043,7 +1044,7 @@ def jitMakeARGB(data, lut, levels, output):
         elif data.ndim == 2:
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    val = min(valmin, max(valmax, data[i, j]))
+                    val = max(valmin, min(valmax, data[i, j]))
                     output[i, j, 0] = val
                     output[i, j, 1] = val
                     output[i, j, 2] = val
@@ -1051,16 +1052,16 @@ def jitMakeARGB(data, lut, levels, output):
         elif data.ndim == 3 and data.shape[2] == 3:
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    output[i, j, 0] = min(valmin, max(valmax, data[i, j, 0]))
-                    output[i, j, 1] = min(valmin, max(valmax, data[i, j, 1]))
-                    output[i, j, 2] = min(valmin, max(valmax, data[i, j, 2]))
+                    output[i, j, 0] = max(valmin, min(valmax, data[i, j, 0]))
+                    output[i, j, 1] = max(valmin, min(valmax, data[i, j, 1]))
+                    output[i, j, 2] = max(valmin, min(valmax, data[i, j, 2]))
                     output[i, j, 3] = 255
         elif data.ndim == 3 and data.shape[2] == 4:
             for i in range(data.shape[0]):
                 for j in range(data.shape[1]):
-                    output[i, j, 0] = min(valmin, max(valmax, data[i, j, 0]))
-                    output[i, j, 1] = min(valmin, max(valmax, data[i, j, 1]))
-                    output[i, j, 2] = min(valmin, max(valmax, data[i, j, 2]))
+                    output[i, j, 0] = max(valmin, min(valmax, data[i, j, 0]))
+                    output[i, j, 1] = max(valmin, min(valmax, data[i, j, 1]))
+                    output[i, j, 2] = max(valmin, min(valmax, data[i, j, 2]))
                     output[i, j, 3] = data[i, j, 3]
     else:
         if lut is not None:
