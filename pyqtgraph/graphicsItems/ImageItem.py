@@ -431,7 +431,7 @@ class ImageItem(GraphicsObject):
         if self._buffer is None:
             self._buildQImageBuffer(image.shape)
 
-        fn.makeARGB(image, lut=lut, levels=levels, output=self._buffer)
+        fn.jitMakeARGB(image, lut=lut, levels=levels, output=self._buffer)
         self._renderRequired = False
         self._unrenderable = False
 

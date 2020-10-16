@@ -7,6 +7,8 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from __future__ import division
 import warnings
+
+import numba as numba
 import numpy as np
 import decimal, re
 import ctypes
@@ -1022,8 +1024,79 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
+@numba.jit(nopython=True)
+def jitMakeARGB(data, lut, levels, output):
+    # todo docstring
+    # todo scale?
+    # todo clip?
+    # todo dtype?
+    if levels is not None:
+        valmin, valmax = levels
+        if lut is not None:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    val = min(valmin, max(valmax, lut[data[i, j]]))
+                    output[i, j, 0] = val
+                    output[i, j, 1] = val
+                    output[i, j, 2] = val
+                    output[i, j, 3] = 255
+        elif data.ndim == 2:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    val = min(valmin, max(valmax, data[i, j]))
+                    output[i, j, 0] = val
+                    output[i, j, 1] = val
+                    output[i, j, 2] = val
+                    output[i, j, 3] = 255
+        elif data.ndim == 3 and data.shape[2] == 3:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    output[i, j, 0] = min(valmin, max(valmax, data[i, j, 0]))
+                    output[i, j, 1] = min(valmin, max(valmax, data[i, j, 1]))
+                    output[i, j, 2] = min(valmin, max(valmax, data[i, j, 2]))
+                    output[i, j, 3] = 255
+        elif data.ndim == 3 and data.shape[2] == 4:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    output[i, j, 0] = min(valmin, max(valmax, data[i, j, 0]))
+                    output[i, j, 1] = min(valmin, max(valmax, data[i, j, 1]))
+                    output[i, j, 2] = min(valmin, max(valmax, data[i, j, 2]))
+                    output[i, j, 3] = data[i, j, 3]
+    else:
+        if lut is not None:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    val = lut[data[i, j]]
+                    output[i, j, 0] = val
+                    output[i, j, 1] = val
+                    output[i, j, 2] = val
+                    output[i, j, 3] = 255
+        elif data.ndim == 2:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    val = data[i, j]
+                    output[i, j, 0] = val
+                    output[i, j, 1] = val
+                    output[i, j, 2] = val
+                    output[i, j, 3] = 255
+        elif data.ndim == 3 and data.shape[2] == 3:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    output[i, j, 0] = data[i, j, 0]
+                    output[i, j, 1] = data[i, j, 1]
+                    output[i, j, 2] = data[i, j, 2]
+                    output[i, j, 3] = 255
+        elif data.ndim == 3 and data.shape[2] == 4:
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    output[i, j, 0] = data[i, j, 0]
+                    output[i, j, 1] = data[i, j, 1]
+                    output[i, j, 2] = data[i, j, 2]
+                    output[i, j, 3] = data[i, j, 3]
+
+
 def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
-    """
+    """ 
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
     
