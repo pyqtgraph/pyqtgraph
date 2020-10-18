@@ -474,9 +474,11 @@ class ExampleLoader(QtGui.QMainWindow):
         self.loadFile(edited=True)
 
 
+def main():
+    app = pg.mkQApp()
+    loader = ExampleLoader()
+    app.exec_()
 
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        app = App([])
-        loader = ExampleLoader()
-        QtGui.QApplication.instance().exec_()
+        main()
