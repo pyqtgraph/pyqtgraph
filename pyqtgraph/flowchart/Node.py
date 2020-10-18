@@ -510,31 +510,41 @@ class NodeGraphicsItem(GraphicsObject):
         
         
     def updateTerminals(self):
-        bounds = self.bounds
         self.terminals = {}
         inp = self.node.inputs()
-        dy = bounds.height() / (len(inp)+1)
-        y = dy
+        out = self.node.outputs()
+        
+        maxNode = max(len(inp), len(out))
+        titleOffset = 25
+        nodeOffset = 12
+        
+        # calculate new height
+        newHeight = titleOffset+maxNode*nodeOffset
+        
+        # if current height is not equal to new height, update
+        if not self.bounds.height() == newHeight:
+            self.bounds.setHeight(newHeight)
+            self.update()
+
+        # Populate inputs
+        y = titleOffset
         for i, t in inp.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             #item.setZValue(self.zValue()+1)
-            br = self.bounds
             item.setAnchor(0, y)
             self.terminals[i] = (t, item)
-            y += dy
+            y += nodeOffset
         
-        out = self.node.outputs()
-        dy = bounds.height() / (len(out)+1)
-        y = dy
+        # Populate inputs
+        y = titleOffset
         for i, t in out.items():
             item = t.graphicsItem()
             item.setParentItem(self)
             item.setZValue(self.zValue())
-            br = self.bounds
-            item.setAnchor(bounds.width(), y)
+            item.setAnchor(self.bounds.width(), y)
             self.terminals[i] = (t, item)
-            y += dy
+            y += nodeOffset
         
         #self.buildMenu()
         

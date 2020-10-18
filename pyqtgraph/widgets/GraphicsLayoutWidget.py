@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, mkQApp
 from ..graphicsItems.GraphicsLayout import GraphicsLayout
 from .GraphicsView import GraphicsView
@@ -17,21 +18,20 @@ class GraphicsLayoutWidget(GraphicsView):
         p2 = w.addPlot(row=0, col=1)
         v = w.addViewBox(row=1, col=0, colspan=2)
     
-    Parameters
-    ----------
-    parent : QWidget or None
-        The parent widget (see QWidget.__init__)
-    show : bool
-        If True, then immediately show the widget after it is created.
-        If the widget has no parent, then it will be shown inside a new window.
-    size : (width, height) tuple
-        Optionally resize the widget. Note: if this widget is placed inside a
-        layout, then this argument has no effect.
-    title : str or None
-        If specified, then set the window title for this widget.
-    kargs : 
-        All extra arguments are passed to 
-        :func:`GraphicsLayout.__init__() <pyqtgraph.GraphicsLayout.__init__>`
+    =========  =================================================================
+    parent     (QWidget or None) The parent widget.
+    show       (bool) If True, then immediately show the widget after it is
+               created. If the widget has no parent, then it will be shown
+               inside a new window.
+    size       (width, height) tuple. Optionally resize the widget. Note: if
+               this widget is placed inside a layout, then this argument has no
+               effect.
+    title      (str or None) If specified, then set the window title for this
+               widget.
+    kargs      All extra arguments are passed to
+               :meth:`GraphicsLayout.__init__
+               <pyqtgraph.GraphicsLayout.__init__>`
+    =========  =================================================================
         
 
     This class wraps several methods from its internal GraphicsLayout:

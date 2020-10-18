@@ -13,7 +13,7 @@ import numpy as np
 import pyqtgraph as pg
 
 #QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
+app = pg.mkQApp()
 mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: PlotWidget')
 mw.resize(800,800)

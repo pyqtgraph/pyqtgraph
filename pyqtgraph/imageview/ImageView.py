@@ -164,11 +164,22 @@ class ImageView(QtGui.QWidget):
         self.view.addItem(self.normRoi)
         self.normRoi.hide()
         self.roiCurves = []
-        self.timeLine = InfiniteLine(0, movable=True, markers=[('^', 0), ('v', 1)])
-        self.timeLine.setPen((255, 255, 0, 200))
+        self.roiCurve = self.ui.roiPlot.plot()
+        self.timeLine = InfiniteLine(0, movable=True)
+        if getConfigOption('background')=='w':
+            self.timeLine.setPen((20, 80,80, 200))
+        else:
+            self.timeLine.setPen((255, 255, 0, 200))
         self.timeLine.setZValue(1)
         self.ui.roiPlot.addItem(self.timeLine)
         self.ui.splitter.setSizes([self.height()-35, 35])
+        
+        # make splitter an unchangeable small grey line:
+        s = self.ui.splitter
+        s.handle(1).setEnabled(False)
+        s.setStyleSheet("QSplitter::handle{background-color: grey}")
+        s.setHandleWidth(2)
+
         self.ui.roiPlot.hideAxis('left')
         self.frameTicks = VTickGroup(yrange=[0.8, 1], pen=0.4)
         self.ui.roiPlot.addItem(self.frameTicks, ignoreBounds=True)
@@ -176,6 +187,7 @@ class ImageView(QtGui.QWidget):
         self.keysPressed = {}
         self.playTimer = QtCore.QTimer()
         self.playRate = 0
+        self.fps = 1 # 1 Hz by default
         self.lastPlayTime = 0
         
         self.normRgn = LinearRegionItem()
@@ -368,11 +380,14 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.imageItem.clear()
         
-    def play(self, rate):
+    def play(self, rate=None):
         """Begin automatically stepping frames forward at the given rate (in fps).
         This can also be accessed by pressing the spacebar."""
         #print "play:", rate
+        if rate is None: 
+            rate = self.fps
         self.playRate = rate
+
         if rate == 0:
             self.playTimer.stop()
             return
@@ -411,11 +426,9 @@ class ImageView(QtGui.QWidget):
         
     def close(self):
         """Closes the widget nicely, making sure to clear the graphics scene and release memory."""
-        self.ui.roiPlot.close()
-        self.ui.graphicsView.close()
-        self.scene.clear()
-        del self.image
-        del self.imageDisp
+        self.clear()
+        self.imageDisp = None
+        self.imageItem.setParent(None)
         super(ImageView, self).close()
         self.setParent(None)
         
@@ -423,9 +436,7 @@ class ImageView(QtGui.QWidget):
         #print ev.key()
         if ev.key() == QtCore.Qt.Key_Space:
             if self.playRate == 0:
-                fps = (self.getProcessedImage().shape[0]-1) / (self.tVals[-1] - self.tVals[0])
-                self.play(fps)
-                #print fps
+                self.play()
             else:
                 self.play(0)
             ev.accept()
@@ -550,8 +561,8 @@ class ImageView(QtGui.QWidget):
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
-            for c in self.roiCurves:
-                c.show()
+            self.ui.splitter.handle(1).setEnabled(True)
+            self.roiCurve.show()
             self.roiChanged()
             self.ui.roiPlot.showAxis('left')
         else:
@@ -571,6 +582,7 @@ class ImageView(QtGui.QWidget):
             self.ui.roiPlot.show()
             if not self.ui.roiBtn.isChecked():
                 self.ui.splitter.setSizes([self.height()-35, 35])
+                self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
             #self.ui.roiPlot.hide()
@@ -578,27 +590,42 @@ class ImageView(QtGui.QWidget):
         self.ui.roiPlot.setVisible(showRoiPlot)
 
     def roiChanged(self):
+        # Extract image data from ROI
         if self.image is None:
             return
-            
+
         image = self.getProcessedImage()
 
-        # Extract image data from ROI
-        axes = (self.axes['x'], self.axes['y'])
+        # getArrayRegion axes should be (x, y) of data array for col-major,
+        # (y, x) for row-major
+        # can't just transpose input because ROI is axisOrder aware
+        colmaj = self.imageItem.axisOrder == 'col-major'
+        if colmaj:
+            axes = (self.axes['x'], self.axes['y'])
+        else:
+            axes = (self.axes['y'], self.axes['x'])
 
-        data, coords = self.roi.getArrayRegion(image.view(np.ndarray), self.imageItem, axes, returnMappedCoords=True)
+        data, coords = self.roi.getArrayRegion(
+            image.view(np.ndarray), img=self.imageItem, axes=axes,
+            returnMappedCoords=True)
+
         if data is None:
             return
 
         # Convert extracted data into 1D plot data
         if self.axes['t'] is None:
             # Average across y-axis of ROI
-            data = data.mean(axis=axes[1])
-            coords = coords[:,:,0] - coords[:,0:1,0]
+            data = data.mean(axis=self.axes['y'])
+
+            # get coordinates along x axis of ROI mapped to range (0, roiwidth)
+            if colmaj:
+                coords = coords[:, :, 0] - coords[:, 0:1, 0]
+            else:
+                coords = coords[:, 0, :] - coords[:, 0, 0:1]
             xvals = (coords**2).sum(axis=0) ** 0.5
         else:
             # Average data within entire ROI for each frame
-            data = data.mean(axis=max(axes)).mean(axis=min(axes))
+            data = data.mean(axis=axes)
             xvals = self.tVals
 
         # Handle multi-channel data

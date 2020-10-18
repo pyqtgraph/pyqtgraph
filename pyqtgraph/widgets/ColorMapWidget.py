@@ -79,7 +79,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
         return item
         
     def fieldNames(self):
-        return self.fields.keys()
+        return list(self.fields.keys())
     
     def setFields(self, fields):
         """

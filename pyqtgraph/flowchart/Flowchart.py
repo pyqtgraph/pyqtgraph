@@ -214,9 +214,11 @@ class Flowchart(Node):
     def nodeClosed(self, node):
         del self._nodes[node.name()]
         self.widget().removeNode(node)
-        for signal in ['sigClosed', 'sigRenamed', 'sigOutputChanged']:
+        for signal, slot in [('sigClosed', self.nodeClosed),
+                             ('sigRenamed', self.nodeRenamed),
+                             ('sigOutputChanged', self.nodeOutputChanged)]:
             try:
-                getattr(node, signal).disconnect(self.nodeClosed)
+                getattr(node, signal).disconnect(slot)
             except (TypeError, RuntimeError):
                 pass
         self.sigChartChanged.emit(self, 'remove', node)
@@ -508,7 +510,7 @@ class Flowchart(Node):
         self.sigStateChanged.emit()
             
     def loadFile(self, fileName=None, startDir=None):
-        """Load a flowchart (*.fc) file.
+        """Load a flowchart (``*.fc``) file.
         """
         if fileName is None:
             if startDir is None:
@@ -763,6 +765,9 @@ class FlowchartCtrlWidget(QtGui.QWidget):
         item = self.items[node]
         self.ui.ctrlList.setCurrentItem(item)
 
+    def clearSelection(self):
+        self.ui.ctrlList.selectionModel().clearSelection()
+
 
 class FlowchartWidget(dockarea.DockArea):
     """Includes the actual graphical flowchart and debugging interface"""
@@ -890,7 +895,10 @@ class FlowchartWidget(dockarea.DockArea):
             item = items[0]
             if hasattr(item, 'node') and isinstance(item.node, Node):
                 n = item.node
-                self.ctrl.select(n)
+                if n in self.ctrl.items:
+                    self.ctrl.select(n)
+                else:
+                    self.ctrl.clearSelection()
                 data = {'outputs': n.outputValues(), 'inputs': n.inputValues()}
                 self.selNameLabel.setText(n.name())
                 if hasattr(n, 'nodeName'):
@@ -938,4 +946,3 @@ class FlowchartWidget(dockarea.DockArea):
         
 class FlowchartNode(Node):
     pass
-

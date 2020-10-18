@@ -25,9 +25,12 @@ if __name__ == '__main__':
 
     pyqtapis = opts.pop('pyqtapis', None)
     if pyqtapis is not None:
-        import sip
-        for k,v in pyqtapis.items():
-            sip.setapi(k, v)
+        try:
+            from PyQt5 import sip
+        except ImportError:
+            import sip
+            for k,v in pyqtapis.items():
+                sip.setapi(k, v)
         
     qt_lib = opts.pop('qt_lib', None)
     if qt_lib == 'PySide':

@@ -24,7 +24,7 @@ class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):
         self.lineNum = lineNum
         self.line = line
-        #self.message = message
+        self.message = message
         self.fileName = fileName
         Exception.__init__(self, message)
         

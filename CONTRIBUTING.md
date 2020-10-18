@@ -6,7 +6,7 @@ Please use the following guidelines when preparing changes:
 
 ## Submitting Code Changes
 
-* The preferred method for submitting changes is by github pull request against the "develop" branch.
+* The preferred method for submitting changes is by github pull request against the "master" branch.
 * Pull requests should include only a focused and related set of changes. Mixed features and unrelated changes may be rejected.
 * For major changes, it is recommended to discuss your plans on the mailing list or in a github issue before putting in too much effort.
 * The following deprecations are being considered by the maintainers

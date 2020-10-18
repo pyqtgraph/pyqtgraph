@@ -64,7 +64,7 @@ class TableWidget(QtGui.QTableWidget):
         self.setSortingEnabled(kwds.pop('sortable'))
         
         if len(kwds) > 0:
-            raise TypeError("Invalid keyword arguments '%s'" % kwds.keys())
+            raise TypeError("Invalid keyword arguments '%s'" % list(kwds.keys()))
         
         self._sorting = None  # used when temporarily disabling sorting
         

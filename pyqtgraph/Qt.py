@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module exists to smooth out some of the differences between PySide and PyQt4:
 
@@ -9,7 +10,7 @@ This module exists to smooth out some of the differences between PySide and PyQt
 
 """
 
-import os, sys, re, time
+import os, sys, re, time, subprocess, warnings
 
 from .python2_3 import asUnicode
 
@@ -104,24 +105,38 @@ def _loadUiType(uiFile):
     if QT_LIB == "PYSIDE":
         import pysideuic
     else:
-        import pyside2uic as pysideuic
-    import xml.etree.ElementTree as xml
+        try:
+            import pyside2uic as pysideuic
+        except ImportError:
+            # later vserions of pyside2 have dropped pysideuic; use the uic binary instead.
+            pysideuic = None
 
+    # get class names from ui file
+    import xml.etree.ElementTree as xml
     parsed = xml.parse(uiFile)
     widget_class = parsed.find('widget').get('class')
     form_class = parsed.find('class').text
-    
-    with open(uiFile, 'r') as f:
+
+    # convert ui file to python code
+    if pysideuic is None:
+        pyside2version = tuple(map(int, PySide2.__version__.split(".")))
+        if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
+            warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
+        uipy = subprocess.check_output(['pyside2-uic', uiFile])
+    else:
         o = _StringIO()
-        frame = {}
+        with open(uiFile, 'r') as f:
+            pysideuic.compileUi(f, o, indent=0)
+        uipy = o.getvalue()
 
-        pysideuic.compileUi(f, o, indent=0)
-        pyc = compile(o.getvalue(), '<string>', 'exec')
-        exec(pyc, frame)
+    # exceute python code
+    pyc = compile(uipy, '<string>', 'exec')
+    frame = {}
+    exec(pyc, frame)
 
-        #Fetch the base_class and form class based on their type in the xml from designer
-        form_class = frame['Ui_%s'%form_class]
-        base_class = eval('QtGui.%s'%widget_class)
+    # fetch the base_class and form class based on their type in the xml from designer
+    form_class = frame['Ui_%s'%form_class]
+    base_class = eval('QtGui.%s'%widget_class)
 
     return form_class, base_class
 
@@ -305,7 +320,10 @@ if QT_LIB in [PYSIDE, PYSIDE2]:
 if QT_LIB in [PYQT4, PYQT5]:
     QtVersion = QtCore.QT_VERSION_STR
     
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)
     
@@ -329,9 +347,19 @@ if m is not None and list(map(int, m.groups())) < versionReq:
 
 
 QAPP = None
-def mkQApp():
-    global QAPP    
+def mkQApp(name=None):
+    """
+    Creates new QApplication or returns current instance if existing.
+    
+    ============== ========================================================
+    **Arguments:**
+    name           (str) Application name, passed to Qt
+    ============== ========================================================
+    """
+    global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication([])
+        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+    if name is not None:
+        QAPP.setApplicationName(name)
     return QAPP

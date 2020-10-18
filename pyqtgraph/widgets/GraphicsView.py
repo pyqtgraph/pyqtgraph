@@ -129,7 +129,12 @@ class GraphicsView(QtGui.QGraphicsView):
         self.mouseEnabled = False
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
-        
+
+        # Set a transparent background QPalette!
+        palette = self.palette()
+        palette.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+        self.setPalette(palette)
+
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
@@ -325,7 +330,6 @@ class GraphicsView(QtGui.QGraphicsView):
     def wheelEvent(self, ev):
         QtGui.QGraphicsView.wheelEvent(self, ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
         
         delta = 0
@@ -371,7 +375,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def mouseMoveEvent(self, ev):
         if self.lastMousePos is None:
             self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - QtCore.QPoint(*self.lastMousePos))
+        delta = Point(ev.pos() - self.lastMousePos.toQPoint())
         self.lastMousePos = Point(ev.pos())
 
         QtGui.QGraphicsView.mouseMoveEvent(self, ev)

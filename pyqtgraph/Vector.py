@@ -12,24 +12,37 @@ class Vector(QtGui.QVector3D):
     """Extension of QVector3D which adds a few helpful methods."""
     
     def __init__(self, *args):
+        """
+        Handle additional constructions of a Vector
+
+        ==============  ================================================================================================
+        **Arguments:**
+        *args*          Could be any of:
+
+                         * 3 numerics (x, y, and z)
+                         * 2 numerics (x, y, and `0` assumed for z)
+                         * Either of the previous in a list-like collection
+                         * 1 QSizeF (`0` assumed for z)
+                         * 1 QPointF (`0` assumed for z)
+                         * Any other valid QVector3D init args.
+        ==============  ================================================================================================
+        """
+        initArgs = args
         if len(args) == 1:
             if isinstance(args[0], QtCore.QSizeF):
-                QtGui.QVector3D.__init__(self, float(args[0].width()), float(args[0].height()), 0)
-                return
+                initArgs = (float(args[0].width()), float(args[0].height()), 0)
             elif isinstance(args[0], QtCore.QPoint) or isinstance(args[0], QtCore.QPointF):
-                QtGui.QVector3D.__init__(self, float(args[0].x()), float(args[0].y()), 0)
-            elif hasattr(args[0], '__getitem__'):
+                initArgs = (float(args[0].x()), float(args[0].y()), 0)
+            elif hasattr(args[0], '__getitem__') and not isinstance(args[0], QtGui.QVector3D):
                 vals = list(args[0])
                 if len(vals) == 2:
                     vals.append(0)
                 if len(vals) != 3:
                     raise Exception('Cannot init Vector with sequence of length %d' % len(args[0]))
-                QtGui.QVector3D.__init__(self, *vals)
-                return
+                initArgs = vals
         elif len(args) == 2:
-            QtGui.QVector3D.__init__(self, args[0], args[1], 0)
-            return
-        QtGui.QVector3D.__init__(self, *args)
+            initArgs = (args[0], args[1], 0)
+        QtGui.QVector3D.__init__(self, *initArgs)
 
     def __len__(self):
         return 3

@@ -14,6 +14,7 @@ examples = OrderedDict([
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
     ('ViewBox Features', 'ViewBoxFeatures.py'),
     ('Dock widgets', 'dockarea.py'),
@@ -50,6 +51,7 @@ examples = OrderedDict([
         ('ViewBox', 'ViewBoxFeatures.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
+        ('PColorMeshItem', 'PColorMeshItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),

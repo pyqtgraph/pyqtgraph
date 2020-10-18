@@ -16,7 +16,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         - Axis/grid display
         - Export options
 
-
     High-DPI displays: Qt5 should automatically detect the correct resolution.
     For Qt4, specify the ``devicePixelRatio`` argument when initializing the
     widget (usually this value is 1-2).
@@ -32,25 +31,31 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        
         self.opts = {
-            'center': Vector(0,0,0),  ## will always appear at the center of the widget
-            'distance': 10.0,         ## distance of camera from center
-            'fov':  60,               ## horizontal field of view in degrees
-            'elevation':  30,         ## camera's angle of elevation in degrees
-            'azimuth': 45,            ## camera's azimuthal angle in degrees 
-                                      ## (rotation around z-axis 0 points along x-axis)
-            'viewport': None,         ## glViewport params; None == whole widget
-            'devicePixelRatio': devicePixelRatio,
+            'devicePixelRatio': devicePixelRatio
         }
-        self.setBackgroundColor('k')
+        self.reset()
         self.items = []
+        
         self.noRepeatKeys = [QtCore.Qt.Key_Right, QtCore.Qt.Key_Left, QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_PageUp, QtCore.Qt.Key_PageDown]
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
         
         self.makeCurrent()
+        
+    def reset(self):
+        """
+        Initialize the widget state or reset the current state to the original state.
+        """
+        self.opts['center'] = Vector(0,0,0)  ## will always appear at the center of the widget
+        self.opts['distance'] = 10.0         ## distance of camera from center
+        self.opts['fov'] = 60                ## horizontal field of view in degrees
+        self.opts['elevation'] = 30          ## camera's angle of elevation in degrees
+        self.opts['azimuth'] = 45            ## camera's azimuthal angle in degrees 
+                                             ## (rotation around z-axis 0 points along x-axis)
+        self.opts['viewport'] = None         ## glViewport params; None == whole widget
+        self.setBackgroundColor('k')        
 
     def addItem(self, item):
         self.items.append(item)
@@ -66,10 +71,21 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.update()
         
     def removeItem(self, item):
+        """
+        Remove the item from the scene.
+        """
         self.items.remove(item)
         item._setView(None)
         self.update()
-        
+
+    def clear(self):
+        """
+        Remove all items from the scene.
+        """
+        for item in self.items:
+            item._setView(None)
+        self.items = []
+        self.update()        
         
     def initializeGL(self):
         self.resizeGL(self.width(), self.height())
@@ -275,7 +291,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         **Arguments:**
         *dx*            Distance to pan in x direction
         *dy*            Distance to pan in y direction
-        *dx*            Distance to pan in z direction
+        *dz*            Distance to pan in z direction
         *relative*      String that determines the direction of dx,dy,dz. 
                         If "global", then the global coordinate system is used.
                         If "view", then the z axis is aligned with the view
@@ -370,7 +386,6 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         #self.paintGL(region=region)
         #self.swapBuffers()
         
-        
     def wheelEvent(self, ev):
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
@@ -425,15 +440,35 @@ class GLViewWidget(QtOpenGL.QGLWidget):
             self.keyTimer.stop()
 
     def checkOpenGLVersion(self, msg):
-        ## Only to be called from within exception handler.
-        ver = glGetString(GL_VERSION).split()[0]
-        if int(ver.split(b'.')[0]) < 2:
-            from .. import debug
-            debug.printExc()
-            raise Exception(msg + " The original exception is printed above; however, pyqtgraph requires OpenGL version 2.0 or greater for many of its 3D features and your OpenGL version is %s. Installing updated display drivers may resolve this issue." % ver)
-        else:
-            raise
-            
+        """
+        Give exception additional context about version support.
+
+        Only to be called from within exception handler.
+        As this check is only performed on error,
+        unsupported versions might still work!
+        """
+
+        # Check for unsupported version
+        verString = glGetString(GL_VERSION)
+        ver = verString.split()[0]
+        # If not OpenGL ES...
+        if str(ver.split(b'.')[0]).isdigit():
+            verNumber = int(ver.split(b'.')[0])
+            # ...and version is supported:
+            if verNumber >= 2:
+                # OpenGL version is fine, raise the original exception
+                raise
+
+        # Print original exception
+        from .. import debug
+        debug.printExc()
+
+        # Notify about unsupported version
+        raise Exception(
+            msg + "\n" + \
+            "pyqtgraph.opengl: Requires >= OpenGL 2.0 (not ES); Found %s" % verString
+        )
+ 
     def readQImage(self):
         """
         Read the current buffer pixels out as a QImage.
@@ -463,6 +498,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.makeCurrent()
         tex = None
         fb = None
+        depth_buf = None
         try:
             output = np.empty((w, h, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
@@ -480,8 +516,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
             ## create teture
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
-            
-            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...) 
+
+            # Create depth buffer
+            depth_buf = glGenRenderbuffers(1)
+            glBindRenderbuffer(GL_RENDERBUFFER, depth_buf)
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texwidth, texwidth)
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
+
+            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
                                                   # is interpreted correctly.
             p2 = 2 * padding
             for x in range(-padding, w-padding, texwidth-p2):
@@ -510,8 +552,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glDeleteTextures([tex])
             if fb is not None:
                 glfbo.glDeleteFramebuffers([fb])
-            
+            if depth_buf is not None:
+                glDeleteRenderbuffers(1, [depth_buf])
+
         return output
-        
-        
-        
