@@ -467,7 +467,7 @@ def getVersionStrings(pkg):
         version = initVersion
         # if git says this is a modified branch, add local version information
         if gitVersion is not None:
-            _, local = gitVersion.split('+')
+            _, _, local = gitVersion.partition('+')
             if local != '':
                 version = version + '+' + local
                 sys.stderr.write("Detected git commit; "
