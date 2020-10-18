@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import warnings
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -678,14 +679,17 @@ class PlotDataItem(GraphicsObject):
             return self._dataRect
         if self.xData is None or self.yData is None:
             return None
-        ymin = np.nanmin(self.yData)
-        if np.isnan( ymin ):
-            return None # most likely case for all-NaN data
-        xmin = np.nanmin(self.xData)
-        if np.isnan( xmin ):
-            return None # less likely case for all-NaN data
-        ymax = np.nanmax(self.yData)
-        xmax = np.nanmax(self.xData)
+        with warnings.catch_warnings(): 
+            # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
+            warnings.simplefilter("ignore")
+            ymin = np.nanmin(self.yData)
+            if np.isnan( ymin ):
+                return None # most likely case for all-NaN data
+            xmin = np.nanmin(self.xData)
+            if np.isnan( xmin ):
+                return None # less likely case for all-NaN data
+            ymax = np.nanmax(self.yData)
+            xmax = np.nanmax(self.xData)
         self._dataRect = QtCore.QRectF(
             QtCore.QPointF(xmin,ymin),
             QtCore.QPointF(xmax,ymax) )
