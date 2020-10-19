@@ -6,6 +6,7 @@ try:
 except:
     HAVE_OPENGL = False
 
+import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
 from .. import functions as fn
@@ -148,7 +149,10 @@ class PlotCurveItem(GraphicsObject):
         if frac >= 1.0:
             # include complete data range
             # first try faster nanmin/max function, then cut out infs if needed.
-            b = (np.nanmin(d), np.nanmax(d))
+            with warnings.catch_warnings(): 
+                # All-NaN data is acceptable; Explicit numpy warning is not needed.
+                warnings.simplefilter("ignore")
+                b = (np.nanmin(d), np.nanmax(d))
             if any(np.isinf(b)):
                 mask = np.isfinite(d)
                 d = d[mask]
