@@ -114,9 +114,9 @@ def generateSvg(item, options={}):
     for d in defs:
         defsXml += d.toprettyxml(indent='    ')
     defsXml += "</defs>\n"
-    svgAttributes = f' viewBox ="0 0 {options["width"]} {options["height"]}"'
+    svgAttributes = ' viewBox ="0 0 %f %f"' % (options["width"], options["height"])
     c = options['background']
-    backgroundtag = f'<rect width="100%" height="100%" style="fill:rgba({c.red()}, {c.blue()}, {c.green()}, {c.alpha()/255.0})" />\n'
+    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%f, %f, %f, %d)" />\n' % (c.red(), c.blue(), c.green(), c.alpha()/255.0)
     return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 
