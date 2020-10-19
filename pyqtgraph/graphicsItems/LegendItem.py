@@ -9,7 +9,12 @@ from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 from .BarGraphItem import BarGraphItem
 
-__all__ = ['LegendItem']
+__all__ = ['LegendItem', 'LegendStyle']
+
+
+class LegendStyle:
+    Classic = 0
+    Toggle = 1
 
 
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
@@ -29,7 +34,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
-                 labelTextSize='9pt', rowCount=1, colCount=1, **kwargs):
+                 labelTextSize='9pt', rowCount=1, colCount=1,
+                 itemStyle=LegendStyle.Classic, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -52,6 +58,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         labelTextSize   Size to use when drawing legend text. Accepts CSS style
                         string arguments, e.g. '9pt'.
+        itemStyle       Fixed style of the legend. Defaults to 0 (LegendStyle.Classic).
         ==============  ===============================================================
 
         """
@@ -79,9 +86,30 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             'labelTextColor': labelTextColor,
             'labelTextSize': labelTextSize,
             'offset': offset,
+            'itemStyle': itemStyle
         }
-
         self.opts.update(kwargs)
+
+    def setItemStyle(self, style):
+        """Set the new legend item style"""
+        if style == self.opts['itemStyle']:
+            return
+
+        # Clear the legend, but before create a list of items
+        items = list(self.items)
+        self.opts['itemStyle'] = style
+        self.clear()
+
+        # Refill the legend with the item list and new item style
+        for sample, _ in items:
+            plot_item = sample.item
+            self.addItem(plot_item, plot_item.name())
+
+        self.updateSize()
+
+    def itemStyle(self):
+        """Get the `itemStyle` of the `LegendItem`"""
+        return self.opts['itemStyle']
 
     def offset(self):
         """Get the offset position relative to the parent."""
@@ -186,7 +214,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if isinstance(item, ItemSample):
             sample = item
         else:
-            sample = ItemSample(item)
+            item_class = _get_legend_item_class(self.opts['itemStyle'])
+            sample = item_class(item)
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
@@ -300,18 +329,31 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
 
 class ItemSample(GraphicsWidget):
-    """Class responsible for drawing a single item in a LegendItem (sans label)
+    """Base Class responsible for drawing a single item in a LegendItem
 
-    This may be subclassed to draw custom graphics in a Legend.
+    This has to be subclassed to draw custom graphics in a Legend.
     """
 
-    # TODO: make this more generic; let items decide how it should be look.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
+
+    def paint(self, p, *args):
+        raise NotImplementedError
+
+
+class ClassicSample(ItemSample):
+    """Generic legend item to handle plot data items
+
+    The `ClassicSample` is the default style of a LegendItem. Considers the
+    style and type of the plot to draw a colored symbol for the legend sample.
+    """
+
+    def __init__(self, item):
+        ItemSample.__init__(self, item)
 
     def paint(self, p, *args):
         opts = self.item.opts
@@ -342,3 +384,73 @@ class ItemSample(GraphicsWidget):
         if isinstance(self.item, BarGraphItem):
             p.setBrush(fn.mkBrush(opts['brush']))
             p.drawRect(QtCore.QRectF(2, 2, 18, 18))
+
+
+class ToggleSample(ItemSample):
+    """The ToggleSample can toggle the visibility of the plot item"""
+
+    def __init__(self, item):
+        ItemSample.__init__(self, item)
+
+    def paint(self, p, *args):
+        pen, brush = get_toggle_pen_brush(self.item)
+        visible = self.item.isVisible()
+        brush = fn.mkBrush(
+            QtGui.QColor(211, 211, 211)) if not visible else brush
+        p.setPen(pen)
+        p.setBrush(brush)
+        p.drawRect(0, 0, 10, 14)
+
+    def mouseClickEvent(self, event):
+        """Use the mouse click with the left button to toggle the visibility
+        """
+        if event.button() == QtCore.Qt.LeftButton:
+            visible = self.item.isVisible()
+            self.item.setVisible(not visible)
+
+        self.update()
+        event.accept()
+
+
+def get_toggle_pen_brush(item):
+    """Retrieve a pen and brush for a legend sample for plot item `item`"""
+    item = item
+    opts = item.opts
+    if isinstance(item, PlotDataItem) and opts.get('symbol', None):
+        opts = item.scatter.opts
+        pen = fn.mkPen(opts['pen'])
+        brush = fn.mkBrush(opts['brush'])
+
+        return pen, brush
+
+    if isinstance(item, ScatterPlotItem):
+        if (opts.get('fillLevel', None) is not None and
+                opts.get('fillBrush', None) is not None):
+            brush = fn.mkBrush(opts['fillBrush'])
+            pen = fn.mkPen(opts['fillBrush'])
+        else:
+            pen = fn.mkPen(opts['pen'])
+            brush = fn.mkBrush(opts['brush'])
+
+        return pen, brush
+
+    if isinstance(item, BarGraphItem):
+        brush = fn.mkBrush(opts['brush'])
+        pen = fn.mkPen(opts['brush'])
+
+        return pen, brush
+
+    pen = fn.mkPen(opts['pen'])
+    brush = fn.mkBrush(pen.color())
+
+    return pen, brush
+
+
+def _get_legend_item_class(style):
+    """Return a legend item style according to input `style`"""
+    item_style = {
+        LegendStyle.Classic: ClassicSample,
+        LegendStyle.Toggle: ToggleSample
+    }
+
+    return item_style.get(style, ClassicSample)

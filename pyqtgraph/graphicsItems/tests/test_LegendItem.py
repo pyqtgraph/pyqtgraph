@@ -1,9 +1,10 @@
-import pytest
 import pyqtgraph as pg
+
+from pyqtgraph.graphicsItems.LegendItem import get_toggle_pen_brush
 
 
 def test_legend_item_basics():
-    app = pg.mkQApp()
+    pg.mkQApp()
 
     legend = pg.LegendItem()
 
@@ -97,5 +98,47 @@ def test_legend_item_basics():
     assert curve not in legend.items
     assert len(legend.items) == 2
 
+    # LegendItem style
+    # ----------------------------------------------------
+
+    assert legend.itemStyle() == 0
+    legend.setItemStyle(pg.LegendStyle.Toggle)
+    assert legend.itemStyle() == 1
+    assert len(legend.items) == 2
+
+    # LegendItem clear
+    # ----------------------------------------------------
     legend.clear()
     assert legend.items == []
+
+
+def test_get_toggle_pen_brush():
+    pg.mkQApp()
+
+    item = pg.PlotDataItem(name="Plot", pen="r")
+    pen, brush = get_toggle_pen_brush(item)
+    assert pen == pg.mkPen("r")
+    assert brush == pg.mkBrush("r")
+
+    item = pg.BarGraphItem(brush='b', pen='w', name='bar')
+    pen, brush = get_toggle_pen_brush(item)
+    assert pen == pg.mkPen("b")
+    assert brush == pg.mkBrush("b")
+
+    item = pg.PlotDataItem(pen='r', symbol='t', symbolPen='r', symbolBrush='g',
+                           name='Symbol')
+    pen, brush = get_toggle_pen_brush(item)
+    assert pen == pg.mkPen('r')
+    assert brush == pg.mkBrush('g')
+
+    item = pg.PlotDataItem(pen='g', fillLevel=0, fillBrush=(70, 255, 255, 30),
+                           name='Fill')
+    pen, brush = get_toggle_pen_brush(item)
+    assert pen == pg.mkPen('g')
+    assert brush == pg.mkBrush('g')
+
+    item = pg.ScatterPlotItem(size=10, pen='c', brush=(255, 255, 255, 120),
+                              name='Scatter')
+    pen, brush = get_toggle_pen_brush(item)
+    assert pen == pg.mkPen('c')
+    assert brush == pg.mkBrush(color=(255, 255, 255, 120))

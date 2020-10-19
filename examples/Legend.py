@@ -32,13 +32,12 @@ s1.addPoints(spots)
 win.addItem(s1)
 
 # # option2: generic method------------------------------------------------
-legend = pg.LegendItem((80,60), offset=(70,20))
+legend = pg.LegendItem((80,60), offset=(70,20), itemStyle=1, labelTextSize='10pt')
 legend.setParentItem(win.graphicsItem())
 legend.addItem(bg1, 'bar')
 legend.addItem(c1, 'curve1')
 legend.addItem(c2, 'curve2')
 legend.addItem(s1, 'scatter')
-
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
