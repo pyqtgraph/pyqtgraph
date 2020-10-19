@@ -23,9 +23,7 @@ def buildFileList(examples, files=None):
     if files is None:
         files = [("Example App", "ExampleApp.py")]
     for key, val in examples.items():
-        #item = QtGui.QTreeWidgetItem([key])
         if isinstance(val, basestring):
-            #item.file = val
             files.append((key,val))
         else:
             buildFileList(val, files)
