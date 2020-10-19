@@ -414,7 +414,6 @@ class ToggleSample(ItemSample):
 
 def get_toggle_pen_brush(item):
     """Retrieve a pen and brush for a legend sample for plot item `item`"""
-    item = item
     opts = item.opts
     if isinstance(item, PlotDataItem) and opts.get('symbol', None):
         opts = item.scatter.opts
