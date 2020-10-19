@@ -21,7 +21,7 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 def buildFileList(examples, files=None):
     if files is None:
-        files = [("Example App", "ExampleApp.py")]
+        files = [("Example App", "test_ExampleApp.py")]
     for key, val in examples.items():
         if isinstance(val, basestring):
             files.append((key,val))

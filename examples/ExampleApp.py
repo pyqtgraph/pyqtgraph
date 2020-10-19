@@ -361,7 +361,6 @@ class ExampleLoader(QtGui.QMainWindow):
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
         self.setWindowTitle("PyQtGraph Examples")
-
         self.codeBtn = QtGui.QPushButton('Run Edited Code')
         self.codeLayout = QtGui.QGridLayout()
         self.ui.codeView.setLayout(self.codeLayout)
@@ -478,7 +477,7 @@ def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
     app.exec_()
-
+# or condition so pytest runs ExampleApp as part of test suite
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         main()
