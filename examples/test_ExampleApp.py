@@ -3,7 +3,7 @@ import initExample ## Add path to library (just for examples; you do not need th
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
-from pg.examples.ExampleApp import ExampleLoader
+from examples.ExampleApp import ExampleLoader
 
 loader = ExampleLoader()
 
