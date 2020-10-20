@@ -33,7 +33,7 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
+| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.9         |
 | :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
 | PyQt-4         | :white_check_mark: | :x:                | :x:                | :x:                |
 | PySide1        | :white_check_mark: | :x:                | :x:                | :x:                |

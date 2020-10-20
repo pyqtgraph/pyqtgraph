@@ -86,7 +86,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
     - script: |
         python -m pip install setuptools wheel
         python setup.py bdist_wheel --universal
@@ -105,7 +105,7 @@ stages:
       vmImage: 'Ubuntu 18.04'
   - template: azure-test-template.yml
     parameters:
-      name: windows
+      name: win
       vmImage: 'windows-2019'
   - template: azure-test-template.yml
     parameters:

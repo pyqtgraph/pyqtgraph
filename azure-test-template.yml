@@ -10,28 +10,28 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   strategy:
     matrix:
-      Python27-PyQt4-4.8:
+      Py27-PyQt4-4.8:
         python.version: '2.7'
         qt.bindings: "pyqt=4"
         install.method: "conda"
-      Python27-PySide-4.8:
+      Py27-PySide-4.8:
         python.version: '2.7'
         qt.bindings: "pyside"
         install.method: "conda"
-      Python36-PyQt5-5.9:
+      Py36-PyQt5-5.9:
         python.version: "3.6"
         qt.bindings: "pyqt"
         install.method: "conda"
-      Python37-PySide2-5.13:
+      Py37-PySide2-5.13:
         python.version: "3.7"
         qt.bindings: "pyside2"
         install.method: "conda"
-      Python38-PyQt5-Latest:
-        python.version: '3.8'
+      Py39-PyQt5-Latest:
+        python.version: '3.9'
         qt.bindings: "PyQt5"
         install.method: "pip"
-      Python38-PySide2-Latest:
-        python.version: '3.8'
+      Py39-PySide2-Latest:
+        python.version: '3.9'
         qt.bindings: "PySide2"
         install.method: "pip"     
 
