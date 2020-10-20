@@ -1,7 +1,6 @@
 from ..widgets.FileDialog import FileDialog
 from ..Qt import QtGui, QtCore, QtSvg
 from ..python2_3 import asUnicode, basestring
-from ..GraphicsScene import GraphicsScene
 import os, re
 LastExportDirectory = None
 
@@ -77,21 +76,21 @@ class Exporter(object):
         self.export(fileName=fileName, **self.fileDialog.opts)
         
     def getScene(self):
-        if isinstance(self.item, GraphicsScene):
+        if isinstance(self.item, QtGui.QGraphicsScene):
             return self.item
         else:
             return self.item.scene()
         
     def getSourceRect(self):
-        if isinstance(self.item, GraphicsScene):
-            w = self.item.getViewWidget()
+        if isinstance(self.item, QtGui.QGraphicsScene):
+            w = self.item.views()[0]
             return w.viewportTransform().inverted()[0].mapRect(w.rect())
         else:
             return self.item.sceneBoundingRect()
         
     def getTargetRect(self):        
-        if isinstance(self.item, GraphicsScene):
-            return self.item.getViewWidget().rect()
+        if isinstance(self.item, QtGui.QGraphicsScene):
+            return self.item.views()[0].rect()
         else:
             return self.item.mapRectToDevice(self.item.boundingRect())
         
