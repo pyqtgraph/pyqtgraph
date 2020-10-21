@@ -1,31 +1,37 @@
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
-app = pg.mkQApp()
-app.processEvents()
-
 
 
 def test_scatterplotitem():
+    app = pg.mkQApp()
+    app.processEvents()
+
     plot = pg.PlotWidget()
     # set view range equal to its bounding rect.
     # This causes plots to look the same regardless of pxMode.
     plot.setRange(rect=plot.boundingRect())
 
     # test SymbolAtlas accepts custom symbol
-    s = pg.ScatterPlotItem()
+    s = pg.ScatterPlotItem(name="Scatter")
     symbol = QtGui.QPainterPath()
     symbol.addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
-    s.addPoints([{'pos': [0,0], 'data': 1, 'symbol': symbol}])
+    s.addPoints([{'pos': [0, 0], 'data': 1, 'symbol': symbol}])
+
+    assert s.name() == "Scatter"
 
     for i, pxMode in enumerate([True, False]):
         for j, useCache in enumerate([True, False]):
             s = pg.ScatterPlotItem()
             s.opts['useCache'] = useCache
             plot.addItem(s)
-            s.setData(x=np.array([10,40,20,30])+i*100, y=np.array([40,60,10,30])+j*100, pxMode=pxMode)
-            s.addPoints(x=np.array([60, 70])+i*100, y=np.array([60, 70])+j*100, size=[20, 30])
+            s.setData(x=np.array([10, 40, 20, 30]) + i * 100,
+                      y=np.array([40, 60, 10, 30]) + j * 100, pxMode=pxMode,
+                      name="MoreScatter")
+            s.addPoints(x=np.array([60, 70]) + i * 100,
+                        y=np.array([60, 70]) + j * 100, size=[20, 30])
 
+            assert s.name() == "MoreScatter"
             # Test uniform spot updates
             s.setSize(10)
             s.setBrush('r')
@@ -62,6 +68,7 @@ def test_scatterplotitem():
 
 
 def test_init_spots():
+    app = pg.mkQApp()
     plot = pg.PlotWidget()
     # set view range equal to its bounding rect.
     # This causes plots to look the same regardless of pxMode.

@@ -420,6 +420,8 @@ class ScatterPlotItem(GraphicsObject):
             newData['x'] = kargs['x']
             newData['y'] = kargs['y']
 
+        if 'name' in kargs:
+            self.opts['name'] = kargs['name']
         if 'pxMode' in kargs:
             self.setPxMode(kargs['pxMode'])
         if 'antialias' in kargs:
