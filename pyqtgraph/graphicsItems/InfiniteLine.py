@@ -2,6 +2,7 @@
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .GraphicsObject import GraphicsObject
+from .GraphicsItem import GraphicsItem
 from .TextItem import TextItem
 from .ViewBox import ViewBox
 from .. import functions as fn
@@ -431,6 +432,7 @@ class InfiniteLine(GraphicsObject):
         Called whenever the transformation matrix of the view has changed.
         (eg, the view range has changed or the view was resized)
         """
+        GraphicsItem.viewTransformChanged(self)
         self._invalidateCache()
         
     def setName(self, name):
