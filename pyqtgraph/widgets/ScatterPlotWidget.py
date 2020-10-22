@@ -33,7 +33,7 @@ class ScatterPlotWidget(QtGui.QSplitter):
        specifying multiple criteria.
     4) A PlotWidget for displaying the data.
     """
-    sigScatterPlotClicked = QtCore.Signal(object, object)
+    sigScatterPlotClicked = QtCore.Signal(object, object, object)
     
     def __init__(self, parent=None):
         QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
@@ -279,8 +279,8 @@ class ScatterPlotWidget(QtGui.QSplitter):
             self._indexMap = {j:i for i,j in enumerate(self._visibleIndices)}
         return self._indexMap
 
-    def plotClicked(self, plot, points):
+    def plotClicked(self, plot, points, ev):
         # Tag each point with its index into the original dataset
         for pt in points:
             pt.originalIndex = self._visibleIndices[pt.index()]
-        self.sigScatterPlotClicked.emit(self, points)
+        self.sigScatterPlotClicked.emit(self, points, ev)

@@ -22,18 +22,18 @@ class PlotDataItem(GraphicsObject):
     usually created by plot() methods such as :func:`pyqtgraph.plot` and
     :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
 
-    ============================== ==============================================
+    ==================================  ==============================================
     **Signals:**
-    sigPlotChanged(self)           Emitted when the data in this item is updated.
-    sigClicked(self)               Emitted when the item is clicked.
-    sigPointsClicked(self, points) Emitted when a plot point is clicked
-                                   Sends the list of points under the mouse.
-    ============================== ==============================================
+    sigPlotChanged(self)                Emitted when the data in this item is updated.
+    sigClicked(self, ev)                Emitted when the item is clicked.
+    sigPointsClicked(self, points, ev)  Emitted when a plot point is clicked
+                                        Sends the list of points under the mouse.
+    ==================================  ==============================================
     """
 
     sigPlotChanged = QtCore.Signal(object)
-    sigClicked = QtCore.Signal(object)
-    sigPointsClicked = QtCore.Signal(object, object)
+    sigClicked = QtCore.Signal(object, object)
+    sigPointsClicked = QtCore.Signal(object, object, object)
 
     def __init__(self, *args, **kargs):
         """
@@ -762,12 +762,12 @@ class PlotDataItem(GraphicsObject):
     def appendData(self, *args, **kargs):
         pass
 
-    def curveClicked(self):
-        self.sigClicked.emit(self)
+    def curveClicked(self, curve, ev):
+        self.sigClicked.emit(self, ev)
 
-    def scatterClicked(self, plt, points):
-        self.sigClicked.emit(self)
-        self.sigPointsClicked.emit(self, points)
+    def scatterClicked(self, plt, points, ev):
+        self.sigClicked.emit(self, ev)
+        self.sigPointsClicked.emit(self, points, ev)
 
     def viewRangeChanged(self):
         # view range has changed; re-plot if needed
