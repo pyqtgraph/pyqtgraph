@@ -609,6 +609,7 @@ class InfLineLabel(TextItem):
             ev.acceptDrags(QtCore.Qt.LeftButton)
 
     def viewTransformChanged(self):
+        GraphicsItem.viewTransformChanged(self)
         self.updatePosition()
         TextItem.viewTransformChanged(self)
 
