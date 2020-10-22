@@ -186,7 +186,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
         
         # hide / show
-        self.defaultBtn.setVisible(not self.param.readonly())
+        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
