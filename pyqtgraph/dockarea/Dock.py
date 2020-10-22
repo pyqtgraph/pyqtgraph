@@ -10,13 +10,13 @@ class Dock(QtGui.QWidget, DockDrop):
     sigStretchChanged = QtCore.Signal()
     sigClosed = QtCore.Signal(object)
 
-    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False):
+    def __init__(self, name, area=None, size=(10, 10), widget=None, hideTitle=False, autoOrientation=True, closable=False, fontSize="12px"):
         QtGui.QWidget.__init__(self)
         DockDrop.__init__(self)
         self._container = None
         self._name = name
         self.area = area
-        self.label = DockLabel(name, self, closable)
+        self.label = DockLabel(name, self, closable, fontSize)
         if closable:
             self.label.sigCloseClicked.connect(self.close)
         self.labelHidden = False
@@ -259,9 +259,10 @@ class DockLabel(VerticalLabel):
     sigClicked = QtCore.Signal(object, object)
     sigCloseClicked = QtCore.Signal()
 
-    def __init__(self, text, dock, showCloseButton):
+    def __init__(self, text, dock, showCloseButton, fontSize):
         self.dim = False
         self.fixedWidth = False
+        self.fontSize = fontSize
         VerticalLabel.__init__(self, text, orientation='horizontal', forceWidth=False)
         self.setAlignment(QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter)
         self.dock = dock
@@ -298,7 +299,8 @@ class DockLabel(VerticalLabel):
                 border-right: 2px solid %s;
                 padding-top: 3px;
                 padding-bottom: 3px;
-            }""" % (bg, fg, r, r, border)
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
             self.setStyleSheet(self.vStyle)
         else:
             self.hStyle = """DockLabel {
@@ -312,7 +314,8 @@ class DockLabel(VerticalLabel):
                 border-bottom: 2px solid %s;
                 padding-left: 3px;
                 padding-right: 3px;
-            }""" % (bg, fg, r, r, border)
+                font-size: %s;
+            }""" % (bg, fg, r, r, border, self.fontSize)
             self.setStyleSheet(self.hStyle)
 
     def setDim(self, d):
