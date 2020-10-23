@@ -4,7 +4,10 @@ from __future__ import division
 import numpy
 
 from ..Qt import QtGui, QtCore
-import cupy as cp
+try:
+    import cupy as cp
+except ImportError:
+    from ..util import empty_cupy as cp
 from .. import functions as fn
 from .. import debug as debug
 from .GraphicsObject import GraphicsObject
@@ -133,6 +136,7 @@ class ImageItem(GraphicsObject):
         for more details on how levels are applied.
         """
         if self.xp is None:
+            self.levels = levels
             self._defferedLevels = levels
             return
         if levels is not None:

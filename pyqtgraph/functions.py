@@ -10,7 +10,10 @@ import warnings
 
 import numba
 import numpy as np
-import cupy as cp
+try:
+    import cupy as cp
+except ImportError:
+    from .util import empty_cupy as cp
 import decimal, re
 import ctypes
 import sys, struct
