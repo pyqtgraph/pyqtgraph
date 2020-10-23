@@ -55,7 +55,8 @@ class ImageItem(GraphicsObject):
         self.lut = None
         self.autoDownsample = False
         self._lastDownsample = (1, 1)
-        self._buffer = None
+        self._gpuBuffer = None
+        self._cpuBuffer = None
         self._renderRequired = True
         self._unrenderable = False
         self.xp = None  # either numpy or cupy, once the image is known
@@ -169,7 +170,8 @@ class ImageItem(GraphicsObject):
         """
         self.autoDownsample = ads
         self._renderRequired = True
-        self._buffer = None
+        self._gpuBuffer = None
+        self._cpuBuffer = None
         self.update()
 
     def setOpts(self, update=True, **kargs):
@@ -211,7 +213,12 @@ class ImageItem(GraphicsObject):
         self.update()
 
     def _buildQImageBuffer(self, shape):
-        self._buffer = self.xp.empty(shape[:2] + (4,), dtype=self.xp.ubyte)
+        self._cpuBuffer = numpy.empty(shape[:2] + (4,), dtype=numpy.ubyte)
+        if self.xp == cp:
+            self._gpuBuffer = self.xp.empty(shape[:2] + (4,), dtype=self.xp.ubyte)
+        else:
+            self._gpuBuffer = self._cpuBuffer
+        self.qimage = fn.makeQImage(self._cpuBuffer, transpose=False, copy=False)
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
@@ -274,7 +281,8 @@ class ImageItem(GraphicsObject):
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
             if shapeChanged:
-                self._buffer = None
+                self._gpuBuffer = None
+                self._cpuBuffer = None
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
 
@@ -375,7 +383,6 @@ class ImageItem(GraphicsObject):
 
     def render(self):
         # Convert data to QImage for display.
-        self.qimage = None
         self._unrenderable = True
         if self.image is None or self.image.size == 0:
             return
@@ -437,11 +444,12 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
 
-        if self._buffer is None:
+        if self._gpuBuffer is None:
             self._buildQImageBuffer(image.shape)
 
-        fn.makeARGB(image, lut=lut, levels=levels, output=self._buffer)
-        self.qimage = fn.makeQImage(cp.asnumpy(self._buffer), transpose=False, copy=False)
+        fn.makeARGB(image, lut=lut, levels=levels, output=self._gpuBuffer)
+        if self.xp == cp:
+            self._gpuBuffer.get(out=self._cpuBuffer)
         self._renderRequired = False
         self._unrenderable = False
 
