@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import numpy
+
 from ..Qt import QtGui, QtCore
-import numpy as np
+import cupy as cp
 from .. import functions as fn
 from .. import debug as debug
 from .GraphicsObject import GraphicsObject
@@ -56,6 +58,8 @@ class ImageItem(GraphicsObject):
         self._buffer = None
         self._renderRequired = True
         self._unrenderable = False
+        self.xp = None  # either numpy or cupy, once the image is known
+        self._defferedLevels = None
 
         self.axisOrder = getConfigOption('imageAxisOrder')
 
@@ -127,13 +131,15 @@ class ImageItem(GraphicsObject):
         Only the first format is compatible with lookup tables. See :func:`makeARGB <pyqtgraph.makeARGB>`
         for more details on how levels are applied.
         """
+        if self.xp is None:
+            self._defferedLevels = levels
+            return
         if levels is not None:
-            levels = np.asarray(levels)
-        if not fn.eq(levels, self.levels):
-            self.levels = levels
-            self._effectiveLut = None
-            if update:
-                self.updateImage()
+            levels = self.xp.asarray(levels)
+        self.levels = levels
+        self._effectiveLut = None
+        if update:
+            self.updateImage()
 
     def getLevels(self):
         return self.levels
@@ -205,8 +211,7 @@ class ImageItem(GraphicsObject):
         self.update()
 
     def _buildQImageBuffer(self, shape):
-        self._buffer = np.empty(shape[:2] + (4,), dtype=np.ubyte)
-        self.qimage = fn.makeQImage(self._buffer, transpose=False, copy=False)
+        self._buffer = self.xp.empty(shape[:2] + (4,), dtype=self.xp.ubyte)
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
@@ -258,9 +263,10 @@ class ImageItem(GraphicsObject):
             if self.image is None:
                 return
         else:
+            self.xp = cp.get_array_module(image)
             gotNewData = True
             shapeChanged = (self.image is None or image.shape != self.image.shape)
-            image = image.view(np.ndarray)
+            image = image.view()
             if self.image is None or image.dtype != self.image.dtype:
                 self._effectiveLut = None
             self.image = image
@@ -283,9 +289,9 @@ class ImageItem(GraphicsObject):
             img = self.image
             while img.size > 2**16:
                 img = img[::2, ::2]
-            mn, mx = np.nanmin(img), np.nanmax(img)
+            mn, mx = self.xp.nanmin(img), self.xp.nanmax(img)
             # mn and mx can still be NaN if the data is all-NaN
-            if mn == mx or np.isnan(mn) or np.isnan(mx):
+            if mn == mx or self.xp.isnan(mn) or self.xp.isnan(mx):
                 mn = 0
                 mx = 255
             kargs['levels'] = [mn,mx]
@@ -303,6 +309,10 @@ class ImageItem(GraphicsObject):
 
         if gotNewData:
             self.sigImageChanged.emit()
+        if self._defferedLevels is not None:
+            levels = self._defferedLevels
+            self._defferedLevels = None
+            self.setLevels((levels))
 
     def dataTransform(self):
         """Return the transform that maps from this image's input array to its
@@ -346,11 +356,11 @@ class ImageItem(GraphicsObject):
         """
         data = self.image
         while data.size > targetSize:
-            ax = np.argmax(data.shape)
+            ax = self.xp.argmax(data.shape)
             sl = [slice(None)] * data.ndim
             sl[ax] = slice(None, None, 2)
             data = data[sl]
-        return np.nanmin(data), np.nanmax(data)
+        return self.xp.nanmin(data), self.xp.nanmax(data)
 
     def updateImage(self, *args, **kargs):
         ## used for re-rendering qimage from self.image.
@@ -365,8 +375,7 @@ class ImageItem(GraphicsObject):
 
     def render(self):
         # Convert data to QImage for display.
-
-        profile = debug.Profiler()
+        self.qimage = None
         self._unrenderable = True
         if self.image is None or self.image.size == 0:
             return
@@ -399,18 +408,18 @@ class ImageItem(GraphicsObject):
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
         levels = self.levels
-        if levels is not None and levels.ndim == 1 and image.dtype in (np.ubyte, np.uint16):
+        if levels is not None and levels.ndim == 1 and image.dtype in (self.xp.ubyte, self.xp.uint16):
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
-                ind = np.arange(eflsize)
+                ind = self.xp.arange(eflsize)
                 minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
                 if lut is None:
                     efflut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=np.ubyte)
+                                            offset=minlev, dtype=self.xp.ubyte)
                 else:
-                    lutdtype = np.min_scalar_type(lut.shape[0]-1)
+                    lutdtype = self.xp.min_scalar_type(lut.shape[0]-1)
                     efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
                                             offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
                     efflut = lut[efflut]
@@ -431,7 +440,8 @@ class ImageItem(GraphicsObject):
         if self._buffer is None:
             self._buildQImageBuffer(image.shape)
 
-        fn.jitMakeARGB(image, lut=lut, levels=levels, output=self._buffer)
+        fn.makeARGB(image, lut=lut, levels=levels, output=self._buffer)
+        self.qimage = fn.makeQImage(cp.asnumpy(self._buffer), transpose=False, copy=False)
         self._renderRequired = False
         self._unrenderable = False
 
@@ -471,7 +481,7 @@ class ImageItem(GraphicsObject):
         dimensions roughly *targetImageSize* for each axis.
 
         The *bins* argument and any extra keyword arguments are passed to
-        np.histogram(). If *bins* is 'auto', then a bin number is automatically
+        self.xp.histogram(). If *bins* is 'auto', then a bin number is automatically
         chosen based on the image characteristics:
 
         * Integer images will have approximately *targetHistogramSize* bins,
@@ -486,28 +496,28 @@ class ImageItem(GraphicsObject):
         if self.image is None or self.image.size == 0:
             return None, None
         if step == 'auto':
-            step = (max(1, int(np.ceil(self.image.shape[0] / targetImageSize))),
-                    max(1, int(np.ceil(self.image.shape[1] / targetImageSize))))
-        if np.isscalar(step):
+            step = (max(1, int(self.xp.ceil(self.image.shape[0] / targetImageSize))),
+                    max(1, int(self.xp.ceil(self.image.shape[1] / targetImageSize))))
+        if self.xp.isscalar(step):
             step = (step, step)
         stepData = self.image[::step[0], ::step[1]]
 
         if isinstance(bins, str) and bins == 'auto':
-            mn = np.nanmin(stepData)
-            mx = np.nanmax(stepData)
+            mn = self.xp.nanmin(stepData)
+            mx = self.xp.nanmax(stepData)
             if mx == mn:
                 # degenerate image, arange will fail
                 mx += 1
-            if np.isnan(mn) or np.isnan(mx):
+            if self.xp.isnan(mn) or self.xp.isnan(mx):
                 # the data are all-nan
                 return None, None
             if stepData.dtype.kind in "ui":
                 # For integer data, we select the bins carefully to avoid aliasing
-                step = np.ceil((mx-mn) / 500.)
-                bins = np.arange(mn, mx+1.01*step, step, dtype=np.int)
+                step = self.xp.ceil((mx-mn) / 500.)
+                bins = self.xp.arange(int(mn), float(int(mx)+1.01*step), float(step), dtype=self.xp.int)
             else:
                 # for float data, let numpy select the bins.
-                bins = np.linspace(mn, mx, 500)
+                bins = self.xp.linspace(mn, mx, 500)
 
             if len(bins) == 0:
                 bins = [mn, mx]
@@ -518,14 +528,14 @@ class ImageItem(GraphicsObject):
             hist = []
             for i in range(stepData.shape[-1]):
                 stepChan = stepData[..., i]
-                stepChan = stepChan[np.isfinite(stepChan)]
-                h = np.histogram(stepChan, **kwds)
-                hist.append((h[1][:-1], h[0]))
+                stepChan = stepChan[self.xp.isfinite(stepChan)]
+                h = self.xp.histogram(stepChan, **kwds)
+                hist.append((cp.asnumpy(h[1][:-1]), cp.asnumpy(h[0])))
             return hist
         else:
-            stepData = stepData[np.isfinite(stepData)]
-            hist = np.histogram(stepData, **kwds)
-            return hist[1][:-1], hist[0]
+            stepData = stepData[self.xp.isfinite(stepData)]
+            hist = self.xp.histogram(stepData, **kwds)
+            return cp.asnumpy(hist[1][:-1]), cp.asnumpy(hist[0])
 
     def setPxMode(self, b):
         """
