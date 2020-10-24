@@ -2325,10 +2325,48 @@ def isosurface(data, level):
     return vertexes, faces
 
 
+# Ad-hoc hard coded inverse of 3x3 matrix
+# taken from:
+# https://github.com/numpy/numpy/issues/17166#issue-686375258
+
+# Helper function for determinant
+def vdet(A):
+    detA = np.zeros_like(A[0, 0])
+    detA = A[0, 0] * (A[1, 1] * A[2, 2] - A[1, 2] * A[2, 1]) -\
+           A[0, 1] * (A[2, 2] * A[1, 0] - A[2, 0] * A[1, 2]) +\
+        A[0, 2] * (A[1, 0] * A[2, 1] - A[2, 0] * A[1, 1])
+    return detA
+
+
+# stolen verbatim from:
+def hdinv(A):
+    invA = np.zeros_like(A)
+    detA = vdet(A)
+
+    invA[0, 0] = (-A[1, 2] * A[2, 1] +
+                  A[1, 1] * A[2, 2]) / detA
+    invA[1, 0] = (A[1, 2] * A[2, 0] -
+                  A[1, 0] * A[2, 2]) / detA
+    invA[2, 0] = (-A[1, 1] * A[2, 0] +
+                  A[1, 0] * A[2, 1]) / detA
+    invA[0, 1] = (A[0, 2] * A[2, 1] -
+                  A[0, 1] * A[2, 2]) / detA
+    invA[1, 1] = (-A[0, 2] * A[2, 0] +
+                  A[0, 0] * A[2, 2]) / detA
+    invA[2, 1] = (A[0, 1] * A[2, 0] -
+                  A[0, 0] * A[2, 1]) / detA
+    invA[0, 2] = (-A[0, 2] * A[1, 1] +
+                  A[0, 1] * A[1, 2]) / detA
+    invA[1, 2] = (A[0, 2] * A[1, 0] -
+                  A[0, 0] * A[1, 2]) / detA
+    invA[2, 2] = (-A[0, 1] * A[1, 0] +
+                  A[0, 0] * A[1, 1]) / detA
+    return invA
+
     
 def invertQTransform(tr):
     """Return a QTransform that is the inverse of *tr*.
-    Rasises an exception if tr is not invertible.
+    Raises an exception if tr is not invertible.
     
     Note that this function is preferred over QTransform.inverted() due to
     bugs in that method. (specifically, Qt has floating-point precision issues
@@ -2337,7 +2375,8 @@ def invertQTransform(tr):
     try:
         import numpy.linalg
         arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-        inv = numpy.linalg.inv(arr)
+        inv = hdinv(arr)
+        # TODO: use `*np.ravel()` below instead?
         return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
     except ImportError:
         inv = tr.inverted()
