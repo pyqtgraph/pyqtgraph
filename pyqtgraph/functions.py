@@ -2343,6 +2343,10 @@ def hdinv(A):
     invA = np.zeros_like(A)
     detA = vdet(A)
 
+    # naive singularity detection; be compat with ``QTransform.inverted()``.
+    if detA == 0:
+        return np.eye(3), False
+
     invA[0, 0] = (-A[1, 2] * A[2, 1] +
                   A[1, 1] * A[2, 2]) / detA
     invA[1, 0] = (A[1, 2] * A[2, 0] -
@@ -2361,29 +2365,44 @@ def hdinv(A):
                   A[0, 0] * A[1, 2]) / detA
     invA[2, 2] = (-A[0, 1] * A[1, 0] +
                   A[0, 0] * A[1, 1]) / detA
-    return invA
 
-    
+    return invA, True
+
+
+from .debug import Profiler
+
+
 def invertQTransform(tr):
     """Return a QTransform that is the inverse of *tr*.
     Raises an exception if tr is not invertible.
-    
+
     Note that this function is preferred over QTransform.inverted() due to
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
-    try:
-        import numpy.linalg
-        arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-        inv = hdinv(arr)
-        # TODO: use `*np.ravel()` below instead?
-        return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
-    except ImportError:
-        inv = tr.inverted()
-        if inv[1] is False:
-            raise Exception("Transform is not invertible.")
-        return inv[0]
-    
+    arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
+    profiler = Profiler(disabled=False, delayed=False)
+    profiler('pre transform calcs')
+
+    inv, invertable = hdinv(arr)
+    profiler('hdinv result')
+
+    ravel_t = QtGui.QTransform(*np.ravel(inv))
+    profiler('ravel speed')
+
+    index_t = QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
+    profiler('indexing speed')
+
+    # see https://doc.qt.io/qt-5/qtransform.html#inverted
+    qt_t, invertable = tr.inverted()
+    profiler('.inverted transform result: {}'.format(qt_t))
+
+    # pretty sure the identity transform handles this
+    # if invertable is False:
+    #     raise Exception("Transform is not invertible.")
+
+    return qt_t
+
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
     """Return an array of position values needed to make beeswarm or column scatter plots.
