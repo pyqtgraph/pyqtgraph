@@ -558,7 +558,7 @@ class ScatterPlotItem(GraphicsObject):
         dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
-        
+
     def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
@@ -637,9 +637,9 @@ class ScatterPlotItem(GraphicsObject):
             return recs
 
     def measureSpotSizes(self, dataSet):
-        for rec in dataSet:
+        opts = self.getSpotOpts(dataSet)
+        for size, pen in zip(opts['size'], opts['pen']):
             ## keep track of the maximum spot size and pixel size
-            symbol, size, pen, brush = self.getSpotOpts(rec)
             width = 0
             pxWidth = 0
             if self.opts['pxMode']:
@@ -821,21 +821,18 @@ class ScatterPlotItem(GraphicsObject):
                 p.setRenderHint(p.Antialiasing, aa)
 
                 pts = pts[:,viewMask]
-                for i, rec in enumerate(data[viewMask]):
+                for i, rec in enumerate(self.getSpotOpts(self.data[viewMask], scale)):
                     p.resetTransform()
                     p.translate(pts[0,i] + rec['width']/2, pts[1,i] + rec['width']/2)
-                    drawSymbol(p, *self.getSpotOpts(rec, scale))
+                    drawSymbol(p, rec['symbol'], rec['size'], rec['pen'], rec['brush'])
         else:
             if self.picture is None:
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
-                for rec in self.data:
-                    if scale != 1.0:
-                        rec = rec.copy()
-                        rec['size'] *= scale
+                for rec in self.getSpotOpts(self.data, scale):
                     p2.resetTransform()
                     p2.translate(rec['x'], rec['y'])
-                    drawSymbol(p2, *self.getSpotOpts(rec, scale))
+                    drawSymbol(p2, rec['symbol'], rec['size'], rec['pen'], rec['brush'])
                 p2.end()
 
             p.setRenderHint(p.Antialiasing, aa)
@@ -991,7 +988,7 @@ class SpotItem(object):
         """Set whether or not this spot is visible."""
         self._data['visible'] = visible
         self.updateItem()
-    
+
     def setData(self, data):
         """Set the user-data associated with this spot"""
         self._data['data'] = data
