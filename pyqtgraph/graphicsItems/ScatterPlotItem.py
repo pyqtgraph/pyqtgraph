@@ -135,38 +135,20 @@ class SymbolAtlas(object):
         """
 
         sourceRect = []
-        keyi = None
-        sourceRecti = None
-        symbol_map = self.symbolMap
-
-        symbols = opts['symbol'].tolist()
-        sizes = opts['size'].tolist()
-        pens = opts['pen'].tolist()
-        brushes = opts['brush'].tolist()
-
-        for symbol, size, pen, brush in zip(symbols, sizes, pens, brushes):
+        for symbol, size, pen, brush in zip(opts['symbol'], opts['size'], opts['pen'], opts['brush']):
             key = (fn.serializeQtData(symbol) if isinstance(symbol, QtGui.QPainterPath) else symbol,
                    size, fn.serializeQtData(pen), fn.serializeQtData(brush))
-            if key == keyi:
-                sourceRect.append(sourceRecti)
-            else:
-                try:
-                    sourceRect.append(symbol_map[key])
-                except KeyError:
-                    newRectSrc = QtCore.QRectF()
-                    newRectSrc.pen = pen
-                    newRectSrc.brush = brush
-                    newRectSrc.symbol = symbol
-
-                    symbol_map[key] = newRectSrc
-                    self.atlasValid = False
-                    sourceRect.append(newRectSrc)
-
-                    keyi = key
-                    sourceRecti = newRectSrc
-
-        sourceRect = np.array(sourceRect, dtype=object)
-        return sourceRect
+            try:
+                rect = self.symbolMap[key]
+            except KeyError:
+                rect = QtCore.QRectF()
+                rect.pen = pen
+                rect.brush = brush
+                rect.symbol = symbol
+                self.symbolMap[key] = rect
+                self.atlasValid = False
+            sourceRect.append(rect)
+        return np.array(sourceRect, dtype=object)
 
     def buildAtlas(self):
         # get rendered array for all symbols, keep track of avg/max width
