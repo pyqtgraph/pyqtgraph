@@ -129,9 +129,10 @@ def hoverEvent(ev):
         lastHovered = points
 
         cutoff = 3
-        tip = '\n\n'.join(f'index: {pt.index()}\nx: {pt.pos().x():.3g}\ny: {pt.pos().y():.3g}' for pt in points[:cutoff])
+        tip = '\n\n'.join('index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
+                          for pt in points[:cutoff])
         if len(points) > cutoff:
-            tip += f'\n\n({len(points) - cutoff} more...)'
+            tip += '\n\n({} more...)'.format(len(points) - cutoff)
 
         if tip:
             s4.getViewBox().setToolTip(tip)
