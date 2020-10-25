@@ -145,8 +145,8 @@ class SymbolAtlas(object):
         brushes = opts['brush'].tolist()
 
         for symbol, size, pen, brush in zip(symbols, sizes, pens, brushes):
-
-            key = id(symbol), size, id(pen), id(brush)
+            key = (fn.serializeQtData(symbol) if isinstance(symbol, QtGui.QPainterPath) else symbol,
+                   size, fn.serializeQtData(pen), fn.serializeQtData(brush))
             if key == keyi:
                 sourceRect.append(sourceRecti)
             else:
