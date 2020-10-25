@@ -129,7 +129,7 @@ def hoverEvent(ev):
         lastHovered = points
 
         cutoff = 3
-        tip = '\n\n'.join(f'index: {pt.index()}\n(x, y): {pt.pos()}' for pt in points[:cutoff])
+        tip = '\n\n'.join(f'index: {pt.index()}\nx: {pt.pos().x():.3g}\ny: {pt.pos().y():.3g}' for pt in points[:cutoff])
         if len(points) > cutoff:
             tip += f'\n\n({len(points) - cutoff} more...)'
 
