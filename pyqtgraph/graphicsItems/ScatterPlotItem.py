@@ -860,34 +860,30 @@ class ScatterPlotItem(GraphicsObject):
             self.picture.play(p)
 
     def points(self):
-        for i,rec in enumerate(self.data):
+        m = np.equal(self.data['item'], None)
+        for i in np.argwhere(m)[:, 0]:
+            rec = self.data[i]
             if rec['item'] is None:
                 rec['item'] = SpotItem(rec, self, i)
         return self.data['item']
 
     def pointsAt(self, pos):
+        return self.points()[self._maskAt(pos)][::-1]
+
+    def _maskAt(self, pos):
         x = pos.x()
         y = pos.y()
         pw = self.pixelWidth()
         ph = self.pixelHeight()
-        pts = []
-        for s in self.points():
-            sp = s.pos()
-            ss = s.size()
-            sx = sp.x()
-            sy = sp.y()
-            s2x = s2y = ss * 0.5
-            if self.opts['pxMode']:
-                s2x *= pw
-                s2y *= ph
-            if x > sx-s2x and x < sx+s2x and y > sy-s2y and y < sy+s2y:
-                pts.append(s)
-                #print "HIT:", x, y, sx, sy, s2x, s2y
-            #else:
-                #print "No hit:", (x, y), (sx, sy)
-                #print "       ", (sx-s2x, sy-s2y), (sx+s2x, sy+s2y)
-        return pts[::-1]
-
+        ss = np.where(self.data['size'] == -1, self.opts['size'], self.data['size'])
+        sx = self.data['x']
+        sy = self.data['y']
+        s2x = ss * 0.5
+        s2y = ss * 0.5
+        if self.opts['pxMode']:
+            s2x *= pw
+            s2y *= ph
+        return (x > sx - s2x) & (x < sx + s2x) & (y > sy - s2y) & (y < sy + s2y)
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
