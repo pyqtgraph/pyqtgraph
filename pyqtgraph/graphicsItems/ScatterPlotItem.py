@@ -134,10 +134,20 @@ class SymbolAtlas(object):
         Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
         """
 
+        cache = {}
+
+        def serQtData(obj):
+            try:
+                val = cache[id(obj)]
+            except KeyError:
+                val = fn.serializeQtData(obj)
+                cache[id(obj)] = val
+            return val
+
         sourceRect = []
         for symbol, size, pen, brush in zip(opts['symbol'], opts['size'], opts['pen'], opts['brush']):
-            key = (fn.serializeQtData(symbol) if isinstance(symbol, QtGui.QPainterPath) else symbol,
-                   size, fn.serializeQtData(pen), fn.serializeQtData(brush))
+            key = (serQtData(symbol) if isinstance(symbol, QtGui.QPainterPath) else symbol,
+                   size, serQtData(pen), serQtData(brush))
             try:
                 rect = self.symbolMap[key]
             except KeyError:
