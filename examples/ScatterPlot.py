@@ -113,6 +113,30 @@ s4.addPoints(x=pos[0], y=pos[1])
 w4.addItem(s4)
 s4.sigClicked.connect(clicked)
 
+# Enable hovering and show a tool tip hovered points
+s4.setAcceptHoverEvents(True)
+lastHovered = []
+
+def hoverEvent(ev):
+    global lastHovered
+    for pt in lastHovered:
+        pt.resetPen()
+
+    if not ev.exit:
+        points = s4.pointsAt(ev.pos())
+        for pt in points:
+            pt.setPen('g')
+        lastHovered = points
+
+        cutoff = 3
+        tip = '\n\n'.join(f'index: {pt.index()}\n(x, y): {pt.pos()}' for pt in points[:cutoff])
+        if len(points) > cutoff:
+            tip += f'\n\n({len(points) - cutoff} more...)'
+
+        if tip:
+            s4.getViewBox().setToolTip(tip)
+
+s4.hoverEvent = hoverEvent
 
 
 ## Start Qt event loop unless running in interactive mode.
