@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import log
+from math import isnan, isfinite
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 import decimal
 import weakref
@@ -330,26 +330,26 @@ class SpinBox(QtGui.QAbstractSpinBox):
         """
         if value is None:
             value = self.value()
-        
-        bounds = self.opts['bounds']
 
-        if None not in bounds and self.opts['wrapping'] is True:
-            # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
-            value = float(value)
-            l, u = float(bounds[0]), float(bounds[1])
-            value = (value - l) % (u - l) + l
-        else:
-            if bounds[0] is not None and value < bounds[0]:
-                value = bounds[0]
-            if bounds[1] is not None and value > bounds[1]:
-                value = bounds[1]
+        if not isnan(value):
+            bounds = self.opts['bounds']
+            if None not in bounds and self.opts['wrapping'] is True:
+                # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
+                value = float(value)
+                l, u = float(bounds[0]), float(bounds[1])
+                value = (value - l) % (u - l) + l
+            else:
+                if bounds[0] is not None and value < bounds[0]:
+                    value = bounds[0]
+                if bounds[1] is not None and value > bounds[1]:
+                    value = bounds[1]
 
         if self.opts['int']:
             value = int(value)
 
         if not isinstance(value, D):
             value = D(asUnicode(value))
-        
+
         if value == self.val:
             return
         prev = self.val
@@ -386,6 +386,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         return self.StepUpEnabled | self.StepDownEnabled        
     
     def stepBy(self, n):
+        if not isfinite(self.val):
+            return
+
         n = D(int(n))   ## n must be integral number of steps.
         s = [D(-1), D(1)][n >= 0]  ## determine sign of step
         val = self.val
@@ -420,14 +423,15 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.setValue(val, delaySignal=True)  ## note all steps (arrow buttons, wheel, up/down keys..) emit delayed signals only.
 
     def valueInRange(self, value):
-        bounds = self.opts['bounds']
-        if bounds[0] is not None and value < bounds[0]:
-            return False
-        if bounds[1] is not None and value > bounds[1]:
-            return False
-        if self.opts.get('int', False):
-            if int(value) != value:
+        if not isnan(value):
+            bounds = self.opts['bounds']
+            if bounds[0] is not None and value < bounds[0]:
                 return False
+            if bounds[1] is not None and value > bounds[1]:
+                return False
+            if self.opts.get('int', False):
+                if int(value) != value:
+                    return False
         return True
 
     def updateText(self, prev=None):
@@ -535,6 +539,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         # generate value
         val = self.opts['evalFunc'](val)
         if self.opts['int']:
+            if not isfinite(val):
+                return False
+
             val = int(fn.siApply(val, siprefix))
         else:
             try:
