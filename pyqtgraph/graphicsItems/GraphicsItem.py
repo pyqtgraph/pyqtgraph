@@ -36,6 +36,7 @@ class GraphicsItem(object):
         self._viewBox = None
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
+        self._cachedView = None
         if register is not None and register:
             warnings.warn(
                 "'register' argument is deprecated and does nothing",
@@ -154,6 +155,10 @@ class GraphicsItem(object):
     def viewRect(self):
         """Return the visible bounds of this item's ViewBox or GraphicsWidget,
         in the local coordinate system of the item."""
+        if self._cachedView is not None:
+            return self._cachedView
+
+        # Note that in cases of early returns here, the view cache stays empty (None).
         view = self.getViewBox()
         if view is None:
             return None
@@ -163,10 +168,12 @@ class GraphicsItem(object):
 
         bounds = bounds.normalized()
         
+        self._cachedView = bounds
+            
         ## nah.
         #for p in self.getBoundingParents():
             #bounds &= self.mapRectFromScene(p.sceneBoundingRect())
-            
+
         return bounds
         
         
@@ -548,8 +555,9 @@ class GraphicsItem(object):
         """
         Called whenever the transformation matrix of the view has changed.
         (eg, the view range has changed or the view was resized)
+        Invalidates the viewRect cache.
         """
-        pass
+        self._cachedView = None
     
     #def prepareGeometryChange(self):
         #self._qtBaseClass.prepareGeometryChange(self)

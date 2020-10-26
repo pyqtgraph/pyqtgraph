@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'examples/exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
 #
-# Created: Fri Feb 16 20:29:46 2018
+# Created: Sun Oct 18 21:53:22 2020
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.loadedFileLabel)
         self.codeView = QtGui.QPlainTextEdit(self.widget1)
         font = QtGui.QFont()
-        font.setFamily("FreeMono")
+        font.setFamily("Courier New")
         self.codeView.setFont(font)
         self.codeView.setObjectName("codeView")
         self.verticalLayout.addWidget(self.codeView)

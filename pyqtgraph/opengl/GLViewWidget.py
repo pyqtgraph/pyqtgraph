@@ -498,6 +498,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.makeCurrent()
         tex = None
         fb = None
+        depth_buf = None
         try:
             output = np.empty((w, h, 4), dtype=np.ubyte)
             fb = glfbo.glGenFramebuffers(1)
@@ -515,8 +516,14 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
             ## create teture
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texwidth, texwidth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.transpose((1,0,2)))
-            
-            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...) 
+
+            # Create depth buffer
+            depth_buf = glGenRenderbuffers(1)
+            glBindRenderbuffer(GL_RENDERBUFFER, depth_buf)
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texwidth, texwidth)
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buf)
+
+            self.opts['viewport'] = (0, 0, w, h)  # viewport is the complete image; this ensures that paintGL(region=...)
                                                   # is interpreted correctly.
             p2 = 2 * padding
             for x in range(-padding, w-padding, texwidth-p2):
@@ -545,6 +552,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 glDeleteTextures([tex])
             if fb is not None:
                 glfbo.glDeleteFramebuffers([fb])
-            
+            if depth_buf is not None:
+                glDeleteRenderbuffers(1, [depth_buf])
+
         return output
- 
