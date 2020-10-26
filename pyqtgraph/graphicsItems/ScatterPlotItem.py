@@ -129,9 +129,10 @@ class SymbolAtlas(object):
         self.atlasValid = False
         self.max_width=0
 
-    def getSymbolCoords(self, opts):
+    def getSymbolCoords(self, symbol, size, pen, brush):
         """
-        Given a list of spot records, return an object representing the coordinates of that symbol within the atlas
+        Given equal length lists of symbols, sizes, pens, brushes, return an object
+        representing the coordinates of that symbol within the atlas
         """
 
         cache = {}
@@ -145,16 +146,16 @@ class SymbolAtlas(object):
             return val
 
         sourceRect = []
-        for symbol, size, pen, brush in zip(opts['symbol'], opts['size'], opts['pen'], opts['brush']):
-            key = (serQtData(symbol) if isinstance(symbol, QtGui.QPainterPath) else symbol,
-                   size, serQtData(pen), serQtData(brush))
+        for symbol_i, size_i, pen_i, brush_i in zip(symbol, size, pen, brush):
+            key = (serQtData(symbol_i) if isinstance(symbol_i, QtGui.QPainterPath) else symbol_i,
+                   size_i, serQtData(pen_i), serQtData(brush_i))
             try:
                 rect = self.symbolMap[key]
             except KeyError:
                 rect = QtCore.QRectF()
-                rect.pen = pen
-                rect.brush = brush
-                rect.symbol = symbol
+                rect.pen = pen_i
+                rect.brush = brush_i
+                rect.symbol = symbol_i
                 self.symbolMap[key] = rect
                 self.atlasValid = False
             sourceRect.append(rect)
@@ -604,9 +605,9 @@ class ScatterPlotItem(GraphicsObject):
             mask = np.equal(dataSet['sourceRect'], None)
             if np.any(mask):
                 invalidate = True
-                opts = self.getSpotOpts(dataSet[mask])
-                sourceRect = self.fragmentAtlas.getSymbolCoords(opts)
-                dataSet['sourceRect'][mask] = sourceRect
+                dataSet['sourceRect'][mask] = self.fragmentAtlas.getSymbolCoords(
+                    *(self.getSpotOpt(k, dataSet)[mask] for k in ['symbol', 'size', 'pen', 'brush'])
+                )
 
             self.fragmentAtlas.getAtlas() # generate atlas so source widths are available.
 
@@ -621,6 +622,17 @@ class ScatterPlotItem(GraphicsObject):
         if invalidate:
             self.invalidate()
 
+    def getSpotOpt(self, opt, recs=None):
+        if recs is None:
+            recs = self.data
+
+        v, func = {'symbol': (None, lambda x: x),
+                   'size': (-1, lambda x: x),
+                   'pen': (None, fn.mkPen),
+                   'brush': (None, fn.mkBrush)}[opt]
+        return np.where(np.equal(recs[opt], v), func(self.opts[opt]), recs[opt])
+
+    # deprecated
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
             rec = recs
@@ -647,8 +659,7 @@ class ScatterPlotItem(GraphicsObject):
             return recs
 
     def measureSpotSizes(self, dataSet):
-        opts = self.getSpotOpts(dataSet)
-        for size, pen in zip(opts['size'], opts['pen']):
+        for size, pen in zip(*(self.getSpotOpt(k, dataSet) for k in ['size', 'pen'])):
             ## keep track of the maximum spot size and pixel size
             width = 0
             pxWidth = 0
@@ -830,19 +841,25 @@ class ScatterPlotItem(GraphicsObject):
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
 
-                pts = pts[:,viewMask]
-                for i, rec in enumerate(self.getSpotOpts(self.data[viewMask], scale)):
+                cols = [self.getSpotOpt(opt) for opt in ['symbol', 'size', 'pen', 'brush']]
+                cols[1] *= scale
+                cols = [pts.T, self.data['width']] + cols
+                for pt, w, symbol, size, pen, brush in zip(*(col[viewMask] for col in cols)):
                     p.resetTransform()
-                    p.translate(pts[0,i] + rec['width']/2, pts[1,i] + rec['width']/2)
-                    drawSymbol(p, rec['symbol'], rec['size'], rec['pen'], rec['brush'])
+                    p.translate(pt[0] + w / 2, pt[1] + w / 2)
+                    drawSymbol(p, symbol, size, pen, brush)
         else:
             if self.picture is None:
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
-                for rec in self.getSpotOpts(self.data, scale):
+
+                cols = [self.getSpotOpt(opt) for opt in ['symbol', 'size', 'pen', 'brush']]
+                cols[1] *= scale
+                cols = [self.data['x'], self.data['y']] + cols
+                for x, y, symbol, size, pen, brush in zip(*cols):
                     p2.resetTransform()
-                    p2.translate(rec['x'], rec['y'])
-                    drawSymbol(p2, rec['symbol'], rec['size'], rec['pen'], rec['brush'])
+                    p2.translate(x, y)
+                    drawSymbol(p2, symbol, size, pen, brush)
                 p2.end()
 
             p.setRenderHint(p.Antialiasing, aa)
