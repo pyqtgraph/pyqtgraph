@@ -52,6 +52,9 @@ class ImageItem(GraphicsObject):
         self.lut = None
         self.autoDownsample = False
         self._lastDownsample = (1, 1)
+        self._buffer = None
+        self._renderRequired = True
+        self._unrenderable = False
 
         self.axisOrder = getConfigOption('imageAxisOrder')
 
@@ -158,7 +161,8 @@ class ImageItem(GraphicsObject):
         Added in version 0.9.9
         """
         self.autoDownsample = ads
-        self.qimage = None
+        self._renderRequired = True
+        self._buffer = None
         self.update()
 
     def setOpts(self, update=True, **kargs):
@@ -198,6 +202,10 @@ class ImageItem(GraphicsObject):
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
         self.update()
+
+    def _buildQImageBuffer(self, shape):
+        self._buffer = np.empty(shape[:2] + (4,), dtype=np.ubyte)
+        self.qimage = fn.makeQImage(self._buffer, transpose=False, copy=False)
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
@@ -259,6 +267,7 @@ class ImageItem(GraphicsObject):
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
             if shapeChanged:
+                self._buffer = None
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
 
@@ -286,7 +295,7 @@ class ImageItem(GraphicsObject):
 
         profile()
 
-        self.qimage = None
+        self._renderRequired = True
         self.update()
 
         profile()
@@ -357,6 +366,7 @@ class ImageItem(GraphicsObject):
         # Convert data to QImage for display.
 
         profile = debug.Profiler()
+        self._unrenderable = True
         if self.image is None or self.image.size == 0:
             return
 
@@ -372,7 +382,6 @@ class ImageItem(GraphicsObject):
         if self.autoDownsample:
             xds, yds = self._computeDownsampleFactors()
             if xds is None:
-                self.qimage = None
                 return
 
             axes = [1, 0] if self.axisOrder == 'row-major' else [0, 1]
@@ -418,16 +427,20 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
 
-        argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
-        self.qimage = fn.makeQImage(argb, alpha, transpose=False, copy=False)
+        if self._buffer is None:
+            self._buildQImageBuffer(image.shape)
+
+        fn.makeARGB(image, lut=lut, levels=levels, output=self._buffer)
+        self._renderRequired = False
+        self._unrenderable = False
 
     def paint(self, p, *args):
         profile = debug.Profiler()
         if self.image is None:
             return
-        if self.qimage is None:
+        if self._renderRequired:
             self.render()
-            if self.qimage is None:
+            if self._unrenderable:
                 return
             profile('render QImage')
         if self.paintMode is not None:
@@ -443,7 +456,7 @@ class ImageItem(GraphicsObject):
 
     def save(self, fileName, *args):
         """Save this image to file. Note that this saves the visible image (after scale/color changes), not the original data."""
-        if self.qimage is None:
+        if self._renderRequired:
             self.render()
         self.qimage.save(fileName, *args)
 
@@ -526,9 +539,9 @@ class ImageItem(GraphicsObject):
         self.setPxMode(False)
 
     def getPixmap(self):
-        if self.qimage is None:
+        if self._renderRequired:
             self.render()
-            if self.qimage is None:
+            if self._unrenderable:
                 return None
         return QtGui.QPixmap.fromImage(self.qimage)
 
@@ -543,10 +556,11 @@ class ImageItem(GraphicsObject):
         if self.autoDownsample:
             xds, yds = self._computeDownsampleFactors()
             if xds is None:
-                self.qimage = None
+                self._renderRequired = True
+                self._unrenderable = True
                 return
             if (xds, yds) != self._lastDownsample:
-                self.qimage = None
+                self._renderRequired = True
                 self.update()
 
     def _computeDownsampleFactors(self):
