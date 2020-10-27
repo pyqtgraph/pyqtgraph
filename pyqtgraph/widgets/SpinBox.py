@@ -82,6 +82,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                             ## if true, minStep must be set in order to cross zero.
             
             'int': False, ## Set True to force value to be integer
+            'finite': True,
             
             'suffix': '',
             'siPrefix': False,   ## Set to True to display numbers with SI prefix (ie, 100pA instead of 1e-10A)
@@ -146,7 +147,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
                        'step' values when dec=True are 0.1, 0.2, 0.5, and 1.0. Default is
                        False.
         minStep        (float) When dec=True, this specifies the minimum allowable step size.
-        int            (bool) if True, the value is forced to integer type. Default is False
+        int            (bool) If True, the value is forced to integer type. Default is False
+        finite         (bool) When False and int=False, infinite values (nan, inf, -inf) are
+                       permitted. Default is True.
         wrapping       (bool) If True and both bounds are not None, spin box has circular behavior.
         decimals       (int) Number of decimal values to display. Default is 6. 
         format         (str) Formatting string used to generate the text shown. Formatting is
@@ -545,10 +548,11 @@ class SpinBox(QtGui.QAbstractSpinBox):
            
         # generate value
         val = self.opts['evalFunc'](val)
-        if self.opts['int']:
-            if not isfinite(val):
-                return False
 
+        if (self.opts['int'] or self.opts['finite']) and not isfinite(val):
+            return False
+
+        if self.opts['int']:
             val = int(fn.siApply(val, siprefix))
         else:
             try:
