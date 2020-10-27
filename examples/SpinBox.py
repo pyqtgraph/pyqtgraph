@@ -39,7 +39,7 @@ spins = [
                 regex='(0x)?(?P<number>[0-9a-fA-F]+)$',
                 evalFunc=lambda s: ast.literal_eval('0x'+s))),
     ("Integer with bounds=[10, 20] and wrapping",
-     pg.SpinBox(value=10, bounds=[10, 20], int=False, minStep=1, step=1, wrapping=True)),
+     pg.SpinBox(value=10, bounds=[10, 20], int=True, minStep=1, step=1, wrapping=True)),
 ]
 
 
