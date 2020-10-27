@@ -331,17 +331,24 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if value is None:
             value = self.value()
 
+        bounded = True
         if not isnan(value):
             bounds = self.opts['bounds']
             if None not in bounds and self.opts['wrapping'] is True:
-                # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
-                value = float(value)
-                l, u = float(bounds[0]), float(bounds[1])
-                value = (value - l) % (u - l) + l
+                bounded = False
+                if isfinite(value):
+                    # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
+                    value = float(value)
+                    l, u = float(bounds[0]), float(bounds[1])
+                    value = (value - l) % (u - l) + l
+                else:
+                    value = self.val
             else:
                 if bounds[0] is not None and value < bounds[0]:
+                    bounded = False
                     value = bounds[0]
                 if bounds[1] is not None and value > bounds[1]:
+                    bounded = False
                     value = bounds[1]
 
         if self.opts['int']:
@@ -350,18 +357,18 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if not isinstance(value, D):
             value = D(asUnicode(value))
 
-        if value == self.val:
-            return
+        changed = value != self.val
         prev = self.val
         
         self.val = value
-        if update:
+        if update and (changed or not bounded):
             self.updateText(prev=prev)
-            
-        self.sigValueChanging.emit(self, float(self.val))  ## change will be emitted in 300ms if there are no subsequent changes.
-        if not delaySignal:
-            self.emitChanged()
-        
+
+        if changed:
+            self.sigValueChanging.emit(self, float(self.val))  ## change will be emitted in 300ms if there are no subsequent changes.
+            if not delaySignal:
+                self.emitChanged()
+
         return value
     
     def emitChanged(self):
