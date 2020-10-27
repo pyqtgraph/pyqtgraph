@@ -1162,7 +1162,14 @@ class ROI(GraphicsObject):
         # this is a hidden argument for internal use
         fromBR = kwds.pop('fromBoundingRect', False)
         
-        shape, vectors, origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
+        # Automaticaly compute missing parameters
+        _shape, _vectors, _origin = self.getAffineSliceParams(data, img, axes, fromBoundingRect=fromBR)
+        
+        # Replace them with user defined parameters if defined
+        shape = kwds.pop('shape', _shape)
+        vectors = kwds.pop('vectors', _vectors)
+        origin = kwds.pop('origin', _origin)
+        
         if not returnMappedCoords:
             rgn = fn.affineSlice(data, shape=shape, vectors=vectors, origin=origin, axes=axes, **kwds)
             return rgn
