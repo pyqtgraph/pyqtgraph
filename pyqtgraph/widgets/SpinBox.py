@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import isnan, isfinite
+from math import isnan, isinf
 from decimal import Decimal as D  ## Use decimal to avoid accumulating floating-point errors
 import decimal
 import weakref
@@ -339,13 +339,13 @@ class SpinBox(QtGui.QAbstractSpinBox):
             bounds = self.opts['bounds']
             if None not in bounds and self.opts['wrapping'] is True:
                 bounded = False
-                if isfinite(value):
+                if isinf(value):
+                    value = self.val
+                else:
                     # Casting of Decimals to floats required to avoid unexpected behavior of remainder operator
                     value = float(value)
                     l, u = float(bounds[0]), float(bounds[1])
                     value = (value - l) % (u - l) + l
-                else:
-                    value = self.val
             else:
                 if bounds[0] is not None and value < bounds[0]:
                     bounded = False
@@ -396,7 +396,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         return self.StepUpEnabled | self.StepDownEnabled        
     
     def stepBy(self, n):
-        if not isfinite(self.val):
+        if isinf(self.val) or isnan(self.val):
             return
 
         n = D(int(n))   ## n must be integral number of steps.
@@ -549,7 +549,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         # generate value
         val = self.opts['evalFunc'](val)
 
-        if (self.opts['int'] or self.opts['finite']) and not isfinite(val):
+        if (self.opts['int'] or self.opts['finite']) and (isinf(val) or isnan(val)):
             return False
 
         if self.opts['int']:
