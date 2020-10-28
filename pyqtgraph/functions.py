@@ -985,7 +985,8 @@ def applyLookupTable(data, lut):
         data = data.astype(int)
 
     if xp == cp:
-        return xp.take(lut, data, axis=0)
+        # CuPy only supports "wrap" mode
+        return xp.take(lut, xp.clip(data, 0, lut.shape[0] - 1), axis=0)
     else:
         return xp.take(lut, data, axis=0, mode='clip')
     
