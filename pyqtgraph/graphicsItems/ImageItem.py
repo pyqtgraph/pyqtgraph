@@ -3,16 +3,17 @@ from __future__ import division
 
 import numpy
 
+from .GraphicsObject import GraphicsObject
+from .. import debug as debug
+from .. import functions as fn
+from .. import getConfigOption
+from ..Point import Point
 from ..Qt import QtGui, QtCore
+
 try:
     import cupy as cp
 except ImportError:
     from ..util import empty_cupy as cp
-from .. import functions as fn
-from .. import debug as debug
-from .GraphicsObject import GraphicsObject
-from ..Point import Point
-from .. import getConfigOption
 
 try:
     from collections.abc import Callable
