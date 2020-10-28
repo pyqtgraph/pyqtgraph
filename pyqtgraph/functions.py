@@ -1342,7 +1342,8 @@ def gaussianFilter(data, sigma):
     (note: results are only approximately equal to the output of
      gaussian_filter)
     """
-    if np.isscalar(sigma):
+    xp = cp.get_array_module(data)  # either numpy or cupy
+    if xp.isscalar(sigma):
         sigma = (sigma,) * data.ndim
         
     baseline = data.mean()
@@ -1354,17 +1355,17 @@ def gaussianFilter(data, sigma):
         
         # generate 1D gaussian kernel
         ksize = int(s * 6)
-        x = np.arange(-ksize, ksize)
-        kernel = np.exp(-x**2 / (2*s**2))
+        x = xp.arange(-ksize, ksize)
+        kernel = xp.exp(-x**2 / (2*s**2))
         kshape = [1,] * data.ndim
         kshape[ax] = len(kernel)
         kernel = kernel.reshape(kshape)
         
         # convolve as product of FFTs
         shape = data.shape[ax] + ksize
-        scale = 1.0 / (abs(s) * (2*np.pi)**0.5)
-        filtered = scale * np.fft.irfft(np.fft.rfft(filtered, shape, axis=ax) * 
-                                        np.fft.rfft(kernel, shape, axis=ax), 
+        scale = 1.0 / (abs(s) * (2*xp.pi)**0.5)
+        filtered = scale * xp.fft.irfft(xp.fft.rfft(filtered, shape, axis=ax) *
+                                        xp.fft.rfft(kernel, shape, axis=ax),
                                         axis=ax)
         
         # clip off extra data

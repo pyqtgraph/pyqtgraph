@@ -5,6 +5,7 @@ Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from .. import getConfigOption, functions as fn
 from ..Qt import QtCore, QtGui
 
 try:
@@ -17,7 +18,10 @@ except (ImportError, AttributeError):
     # AttributeError upon import
     HAVE_OPENGL = False
 
-from .. import getConfigOption, functions as fn
+try:
+    import cupy as cp
+except ImportError:
+    from pyqtgraph.util import empty_cupy as cp
 
 
 class RawImageWidget(QtGui.QWidget):
@@ -52,6 +56,8 @@ class RawImageWidget(QtGui.QWidget):
             return
         if self.image is None:
             argb, alpha = fn.makeARGB(self.opts[0], *self.opts[1], **self.opts[2])
+            if cp.get_array_module(argb) == cp:
+                argb = argb.get()
             self.image = fn.makeQImage(argb, alpha)
             self.opts = ()
         # if self.pixmap is None:

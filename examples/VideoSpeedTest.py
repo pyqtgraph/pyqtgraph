@@ -6,14 +6,14 @@ it is being scaled and/or converted by lookup table, and whether OpenGL
 is used by the view widget
 """
 
+import argparse
+import sys
 
-import initExample ## Add path to library (just for examples; you do not need this)
-
-import sys, argparse
-from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 import numpy as np
+
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
+from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 
 if QT_LIB == 'PySide':
     import VideoTemplate_pyside as VideoTemplate
@@ -24,15 +24,21 @@ elif QT_LIB == 'PyQt5':
 else:
     import VideoTemplate_pyqt as VideoTemplate
 
+try:
+    import cupy as cp
+except ImportError:
+    from pyqtgraph.util import empty_cupy as cp
+
 
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
-parser.add_argument('--frames', default=3, type=int, help="Number of image frames to generate (default=3)")
-parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
+parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")
 parser.add_argument('--dtype', default='uint8', choices=['uint8', 'uint16', 'float'], help="Image dtype (uint8, uint16, or float)")
+parser.add_argument('--frames', default=3, type=int, help="Number of image frames to generate (default=3)")
 parser.add_argument('--image-mode', default='mono', choices=['mono', 'rgb'], help="Image data mode (mono or rgb)", dest='image_mode')
 parser.add_argument('--levels', default=None, type=lambda s: tuple([float(x) for x in s.split(',')]), help="min,max levels to scale monochromatic image dynamic range, or rmin,rmax,gmin,gmax,bmin,bmax to scale rgb")
 parser.add_argument('--lut', default=False, action='store_true', help="Use color lookup table")
 parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use alpha color lookup table", dest='lut_alpha')
+parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
 args = parser.parse_args(sys.argv[1:])
 
 
@@ -55,6 +61,7 @@ else:
     ui.stack.addWidget(ui.rawGLImg)
 
 # read in CLI args
+ui.cudaCheck.setChecked(args.cuda)
 ui.framesSpin.setValue(args.frames)
 ui.widthSpin.setValue(args.size[0])
 ui.heightSpin.setValue(args.size[1])
@@ -63,6 +70,10 @@ ui.rgbCheck.setChecked(args.image_mode=='rgb')
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
 levelSpins = [ui.minSpin1, ui.maxSpin1, ui.minSpin2, ui.maxSpin2, ui.minSpin3, ui.maxSpin3]
+if args.cuda:
+    xp = cp
+else:
+    xp = np
 if args.levels is None:
     ui.scaleCheck.setChecked(False)
     ui.rgbLevelsCheck.setChecked(False)
@@ -122,36 +133,36 @@ ui.rgbLevelsCheck.toggled.connect(updateScale)
 cache = {}
 def mkData():
     with pg.BusyCursor():
-        global data, cache, ui
+        global data, cache, ui, xp
         frames = ui.framesSpin.value()
         width = ui.widthSpin.value()
         height = ui.heightSpin.value()
         dtype = (ui.dtypeCombo.currentText(), ui.rgbCheck.isChecked(), frames, width, height)
         if dtype not in cache:
             if dtype[0] == 'uint8':
-                dt = np.uint8
+                dt = xp.uint8
                 loc = 128
                 scale = 64
                 mx = 255
             elif dtype[0] == 'uint16':
-                dt = np.uint16
+                dt = xp.uint16
                 loc = 4096
                 scale = 1024
                 mx = 2**16
             elif dtype[0] == 'float':
-                dt = np.float
+                dt = xp.float
                 loc = 1.0
                 scale = 0.1
                 mx = 1.0
             
             if ui.rgbCheck.isChecked():
-                data = np.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
+                data = xp.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
                 data = pg.gaussianFilter(data, (0, 6, 6, 0))
             else:
-                data = np.random.normal(size=(frames,width,height), loc=loc, scale=scale)
+                data = xp.random.normal(size=(frames,width,height), loc=loc, scale=scale)
                 data = pg.gaussianFilter(data, (0, 6, 6))
             if dtype[0] != 'float':
-                data = np.clip(data, 0, mx)
+                data = xp.clip(data, 0, mx)
             data = data.astype(dt)
             data[:, 10, 10:50] = mx
             data[:, 9:12, 48] = mx
@@ -167,11 +178,21 @@ def updateSize():
     frames = ui.framesSpin.value()
     width = ui.widthSpin.value()
     height = ui.heightSpin.value()
-    dtype = np.dtype(str(ui.dtypeCombo.currentText()))
+    dtype = xp.dtype(str(ui.dtypeCombo.currentText()))
     rgb = 3 if ui.rgbCheck.isChecked() else 1
     ui.sizeLabel.setText('%d MB' % (frames * width * height * rgb * dtype.itemsize / 1e6))
     vb.setRange(QtCore.QRectF(0, 0, width, height))
-    
+
+
+def noticeCudaCheck():
+    global xp, cache
+    cache = {}
+    if ui.cudaCheck.isChecked():
+        xp = cp
+    else:
+        xp = np
+    updateSize()
+    mkData()
 
 mkData()
 
@@ -185,7 +206,7 @@ ui.framesSpin.editingFinished.connect(mkData)
 ui.widthSpin.valueChanged.connect(updateSize)
 ui.heightSpin.valueChanged.connect(updateSize)
 ui.framesSpin.valueChanged.connect(updateSize)
-
+ui.cudaCheck.toggled.connect(noticeCudaCheck)
 
 
 ptr = 0

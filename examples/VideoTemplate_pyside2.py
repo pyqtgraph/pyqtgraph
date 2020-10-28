@@ -17,6 +17,9 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.cudaCheck = QtWidgets.QCheckBox(self.centralwidget)
+        self.cudaCheck.setObjectName("cudaCheck")
+        self.gridLayout_2.addWidget(self.cudaCheck, 9, 0, 1, 2)
         self.downsampleCheck = QtWidgets.QCheckBox(self.centralwidget)
         self.downsampleCheck.setObjectName("downsampleCheck")
         self.gridLayout_2.addWidget(self.downsampleCheck, 8, 0, 1, 2)
@@ -184,6 +187,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "MainWindow", None, -1))
+        self.cudaCheck.setText(QtWidgets.QApplication.translate("MainWindow", "Use CUDA (GPU) if available", None, -1))
         self.downsampleCheck.setText(QtWidgets.QApplication.translate("MainWindow", "Auto downsample", None, -1))
         self.scaleCheck.setText(QtWidgets.QApplication.translate("MainWindow", "Scale Data", None, -1))
         self.rawRadio.setText(QtWidgets.QApplication.translate("MainWindow", "RawImageWidget", None, -1))
