@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
 #
-# Created: Sat Feb 28 10:31:57 2015
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Sun Oct 18 21:53:22 2020
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -41,6 +41,7 @@ class Ui_Form(object):
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
+        self.qtLibCombo.addItem("")
         self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
         self.label_2 = QtGui.QLabel(self.widget)
         self.label_2.setObjectName("label_2")
@@ -67,7 +68,7 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.loadedFileLabel)
         self.codeView = QtGui.QPlainTextEdit(self.widget1)
         font = QtGui.QFont()
-        font.setFamily("FreeMono")
+        font.setFamily("Courier New")
         self.codeView.setFont(font)
         self.codeView.setObjectName("codeView")
         self.verticalLayout.addWidget(self.codeView)
@@ -77,7 +78,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "PyQtGraph", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(0, QtGui.QApplication.translate("Form", "default", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(1, QtGui.QApplication.translate("Form", "native", None, QtGui.QApplication.UnicodeUTF8))
         self.graphicsSystemCombo.setItemText(2, QtGui.QApplication.translate("Form", "raster", None, QtGui.QApplication.UnicodeUTF8))
@@ -86,6 +87,7 @@ class Ui_Form(object):
         self.qtLibCombo.setItemText(1, QtGui.QApplication.translate("Form", "PyQt4", None, QtGui.QApplication.UnicodeUTF8))
         self.qtLibCombo.setItemText(2, QtGui.QApplication.translate("Form", "PySide", None, QtGui.QApplication.UnicodeUTF8))
         self.qtLibCombo.setItemText(3, QtGui.QApplication.translate("Form", "PyQt5", None, QtGui.QApplication.UnicodeUTF8))
+        self.qtLibCombo.setItemText(4, QtGui.QApplication.translate("Form", "PySide2", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Form", "Graphics System:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Form", "Qt Library:", None, QtGui.QApplication.UnicodeUTF8))
         self.loadBtn.setText(QtGui.QApplication.translate("Form", "Run Example", None, QtGui.QApplication.UnicodeUTF8))

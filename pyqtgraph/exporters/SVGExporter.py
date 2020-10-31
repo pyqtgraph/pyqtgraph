@@ -1,7 +1,7 @@
 from .Exporter import Exporter
 from ..python2_3 import asUnicode
 from ..parametertree import Parameter
-from ..Qt import QtGui, QtCore, QtSvg, USE_PYSIDE
+from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from .. import debug
 from .. import functions as fn
 import re
@@ -17,16 +17,28 @@ class SVGExporter(Exporter):
     
     def __init__(self, item):
         Exporter.__init__(self, item)
-        #tr = self.getTargetRect()
+        tr = self.getTargetRect()
+
+        if isinstance(item, QtGui.QGraphicsItem):
+            scene = item.scene()
+        else:
+            scene = item
+        bgbrush = scene.views()[0].backgroundBrush()
+        bg = bgbrush.color()
+        if bgbrush.style() == QtCore.Qt.NoBrush:
+            bg.setAlpha(0)
+
         self.params = Parameter(name='params', type='group', children=[
-            #{'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
-            #{'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
+            {'name': 'background', 'type': 'color', 'value': bg},
+            {'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
+            {'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
-            #{'name': 'normalize line width', 'type': 'bool', 'value': True},
+            {'name': 'scaling stroke', 'type': 'bool', 'value': False, 'tip': "If False, strokes are non-scaling, "
+             "which means that they appear the same width on screen regardless of how they are scaled or how the view is zoomed."},
         ])
-        #self.params.param('width').sigValueChanged.connect(self.widthChanged)
-        #self.params.param('height').sigValueChanged.connect(self.heightChanged)
+        self.params.param('width').sigValueChanged.connect(self.widthChanged)
+        self.params.param('height').sigValueChanged.connect(self.heightChanged)
 
     def widthChanged(self):
         sr = self.getSourceRect()
@@ -49,7 +61,11 @@ class SVGExporter(Exporter):
         ## Qt's SVG generator is not complete. (notably, it lacks clipping)
         ## Instead, we will use Qt to generate SVG for each item independently,
         ## then manually reconstruct the entire document.
-        xml = generateSvg(self.item)
+        options = {ch.name():ch.value() for ch in self.params.children()}
+        options['background'] = self.params['background']
+        options['width'] = self.params['width']
+        options['height'] = self.params['height']
+        xml = generateSvg(self.item, options)
         
         if toBytes:
             return xml.encode('UTF-8')
@@ -61,18 +77,25 @@ class SVGExporter(Exporter):
             with open(fileName, 'wb') as fh:
                 fh.write(asUnicode(xml).encode('utf-8'))
 
-
+# Includes space for extra attributes
 xmlHeader = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.2" baseProfile="tiny">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.2" baseProfile="tiny"%s>
 <title>pyqtgraph SVG export</title>
 <desc>Generated with Qt and pyqtgraph</desc>
+<style>
+    image {
+        image-rendering: crisp-edges;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: pixelated;
+    }
+</style>
 """
 
-def generateSvg(item):
+def generateSvg(item, options={}):
     global xmlHeader
     try:
-        node, defs = _generateItemSvg(item)
+        node, defs = _generateItemSvg(item, options=options)
     finally:
         ## reset export mode for all items in the tree
         if isinstance(item, QtGui.QGraphicsScene):
@@ -91,10 +114,13 @@ def generateSvg(item):
     for d in defs:
         defsXml += d.toprettyxml(indent='    ')
     defsXml += "</defs>\n"
-    return xmlHeader + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
+    svgAttributes = ' viewBox ="0 0 %f %f"' % (options["width"], options["height"])
+    c = options['background']
+    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%f, %f, %f, %d)" />\n' % (c.red(), c.blue(), c.green(), c.alpha()/255.0)
+    return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 
-def _generateItemSvg(item, nodes=None, root=None):
+def _generateItemSvg(item, nodes=None, root=None, options={}):
     ## This function is intended to work around some issues with Qt's SVG generator
     ## and SVG in general.
     ## 1) Qt SVG does not implement clipping paths. This is absurd.
@@ -169,7 +195,7 @@ def _generateItemSvg(item, nodes=None, root=None):
         buf = QtCore.QBuffer(arr)
         svg = QtSvg.QSvgGenerator()
         svg.setOutputDevice(buf)
-        dpi = QtGui.QDesktopWidget().physicalDpiX()
+        dpi = QtGui.QDesktopWidget().logicalDpiX()
         svg.setResolution(dpi)
 
         p = QtGui.QPainter()
@@ -178,19 +204,17 @@ def _generateItemSvg(item, nodes=None, root=None):
             item.setExportMode(True, {'painter': p})
         try:
             p.setTransform(tr)
-            item.paint(p, QtGui.QStyleOptionGraphicsItem(), None)
+            opt = QtGui.QStyleOptionGraphicsItem()
+            if item.flags() & QtGui.QGraphicsItem.ItemUsesExtendedStyleOption:
+                opt.exposedRect = item.boundingRect()
+            item.paint(p, opt, None)
         finally:
             p.end()
             ## Can't do this here--we need to wait until all children have painted as well.
             ## this is taken care of in generateSvg instead.
             #if hasattr(item, 'setExportMode'):
                 #item.setExportMode(False)
-
-        if USE_PYSIDE:
-            xmlStr = str(arr)
-        else:
-            xmlStr = bytes(arr).decode('utf-8')
-        doc = xml.parseString(xmlStr)
+        doc = xml.parseString(arr.data())
         
     try:
         ## Get top-level group for this item
@@ -209,18 +233,8 @@ def _generateItemSvg(item, nodes=None, root=None):
 
     ## Get rid of group transformation matrices by applying
     ## transformation to inner coordinates
-    correctCoordinates(g1, defs, item)
+    correctCoordinates(g1, defs, item, options)
     profiler('correct')
-    ## make sure g1 has the transformation matrix
-    #m = (tr.m11(), tr.m12(), tr.m21(), tr.m22(), tr.m31(), tr.m32())
-    #g1.setAttribute('transform', "matrix(%f,%f,%f,%f,%f,%f)" % m)
-    
-    #print "=================",item,"====================="
-    #print g1.toprettyxml(indent="  ", newl='')
-    
-    ## Inkscape does not support non-scaling-stroke (this is SVG 1.2, inkscape supports 1.1)
-    ## So we need to correct anything attempting to use this.
-    #correctStroke(g1, item, root)
     
     ## decide on a name for this item
     baseName = item.__class__.__name__
@@ -239,15 +253,10 @@ def _generateItemSvg(item, nodes=None, root=None):
         ## See if this item clips its children
         if int(item.flags() & item.ItemClipsChildrenToShape) > 0:
             ## Generate svg for just the path
-            #if isinstance(root, QtGui.QGraphicsScene):
-                #path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
-            #else:
-                #path = QtGui.QGraphicsPathItem(root.mapToParent(item.mapToItem(root, item.shape())))
             path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
             item.scene().addItem(path)
             try:
-                #pathNode = _generateItemSvg(path, root=root).getElementsByTagName('path')[0]
-                pathNode = _generateItemSvg(path, root=root)[0].getElementsByTagName('path')[0]
+                pathNode = _generateItemSvg(path, root=root, options=options)[0].getElementsByTagName('path')[0]
                 # assume <defs> for this path is empty.. possibly problematic.
             finally:
                 item.scene().removeItem(path)
@@ -267,17 +276,18 @@ def _generateItemSvg(item, nodes=None, root=None):
     ## Add all child items as sub-elements.
     childs.sort(key=lambda c: c.zValue())
     for ch in childs:
-        csvg = _generateItemSvg(ch, nodes, root)
+        csvg = _generateItemSvg(ch, nodes, root, options=options)
         if csvg is None:
             continue
         cg, cdefs = csvg
         childGroup.appendChild(cg)  ### this isn't quite right--some items draw below their parent (good enough for now)
         defs.extend(cdefs)
-        
+
     profiler('children')
     return g1, defs
 
-def correctCoordinates(node, defs, item):
+
+def correctCoordinates(node, defs, item, options):
     # TODO: correct gradient coordinates inside defs
     
     ## Remove transformation matrices from <g> tags by applying matrix to coordinates inside.
@@ -344,6 +354,10 @@ def correctCoordinates(node, defs, item):
                         t = ''
                     nc = fn.transformCoordinates(tr, np.array([[float(x),float(y)]]), transpose=True)
                     newCoords += t+str(nc[0,0])+','+str(nc[0,1])+' '
+                # If coords start with L instead of M, then the entire path will not be rendered.
+                # (This can happen if the first point had nan values in it--Qt will skip it on export)
+                if newCoords[0] != 'M':
+                    newCoords = 'M' + newCoords[1:]
                 ch.setAttribute('d', newCoords)
             elif ch.tagName == 'text':
                 removeTransform = False
@@ -372,12 +386,16 @@ def correctCoordinates(node, defs, item):
                     ch.setAttribute('font-family', ', '.join([f if ' ' not in f else '"%s"'%f for f in families]))
                 
             ## correct line widths if needed
-            if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke':
+            if removeTransform and ch.getAttribute('vector-effect') != 'non-scaling-stroke' and grp.getAttribute('stroke-width') != '':
                 w = float(grp.getAttribute('stroke-width'))
                 s = fn.transformCoordinates(tr, np.array([[w,0], [0,0]]), transpose=True)
                 w = ((s[0]-s[1])**2).sum()**0.5
                 ch.setAttribute('stroke-width', str(w))
             
+            # Remove non-scaling-stroke if requested
+            if options.get('scaling stroke') is True and ch.getAttribute('vector-effect') == 'non-scaling-stroke':
+                ch.removeAttribute('vector-effect')
+
         if removeTransform:
             grp.removeAttribute('transform')
 

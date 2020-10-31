@@ -31,7 +31,6 @@ def init_viewbox():
     
     g = pg.GridItem()
     vb.addItem(g)
-    
     app.processEvents()
     
 def test_ViewBox():
@@ -64,13 +63,23 @@ def test_ViewBox():
     assertMapping(vb, view1, size1)
     
     # test tall resize
-    win.resize(400, 800)
+    win.resize(200, 400)
     app.processEvents()
     w = vb.geometry().width()
     h = vb.geometry().height()
     view1 = QRectF(0, -5, 10, 20)
     size1 = QRectF(0, h, w, -h)
     assertMapping(vb, view1, size1)
+
+    win.close()
+
+
+def test_ViewBox_setMenuEnabled():
+    init_viewbox()
+    vb.setMenuEnabled(True)
+    assert vb.menu is not None
+    vb.setMenuEnabled(False)
+    assert vb.menu is None
 
 
 skipreason = "Skipping this test until someone has time to fix it."

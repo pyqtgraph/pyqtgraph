@@ -11,11 +11,12 @@ import numpy as np
 import decimal, re
 import ctypes
 import sys, struct
+from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, USE_PYSIDE
+from .Qt import QtGui, QtCore, QT_LIB
 from . import getConfigOption, setConfigOptions
-from . import debug
-
+from . import debug, reload
+from .metaarray import MetaArray
 
 
 Colors = {
@@ -34,10 +35,13 @@ Colors = {
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
+SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
+SI_PREFIX_EXPONENTS['u'] = -6
 
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i)(nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
-
-
+    
 def siScale(x, minVal=1e-25, allowUnicode=True):
     """
     Return the recommended scale factor and SI prefix string for x.
@@ -72,9 +76,11 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES[m+8]
         else:
             pref = SI_PREFIXES_ASCII[m+8]
-    p = .001**m
+    m1 = -3*m
+    p = 10.**m1
     
-    return (p, pref)    
+    return (p, pref)
+
 
 def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, allowUnicode=True):
     """
@@ -104,31 +110,65 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
             plusminus = " +/- "
         fmt = "%." + str(precision) + "g%s%s%s%s"
         return fmt % (x*p, pref, suffix, plusminus, siFormat(error, precision=precision, suffix=suffix, space=space, minVal=minVal))
+
+
+def siParse(s, regex=FLOAT_REGEX, suffix=None):
+    """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
     
-def siEval(s):
+    Example::
+    
+        siParse('100 μV")  # returns ('100', 'μ', 'V')
     """
-    Convert a value written in SI notation to its equivalent prefixless value
+    s = asUnicode(s)
+    s = s.strip()
+    if suffix is not None and len(suffix) > 0:
+        if s[-len(suffix):] != suffix:
+            raise ValueError("String '%s' does not have the expected suffix '%s'" % (s, suffix))
+        s = s[:-len(suffix)] + 'X'  # add a fake suffix so the regex still picks up the si prefix
+        
+    m = regex.match(s)
+    if m is None:
+        raise ValueError('Cannot parse number "%s"' % s)
+    try:
+        sip = m.group('siPrefix')
+    except IndexError:
+        sip = ''
     
+    if suffix is None:
+        try:
+            suf = m.group('suffix')
+        except IndexError:
+            suf = ''
+    else:
+        suf = suffix
+    
+    return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
+
+
+def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
+    """
+    Convert a value written in SI notation to its equivalent prefixless value.
+
     Example::
     
         siEval("100 μV")  # returns 0.0001
     """
+    val, siprefix, suffix = siParse(s, regex, suffix=suffix)
+    v = typ(val)
+    return siApply(v, siprefix)
+
     
-    s = asUnicode(s)
-    m = re.match(r'(-?((\d+(\.\d*)?)|(\.\d+))([eE]-?\d+)?)\s*([u' + SI_PREFIXES + r']?).*$', s)
-    if m is None:
-        raise Exception("Can't convert string '%s' to number." % s)
-    v = float(m.groups()[0])
-    p = m.groups()[6]
-    #if p not in SI_PREFIXES:
-        #raise Exception("Can't convert string '%s' to number--unknown prefix." % s)
-    if p ==  '':
-        n = 0
-    elif p == 'u':
-        n = -2
+def siApply(val, siprefix):
+    """
+    """
+    n = SI_PREFIX_EXPONENTS[siprefix] if siprefix != '' else 0
+    if n > 0:
+        return val * 10**n
+    elif n < 0:
+        # this case makes it possible to use Decimal objects here
+        return val / 10**-n
     else:
-        n = SI_PREFIXES.index(p) - 8
-    return v * 1000**n
+        return val
     
 
 class Color(QtGui.QColor):
@@ -171,7 +211,7 @@ def mkColor(*args):
                 try:
                     return Colors[c]
                 except KeyError:
-                    raise Exception('No color named "%s"' % c)
+                    raise ValueError('No color named "%s"' % c)
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -206,18 +246,18 @@ def mkColor(*args):
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
-                raise Exception(err)
+                raise TypeError(err)
         elif type(args[0]) == int:
             return intColor(args[0])
         else:
-            raise Exception(err)
+            raise TypeError(err)
     elif len(args) == 3:
         (r, g, b) = args
         a = 255
     elif len(args) == 4:
         (r, g, b, a) = args
     else:
-        raise Exception(err)
+        raise TypeError(err)
     
     args = [r,g,b,a]
     args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
@@ -313,7 +353,7 @@ def colorStr(c):
     return ('%02x'*4) % colorTuple(c)
 
 
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255, **kargs):
+def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, minHue=0, sat=255, alpha=255):
     """
     Creates a QColor from a single index. Useful for stepping through a predefined list of colors.
     
@@ -325,12 +365,12 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     values = int(values)
     ind = int(index) % (hues * values)
     indh = ind % hues
-    indv = ind / hues
+    indv = ind // hues
     if values > 1:
-        v = minValue + indv * ((maxValue-minValue) / (values-1))
+        v = minValue + indv * ((maxValue-minValue) // (values-1))
     else:
         v = maxValue
-    h = minHue + (indh * (maxHue-minHue)) / hues
+    h = minHue + (indh * (maxHue-minHue)) // hues
     
     c = QtGui.QColor()
     c.setHsv(h, sat, v)
@@ -348,14 +388,15 @@ def glColor(*args, **kargs):
 
     
 
-def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
+def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
     """
     Construct a path outlining an arrow with the given dimensions.
     The arrow points in the -x direction with tip positioned at 0,0.
-    If *tipAngle* is supplied (in degrees), it overrides *headWidth*.
+    If *headWidth* is supplied, it overrides *tipAngle* (in degrees).
     If *tailLen* is None, no tail will be drawn.
     """
-    headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+    if headWidth is None:
+        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
@@ -373,24 +414,79 @@ def makeArrowPath(headLen=20, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0)
     path.lineTo(0,0)
     return path
     
-    
+
 def eq(a, b):
-    """The great missing equivalence function: Guaranteed evaluation to a single bool value."""
+    """The great missing equivalence function: Guaranteed evaluation to a single bool value.
+    
+    This function has some important differences from the == operator:
+    
+    1. Returns True if a IS b, even if a==b still evaluates to False, such as with nan values.
+    2. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
+       (AtrtibuteError, ValueError).
+    3. When comparing arrays, returns False if the array shapes are not the same.
+    4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
+       the == operator would return a boolean array).
+    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
+       consequence is that comparing a dict to an OrderedDict will always return False. 
+    """
     if a is b:
         return True
-        
-    try:
-        with warnings.catch_warnings(module=np):  # ignore numpy futurewarning (numpy v. 1.10)
-            e = a==b
-    except ValueError:
+
+    # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
+    aIsArr = isinstance(a, (np.ndarray, MetaArray))
+    bIsArr = isinstance(b, (np.ndarray, MetaArray))
+    if (aIsArr or bIsArr) and type(a) != type(b):
         return False
-    except AttributeError: 
+
+    # If both inputs are arrays, we can speeed up comparison if shapes / dtypes don't match
+    # NOTE: arrays of dissimilar type should be considered unequal even if they are numerically
+    # equal because they may behave differently when computed on.
+    if aIsArr and bIsArr and (a.shape != b.shape or a.dtype != b.dtype):
+        return False
+
+    # Recursively handle common containers
+    if isinstance(a, dict) and isinstance(b, dict):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        if set(a.keys()) != set(b.keys()):
+            return False
+        for k, v in a.items():
+            if not eq(v, b[k]):
+                return False
+        if isinstance(a, OrderedDict) or sys.version_info >= (3, 7):
+            for a_item, b_item in zip(a.items(), b.items()):
+                if not eq(a_item, b_item):
+                    return False
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        if type(a) != type(b) or len(a) != len(b):
+            return False
+        for v1,v2 in zip(a, b):
+            if not eq(v1, v2):
+                return False
+        return True
+
+    # Test for equivalence. 
+    # If the test raises a recognized exception, then return Falase
+    try:
+        try:
+            # Sometimes running catch_warnings(module=np) generates AttributeError ???
+            catcher =  warnings.catch_warnings(module=np)  # ignore numpy futurewarning (numpy v. 1.10)
+            catcher.__enter__()
+        except Exception:
+            catcher = None
+        e = a==b
+    except (ValueError, AttributeError): 
         return False
     except:
         print('failed to evaluate equivalence for:')
         print("  a:", str(type(a)), str(a))
         print("  b:", str(type(b)), str(b))
         raise
+    finally:
+        if catcher is not None:
+            catcher.__exit__(None, None, None)
+    
     t = type(e)
     if t is bool:
         return e
@@ -409,12 +505,45 @@ def eq(a, b):
     else:
         raise Exception("== operator returned type %s" % str(type(e)))
 
+
+def affineSliceCoords(shape, origin, vectors, axes):
+    """Return the array of coordinates used to sample data arrays in affineSlice().
+    """
+    # sanity check
+    if len(shape) != len(vectors):
+        raise Exception("shape and vectors must have same length.")
+    if len(origin) != len(axes):
+        raise Exception("origin and axes must have same length.")
+    for v in vectors:
+        if len(v) != len(axes):
+            raise Exception("each vector must be same length as axes.")
+        
+    shape = list(map(np.ceil, shape))
+
+    ## make sure vectors are arrays
+    if not isinstance(vectors, np.ndarray):
+        vectors = np.array(vectors)
+    if not isinstance(origin, np.ndarray):
+        origin = np.array(origin)
+    origin.shape = (len(axes),) + (1,)*len(shape)
+
+    ## Build array of sample locations. 
+    grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
+    x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
+    x += origin
+
+    return x
+
     
 def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False, **kargs):
     """
-    Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays such as MRI images for viewing as 1D or 2D data.
+    Take a slice of any orientation through an array. This is useful for extracting sections of multi-dimensional arrays
+    such as MRI images for viewing as 1D or 2D data.
     
-    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger datasets. The original data is interpolated onto a new array of coordinates using scipy.ndimage.map_coordinates if it is available (see the scipy documentation for more information about this). If scipy is not available, then a slower implementation of map_coordinates is used.
+    The slicing axes are aribtrary; they do not need to be orthogonal to the original data or even to each other. It is
+    possible to use this function to extract arbitrary linear, rectangular, or parallelepiped shapes from within larger
+    datasets. The original data is interpolated onto a new array of coordinates using either interpolateArray if order<2
+    or scipy.ndimage.map_coordinates otherwise.
     
     For a graphical interface to this function, see :func:`ROI.getArrayRegion <pyqtgraph.ROI.getArrayRegion>`
     
@@ -453,47 +582,24 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         affineSlice(data, shape=(20,20), origin=(40,0,0), vectors=((-1, 1, 0), (-1, 0, 1)), axes=(1,2,3))
     
     """
-    try:
-        import scipy.ndimage
-        have_scipy = True
-    except ImportError:
-        have_scipy = False
-    have_scipy = False
-
-    # sanity check
-    if len(shape) != len(vectors):
-        raise Exception("shape and vectors must have same length.")
-    if len(origin) != len(axes):
-        raise Exception("origin and axes must have same length.")
-    for v in vectors:
-        if len(v) != len(axes):
-            raise Exception("each vector must be same length as axes.")
-        
-    shape = list(map(np.ceil, shape))
+    x = affineSliceCoords(shape, origin, vectors, axes)
 
     ## transpose data so slice axes come first
     trAx = list(range(data.ndim))
-    for x in axes:
-        trAx.remove(x)
+    for ax in axes:
+        trAx.remove(ax)
     tr1 = tuple(axes) + tuple(trAx)
     data = data.transpose(tr1)
     #print "tr1:", tr1
     ## dims are now [(slice axes), (other axes)]
-    
-    ## make sure vectors are arrays
-    if not isinstance(vectors, np.ndarray):
-        vectors = np.array(vectors)
-    if not isinstance(origin, np.ndarray):
-        origin = np.array(origin)
-    origin.shape = (len(axes),) + (1,)*len(shape)
-    
-    ## Build array of sample locations. 
-    grid = np.mgrid[tuple([slice(0,x) for x in shape])]  ## mesh grid of indexes
-    x = (grid[np.newaxis,...] * vectors.transpose()[(Ellipsis,) + (np.newaxis,)*len(shape)]).sum(axis=1)  ## magic
-    x += origin
 
-    ## iterate manually over unused axes since map_coordinates won't do it for us
-    if have_scipy:
+    if order > 1:
+        try:
+            import scipy.ndimage
+        except ImportError:
+            raise ImportError("Interpolating with order > 1 requires the scipy.ndimage module, but it could not be imported.")
+
+        # iterate manually over unused axes since map_coordinates won't do it for us
         extraShape = data.shape[len(axes):]
         output = np.empty(tuple(shape) + extraShape, dtype=data.dtype)
         for inds in np.ndindex(*extraShape):
@@ -502,8 +608,8 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     else:
         # map_coordinates expects the indexes as the first axis, whereas
         # interpolateArray expects indexes at the last axis. 
-        tr = tuple(range(1,x.ndim)) + (0,)
-        output = interpolateArray(data, x.transpose(tr))
+        tr = tuple(range(1, x.ndim)) + (0,)
+        output = interpolateArray(data, x.transpose(tr), order=order)
     
     tr = list(range(output.ndim))
     trb = []
@@ -520,16 +626,24 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
     else:
         return output
 
-def interpolateArray(data, x, default=0.0):
+
+def interpolateArray(data, x, default=0.0, order=1):
     """
     N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
     
     This function returns linearly-interpolated values sampled from a regular
-    grid of data. 
+    grid of data. It differs from `ndimage.map_coordinates` by allowing broadcasting
+    within the input array.
     
-    *data* is an array of any shape containing the values to be interpolated.
-    *x* is an array with (shape[-1] <= data.ndim) containing the locations
-        within *data* to interpolate. 
+    ==============  ===========================================================================================
+    **Arguments:**
+    *data*          Array of any shape containing the values to be interpolated.
+    *x*             Array with (shape[-1] <= data.ndim) containing the locations within *data* to interpolate.
+                    (note: the axes for this argument are transposed relative to the same argument for
+                    `ndimage.map_coordinates`).
+    *default*       Value to return for locations in *x* that are outside the bounds of *data*.
+    *order*         Order of interpolation: 0=nearest, 1=linear.
+    ==============  ===========================================================================================
     
     Returns array of shape (x.shape[:-1] + data.shape[x.shape[-1]:])
     
@@ -574,53 +688,66 @@ def interpolateArray(data, x, default=0.0):
 
     This is useful for interpolating from arrays of colors, vertexes, etc.
     """
+    if order not in (0, 1):
+        raise ValueError("interpolateArray requires order=0 or 1 (got %s)" % order)
+
     prof = debug.Profiler()
-    
+
     nd = data.ndim
     md = x.shape[-1]
     if md > nd:
         raise TypeError("x.shape[-1] must be less than or equal to data.ndim")
 
-    # First we generate arrays of indexes that are needed to 
-    # extract the data surrounding each point
-    fields = np.mgrid[(slice(0,2),) * md]
-    xmin = np.floor(x).astype(int)
-    xmax = xmin + 1
-    indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
-    fieldInds = []
     totalMask = np.ones(x.shape[:-1], dtype=bool) # keep track of out-of-bound indexes
-    for ax in range(md):
-        mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
-        # keep track of points that need to be set to default
-        totalMask &= mask
+    if order == 0:
+        xinds = np.round(x).astype(int)  # NOTE: for 0.5 this rounds to the nearest *even* number
+        for ax in range(md):
+            mask = (xinds[...,ax] >= 0) & (xinds[...,ax] <= data.shape[ax]-1) 
+            xinds[...,ax][~mask] = 0
+            # keep track of points that need to be set to default
+            totalMask &= mask
+        result = data[tuple([xinds[...,i] for i in range(xinds.shape[-1])])]
         
-        # ..and keep track of indexes that are out of bounds 
-        # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
-        #  of bounds, but the interpolation will work anyway)
-        mask &= (xmax[...,ax] < data.shape[ax])
-        axisIndex = indexes[...,ax][fields[ax]]
-        axisIndex[axisIndex < 0] = 0
-        axisIndex[axisIndex >= data.shape[ax]] = 0
-        fieldInds.append(axisIndex)
-    prof()
+    elif order == 1:
+        # First we generate arrays of indexes that are needed to 
+        # extract the data surrounding each point
+        fields = np.mgrid[(slice(0,order+1),) * md]
+        xmin = np.floor(x).astype(int)
+        xmax = xmin + 1
+        indexes = np.concatenate([xmin[np.newaxis, ...], xmax[np.newaxis, ...]])
+        fieldInds = []
+        for ax in range(md):
+            mask = (xmin[...,ax] >= 0) & (x[...,ax] <= data.shape[ax]-1) 
+            # keep track of points that need to be set to default
+            totalMask &= mask
+            
+            # ..and keep track of indexes that are out of bounds 
+            # (note that when x[...,ax] == data.shape[ax], then xmax[...,ax] will be out
+            #  of bounds, but the interpolation will work anyway)
+            mask &= (xmax[...,ax] < data.shape[ax])
+            axisIndex = indexes[...,ax][fields[ax]]
+            axisIndex[axisIndex < 0] = 0
+            axisIndex[axisIndex >= data.shape[ax]] = 0
+            fieldInds.append(axisIndex)
+        prof()
 
-    # Get data values surrounding each requested point
-    fieldData = data[tuple(fieldInds)]
-    prof()
+        # Get data values surrounding each requested point
+        fieldData = data[tuple(fieldInds)]
+        prof()
     
-    ## Interpolate
-    s = np.empty((md,) + fieldData.shape, dtype=float)
-    dx = x - xmin
-    # reshape fields for arithmetic against dx
-    for ax in range(md):
-        f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
-        sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
-        sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
-        s[ax] = sax
-    s = np.product(s, axis=0)
-    result = fieldData * s
-    for i in range(md):
-        result = result.sum(axis=0)
+        ## Interpolate
+        s = np.empty((md,) + fieldData.shape, dtype=float)
+        dx = x - xmin
+        # reshape fields for arithmetic against dx
+        for ax in range(md):
+            f1 = fields[ax].reshape(fields[ax].shape + (1,)*(dx.ndim-1))
+            sax = f1 * dx[...,ax] + (1-f1) * (1-dx[...,ax])
+            sax = sax.reshape(sax.shape + (1,) * (s.ndim-1-sax.ndim))
+            s[ax] = sax
+        s = np.product(s, axis=0)
+        result = fieldData * s
+        for i in range(md):
+            result = result.sum(axis=0)
 
     prof()
 
@@ -656,26 +783,17 @@ def subArray(data, offset, shape, stride):
     the input in the example above to have shape (10, 7) would cause the
     output to have shape (2, 3, 7).
     """
-    #data = data.flatten()
-    data = data[offset:]
+    data = np.ascontiguousarray(data)[offset:]
     shape = tuple(shape)
-    stride = tuple(stride)
     extraShape = data.shape[1:]
-    #print data.shape, offset, shape, stride
-    for i in range(len(shape)):
-        mask = (slice(None),) * i + (slice(None, shape[i] * stride[i]),)
-        newShape = shape[:i+1]
-        if i < len(shape)-1:
-            newShape += (stride[i],)
-        newShape += extraShape 
-        #print i, mask, newShape
-        #print "start:\n", data.shape, data
-        data = data[mask]
-        #print "mask:\n", data.shape, data
-        data = data.reshape(newShape)
-        #print "reshape:\n", data.shape, data
+
+    strides = list(data.strides[::-1])
+    itemsize = strides[-1]
+    for s in stride[1::-1]:
+        strides.append(itemsize * s)
+    strides = tuple(strides[::-1])
     
-    return data
+    return np.ndarray(buffer=data, shape=shape+extraShape, strides=strides, dtype=data.dtype)
 
 
 def transformToArray(tr):
@@ -817,10 +935,12 @@ def solveBilinearTransform(points1, points2):
     return matrix
     
 def rescaleData(data, scale, offset, dtype=None, clip=None):
-    """Return data rescaled and optionally cast to a new dtype::
-    
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
         data => (data-offset) * scale
-        
+
     """
     if dtype is None:
         dtype = data.dtype
@@ -943,7 +1063,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     ============== ==================================================================================
     """
     profile = debug.Profiler()
-
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
@@ -965,6 +1084,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             raise Exception('levels argument is required for float input types')
     if not isinstance(levels, np.ndarray):
         levels = np.array(levels)
+    levels = levels.astype(np.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -981,7 +1101,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # Decide on maximum scaled value
     if scale is None:
         if lut is not None:
-            scale = lut.shape[0] - 1
+            scale = lut.shape[0]
         else:
             scale = 255.
 
@@ -990,7 +1110,14 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         dtype = np.ubyte
     else:
         dtype = np.min_scalar_type(lut.shape[0]-1)
-            
+
+    # awkward, but fastest numpy native nan evaluation
+    # 
+    nanMask = None
+    if data.dtype.kind == 'f' and np.isnan(data.min()):
+        nanMask = np.isnan(data)
+        if data.ndim > 2:
+            nanMask = np.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
         if isinstance(levels, np.ndarray) and levels.ndim == 2:
@@ -1001,20 +1128,22 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                newData[...,i] = rescaleData(data[...,i], scale/(maxVal-minVal), minVal, dtype=dtype)
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal += 1e-16
-                data = rescaleData(data, scale/(maxVal-minVal), minVal, dtype=dtype)
-            
+                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                rng = maxVal-minVal
+                rng = 1 if rng == 0 else rng
+                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
     profile()
-
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
@@ -1057,7 +1186,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         imgData[..., 3] = 255
     else:
         alpha = True
-        
+
+    # apply nan mask through alpha channel
+    if nanMask is not None:
+        alpha = True
+        imgData[nanMask, 3] = 0
+
     profile()
     return imgData, alpha
 
@@ -1126,19 +1260,12 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
-        #addr = ctypes.addressof(ctypes.c_char.from_buffer(imgData, 0))
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        #addr = ctypes.c_char.from_buffer(imgData, 0)
-        #try:
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
-        #except TypeError:  
-            #addr = ctypes.addressof(addr)
-            #img = QtGui.QImage(addr, imgData.shape[1], imgData.shape[0], imgFormat)
         try:
             img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
         except:
@@ -1151,16 +1278,6 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 
     img.data = imgData
     return img
-    #try:
-        #buf = imgData.data
-    #except AttributeError:  ## happens when image data is non-contiguous
-        #buf = imgData.data
-        
-    #profiler()
-    #qimage = QtGui.QImage(buf, imgData.shape[1], imgData.shape[0], imgFormat)
-    #profiler()
-    #qimage.data = imgData
-    #return qimage
 
 def imageToArray(img, copy=False, transpose=True):
     """
@@ -1171,7 +1288,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if USE_PYSIDE:
+    if QT_LIB in ['PySide', 'PySide2']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())
@@ -1273,7 +1390,7 @@ def gaussianFilter(data, sigma):
         # clip off extra data
         sl = [slice(None)] * data.ndim
         sl[ax] = slice(filtered.shape[ax]-data.shape[ax],None,None)
-        filtered = filtered[sl]
+        filtered = filtered[tuple(sl)]
     return filtered + baseline
     
     
@@ -1353,12 +1470,14 @@ def arrayToQPath(x, y, connect='all'):
 
     ## Speed this up using >> operator
     ## Format is:
-    ##    numVerts(i4)   0(i4)
-    ##    x(f8)   y(f8)   0(i4)    <-- 0 means this vertex does not connect
-    ##    x(f8)   y(f8)   1(i4)    <-- 1 means this vertex connects to the previous vertex
+    ##    numVerts(i4)
+    ##    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    ##    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
     ##    ...
-    ##    0(i4)
+    ##    cStart(i4)   fillRule(i4)
     ##
+    ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
     ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
 
     path = QtGui.QPainterPath()
@@ -1366,12 +1485,12 @@ def arrayToQPath(x, y, connect='all'):
     #profiler = debug.Profiler()
     n = x.shape[0]
     # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('x', '>f8'), ('y', '>f8'), ('c', '>i4')])
+    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
     # write first two integers
     #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
-    byteview[:12] = 0
-    byteview.data[12:20] = struct.pack('>ii', n, 0)
+    byteview[:16] = 0
+    byteview.data[16:20] = struct.pack('>i', n)
     #profiler('pack header')
     # Fill array with vertex values
     arr[1:-1]['x'] = x
@@ -1381,26 +1500,31 @@ def arrayToQPath(x, y, connect='all'):
     if eq(connect, 'all'):
         arr[1:-1]['c'] = 1
     elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 1
-        arr[1:-1]['c'][1::2] = 0
+        arr[1:-1]['c'][::2] = 0
+        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
-        arr[1:-1]['c'] = np.isfinite(x) & np.isfinite(y)
+        # Let's call a point with either x or y being nan is an invalid point.
+        # A point will anyway not connect to an invalid point regardless of the
+        # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
+        # the next point of an invalid point.
+        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
+    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
+
     #profiler('fill array')
-    # write last 0
-    lastInd = 20*(n+1)
-    byteview.data[lastInd:lastInd+4] = struct.pack('>i', 0)
+    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
+    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
     #profiler('footer')
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
     #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
 
-    path.strn = byteview.data[12:lastInd+4] # make sure data doesn't run away
+    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
     try:
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
@@ -2066,7 +2190,7 @@ def isosurface(data, level):
             ## compute lookup table of index: vertexes mapping
             faceTableI = np.zeros((len(triTable), i*3), dtype=np.ubyte)
             faceTableInds = np.argwhere(nTableFaces == i)
-            faceTableI[faceTableInds[:,0]] = np.array([triTable[j] for j in faceTableInds])
+            faceTableI[faceTableInds[:,0]] = np.array([triTable[j[0]] for j in faceTableInds])
             faceTableI = faceTableI.reshape((len(triTable), i, 3))
             faceShiftTables.append(edgeShifts[faceTableI])
             
@@ -2204,13 +2328,61 @@ def invertQTransform(tr):
             raise Exception("Transform is not invertible.")
         return inv[0]
     
+
+def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):
+    """Return an array of position values needed to make beeswarm or column scatter plots.
     
-def pseudoScatter(data, spacing=None, shuffle=True, bidir=False):
-    """
-    Used for examining the distribution of values in a set. Produces scattering as in beeswarm or column scatter plots.
+    Used for examining the distribution of values in an array.
     
-    Given a list of x-values, construct a set of y-values such that an x,y scatter-plot
+    Given an array of x-values, construct an array of y-values such that an x,y scatter-plot
     will not have overlapping points (it will look similar to a histogram).
+    """
+    if method == 'exact':
+        return _pseudoScatterExact(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+    elif method == 'histogram':
+        return _pseudoScatterHistogram(data, spacing=spacing, shuffle=shuffle, bidir=bidir)
+
+
+def _pseudoScatterHistogram(data, spacing=None, shuffle=True, bidir=False):
+    """Works by binning points into a histogram and spreading them out to fill the bin.
+    
+    Faster method, but can produce blocky results.
+    """
+    inds = np.arange(len(data))
+    if shuffle:
+        np.random.shuffle(inds)
+        
+    data = data[inds]
+    
+    if spacing is None:
+        spacing = 2.*np.std(data)/len(data)**0.5
+
+    yvals = np.empty(len(data))
+    
+    dmin = data.min()
+    dmax = data.max()
+    nbins = int((dmax-dmin) / spacing) + 1
+    bins = np.linspace(dmin, dmax, nbins)
+    dx = bins[1] - bins[0]
+    dbins = ((data - bins[0]) / dx).astype(int)
+    binCounts = {}
+        
+    for i,j in enumerate(dbins):
+        c = binCounts.get(j, -1) + 1
+        binCounts[j] = c
+        yvals[i] = c
+
+    if bidir is True:
+        for i in range(nbins):
+            yvals[dbins==i] -= binCounts.get(i, 0) * 0.5
+
+    return yvals[np.argsort(inds)]  ## un-shuffle values before returning
+
+
+def _pseudoScatterExact(data, spacing=None, shuffle=True, bidir=False):
+    """Works by stacking points up one at a time, searching for the lowest position available at each point.
+    
+    This method produces nice, smooth results but can be prohibitively slow for large datasets.
     """
     inds = np.arange(len(data))
     if shuffle:
@@ -2322,3 +2494,42 @@ def toposort(deps, nodes=None, seen=None, stack=None, depth=0):
         sorted.extend( toposort(deps, deps[n], seen, stack+[n], depth=depth+1))
         sorted.append(n)
     return sorted
+
+
+def disconnect(signal, slot):
+    """Disconnect a Qt signal from a slot.
+
+    This method augments Qt's Signal.disconnect():
+
+    * Return bool indicating whether disconnection was successful, rather than
+      raising an exception
+    * Attempt to disconnect prior versions of the slot when using pg.reload    
+    """
+    while True:
+        try:
+            signal.disconnect(slot)
+            return True
+        except (TypeError, RuntimeError):
+            slot = reload.getPreviousVersion(slot)
+            if slot is None:
+                return False
+
+
+class SignalBlock(object):
+    """Class used to temporarily block a Qt signal connection::
+
+        with SignalBlock(signal, slot):
+            # do something that emits a signal; it will
+            # not be delivered to slot
+    """
+    def __init__(self, signal, slot):
+        self.signal = signal
+        self.slot = slot
+
+    def __enter__(self):
+        self.reconnect = disconnect(self.signal, self.slot)
+        return self
+
+    def __exit__(self, *args):
+        if self.reconnect:
+            self.signal.connect(self.slot)

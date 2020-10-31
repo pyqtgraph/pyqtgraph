@@ -105,7 +105,13 @@ class Point(QtCore.QPointF):
     
     def length(self):
         """Returns the vector length of this Point."""
-        return (self[0]**2 + self[1]**2) ** 0.5
+        try:
+            return (self[0]**2 + self[1]**2) ** 0.5
+        except OverflowError:
+            try:
+                return self[1] / np.sin(np.arctan2(self[1], self[0]))
+            except OverflowError:
+                return np.inf
     
     def norm(self):
         """Returns a vector in the same direction with unit length."""
@@ -152,4 +158,4 @@ class Point(QtCore.QPointF):
         return Point(self)
         
     def toQPoint(self):
-        return QtCore.QPoint(*self)
+        return QtCore.QPoint(int(self[0]), int(self[1]))

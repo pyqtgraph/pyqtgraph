@@ -510,7 +510,7 @@ class Profiler(object):
         try:
             caller_object_type = type(caller_frame.f_locals["self"])
         except KeyError: # we are in a regular function
-            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[1]
+            qualifier = caller_frame.f_globals["__name__"].split(".", 1)[-1]
         else: # we are in a method
             qualifier = caller_object_type.__name__
         func_qualname = qualifier + "." + caller_frame.f_code.co_name
@@ -1083,7 +1083,10 @@ def listQThreads():
     """Prints Thread IDs (Qt's, not OS's) for all QThreads."""
     thr = findObj('[Tt]hread')
     thr = [t for t in thr if isinstance(t, QtCore.QThread)]
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
     for t in thr:
         print("--> ", t)
         print("     Qt ID: 0x%x" % sip.unwrapinstance(t))
@@ -1097,7 +1100,7 @@ def pretty(data, indent=''):
     ind2 = indent + "    "
     if isinstance(data, dict):
         ret = indent+"{\n"
-        for k, v in data.iteritems():
+        for k, v in data.items():
             ret += ind2 + repr(k) + ":  " + pretty(v, ind2).strip() + "\n"
         ret += indent+"}\n"
     elif isinstance(data, list) or isinstance(data, tuple):
@@ -1151,7 +1154,22 @@ class ThreadTrace(object):
             for id, frame in sys._current_frames().items():
                 if id == threading.current_thread().ident:
                     continue
-                print("<< thread %d >>" % id)
+
+                # try to determine a thread name
+                try:
+                    name = threading._active.get(id, None)
+                except:
+                    name = None
+                if name is None:
+                    try:
+                        # QThread._names must be manually set by thread creators.
+                        name = QtCore.QThread._names.get(id)
+                    except:
+                        name = None
+                if name is None:
+                    name = "???"
+
+                print("<< thread %d \"%s\" >>" % (id, name))
                 traceback.print_stack(frame)
             print("===============================================\n")
             
@@ -1186,3 +1204,23 @@ class ThreadColor(object):
             c = (len(self.colors) % 15) + 1
             self.colors[tid] = c
         return self.colors[tid]
+
+
+def enableFaulthandler():
+    """ Enable faulthandler for all threads. 
+    
+    If the faulthandler package is available, this function disables and then 
+    re-enables fault handling for all threads (this is necessary to ensure any
+    new threads are handled correctly), and returns True.
+
+    If faulthandler is not available, then returns False.
+    """
+    try:
+        import faulthandler
+        # necessary to disable first or else new threads may not be handled.
+        faulthandler.disable()
+        faulthandler.enable(all_threads=True)
+        return True
+    except ImportError:
+        return False
+

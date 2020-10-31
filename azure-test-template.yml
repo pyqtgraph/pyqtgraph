@@ -1,0 +1,209 @@
+# Azure Pipelines CI job template for PyDM Tests
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/anaconda?view=azure-devops
+parameters:
+  name: ''
+  vmImage: ''
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  strategy:
+    matrix:
+      Python27-PyQt4-4.8:
+        python.version: '2.7'
+        qt.bindings: "pyqt=4"
+        install.method: "conda"
+      Python27-PySide-4.8:
+        python.version: '2.7'
+        qt.bindings: "pyside"
+        install.method: "conda"
+      Python36-PyQt5-5.9:
+        python.version: "3.6"
+        qt.bindings: "pyqt"
+        install.method: "conda"
+      Python37-PySide2-5.13:
+        python.version: "3.7"
+        qt.bindings: "pyside2"
+        install.method: "conda"
+      Python38-PyQt5-Latest:
+        python.version: '3.8'
+        qt.bindings: "PyQt5"
+        install.method: "pip"
+      Python38-PySide2-Latest:
+        python.version: '3.8'
+        qt.bindings: "PySide2"
+        install.method: "pip"     
+
+  steps:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      source: 'current'
+      artifact: wheel
+      path: 'dist'
+
+  - task: ScreenResolutionUtility@1
+    inputs:
+      displaySettings: 'specific'
+      width: '1920'
+      height: '1080'
+    condition: eq(variables['agent.os'], 'Windows_NT' )
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: $(python.version)
+    condition: eq(variables['install.method'], 'pip')
+
+  - script: |
+      curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
+      7z x mesa3d-19.1.0-release-msvc.exe
+      cd x64
+      xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
+      xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DLL /t REG_SZ /d "mesadrv.dll" /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v DriverVersion /t REG_DWORD /d 1 /f
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Flags /t REG_DWORD /d 1 /f 
+      REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL" /v Version /t REG_DWORD /d 2 /f 
+    displayName: "Install Windows-Mesa OpenGL DLL"
+    condition: eq(variables['agent.os'], 'Windows_NT')
+
+  - bash: |
+      if [ $(agent.os) == 'Linux' ]
+      then
+        echo "##vso[task.prependpath]$CONDA/bin"
+      elif [ $(agent.os) == 'Darwin' ]
+      then
+        sudo chown -R $USER $CONDA  
+        echo "##vso[task.prependpath]$CONDA/bin"
+      elif [ $(agent.os) == 'Windows_NT' ]
+      then
+        echo "##vso[task.prependpath]$CONDA/Scripts"
+      else
+        echo 'Just what OS are you using?'
+      fi
+    displayName: 'Add Conda To $PATH' 
+    condition: eq(variables['install.method'], 'conda' )
+    continueOnError: false
+
+  - bash: |
+      if [ $(install.method) == "conda" ]
+      then
+        conda update --all --yes --quiet
+        conda config --env --set always_yes true
+        if [ $(python.version) == '2.7' ]
+        then
+          conda config --set restore_free_channel true
+        fi
+        if [ $(qt.bindings) == "pyside2" ] || ([ $(qt.bindings) == 'pyside' ] && [ $(agent.os) == 'Darwin' ])
+        then
+          conda config --prepend channels conda-forge
+        fi      
+        conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
+        source activate test-environment-$(python.version)
+        conda info
+        conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
+        pip install matplotlib
+      else
+        pip install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib
+      fi
+      pip install pytest pytest-cov coverage pytest-xdist
+      if [ $(python.version) == "2.7" ]
+      then
+        pip install pytest-faulthandler==1.6.0
+        export PYTEST_ADDOPTS="--faulthandler-timeout=15"
+      else
+        pip install pytest pytest-cov coverage
+      fi
+    displayName: "Install Dependencies"
+
+  - bash: |
+      if [ $(install.method) == "conda" ]
+      then
+        source activate test-environment-$(python.version)
+      fi
+      python -m pip install --no-index --find-links=dist pyqtgraph
+    displayName: 'Install Wheel'
+
+  - bash: |
+      sudo apt-get install -y libxkbcommon-x11-dev 
+      # workaround for QTBUG-84489
+      sudo apt-get install -y libxcb-xfixes0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
+      if [ $(install.method) == "conda" ]
+      then
+        source activate test-environment-$(python.version)
+      fi
+      if [ $(python.version) == "2.7" ]
+      then
+        pip install PyVirtualDisplay==0.2.5 pytest-xvfb==1.2.0
+      else
+        pip install pytest-xvfb
+      fi
+    displayName: "Virtual Display Setup"
+    condition: eq(variables['agent.os'], 'Linux' )
+
+  - bash: |
+      export QT_DEBUG_PLUGINS=1
+      if [ $(install.method) == "conda" ]
+      then
+        source activate test-environment-$(python.version)
+      fi
+      echo python location: `which python`
+      echo python version: `python --version`
+      echo pytest location: `which pytest`
+      echo installed packages
+      pip list
+      echo pyqtgraph system info
+      python -c "import pyqtgraph as pg; pg.systemInfo()"
+      echo display information
+      if [ $(agent.os) == 'Linux' ]
+      then
+        export DISPLAY=:99.0
+        Xvfb :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset &
+        sleep 3
+      fi
+      python -m pyqtgraph.util.get_resolution
+      echo openGL information
+      python -c "from pyqtgraph.opengl.glInfo import GLTest"
+    displayName: 'Debug Info'
+    continueOnError: false
+
+  - bash: |
+      if [ $(install.method) == "conda" ]
+      then
+        source activate test-environment-$(python.version)
+      fi
+      mkdir -p "$SCREENSHOT_DIR"
+      # echo "If Screenshots are generated, they may be downloaded from:"
+      # echo "https://dev.azure.com/pyqtgraph/pyqtgraph/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=Screenshots&api-version=5.0"
+      pytest . -v \
+        -n 1 \
+        --junitxml=junit/test-results.xml \
+        --cov pyqtgraph --cov-report=xml --cov-report=html
+    displayName: 'Unit tests' 
+    env:
+      AZURE: 1
+      SCREENSHOT_DIR: $(Build.ArtifactStagingDirectory)/screenshots
+      
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Screenshots' 
+    condition: failed()
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)/screenshots
+      artifactName: Screenshots
+  
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Test Results for $(agent.os) - $(python.version) - $(qt.bindings) - $(install.method)'
+      publishRunAttachments: true
+  
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'

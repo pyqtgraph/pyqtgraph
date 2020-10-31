@@ -113,7 +113,7 @@ class SRTTransform3D(Transform3D):
     
     def setFromMatrix(self, m):
         """
-        Set this transform mased on the elements of *m*
+        Set this transform based on the elements of *m*
         The input matrix must be affine AND have no shear,
         otherwise the conversion will most likely fail.
         """
@@ -224,9 +224,9 @@ class SRTTransform3D(Transform3D):
             raise Exception("Argument 'nd' must be 2 or 3")
         
 if __name__ == '__main__':
-    import widgets
+    from . import widgets
     import GraphicsView
-    from functions import *
+    from .functions import *
     app = QtGui.QApplication([])
     win = QtGui.QMainWindow()
     win.show()

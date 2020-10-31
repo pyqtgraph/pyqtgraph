@@ -10,7 +10,7 @@
 ## No unicode variable names (μ,Ω) allowed until python 3
 
 SI_PREFIXES = 'yzafpnum kMGTPEZY'
-UNITS = 'm,s,g,W,J,V,A,F,T,Hz,Ohm,S,N,C,px,b,B'.split(',')
+UNITS = 'm,s,g,W,J,V,A,F,T,Hz,Ohm,S,N,C,px,b,B,Pa'.split(',')
 allUnits = {}
 
 def addUnit(p, n):

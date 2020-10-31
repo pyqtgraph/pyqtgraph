@@ -8,7 +8,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-win = pg.GraphicsWindow()
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: Scrolling Plots')
 
 
@@ -21,7 +21,7 @@ curve1 = p1.plot(data1)
 curve2 = p2.plot(data1)
 ptr1 = 0
 def update1():
-    global data1, curve1, ptr1
+    global data1, ptr1
     data1[:-1] = data1[1:]  # shift data in the array one sample left
                             # (see also: np.roll)
     data1[-1] = np.random.normal()

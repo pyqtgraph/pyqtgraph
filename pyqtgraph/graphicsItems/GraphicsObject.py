@@ -1,6 +1,9 @@
-from ..Qt import QtGui, QtCore, USE_PYSIDE
-if not USE_PYSIDE:
-    import sip
+from ..Qt import QtGui, QtCore, QT_LIB
+if QT_LIB in ['PyQt4', 'PyQt5']:
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
@@ -33,7 +36,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
             
         ## workaround for pyqt bug:
         ## http://www.riverbankcomputing.com/pipermail/pyqt/2012-August/031818.html
-        if not USE_PYSIDE and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
+        if QT_LIB in ['PyQt4', 'PyQt5'] and change == self.ItemParentChange and isinstance(ret, QtGui.QGraphicsItem):
             ret = sip.cast(ret, QtGui.QGraphicsItem)
 
         return ret

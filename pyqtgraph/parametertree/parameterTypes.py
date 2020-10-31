@@ -4,11 +4,12 @@ from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
-#from ..widgets.GradientWidget import GradientWidget ## creates import loop
+from ..colormap import ColorMap
 from .. import pixmaps as pixmaps
 from .. import functions as fn
-import os
+import os, sys
 from ..pgcollections import OrderedDict
+
 
 class WidgetParameterItem(ParameterItem):
     """
@@ -37,17 +38,13 @@ class WidgetParameterItem(ParameterItem):
         self.hideWidget = True  ## hide edit widget, replace with label when not selected
                                 ## set this to False to keep the editor widget always visible
         
-        
         ## build widget into column 1 with a display label and default button.
         w = self.makeWidget()  
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
         
-        opts = self.param.opts
-        if 'tip' in opts:
-            w.setToolTip(opts['tip'])
-        
         self.defaultBtn = QtGui.QPushButton()
+        self.defaultBtn.setAutoDefault(False)
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
         modDir = os.path.dirname(__file__)
@@ -72,6 +69,7 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanging.connect(self.widgetValueChanging)
             
         ## update value shown in widget. 
+        opts = self.param.opts
         if opts.get('value', None) is not None:
             self.valueChanged(self, opts['value'], force=True)
         else:
@@ -79,6 +77,8 @@ class WidgetParameterItem(ParameterItem):
             self.widgetValueChanged()
 
         self.updateDefaultBtn()
+        
+        self.optsChanged(self.param, self.param.opts)
 
     def makeWidget(self):
         """
@@ -104,11 +104,12 @@ class WidgetParameterItem(ParameterItem):
             if t == 'int':
                 defs['int'] = True
                 defs['minStep'] = 1.0
+                defs['format'] = '{value:d}'
             for k in defs:
                 if k in opts:
                     defs[k] = opts[k]
             if 'limits' in opts:
-                defs['bounds'] = opts['limits']
+                defs['min'], defs['max'] = opts['limits']
             w = SpinBox()
             w.setOpts(**defs)
             w.sigChanged = w.sigValueChanged
@@ -122,6 +123,7 @@ class WidgetParameterItem(ParameterItem):
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
+            w.setStyleSheet('border: 0px')
             w.sigChanged = w.editingFinished
             w.value = lambda: asUnicode(w.text())
             w.setValue = lambda v: w.setText(asUnicode(v))
@@ -159,8 +161,6 @@ class WidgetParameterItem(ParameterItem):
                 self.focusNext(forward=False)
                 return True ## don't let anyone else see this event
             
-        #elif ev.type() == ev.FocusOut:
-            #self.hideEditor()
         return False
         
     def setFocus(self):
@@ -186,7 +186,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
         
         # hide / show
-        self.defaultBtn.setVisible(not self.param.readonly())
+        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -269,7 +269,6 @@ class WidgetParameterItem(ParameterItem):
     def optsChanged(self, param, opts):
         """Called when any options are changed that are not
         name, value, default, or limits"""
-        #print "opts changed:", opts
         ParameterItem.optsChanged(self, param, opts)
         
         if 'readonly' in opts:
@@ -277,11 +276,19 @@ class WidgetParameterItem(ParameterItem):
             if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
                 self.widget.setEnabled(not opts['readonly'])
         
+        if 'tip' in opts:
+            self.widget.setToolTip(opts['tip'])
+        
         ## If widget is a SpinBox, pass options straight through
         if isinstance(self.widget, SpinBox):
+            # send only options supported by spinbox
+            sbOpts = {}
             if 'units' in opts and 'suffix' not in opts:
-                opts['suffix'] = opts['units']
-            self.widget.setOpts(**opts)
+                sbOpts['suffix'] = opts['units']
+            for k,v in opts.items():
+                if k in self.widget.opts:
+                    sbOpts[k] = v
+            self.widget.setOpts(**sbOpts)
             self.updateDisplayLabel()
         
             
@@ -306,6 +313,11 @@ class SimpleParameter(Parameter):
             self.value = self.colorValue
             self.saveState = self.saveColorState
     
+    def setValue(self, value, blockSignal=None):
+        if self.opts['type'] == 'int':
+            value = int(value)
+        Parameter.setValue(self, value, blockSignal)
+
     def colorValue(self):
         return fn.mkColor(Parameter.value(self))
     
@@ -314,15 +326,32 @@ class SimpleParameter(Parameter):
         state['value'] = fn.colorTuple(self.value())
         return state
         
+    def _interpretValue(self, v):
+        fn = {
+            'int': int,
+            'float': float,
+            'bool': bool,
+            'str': asUnicode,
+            'color': self._interpColor,
+            'colormap': self._interpColormap,
+        }[self.opts['type']]
+        return fn(v)
     
+    def _interpColor(self, v):
+        return fn.mkColor(v)
+    
+    def _interpColormap(self, v):
+        if not isinstance(v, ColorMap):
+            raise TypeError("Cannot set colormap parameter from object %r" % v)
+        return v
+
+
 registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
 registerParameterType('colormap', SimpleParameter, override=True)
-
-
 
 
 class GroupParameterItem(ParameterItem):
@@ -352,7 +381,6 @@ class GroupParameterItem(ParameterItem):
             w.setLayout(l)
             l.addWidget(self.addWidget)
             l.addStretch()
-            #l.addItem(QtGui.QSpacerItem(200, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
             self.addWidgetBox = w
             self.addItem = QtGui.QTreeWidgetItem([])
             self.addItem.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -373,6 +401,7 @@ class GroupParameterItem(ParameterItem):
         else:
             for c in [0,1]:
                 self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
+                self.setForeground(c, QtGui.QBrush(QtGui.QColor(50,50,50)))
                 font = self.font(c)
                 font.setBold(True)
                 #font.setPointSize(font.pointSize()+1)
@@ -397,10 +426,13 @@ class GroupParameterItem(ParameterItem):
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self, True)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+        tw.setFirstItemColumnSpanned(self, True)
         if self.addItem is not None:
-            self.treeWidget().setItemWidget(self.addItem, 0, self.addWidgetBox)
-            self.treeWidget().setFirstItemColumnSpanned(self.addItem, True)
+            tw.setItemWidget(self.addItem, 0, self.addWidgetBox)
+            tw.setFirstItemColumnSpanned(self.addItem, True)
         
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
@@ -408,8 +440,10 @@ class GroupParameterItem(ParameterItem):
         else:
             ParameterItem.addChild(self, child)
             
-    def optsChanged(self, param, changed):
-        if 'addList' in changed:
+    def optsChanged(self, param, opts):
+        ParameterItem.optsChanged(self, param, opts)
+        
+        if 'addList' in opts:
             self.updateAddList()
                 
     def updateAddList(self):
@@ -421,7 +455,8 @@ class GroupParameterItem(ParameterItem):
                 self.addWidget.addItem(t)
         finally:
             self.addWidget.blockSignals(False)
-            
+
+
 class GroupParameter(Parameter):
     """
     Group parameters are used mainly as a generic parent item that holds (and groups!) a set
@@ -435,23 +470,22 @@ class GroupParameter(Parameter):
     instead of a button.
     """
     itemClass = GroupParameterItem
+    
+    sigAddNew = QtCore.Signal(object, object)  # self, type
 
     def addNew(self, typ=None):
         """
         This method is called when the user has requested to add a new item to the group.
+        By default, it emits ``sigAddNew(self, typ)``.
         """
-        raise Exception("Must override this function in subclass.")
+        self.sigAddNew.emit(self, typ)
     
     def setAddList(self, vals):
         """Change the list of options available for the user to add to the group."""
         self.setOpts(addList=vals)
 
-    
 
 registerParameterType('group', GroupParameter, override=True)
-
-
-
 
 
 class ListParameterItem(WidgetParameterItem):
@@ -462,7 +496,6 @@ class ListParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         self.targetValue = None
         WidgetParameterItem.__init__(self, param, depth)
-        
         
     def makeWidget(self):
         opts = self.param.opts
@@ -511,7 +544,6 @@ class ListParameterItem(WidgetParameterItem):
                     self.updateDisplayLabel()
         finally:
             self.widget.blockSignals(False)
-            
 
 
 class ListParameter(Parameter):
@@ -521,7 +553,7 @@ class ListParameter(Parameter):
         self.forward = OrderedDict()  ## {name: value, ...}
         self.reverse = ([], [])       ## ([value, ...], [name, ...])
         
-        ## Parameter uses 'limits' option to define the set of allowed values
+        # Parameter uses 'limits' option to define the set of allowed values
         if 'values' in opts:
             opts['limits'] = opts['values']
         if opts.get('limits', None) is None:
@@ -536,24 +568,9 @@ class ListParameter(Parameter):
         if len(self.reverse[0]) > 0 and self.value() not in self.reverse[0]:
             self.setValue(self.reverse[0][0])
             
-    #def addItem(self, name, value=None):
-        #if name in self.forward:
-            #raise Exception("Name '%s' is already in use for this parameter" % name)
-        #limits = self.opts['limits']
-        #if isinstance(limits, dict):
-            #limits = limits.copy()
-            #limits[name] = value
-            #self.setLimits(limits)
-        #else:
-            #if value is not None:
-                #raise Exception  ## raise exception or convert to dict?
-            #limits = limits[:]
-            #limits.append(name)
-        ## what if limits == None?
-            
     @staticmethod
     def mapping(limits):
-        ## Return forward and reverse mapping objects given a limit specification
+        # Return forward and reverse mapping objects given a limit specification
         forward = OrderedDict()  ## {name: value, ...}
         reverse = ([], [])       ## ([value, ...], [name, ...])
         if isinstance(limits, dict):
@@ -578,14 +595,13 @@ class ActionParameterItem(ParameterItem):
         ParameterItem.__init__(self, param, depth)
         self.layoutWidget = QtGui.QWidget()
         self.layout = QtGui.QHBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
-        self.button = QtGui.QPushButton(param.name())
+        self.button = QtGui.QPushButton(param.title())
         #self.layout.addSpacing(100)
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
-        param.sigNameChanged.connect(self.paramRenamed)
-        self.setText(0, '')
         
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -595,9 +611,10 @@ class ActionParameterItem(ParameterItem):
         
         tree.setFirstItemColumnSpanned(self, True)
         tree.setItemWidget(self, 0, self.layoutWidget)
-        
-    def paramRenamed(self, param, name):
-        self.button.setText(name)
+
+    def titleChanged(self):
+        self.button.setText(self.param.title())
+        ParameterItem.titleChanged(self)
         
     def buttonClicked(self):
         self.param.activate()
@@ -614,7 +631,6 @@ class ActionParameter(Parameter):
 registerParameterType('action', ActionParameter, override=True)
 
 
-
 class TextParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         WidgetParameterItem.__init__(self, param, depth)
@@ -626,8 +642,12 @@ class TextParameterItem(WidgetParameterItem):
         ## TODO: fix so that superclass method can be called
         ## (WidgetParameter should just natively support this style)
         #WidgetParameterItem.treeWidgetChanged(self)
-        self.treeWidget().setFirstItemColumnSpanned(self.subItem, True)
-        self.treeWidget().setItemWidget(self.subItem, 0, self.textBox)
+        tw = self.treeWidget()
+        if tw is None:
+            return
+
+        tw.setFirstItemColumnSpanned(self.subItem, True)
+        tw.setItemWidget(self.subItem, 0, self.textBox)
         
         # for now, these are copied from ParameterItem.treeWidgetChanged
         self.setHidden(not self.param.opts.get('visible', True))
@@ -645,7 +665,6 @@ class TextParameterItem(WidgetParameterItem):
 class TextParameter(Parameter):
     """Editable string; displayed as large text box in the tree."""
     itemClass = TextParameterItem
-
     
     
 registerParameterType('text', TextParameter, override=True)

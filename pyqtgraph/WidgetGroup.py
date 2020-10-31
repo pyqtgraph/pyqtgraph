@@ -8,7 +8,7 @@ This class addresses the problem of having to save and restore the state
 of a large group of widgets. 
 """
 
-from .Qt import QtCore, QtGui, USE_PYQT5
+from .Qt import QtCore, QtGui, QT_LIB
 import weakref, inspect
 from .python2_3 import asUnicode
 
@@ -23,7 +23,7 @@ def restoreSplitter(w, s):
     if type(s) is list:
         w.setSizes(s)
     elif type(s) is str:
-        w.restoreState(QtCore.QByteArray.fromPercentEncoding(s))
+        w.restoreState(QtCore.QByteArray.fromPercentEncoding(s.encode()))
     else:
         print("Can't configure QSplitter using object of type", type(s))
     if w.count() > 0:   ## make sure at least one item is not collapsed
@@ -218,7 +218,7 @@ class WidgetGroup(QtCore.QObject):
         v1 = self.cache[n]
         v2 = self.readWidget(w)
         if v1 != v2:
-            if not USE_PYQT5:
+            if QT_LIB != 'PyQt5':
                 # Old signal kept for backward compatibility.
                 self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
             self.sigChanged.emit(self.widgetList[w], v2)
