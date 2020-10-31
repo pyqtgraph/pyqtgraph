@@ -1,6 +1,7 @@
 import numpy as np
 from .Qt import QtGui, QtCore
 from .python2_3 import basestring
+from .functions import mkColor
 from os import path
 
 def load(name):
@@ -32,7 +33,7 @@ def load(name):
             if csv_mode:
                 comp = parts[0].split(',')
                 if len( comp ) < 3: continue # not enough components given
-                color_tuple = tuple( [ float(c) for c in comp ] )
+                color_tuple = tuple( [ int(255*float(c)+0.5) for c in comp ] )
                 if len(parts) > 1:
                     name = parts[1].strip()
             else:
@@ -52,9 +53,6 @@ def load(name):
     return ColorMap(
         pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list, names=color_names)
-    
-    
-                        
 
 class ColorMap(object):
     """
@@ -109,14 +107,14 @@ class ColorMap(object):
         ===============     ==============================================================
         **Arguments:**
         pos                 Array of positions where each color is defined
-        color               Array of RGBA colors.
-                            Integer data types are interpreted as 0-255; float data types
-                            are interpreted as 0.0-1.0
+        color               Array of colors.
+                            Values are interpreted via 
+                            :func:`mkColor() <pyqtgraph.mkColor>`.
         mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
                             indicating the color space that should be used when
                             interpolating between stops. Note that the last mode value is
                             ignored. By default, the mode is entirely RGB.
-        names               Optional dictionary mapping names to (a subset of) color indices
+        names               Optional dictionary mapping names to (a subset of) color indices                            
         ===============     ==============================================================
         """
         self.pos = np.array(pos)
@@ -129,12 +127,16 @@ class ColorMap(object):
             old_idx = names[key]
             names[key] = order[old_idx]
         self.pos = self.pos[order]
-        self.color = np.array(color)[order]
+        self.color = np.apply_along_axis(
+            func1d = lambda x: mkColor(x).getRgb(),
+            axis   = -1,
+            arr    = color,
+            )[order]
         if mode is None:
             mode = np.ones(len(pos))
         self.mode = mode
         self.stopsCache = {}
-    
+
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
         if isinstance(key, int): # access by color index 
@@ -144,7 +146,7 @@ class ColorMap(object):
         if isinstance(key, str): # acces by name
             return self.getByName(key)
         return None
-        
+
     def map(self, data, mode='byte'):
         """
         Return an array of colors corresponding to the values in *data*. 
@@ -201,7 +203,7 @@ class ColorMap(object):
     def mapToFloat(self, data):
         """Convenience function; see :func:`map() <pyqtgraph.ColorMap.map>`."""
         return self.map(data, mode=self.FLOAT)
-        
+    
     def getByIndex(self, idx):
         """Retrieve palette QColor by index"""
         return QtGui.QColor( *self.color[idx] )
@@ -232,7 +234,7 @@ class ColorMap(object):
         
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(zip(pos, color))
+        g.setStops(list(zip(pos, color)))
         
         #if self.colorMode == 'rgb':
             #ticks = self.listTicks()
@@ -316,7 +318,7 @@ class ColorMap(object):
         x = np.linspace(start, stop, nPts)
         table = self.map(x, mode)
         
-        if not alpha:
+        if not alpha and mode != self.QCOLOR:
             return table[:,:3]
         else:
             return table
