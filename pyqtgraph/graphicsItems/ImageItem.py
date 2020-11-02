@@ -530,7 +530,8 @@ class ImageItem(GraphicsObject):
                 bins = self._xp.linspace(mn, mx, 500)
 
             if len(bins) == 0:
-                bins = [mn, mx]
+                bins = None
+                kwds["range"] = (mn, mx)
 
         kwds['bins'] = bins
 
