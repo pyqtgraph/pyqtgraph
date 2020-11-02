@@ -530,7 +530,7 @@ class ImageItem(GraphicsObject):
                 bins = self._xp.linspace(mn, mx, 500)
 
             if len(bins) == 0:
-                bins = self._xp.asarray(mn, mx)
+                bins = self._xp.asarray(mn.item(), mx.item())
 
         kwds['bins'] = bins
 
