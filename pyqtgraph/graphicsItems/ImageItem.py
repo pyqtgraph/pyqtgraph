@@ -175,8 +175,6 @@ class ImageItem(GraphicsObject):
         """
         self.autoDownsample = ads
         self._renderRequired = True
-        self._processingBuffer = None
-        self._displayBuffer = None
         self.update()
 
     def setOpts(self, update=True, **kargs):
@@ -287,8 +285,6 @@ class ImageItem(GraphicsObject):
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
             if shapeChanged:
-                self._processingBuffer = None
-                self._displayBuffer = None
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
 
@@ -450,7 +446,7 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
 
-        if self._processingBuffer is None:
+        if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
             self._buildQImageBuffer(image.shape)
 
         fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
