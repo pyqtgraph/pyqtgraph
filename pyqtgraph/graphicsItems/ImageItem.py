@@ -513,8 +513,8 @@ class ImageItem(GraphicsObject):
         stepData = self.image[::step[0], ::step[1]]
 
         if isinstance(bins, str) and bins == 'auto':
-            mn = self._xp.nanmin(stepData)
-            mx = self._xp.nanmax(stepData)
+            mn = self._xp.nanmin(stepData).item()
+            mx = self._xp.nanmax(stepData).item()
             if mx == mn:
                 # degenerate image, arange will fail
                 mx += 1
@@ -530,7 +530,7 @@ class ImageItem(GraphicsObject):
                 bins = self._xp.linspace(mn, mx, 500)
 
             if len(bins) == 0:
-                bins = self._xp.asarray(mn.item(), mx.item())
+                bins = self._xp.asarray((mn, mx))
 
         kwds['bins'] = bins
 
