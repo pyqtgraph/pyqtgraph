@@ -46,7 +46,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     *  Eats mouseMove events that occur too soon after a mouse press.
     *  Reimplements items() and itemAt() to circumvent PyQt bug
 
-    ====================== ==================================================================
+    ====================== ====================================================================
     **Signals**
     sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
                            get the click position relative to the item that was clicked on,
@@ -57,7 +57,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
                            of items under the cursor.
     sigItemAdded(item)     Emitted when an item is added via addItem(). The item is given.
-    ====================== ==================================================================
+    sigItemRemoved(item)   Emitted when an item is removed via removeItem(). The item is given.
+    ====================== ====================================================================
     
     Mouse interaction is as follows:
     
@@ -93,7 +94,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
 
     sigItemAdded = QtCore.Signal(object)  ## emits the item object just added
-    
+    sigItemRemoved = QtCore.Signal(object)  ## emits the item object just removed
+
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
@@ -401,6 +403,12 @@ class GraphicsScene(QtGui.QGraphicsScene):
         # extend QGraphicsScene.addItem to emit a sigItemAdded signal
         ret = QtGui.QGraphicsScene.addItem(self, item)
         self.sigItemAdded.emit(item)
+        return ret
+
+    def removeItem(self, item):
+        # extend QGraphicsScene.removeItem to emit a sigItemRemoved signal
+        ret = QtGui.QGraphicsScene.removeItem(self, item)
+        self.sigItemRemoved.emit(item)
         return ret
         
     def items(self, *args):
