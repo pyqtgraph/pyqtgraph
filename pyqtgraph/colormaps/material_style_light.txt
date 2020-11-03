@@ -1,0 +1,314 @@
+;
+; Copyright 2017 Google Inc.
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+; THE SOFTWARE.
+
+; collected '500' shades
+#f44336 red
+#e91e63 pink
+#9c27b0 purple
+#673ab7 deep-purple
+#3f51b5 indigo
+#2196f3 blue
+#03a9f4 light-blue
+#00bcd4 cyan
+#009688 teal
+#4caf50 green
+#8bc34a light-green
+#cddc39 lime
+#ffeb3b yellow
+#ffc107 amber
+#ff9800 orange
+#ff5722 deep-orange
+#795548 brown
+#9e9e9e grey
+#607d8b blue-grey
+
+#ffebee red-50
+#ffcdd2 red-100
+#ef9a9a red-200
+#e57373 red-300
+#ef5350 red-400
+#f44336 red-500
+#e53935 red-600
+#d32f2f red-700
+#c62828 red-800
+#b71c1c red-900
+#ff8a80 red-a100
+#ff5252 red-a200
+#ff1744 red-a400
+#d50000 red-a700
+
+#fce4ec pink-50
+#f8bbd0 pink-100
+#f48fb1 pink-200
+#f06292 pink-300
+#ec407a pink-400
+#e91e63 pink-500
+#d81b60 pink-600
+#c2185b pink-700
+#ad1457 pink-800
+#880e4f pink-900
+#ff80ab pink-a100
+#ff4081 pink-a200
+#f50057 pink-a400
+#c51162 pink-a700
+
+#f3e5f5 purple-50
+#e1bee7 purple-100
+#ce93d8 purple-200
+#ba68c8 purple-300
+#ab47bc purple-400
+#9c27b0 purple-500
+#8e24aa purple-600
+#7b1fa2 purple-700
+#6a1b9a purple-800
+#4a148c purple-900
+#ea80fc purple-a100
+#e040fb purple-a200
+#d500f9 purple-a400
+#a0f purple-a700
+
+#ede7f6 deep-purple-50
+#d1c4e9 deep-purple-100
+#b39ddb deep-purple-200
+#9575cd deep-purple-300
+#7e57c2 deep-purple-400
+#673ab7 deep-purple-500
+#5e35b1 deep-purple-600
+#512da8 deep-purple-700
+#4527a0 deep-purple-800
+#311b92 deep-purple-900
+#b388ff deep-purple-a100
+#7c4dff deep-purple-a200
+#651fff deep-purple-a400
+#6200ea deep-purple-a700
+
+#e8eaf6 indigo-50
+#c5cae9 indigo-100
+#9fa8da indigo-200
+#7986cb indigo-300
+#5c6bc0 indigo-400
+#3f51b5 indigo-500
+#3949ab indigo-600
+#303f9f indigo-700
+#283593 indigo-800
+#1a237e indigo-900
+#8c9eff indigo-a100
+#536dfe indigo-a200
+#3d5afe indigo-a400
+#304ffe indigo-a700
+
+#e3f2fd blue-50
+#bbdefb blue-100
+#90caf9 blue-200
+#64b5f6 blue-300
+#42a5f5 blue-400
+#2196f3 blue-500
+#1e88e5 blue-600
+#1976d2 blue-700
+#1565c0 blue-800
+#0d47a1 blue-900
+#82b1ff blue-a100
+#448aff blue-a200
+#2979ff blue-a400
+#2962ff blue-a700
+
+#e1f5fe light-blue-50
+#b3e5fc light-blue-100
+#81d4fa light-blue-200
+#4fc3f7 light-blue-300
+#29b6f6 light-blue-400
+#03a9f4 light-blue-500
+#039be5 light-blue-600
+#0288d1 light-blue-700
+#0277bd light-blue-800
+#01579b light-blue-900
+#80d8ff light-blue-a100
+#40c4ff light-blue-a200
+#00b0ff light-blue-a400
+#0091ea light-blue-a700
+
+#e0f7fa cyan-50
+#b2ebf2 cyan-100
+#80deea cyan-200
+#4dd0e1 cyan-300
+#26c6da cyan-400
+#00bcd4 cyan-500
+#00acc1 cyan-600
+#0097a7 cyan-700
+#00838f cyan-800
+#006064 cyan-900
+#84ffff cyan-a100
+#18ffff cyan-a200
+#00e5ff cyan-a400
+#00b8d4 cyan-a700
+
+#e0f2f1 teal-50
+#b2dfdb teal-100
+#80cbc4 teal-200
+#4db6ac teal-300
+#26a69a teal-400
+#009688 teal-500
+#00897b teal-600
+#00796b teal-700
+#00695c teal-800
+#004d40 teal-900
+#a7ffeb teal-a100
+#64ffda teal-a200
+#1de9b6 teal-a400
+#00bfa5 teal-a700
+
+#e8f5e9 green-50
+#c8e6c9 green-100
+#a5d6a7 green-200
+#81c784 green-300
+#66bb6a green-400
+#4caf50 green-500
+#43a047 green-600
+#388e3c green-700
+#2e7d32 green-800
+#1b5e20 green-900
+#b9f6ca green-a100
+#69f0ae green-a200
+#00e676 green-a400
+#00c853 green-a700
+
+#f1f8e9 light-green-50
+#dcedc8 light-green-100
+#c5e1a5 light-green-200
+#aed581 light-green-300
+#9ccc65 light-green-400
+#8bc34a light-green-500
+#7cb342 light-green-600
+#689f38 light-green-700
+#558b2f light-green-800
+#33691e light-green-900
+#ccff90 light-green-a100
+#b2ff59 light-green-a200
+#76ff03 light-green-a400
+#64dd17 light-green-a700
+
+#f9fbe7 lime-50
+#f0f4c3 lime-100
+#e6ee9c lime-200
+#dce775 lime-300
+#d4e157 lime-400
+#cddc39 lime-500
+#c0ca33 lime-600
+#afb42b lime-700
+#9e9d24 lime-800
+#827717 lime-900
+#f4ff81 lime-a100
+#eeff41 lime-a200
+#c6ff00 lime-a400
+#aeea00 lime-a700
+
+#fffde7 yellow-50
+#fff9c4 yellow-100
+#fff59d yellow-200
+#fff176 yellow-300
+#ffee58 yellow-400
+#ffeb3b yellow-500
+#fdd835 yellow-600
+#fbc02d yellow-700
+#f9a825 yellow-800
+#f57f17 yellow-900
+#ffff8d yellow-a100
+#ff0 yellow-a200
+#ffea00 yellow-a400
+#ffd600 yellow-a700
+
+#fff8e1 amber-50
+#ffecb3 amber-100
+#ffe082 amber-200
+#ffd54f amber-300
+#ffca28 amber-400
+#ffc107 amber-500
+#ffb300 amber-600
+#ffa000 amber-700
+#ff8f00 amber-800
+#ff6f00 amber-900
+#ffe57f amber-a100
+#ffd740 amber-a200
+#ffc400 amber-a400
+#ffab00 amber-a700
+
+#fff3e0 orange-50
+#ffe0b2 orange-100
+#ffcc80 orange-200
+#ffb74d orange-300
+#ffa726 orange-400
+#ff9800 orange-500
+#fb8c00 orange-600
+#f57c00 orange-700
+#ef6c00 orange-800
+#e65100 orange-900
+#ffd180 orange-a100
+#ffab40 orange-a200
+#ff9100 orange-a400
+#ff6d00 orange-a700
+
+#fbe9e7 deep-orange-50
+#ffccbc deep-orange-100
+#ffab91 deep-orange-200
+#ff8a65 deep-orange-300
+#ff7043 deep-orange-400
+#ff5722 deep-orange-500
+#f4511e deep-orange-600
+#e64a19 deep-orange-700
+#d84315 deep-orange-800
+#bf360c deep-orange-900
+#ff9e80 deep-orange-a100
+#ff6e40 deep-orange-a200
+#ff3d00 deep-orange-a400
+#dd2c00 deep-orange-a700
+
+#efebe9 brown-50
+#d7ccc8 brown-100
+#bcaaa4 brown-200
+#a1887f brown-300
+#8d6e63 brown-400
+#795548 brown-500
+#6d4c41 brown-600
+#5d4037 brown-700
+#4e342e brown-800
+#3e2723 brown-900
+
+#fafafa grey-50
+#f5f5f5 grey-100
+#eee grey-200
+#e0e0e0 grey-300
+#bdbdbd grey-400
+#9e9e9e grey-500
+#757575 grey-600
+#616161 grey-700
+#424242 grey-800
+#212121 grey-900
+
+#eceff1 blue-grey-50
+#cfd8dc blue-grey-100
+#b0bec5 blue-grey-200
+#90a4ae blue-grey-300
+#78909c blue-grey-400
+#607d8b blue-grey-500
+#546e7a blue-grey-600
+#455a64 blue-grey-700
+#37474f blue-grey-800
+#263238 blue-grey-900

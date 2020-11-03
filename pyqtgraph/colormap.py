@@ -4,7 +4,7 @@ from .python2_3 import basestring
 from .functions import mkColor
 from os import path
 
-def load(name):
+def get(name):
     """
     Load a file representing a color map or palette. Returns a ColorMap object.
     """
@@ -14,6 +14,9 @@ def load(name):
         dirname = path.dirname(__file__)
         filename = path.join(dirname, 'colormaps/'+filename)
         # print('loading from', filename )
+    if not path.isfile( filename ): # try suffixes if file is not found:
+        if   path.isfile( filename+'.txt' ): filename += '.txt'
+        elif path.isfile( filename+'.csv' ): filename += '.csv'
     with open(filename,'r') as fh:
         idx = 0
         color_list = []
@@ -29,17 +32,21 @@ def load(name):
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
-            parts = line.split(sep=None, maxsplit=1)
             if csv_mode:
+                parts = line.split(sep=';', maxsplit=1)
                 comp = parts[0].split(',')
                 if len( comp ) < 3: continue # not enough components given
                 color_tuple = tuple( [ int(255*float(c)+0.5) for c in comp ] )
                 if len(parts) > 1:
                     name = parts[1].strip()
             else:
+                parts = line.split(sep=None, maxsplit=1)
                 hex_str = parts[0]
-                if len(hex_str) < 7: continue
+                if len(hex_str) < 4: continue
                 if hex_str[0] != '#': continue
+                if len(hex_str) == 4:
+                    hex_str = hex_str[0] + 2*hex_str[1] + 2*hex_str[2] + 2*hex_str[3]
+                if len(hex_str) < 7: continue
                 color_tuple = tuple( bytes.fromhex( hex_str[1:] ) )
                 if len(parts) > 0:
                     name = parts[1].strip()
