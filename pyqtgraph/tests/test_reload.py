@@ -43,6 +43,8 @@ def remove_cache(mod):
 
 
 def test_reload():
+    """PYTEST_DONT_REWRITE
+    """
     py3 = sys.version_info >= (3,)
 
     # write a module
