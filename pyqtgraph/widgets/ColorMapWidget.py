@@ -73,7 +73,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
             if k == 'colormap':
                 if mode == 'range':
                     item.setValue(v)
-                if mode == 'enum':
+                elif mode == 'enum':
                     children = item.param('Values').children()
                     for i, child in enumerate(children):
                         try:
