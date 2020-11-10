@@ -41,6 +41,7 @@ class MultiAxisPlotWidget(PlotWidget):
     def addChart(self, name, x_axis=None, y_axis=None, **kwargs):
         # CHART
         chart = PlotDataItem(
+            name=name,
             connect="all",
             # symbol="+",
             symbol=None,
@@ -59,7 +60,7 @@ class MultiAxisPlotWidget(PlotWidget):
             if x_axis in self.axis:
                 x = self.axis[x_axis]
             else:
-                self.addAxis(x_axis, "bottom", parent=plotitem)
+                self.addAxis(x_axis, "bottom", parent=self.pi)
                 x = self.axis[x_axis]
             # Y AXIS
             if y_axis is None:  # use default axis if none provided
@@ -67,7 +68,7 @@ class MultiAxisPlotWidget(PlotWidget):
             if y_axis in self.axis:
                 y = self.axis[y_axis]
             else:
-                self.addAxis(y_axis, "left", parent=plotitem)
+                self.addAxis(y_axis, "left", parent=self.pi)
                 y = self.axis[y_axis]
             # VIEW
             plotitem = PlotItem(parent=self.pi, name=name, **kwargs)
@@ -110,29 +111,35 @@ class MultiAxisPlotWidget(PlotWidget):
     def linkAxisToView(self, axis_name, view):
         axis = self.axis[axis_name]
         # connect view changes to axis
+        # set axis main view link if not assigned
+        if axis.linkedView() is None:
+            axis._linkedView = weakref.ref(view)
         # FROM AxisItem.linkToView
+        # connect view changes to axis changes
         if axis.orientation in ["right", "left"]:
             view.sigYRangeChanged.connect(axis.linkedViewChanged)
         elif axis.orientation in ["top", "bottom"]:
             view.sigXRangeChanged.connect(axis.linkedViewChanged)
         view.sigResized.connect(axis.linkedViewChanged)
-        if axis.linkedView() is None:
-            axis._linkedView = weakref.ref(view)
-        # set axis main view link if not assigned
         axis_view = axis.linkedView()
         if axis_view is not view:
             # FROM ViewBox.linkView
             # connext axis's view changes to view since axis acts just like a proxy to it
             if axis.orientation in ["top", "bottom"]:
-                axis_view.sigXRangeChanged.connect(lambda v: view.linkedViewChanged(v, ViewBox.XAxis))
-                axis_view.sigResized.connect(lambda v: view.linkedViewChanged(v, ViewBox.XAxis))
+                # connect axis main view changes to view
+                view.state["linkedViews"][view.XAxis] = weakref.ref(axis_view)
+                axis_view.sigXRangeChanged.connect(view.linkedXChanged)
+                axis_view.sigResized.connect(view.linkedXChanged)
                 # disable autorange on manual movements
                 axis_view.sigXRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
             elif axis.orientation in ["right", "left"]:
-                axis_view.sigYRangeChanged.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
-                axis_view.sigResized.connect(lambda v: view.linkedViewChanged(v, ViewBox.YAxis))
+                # connect axis main view changes to view
+                view.state["linkedViews"][view.YAxis] = weakref.ref(axis_view)
+                axis_view.sigYRangeChanged.connect(view.linkedYChanged)
+                axis_view.sigResized.connect(view.linkedYChanged)
                 # disable autorange on manual movements
                 axis_view.sigYRangeChangedManually.connect(lambda mask: self.disableAxisAutoRange(axis_name))
+        view.sigStateChanged.emit(view)
 
     def makeLayout(self, axis=None, charts=None):
         self.clearLayout()
@@ -176,11 +183,13 @@ class MultiAxisPlotWidget(PlotWidget):
         # MOVE LEGEND TO LAYOUT
         if self.pi.legend is not None:
             self.pi.legend.setParentItem(self.pi)
+        self.update()
 
     def clean(self):
         # CLEAR PLOTS
         for p in self.charts.values():
             p.clear()
+        self.update()
 
     def getPlotItem(self, name=None):
         if name is None:
@@ -188,7 +197,7 @@ class MultiAxisPlotWidget(PlotWidget):
         else:
             return self.charts[name].plotItem
 
-    def setAxisRange(self, axis, range=None, **kwargs):
+    def setAxisRange(self, axis_name, range=None, **kwargs):
         if range is None or len(range) == 0:
             # AUTORANGE
             range = None
@@ -201,15 +210,19 @@ class MultiAxisPlotWidget(PlotWidget):
         else:
             raise AttributeError("bad range")
         if range is None:
-            self.enableAxisAutoRange(axis)
+            self.enableAxisAutoRange(axis_name)
         else:
-            self.disableAxisAutoRange(axis)
-            a = self.axis[axis]
-            vb = a.linkedView()
-            if a.orientation in ["top", "bottom"]:  # IS X AXIS
-                vb.setXRange(*range, **kwargs)
-            elif a.orientation in ["left", "right"]:  # IS Y AXIS
-                vb.setYRange(*range, **kwargs)
+            self.disableAxisAutoRange(axis_name)
+            axis = self.axis[axis_name]
+            charts = [self.charts[connection] for connection in self.axis_connections[axis_name]]
+            if axis.orientation in ["top", "bottom"]:  # IS X AXIS
+                for chart in charts:
+                    vb = chart.plotItem.getViewBox()
+                    vb.setXRange(*range, **kwargs)
+            elif axis.orientation in ["left", "right"]:  # IS Y AXIS
+                for chart in charts:
+                    vb = chart.plotItem.getViewBox()
+                    vb.setYRange(*range, **kwargs)
 
     def update(self):
         for axis_name, connections in self.axis_connections.items():
@@ -223,14 +236,17 @@ class MultiAxisPlotWidget(PlotWidget):
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            chart.plotItem.getViewBox().setXRange(min(bounds), max(bounds))
+                            vb = chart.plotItem.getViewBox()
+                            vb.setXRange(min(bounds), max(bounds))
                 elif axis.orientation in ["left", "right"]:  # IS Y AXIS
                     for chart in charts:
                         bounds += chart.dataBounds(ViewBox.YAxis)
                     bounds = [bound for bound in bounds if bound is not None]
                     if len(bounds) > 0:
                         for chart in charts:
-                            chart.plotItem.getViewBox().setYRange(min(bounds), max(bounds))
+                            vb = chart.plotItem.getViewBox()
+                            vb.setYRange(min(bounds), max(bounds))
+        super().update()
 
     def enableAxisAutoRange(self, axis_name):
         self.axis[axis_name].autorange = True

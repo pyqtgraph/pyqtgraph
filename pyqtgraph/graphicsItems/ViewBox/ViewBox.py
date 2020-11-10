@@ -1237,6 +1237,9 @@ class ViewBox(GraphicsWidget):
             self.sigXRangeChangedManually.emit(mask)
         elif axis == ViewBox.YAxis:
             self.sigYRangeChangedManually.emit(mask)
+        elif axis is None:
+            self.sigXRangeChangedManually.emit(mask)
+            self.sigYRangeChangedManually.emit(mask)
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
@@ -1300,6 +1303,9 @@ class ViewBox(GraphicsWidget):
                     self.sigXRangeChangedManually.emit(mask)
                 elif axis == ViewBox.YAxis:
                     self.sigYRangeChangedManually.emit(mask)
+                elif axis is None:
+                    self.sigXRangeChangedManually.emit(mask)
+                    self.sigYRangeChangedManually.emit(mask)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
@@ -1323,6 +1329,9 @@ class ViewBox(GraphicsWidget):
             if axis == ViewBox.XAxis:
                 self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
             elif axis == ViewBox.YAxis:
+                self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
+            elif axis is None:
+                self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
                 self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
