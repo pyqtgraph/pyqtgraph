@@ -46,7 +46,7 @@ class GridItem(UIGraphicsItem):
             if args == (None,):
                 self.opts['textPen'] = None
             else:
-                self.opts['textPen'] = fn.mkPen(*args, **kargs)
+                self.opts['textPen'] = fn.mkPen(*args, **kwargs)
 
         self.picture = None
         self.update()

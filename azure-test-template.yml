@@ -93,8 +93,6 @@ jobs:
       if [ $(install.method) == "conda" ]
       then
         conda update --all --yes --quiet
-        conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
-        source activate test-environment-$(python.version)
         conda config --env --set always_yes true
         if [ $(python.version) == '2.7' ]
         then
@@ -104,6 +102,8 @@ jobs:
         then
           conda config --prepend channels conda-forge
         fi      
+        conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
+        source activate test-environment-$(python.version)
         conda info
         conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
         pip install matplotlib

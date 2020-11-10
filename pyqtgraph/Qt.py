@@ -345,6 +345,24 @@ if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
 
+class App(QtGui.QApplication):
+
+    def __init__(self, *args, **kwargs):
+        super(App, self).__init__(*args, **kwargs)
+        if QT_LIB in ['PyQt5', 'PySide2']:
+            # qt4 does not have paletteChanged signal!
+            self.paletteChanged.connect(self.onPaletteChange)
+        self.onPaletteChange(self.palette())
+
+    def onPaletteChange(self, palette):
+        if QT_LIB in ['PyQt4', 'PySide']:
+            # Qt4 this is a QString
+            color = str(palette.base().color().name())
+        else:
+            # Qt5 has this as a str
+            color = palette.base().color().name()
+        self.dark_mode = color.lower() != "#ffffff"
+
 
 QAPP = None
 def mkQApp(name=None):
@@ -359,7 +377,8 @@ def mkQApp(name=None):
     global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+        QAPP = App(sys.argv or ["pyqtgraph"])
+
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP

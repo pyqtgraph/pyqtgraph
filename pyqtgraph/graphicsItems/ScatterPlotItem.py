@@ -247,16 +247,16 @@ class ScatterPlotItem(GraphicsObject):
     or for all points.
 
 
-    ========================  ===============================================
+    ============================  ===============================================
     **Signals:**
-    sigPlotChanged(self)      Emitted when the data being plotted has changed
-    sigClicked(self, points)  Emitted when the curve is clicked. Sends a list
-                              of all the points under the mouse pointer.
-    ========================  ===============================================
+    sigPlotChanged(self)          Emitted when the data being plotted has changed
+    sigClicked(self, points, ev)  Emitted when the curve is clicked. Sends a list
+                                  of all the points under the mouse pointer.
+    ============================  ===============================================
 
     """
     #sigPointClicked = QtCore.Signal(object, object)
-    sigClicked = QtCore.Signal(object, object)  ## self, points
+    sigClicked = QtCore.Signal(object, object, object)  ## self, points
     sigPlotChanged = QtCore.Signal(object)
     def __init__(self, *args, **kargs):
         """
@@ -420,6 +420,8 @@ class ScatterPlotItem(GraphicsObject):
             newData['x'] = kargs['x']
             newData['y'] = kargs['y']
 
+        if 'name' in kargs:
+            self.opts['name'] = kargs['name']
         if 'pxMode' in kargs:
             self.setPxMode(kargs['pxMode'])
         if 'antialias' in kargs:
@@ -893,7 +895,7 @@ class ScatterPlotItem(GraphicsObject):
             if len(pts) > 0:
                 self.ptsClicked = pts
                 ev.accept()
-                self.sigClicked.emit(self, self.ptsClicked)
+                self.sigClicked.emit(self, self.ptsClicked, ev)
             else:
                 #print "no spots"
                 ev.ignore()

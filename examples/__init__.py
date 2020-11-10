@@ -1,1 +1,1 @@
-from .__main__ import run
+from .ExampleApp import main as run

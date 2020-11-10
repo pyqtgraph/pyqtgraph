@@ -131,9 +131,10 @@ class GraphicsView(QtGui.QGraphicsView):
         self.clickAccepted = False
 
         # Set a transparent background QPalette!
-        palette = self.palette()
-        palette.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
-        self.setPalette(palette)
+        if QT_LIB in ["PySide2", "PyQt5"]:
+            palette = self.palette()
+            palette.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
+            self.setPalette(palette)
 
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
