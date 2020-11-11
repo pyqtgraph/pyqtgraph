@@ -112,6 +112,8 @@ def updateLUT():
     else:
         n = 4096
     LUT = ui.gradient.getLookupTable(n, alpha=ui.alphaCheck.isChecked())
+    if xp == cp:
+        LUT = cp.asarray(LUT)
 ui.gradient.sigGradientChanged.connect(updateLUT)
 updateLUT()
 
@@ -191,6 +193,7 @@ def noticeCudaCheck():
         xp = cp
     else:
         xp = np
+    updateLUT()
     updateSize()
     mkData()
 
