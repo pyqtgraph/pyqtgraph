@@ -547,7 +547,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
         for m in menusToAdd:
             if isinstance(m, QtGui.QMenu):
-                menu.addMenu(m)
+                menu.addAction(m.menuAction())
             elif isinstance(m, QtGui.QAction):
                 menu.addAction(m)
             else:
