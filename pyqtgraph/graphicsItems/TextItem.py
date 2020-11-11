@@ -4,6 +4,9 @@ from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 
+import inspect
+from pprint import pprint
+
 
 class TextItem(GraphicsObject):
     """
@@ -143,25 +146,25 @@ class TextItem(GraphicsObject):
     def updateTextPos(self):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
-        tl = self.textItem.mapToParent(r.topLeft())
-        br = self.textItem.mapToParent(r.bottomRight())
+        parentRect = self.textItem.mapRectToParent(r)
+        # tl = self.textItem.mapToParent(r.topLeft())
+        # br = self.textItem.mapToParent(r.bottomRight())
+        tl = parentRect.topLeft()
+        br = parentRect.bottomRight()
         offset = (br - tl) * self.anchor
         self.textItem.setPos(-offset)
-        
-        ### Needed to maintain font size when rendering to image with increased resolution
-        #self.textItem.resetTransform()
-        ##self.textItem.rotate(self.angle)
-        #if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
-            #s = self._exportOpts['resolutionScale']
-            #self.textItem.scale(s, s)
+        print(f"TextItem.updateTextPos: position set to {self.mapToView(-offset)}")
+
         
     def boundingRect(self):
-        return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
+        # return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
+        return self.textItem.mapRectToParent(self.textItem.boundingRect())
 
     def viewTransformChanged(self):
         # called whenever view transform has changed.
         # Do this here to avoid double-updates when view changes.
         self.updateTransform()
+        GraphicsObject.viewTransformChanged(self)
         
     def paint(self, p, *args):
         # this is not ideal because it requires the transform to be updated at every draw.
@@ -191,7 +194,7 @@ class TextItem(GraphicsObject):
     def updateTransform(self, force=False):
         if not self.isVisible():
             return
-
+    
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -206,11 +209,14 @@ class TextItem(GraphicsObject):
         if not force and pt == self._lastTransform:
             return
 
+        self.updateTextPos()
+
         t = pt.inverted()[0]
         # reset translation
         t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
+        # t.translate(0, 0)
         
-        # apply rotation
+        # # apply rotation
         angle = -self.angle
         if self.rotateAxis is not None:
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
@@ -219,7 +225,7 @@ class TextItem(GraphicsObject):
         t.rotate(angle)
         
         self.setTransform(t)
-        
+
         self._lastTransform = pt
-        
-        self.updateTextPos()
+
+        print("Finished TextItem.updateTransform")
