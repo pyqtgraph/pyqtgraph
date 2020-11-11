@@ -17,17 +17,28 @@ class SVGExporter(Exporter):
     
     def __init__(self, item):
         Exporter.__init__(self, item)
-        #tr = self.getTargetRect()
+        tr = self.getTargetRect()
+
+        if isinstance(item, QtGui.QGraphicsItem):
+            scene = item.scene()
+        else:
+            scene = item
+        bgbrush = scene.views()[0].backgroundBrush()
+        bg = bgbrush.color()
+        if bgbrush.style() == QtCore.Qt.NoBrush:
+            bg.setAlpha(0)
+
         self.params = Parameter(name='params', type='group', children=[
-            #{'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
-            #{'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
+            {'name': 'background', 'type': 'color', 'value': bg},
+            {'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
+            {'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
             {'name': 'scaling stroke', 'type': 'bool', 'value': False, 'tip': "If False, strokes are non-scaling, "
              "which means that they appear the same width on screen regardless of how they are scaled or how the view is zoomed."},
         ])
-        #self.params.param('width').sigValueChanged.connect(self.widthChanged)
-        #self.params.param('height').sigValueChanged.connect(self.heightChanged)
+        self.params.param('width').sigValueChanged.connect(self.widthChanged)
+        self.params.param('height').sigValueChanged.connect(self.heightChanged)
 
     def widthChanged(self):
         sr = self.getSourceRect()
@@ -51,6 +62,9 @@ class SVGExporter(Exporter):
         ## Instead, we will use Qt to generate SVG for each item independently,
         ## then manually reconstruct the entire document.
         options = {ch.name():ch.value() for ch in self.params.children()}
+        options['background'] = self.params['background']
+        options['width'] = self.params['width']
+        options['height'] = self.params['height']
         xml = generateSvg(self.item, options)
         
         if toBytes:
@@ -63,10 +77,10 @@ class SVGExporter(Exporter):
             with open(fileName, 'wb') as fh:
                 fh.write(asUnicode(xml).encode('utf-8'))
 
-
+# Includes space for extra attributes
 xmlHeader = """\
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.2" baseProfile="tiny">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.2" baseProfile="tiny"%s>
 <title>pyqtgraph SVG export</title>
 <desc>Generated with Qt and pyqtgraph</desc>
 <style>
@@ -100,7 +114,10 @@ def generateSvg(item, options={}):
     for d in defs:
         defsXml += d.toprettyxml(indent='    ')
     defsXml += "</defs>\n"
-    return xmlHeader + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
+    svgAttributes = ' viewBox ="0 0 %f %f"' % (options["width"], options["height"])
+    c = options['background']
+    backgroundtag = '<rect width="100%%" height="100%%" style="fill:rgba(%f, %f, %f, %d)" />\n' % (c.red(), c.blue(), c.green(), c.alpha()/255.0)
+    return (xmlHeader % svgAttributes) + backgroundtag + defsXml + node.toprettyxml(indent='    ') + "\n</svg>\n"
 
 
 def _generateItemSvg(item, nodes=None, root=None, options={}):

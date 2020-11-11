@@ -49,9 +49,9 @@ To get access to the very latest features and bugfixes you have three choices:
 
 2. Directly install from GitHub repo::
 
-    $ pip install git+git://github.com/pyqtgraph/pyqtgraph.git@develop
+    $ pip install git+git://github.com/pyqtgraph/pyqtgraph.git@master
 
-   You can change ``develop`` of the above command to the branch name or the
+   You can change ``master`` of the above command to the branch name or the
    commit you prefer.
 
 3. You can simply place the pyqtgraph folder someplace importable, such as

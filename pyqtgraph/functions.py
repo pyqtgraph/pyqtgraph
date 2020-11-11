@@ -38,7 +38,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i)(nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
     
@@ -367,10 +367,10 @@ def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360, mi
     indh = ind % hues
     indv = ind // hues
     if values > 1:
-        v = minValue + indv * ((maxValue-minValue) / (values-1))
+        v = minValue + indv * ((maxValue-minValue) // (values-1))
     else:
         v = maxValue
-    h = minHue + (indh * (maxHue-minHue)) / hues
+    h = minHue + (indh * (maxHue-minHue)) // hues
     
     c = QtGui.QColor()
     c.setHsv(h, sat, v)

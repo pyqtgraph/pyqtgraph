@@ -186,7 +186,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
         
         # hide / show
-        self.defaultBtn.setVisible(not self.param.readonly())
+        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -597,16 +597,11 @@ class ActionParameterItem(ParameterItem):
         self.layout = QtGui.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
-        title = param.opts.get('title', None)
-        if title is None:
-            title = param.name()
-        self.button = QtGui.QPushButton(title)
+        self.button = QtGui.QPushButton(param.title())
         #self.layout.addSpacing(100)
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
-        param.sigNameChanged.connect(self.paramRenamed)
-        self.setText(0, '')
         
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -616,9 +611,10 @@ class ActionParameterItem(ParameterItem):
         
         tree.setFirstItemColumnSpanned(self, True)
         tree.setItemWidget(self, 0, self.layoutWidget)
-        
-    def paramRenamed(self, param, name):
-        self.button.setText(name)
+
+    def titleChanged(self):
+        self.button.setText(self.param.title())
+        ParameterItem.titleChanged(self)
         
     def buttonClicked(self):
         self.param.activate()

@@ -16,11 +16,11 @@ pr:
 
 variables:
   OFFICIAL_REPO: 'pyqtgraph/pyqtgraph'
-  DEFAULT_MERGE_BRANCH: 'develop'
+  DEFAULT_MERGE_BRANCH: 'master'
   disable.coverage.autogenerate: 'true'
 
 stages:
-- stage: "pre_test"
+- stage: pre_build
   jobs:
   - job: check_diff_size
     pool:
@@ -53,8 +53,6 @@ stages:
         echo -e "Estimated content size difference = ${SIZE_DIFF} kB" &&
         test ${SIZE_DIFF} -lt 100;
       displayName: 'Diff Size Check'
-      continueOnError: true
-
   - job: "style_check"
     pool:
       vmImage: "Ubuntu 18.04"
@@ -66,8 +64,22 @@ stages:
         pip install flake8
         python setup.py style
       displayName: 'flake8 check'
-      continueOnError: true
+  - job: "build_docs"
+    pool:
+      vmImage: 'Ubuntu 18.04'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+    - script: |
+        cd doc
+        python -m pip install -r requirements.txt
+        make html SPHINXOPTS='-W -v'
+      displayName: "Build docs"
 
+- stage: build
+  dependsOn: []
+  jobs:
   - job: "build_wheel"
     pool:
       vmImage: 'Ubuntu 18.04'
@@ -83,7 +95,9 @@ stages:
     - publish: dist
       artifact: wheel
 
-- stage: "test"
+- stage: test
+  displayName: "Test Suite"
+  dependsOn: build
   jobs:
   - template: azure-test-template.yml
     parameters:
