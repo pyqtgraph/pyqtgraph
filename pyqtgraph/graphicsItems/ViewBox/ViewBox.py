@@ -294,10 +294,6 @@ class ViewBox(GraphicsWidget):
                 #scene.sigPrepareForPaint.connect(self.prepareForPaint)
         #return ret
 
-    def update(self, *args, **kwargs):
-        self.prepareForPaint()
-        GraphicsWidget.update(self, *args, **kwargs)
-
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
@@ -417,6 +413,8 @@ class ViewBox(GraphicsWidget):
 
         if not ignoreBounds:
             self.addedItems.append(item)
+        else:
+            self._autoRangeNeedsUpdate = True
         self.updateAutoRange()
 
     def removeItem(self, item):
@@ -440,24 +438,26 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
-        self._matrixNeedsUpdate = True
-        # self.updateMatrix()  # removed as fix for issue 1373
+        if ev.oldSize() != ev.newSize():
+            self._matrixNeedsUpdate = True
+            # self.updateMatrix()  # removed as fix for issue 1373
 
-        self.linkedXChanged()
-        self.linkedYChanged()
+            self.linkedXChanged()
+            self.linkedYChanged()
 
-        self.updateAutoRange()
-        self.updateViewRange()
+            self.childGroup.prepareGeometryChange()
 
-        self._matrixNeedsUpdate = True
-        self.updateMatrix()
+            # self.updateAutoRange()
+            self.updateViewRange()
+            self.background.setRect(self.rect())
+            self.borderRect.setRect(self.rect())
+        
+            self.sigResized.emit(self)
+            self.sigStateChanged.emit(self)
 
-        self.background.setRect(self.rect())
-        self.borderRect.setRect(self.rect())
+            # self._matrixNeedsUpdate = True
+            # self.updateMatrix()
 
-        self.sigStateChanged.emit(self)
-        self.sigResized.emit(self)
-        self.childGroup.prepareGeometryChange()
 
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -1592,6 +1592,7 @@ class ViewBox(GraphicsWidget):
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
 
     def paint(self, p, opt, widget):
+        self.prepareForPaint()
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)
