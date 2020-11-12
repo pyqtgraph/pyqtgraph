@@ -441,7 +441,7 @@ class ViewBox(GraphicsWidget):
 
     def resizeEvent(self, ev):
         self._matrixNeedsUpdate = True
-        self.updateMatrix()
+        # self.updateMatrix()  # removed as fix for issue 1373
 
         self.linkedXChanged()
         self.linkedYChanged()
@@ -670,7 +670,6 @@ class ViewBox(GraphicsWidget):
         if item is None:
             bounds = self.childrenBoundingRect(items=items)
         else:
-            print("Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead.")
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
 
         if bounds is not None:
@@ -901,7 +900,6 @@ class ViewBox(GraphicsWidget):
                 else:
                     if childRange is None:
                         childRange = self.childrenBounds(frac=fractionVisible)
-                        print(f"ViewBox.updateAutoRange: {childRange=} (should be approx [[-3.0069, 3.0069], [-0.0017, 1.1290]])")
                 ## Make corrections to range
                 xr = childRange[ax]
                 if xr is not None:
@@ -1413,10 +1411,7 @@ class ViewBox(GraphicsWidget):
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
                     continue
-                bounds = item.boundingRect()
-                bounds = self.mapFromItemToView(item, bounds).boundingRect()
-                # bounds = self.mapRectToView(item.boundingRect())
-                print(f"ViewBox.childrenBounds: TextItem BoundingRect center={bounds.center()} width={bounds.width()} height={bounds.height()}")
+                bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))
 
         ## determine tentative new range
@@ -1453,7 +1448,6 @@ class ViewBox(GraphicsWidget):
                     continue
                 range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
-        print("Finished ViewBox.childrenBounds")
         return range
 
     def childrenBoundingRect(self, *args, **kwds):

@@ -146,14 +146,10 @@ class TextItem(GraphicsObject):
     def updateTextPos(self):
         # update text position to obey anchor
         r = self.textItem.boundingRect()
-        parentRect = self.textItem.mapRectToParent(r)
-        # tl = self.textItem.mapToParent(r.topLeft())
-        # br = self.textItem.mapToParent(r.bottomRight())
-        tl = parentRect.topLeft()
-        br = parentRect.bottomRight()
+        tl = self.textItem.mapToParent(r.topLeft())
+        br = self.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.anchor
         self.textItem.setPos(-offset)
-        print(f"TextItem.updateTextPos: position set to {self.mapToView(-offset)}")
 
         
     def boundingRect(self):
@@ -227,5 +223,3 @@ class TextItem(GraphicsObject):
         self.setTransform(t)
 
         self._lastTransform = pt
-
-        print("Finished TextItem.updateTransform")
