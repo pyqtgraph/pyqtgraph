@@ -4,9 +4,6 @@ from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 
-import inspect
-from pprint import pprint
-
 
 class TextItem(GraphicsObject):
     """
@@ -160,7 +157,6 @@ class TextItem(GraphicsObject):
         # called whenever view transform has changed.
         # Do this here to avoid double-updates when view changes.
         self.updateTransform()
-        GraphicsObject.viewTransformChanged(self)
         
     def paint(self, p, *args):
         # this is not ideal because it requires the transform to be updated at every draw.
@@ -190,7 +186,7 @@ class TextItem(GraphicsObject):
     def updateTransform(self, force=False):
         if not self.isVisible():
             return
-    
+
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -205,21 +201,18 @@ class TextItem(GraphicsObject):
         if not force and pt == self._lastTransform:
             return
 
-        self.updateTextPos()
+        # self.updateTextPos()
 
         t = pt.inverted()[0]
         # reset translation
         t.setMatrix(t.m11(), t.m12(), t.m13(), t.m21(), t.m22(), t.m23(), 0, 0, t.m33())
-        # t.translate(0, 0)
         
-        # # apply rotation
+        # apply rotation
         angle = -self.angle
         if self.rotateAxis is not None:
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
             a = np.arctan2(d.y(), d.x()) * 180 / np.pi
             angle += a
-        t.rotate(angle)
-        
+        t.rotate(angle)  
         self.setTransform(t)
-
         self._lastTransform = pt
