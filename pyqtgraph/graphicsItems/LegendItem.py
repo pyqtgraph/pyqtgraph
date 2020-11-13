@@ -31,7 +31,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
-                 labelTextSize='9pt', rowCount=1, colCount=1, **kwargs):
+                 labelTextSize='9pt', colCount=1, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -70,7 +70,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.offset = offset
         self.frame = frame
         self.columnCount = colCount
-        self.rowCount = rowCount
+        self.rowCount = 1
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
