@@ -69,7 +69,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.frame = frame
         self.columnCount = colCount
         self.rowCount = rowCount
-        self.curRow = 0
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
