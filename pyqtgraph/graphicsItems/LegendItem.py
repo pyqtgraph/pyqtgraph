@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import math
+
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
@@ -208,13 +210,15 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 row += 1
         self.layout.addItem(sample, row, col)
         self.layout.addItem(label, row, col + 1)
+        # Keep rowCount in sync with the number of rows if items are added
+        self.rowCount = max(self.rowCount, row + 1)
 
     def setColumnCount(self, columnCount):
         """change the orientation of all items of the legend
         """
         if columnCount != self.columnCount:
             self.columnCount = columnCount
-            self.rowCount = int(len(self.items) / columnCount)
+            self.rowCount = math.ceil(len(self.items) / columnCount)
             for i in range(self.layout.count() - 1, -1, -1):
                 self.layout.removeAt(i)  # clear layout
             for sample, label in self.items:
