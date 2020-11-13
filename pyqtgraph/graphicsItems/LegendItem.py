@@ -269,13 +269,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         width = 0
         for row in range(self.layout.rowCount()):
             row_height = 0
-            col_witdh = 0
+            col_width = 0
             for col in range(self.layout.columnCount()):
                 item = self.layout.itemAt(row, col)
                 if item:
-                    col_witdh += item.width() + 3
+                    col_width += item.width() + 3
                     row_height = max(row_height, item.height())
-            width = max(width, col_witdh)
+            width = max(width, col_width)
             height += row_height
         self.setGeometry(0, 0, width, height)
         return
