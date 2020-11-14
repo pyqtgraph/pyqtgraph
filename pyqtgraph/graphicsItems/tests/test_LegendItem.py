@@ -15,7 +15,6 @@ def test_legend_item_basics():
 
     assert legend.columnCount == 1
     assert legend.rowCount == 1
-    assert legend.curRow == 0
 
     assert legend.labelTextColor() is None
     assert legend.labelTextSize() == '9pt'
