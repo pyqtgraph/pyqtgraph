@@ -751,7 +751,6 @@ class GradientEditorItem(TickSliderItem):
             color = self.getColor(x)
         t = TickSliderItem.addTick(self, x, color=color, movable=movable)
         t.colorChangeAllowed = True
-        t.removeAllowed = True
         
         if finish:
             self.sigGradientChangeFinished.emit(self)
@@ -854,6 +853,7 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
         self.pen = fn.mkPen(pen)
         self.hoverPen = fn.mkPen(255,255,0)
         self.currentPen = self.pen
+        self.removeAllowed = True
         self.pg = QtGui.QPainterPath(QtCore.QPointF(0,0))
         self.pg.lineTo(QtCore.QPointF(-scale/3**0.5, scale))
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
