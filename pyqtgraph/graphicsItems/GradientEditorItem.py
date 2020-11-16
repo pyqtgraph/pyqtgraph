@@ -316,7 +316,6 @@ class TickSliderItem(GraphicsWidget):
         pos.setX(x)
         tick.setPos(pos)
         self.ticks[tick] = val
-        self.updateGradient()
         
     def tickValue(self, tick):
         ## public
@@ -500,6 +499,23 @@ class GradientEditorItem(TickSliderItem):
         #global Gradients
         act = self.sender()
         self.loadPreset(act.name)
+    
+    def setTickValue(self, tick, val):
+        ## public
+        """
+        Set the position (along the slider) of the tick.
+        
+        ==============   ==================================================================
+        **Arguments:**
+        tick             Can be either an integer corresponding to the index of the tick
+                         or a Tick object. Ex: if you had a slider with 3 ticks and you
+                         wanted to change the middle tick, the index would be 1.
+        val              The desired position of the tick. If val is < 0, position will be
+                         set to 0. If val is > 1, position will be set to 1.
+        ==============   ==================================================================
+        """
+        TickSliderItem.setTickValue(self, tick, val)
+        self.updateGradient()
         
     @addGradientListToDocstring()
     def loadPreset(self, name):
