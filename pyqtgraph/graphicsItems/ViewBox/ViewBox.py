@@ -1267,7 +1267,7 @@ class ViewBox(GraphicsWidget):
 
         ## Scale or translate based on mouse button
         if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
-            if self.state['mouseMode'] == ViewBox.RectMode:
+            if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
                     self.rbScaleBox.hide()
