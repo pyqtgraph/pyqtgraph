@@ -23,9 +23,9 @@ class CustomViewBox(pg.ViewBox):
         if ev.button() == QtCore.Qt.RightButton:
             self.autoRange()
     
-    ## reimplement mouseDragEvent to disable axis interaction
+    ## reimplement mouseDragEvent to disable continuous axis zoom
     def mouseDragEvent(self, ev, axis=None):
-        if axis is not None:
+        if axis is not None and ev.button() == QtCore.Qt.RightButton:
             ev.ignore()
         else:
             pg.ViewBox.mouseDragEvent(self, ev, axis=axis)
