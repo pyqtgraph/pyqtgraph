@@ -190,7 +190,7 @@ class TickSliderItem(GraphicsWidget):
         pass
     
     def tickClicked(self, tick, ev):
-        if ev.button() == QtCore.Qt.RightButton:
+        if ev.button() == QtCore.Qt.RightButton and tick.removeAllowed:
             self.removeTick(tick)
     
     def widgetLength(self):
