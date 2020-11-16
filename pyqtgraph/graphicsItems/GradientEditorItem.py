@@ -48,13 +48,14 @@ class TickSliderItem(GraphicsWidget):
     sigTicksChanged = QtCore.Signal(object)
     sigTicksChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, orientation='bottom', allowAdd=True, **kargs):
+    def __init__(self, orientation='bottom', allowAdd=True, allowRemove=True, **kargs):
         """
         ==============  =================================================================================
         **Arguments:**
         orientation     Set the orientation of the gradient. Options are: 'left', 'right'
                         'top', and 'bottom'.
-        allowAdd        Specifies whether ticks can be added to the item by the user.
+        allowAdd        Specifies whether the user can add ticks.
+        allowRemove     Specifies whether the user can remove new ticks.
         tickPen         Default is white. Specifies the color of the outline of the ticks.
                         Can be any of the valid arguments for :func:`mkPen <pyqtgraph.mkPen>`
         ==============  =================================================================================
@@ -67,6 +68,7 @@ class TickSliderItem(GraphicsWidget):
         self.ticks = {}
         self.maxDim = 20
         self.allowAdd = allowAdd
+        self.allowRemove = allowRemove
         if 'tickPen' in kargs:
             self.tickPen = fn.mkPen(kargs['tickPen'])
         else:
@@ -166,7 +168,7 @@ class TickSliderItem(GraphicsWidget):
         
         if color is None:
             color = QtGui.QColor(255,255,255)
-        tick = Tick([x*self.length, 0], color, movable, self.tickSize, pen=self.tickPen)
+        tick = Tick([x*self.length, 0], color, movable, self.tickSize, pen=self.tickPen, removeAllowed=self.allowRemove)
         self.ticks[tick] = x
         tick.setParentItem(self)
         
@@ -863,7 +865,7 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
     sigMoved = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object, object)
     
-    def __init__(self, pos, color, movable=True, scale=10, pen='w'):
+    def __init__(self, pos, color, movable=True, scale=10, pen='w', removeAllowed=True):
         self.movable = movable
         self.moving = False
         self.scale = scale
@@ -871,7 +873,7 @@ class Tick(QtGui.QGraphicsWidget):  ## NOTE: Making this a subclass of GraphicsO
         self.pen = fn.mkPen(pen)
         self.hoverPen = fn.mkPen(255,255,0)
         self.currentPen = self.pen
-        self.removeAllowed = True
+        self.removeAllowed = removeAllowed
         self.pg = QtGui.QPainterPath(QtCore.QPointF(0,0))
         self.pg.lineTo(QtCore.QPointF(-scale/3**0.5, scale))
         self.pg.lineTo(QtCore.QPointF(scale/3**0.5, scale))
