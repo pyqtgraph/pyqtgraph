@@ -470,18 +470,12 @@ class PlotDataItem(GraphicsObject):
 
         if 'x' in kargs:
             x = kargs['x']
-            if not isinstance(x, np.ndarray): # also sanitize named arguments
-                if dtyp[1] == 'MetaArray':
-                    x = x.asarray()
-                else:
-                    x = np.array(x)
+            if dataType(x) == 'MetaArray':
+                x = x.asarray()
         if 'y' in kargs:
             y = kargs['y']
-            if not isinstance(y, np.ndarray): # also sanitize named arguments
-                if dtyp[1] == 'MetaArray':
-                    y = y.asarray()
-                else:
-                    y = np.array(y)
+            if dataType(y) == 'MetaArray':
+                y = y.asarray()
 
         profiler('interpret data')
         ## pull in all style arguments.
