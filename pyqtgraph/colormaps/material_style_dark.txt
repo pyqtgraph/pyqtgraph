@@ -1,3 +1,5 @@
+; original file "_color-palette.scss" is available at
+; https://github.com/material-components/material-components-web
 ;
 ; Copyright 2017 Google Inc.
 ;
@@ -19,7 +21,8 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ; THE SOFTWARE.
 
-; collected '200' shades
+
+; collected '200' shades appropriate for dark mode display
 #ef9a9a red
 #f48fb1 pink
 #ce93d8 purple

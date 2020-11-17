@@ -1,6 +1,11 @@
 ; Color map data from Colorcet project
 ; https://colorcet.holoviz.org/
 ; data available under CC-BY license from https://github.com/holoviz/colorcet
+;
+; Based on
+; Peter Kovesi. Good Colour Maps: How to Design Them.
+; arXiv:1509.03700 [cs.GR] 2015
+
 0.24409,0.24544,0.94131
 0.25448,0.24134,0.94753
 0.26529,0.23866,0.95301
