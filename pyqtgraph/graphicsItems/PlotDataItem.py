@@ -470,8 +470,18 @@ class PlotDataItem(GraphicsObject):
 
         if 'x' in kargs:
             x = kargs['x']
+            if not isinstance(x, np.ndarray): # also sanitize named arguments
+                if dtyp[1] == 'MetaArray':
+                    x = x.asarray()
+                else:
+                    x = np.array(x)
         if 'y' in kargs:
             y = kargs['y']
+            if not isinstance(y, np.ndarray): # also sanitize named arguments
+                if dtyp[1] == 'MetaArray':
+                    y = y.asarray()
+                else:
+                    y = np.array(y)
 
         profiler('interpret data')
         ## pull in all style arguments.
@@ -506,21 +516,21 @@ class PlotDataItem(GraphicsObject):
                 #self.opts[k] = kargs[k]
             #scatterArgs[v] = self.opts[k]
 
-
-        if y is None:
-            self.updateItems()
-            profiler('update items')
-            return
-        if y is not None and x is None:
-            x = np.arange(len(y))
-
-        if not isinstance(x, np.ndarray):
-            x = np.array(x)
-        if not isinstance(y, np.ndarray):
-            y = np.array(y)
-
-        self.xData = x.view(np.ndarray)  ## one last check to make sure there are no MetaArrays getting by
-        self.yData = y.view(np.ndarray)
+        if y is None or len(y) == 0: # empty data is represented as None
+            self.yData = None
+        else: # actual data is represented by ndarray
+            if not isinstance(y, np.ndarray):
+                y = np.array(y)
+            self.yData = y.view(np.ndarray)
+            if x is None:
+                x = np.arange(len(y))
+                
+        if x is None or len(x)==0: # empty data is represented as None
+            self.xData = None
+        else: # actual data is represented by ndarray
+            if not isinstance(x, np.ndarray):
+                x = np.array(x)
+            self.xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
         self._dataRect = None
         self.xClean = self.yClean = None
         self.xDisp = None
@@ -682,6 +692,8 @@ class PlotDataItem(GraphicsObject):
         if self._dataRect is not None:
             return self._dataRect
         if self.xData is None or self.yData is None:
+            return None
+        if len(self.xData) == 0: # avoid crash if empty data is represented by [] instead of None
             return None
         with warnings.catch_warnings(): 
             # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
