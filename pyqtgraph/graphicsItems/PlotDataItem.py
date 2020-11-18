@@ -226,7 +226,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
-        self.xClean = self.yClean = None
+        # self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
 
@@ -235,7 +235,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
-        self.xClean = self.yClean = None
+        # self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
 
@@ -245,7 +245,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['derivativeMode'] = mode
         self.xDisp = self.yDisp = None
-        self.xClean = self.yClean = None
+        # self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
 
@@ -254,7 +254,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['phasemapMode'] = mode
         self.xDisp = self.yDisp = None
-        self.xClean = self.yClean = None
+        # self.xClean = self.yClean = None
         self.updateItems()
         self.informViewBoundsChanged()
 
@@ -526,7 +526,7 @@ class PlotDataItem(GraphicsObject):
                 x = np.array(x)
             self.xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
         self._dataRect = None
-        self.xClean = self.yClean = None
+        # self.xClean = self.yClean = None
         self.xDisp = None
         self.yDisp = None
         profiler('set data')
