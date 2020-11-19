@@ -48,20 +48,27 @@ class CustomTickSliderItem(pg.TickSliderItem):
         self.updateRange(None, self._range)
     
     def updateRange(self, vb, viewRange):
+        origin = self.tickSize/2.
+        length = self.length
+
+        lengthIncludingPadding = length + self.tickSize + 2
+        
         self._range = viewRange
         
         for pos in self.all_ticks:
-            visible = pos >= viewRange[0] and pos <= viewRange[1]
+        
+            if pos not in self.visible_ticks:
+                self.visible_ticks[pos] = self.addTick(pos, movable=False, color="333333")
+            
+            tick = self.visible_ticks[pos]
+            
+            tickValueIncludingPadding = (pos - viewRange[0]) / (viewRange[1] - viewRange[0])
+            tickValue = (tickValueIncludingPadding*lengthIncludingPadding - origin) / length
+            
+            visible = tickValue >= 0 and tickValue <= 1
             
             if visible:
-                if pos not in self.visible_ticks:
-                    self.visible_ticks[pos] = self.addTick(pos, movable=False, color="333333")
-                
-                tick = self.visible_ticks[pos]
-                
-                tickValue = (pos - viewRange[0]) / (viewRange[1] - viewRange[0])
                 self.setTickValue(tick, tickValue)
-            
             elif pos in self.visible_ticks:
                 self.removeTick(self.visible_ticks[pos])
                 del self.visible_ticks[pos]
