@@ -26,9 +26,9 @@ else:
 
 try:
     import cupy as cp
+    _has_cupy = True
 except ImportError:
-    from pyqtgraph.util import empty_cupy as cp
-
+    _has_cupy = False
 
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
 parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")
@@ -61,7 +61,8 @@ else:
     ui.stack.addWidget(ui.rawGLImg)
 
 # read in CLI args
-ui.cudaCheck.setChecked(args.cuda)
+ui.cudaCheck.setChecked(args.cuda and _has_cupy)
+ui.cudaCheck.setEnabled(_has_cupy)
 ui.framesSpin.setValue(args.frames)
 ui.widthSpin.setValue(args.size[0])
 ui.heightSpin.setValue(args.size[1])
@@ -70,7 +71,7 @@ ui.rgbCheck.setChecked(args.image_mode=='rgb')
 ui.maxSpin1.setOpts(value=255, step=1)
 ui.minSpin1.setOpts(value=0, step=1)
 levelSpins = [ui.minSpin1, ui.maxSpin1, ui.minSpin2, ui.maxSpin2, ui.minSpin3, ui.maxSpin3]
-if args.cuda:
+if args.cuda and _has_cupy:
     xp = cp
 else:
     xp = np
@@ -112,7 +113,7 @@ def updateLUT():
     else:
         n = 4096
     LUT = ui.gradient.getLookupTable(n, alpha=ui.alphaCheck.isChecked())
-    if xp == cp:
+    if _has_cupy and xp == cp:
         LUT = cp.asarray(LUT)
 ui.gradient.sigGradientChanged.connect(updateLUT)
 updateLUT()
@@ -131,7 +132,7 @@ def updateScale():
 updateScale()
 
 ui.rgbLevelsCheck.toggled.connect(updateScale)
-    
+
 cache = {}
 def mkData():
     with pg.BusyCursor():
@@ -170,7 +171,7 @@ def mkData():
             data[:, 9:12, 48] = mx
             data[:, 8:13, 47] = mx
             cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
-            
+
         data = cache[dtype]
         updateLUT()
         updateSize()
@@ -190,7 +191,11 @@ def noticeCudaCheck():
     global xp, cache
     cache = {}
     if ui.cudaCheck.isChecked():
-        xp = cp
+        if _has_cupy:
+            xp = cp
+        else:
+            xp = np
+            ui.cudaCheck.setChecked(False)
     else:
         xp = np
     updateLUT()
@@ -221,14 +226,14 @@ def update():
         useLut = LUT
     else:
         useLut = None
-        
+
     downsample = ui.downsampleCheck.isChecked()
 
     if ui.scaleCheck.isChecked():
         if ui.rgbLevelsCheck.isChecked():
             useScale = [
-                [ui.minSpin1.value(), ui.maxSpin1.value()], 
-                [ui.minSpin2.value(), ui.maxSpin2.value()], 
+                [ui.minSpin1.value(), ui.maxSpin1.value()],
+                [ui.minSpin2.value(), ui.maxSpin2.value()],
                 [ui.minSpin3.value(), ui.maxSpin3.value()]]
         else:
             useScale = [ui.minSpin1.value(), ui.maxSpin1.value()]
@@ -245,7 +250,7 @@ def update():
         img.setImage(data[ptr%data.shape[0]], autoLevels=False, levels=useScale, lut=useLut, autoDownsample=downsample)
         ui.stack.setCurrentIndex(0)
         #img.setImage(data[ptr%data.shape[0]], autoRange=False)
-        
+
     ptr += 1
     now = ptime.time()
     dt = now - lastTime
@@ -260,7 +265,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
-    
+
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
