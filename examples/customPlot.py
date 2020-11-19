@@ -39,9 +39,9 @@ class CustomTickSliderItem(pg.TickSliderItem):
         self._range = [0,1]
     
     def setTicks(self, ticks):
-        for tick in self.listTicks():
+        for tick, pos in self.listTicks():
             self.removeTick(tick)
-            self.visible_ticks = {}
+        self.visible_ticks = {}
         
         self.all_ticks = ticks
         
