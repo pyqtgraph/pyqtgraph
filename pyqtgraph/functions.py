@@ -979,8 +979,15 @@ def applyLookupTable(data, lut):
     The returned data has shape data.shape + lut.shape[1:]
     
     Note: color gradient lookup tables can be generated using GradientWidget.
+
+    Parameters
+    ----------
+    lut : ndarray
+        Either cupy or numpy arrays are accepted, though this function has
+        problems in cupy on windows with some versions of the cuda toolkit.
     """
     xp = cp.get_array_module(data)
+
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
 
