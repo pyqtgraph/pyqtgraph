@@ -402,8 +402,13 @@ class PlotDataItem(GraphicsObject):
         """
         Clear any data displayed by this item and display new data.
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
+        
+        ============== ===================================================================
+        **Arguments:**
+        append         (boolean) If true, data is appended after the last existing point.
+                       The default is to replace all existing data.
+        ============== ===================================================================
         """
-        #self.clear()
         if kargs.get("stepMode", None) is True:
             import warnings
             warnings.warn(
@@ -472,10 +477,7 @@ class PlotDataItem(GraphicsObject):
             y = kargs['y']
             if dataType(y) == 'MetaArray':
                 y = y.asarray()
-        if 'append' in kargs and kargs['append'] == True:
-            append = True
-        else:
-            append = False
+        append = ('append' in kargs and kargs['append'])
 
         profiler('interpret data')
         ## pull in all style arguments.
@@ -510,18 +512,6 @@ class PlotDataItem(GraphicsObject):
                 #self.opts[k] = kargs[k]
             #scatterArgs[v] = self.opts[k]
 
-        if y is not None:
-            if len(y) == 0:
-                y = None # represent empty data as None
-            else:
-                if not isinstance(y, np.ndarray):
-                    y = np.array(y) # convert to ndarray
-                else:
-                    y = y.view(np.ndarray) # last check to remove MetaArrays
-                if x is None: # generate x indices if no values are given
-                    x = np.arange( float(len(y)) )
-                    if append and self.xData is not None: # ...then continue after the latest element
-                        x += self.xData[-1]+1
         if x is not None:
             if len(x) == 0:
                 x = None # represent empty data as None
@@ -529,6 +519,19 @@ class PlotDataItem(GraphicsObject):
                 x = np.array(x) # convert to ndarray
             else:
                 x = x.view(np.ndarray) # last check to remove MetaArrays
+
+        if y is not None:
+            if len(y) == 0:
+                y = None # represent empty data as None
+            elif not isinstance(y, np.ndarray):
+                y = np.array(y) # convert to ndarray
+            else:
+                y = y.view(np.ndarray) # last check to remove MetaArrays
+
+        if x is None and y is not None: # generate x indices if no values are given
+            x = np.arange( float(len(y)) )
+            if append and self.xData is not None: # ...then continue after the latest element
+                x += self.xData[-1]+1
 
         if not append or self.yData is None:
             self.xData = x # set to new data
