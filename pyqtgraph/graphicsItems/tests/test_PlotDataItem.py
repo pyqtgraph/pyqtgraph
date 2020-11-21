@@ -60,6 +60,29 @@ def test_setData():
     assert pdi.xData is None
     assert pdi.yData is None
 
+    #test appending y data
+    y1 = np.random.normal(size=3)
+    y2 = np.random.normal(size=3)
+    xtest = np.arange(6)
+    pdi.setData()
+    pdi.setData( y1, append=True )
+    pdi.setData( y2, append=True )
+    assert np.array_equal(pdi.xData, xtest) # continuous x-values?
+    assert np.array_equal(pdi.yData[:3], y1)
+    assert np.array_equal(pdi.yData[3:], y2)
+    
+    #test appending x,y data
+    x1 = np.random.normal(size=3)
+    x2 = np.random.normal(size=3)
+    y1 = np.random.normal(size=3)
+    y2 = np.random.normal(size=3)
+    pdi.setData( x1, y1 )
+    pdi.setData( x2, y2, append=True )
+    assert np.array_equal(pdi.xData[:3], x1)
+    assert np.array_equal(pdi.xData[3:], x2)
+    assert np.array_equal(pdi.yData[:3], y1)
+    assert np.array_equal(pdi.yData[3:], y2)
+
 def test_clear():
     y = list(np.random.normal(size=100))
     x = np.linspace(5, 10, 100)

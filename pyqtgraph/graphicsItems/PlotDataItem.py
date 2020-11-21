@@ -472,6 +472,10 @@ class PlotDataItem(GraphicsObject):
             y = kargs['y']
             if dataType(y) == 'MetaArray':
                 y = y.asarray()
+        if 'append' in kargs and kargs['append'] == True:
+            append = True
+        else:
+            append = False
 
         profiler('interpret data')
         ## pull in all style arguments.
@@ -506,21 +510,33 @@ class PlotDataItem(GraphicsObject):
                 #self.opts[k] = kargs[k]
             #scatterArgs[v] = self.opts[k]
 
-        if y is None or len(y) == 0: # empty data is represented as None
-            self.yData = None
-        else: # actual data is represented by ndarray
-            if not isinstance(y, np.ndarray):
-                y = np.array(y)
-            self.yData = y.view(np.ndarray)
-            if x is None:
-                x = np.arange(len(y))
-                
-        if x is None or len(x)==0: # empty data is represented as None
-            self.xData = None
-        else: # actual data is represented by ndarray
-            if not isinstance(x, np.ndarray):
-                x = np.array(x)
-            self.xData = x.view(np.ndarray)  # one last check to make sure there are no MetaArrays getting by
+        if y is not None:
+            if len(y) == 0:
+                y = None # represent empty data as None
+            else:
+                if not isinstance(y, np.ndarray):
+                    y = np.array(y) # convert to ndarray
+                else:
+                    y = y.view(np.ndarray) # last check to remove MetaArrays
+                if x is None: # generate x indices if no values are given
+                    x = np.arange( float(len(y)) )
+                    if append and self.xData is not None: # ...then continue after the latest element
+                        x += self.xData[-1]+1
+        if x is not None:
+            if len(x) == 0:
+                x = None # represent empty data as None
+            elif not isinstance(x, np.ndarray):
+                x = np.array(x) # convert to ndarray
+            else:
+                x = x.view(np.ndarray) # last check to remove MetaArrays
+
+        if not append or self.yData is None:
+            self.xData = x # set to new data
+            self.yData = y
+        elif y is not None: # append; note that x cannot be None if y is given
+            self.xData = np.append(self.xData, x)
+            self.yData = np.append(self.yData, y)
+
         self._dataRect = None
         self.xDisp = None
         self.yDisp = None
@@ -530,10 +546,6 @@ class PlotDataItem(GraphicsObject):
         profiler('update items')
 
         self.informViewBoundsChanged()
-        #view = self.getViewBox()
-        #if view is not None:
-            #view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
-
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
