@@ -1,7 +1,7 @@
 import numpy as np
 import pyqtgraph as pg
 
-app = pg.mkQApp()
+pg.mkQApp()
 
 
 def test_fft():
@@ -74,8 +74,6 @@ def test_clipping():
     w.addItem(c)
 
     c.setClipToView(True)
-
-
     w.setXRange(200, 600)
     for x_min in range(100, 2**10 - 100, 100):
         w.setXRange(x_min, x_min + 100)
