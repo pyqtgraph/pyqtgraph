@@ -294,10 +294,6 @@ class ViewBox(GraphicsWidget):
                 #scene.sigPrepareForPaint.connect(self.prepareForPaint)
         #return ret
 
-    def update(self, *args, **kwargs):
-        self.prepareForPaint()
-        GraphicsWidget.update(self, *args, **kwargs)
-
     def prepareForPaint(self):
         #autoRangeEnabled = (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False)
         # don't check whether auto range is enabled here--only check when setting dirty flag.
@@ -440,24 +436,24 @@ class ViewBox(GraphicsWidget):
             ch.setParentItem(None)
 
     def resizeEvent(self, ev):
-        self._matrixNeedsUpdate = True
-        self.updateMatrix()
+        if ev.oldSize() != ev.newSize():
+            self._matrixNeedsUpdate = True
+            self.childGroup.prepareGeometryChange()
 
-        self.linkedXChanged()
-        self.linkedYChanged()
+            self.linkedXChanged()
+            self.linkedYChanged()
 
-        self.updateAutoRange()
-        self.updateViewRange()
+            self.updateAutoRange()
+            self.updateViewRange()
 
-        self._matrixNeedsUpdate = True
-        self.updateMatrix()
+            # self._matrixNeedsUpdate = True
 
-        self.background.setRect(self.rect())
-        self.borderRect.setRect(self.rect())
+            self.background.setRect(self.rect())
+            self.borderRect.setRect(self.rect())
+        
+            self.sigStateChanged.emit(self)
+            self.sigResized.emit(self)
 
-        self.sigStateChanged.emit(self)
-        self.sigResized.emit(self)
-        self.childGroup.prepareGeometryChange()
 
     def viewRange(self):
         """Return a the view's visible range as a list: [[xmin, xmax], [ymin, ymax]]"""
@@ -517,9 +513,6 @@ class ViewBox(GraphicsWidget):
         ================== =====================================================================
 
         """
-        #print self.name, "ViewBox.setRange", rect, xRange, yRange, padding
-        #import traceback
-        #traceback.print_stack()
 
         changes = {}   # axes
         setRequested = [False, False]
@@ -611,7 +604,6 @@ class ViewBox(GraphicsWidget):
                     mx = lmx
                     mn += delta
 
-
             # Set target range
             if self.state['targetRange'][ax] != [mn, mx]:
                 self.state['targetRange'][ax] = [mn, mx]
@@ -674,7 +666,6 @@ class ViewBox(GraphicsWidget):
         if item is None:
             bounds = self.childrenBoundingRect(items=items)
         else:
-            print("Warning: ViewBox.autoRange(item=__) is deprecated. Use 'items' argument instead.")
             bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
 
         if bounds is not None:
@@ -877,7 +868,6 @@ class ViewBox(GraphicsWidget):
         ## to a view change.
         if self._updatingRange:
             return
-
         self._updatingRange = True
         try:
             targetRect = self.viewRange()
@@ -903,11 +893,9 @@ class ViewBox(GraphicsWidget):
                     oRange = [None, None]
                     oRange[ax] = targetRect[1-ax]
                     childRange = self.childrenBounds(frac=fractionVisible, orthoRange=oRange)
-
                 else:
                     if childRange is None:
                         childRange = self.childrenBounds(frac=fractionVisible)
-
                 ## Make corrections to range
                 xr = childRange[ax]
                 if xr is not None:
@@ -932,9 +920,8 @@ class ViewBox(GraphicsWidget):
 
             if len(args) == 0:
                 return
-            args['padding'] = 0
+            args['padding'] = 0.0
             args['disableAutoRange'] = False
-
             self.setRange(**args)
         finally:
             self._autoRangeNeedsUpdate = False
@@ -1085,7 +1072,6 @@ class ViewBox(GraphicsWidget):
         if (self.state['autoRange'][0] is not False) or (self.state['autoRange'][1] is not False):
             self._autoRangeNeedsUpdate = True
             self.update()
-        #self.updateAutoRange()
 
     def _invertAxis(self, ax, inv):
         key = 'xy'[ax] + 'Inverted'
@@ -1193,7 +1179,6 @@ class ViewBox(GraphicsWidget):
         """Maps *obj* from the local coordinate system of *item* to the view coordinates"""
         self.updateMatrix()
         return self.childGroup.mapFromItem(item, obj)
-        #return self.mapSceneToView(item.mapToScene(obj))
 
     def mapFromViewToItem(self, item, obj):
         """Maps *obj* from view coordinates to the local coordinate system of *item*."""
@@ -1422,9 +1407,7 @@ class ViewBox(GraphicsWidget):
             else:
                 if int(item.flags() & item.ItemHasNoContents) > 0:
                     continue
-                else:
-                    bounds = item.boundingRect()
-                bounds = self.mapFromItemToView(item, bounds).boundingRect()
+                bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))
 
         ## determine tentative new range
@@ -1461,7 +1444,6 @@ class ViewBox(GraphicsWidget):
                     continue
                 range[1][0] = min(range[1][0], bounds.top() - px*pxSize)
                 range[1][1] = max(range[1][1], bounds.bottom() + px*pxSize)
-
         return range
 
     def childrenBoundingRect(self, *args, **kwds):
@@ -1606,6 +1588,7 @@ class ViewBox(GraphicsWidget):
         self.sigTransformChanged.emit(self)  ## segfaults here: 1
 
     def paint(self, p, opt, widget):
+        self.prepareForPaint()
         if self.border is not None:
             bounds = self.shape()
             p.setPen(self.border)

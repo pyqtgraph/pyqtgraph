@@ -82,12 +82,9 @@ def test_clipping():
     w = pg.PlotWidget(autoRange=True, downsample=5)
     c = pg.PlotDataItem(x, y)
     w.addItem(c)
-    w.show()
 
     c.setClipToView(True)
-
     w.setXRange(200, 600)
-
     for x_min in range(100, 2**10 - 100, 100):
         w.setXRange(x_min, x_min + 100)
 
