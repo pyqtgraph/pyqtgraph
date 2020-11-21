@@ -413,8 +413,8 @@ class ViewBox(GraphicsWidget):
 
         if not ignoreBounds:
             self.addedItems.append(item)
-        else:
-            self._autoRangeNeedsUpdate = True
+        # else:
+        #     self._autoRangeNeedsUpdate = True
         self.updateAutoRange()
 
     def removeItem(self, item):
@@ -440,23 +440,21 @@ class ViewBox(GraphicsWidget):
     def resizeEvent(self, ev):
         if ev.oldSize() != ev.newSize():
             self._matrixNeedsUpdate = True
-            # self.updateMatrix()  # removed as fix for issue 1373
+            self.childGroup.prepareGeometryChange()
 
             self.linkedXChanged()
             self.linkedYChanged()
 
-            self.childGroup.prepareGeometryChange()
-
-            # self.updateAutoRange()
+            self.updateAutoRange()
             self.updateViewRange()
+
+            # self._matrixNeedsUpdate = True
+
             self.background.setRect(self.rect())
             self.borderRect.setRect(self.rect())
         
-            self.sigResized.emit(self)
             self.sigStateChanged.emit(self)
-
-            # self._matrixNeedsUpdate = True
-            # self.updateMatrix()
+            self.sigResized.emit(self)
 
 
     def viewRange(self):
