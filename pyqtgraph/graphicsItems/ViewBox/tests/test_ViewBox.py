@@ -1,7 +1,6 @@
 #import PySide
 import pyqtgraph as pg
 import pytest
-import numpy as np
 
 app = pg.mkQApp()
 qtest = pg.Qt.QtTest.QTest
@@ -81,51 +80,6 @@ def test_ViewBox_setMenuEnabled():
     assert vb.menu is not None
     vb.setMenuEnabled(False)
     assert vb.menu is None
-
-
-def test_enableAutoRange():
-    init_viewbox()
-
-    x = np.linspace(-3, 3, 1001)
-    y = np.abs(np.sinc(x))
-
-    plotItem = win.addPlot()
-    plotItem.plot(x, y)
-    inds = [np.argmax(y)]
-
-    for ind in inds:
-        xp = x[ind]
-        text = pg.TextItem('{:.2f}'.format(xp), anchor=(0.5,1.9))
-        plotItem.addItem(text) 
-
-    vb = plotItem.vb
-
-    xRange, yRange = vb.viewRange()
-    vb.scaleBy([1e-10, 5e-9])
-    zoomedXRange, zoomedYRange = vb.viewRange()
-    assert xRange[0] < zoomedXRange[0]
-    assert xRange[1] > zoomedXRange[1]
-    assert yRange[0] < zoomedYRange[0]
-    assert yRange[1] > zoomedYRange[1]
-
-    vb.enableAutoRange()
-    app.processEvents()
-    autoXRange, autoYRange = vb.viewRange()
-
-    assert xRange[0] == pytest.approx(autoXRange[0], rel=1e-1)
-    assert xRange[1] == pytest.approx(autoXRange[1], rel=1e-1)
-    assert yRange[0] == pytest.approx(autoYRange[0], rel=1e-1)
-    assert yRange[1] == pytest.approx(autoYRange[1], rel=1e-1)
-
-    vb.scaleBy([5_000_000, 1_000_000])
-    zoomedXRange, zoomedYRange = vb.viewRange()
-    assert xRange[0] > zoomedXRange[0]
-    assert xRange[1] < zoomedXRange[1]
-    assert yRange[0] > zoomedYRange[0]
-    assert yRange[1] < zoomedYRange[1]
-    vb.enableAutoRange()
-    app.processEvents()
-    autoXRange, autoYRange = vb.viewRange()
 
 
 

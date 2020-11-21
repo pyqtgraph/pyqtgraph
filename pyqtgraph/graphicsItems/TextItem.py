@@ -150,7 +150,6 @@ class TextItem(GraphicsObject):
 
         
     def boundingRect(self):
-        # return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
         return self.textItem.mapRectToParent(self.textItem.boundingRect())
 
     def viewTransformChanged(self):
