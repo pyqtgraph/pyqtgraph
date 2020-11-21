@@ -101,7 +101,7 @@ def test_enableAutoRange():
     vb = plotItem.vb
 
     xRange, yRange = vb.viewRange()
-    vb.scaleBy([0.5, 0.5])
+    vb.scaleBy([1e-10, 5e-9])
     zoomedXRange, zoomedYRange = vb.viewRange()
     assert xRange[0] < zoomedXRange[0]
     assert xRange[1] > zoomedXRange[1]
@@ -112,12 +112,12 @@ def test_enableAutoRange():
     app.processEvents()
     autoXRange, autoYRange = vb.viewRange()
 
-    assert xRange[0] == pytest.approx(autoXRange[0])
-    assert xRange[1] == pytest.approx(autoXRange[1])
-    assert yRange[0] == pytest.approx(autoYRange[0])
-    assert yRange[1] == pytest.approx(autoYRange[1])
+    assert xRange[0] == pytest.approx(autoXRange[0], rel=1e-1)
+    assert xRange[1] == pytest.approx(autoXRange[1], rel=1e-1)
+    assert yRange[0] == pytest.approx(autoYRange[0], rel=1e-1)
+    assert yRange[1] == pytest.approx(autoYRange[1], rel=1e-1)
 
-    vb.scaleBy([2, 2])
+    vb.scaleBy([5_000_000, 1_000_000])
     zoomedXRange, zoomedYRange = vb.viewRange()
     assert xRange[0] > zoomedXRange[0]
     assert xRange[1] < zoomedXRange[1]
