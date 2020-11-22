@@ -1510,8 +1510,10 @@ def arrayToQPath(x, y, connect='all'):
             idx[mask] = -1
             np.maximum.accumulate(idx, out=idx)
             first = np.searchsorted(idx, 0)
-            idx[:first] = first
-            arr[1:-1] = arr[1:-1][idx]
+            if first < len(x):
+                # Replace all non-finite entries from beginning of arr with the first finite one
+                idx[:first] = first
+                arr[1:-1] = arr[1:-1][idx]
 
     # decide which points are connected by lines
     if eq(connect, 'all'):
