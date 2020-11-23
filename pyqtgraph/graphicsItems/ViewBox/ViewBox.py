@@ -452,7 +452,7 @@ class ViewBox(GraphicsWidget):
 
             self.background.setRect(self.rect())
             self.borderRect.setRect(self.rect())
-        
+
             self.sigStateChanged.emit(self)
             self.sigResized.emit(self)
 

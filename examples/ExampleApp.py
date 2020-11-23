@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import subprocess
@@ -83,6 +84,7 @@ examples = OrderedDict([
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
+        ('MultiAxisPlotWidget', 'MultiAxisExample.py'),
         ('SpinBox', 'SpinBox.py'),
         ('ConsoleWidget', 'ConsoleWidget.py'),
         ('Histogram / lookup table', 'HistogramLUT.py'),
