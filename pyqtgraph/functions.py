@@ -13,7 +13,7 @@ import ctypes
 import sys, struct
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, QT_LIB
+from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import getConfigOption, setConfigOptions
 from . import debug, reload
 from .metaarray import MetaArray
@@ -1482,19 +1482,37 @@ def arrayToQPath(x, y, connect='all'):
 
     path = QtGui.QPainterPath()
 
-    #profiler = debug.Profiler()
     n = x.shape[0]
+
     # create empty array, pad with extra space on either end
     arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
+
     # write first two integers
-    #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
     byteview[:16] = 0
     byteview.data[16:20] = struct.pack('>i', n)
-    #profiler('pack header')
+
     # Fill array with vertex values
     arr[1:-1]['x'] = x
     arr[1:-1]['y'] = y
+
+    # inf/nans completely prevent the plot from being displayed starting on 
+    # Qt version 5.12.3; these must now be manually cleaned out.
+    isfinite = None
+    qtver = [int(x) for x in QtVersion.split('.')]
+    if qtver >= [5, 12, 3]:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not np.all(isfinite):
+            # credit: Divakar https://stackoverflow.com/a/41191127/643629
+            mask = ~isfinite
+            idx = np.arange(len(x))
+            idx[mask] = -1
+            np.maximum.accumulate(idx, out=idx)
+            first = np.searchsorted(idx, 0)
+            if first < len(x):
+                # Replace all non-finite entries from beginning of arr with the first finite one
+                idx[:first] = first
+                arr[1:-1] = arr[1:-1][idx]
 
     # decide which points are connected by lines
     if eq(connect, 'all'):
@@ -1507,7 +1525,9 @@ def arrayToQPath(x, y, connect='all'):
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
+        if isfinite is None:
+            isfinite = np.isfinite(x) & np.isfinite(y)
+        arr[2:]['c'] = isfinite
     elif isinstance(connect, np.ndarray):
         arr[1:-1]['c'] = connect
     else:
@@ -1515,10 +1535,9 @@ def arrayToQPath(x, y, connect='all'):
 
     arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
 
-    #profiler('fill array')
     byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
     byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
-    #profiler('footer')
+
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
@@ -1529,11 +1548,9 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
         buf = QtCore.QByteArray(bytes(path.strn))
-    #profiler('create buffer')
-    ds = QtCore.QDataStream(buf)
 
+    ds = QtCore.QDataStream(buf)
     ds >> path
-    #profiler('load')
 
     return path
 
