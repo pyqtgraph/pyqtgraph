@@ -94,6 +94,8 @@ class ViewBox(GraphicsWidget):
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
+    sigXRangeChangedManually = QtCore.Signal(object)
+    sigYRangeChangedManually = QtCore.Signal(object)
     sigRangeChanged = QtCore.Signal(object, object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
@@ -1216,6 +1218,13 @@ class ViewBox(GraphicsWidget):
         self._resetTarget()
         self.scaleBy(s, center)
         ev.accept()
+        if axis == ViewBox.XAxis:
+            self.sigXRangeChangedManually.emit(mask)
+        elif axis == ViewBox.YAxis:
+            self.sigYRangeChangedManually.emit(mask)
+        elif axis is None:
+            self.sigXRangeChangedManually.emit(mask)
+            self.sigYRangeChangedManually.emit(mask)
         self.sigRangeChangedManually.emit(mask)
 
     def mouseClickEvent(self, ev):
@@ -1275,6 +1284,13 @@ class ViewBox(GraphicsWidget):
                 self._resetTarget()
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
+                if axis == ViewBox.XAxis:
+                    self.sigXRangeChangedManually.emit(mask)
+                elif axis == ViewBox.YAxis:
+                    self.sigYRangeChangedManually.emit(mask)
+                elif axis is None:
+                    self.sigXRangeChangedManually.emit(mask)
+                    self.sigYRangeChangedManually.emit(mask)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         elif ev.button() & QtCore.Qt.RightButton:
             #print "vb.rightDrag"
@@ -1295,6 +1311,13 @@ class ViewBox(GraphicsWidget):
             center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.RightButton)))
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
+            if axis == ViewBox.XAxis:
+                self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
+            elif axis == ViewBox.YAxis:
+                self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
+            elif axis is None:
+                self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
+                self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def keyPressEvent(self, ev):
@@ -1338,6 +1361,8 @@ class ViewBox(GraphicsWidget):
         Passes keyword arguments to setRange
         """
         self.setRange(ax.normalized(), **kwargs) # be sure w, h are correct coordinates
+        self.sigXRangeChangedManually.emit(self.state['mouseEnabled'])
+        self.sigYRangeChangedManually.emit(self.state['mouseEnabled'])
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def allChildren(self, item=None):

@@ -238,6 +238,7 @@ from .graphicsItems.ScatterPlotItem import *
 from .graphicsItems.ItemGroup import * 
 
 from .widgets.MultiPlotWidget import * 
+from .widgets.MultiAxisPlotWidget import *
 from .widgets.ScatterPlotWidget import * 
 from .widgets.ColorMapWidget import * 
 from .widgets.FileDialog import * 
