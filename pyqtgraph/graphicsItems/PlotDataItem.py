@@ -400,7 +400,7 @@ class PlotDataItem(GraphicsObject):
 
     def setData(self, *args, **kargs):
         """
-        Clear any data displayed by this item and display new data.
+        Set displayed data. New data replaces previous, unless append = True is specified.
         See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
         
         ============== ===================================================================
@@ -774,7 +774,23 @@ class PlotDataItem(GraphicsObject):
         self.scatter.clear()
 
     def appendData(self, *args, **kargs):
-        pass
+        """
+        Append to displayed data.
+        See :func:`__init__() <pyqtgraph.PlotDataItem.__init__>` for details; it accepts the same arguments.
+        In addition to the listed data formats, appendData also accepts single numerical values as 
+        ==========================  ======================================
+        appendData(xValue, yValue)  x and y values may be int or float
+        appendData(yValue)          y value may be int or float
+        ==========================  ======================================
+        """
+        arg_list = list(args)
+        for idx in range(len(args)):
+            if idx == 2: break # only convert the first two arguments
+            try: # if it converts to float, then convert to single-value ndarray
+                arg_list[idx] = np.full(1, float(arg_list[idx]))
+            except TypeError: pass
+        kargs['append'] = True
+        self.setData(*arg_list, **kargs)
 
     def curveClicked(self, curve, ev):
         self.sigClicked.emit(self, ev)

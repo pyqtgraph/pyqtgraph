@@ -12,7 +12,6 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 pg.mkQApp()
-
 pw = pg.PlotWidget()
 pw.show()
 pw.setWindowTitle('pyqtgraph example: MultiplePlotAxes')

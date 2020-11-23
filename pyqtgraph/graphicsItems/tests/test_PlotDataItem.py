@@ -82,6 +82,23 @@ def test_setData():
     assert np.array_equal(pdi.xData[3:], x2)
     assert np.array_equal(pdi.yData[:3], y1)
     assert np.array_equal(pdi.yData[3:], y2)
+    
+def test_append():
+    x = np.random.normal(size=3)
+    y = np.random.normal(size=3)
+    pdi = pg.PlotDataItem()
+    pdi.appendData(x[0], y[0])
+    pdi.appendData(x[1], y[1])
+    pdi.appendData(x[2], y[2])
+    assert np.array_equal(pdi.xData, x)
+    assert np.array_equal(pdi.yData, y)
+
+    pdi.appendData(y)
+    assert np.array_equal(pdi.yData[:3], y) # y: first half matches test data?
+    assert np.array_equal(pdi.yData[3:], y) # y: second half repeats test data?
+    assert np.array_equal(pdi.xData[:3], x) # x: first hald matches test data?
+    x_assert = x[-1] + np.array([1,2,3]) #     x: second half is enumerated correctly?
+    assert np.array_equal(pdi.xData[3:], x_assert)
 
 def test_clear():
     y = list(np.random.normal(size=100))
