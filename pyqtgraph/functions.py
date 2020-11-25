@@ -394,7 +394,7 @@ def serializeQtData(obj):
     a = QtCore.QByteArray(b'')
     s = QtCore.QDataStream(a, QtCore.QIODevice.WriteOnly)
     s << obj
-    return bytes(a)
+    return a.data()
 
 
 def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
