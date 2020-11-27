@@ -146,8 +146,8 @@ class SymbolAtlas(object):
 
     def getSymbolCoords(self, symbol, size, pen, brush):
         """
-        Given equal length lists of symbols, sizes, pens, brushes, return an object
-        representing the coordinates of that symbol within the atlas
+        Given equal length lists of symbols, sizes, pens, brushes, return a list of QRectF
+        representing the coordinates of corresponding glyphs within the atlas
         """
         sourceRect = []
         for symbol_i, size_i, pen_i, brush_i in zip(symbol, size, pen, brush):
@@ -609,7 +609,7 @@ class ScatterPlotItem(GraphicsObject):
             if np.any(mask):
                 invalidate = True
                 dataSet['sourceRect'][mask] = self.fragmentAtlas.getSymbolCoords(
-                    *(self.getSpotOpt(k, dataSet)[mask] for k in ['symbol', 'size', 'pen', 'brush'])
+                    *self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], data=dataSet, mask=mask)
                 )
 
             self.fragmentAtlas.getAtlas() # generate atlas so source widths are available.
@@ -625,12 +625,19 @@ class ScatterPlotItem(GraphicsObject):
         if invalidate:
             self.invalidate()
 
-    def getSpotOpt(self, opt, recs=None):
-        if recs is None:
-            recs = self.data
+    def _getSpotOpts(self, opts, data=None, mask=None, scale=None):
+        if data is None:
+            data = self.data
 
-        null = {'symbol': None, 'size': -1, 'pen': None, 'brush': None}[opt]
-        return np.where(np.equal(recs[opt], null), self.opts[opt], recs[opt])
+        for opt in opts:
+            null = {'symbol': None, 'size': -1, 'pen': None, 'brush': None}[opt]
+            col = data[opt].copy() if mask is None else data[opt][mask]
+            col[np.equal(col, null)] = self.opts[opt]
+
+            if opt == 'size' and scale is not None:
+                col *= scale
+
+            yield col
 
     # deprecated
     def getSpotOpts(self, recs, scale=1.0):
@@ -659,7 +666,7 @@ class ScatterPlotItem(GraphicsObject):
             return recs
 
     def measureSpotSizes(self, dataSet):
-        for size, pen in zip(*(self.getSpotOpt(k, dataSet) for k in ['size', 'pen'])):
+        for size, pen in zip(*self._getSpotOpts(['size', 'pen'], data=dataSet)):
             ## keep track of the maximum spot size and pixel size
             width = 0
             pxWidth = 0
@@ -841,10 +848,11 @@ class ScatterPlotItem(GraphicsObject):
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
 
-                cols = [self.getSpotOpt(opt) for opt in ['symbol', 'size', 'pen', 'brush']]
-                cols[1] *= scale
-                cols = [pts.T, self.data['width']] + cols
-                for pt, w, symbol, size, pen, brush in zip(*(col[viewMask] for col in cols)):
+                for pt, w, symbol, size, pen, brush in zip(
+                        pts.T[viewMask],
+                        data['width'][viewMask],
+                        *self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], data=data, mask=viewMask, scale=scale)
+                ):
                     p.resetTransform()
                     p.translate(pt[0] + w / 2, pt[1] + w / 2)
                     drawSymbol(p, symbol, size, pen, brush)
@@ -853,10 +861,11 @@ class ScatterPlotItem(GraphicsObject):
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
 
-                cols = [self.getSpotOpt(opt) for opt in ['symbol', 'size', 'pen', 'brush']]
-                cols[1] *= scale
-                cols = [self.data['x'], self.data['y']] + cols
-                for x, y, symbol, size, pen, brush in zip(*cols):
+                for x, y, symbol, size, pen, brush in zip(
+                        self.data['x'],
+                        self.data['y'],
+                        *self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], scale=scale)
+                ):
                     p2.resetTransform()
                     p2.translate(x, y)
                     drawSymbol(p2, symbol, size, pen, brush)
