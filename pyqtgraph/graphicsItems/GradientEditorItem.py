@@ -342,6 +342,7 @@ class TickSliderItem(GraphicsWidget):
         tick.setPos(pos)
         self.ticks[tick] = val
         
+        self.update()
         self.sigTicksChanged.emit(self)
         self.sigTicksChangeFinished.emit(self)
         
