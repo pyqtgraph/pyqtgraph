@@ -117,10 +117,13 @@ s4.sigClicked.connect(clicked)
 s4.setAcceptHoverEvents(True)
 lastHovered = []
 hoverPen = pg.mkPen('g')
+hoverRect = None
 
 def hoverEvent(ev):
-    global lastHovered
+    global lastHovered, hoverRect
     for pt in lastHovered:
+        if hoverRect is None:
+            hoverRect = pt._data['sourceRect']  # prevents gc and subsequent removal from cache
         pt.resetPen()
 
     if not ev.exit:
