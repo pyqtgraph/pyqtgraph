@@ -116,6 +116,7 @@ s4.sigClicked.connect(clicked)
 # Enable hovering and show a tool tip hovered points
 s4.setAcceptHoverEvents(True)
 lastHovered = []
+hoverPen = pg.mkPen('g')
 
 def hoverEvent(ev):
     global lastHovered
@@ -125,7 +126,7 @@ def hoverEvent(ev):
     if not ev.exit:
         points = s4.pointsAt(ev.pos())
         for pt in points:
-            pt.setPen('g')
+            pt.setPen(hoverPen)
         lastHovered = points
 
         cutoff = 3

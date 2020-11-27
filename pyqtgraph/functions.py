@@ -387,16 +387,6 @@ def glColor(*args, **kargs):
     return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
 
 
-def serializeQtData(obj):
-    """
-    Serializes any Qt data type that can be serialized into a QDataStream using the left-shift operator.
-    """
-    a = QtCore.QByteArray(b'')
-    s = QtCore.QDataStream(a, QtCore.QIODevice.WriteOnly)
-    s << obj
-    return a.data()
-
-
 def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
     """
     Construct a path outlining an arrow with the given dimensions.

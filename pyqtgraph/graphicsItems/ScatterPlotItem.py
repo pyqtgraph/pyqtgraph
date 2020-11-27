@@ -103,6 +103,21 @@ def makeSymbolPixmap(size, pen, brush, symbol):
     img = renderSymbol(symbol, size, pen, brush)
     return QtGui.QPixmap(img)
 
+
+def _mkPen(*args, **kwargs):
+    if len(args) == 1 and isinstance(args[0], QtGui.QPen):
+        return args[0]
+    else:
+        return fn.mkPen(*args, **kwargs)
+
+
+def _mkBrush(*args, **kwargs):
+    if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
+        return args[0]
+    else:
+        return fn.mkBrush(*args, **kwargs)
+
+
 class SymbolAtlas(object):
     """
     Used to efficiently construct a single QPixmap containing all rendered symbols
@@ -134,21 +149,9 @@ class SymbolAtlas(object):
         Given equal length lists of symbols, sizes, pens, brushes, return an object
         representing the coordinates of that symbol within the atlas
         """
-
-        cache = {}
-
-        def serQtData(obj):
-            try:
-                val = cache[id(obj)]
-            except KeyError:
-                val = fn.serializeQtData(obj)
-                cache[id(obj)] = val
-            return val
-
         sourceRect = []
         for symbol_i, size_i, pen_i, brush_i in zip(symbol, size, pen, brush):
-            key = (serQtData(symbol_i) if isinstance(symbol_i, QtGui.QPainterPath) else symbol_i,
-                   size_i, serQtData(pen_i), serQtData(brush_i))
+            key = (id(symbol_i), size_i, id(pen_i), id(brush_i))
             try:
                 rect = self.symbolMap[key]
             except KeyError:
@@ -402,10 +405,10 @@ class ScatterPlotItem(GraphicsObject):
                         newData[i]['x'] = x
                         newData[i]['y'] = y
                     elif k == 'pen':
-                        newData[i][k] = fn.mkPen(spot[k])
+                        newData[i][k] = _mkPen(spot[k])
                     elif k == 'brush':
-                        newData[i][k] = fn.mkBrush(spot[k])
-                    elif k in ['x', 'y', 'size', 'symbol', 'brush', 'data']:
+                        newData[i][k] = _mkBrush(spot[k])
+                    elif k in ['x', 'y', 'size', 'symbol', 'data']:
                         newData[i][k] = spot[k]
                     else:
                         raise Exception("Unknown spot parameter: %s" % k)
@@ -473,7 +476,7 @@ class ScatterPlotItem(GraphicsObject):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
             dataSet['pen'] = pens
         else:
-            self.opts['pen'] = fn.mkPen(*args, **kargs)
+            self.opts['pen'] = _mkPen(*args, **kargs)
 
         dataSet['sourceRect'] = None
         if update:
@@ -495,7 +498,7 @@ class ScatterPlotItem(GraphicsObject):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
             dataSet['brush'] = brushes
         else:
-            self.opts['brush'] = fn.mkBrush(*args, **kargs)
+            self.opts['brush'] = _mkBrush(*args, **kargs)
             #self._spotPixmap = None
 
         dataSet['sourceRect'] = None
@@ -626,11 +629,8 @@ class ScatterPlotItem(GraphicsObject):
         if recs is None:
             recs = self.data
 
-        v, func = {'symbol': (None, lambda x: x),
-                   'size': (-1, lambda x: x),
-                   'pen': (None, fn.mkPen),
-                   'brush': (None, fn.mkBrush)}[opt]
-        return np.where(np.equal(recs[opt], v), func(self.opts[opt]), recs[opt])
+        null = {'symbol': None, 'size': -1, 'pen': None, 'brush': None}[opt]
+        return np.where(np.equal(recs[opt], null), self.opts[opt], recs[opt])
 
     # deprecated
     def getSpotOpts(self, recs, scale=1.0):
@@ -981,8 +981,7 @@ class SpotItem(object):
 
     def setPen(self, *args, **kargs):
         """Set the outline pen for this spot"""
-        pen = fn.mkPen(*args, **kargs)
-        self._data['pen'] = pen
+        self._data['pen'] = _mkPen(*args, **kargs)
         self.updateItem()
 
     def resetPen(self):
@@ -998,8 +997,7 @@ class SpotItem(object):
 
     def setBrush(self, *args, **kargs):
         """Set the fill brush for this spot"""
-        brush = fn.mkBrush(*args, **kargs)
-        self._data['brush'] = brush
+        self._data['brush'] = _mkBrush(*args, **kargs)
         self.updateItem()
 
     def resetBrush(self):
