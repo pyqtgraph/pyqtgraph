@@ -116,7 +116,7 @@ s4.sigClicked.connect(clicked)
 
 # Enable hovering and show a tool tip hovered points
 s4.setAcceptHoverEvents(True)
-hoverPoints = []
+hoverPoints = set()
 hoverPen = pg.mkPen('g')
 hoverRect = None
 
@@ -124,16 +124,16 @@ def hoverEvent(ev):
     global hoverPoints, hoverRect
 
     if hoverRect is None and len(hoverPoints) > 0:
-        hoverRect = hoverPoints[0]._data['sourceRect']  # avoid gc to prevent removal of glyph from cache
+        hoverRect = next(iter(hoverPoints))._data['sourceRect']  # avoid gc to prevent removal of glyph from cache
 
     newPoints = [] if ev.exit else s4.pointsAt(ev.pos())
+    newPointsSet = set(newPoints)
 
-    for pt in chain(hoverPoints, newPoints):
-        if pt in newPoints and pt not in hoverPoints:
-            pt.setPen(hoverPen)
+    for pt in newPointsSet.difference(hoverPoints):
+        pt.setPen(hoverPen)
 
-        elif pt in hoverPoints and pt not in newPoints:
-            pt.resetPen()
+    for pt in hoverPoints.difference(newPoints):
+        pt.resetPen()
 
     cutoff = 3
     tip = '\n\n'.join('index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
@@ -143,7 +143,7 @@ def hoverEvent(ev):
 
     s4.getViewBox().setToolTip(tip)
 
-    hoverPoints = newPoints
+    hoverPoints = newPointsSet
 
 s4.hoverEvent = hoverEvent
 
