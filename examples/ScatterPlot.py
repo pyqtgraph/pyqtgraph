@@ -12,6 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 from collections import namedtuple
+from itertools import chain
 
 app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
@@ -115,28 +116,34 @@ s4.sigClicked.connect(clicked)
 
 # Enable hovering and show a tool tip hovered points
 s4.setAcceptHoverEvents(True)
-lastHovered = []
+hoverPoints = []
 hoverPen = pg.mkPen('g')
+hoverRect = None
 
 def hoverEvent(ev):
-    global lastHovered
-    for pt in lastHovered:
-        pt.resetPen()
+    global hoverPoints, hoverRect
 
-    if not ev.exit:
-        points = s4.pointsAt(ev.pos())
-        for pt in points:
+    if hoverRect is None and len(hoverPoints) > 0:
+        hoverRect = hoverPoints[0]._data['sourceRect']  # avoid gc to prevent removal of glyph from cache
+
+    newPoints = [] if ev.exit else s4.pointsAt(ev.pos())
+
+    for pt in chain(hoverPoints, newPoints):
+        if pt in newPoints and pt not in hoverPoints:
             pt.setPen(hoverPen)
-        lastHovered = points
 
-        cutoff = 3
-        tip = '\n\n'.join('index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
-                          for pt in points[:cutoff])
-        if len(points) > cutoff:
-            tip += '\n\n({} more...)'.format(len(points) - cutoff)
+        elif pt in hoverPoints and pt not in newPoints:
+            pt.resetPen()
 
-        if tip:
-            s4.getViewBox().setToolTip(tip)
+    cutoff = 3
+    tip = '\n\n'.join('index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
+                      for pt in newPoints[:cutoff])
+    if len(newPoints) > cutoff:
+        tip += '\n\n({} more...)'.format(len(newPoints) - cutoff)
+
+    s4.getViewBox().setToolTip(tip)
+
+    hoverPoints = newPoints
 
 s4.hoverEvent = hoverEvent
 
