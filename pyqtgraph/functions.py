@@ -386,6 +386,7 @@ def glColor(*args, **kargs):
     c = mkColor(*args, **kargs)
     return (c.red()/255., c.green()/255., c.blue()/255., c.alpha()/255.)
 
+    
 
 def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth=3, baseAngle=0):
     """

@@ -162,7 +162,7 @@ class SymbolAtlas(object):
                 self.symbolMap[key] = rect
                 self.atlasValid = False
             sourceRect.append(rect)
-        return np.array(sourceRect, dtype=object)
+        return sourceRect
 
     def buildAtlas(self):
         # get rendered array for all symbols, keep track of avg/max width
@@ -572,7 +572,7 @@ class ScatterPlotItem(GraphicsObject):
         dataSet['sourceRect'] = None
         if update:
             self.updateSpots(dataSet)
-
+        
     def setPointData(self, data, dataSet=None, mask=None):
         if dataSet is None:
             dataSet = self.data
@@ -1013,7 +1013,7 @@ class SpotItem(object):
         """Set whether or not this spot is visible."""
         self._data['visible'] = visible
         self.updateItem()
-
+    
     def setData(self, data):
         """Set the user-data associated with this spot"""
         self._data['data'] = data
