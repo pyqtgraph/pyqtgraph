@@ -1529,7 +1529,7 @@ def arrayToQPath(x, y, connect='all'):
             isfinite = np.isfinite(x) & np.isfinite(y)
         arr[2:]['c'] = isfinite
     elif isinstance(connect, np.ndarray):
-        arr[1:-1]['c'] = connect
+        arr[2:-1]['c'] = connect[:-1]
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
