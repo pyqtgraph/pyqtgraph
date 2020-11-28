@@ -118,13 +118,9 @@ s4.sigClicked.connect(clicked)
 s4.setAcceptHoverEvents(True)
 hoverPoints = set()
 hoverPen = pg.mkPen('g')
-hoverRect = None
 
 def hoverEvent(ev):
-    global hoverPoints, hoverRect
-
-    if hoverRect is None and len(hoverPoints) > 0:
-        hoverRect = next(iter(hoverPoints))._data['sourceRect']  # avoid gc to prevent removal of glyph from cache
+    global hoverPoints
 
     newPoints = [] if ev.exit else s4.pointsAt(ev.pos())
     newPointsSet = set(newPoints)

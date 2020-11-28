@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from itertools import starmap, repeat
+from collections import deque
 try:
     from itertools import imap
 except ImportError:
@@ -139,6 +140,11 @@ class SymbolAtlas(object):
         # the symbol will be forgotten.
         self.symbolMap = weakref.WeakValueDictionary()
 
+        # Keep a limited number entries around in case they are used again
+        # in the future. The overhead in doing so is small and it supports some
+        # common use-cases with a small number of distinct glyphs.
+        self._refs = deque(maxlen=20)
+
         self.atlasData = None # numpy array of atlas image
         self.atlas = None     # atlas as QPixmap
         self.atlasValid = False
@@ -161,6 +167,7 @@ class SymbolAtlas(object):
                 rect.symbol = symbol_i
                 self.symbolMap[key] = rect
                 self.atlasValid = False
+                self._refs.append(rect)
             sourceRect.append(rect)
         return sourceRect
 
