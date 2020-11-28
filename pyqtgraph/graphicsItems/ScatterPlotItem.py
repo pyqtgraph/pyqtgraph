@@ -308,7 +308,8 @@ class ScatterPlotItem(GraphicsObject):
         *x*,*y*                1D arrays of x,y values.
         *pos*                  2D structure of x,y pairs (such as Nx2 array or list of tuples)
         *pxMode*               If True, spots are always the same size regardless of scaling, and size is given in px.
-                               Otherwise, size is in scene coordinates and the spots scale with the view.
+                               Otherwise, size is in scene coordinates and the spots scale with the view. To ensure
+                               effective caching, QPen and QBrush objects should be reused as much as possible.
                                Default is True
         *symbol*               can be one (or a list) of:
                                * 'o'  circle (default)
