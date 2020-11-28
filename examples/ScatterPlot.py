@@ -114,7 +114,7 @@ s4.addPoints(x=pos[0], y=pos[1])
 w4.addItem(s4)
 s4.sigClicked.connect(clicked)
 
-# Enable hovering and show a tool tip hovered points
+# Enable hovering and show information about hovered points in a tool tip
 s4.setAcceptHoverEvents(True)
 hoverPoints = set()
 hoverPen = pg.mkPen('g')
