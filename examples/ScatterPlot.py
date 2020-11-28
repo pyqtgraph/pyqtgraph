@@ -123,23 +123,25 @@ def hoverEvent(ev):
     global hoverPoints
 
     newPoints = [] if ev.exit else s4.pointsAt(ev.pos())
-    newPointsSet = set(newPoints)
-
-    for pt in newPointsSet.difference(hoverPoints):
-        pt.setPen(hoverPen)
-
-    for pt in hoverPoints.difference(newPoints):
-        pt.resetPen()
 
     cutoff = 3
-    tip = '\n\n'.join('index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
-                      for pt in newPoints[:cutoff])
+    tip = ['index: {}\nx: {:.3g}\ny: {:.3g}'.format(pt.index(), pt.pos().x(), pt.pos().y())
+           for pt in newPoints[:cutoff]]
     if len(newPoints) > cutoff:
-        tip += '\n\n({} more...)'.format(len(newPoints) - cutoff)
+        tip.append('({} others...)'.format(len(newPoints) - cutoff))
+    s4.getViewBox().setToolTip('\n\n'.join(tip))
 
-    s4.getViewBox().setToolTip(tip)
+    newPoints = set(newPoints)
 
-    hoverPoints = newPointsSet
+    for pt in newPoints:
+        if pt not in hoverPoints:
+            pt.setPen(hoverPen)
+
+    for pt in hoverPoints:
+        if pt not in newPoints:
+            pt.resetPen()
+
+    hoverPoints = newPoints
 
 s4.hoverEvent = hoverEvent
 
