@@ -64,6 +64,30 @@ class BarGraphItem(GraphicsObject):
         self.setOpts(brush=fn.mkBrush(*args, **kargs))
 
     def setData(self, **kargs):
+        """
+        ====================== ===============================================================================================
+        **Keyword Arguments:**
+        *x*                    bar centers.
+        *x0*                   bar left edges.
+        *x1*                   bar ritgh edges.
+        *width*                bar widths.
+        *y*                    bar centers.
+        *y0*                   bar bottoms.
+        *y1*                   bar tops.
+        *height*               bar heights.
+        ====================== ===============================================================================================
+
+        You may specify any combination:
+
+            x, width
+            x0, width
+            x1, width
+            x0, x1
+
+        Likewise y, y0, y1, and height.
+        If only height is specified, then y0 will be set to 0
+
+        """
 
         def asarray(x):
             if x is None or np.isscalar(x) or isinstance(x, np.ndarray):
