@@ -139,13 +139,8 @@ class SymbolAtlas(object):
         # weak value; if all external refs to this list disappear,
         # the symbol will be forgotten.
         self.symbolMap = weakref.WeakValueDictionary()
-
-        # Keep a limited number entries around in case they are used again
-        # in the future. The overhead in doing so is small and it supports some
-        # common use-cases with a small number of distinct glyphs.
-        self._refs = deque(maxlen=20)
-
         self.atlasData = None # numpy array of atlas image
+        self.atlasDataMap = {}
         self.atlas = None     # atlas as QPixmap
         self.atlasValid = False
         self.max_width=0
@@ -165,9 +160,11 @@ class SymbolAtlas(object):
                 rect.pen = pen_i
                 rect.brush = brush_i
                 rect.symbol = symbol_i
+                try:
+                    rect.setRect(*self.atlasDataMap[key])
+                except KeyError:
+                    self.atlasValid = False
                 self.symbolMap[key] = rect
-                self.atlasValid = False
-                self._refs.append(rect)
             sourceRect.append(rect)
         return sourceRect
 
@@ -220,9 +217,11 @@ class SymbolAtlas(object):
         height = y + rowheight
 
         self.atlasData = np.zeros((int(width), int(height), 4), dtype=np.ubyte)
+        self.atlasDataMap.clear()
         for key in symbols:
             y, x, h, w = self.symbolMap[key].getRect()
             self.atlasData[int(x):int(x+w), int(y):int(y+h)] = rendered[key]
+            self.atlasDataMap[key] = (y, x, h, w)
         self.atlas = None
         self.atlasValid = True
         self.max_width = maxWidth
