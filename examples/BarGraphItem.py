@@ -24,7 +24,6 @@ win.addItem(bg1)
 win.addItem(bg2)
 win.addItem(bg3)
 
-
 # Final example shows how to handle mouse clicks:
 class BarGraph(pg.BarGraphItem):
     def mouseClickEvent(self, event):
@@ -33,6 +32,16 @@ class BarGraph(pg.BarGraphItem):
 
 bg = BarGraph(x=x, y=y1*0.3+2, height=0.4+y1*0.2, width=0.8)
 win.addItem(bg)
+
+def update():
+    global win, bg3, x, y3
+    height = y3 * np.random.uniform(low=0.0, high=1.0, size=y3.size)
+    bg3.setData(x=x+0.66, height=height, width=0.3)
+
+
+timer = QtCore.QTimer()
+timer.timeout.connect(update)
+timer.start(300)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
