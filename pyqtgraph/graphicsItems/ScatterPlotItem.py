@@ -139,11 +139,17 @@ class SymbolAtlas(object):
         # weak value; if all external refs to this list disappear,
         # the symbol will be forgotten.
         self.symbolMap = weakref.WeakValueDictionary()
-        self.atlasData = None # numpy array of atlas image
+        self.atlasData = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
         self.atlasDataMap = {}
         self.atlas = None     # atlas as QPixmap
         self.atlasValid = False
-        self.max_width=0
+        self._images = []
+        self.max_width = 0
+        self._totalWidth = 0
+        self._symbolCount = 0
+        self._pos = (0, 0)
+        self._rowShape = (0, 0)
+        self._newKeys = set()
 
     def getSymbolCoords(self, symbol, size, pen, brush):
         """
@@ -163,24 +169,52 @@ class SymbolAtlas(object):
                 try:
                     rect.setRect(*self.atlasDataMap[key])
                 except KeyError:
+                    self._newKeys.add(key)
                     self.atlasValid = False
                 self.symbolMap[key] = rect
             sourceRect.append(rect)
         return sourceRect
 
     def buildAtlas(self):
-        data, _ = self._symbolData()
-        self._setSourceRectShapes(data)
-        shape, maxWidth = self._packSourceRects(data)
-        self.atlasData = np.zeros((*shape, 4), dtype=np.ubyte)
-        self.atlasDataMap.clear()
-        for key, sourceRect, arr in data:
-            y, x, h, w = sourceRect.getRect()
-            self.atlasData[int(x):int(x+w), int(y):int(y+h)] = arr
-            self.atlasDataMap[key] = (y, x, h, w)
         self.atlas = None
+        data = self._newSymbolData()
+
+        if self._needsRebuild():
+            data += self._oldSymbolData()
+            self._clear()
+
+        self._extendAtlas(data)
+        self._newKeys.clear()
+        self._images.clear()
         self.atlasValid = True
-        self.max_width = maxWidth
+
+    def _clear(self):
+        self.max_width = 0
+        self._totalWidth = 0
+        self._symbolCount = 0
+        self._pos = (0, 0)
+        self._rowShape = (0, 0)
+        self.atlasData = self.atlasData[:0, :0].copy()
+        self.atlasDataMap.clear()
+
+    def _needsRebuild(self):
+        return (self._symbolCount > 4 * len(self.symbolMap)) & (self._symbolCount > 100)
+
+    def _extendAtlas(self, data):
+        if len(data) == 0:
+            return
+
+        data = sorted(data, key=lambda x: x[2].shape[1], reverse=True)  # sorting improves packing quality
+        self._packSourceRects(data)
+
+        wNew, hNew = self._minAtlasDataShape()
+        wOld, hOld, _ = self.atlasData.shape
+        if (wNew > wOld) or (hNew > hOld):
+            atlasData = np.zeros((wNew, hNew, 4), dtype=np.ubyte)
+            atlasData[:wOld, :hOld] = self.atlasData
+            self.atlasData = atlasData
+
+        self._insertAtlasData(data)
 
     def getAtlas(self):
         if not self.atlasValid:
@@ -192,50 +226,76 @@ class SymbolAtlas(object):
             self.atlas = QtGui.QPixmap(img)
         return self.atlas
 
-    def _symbolData(self):
+    def _newSymbolData(self):
         out = []
-        images = []
-        for key, sourceRect in self.symbolMap.items():
-            if sourceRect.width() == 0:
-                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
-                images.append(img)  ## we only need this to prevent the images being garbage collected immediately
-                arr = fn.imageToArray(img, copy=False, transpose=False)
+        for key in self._newKeys:
+            try:
+                sourceRect = self.symbolMap[key]
+            except KeyError:
+                pass
             else:
-                (y,x,h,w) = sourceRect.getRect()
-                arr = self.atlasData[int(x):int(x+w), int(y):int(y+w)]
-            out.append((key, sourceRect, arr))
-        return out, images
+                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
+                self._images.append(img)  # we only need this to prevent the images being garbage collected immediately
+                arr = fn.imageToArray(img, copy=False, transpose=False)
+                out.append((key, sourceRect, arr))
+        return out
 
-    def _setSourceRectShapes(self, data):
-        for key, sourceRect, arr in data:
-            w, h, _ = arr.shape
-            sourceRect.setRect(0, 0, h, w)
+    def _oldSymbolData(self):
+        out = []
+        for key, sourceRect in self.symbolMap.items():
+            try:
+                y, x, h, w = self.atlasDataMap[key]
+            except KeyError:
+                pass
+            else:
+                arr = self.atlasData[x:x+w, y:y+h]
+                out.append((key, sourceRect, arr))
+        return out
 
     def _packSourceRects(self, data):
         # pack all sourceRect objects into an approximate square
-        # sort symbols by height for more efficient packing
-        data = sorted(data, key=lambda x: x[2].shape[1], reverse=True)
-        nSymbols = len(data)
-        if nSymbols > 0:
-            maxWidth = max(x[2].shape[0] for x in data)
-            avgWidth = sum(x[2].shape[0] for x in data) / nSymbols
-            width = max(maxWidth, avgWidth * (nSymbols**0.5))
-        else:
-            maxWidth = 0
-            width = 0
-        x = width
-        y = 0
-        rowheight = 0
-        for key, sourceRect, arr in data:
+        n = self._symbolCount
+        wMax = self.max_width
+        wSum = self._totalWidth
+        x, y = self._pos
+        wRow, hRow = self._rowShape
+
+        n += len(data)
+
+        for _, _, arr in data:
             w, h, _ = arr.shape
-            if x+w > width:
-                y += rowheight
+            wMax = max(w, wMax)
+            wSum += w
+
+        wRowEst = wSum / (n ** 0.5)
+        wRow = max(wMax, wRowEst, wRow)
+
+        for _, sourceRect, arr in data:
+            w, h, _ = arr.shape
+            if x + w > wRow:
                 x = 0
-                rowheight = h
+                y += hRow
+                hRow = h
+            hRow = max(h, hRow)
             sourceRect.setRect(y, x, h, w)
             x += w
-        height = y + rowheight
-        return (int(width), int(height)), maxWidth
+
+        self._symbolCount = n
+        self.max_width = wMax
+        self._totalWidth = wSum
+        self._pos = (x, y)
+        self._rowShape = (wRow, hRow)
+
+    def _minAtlasDataShape(self):
+        x, y = self._pos
+        wRow, hRow = self._rowShape
+        return int(wRow), int(y + hRow)
+
+    def _insertAtlasData(self, data):
+        for key, sourceRect, arr in data:
+            y, x, h, w = map(int, sourceRect.getRect())
+            self.atlasData[x:x + w, y:y + h] = arr
+            self.atlasDataMap[key] = (y, x, h, w)
 
 
 class ScatterPlotItem(GraphicsObject):
