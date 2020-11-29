@@ -169,58 +169,14 @@ class SymbolAtlas(object):
         return sourceRect
 
     def buildAtlas(self):
-        # get rendered array for all symbols, keep track of avg/max width
-        rendered = {}
-        avgWidth = 0.0
-        maxWidth = 0
-        images = []
-        for key, sourceRect in self.symbolMap.items():
-            if sourceRect.width() == 0:
-                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
-                images.append(img)  ## we only need this to prevent the images being garbage collected immediately
-                arr = fn.imageToArray(img, copy=False, transpose=False)
-            else:
-                (y,x,h,w) = sourceRect.getRect()
-                arr = self.atlasData[int(x):int(x+w), int(y):int(y+w)]
-            rendered[key] = arr
-            w = arr.shape[0]
-            avgWidth += w
-            maxWidth = max(maxWidth, w)
-
-        nSymbols = len(rendered)
-        if nSymbols > 0:
-            avgWidth /= nSymbols
-            width = max(maxWidth, avgWidth * (nSymbols**0.5))
-        else:
-            avgWidth = 0
-            width = 0
-
-        # sort symbols by height
-        symbols = sorted(rendered.keys(), key=lambda x: rendered[x].shape[1], reverse=True)
-
-        self.atlasRows = []
-
-        x = width
-        y = 0
-        rowheight = 0
-        for key in symbols:
-            arr = rendered[key]
-            w,h = arr.shape[:2]
-            if x+w > width:
-                y += rowheight
-                x = 0
-                rowheight = h
-                self.atlasRows.append([y, rowheight, 0])
-            self.symbolMap[key].setRect(y, x, h, w)
-            x += w
-            self.atlasRows[-1][2] = x
-        height = y + rowheight
-
-        self.atlasData = np.zeros((int(width), int(height), 4), dtype=np.ubyte)
+        data, _ = self._symbolData()
+        self._setSourceRectShapes(data)
+        shape, maxWidth = self._packSourceRects(data)
+        self.atlasData = np.zeros((*shape, 4), dtype=np.ubyte)
         self.atlasDataMap.clear()
-        for key in symbols:
-            y, x, h, w = self.symbolMap[key].getRect()
-            self.atlasData[int(x):int(x+w), int(y):int(y+h)] = rendered[key]
+        for key, sourceRect, arr in data:
+            y, x, h, w = sourceRect.getRect()
+            self.atlasData[int(x):int(x+w), int(y):int(y+h)] = arr
             self.atlasDataMap[key] = (y, x, h, w)
         self.atlas = None
         self.atlasValid = True
@@ -236,7 +192,50 @@ class SymbolAtlas(object):
             self.atlas = QtGui.QPixmap(img)
         return self.atlas
 
+    def _symbolData(self):
+        out = []
+        images = []
+        for key, sourceRect in self.symbolMap.items():
+            if sourceRect.width() == 0:
+                img = renderSymbol(sourceRect.symbol, key[1], sourceRect.pen, sourceRect.brush)
+                images.append(img)  ## we only need this to prevent the images being garbage collected immediately
+                arr = fn.imageToArray(img, copy=False, transpose=False)
+            else:
+                (y,x,h,w) = sourceRect.getRect()
+                arr = self.atlasData[int(x):int(x+w), int(y):int(y+w)]
+            out.append((key, sourceRect, arr))
+        return out, images
 
+    def _setSourceRectShapes(self, data):
+        for key, sourceRect, arr in data:
+            w, h, _ = arr.shape
+            sourceRect.setRect(0, 0, h, w)
+
+    def _packSourceRects(self, data):
+        # pack all sourceRect objects into an approximate square
+        # sort symbols by height for more efficient packing
+        data = sorted(data, key=lambda x: x[2].shape[1], reverse=True)
+        nSymbols = len(data)
+        if nSymbols > 0:
+            maxWidth = max(x[2].shape[0] for x in data)
+            avgWidth = sum(x[2].shape[0] for x in data) / nSymbols
+            width = max(maxWidth, avgWidth * (nSymbols**0.5))
+        else:
+            maxWidth = 0
+            width = 0
+        x = width
+        y = 0
+        rowheight = 0
+        for key, sourceRect, arr in data:
+            w, h, _ = arr.shape
+            if x+w > width:
+                y += rowheight
+                x = 0
+                rowheight = h
+            sourceRect.setRect(y, x, h, w)
+            x += w
+        height = y + rowheight
+        return (int(width), int(height)), maxWidth
 
 
 class ScatterPlotItem(GraphicsObject):
