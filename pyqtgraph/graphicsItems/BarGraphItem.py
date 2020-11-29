@@ -132,6 +132,10 @@ class BarGraphItem(GraphicsObject):
                 raise Exception('must specify either y1 or height')
             self.height = y1 - self.y0
 
+        self.picture = None
+        self._shape = None
+        self.update()
+        self.informViewBoundsChanged()
 
     def drawPicture(self):
         self.picture = QtGui.QPicture()
