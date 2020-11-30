@@ -46,6 +46,7 @@ s1.addPoints(spots)
 w1.addItem(s1)
 
 ## Make all plots clickable
+clickedPen = pg.mkPen('b', width=2)
 lastClicked = []
 def clicked(plot, points):
     global lastClicked
@@ -53,7 +54,7 @@ def clicked(plot, points):
         p.resetPen()
     print("clicked points", points)
     for p in points:
-        p.setPen('b', width=2)
+        p.setPen(clickedPen)
     lastClicked = points
 s1.sigClicked.connect(clicked)
 
@@ -109,8 +110,14 @@ s3.sigClicked.connect(clicked)
 ## Test performance of large scatterplots
 
 s4 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 255, 255, 20))
-pos = np.random.normal(size=(2,10000), scale=1e-9)
-s4.addPoints(x=pos[0], y=pos[1])
+n = 10000
+pos = np.random.normal(size=(2, n), scale=1e-9)
+s4.addPoints(
+    x=pos[0],
+    y=pos[1],
+    # size=(np.random.random(n) * 20.).astype(int),
+    # brush=[pg.mkBrush(x) for x in np.random.randint(0, 256, (n, 3))]
+)
 w4.addItem(s4)
 s4.sigClicked.connect(clicked)
 
