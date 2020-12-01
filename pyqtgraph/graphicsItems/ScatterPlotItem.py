@@ -146,17 +146,16 @@ class SymbolAtlas(object):
         self._pos = (0, 0)
         self._rowShape = (0, 0)
 
-    def __getitem__(self, items):
+    def __getitem__(self, styles):
         """
-        Given an iterator over tuples, (symbol, size, pen, brush), return a list of QRectF
+        Given an iteratable over tuples, (symbol, size, pen, brush), return a list of QRectF
         representing the coordinates of corresponding symbols within the atlas. Note that these
         coordinates may change if the atlas is rebuilt.
         """
         out = []
         new = []
-        images = []
-        for symbol, size, pen, brush in items:
-            key = (id(symbol), size, id(pen), id(brush))
+        for symbol, size, pen, brush in styles:
+            key = id(symbol), size, id(pen), id(brush)
             try:
                 rect = self._rects[key]
             except KeyError:
@@ -164,10 +163,7 @@ class SymbolAtlas(object):
                 try:
                     rect.setRect(*self._coords[key])
                 except KeyError:
-                    img = renderSymbol(symbol, size, pen, brush)
-                    images.append(img)  # delay garbage collection
-                    arr = fn.imageToArray(img, copy=False, transpose=False)
-                    new.append((key, arr))
+                    new.append((key, (symbol, size, pen, brush)))
                 self._rects[key] = rect
             out.append(rect)
 
@@ -178,38 +174,35 @@ class SymbolAtlas(object):
 
     @property
     def pixmap(self):
+        profiler = debug.Profiler()
         if self._needsRebuild():
-            self._rebuild()
-
+            self.rebuild()
+            profiler('rebuild')
         if self._pixmap is None:
             self._pixmap = self._createPixmap()
+            profiler('_createPixmap')
         return self._pixmap
 
     @property
     def maxWidth(self):
         return self._maxWidth
 
-    def _clear(self):
-        self._data = np.zeros((0, 0, 4), dtype=np.ubyte)
-        self._coords.clear()
-        self._pixmap = None
-        self._maxWidth = 0
-        self._totalWidth = 0
-        self._totalArea = 0
-        self._pos = (0, 0)
-        self._rowShape = (0, 0)
+    def rebuild(self):
+        rects = self._rects
+        data = list(self._currentItemData())
+        self.clear()
+        self._rects = rects
+        self._extendFromData(data)
+
+    def clear(self):
+        self.__init__()
 
     def _needsRebuild(self):
         n = len(self._coords)
         m = len(self._rects)
         return (n > 4 * m) and (n > 1000)
 
-    def _rebuild(self):
-        items = list(self._currentItems())
-        self._clear()
-        self._extend(items)
-
-    def _diagnostics(self):
+    def diagnostics(self):
         n = len(self._coords)
         m = len(self._rects)
         w, h, _ = self._data.shape
@@ -222,19 +215,31 @@ class SymbolAtlas(object):
                     area_used=1.0 if n == 0 else a / (w * h),
                     squareness=1.0 if n == 0 else 2 * w * h / (w**2 + h**2))
 
-    def _currentItems(self):
+    def _currentItemData(self):
         for key in self._rects.keys():
             y, x, h, w = self._coords[key]
             arr = self._data[x:x + w, y:y + h]
             yield key, arr
 
-    def _extend(self, items):
-        if len(items) == 0:
-            return
+    def _extend(self, styles):
+        profiler = debug.Profiler()
 
-        items = sorted(items, key=lambda item: item[1].shape[1], reverse=True)  # sorting improves packing density
-        self._pack(items)
+        images = []
+        data = []
+        for key, style in styles:
+            img = renderSymbol(*style)
+            arr = fn.imageToArray(img, copy=False, transpose=False)
+            images.append(img)  # keep these to delay garbage collection
+            data.append((key, arr))
 
+        profiler('render')
+        self._extendFromData(data)
+        profiler('insert')
+
+    def _extendFromData(self, data):
+        self._pack(data)
+
+        # expand array if necessary
         wNew, hNew = self._minDataShape()
         wOld, hOld, _ = self._data.shape
         if (wNew > wOld) or (hNew > hOld):
@@ -242,13 +247,14 @@ class SymbolAtlas(object):
             arr[:wOld, :hOld] = self._data
             self._data = arr
 
-        for key, arr in items:
+        # insert data into array
+        for key, arr in data:
             y, x, h, w = self._coords[key]
             self._data[x:x+w, y:y+h] = arr
 
         self._pixmap = None
 
-    def _pack(self, items):
+    def _pack(self, data):
         # pack each item rectangle as efficiently as possible into a larger, expanding, approximate square
         n = len(self._coords)
         wMax = self._maxWidth
@@ -257,22 +263,23 @@ class SymbolAtlas(object):
         x, y = self._pos
         wRow, hRow = self._rowShape
 
-        n += len(items)
-
-        for _, arr in items:
+        # update packing statistics
+        for _, arr in data:
             w, h, _ = arr.shape
             wMax = max(w, wMax)
             wSum += w
             aSum += w * h
+        n += len(data)
 
+        # maybe expand row width for squareness and to accommodate largest width
         wRowEst = int(wSum / (n ** 0.5))
-
         if wRowEst > 2 * wRow:
             wRow = wRowEst
-
         wRow = max(wMax, wRow)
 
-        for key, arr in items:
+        # set coordinates by packing along rows
+        # sort by rectangle height first to improve packing density
+        for key, arr in sorted(data, key=lambda data: data[1].shape[1]):
             w, h, _ = arr.shape
             if x + w > wRow:
                 # move up a row
@@ -864,6 +871,7 @@ class ScatterPlotItem(GraphicsObject):
 
     @debug.warnOnException  ## raising an exception here causes crash
     def paint(self, p, *args):
+        profiler = debug.Profiler()
         cmode = self.opts.get('compositionMode', None)
         if cmode is not None:
             p.setCompositionMode(cmode)
