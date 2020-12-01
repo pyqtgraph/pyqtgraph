@@ -6,6 +6,12 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
+
+import ctypes
+import decimal
+import re
+import struct
+import sys
 import warnings
 
 import numpy as np
@@ -13,16 +19,12 @@ try:
     import cupy as cp
 except ImportError:
     from .util import empty_cupy as cp
-import decimal, re
-import ctypes
-import sys, struct
+
+from . import debug, reload
+from .Qt import QtGui, QtCore, QT_LIB, QtVersion
+from .metaarray import MetaArray
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import getConfigOption, setConfigOptions
-from . import debug, reload
-from .metaarray import MetaArray
-
 
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
