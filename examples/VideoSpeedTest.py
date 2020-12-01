@@ -29,6 +29,7 @@ try:
     _has_cupy = True
 except ImportError:
     _has_cupy = False
+    cp = None
 
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
 parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")
@@ -54,6 +55,7 @@ win.show()
 try:
     from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
 except ImportError:
+    RawImageGLWidget = None
     ui.rawGLRadio.setEnabled(False)
     ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
 else:
