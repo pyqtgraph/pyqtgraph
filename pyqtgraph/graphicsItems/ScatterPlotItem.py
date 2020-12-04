@@ -987,12 +987,14 @@ class ScatterPlotItem(GraphicsObject):
                 source_rect = data['sourceRect']
                 widths = data['width']
 
+                profiler()
                 # Update targetRects if necessary
                 updateMask = viewMask & np.equal(target_rect, None)
                 if np.any(updateMask):
                     updatePts = pts[:,updateMask]
                     width = widths[updateMask] * 2
                     target_rect[updateMask] = list(imap(QtCore.QRectF, updatePts[0,:], updatePts[1,:], width, width))
+                profiler('update targetRects')
 
                 if QT_LIB == 'PyQt4':
                     p.drawPixmapFragments(
@@ -1002,6 +1004,7 @@ class ScatterPlotItem(GraphicsObject):
                     )
                 else:
                     list(imap(p.drawPixmap, target_rect[viewMask].tolist(), repeat(atlas), source_rect[viewMask].tolist()))
+                profiler('draw')
             else:
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
