@@ -344,7 +344,7 @@ class ScatterPlotItem(GraphicsObject):
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
         
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('_targetRectInvalid', bool), ('width', float), ('visible', bool)])
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('targetRectInvalid', bool), ('width', float), ('visible', bool)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -472,7 +472,7 @@ class ScatterPlotItem(GraphicsObject):
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
         newData['targetRect'] = [QtCore.QRectF(0, 0, 0, 0) for _ in range(numPts)]
-        newData['_targetRectInvalid'] = True
+        newData['targetRectInvalid'] = True
 
         if 'spots' in kargs:
             spots = kargs['spots']
@@ -696,7 +696,7 @@ class ScatterPlotItem(GraphicsObject):
                 ]
 
             dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
-            dataSet['_targetRectInvalid'] = True
+            dataSet['targetRectInvalid'] = True
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
         else:
             self._maxSpotWidth = 0
@@ -843,7 +843,7 @@ class ScatterPlotItem(GraphicsObject):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
-        self.data['_targetRectInvalid'] = True
+        self.data['targetRectInvalid'] = True
 
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
@@ -911,13 +911,13 @@ class ScatterPlotItem(GraphicsObject):
 
                 profiler()
                 # Update targetRects if necessary
-                updateMask = viewMask & self.data['_targetRectInvalid']
+                updateMask = viewMask & self.data['targetRectInvalid']
                 if np.any(updateMask):
                     rect = self.data['targetRect'][updateMask]
                     x, y = pts[:, updateMask]
                     list(map(QtCore.QRectF.setX, rect, x))
                     list(map(QtCore.QRectF.setY, rect, y))
-                    self.data['_targetRectInvalid'][updateMask] = False
+                    self.data['targetRectInvalid'][updateMask] = False
                 profiler('update targetRects')
 
                 if QT_LIB == 'PyQt4':
