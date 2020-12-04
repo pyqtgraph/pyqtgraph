@@ -39,6 +39,10 @@ def test_scatterplotitem():
             s.setSymbol('+')
             app.processEvents()
 
+            # Test opts updates
+            s.setOpts(symbol='+', size=10, brush='r', pen='g', pxMode=pxMode, useCache=useCache)
+            app.processEvents()
+
             # Test list spot updates
             s.setSize([10] * 6)
             s.setBrush([pg.mkBrush('r')] * 6)
@@ -99,6 +103,43 @@ def test_init_spots():
     assert spots[1].pen() == pg.mkPen(None)
     assert spots[1].brush() == pg.mkBrush(None)
     assert spots[1].data() == 'zzz'
+
+
+def test_loc_indexer():
+    app = pg.mkQApp()
+    plot = pg.PlotWidget()
+    # set view range equal to its bounding rect.
+    # This causes plots to look the same regardless of pxMode.
+    plot.setRange(rect=plot.boundingRect())
+
+    s = pg.ScatterPlotItem()
+    plot.addItem(s)
+    s.setData(x=np.zeros(4), y=np.zeros(4))
+    d1 = s.loc[:]
+
+    for idx in [
+        0,
+        np.s_[1:2],
+        np.array([2], dtype=int),
+        np.array([False, False, False, True], dtype=bool),
+        None
+    ]:
+        for cols, vals in [
+            ('x', 1),
+            (['y'], 2),
+            (['symbol', 'size'], ('t', 3)),
+            ('visible', [False])
+        ]:
+            key = cols if idx is None else (idx, cols)
+            s.loc[key] = s.loc[key]
+            s.loc[key] = vals
+            app.processEvents()
+
+    d2 = np.array([(1., 2., 't', 3., None, None, None, False)] * 4, dtype=d1.dtype)
+    assert np.array_equal(s.loc[:], d2)
+    app.processEvents()
+
+    plot.clear()
 
 
 if __name__ == '__main__':

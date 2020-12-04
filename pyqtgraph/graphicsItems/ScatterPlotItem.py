@@ -311,6 +311,56 @@ class SymbolAtlas(object):
         return pm
 
 
+_USER_COLS = ['x', 'y', 'symbol', 'size', 'pen', 'brush', 'data', 'visible']
+_DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
+
+
+class _LocIndexer:
+    def __init__(self, spi):
+        self._spi = spi
+
+    def __getitem__(self, key):
+        idx, cols = self._unpackKey(key)
+        out = self._spi.data[cols][idx]
+        if hasattr(out, 'base') and out.base is not None:
+            out = out.copy()
+        return out
+
+    def __setitem__(self, key, value):
+        idx, cols = self._unpackKey(key)
+        self._spi.data[cols][idx] = value
+
+        if isinstance(cols, str):
+            cols = [cols]
+
+        if cols != ['data']:
+            self._spi._onChanged(idx=idx, style=any(c in _DEFAULT_STYLE for c in cols))
+
+    @staticmethod
+    def _unpackKey(key):
+        if isinstance(key, (slice, np.ndarray)):
+            idx, cols = key, _USER_COLS
+        elif isinstance(key, list):
+            idx, cols = np.s_[:], key
+        elif isinstance(key, tuple):
+            idx, cols = key
+        elif isinstance(key, str):
+            idx, cols = np.s_[:], key
+        else:
+            raise TypeError
+
+        if isinstance(cols, str):
+            if cols not in _USER_COLS:
+                raise ValueError
+        elif isinstance(cols, list):
+            if any(c not in _USER_COLS for c in cols):
+                raise ValueError
+        else:
+            raise TypeError
+
+        return idx, cols
+
+
 class ScatterPlotItem(GraphicsObject):
     """
     Displays a set of x/y points. Instances of this class are created
@@ -363,6 +413,10 @@ class ScatterPlotItem(GraphicsObject):
         profiler('setData')
 
         #self.setCacheMode(self.DeviceCoordinateCache)
+
+    @property
+    def loc(self):
+        return _LocIndexer(self)
 
     def setData(self, *args, **kargs):
         """
@@ -539,6 +593,22 @@ class ScatterPlotItem(GraphicsObject):
     def name(self):
         return self.opts.get('name', None)
 
+    def setOpts(self, **kwargs):
+        if any(k not in self.opts for k in kwargs):
+            raise ValueError
+
+        style = False
+        for k, v in kwargs.items():
+            if k in _DEFAULT_STYLE:
+                style = True
+                if k == 'pen':
+                    v = _mkPen(v)
+                elif k == 'brush':
+                    v = _mkBrush(v)
+            self.opts[k] = v
+
+        self._onChanged(style=style)
+
     def setPen(self, *args, **kargs):
         """Set the pen(s) used to draw the outline around each spot.
         If a list or array is provided, then the pen for each spot will be set separately.
@@ -677,39 +747,49 @@ class ScatterPlotItem(GraphicsObject):
         self.opts['pxMode'] = mode
         self.invalidate()
 
-    def updateSpots(self, dataSet=None):
+    def updateSpots(self, dataSet=None, idx=None):
 
         if dataSet is None:
             dataSet = self.data
 
-        invalidate = False
-        if self.opts['pxMode']:
-            mask = np.equal(dataSet['sourceRect'], None)
-            if np.any(mask):
-                invalidate = True
-                dataSet['sourceRect'][mask] = self.fragmentAtlas[
-                    zip(*self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], data=dataSet, mask=mask))
-                ]
+        if idx is None:
+            idx = np.s_[:]
+        elif isinstance(idx, int):
+            idx = np.array([idx])
 
-            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
-            dataSet['targetRect'] = None
+        if self.opts['pxMode']:
+            dataSet['sourceRect'][idx] = self.fragmentAtlas[
+                zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=idx))
+            ]
+            dataSet['width'][idx] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'][idx])))/2
+            dataSet['targetRect'][idx] = None
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
         else:
             self._maxSpotWidth = 0
             self._maxSpotPxWidth = 0
-            self.measureSpotSizes(dataSet)
+            self.measureSpotSizes(dataSet, idx=idx)
 
-        if invalidate:
-            self.invalidate()
+        self.invalidate()
 
-    def _getSpotOpts(self, opts, data=None, mask=None, scale=None):
+    def _onChanged(self, idx=None, style=True):
+        if style:
+            self.updateSpots(idx=idx)
+
+        self.bounds = [None, None]
+        self.invalidate()
+
+    def _style(self, opts, data=None, idx=None, scale=None):
         if data is None:
             data = self.data
 
+        if idx is None:
+            idx = np.s_[:]
+
         for opt in opts:
-            null = {'symbol': None, 'size': -1, 'pen': None, 'brush': None}[opt]
-            col = data[opt].copy() if mask is None else data[opt][mask]
-            col[np.equal(col, null)] = self.opts[opt]
+            col = data[opt][idx]
+            if col.base is not None:
+                col = col.copy()
+            col[np.equal(col, _DEFAULT_STYLE[opt])] = self.opts[opt]
 
             if opt == 'size' and scale is not None:
                 col *= scale
@@ -742,8 +822,8 @@ class ScatterPlotItem(GraphicsObject):
             recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
             return recs
 
-    def measureSpotSizes(self, dataSet):
-        for size, pen in zip(*self._getSpotOpts(['size', 'pen'], data=dataSet)):
+    def measureSpotSizes(self, dataSet, idx=None):
+        for size, pen in zip(*self._style(['size', 'pen'], data=dataSet, idx=idx)):
             ## keep track of the maximum spot size and pixel size
             width = 0
             pxWidth = 0
@@ -929,7 +1009,7 @@ class ScatterPlotItem(GraphicsObject):
                 for pt, w, symbol, size, pen, brush in zip(
                         pts.T[viewMask],
                         data['width'][viewMask],
-                        *self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], data=data, mask=viewMask, scale=scale)
+                        *self._style(['symbol', 'size', 'pen', 'brush'], data=data, idx=viewMask, scale=scale)
                 ):
                     p.resetTransform()
                     p.translate(pt[0] + w / 2, pt[1] + w / 2)
@@ -942,7 +1022,7 @@ class ScatterPlotItem(GraphicsObject):
                 for x, y, symbol, size, pen, brush in zip(
                         self.data['x'],
                         self.data['y'],
-                        *self._getSpotOpts(['symbol', 'size', 'pen', 'brush'], scale=scale)
+                        *self._style(['symbol', 'size', 'pen', 'brush'], scale=scale)
                 ):
                     p2.resetTransform()
                     p2.translate(x, y)
@@ -961,21 +1041,22 @@ class ScatterPlotItem(GraphicsObject):
         return self.data['item']
 
     def pointsAt(self, pos):
-        return self.points()[self._maskAt(pos)][::-1]
+        return self.points()[self.maskAt(pos)][::-1]
 
-    def _maskAt(self, pos):
+    def indexesAt(self, pos):
+        return np.argwhere(self.maskAt(pos))[::-1, 0]
+
+    def maskAt(self, pos):
         x = pos.x()
         y = pos.y()
-        pw = self.pixelWidth()
-        ph = self.pixelHeight()
-        ss = np.where(self.data['size'] == -1, self.opts['size'], self.data['size'])
         sx = self.data['x']
         sy = self.data['y']
+        ss, = self._style(['size'])
         s2x = ss * 0.5
         s2y = ss * 0.5
         if self.opts['pxMode']:
-            s2x *= pw
-            s2y *= ph
+            s2x *= self.pixelWidth()
+            s2y *= self.pixelHeight()
         return (x > sx - s2x) & (x < sx + s2x) & (y > sy - s2y) & (y < sy + s2y)
 
     def mouseClickEvent(self, ev):
