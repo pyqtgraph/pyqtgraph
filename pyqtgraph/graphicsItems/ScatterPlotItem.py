@@ -987,10 +987,10 @@ class ScatterPlotItem(GraphicsObject):
                 # Update targetRects if necessary
                 updateMask = viewMask & self.data['targetRectInvalid']
                 if np.any(updateMask):
-                    updatePts = pts[:, updateMask]
-                    width = self.data['width'][updateMask] * 2
-                    list(map(QtCore.QRectF.setRect,
-                             self.data['targetRect'][updateMask], updatePts[0, :], updatePts[1, :], width, width))
+                    rect = self.data['targetRect'][updateMask]
+                    x, y = pts[:, updateMask]
+                    list(map(QtCore.QRectF.setX, rect, x))
+                    list(map(QtCore.QRectF.setY, rect, y))
                     self.data['targetRectInvalid'][updateMask] = False
                 profiler('update targetRects')
 
