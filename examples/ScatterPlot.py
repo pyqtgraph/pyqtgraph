@@ -124,30 +124,33 @@ s4.sigClicked.connect(clicked)
 
 # Enable hovering and show information about hovered points in a tool tip
 s4.setAcceptHoverEvents(True)
-hovered = []
+hoverPoints = set()
 hoverPen = pg.mkPen('r', width=2)
-oldData = None
+
 
 def hoverEvent(ev):
-    global hovered
+    global hoverPoints
 
-    new = [] if ev.exit else s4.indexesAt(ev.pos())
+    newPoints = [] if ev.exit else s4.pointsAt(ev.pos())
 
     cutoff = 3
-    data = s4.loc[new[:cutoff], ['x', 'y', 'data']]
-    tip = ['x: {:.3g}\ny: {:.3g}\ndata: {}'.format(*rec) for rec in data]
-    if len(new) > cutoff:
-        tip.append('({} others...)'.format(len(new) - cutoff))
+    tip = ['x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format(x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
+           for pt in newPoints[:cutoff]]
+    if len(newPoints) > cutoff:
+        tip.append('({} others...)'.format(len(newPoints) - cutoff))
     s4.getViewBox().setToolTip('\n\n'.join(tip))
 
-    idx1 = np.setdiff1d(new, hovered)
-    if len(idx1) > 0:
-        s4.loc[idx1, 'pen'] = hoverPen
-    idx2 = np.setdiff1d(hovered, new)
-    if len(idx2) > 0:
-        s4.loc[idx2, 'pen', ] = None
+    newPoints = set(newPoints)
 
-    hovered = new
+    for pt in newPoints:
+        if pt not in hoverPoints:
+            pt.setPen(hoverPen)
+
+    for pt in hoverPoints:
+        if pt not in newPoints:
+            pt.resetPen()
+
+    hoverPoints = newPoints
 
 s4.hoverEvent = hoverEvent
 

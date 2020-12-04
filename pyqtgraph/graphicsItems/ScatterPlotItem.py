@@ -62,6 +62,8 @@ tr.rotate(45)
 Symbols['arrow_right'] = tr.map(Symbols['arrow_down'])
 Symbols['arrow_up'] = tr.map(Symbols['arrow_right'])
 Symbols['arrow_left'] = tr.map(Symbols['arrow_up'])
+_DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
+
 
 def drawSymbol(painter, symbol, size, pen, brush):
     if symbol is None:
@@ -311,56 +313,6 @@ class SymbolAtlas(object):
         return pm
 
 
-_USER_COLS = ['x', 'y', 'symbol', 'size', 'pen', 'brush', 'data', 'visible']
-_DEFAULT_STYLE = {'symbol': None, 'size': -1, 'pen': None, 'brush': None, 'visible': True}
-
-
-class _LocIndexer:
-    def __init__(self, spi):
-        self._spi = spi
-
-    def __getitem__(self, key):
-        idx, col = self._unpackKey(key)
-        out = self._spi.data[col][idx]
-        if hasattr(out, 'base') and out.base is not None:
-            out = out.copy()
-        return out
-
-    def __setitem__(self, key, value):
-        idx, col = self._unpackKey(key)
-        self._spi.data[col][idx] = value
-
-        if isinstance(col, str):
-            col = [col]
-
-        if col != ['data']:
-            self._spi._onChanged(idx=idx, style=any(c in _DEFAULT_STYLE for c in col))
-
-    @staticmethod
-    def _unpackKey(key):
-        if isinstance(key, (slice, np.ndarray)):
-            idx, col = key, _USER_COLS
-        elif isinstance(key, list):
-            idx, col = np.s_[:], key
-        elif isinstance(key, tuple):
-            idx, col = key
-        elif isinstance(key, str):
-            idx, col = np.s_[:], key
-        else:
-            raise TypeError
-
-        if isinstance(col, str):
-            if col not in _USER_COLS:
-                raise ValueError
-        elif isinstance(col, list):
-            if any(c not in _USER_COLS for c in col):
-                raise ValueError
-        else:
-            raise TypeError
-
-        return idx, col
-
-
 class ScatterPlotItem(GraphicsObject):
     """
     Displays a set of x/y points. Instances of this class are created
@@ -392,7 +344,7 @@ class ScatterPlotItem(GraphicsObject):
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
         
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('targetRectInvalid', bool), ('width', float), ('visible', bool)])
+        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('_targetRectInvalid', bool), ('width', float), ('visible', bool)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -413,10 +365,6 @@ class ScatterPlotItem(GraphicsObject):
         profiler('setData')
 
         #self.setCacheMode(self.DeviceCoordinateCache)
-
-    @property
-    def loc(self):
-        return _LocIndexer(self)
 
     def setData(self, *args, **kargs):
         """
@@ -524,7 +472,7 @@ class ScatterPlotItem(GraphicsObject):
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
         newData['targetRect'] = [QtCore.QRectF(0, 0, 0, 0) for _ in range(numPts)]
-        newData['targetRectInvalid'] = True
+        newData['_targetRectInvalid'] = True
 
         if 'spots' in kargs:
             spots = kargs['spots']
@@ -594,22 +542,6 @@ class ScatterPlotItem(GraphicsObject):
 
     def name(self):
         return self.opts.get('name', None)
-
-    def setOpts(self, **kwargs):
-        if any(k not in self.opts for k in kwargs):
-            raise ValueError
-
-        style = False
-        for k, v in kwargs.items():
-            if k in _DEFAULT_STYLE:
-                style = True
-                if k == 'pen':
-                    v = _mkPen(v)
-                elif k == 'brush':
-                    v = _mkBrush(v)
-            self.opts[k] = v
-
-        self._onChanged(style=style)
 
     def setPen(self, *args, **kargs):
         """Set the pen(s) used to draw the outline around each spot.
@@ -749,36 +681,30 @@ class ScatterPlotItem(GraphicsObject):
         self.opts['pxMode'] = mode
         self.invalidate()
 
-    def updateSpots(self, dataSet=None, idx=None):
+    def updateSpots(self, dataSet=None):
 
         if dataSet is None:
             dataSet = self.data
 
-        if idx is None:
-            idx = np.s_[:]
-        elif isinstance(idx, int):
-            idx = np.array([idx])
-
+        invalidate = False
         if self.opts['pxMode']:
-            dataSet['sourceRect'][idx] = self.fragmentAtlas[
-                zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=idx))
-            ]
-            dataSet['width'][idx] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'][idx])))/2
-            dataSet['targetRectInvalid'][idx] = True
+            mask = np.equal(dataSet['sourceRect'], None)
+            if np.any(mask):
+                invalidate = True
+                dataSet['sourceRect'][mask] = self.fragmentAtlas[
+                    zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask))
+                ]
+
+            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
+            dataSet['_targetRectInvalid'] = True
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
         else:
             self._maxSpotWidth = 0
             self._maxSpotPxWidth = 0
-            self.measureSpotSizes(dataSet, idx=idx)
+            self.measureSpotSizes(dataSet)
 
-        self.invalidate()
-
-    def _onChanged(self, idx=None, style=True):
-        if style:
-            self.updateSpots(idx=idx)
-
-        self.bounds = [None, None]
-        self.invalidate()
+        if invalidate:
+            self.invalidate()
 
     def _style(self, opts, data=None, idx=None, scale=None):
         if data is None:
@@ -824,8 +750,8 @@ class ScatterPlotItem(GraphicsObject):
             recs['brush'][np.equal(recs['brush'], None)] = fn.mkBrush(self.opts['brush'])
             return recs
 
-    def measureSpotSizes(self, dataSet, idx=None):
-        for size, pen in zip(*self._style(['size', 'pen'], data=dataSet, idx=idx)):
+    def measureSpotSizes(self, dataSet):
+        for size, pen in zip(*self._style(['size', 'pen'], data=dataSet)):
             ## keep track of the maximum spot size and pixel size
             width = 0
             pxWidth = 0
@@ -917,7 +843,7 @@ class ScatterPlotItem(GraphicsObject):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
-        self.data['targetRectInvalid'] = True
+        self.data['_targetRectInvalid'] = True
 
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
@@ -985,13 +911,13 @@ class ScatterPlotItem(GraphicsObject):
 
                 profiler()
                 # Update targetRects if necessary
-                updateMask = viewMask & self.data['targetRectInvalid']
+                updateMask = viewMask & self.data['_targetRectInvalid']
                 if np.any(updateMask):
                     rect = self.data['targetRect'][updateMask]
                     x, y = pts[:, updateMask]
                     list(map(QtCore.QRectF.setX, rect, x))
                     list(map(QtCore.QRectF.setY, rect, y))
-                    self.data['targetRectInvalid'][updateMask] = False
+                    self.data['_targetRectInvalid'][updateMask] = False
                 profiler('update targetRects')
 
                 if QT_LIB == 'PyQt4':
@@ -1043,12 +969,9 @@ class ScatterPlotItem(GraphicsObject):
         return self.data['item']
 
     def pointsAt(self, pos):
-        return self.points()[self.maskAt(pos)][::-1]
+        return self.points()[self._maskAt(pos)][::-1]
 
-    def indexesAt(self, pos):
-        return np.argwhere(self.maskAt(pos))[::-1, 0]
-
-    def maskAt(self, pos):
+    def _maskAt(self, pos):
         x = pos.x()
         y = pos.y()
         sx = self.data['x']
