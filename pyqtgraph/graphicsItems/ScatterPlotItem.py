@@ -915,8 +915,8 @@ class ScatterPlotItem(GraphicsObject):
                 if np.any(updateMask):
                     rect = self.data['targetRect'][updateMask]
                     x, y = pts[:, updateMask]
-                    list(map(QtCore.QRectF.setX, rect, x))
-                    list(map(QtCore.QRectF.setY, rect, y))
+                    list(imap(QtCore.QRectF.setX, rect, x))
+                    list(imap(QtCore.QRectF.setY, rect, y))
                     self.data['targetRectInvalid'][updateMask] = False
                 profiler('update targetRects')
 
