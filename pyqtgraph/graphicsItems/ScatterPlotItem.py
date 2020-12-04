@@ -320,45 +320,45 @@ class _LocIndexer:
         self._spi = spi
 
     def __getitem__(self, key):
-        idx, cols = self._unpackKey(key)
-        out = self._spi.data[cols][idx]
+        idx, col = self._unpackKey(key)
+        out = self._spi.data[col][idx]
         if hasattr(out, 'base') and out.base is not None:
             out = out.copy()
         return out
 
     def __setitem__(self, key, value):
-        idx, cols = self._unpackKey(key)
-        self._spi.data[cols][idx] = value
+        idx, col = self._unpackKey(key)
+        self._spi.data[col][idx] = value
 
-        if isinstance(cols, str):
-            cols = [cols]
+        if isinstance(col, str):
+            col = [col]
 
-        if cols != ['data']:
-            self._spi._onChanged(idx=idx, style=any(c in _DEFAULT_STYLE for c in cols))
+        if col != ['data']:
+            self._spi._onChanged(idx=idx, style=any(c in _DEFAULT_STYLE for c in col))
 
     @staticmethod
     def _unpackKey(key):
         if isinstance(key, (slice, np.ndarray)):
-            idx, cols = key, _USER_COLS
+            idx, col = key, _USER_COLS
         elif isinstance(key, list):
-            idx, cols = np.s_[:], key
+            idx, col = np.s_[:], key
         elif isinstance(key, tuple):
-            idx, cols = key
+            idx, col = key
         elif isinstance(key, str):
-            idx, cols = np.s_[:], key
+            idx, col = np.s_[:], key
         else:
             raise TypeError
 
-        if isinstance(cols, str):
-            if cols not in _USER_COLS:
+        if isinstance(col, str):
+            if col not in _USER_COLS:
                 raise ValueError
-        elif isinstance(cols, list):
-            if any(c not in _USER_COLS for c in cols):
+        elif isinstance(col, list):
+            if any(c not in _USER_COLS for c in col):
                 raise ValueError
         else:
             raise TypeError
 
-        return idx, cols
+        return idx, col
 
 
 class ScatterPlotItem(GraphicsObject):

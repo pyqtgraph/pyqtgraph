@@ -124,15 +124,15 @@ def test_loc_indexer():
         np.array([False, False, False, True], dtype=bool),
         None
     ]:
-        for cols, vals in [
+        for col, val in [
             ('x', 1),
             (['y'], 2),
             (['symbol', 'size'], ('t', 3)),
             ('visible', [False])
         ]:
-            key = cols if idx is None else (idx, cols)
+            key = col if idx is None else (idx, col)
             s.loc[key] = s.loc[key]
-            s.loc[key] = vals
+            s.loc[key] = val
             app.processEvents()
 
     d2 = np.array([(1., 2., 't', 3., None, None, None, False)] * 4, dtype=d1.dtype)
