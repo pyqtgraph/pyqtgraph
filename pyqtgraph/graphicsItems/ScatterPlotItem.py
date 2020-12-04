@@ -970,10 +970,8 @@ class ScatterPlotItem(GraphicsObject):
         if self.opts['pxMode'] is True:
             p.resetTransform()
 
-            data = self.data
-
             # Map point coordinates to device
-            pts = np.vstack([data['x'], data['y']])
+            pts = np.vstack([self.data['x'], self.data['y']])
             pts = self.mapPointsToDevice(pts)
             if pts is None:
                 return
@@ -985,28 +983,26 @@ class ScatterPlotItem(GraphicsObject):
                 # Draw symbols from pre-rendered atlas
                 atlas = self.fragmentAtlas.pixmap
 
-                target_rect = data['targetRect']
-                source_rect = data['sourceRect']
-                widths = data['width']
-
                 profiler()
                 # Update targetRects if necessary
-                updateMask = viewMask & data['targetRectInvalid']
+                updateMask = viewMask & self.data['targetRectInvalid']
                 if np.any(updateMask):
-                    updatePts = pts[:,updateMask]
-                    width = widths[updateMask] * 2
-                    list(map(QtCore.QRectF.setRect, target_rect[updateMask], updatePts[0,:], updatePts[1,:], width, width))
-                    data['targetRectInvalid'][updateMask] = False
+                    updatePts = pts[:, updateMask]
+                    width = self.data['width'][updateMask] * 2
+                    list(map(QtCore.QRectF.setRect,
+                             self.data['targetRect'][updateMask], updatePts[0, :], updatePts[1, :], width, width))
+                    self.data['targetRectInvalid'][updateMask] = False
                 profiler('update targetRects')
 
                 if QT_LIB == 'PyQt4':
                     p.drawPixmapFragments(
-                        target_rect[viewMask].tolist(),
-                        source_rect[viewMask].tolist(),
+                        self.data['targetRect'][viewMask].tolist(),
+                        self.data['sourceRect'][viewMask].tolist(),
                         atlas
                     )
                 else:
-                    list(imap(p.drawPixmap, target_rect[viewMask].tolist(), repeat(atlas), source_rect[viewMask].tolist()))
+                    list(imap(p.drawPixmap,
+                              self.data['targetRect'][viewMask], repeat(atlas), self.data['sourceRect'][viewMask]))
                 profiler('draw')
             else:
                 # render each symbol individually
@@ -1014,8 +1010,8 @@ class ScatterPlotItem(GraphicsObject):
 
                 for pt, w, symbol, size, pen, brush in zip(
                         pts.T[viewMask],
-                        data['width'][viewMask],
-                        *self._style(['symbol', 'size', 'pen', 'brush'], data=data, idx=viewMask, scale=scale)
+                        self.data['width'][viewMask],
+                        *self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)
                 ):
                     p.resetTransform()
                     p.translate(pt[0] + w / 2, pt[1] + w / 2)
