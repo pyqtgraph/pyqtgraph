@@ -182,8 +182,8 @@ def _get_from_colorcet(name):
     if len(color_list) == 0: 
         return None
     cm = ColorMap(
-    pos=np.linspace(0.0, 1.0, len(color_list)), 
-    color=color_list) #, names=color_names)
+        pos=np.linspace(0.0, 1.0, len(color_list)), 
+        color=color_list) #, names=color_names)
     _mapCache[name] = cm
     return cm
 
