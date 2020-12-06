@@ -5,7 +5,6 @@ from .functions import mkColor
 from os import path, listdir
 import collections
 
-print('initializing color maps module')
 _mapCache = {}
 
 def listMaps(source=None):
@@ -182,7 +181,6 @@ def _get_from_colorcet(name):
         color_list.append( color_tuple )
     if len(color_list) == 0: 
         return None
-    # print( color_list )
     cm = ColorMap(
     pos=np.linspace(0.0, 1.0, len(color_list)), 
     color=color_list) #, names=color_names)
@@ -217,9 +215,10 @@ class ColorMap(object):
     HSV_NEG = 3
     
     ## mapping modes
-    CLIPPED = 1
-    CYCLIC = 2
-    DIVERGING = 3
+    CLIP   = 1
+    REPEAT = 2
+    MIRROR = 3
+    DIVERGING = 4
     
     ## return types
     BYTE = 1
@@ -249,11 +248,12 @@ class ColorMap(object):
                             indicating the color space that should be used when
                             interpolating between stops. Note that the last mode value is
                             ignored. By default, the mode is entirely RGB.
-        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR, or DIVERGE)
+        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR, or DIVERGING)
                             controlling mapping of relative index to color. 
-                            CLIPPED maps colors to [0.0;1.0]
-                            CYCLIC maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
-                            DIVERGING maps colors to [-1.0;+1.0]                             
+                            CLIP maps colors to [0.0;1.0]
+                            REPEAT maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
+                            MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
+                            DIVERGING maps colors to [-1.0;+1.0]
         ===============     =================================================================
         """
 #       names               Optional dictionary mapping names to (a subset of) color indices                            
@@ -277,13 +277,15 @@ class ColorMap(object):
         self.mode = mode
         
         if mapping is None:
-            self.mapping_mode = self.CLIPPED
-        elif mapping == self.CYCLIC:
-            self.mapping_mode = self.CYCLIC
+            self.mapping_mode = self.CLIP
+        elif mapping == self.REPEAT:
+            self.mapping_mode = self.REPEAT
         elif mapping == self.DIVERGING:
             self.mapping_mode = self.DIVERGING
+        elif mapping == self.MIRROR:
+            self.mapping_mode = self.MIRROR
         else:
-            self.mapping_mode = self.CLIPPED
+            self.mapping_mode = self.CLIP
         
         self.stopsCache = {}
 
@@ -334,11 +336,13 @@ class ColorMap(object):
                 data = np.array(data)
             interp = np.empty(data.shape + (color.shape[1],), dtype=color.dtype)
 
-        if self.mapping_mode != self.CLIPPED:
-            if self.mapping_mode == self.CYCLIC:
-                data = dat%1.0
+        if self.mapping_mode != self.CLIP:
+            if self.mapping_mode == self.REPEAT:
+                data = data % 1.0
             elif self.mapping_mode == self.DIVERGING:
                 data = (data/2)+0.5
+            elif self.mapping_mode == self.MIRROR:
+                data = abs(data)
 
         for i in range(color.shape[1]):
             interp[...,i] = np.interp(data, pos, color[:,i])

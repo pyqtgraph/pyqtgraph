@@ -17,9 +17,6 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-# Interpret image data as row-major instead of col-major
-# pg.setConfigOptions(imageAxisOrder='row-major')
-
 app = QtGui.QApplication([])
 
 ## Create window with ImageView widget
@@ -28,7 +25,6 @@ win.resize(1000,800)
 
 lw = pg.GraphicsLayoutWidget()
 lw.setFixedWidth(1000)
-# lw.setFixedHeight(1600)
 lw.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
 
 scr = QtGui.QScrollArea()
@@ -56,6 +52,7 @@ num_bars += 1
 lw.nextRow()
 list_of_maps = pg.colormap.listMaps()
 for map_name in list_of_maps: # [:3]:
+    # print(map_name)
     num_bars += 1
     lw.addLabel(map_name)
     cmap = pg.colormap.get(map_name)
@@ -101,32 +98,6 @@ for map_name in list_of_maps: # [:3]:
     lw.nextRow()
     
 lw.setFixedHeight(num_bars * (height+5) )
-
-
-    # ## Set a custom color map
-    # colors = [
-    #     (  0,   0,   0), ( 45,   5,  61), ( 84,  42,  55),  
-    #     (150,  87,  60), (208, 171, 141), (255, 255, 255)
-    # ]
-    # cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
-
-
-# lw.addLabel('test2')
-# grv = pg.GraphicsView()
-# imi = pg.ImageItem()
-# imi.setImage(img)
-# grv.addItem(imi)
-# lw.addWidget(grv)
-# lw.nextRow()
-
-
-# ge = pg.GradientEditorItem()
-# # ge.setOrientation('right')
-# # ge.loadPreset('grey')
-# ge.loadPreset('viridis')
-# # ge.setColorMap( cmap )
-# # imv.setColorMap(cmap)
-# imi.setLookupTable( ge.getLookupTable(512) ) # pass color map as 512 value table
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
