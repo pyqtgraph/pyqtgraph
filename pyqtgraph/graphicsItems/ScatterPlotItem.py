@@ -133,12 +133,6 @@ class SymbolAtlas(object):
 
     """
     def __init__(self):
-        # symbol key : QRect(...) coordinates where symbol can be found in atlas.
-        # note that these coordinates may change if the atlas is rebuilt.
-        # rebuild happens automatically when too many unused symbols are detected.
-        # weak value; if all external refs to this list disappear,
-        # the symbol will be forgotten after a rebuild.
-        self._rects = weakref.WeakValueDictionary()
         self._data = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
         self._coords = {}
         self._pixmap = None
@@ -150,85 +144,71 @@ class SymbolAtlas(object):
 
     def __getitem__(self, styles):
         """
-        Given an iteratable over tuples, (symbol, size, pen, brush), return a list of QRectF
-        representing the coordinates of corresponding symbols within the atlas. Note that these
-        coordinates may change if the atlas is rebuilt.
+        Given a list of tuples, (symbol, size, pen, brush), return a list of coordinates of
+        corresponding symbols within the atlas. Note that these coordinates may change if the atlas is rebuilt.
         """
-        out = []
-        new = []
-        for symbol, size, pen, brush in styles:
-            key = id(symbol), size, id(pen), id(brush)
-            try:
-                rect = self._rects[key]
-            except KeyError:
-                rect = QtCore.QRectF()
-                try:
-                    rect.setRect(*self._coords[key])
-                except KeyError:
-                    new.append((key, (symbol, size, pen, brush)))
-                self._rects[key] = rect
-            out.append(rect)
+        keys = self._keys(styles)
+        new = {key: style for key, style in zip(keys, styles) if key not in self._coords}
 
         if new:
             self._extend(new)
 
-        return out
+        return list(imap(self._coords.__getitem__, keys))
+
+    def __len__(self):
+        return len(self._coords)
 
     @property
     def pixmap(self):
-        profiler = debug.Profiler()
-        if self._needsRebuild():
-            self.rebuild()
-            profiler('rebuild')
         if self._pixmap is None:
             self._pixmap = self._createPixmap()
-            profiler('_createPixmap')
         return self._pixmap
 
     @property
     def maxWidth(self):
         return self._maxWidth
 
-    def rebuild(self):
-        rects = self._rects
-        data = list(self._currentItemData())
+    def rebuild(self, styles=None):
+        profiler = debug.Profiler()
+        if styles is None:
+            data = []
+        else:
+            keys = set(self._keys(styles))
+            data = list(self._itemData(keys))
+
         self.clear()
-        self._rects = rects
-        self._extendFromData(data)
+        if data:
+            self._extendFromData(data)
+        return [] if styles is None else self[styles]
 
     def clear(self):
         self.__init__()
 
-    def _needsRebuild(self):
-        n = len(self._coords)
-        m = len(self._rects)
-        return (n > 4 * m) and (n > 1000)
-
     def diagnostics(self):
         n = len(self._coords)
-        m = len(self._rects)
         w, h, _ = self._data.shape
         a = self._totalArea
         return dict(count=n,
                     width=w,
                     height=h,
                     area=w * h,
-                    count_used=1.0 if n == 0 else m / n,
                     area_used=1.0 if n == 0 else a / (w * h),
                     squareness=1.0 if n == 0 else 2 * w * h / (w**2 + h**2))
 
-    def _currentItemData(self):
-        for key in self._rects.keys():
+    def _keys(self, styles):
+        return [(id(symbol), size, id(pen), id(brush)) for symbol, size, pen, brush in styles]
+
+    def _itemData(self, keys):
+        for key in keys:
             y, x, h, w = self._coords[key]
-            arr = self._data[x:x + w, y:y + h]
-            yield key, arr
+            yield key, self._data[x:x + w, y:y + h]
 
     def _extend(self, styles):
         profiler = debug.Profiler()
 
         images = []
         data = []
-        for key, style in styles:
+        for key, style in styles.items():
             img = renderSymbol(*style)
             arr = fn.imageToArray(img, copy=False, transpose=False)
             images.append(img)  # keep these to delay garbage collection
@@ -290,7 +270,6 @@ class SymbolAtlas(object):
                 hRow = h
             hRow = max(h, hRow)
             self._coords[key] = (y, x, h, w)
-            self._rects[key].setRect(y, x, h, w)
             x += w
 
         self._maxWidth = wMax
@@ -305,6 +284,7 @@ class SymbolAtlas(object):
         return int(w), int(y + h)
 
     def _createPixmap(self):
+        profiler = debug.Profiler()
         if self._data.size == 0:
             pm = QtGui.QPixmap(0, 0)
         else:
@@ -353,10 +333,10 @@ class ScatterPlotItem(GraphicsObject):
                                        ('visible', bool),
                                        ('data', object),
                                        ('item', object),
-                                       ('sourceRect', object),
-                                       ('sourceRectCoords', [('x', int), ('y', int), ('w', int), ('h', int)]),
-                                       ('targetRect', object),
-                                       ('targetRectInvalid', bool)])
+                                       ('sourceRect', [('x', int),
+                                                       ('y', int),
+                                                       ('w', int),
+                                                       ('h', int)])])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -484,10 +464,6 @@ class ScatterPlotItem(GraphicsObject):
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
 
-        if QT_LIB != 'PySide2':
-            newData['targetRect'] = [QtCore.QRectF(0, 0, 0, 0) for _ in range(numPts)]
-            newData['targetRectInvalid'] = True
-
         if 'spots' in kargs:
             spots = kargs['spots']
             for i in range(len(spots)):
@@ -575,7 +551,7 @@ class ScatterPlotItem(GraphicsObject):
         else:
             self.opts['pen'] = _mkPen(*args, **kargs)
 
-        dataSet['sourceRect'] = None
+        dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
 
@@ -596,9 +572,8 @@ class ScatterPlotItem(GraphicsObject):
             dataSet['brush'] = brushes
         else:
             self.opts['brush'] = _mkBrush(*args, **kargs)
-            #self._spotPixmap = None
 
-        dataSet['sourceRect'] = None
+        dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
 
@@ -621,7 +596,7 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['symbol'] = symbol
             self._spotPixmap = None
 
-        dataSet['sourceRect'] = None
+        dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
 
@@ -644,7 +619,7 @@ class ScatterPlotItem(GraphicsObject):
             self.opts['size'] = size
             self._spotPixmap = None
 
-        dataSet['sourceRect'] = None
+        dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
 
@@ -666,7 +641,7 @@ class ScatterPlotItem(GraphicsObject):
         else:
             dataSet['visible'] = visible
 
-        dataSet['sourceRect'] = None
+        dataSet['sourceRect'] = 0
         if update:
             self.updateSpots(dataSet)
         
@@ -696,24 +671,22 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def updateSpots(self, dataSet=None):
+        profiler = debug.Profiler()
+
         if dataSet is None:
             dataSet = self.data
 
         invalidate = False
         if self.opts['pxMode']:
-            mask = np.equal(dataSet['sourceRect'], None)
+            mask = dataSet['sourceRect']['w'] == 0
             if np.any(mask):
                 invalidate = True
-                sr = self.fragmentAtlas[
-                    zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask))
+                dataSet['sourceRect'][mask] = self.fragmentAtlas[
+                    list(zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask)))
                 ]
-                dataSet['sourceRect'][mask] = sr
-                dataSet['sourceRectCoords'][mask] = list(imap(QtCore.QRectF.getRect, sr))
-
-            if QT_LIB != 'PySide2':
-                dataSet['targetRectInvalid'] = True
-
+            self._maybeRebuildAtlas()
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
+
         else:
             self._maxSpotWidth = 0
             self._maxSpotPxWidth = 0
@@ -721,6 +694,13 @@ class ScatterPlotItem(GraphicsObject):
 
         if invalidate:
             self.invalidate()
+
+    def _maybeRebuildAtlas(self, threshold=4, minlen=1000):
+        n = len(self.fragmentAtlas)
+        if (n > minlen) and (n > threshold * len(self.data)):
+            self.data['sourceRect'] = self.fragmentAtlas.rebuild(
+                list(zip(*self._style(['symbol', 'size', 'pen', 'brush'])))
+            )
 
     def _style(self, opts, data=None, idx=None, scale=None):
         if data is None:
@@ -859,8 +839,6 @@ class ScatterPlotItem(GraphicsObject):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
-        if QT_LIB != 'PySide2':
-            self.data['targetRectInvalid'] = True
 
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
@@ -873,7 +851,7 @@ class ScatterPlotItem(GraphicsObject):
             return None
 
         pts = fn.transformCoordinates(tr, pts)
-        pts -= self.data['sourceRectCoords']['w'] / 2
+        pts -= self.data['sourceRect']['w'] / 2
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
 
         return pts
@@ -885,7 +863,7 @@ class ScatterPlotItem(GraphicsObject):
         if vb is None:
             return None
         viewBounds = vb.mapRectToDevice(vb.boundingRect())
-        w = self.data['sourceRectCoords']['w'] / 2
+        w = self.data['sourceRect']['w'] / 2
         mask = ((pts[0] + w > viewBounds.left()) &
                 (pts[0] - w < viewBounds.right()) &
                 (pts[1] + w > viewBounds.top()) &
@@ -925,55 +903,22 @@ class ScatterPlotItem(GraphicsObject):
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
                 pm = self.fragmentAtlas.pixmap
-
-                # The approach to drawing taken here for PySide2 works with the other Qt bindings as well,
-                # but they are treated differently for performance reasons. The drawPixmap signature used for PySide2 is
-                # much slower for PyQt5, so much so that it warrants the cost of updating the targetRect coordinates,
-                # which is as costly as drawing. If the drawPixmap signature used by PySide2 can be made as fast
-                # in PyQt5, then separate treatment is not necessary and all of the source and target
-                # QRectF stuff in this module can be discarded.
-
-                if QT_LIB == 'PySide2':
-                    x, y = pts[:, viewMask].astype(int)
-                    sr = self.data['sourceRectCoords'][viewMask]
-                    profiler('prep')
-                    # The bulk of the time spent in this method is the following calls to drawPixmap.
-                    # This could be improved if drawPixmap would accept numpy arrays as coordinate arguments.
-                    # See: https://bugreports.qt.io/browse/PYSIDE-163?jql=project%20%3D%20PYSIDE%20AND%20text%20~%20drawpixmapfragments
-                    list(imap(p.drawPixmap,
-                              x.tolist(), y.tolist(), repeat(pm),
-                              sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
-                    profiler('draw')
-                elif QT_LIB == 'PyQt4':
-                    p.drawPixmapFragments(
-                        self.data['targetRect'][viewMask].tolist(),
-                        self.data['sourceRect'][viewMask].tolist(),
-                        pm
-                    )
-                else:
-                    # Update targetRects if necessary
-                    updateMask = viewMask & self.data['targetRectInvalid']
-                    if np.any(updateMask):
-                        rect = self.data['targetRect'][updateMask]
-                        x, y = pts[:, updateMask]
-                        # It appears to only be necessary to set w and h.
-                        # These two lines are slightly faster than the single setRect one.
-                        list(imap(QtCore.QRectF.setX, rect, x))
-                        list(imap(QtCore.QRectF.setY, rect, y))
-                        # w = self.data['sourceRectCoords']['w'][updateMask]
-                        # list(imap(QtCore.QRectF.setRect, rect, x, y, w, w))
-                        self.data['targetRectInvalid'][updateMask] = False
-                    profiler('prep')
-                    list(imap(p.drawPixmap,
-                              self.data['targetRect'][viewMask].tolist(), repeat(pm),
-                              self.data['sourceRect'][viewMask].tolist()))
-                    profiler('draw')
+                x, y = pts[:, viewMask].astype(int)
+                sr = self.data['sourceRect'][viewMask]
+                profiler('prep')
+                # The bulk of the time spent in this method is the following calls to drawPixmap.
+                # This could be improved if drawPixmap would accept numpy arrays as coordinate arguments.
+                # See: https://bugreports.qt.io/browse/PYSIDE-163
+                list(imap(p.drawPixmap,
+                          x.tolist(), y.tolist(), repeat(pm),
+                          sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
+                profiler('draw')
             else:
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
 
                 for pt, style in zip(
-                        (pts[:, viewMask] + self.data['sourceRectCoords']['w'][viewMask] / 2).T,
+                        (pts[:, viewMask] + self.data['sourceRect']['w'][viewMask] / 2).T,
                         zip(*(self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)))
                 ):
                     p.resetTransform()
@@ -1149,6 +1094,6 @@ class SpotItem(object):
         self._data['data'] = data
 
     def updateItem(self):
-        self._data['sourceRect'] = None
+        self._data['sourceRect'] = 0
         self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
