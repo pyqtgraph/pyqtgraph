@@ -483,8 +483,10 @@ class ScatterPlotItem(GraphicsObject):
         newData = self.data[len(oldData):]
         newData['size'] = -1  ## indicates to use default size
         newData['visible'] = True
-        newData['targetRect'] = [QtCore.QRectF(0, 0, 0, 0) for _ in range(numPts)]
-        newData['targetRectInvalid'] = True
+
+        if QT_LIB != 'PySide2':
+            newData['targetRect'] = [QtCore.QRectF(0, 0, 0, 0) for _ in range(numPts)]
+            newData['targetRectInvalid'] = True
 
         if 'spots' in kargs:
             spots = kargs['spots']
@@ -708,7 +710,9 @@ class ScatterPlotItem(GraphicsObject):
                 dataSet['sourceRect'][mask] = sr
                 dataSet['sourceRectCoords'][mask] = list(imap(QtCore.QRectF.getRect, sr))
 
-            dataSet['targetRectInvalid'] = True
+            if QT_LIB != 'PySide2':
+                dataSet['targetRectInvalid'] = True
+
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
         else:
             self._maxSpotWidth = 0
@@ -855,7 +859,8 @@ class ScatterPlotItem(GraphicsObject):
         self.prepareGeometryChange()
         GraphicsObject.viewTransformChanged(self)
         self.bounds = [None, None]
-        self.data['targetRectInvalid'] = True
+        if QT_LIB != 'PySide2':
+            self.data['targetRectInvalid'] = True
 
     def setExportMode(self, *args, **kwds):
         GraphicsObject.setExportMode(self, *args, **kwds)
@@ -919,38 +924,50 @@ class ScatterPlotItem(GraphicsObject):
 
             if self.opts['useCache'] and self._exportOpts is False:
                 # Draw symbols from pre-rendered atlas
-                atlas = self.fragmentAtlas.pixmap
+                pm = self.fragmentAtlas.pixmap
 
-                # profiler()
-                # # Update targetRects if necessary
-                # updateMask = viewMask & self.data['targetRectInvalid']
-                # if np.any(updateMask):
-                #     rect = self.data['targetRect'][updateMask]
-                #     x, y = pts[:, updateMask]
-                #     list(imap(QtCore.QRectF.setX, rect, x))
-                #     list(imap(QtCore.QRectF.setY, rect, y))
-                #     # w = self.data['width'][updateMask] * 2
-                #     # list(imap(QtCore.QRectF.setRect, rect, x, y, w, w))
-                #     self.data['targetRectInvalid'][updateMask] = False
-                # profiler('update targetRects')
+                # The approach to drawing taken here for PySide2 works with the other Qt bindings as well,
+                # but they are treated differently for performance reasons. The drawPixmap signature used for PySide2 is
+                # much slower for PyQt5, so much so that it warrants the cost of updating the targetRect coordinates,
+                # which is as costly as drawing. If the drawPixmap signature used by PySide2 can be made as fast
+                # in PyQt5, then separate treatment is not necessary and all of the source and target
+                # QRectF stuff in this module can be discarded.
 
-                if QT_LIB == 'PyQt4':
+                if QT_LIB == 'PySide2':
+                    x, y = pts[:, viewMask].astype(int)
+                    sr = self.data['sourceRectCoords'][viewMask]
+                    profiler('prep')
+                    # The bulk of the time spent in this method is the following calls to drawPixmap.
+                    # This could be improved if drawPixmap would accept numpy arrays as coordinate arguments.
+                    # See: https://bugreports.qt.io/browse/PYSIDE-163?jql=project%20%3D%20PYSIDE%20AND%20text%20~%20drawpixmapfragments
+                    list(imap(p.drawPixmap,
+                              x.tolist(), y.tolist(), repeat(pm),
+                              sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
+                    profiler('draw')
+                elif QT_LIB == 'PyQt4':
                     p.drawPixmapFragments(
                         self.data['targetRect'][viewMask].tolist(),
                         self.data['sourceRect'][viewMask].tolist(),
-                        atlas
+                        pm
                     )
                 else:
-                    x, y = pts[:, viewMask]
-                    sr = self.data['sourceRectCoords'][viewMask]
-                    profiler('draw prep')
+                    # Update targetRects if necessary
+                    updateMask = viewMask & self.data['targetRectInvalid']
+                    if np.any(updateMask):
+                        rect = self.data['targetRect'][updateMask]
+                        x, y = pts[:, updateMask]
+                        # It appears to only be necessary to set w and h.
+                        # These two lines are slightly faster than the single setRect one.
+                        list(imap(QtCore.QRectF.setX, rect, x))
+                        list(imap(QtCore.QRectF.setY, rect, y))
+                        # w = self.data['sourceRectCoords']['w'][updateMask]
+                        # list(imap(QtCore.QRectF.setRect, rect, x, y, w, w))
+                        self.data['targetRectInvalid'][updateMask] = False
+                    profiler('prep')
                     list(imap(p.drawPixmap,
-                              x.tolist(), y.tolist(), repeat(atlas),
-                              sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
-
-                    # list(imap(p.drawPixmap,
-                    #           self.data['targetRect'][viewMask], repeat(atlas), self.data['sourceRect'][viewMask]))
-                profiler('draw')
+                              self.data['targetRect'][viewMask].tolist(), repeat(pm),
+                              self.data['sourceRect'][viewMask].tolist()))
+                    profiler('draw')
             else:
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
