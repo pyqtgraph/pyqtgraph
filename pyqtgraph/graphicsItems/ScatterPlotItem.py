@@ -978,7 +978,7 @@ class ScatterPlotItem(GraphicsObject):
                         *self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)
                 ):
                     p.resetTransform()
-                    p.translate(pt[0] + w, pt[1] + w)
+                    p.translate(pt[0] + w / 2, pt[1] + w / 2)
                     drawSymbol(p, symbol, size, pen, brush)
         else:
             if self.picture is None:
