@@ -972,27 +972,26 @@ class ScatterPlotItem(GraphicsObject):
                 # render each symbol individually
                 p.setRenderHint(p.Antialiasing, aa)
 
-                for pt, w, symbol, size, pen, brush in zip(
-                        pts.T[viewMask],
-                        self.data['sourceRectCoords']['w'][viewMask],
-                        *self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)
+                for pt, style in zip(
+                        (pts[:, viewMask] + self.data['sourceRectCoords']['w'][viewMask] / 2).T,
+                        zip(*(self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)))
                 ):
                     p.resetTransform()
-                    p.translate(pt[0] + w / 2, pt[1] + w / 2)
-                    drawSymbol(p, symbol, size, pen, brush)
+                    p.translate(*pt)
+                    drawSymbol(p, *style)
         else:
             if self.picture is None:
                 self.picture = QtGui.QPicture()
                 p2 = QtGui.QPainter(self.picture)
 
-                for x, y, symbol, size, pen, brush in zip(
+                for x, y, style in zip(
                         self.data['x'],
                         self.data['y'],
-                        *self._style(['symbol', 'size', 'pen', 'brush'], scale=scale)
+                        zip(*self._style(['symbol', 'size', 'pen', 'brush'], scale=scale))
                 ):
                     p2.resetTransform()
                     p2.translate(x, y)
-                    drawSymbol(p2, symbol, size, pen, brush)
+                    drawSymbol(p2, *style)
                 p2.end()
 
             p.setRenderHint(p.Antialiasing, aa)
