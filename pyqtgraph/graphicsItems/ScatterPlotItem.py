@@ -344,7 +344,19 @@ class ScatterPlotItem(GraphicsObject):
         self.picture = None   # QPicture used for rendering when pxmode==False
         self.fragmentAtlas = SymbolAtlas()
         
-        self.data = np.empty(0, dtype=[('x', float), ('y', float), ('size', float), ('symbol', object), ('pen', object), ('brush', object), ('data', object), ('item', object), ('sourceRect', object), ('targetRect', object), ('targetRectInvalid', bool), ('width', float), ('visible', bool)])
+        self.data = np.empty(0, dtype=[('x', float),
+                                       ('y', float),
+                                       ('size', float),
+                                       ('symbol', object),
+                                       ('pen', object),
+                                       ('brush', object),
+                                       ('visible', bool),
+                                       ('data', object),
+                                       ('item', object),
+                                       ('sourceRect', object),
+                                       ('sourceRectCoords', [('x', int), ('y', int), ('w', int), ('h', int)]),
+                                       ('targetRect', object),
+                                       ('targetRectInvalid', bool)])
         self.bounds = [None, None]  ## caches data bounds
         self._maxSpotWidth = 0      ## maximum size of the scale-variant portion of all spots
         self._maxSpotPxWidth = 0    ## maximum size of the scale-invariant portion of all spots
@@ -682,7 +694,6 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def updateSpots(self, dataSet=None):
-
         if dataSet is None:
             dataSet = self.data
 
@@ -691,11 +702,12 @@ class ScatterPlotItem(GraphicsObject):
             mask = np.equal(dataSet['sourceRect'], None)
             if np.any(mask):
                 invalidate = True
-                dataSet['sourceRect'][mask] = self.fragmentAtlas[
+                sr = self.fragmentAtlas[
                     zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask))
                 ]
+                dataSet['sourceRect'][mask] = sr
+                dataSet['sourceRectCoords'][mask] = list(imap(QtCore.QRectF.getRect, sr))
 
-            dataSet['width'] = np.array(list(imap(QtCore.QRectF.width, dataSet['sourceRect'])))/2
             dataSet['targetRectInvalid'] = True
             self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
         else:
@@ -856,7 +868,7 @@ class ScatterPlotItem(GraphicsObject):
             return None
 
         pts = fn.transformCoordinates(tr, pts)
-        pts -= self.data['width']
+        pts -= self.data['sourceRectCoords']['w'] / 2
         pts = np.clip(pts, -2**30, 2**30) ## prevent Qt segmentation fault.
 
         return pts
@@ -868,7 +880,7 @@ class ScatterPlotItem(GraphicsObject):
         if vb is None:
             return None
         viewBounds = vb.mapRectToDevice(vb.boundingRect())
-        w = self.data['width']
+        w = self.data['sourceRectCoords']['w'] / 2
         mask = ((pts[0] + w > viewBounds.left()) &
                 (pts[0] - w < viewBounds.right()) &
                 (pts[1] + w > viewBounds.top()) &
@@ -909,16 +921,18 @@ class ScatterPlotItem(GraphicsObject):
                 # Draw symbols from pre-rendered atlas
                 atlas = self.fragmentAtlas.pixmap
 
-                profiler()
-                # Update targetRects if necessary
-                updateMask = viewMask & self.data['targetRectInvalid']
-                if np.any(updateMask):
-                    rect = self.data['targetRect'][updateMask]
-                    x, y = pts[:, updateMask]
-                    list(imap(QtCore.QRectF.setX, rect, x))
-                    list(imap(QtCore.QRectF.setY, rect, y))
-                    self.data['targetRectInvalid'][updateMask] = False
-                profiler('update targetRects')
+                # profiler()
+                # # Update targetRects if necessary
+                # updateMask = viewMask & self.data['targetRectInvalid']
+                # if np.any(updateMask):
+                #     rect = self.data['targetRect'][updateMask]
+                #     x, y = pts[:, updateMask]
+                #     list(imap(QtCore.QRectF.setX, rect, x))
+                #     list(imap(QtCore.QRectF.setY, rect, y))
+                #     # w = self.data['width'][updateMask] * 2
+                #     # list(imap(QtCore.QRectF.setRect, rect, x, y, w, w))
+                #     self.data['targetRectInvalid'][updateMask] = False
+                # profiler('update targetRects')
 
                 if QT_LIB == 'PyQt4':
                     p.drawPixmapFragments(
@@ -927,8 +941,15 @@ class ScatterPlotItem(GraphicsObject):
                         atlas
                     )
                 else:
+                    x, y = pts[:, viewMask]
+                    sr = self.data['sourceRectCoords'][viewMask]
+                    profiler('draw prep')
                     list(imap(p.drawPixmap,
-                              self.data['targetRect'][viewMask], repeat(atlas), self.data['sourceRect'][viewMask]))
+                              x.tolist(), y.tolist(), repeat(atlas),
+                              sr['x'].tolist(), sr['y'].tolist(), sr['w'].tolist(), sr['h'].tolist()))
+
+                    # list(imap(p.drawPixmap,
+                    #           self.data['targetRect'][viewMask], repeat(atlas), self.data['sourceRect'][viewMask]))
                 profiler('draw')
             else:
                 # render each symbol individually
@@ -936,11 +957,11 @@ class ScatterPlotItem(GraphicsObject):
 
                 for pt, w, symbol, size, pen, brush in zip(
                         pts.T[viewMask],
-                        self.data['width'][viewMask],
+                        self.data['sourceRectCoords']['w'][viewMask],
                         *self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)
                 ):
                     p.resetTransform()
-                    p.translate(pt[0] + w / 2, pt[1] + w / 2)
+                    p.translate(pt[0] + w, pt[1] + w)
                     drawSymbol(p, symbol, size, pen, brush)
         else:
             if self.picture is None:
