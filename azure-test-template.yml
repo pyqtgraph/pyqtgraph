@@ -105,7 +105,14 @@ jobs:
         conda create --name test-environment-$(python.version) python=$(python.version) --yes --quiet
         source activate test-environment-$(python.version)
         conda info
-        conda install $(qt.bindings) numpy scipy pyopengl h5py six --yes --quiet
+        
+        if [ $(qt.bindings) == "pyside2" ]
+        then
+          conda install $(qt.bindings) --yes --quiet --strict-channel-priority
+        else
+          conda install $(qt.bindings) --yes --quiet
+        fi
+        conda install numpy scipy pyopengl h5py six --yes --quiet
         pip install matplotlib
       else
         pip install $(qt.bindings) numpy scipy pyopengl h5py six matplotlib
