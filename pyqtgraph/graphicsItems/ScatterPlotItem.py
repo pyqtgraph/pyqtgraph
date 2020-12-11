@@ -763,7 +763,6 @@ class ScatterPlotItem(GraphicsObject):
 
             yield col
 
-    # deprecated
     def getSpotOpts(self, recs, scale=1.0):
         if recs.ndim == 0:
             rec = recs
