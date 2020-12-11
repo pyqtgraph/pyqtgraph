@@ -1162,6 +1162,6 @@ class SpotItem(object):
         self._data['data'] = data
 
     def updateItem(self):
-        self._data['sourceRect'] = 0
+        self._data['sourceRect'] = (0, 0, 0, 0)  # numpy <=1.13.1 won't let us set this with a single zero
         self._plot.updateSpots(self._data.reshape(1))
         self._plot.invalidate()
