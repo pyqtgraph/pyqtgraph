@@ -200,8 +200,6 @@ def noticeCudaCheck():
             ui.cudaCheck.setChecked(False)
     else:
         xp = np
-    updateLUT()
-    updateSize()
     mkData()
 
 mkData()

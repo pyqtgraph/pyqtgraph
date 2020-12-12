@@ -276,7 +276,10 @@ class ImageItem(GraphicsObject):
             old_xp = self._xp
             self._xp = cp.get_array_module(image)
             gotNewData = True
-            shapeChanged = (old_xp != self._xp or self.image is None or image.shape != self.image.shape)
+            processingSubstrateChanged = old_xp != self._xp
+            if processingSubstrateChanged:
+                self._processingBuffer = None
+            shapeChanged = (processingSubstrateChanged or self.image is None or image.shape != self.image.shape)
             image = image.view()
             if self.image is None or image.dtype != self.image.dtype:
                 self._effectiveLut = None
