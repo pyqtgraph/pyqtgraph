@@ -122,6 +122,11 @@ def makeSymbolPixmap(size, pen, brush, symbol):
 
 
 def _mkPen(*args, **kwargs):
+    """
+    Wrapper for fn.mkPen which avoids creating a new QPen object if passed one as its
+    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
+    uses the QPen object id in its key.
+    """
     if len(args) == 1 and isinstance(args[0], QtGui.QPen):
         return args[0]
     else:
@@ -129,6 +134,11 @@ def _mkPen(*args, **kwargs):
 
 
 def _mkBrush(*args, **kwargs):
+    """
+    Wrapper for fn.mkBrush which avoids creating a new QBrush object if passed one as its
+    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
+    uses the QBrush object id in its key.
+    """
     if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
         return args[0]
     else:
@@ -199,7 +209,7 @@ class SymbolAtlas(object):
         self.__init__()
 
     def diagnostics(self):
-        n = len(self._coords)
+        n = len(self)
         w, h, _ = self._data.shape
         a = self._totalArea
         return dict(count=n,
@@ -252,7 +262,7 @@ class SymbolAtlas(object):
 
     def _pack(self, data):
         # pack each item rectangle as efficiently as possible into a larger, expanding, approximate square
-        n = len(self._coords)
+        n = len(self)
         wMax = self._maxWidth
         wSum = self._totalWidth
         aSum = self._totalArea
