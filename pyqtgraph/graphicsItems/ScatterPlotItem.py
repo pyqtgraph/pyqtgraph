@@ -388,12 +388,11 @@ class ScatterPlotItem(GraphicsObject):
             'antialias': getConfigOption('antialias'),
             'compositionMode': None,
             'name': None,
+            'symbol': 'o',
+            'size': 7,
+            'pen': fn.mkPen(getConfigOption('foreground')),
+            'brush': fn.mkBrush(100, 100, 150)
         }
-
-        self.setPen(fn.mkPen(getConfigOption('foreground')), update=False)
-        self.setBrush(fn.mkBrush(100,100,150), update=False)
-        self.setSymbol('o', update=False)
-        self.setSize(7, update=False)
         profiler()
         self.setData(*args, **kargs)
         profiler('setData')
