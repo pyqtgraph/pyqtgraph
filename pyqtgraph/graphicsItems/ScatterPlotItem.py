@@ -1032,10 +1032,9 @@ class ScatterPlotItem(GraphicsObject):
             # Cull points that are outside view
             viewMask = self._maskAt(self.getViewBox().viewRect())
 
-            # Map points to painter's device coordinates then reset painter transform so
-            # points are drawn in device coordinates with pixel-valued sizes
+            # Map points using painter's world transform so they are drawn with pixel-valued sizes
             pts = np.vstack([self.data['x'], self.data['y']])
-            pts = fn.transformCoordinates(p.deviceTransform(), pts)
+            pts = fn.transformCoordinates(p.transform(), pts)
             pts = np.clip(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
             p.resetTransform()
 
