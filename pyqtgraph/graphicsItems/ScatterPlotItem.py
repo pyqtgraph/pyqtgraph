@@ -629,7 +629,7 @@ class ScatterPlotItem(GraphicsObject):
                 pens = pens[kargs['mask']]
             if len(pens) != len(dataSet):
                 raise Exception("Number of pens does not match number of points (%d != %d)" % (len(pens), len(dataSet)))
-            dataSet['pen'] = pens
+            dataSet['pen'] = list(imap(_mkPen, pens))
         else:
             self.opts['pen'] = _mkPen(*args, **kargs)
 
@@ -651,7 +651,7 @@ class ScatterPlotItem(GraphicsObject):
                 brushes = brushes[kargs['mask']]
             if len(brushes) != len(dataSet):
                 raise Exception("Number of brushes does not match number of points (%d != %d)" % (len(brushes), len(dataSet)))
-            dataSet['brush'] = brushes
+            dataSet['brush'] = list(imap(_mkBrush, brushes))
         else:
             self.opts['brush'] = _mkBrush(*args, **kargs)
 
