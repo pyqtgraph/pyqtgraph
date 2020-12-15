@@ -1083,8 +1083,18 @@ class ScatterPlotItem(GraphicsObject):
         h = h / 2
 
         if self.opts['pxMode']:
-            w *= self.pixelWidth()
-            h *= self.pixelHeight()
+            # determine length of pixel in local x, y directions
+            px, py = self.pixelVectors()
+            try:
+                px = 0 if px is None else px.length()
+            except OverflowError:
+                px = 0
+            try:
+                py = 0 if py is None else py.length()
+            except OverflowError:
+                py = 0
+            w *= px
+            h *= py
 
         return (self.data['visible']
                 & (self.data['x'] + w > l)
