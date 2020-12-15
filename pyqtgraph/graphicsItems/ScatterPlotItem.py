@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
-from itertools import repeat
+from itertools import repeat, chain
 try:
     from itertools import imap
 except ImportError:
@@ -731,7 +731,7 @@ class ScatterPlotItem(GraphicsObject):
             dataSet = self.data
 
         invalidate = False
-        if self.opts['pxMode']:
+        if self.opts['pxMode'] and self.opts['useCache']:
             mask = dataSet['sourceRect']['w'] == 0
             if np.any(mask):
                 invalidate = True
@@ -746,12 +746,10 @@ class ScatterPlotItem(GraphicsObject):
                     dataSet['targetQRectValid'][mask] = False
 
             self._maybeRebuildAtlas()
-            self._maxSpotPxWidth = self.fragmentAtlas.maxWidth
-
         else:
-            self._maxSpotWidth = 0
-            self._maxSpotPxWidth = 0
-            self.measureSpotSizes(dataSet)
+            invalidate = True
+
+        self._updateMaxSpotSizes(data=dataSet)
 
         if invalidate:
             self.invalidate()
@@ -785,6 +783,30 @@ class ScatterPlotItem(GraphicsObject):
 
             yield col
 
+    def _updateMaxSpotSizes(self, **kwargs):
+        if self.opts['pxMode'] and self.opts['useCache']:
+            w, pw = 0, self.fragmentAtlas.maxWidth
+        else:
+            w, pw = max(chain([(self._maxSpotWidth, self._maxSpotPxWidth)],
+                              self._measureSpotSizes(**kwargs)))
+        self._maxSpotWidth = w
+        self._maxSpotPxWidth = pw
+        self.bounds = [None, None]
+
+    def _measureSpotSizes(self, **kwargs):
+        """Generate pairs (width, pxWidth) for spots in data"""
+        styles = zip(*self._style(['size', 'pen'], **kwargs))
+
+        if self.opts['pxMode']:
+            for size, pen in styles:
+                yield 0, size + pen.widthF()
+        else:
+            for size, pen in styles:
+                if pen.isCosmetic():
+                    yield size, pen.widthF()
+                else:
+                    yield size + pen.widthF(), 0
+
     def getSpotOpts(self, recs, scale=1.0):
         warnings.warn(
             "This is an internal method that is no longer being used.",
@@ -815,6 +837,10 @@ class ScatterPlotItem(GraphicsObject):
             return recs
 
     def measureSpotSizes(self, dataSet):
+        warnings.warn(
+            "This is an internal method that is no longer being used.",
+            DeprecationWarning, stacklevel=2
+        )
         for size, pen in zip(*self._style(['size', 'pen'], data=dataSet)):
             ## keep track of the maximum spot size and pixel size
             width = 0
@@ -834,6 +860,8 @@ class ScatterPlotItem(GraphicsObject):
     def clear(self):
         """Remove all spots from the scatter plot"""
         #self.clearItems()
+        self._maxSpotWidth = 0
+        self._maxSpotPxWidth = 0
         self.data = np.empty(0, dtype=self.data.dtype)
         self.bounds = [None, None]
         self.invalidate()
@@ -1232,4 +1260,3 @@ class SpotItem(object):
     def updateItem(self):
         self._data['sourceRect'] = (0, 0, 0, 0)  # numpy <=1.13.1 won't let us set this with a single zero
         self._plot.updateSpots(self._data.reshape(1))
-        self._plot.invalidate()
