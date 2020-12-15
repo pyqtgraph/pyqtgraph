@@ -1,3 +1,4 @@
+import warnings
 from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
