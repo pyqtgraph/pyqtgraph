@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import warnings
 from itertools import repeat
 try:
     from itertools import imap
@@ -116,7 +117,10 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     return device
 
 def makeSymbolPixmap(size, pen, brush, symbol):
-    ## deprecated
+    warnings.warn(
+        "This is an internal function that is no longer being used.",
+        DeprecationWarning, stacklevel=2
+    )
     img = renderSymbol(symbol, size, pen, brush)
     return QtGui.QPixmap(img)
 
@@ -438,6 +442,11 @@ class ScatterPlotItem(GraphicsObject):
                                generating LegendItem entries and by some exporters.
         ====================== ===============================================================================================
         """
+        if 'identical' in kargs:
+            warnings.warn(
+                "The *identical* functionality is handled automatically now.",
+                DeprecationWarning, stacklevel=2
+            )
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
         self.clear()  ## clear out all old data
         self.addPoints(*args, **kargs)
@@ -563,7 +572,10 @@ class ScatterPlotItem(GraphicsObject):
         return self.data['x'], self.data['y']
 
     def setPoints(self, *args, **kargs):
-        ##Deprecated; use setData
+        warnings.warn(
+            "Use setData instead.",
+            DeprecationWarning, stacklevel=2
+        )
         return self.setData(*args, **kargs)
 
     def implements(self, interface=None):
@@ -774,6 +786,10 @@ class ScatterPlotItem(GraphicsObject):
             yield col
 
     def getSpotOpts(self, recs, scale=1.0):
+        warnings.warn(
+            "This is an internal method that is no longer being used.",
+            DeprecationWarning, stacklevel=2
+        )
         if recs.ndim == 0:
             rec = recs
             symbol = rec['symbol']
@@ -899,6 +915,10 @@ class ScatterPlotItem(GraphicsObject):
         self.invalidate()
 
     def mapPointsToDevice(self, pts):
+        warnings.warn(
+            "This is an internal method that is no longer being used.",
+            DeprecationWarning, stacklevel=2
+        )
         # Map point locations to device
         tr = self.deviceTransform()
         if tr is None:
@@ -911,6 +931,10 @@ class ScatterPlotItem(GraphicsObject):
         return pts
 
     def getViewMask(self, pts):
+        warnings.warn(
+            "This is an internal method that is no longer being used.",
+            DeprecationWarning, stacklevel=2
+        )
         # Return bool mask indicating all points that are within viewbox
         # pts is expressed in *device coordiantes*
         vb = self.getViewBox()
