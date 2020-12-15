@@ -399,9 +399,10 @@ class ScatterPlotItem(GraphicsObject):
             'brush': fn.mkBrush(100, 100, 150),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
-            **{'hover' + opt.title(): _DEFAULT_STYLE[opt]
-               for opt in ['symbol', 'size', 'pen', 'brush']}
         }
+        self.opts.update(
+            {'hover' + opt.title(): _DEFAULT_STYLE[opt] for opt in ['symbol', 'size', 'pen', 'brush']}
+        )
         profiler()
         self.setData(*args, **kargs)
         profiler('setData')
