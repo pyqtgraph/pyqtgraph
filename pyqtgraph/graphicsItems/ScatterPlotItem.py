@@ -334,14 +334,18 @@ class ScatterPlotItem(GraphicsObject):
     ============================  ===============================================
     **Signals:**
     sigPlotChanged(self)          Emitted when the data being plotted has changed
-    sigClicked(self, points, ev)  Emitted when the curve is clicked. Sends a list
+    sigClicked(self, points, ev)  Emitted when points are clicked. Sends a list
+                                  of all the points under the mouse pointer.
+    sigHovered(self, points, ev)  Emitted when the item is hovered. Sends a list
                                   of all the points under the mouse pointer.
     ============================  ===============================================
 
     """
     #sigPointClicked = QtCore.Signal(object, object)
-    sigClicked = QtCore.Signal(object, object, object)  ## self, points
+    sigClicked = QtCore.Signal(object, object, object)
+    sigHovered = QtCore.Signal(object, object, object)
     sigPlotChanged = QtCore.Signal(object)
+
     def __init__(self, *args, **kargs):
         """
         Accepts the same arguments as setData()
@@ -361,6 +365,7 @@ class ScatterPlotItem(GraphicsObject):
             ('brush', object),
             ('visible', bool),
             ('data', object),
+            ('hovered', bool),
             ('item', object),
             ('sourceRect', [
                 ('x', int),
@@ -391,7 +396,11 @@ class ScatterPlotItem(GraphicsObject):
             'symbol': 'o',
             'size': 7,
             'pen': fn.mkPen(getConfigOption('foreground')),
-            'brush': fn.mkBrush(100, 100, 150)
+            'brush': fn.mkBrush(100, 100, 150),
+            'hoverable': False,
+            'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
+            **{'hover' + opt.title(): _DEFAULT_STYLE[opt]
+               for opt in ['symbol', 'size', 'pen', 'brush']}
         }
         profiler()
         self.setData(*args, **kargs)
@@ -431,6 +440,14 @@ class ScatterPlotItem(GraphicsObject):
         *size*                 The size (or list of sizes) of spots. If *pxMode* is True, this value is in pixels. Otherwise,
                                it is in the item's local coordinate system.
         *data*                 a list of python objects used to uniquely identify each spot.
+        *hoverable*            If True, sigHovered is emitted with a list of hovered points, a tool tip is shown containing
+                               information about them, and an optional separate style for them is used. Default is False.
+        *tip*                  A string-valued function of a spot's (x, y, data) values. Set to None to prevent a tool tip
+                               from being shown.
+        *hoverSymbol*          A single symbol to use for hovered spots. Set to None to keep symbol unchanged. Default is None.
+        *hoverSize*            A single size to use for hovered spots. Set to -1 to keep size unchanged. Default is -1.
+        *hoverPen*             A single pen to use for hovered spots. Set to None to keep pen unchanged. Default is None.
+        *hoverBrush*           A single brush to use for hovered spots. Set to None to keep brush unchanged. Default is None.
         *identical*            *Deprecated*. This functionality is handled automatically now.
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
@@ -545,13 +562,24 @@ class ScatterPlotItem(GraphicsObject):
             self.setPxMode(kargs['pxMode'])
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
+        if 'hoverable' in kargs:
+            self.opts['hoverable'] = bool(kargs['hoverable'])
+        if 'tip' in kargs:
+            self.opts['tip'] = kargs['tip']
 
         ## Set any extra parameters provided in keyword arguments
         for k in ['pen', 'brush', 'symbol', 'size']:
             if k in kargs:
                 setMethod = getattr(self, 'set' + k[0].upper() + k[1:])
                 setMethod(kargs[k], update=False, dataSet=newData, mask=kargs.get('mask', None))
-
+            kh = 'hover' + k.title()
+            if kh in kargs:
+                vh = kargs[kh]
+                if k == 'pen':
+                    vh = _mkPen(vh)
+                elif k == 'brush':
+                    vh = _mkBrush(vh)
+                self.opts[kh] = vh
         if 'data' in kargs:
             self.setPointData(kargs['data'], dataSet=newData)
 
@@ -775,6 +803,12 @@ class ScatterPlotItem(GraphicsObject):
             col = data[opt][idx]
             if col.base is not None:
                 col = col.copy()
+
+            if self.opts['hoverable']:
+                val = self.opts['hover' + opt.title()]
+                if val != _DEFAULT_STYLE[opt]:
+                    col[data['hovered'][idx]] = val
+
             col[np.equal(col, _DEFAULT_STYLE[opt])] = self.opts[opt]
 
             if opt == 'size' and scale is not None:
@@ -1141,6 +1175,38 @@ class ScatterPlotItem(GraphicsObject):
                 ev.ignore()
         else:
             ev.ignore()
+
+    def hoverEvent(self, ev):
+        if self.opts['hoverable']:
+            old = self.data['hovered']
+
+            if ev.exit:
+                new = np.zeros_like(self.data['hovered'])
+            else:
+                new = self._maskAt(ev.pos())
+
+            if self._hasHoverStyle():
+                self.data['sourceRect'][old ^ new] = 0
+                self.data['hovered'] = new
+                self.updateSpots()
+
+            points = self.points()[new][::-1]
+
+            # Show information about hovered points in a tool tip
+            vb = self.getViewBox()
+            if vb is not None and self.opts['tip'] is not None:
+                cutoff = 3
+                tip = [self.opts['tip'](x=pt.pos().x(), y=pt.pos().y(), data=pt.data())
+                       for pt in points[:cutoff]]
+                if len(points) > cutoff:
+                    tip.append('({} others...)'.format(len(points) - cutoff))
+                vb.setToolTip('\n\n'.join(tip))
+
+            self.sigHovered.emit(self, points, ev)
+
+    def _hasHoverStyle(self):
+        return any(self.opts['hover' + opt.title()] != _DEFAULT_STYLE[opt]
+                   for opt in ['symbol', 'size', 'pen', 'brush'])
 
 
 class SpotItem(object):
