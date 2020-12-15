@@ -943,18 +943,20 @@ class ScatterPlotItem(GraphicsObject):
             scale = 1.0
 
         if self.opts['pxMode'] is True:
+            # Cull points that are outside view
+            viewMask = self._maskAt(self.getViewBox().viewRect())
+
+            # Map points to painter's device coordinates then reset painter transform so
+            # points are drawn in device coordinates with pixel-valued sizes
+            pts = np.vstack([self.data['x'], self.data['y']])
+            pts = fn.transformCoordinates(p.deviceTransform(), pts)
+            pts = np.clip(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
             p.resetTransform()
 
-            # Map point coordinates to device
-            pts = np.vstack([self.data['x'], self.data['y']])
-            pts = self.mapPointsToDevice(pts)
-            if pts is None:
-                return
-
-            # Cull points that are outside view
-            viewMask = self.getViewMask(pts)
-
             if self.opts['useCache'] and self._exportOpts is False:
+                # Map pts to (x, y) coordinates of targetRect
+                pts -= self.data['sourceRect']['w'] / 2
+
                 # Draw symbols from pre-rendered atlas
                 pm = self.fragmentAtlas.pixmap
 
@@ -996,7 +998,7 @@ class ScatterPlotItem(GraphicsObject):
                 p.setRenderHint(p.Antialiasing, aa)
 
                 for pt, style in zip(
-                        (pts[:, viewMask] + self.data['sourceRect']['w'][viewMask] / 2).T,
+                        pts[:, viewMask].T,
                         zip(*(self._style(['symbol', 'size', 'pen', 'brush'], idx=viewMask, scale=scale)))
                 ):
                     p.resetTransform()
@@ -1031,18 +1033,40 @@ class ScatterPlotItem(GraphicsObject):
     def pointsAt(self, pos):
         return self.points()[self._maskAt(pos)][::-1]
 
-    def _maskAt(self, pos):
-        x = pos.x()
-        y = pos.y()
-        sx = self.data['x']
-        sy = self.data['y']
-        ss, = self._style(['size'])
-        s2x = ss * 0.5
-        s2y = ss * 0.5
+    def _maskAt(self, obj):
+        """
+        Return a boolean mask indicating all points that overlap obj, a QPointF or QRectF.
+        """
+        if isinstance(obj, QtCore.QPointF):
+            l = r = obj.x()
+            t = b = obj.y()
+        elif isinstance(obj, QtCore.QRectF):
+            l = obj.left()
+            r = obj.right()
+            t = obj.top()
+            b = obj.bottom()
+        else:
+            raise TypeError
+
+        if self.opts['pxMode'] and self.opts['useCache']:
+            w = self.data['sourceRect']['w']
+            h = self.data['sourceRect']['h']
+        else:
+            s, = self._style(['size'])
+            w = h = s
+
+        w = w / 2
+        h = h / 2
+
         if self.opts['pxMode']:
-            s2x *= self.pixelWidth()
-            s2y *= self.pixelHeight()
-        return (x > sx - s2x) & (x < sx + s2x) & (y > sy - s2y) & (y < sy + s2y)
+            w *= self.pixelWidth()
+            h *= self.pixelHeight()
+
+        return (self.data['visible']
+                & (self.data['x'] + w > l)
+                & (self.data['x'] - w < r)
+                & (self.data['y'] + h > t)
+                & (self.data['y'] - h < b))
 
     def mouseClickEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
