@@ -28,12 +28,15 @@ class PlotDataItem(GraphicsObject):
     sigClicked(self, ev)                Emitted when the item is clicked.
     sigPointsClicked(self, points, ev)  Emitted when a plot point is clicked
                                         Sends the list of points under the mouse.
+    sigPointsHovered(self, points, ev)  Emitted when a plot point is hovered over.
+                                        Sends the list of points under the mouse.
     ==================================  ==============================================
     """
 
     sigPlotChanged = QtCore.Signal(object)
     sigClicked = QtCore.Signal(object, object)
     sigPointsClicked = QtCore.Signal(object, object, object)
+    sigPointsHovered = QtCore.Signal(object, object, object)
 
     def __init__(self, *args, **kargs):
         """
@@ -161,6 +164,7 @@ class PlotDataItem(GraphicsObject):
 
         self.curve.sigClicked.connect(self.curveClicked)
         self.scatter.sigClicked.connect(self.scatterClicked)
+        self.scatter.sigHovered.connect(self.scatterHovered)
 
         self._dataRect = None
         #self.clear()
@@ -767,6 +771,9 @@ class PlotDataItem(GraphicsObject):
     def scatterClicked(self, plt, points, ev):
         self.sigClicked.emit(self, ev)
         self.sigPointsClicked.emit(self, points, ev)
+
+    def scatterHovered(self, plt, points, ev):
+        self.sigPointsHovered.emit(self, points, ev)
 
     def viewRangeChanged(self):
         # view range has changed; re-plot if needed
