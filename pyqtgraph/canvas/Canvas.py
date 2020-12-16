@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-if __name__ == '__main__':
-    import sys, os
-    md = os.path.dirname(os.path.abspath(__file__))
-    sys.path = [os.path.dirname(md), os.path.join(md, '..', '..', '..')] + sys.path
 
 from ..Qt import QtGui, QtCore, QT_LIB
 from ..graphicsItems.ROI import ROI
@@ -13,6 +9,8 @@ if QT_LIB == 'PySide':
     from .CanvasTemplate_pyside import *
 elif QT_LIB == 'PyQt4':
     from .CanvasTemplate_pyqt import *
+elif QT_LIB == 'PySide2':
+    from .CanvasTemplate_pyside2 import *
 elif QT_LIB == 'PyQt5':
     from .CanvasTemplate_pyqt5 import *
     

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 DESCRIPTION = """\
-PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PySide and
+PyQtGraph is a pure-python graphics and GUI library built on PyQt4/PyQt5/PySide/PySide2 and
 numpy. 
 
 It is intended for use in mathematics / scientific / engineering applications.
@@ -12,14 +13,13 @@ setupOpts = dict(
     name='pyqtgraph',
     description='Scientific Graphics and GUI Library for Python',
     long_description=DESCRIPTION,
-    license='MIT',
+    license =  'MIT',
     url='http://www.pyqtgraph.org',
     author='Luke Campagnola',
     author_email='luke.campagnola@gmail.com',
     classifiers = [
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",
@@ -141,8 +141,7 @@ setup(
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg']},
     install_requires = [
-        'numpy',
+        'numpy>=1.8.0',
         ],
     **setupOpts
 )
-
