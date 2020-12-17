@@ -63,8 +63,9 @@ class WidgetParameterItem(ParameterItem):
         layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        layout.addWidget(w)
-        layout.addWidget(self.displayLabel)
+        layout.addWidget(w, 1)
+        layout.addWidget(self.displayLabel, 1)
+        layout.addStretch(0)
         layout.addWidget(self.defaultBtn)
         self.layoutWidget = QtGui.QWidget()
         self.layoutWidget.setLayout(layout)
@@ -279,10 +280,9 @@ class WidgetParameterItem(ParameterItem):
             if self.asSubItem:
                 tree.setFirstItemColumnSpanned(self.subItem, True)
                 tree.setItemWidget(self.subItem, 0, self.widget)
-            else:
-                tree.setItemWidget(self, 1, self.layoutWidget)
-                self.displayLabel.hide()
-                self.selected(False)
+            tree.setItemWidget(self, 1, self.layoutWidget)
+            self.displayLabel.hide()
+            self.selected(False)
 
     def defaultClicked(self):
         self.param.setToDefault()
