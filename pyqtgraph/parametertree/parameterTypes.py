@@ -161,6 +161,7 @@ class WidgetParameterItem(ParameterItem):
             w.value = w.colorMap
             w.setValue = w.setColorMap
             self.hideWidget = False
+            self.asSubItem = True
         else:
             raise Exception("Unknown type '%s'" % asUnicode(t))
         return w
