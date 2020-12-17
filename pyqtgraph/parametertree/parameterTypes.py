@@ -1,3 +1,6 @@
+import os
+import warnings
+
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
@@ -7,7 +10,6 @@ from ..widgets.ColorButton import ColorButton
 from ..colormap import ColorMap
 from .. import pixmaps as pixmaps
 from .. import functions as fn
-import os, sys
 from ..pgcollections import OrderedDict
 
 
@@ -34,7 +36,8 @@ class WidgetParameterItem(ParameterItem):
     """
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
-        
+
+        self.asSubItem = False
         self.hideWidget = True  ## hide edit widget, replace with label when not selected
                                 ## set this to False to keep the editor widget always visible
         
@@ -42,7 +45,11 @@ class WidgetParameterItem(ParameterItem):
         w = self.makeWidget()  
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
-        
+
+        if self.asSubItem:
+            self.subItem = QtGui.QTreeWidgetItem()
+            self.addChild(self.subItem)
+
         self.defaultBtn = QtGui.QPushButton()
         self.defaultBtn.setAutoDefault(False)
         self.defaultBtn.setFixedWidth(20)
@@ -128,6 +135,15 @@ class WidgetParameterItem(ParameterItem):
             w.value = lambda: asUnicode(w.text())
             w.setValue = lambda v: w.setText(asUnicode(v))
             w.sigChanging = w.textChanged
+        elif t == 'text':
+            w = QtGui.QTextEdit()
+            w.setMaximumHeight(100)
+            w.setReadOnly(opts.get('readonly', False))
+            w.value = lambda: str(w.toPlainText())
+            w.setValue = w.setPlainText
+            w.sigChanged = w.textChanged
+            self.hideWidget = False
+            self.asSubItem = True
         elif t == 'color':
             w = ColorButton()
             w.sigChanged = w.sigColorChanged
@@ -259,9 +275,13 @@ class WidgetParameterItem(ParameterItem):
             tree = self.treeWidget()
             if tree is None:
                 return
-            tree.setItemWidget(self, 1, self.layoutWidget)
-            self.displayLabel.hide()
-            self.selected(False)            
+            if self.asSubItem:
+                tree.setFirstItemColumnSpanned(self.subItem, True)
+                tree.setItemWidget(self.subItem, 0, self.widget)
+            else:
+                tree.setItemWidget(self, 1, self.layoutWidget)
+                self.displayLabel.hide()
+                self.selected(False)
 
     def defaultClicked(self):
         self.param.setToDefault()
@@ -332,6 +352,7 @@ class SimpleParameter(Parameter):
             'float': float,
             'bool': bool,
             'str': asUnicode,
+            'text': asUnicode,
             'color': self._interpColor,
             'colormap': self._interpColormap,
         }[self.opts['type']]
@@ -350,6 +371,7 @@ registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
+registerParameterType('text', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
 registerParameterType('colormap', SimpleParameter, override=True)
 
@@ -633,6 +655,10 @@ registerParameterType('action', ActionParameter, override=True)
 
 class TextParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
+        warnings.warn(
+            "This functionality is now handled directly by WidgetParameterItem.",
+            DeprecationWarning, stacklevel=2
+        )
         WidgetParameterItem.__init__(self, param, depth)
         self.hideWidget = False
         self.subItem = QtGui.QTreeWidgetItem()
@@ -661,10 +687,16 @@ class TextParameterItem(WidgetParameterItem):
         self.textBox.setValue = self.textBox.setPlainText
         self.textBox.sigChanged = self.textBox.textChanged
         return self.textBox
-        
+
+
 class TextParameter(Parameter):
     """Editable string; displayed as large text box in the tree."""
     itemClass = TextParameterItem
-    
-    
-registerParameterType('text', TextParameter, override=True)
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "This functionality is now handled directly by SimpleParameter.",
+            DeprecationWarning, stacklevel=2
+        )
+        super().__init__(*args, **kwargs)
+
+# registerParameterType('text', TextParameter, override=True)
