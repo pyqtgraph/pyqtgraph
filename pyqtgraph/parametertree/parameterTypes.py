@@ -359,11 +359,6 @@ class SimpleParameter(Parameter):
         if self.opts['type'] == 'color':
             self.value = self.colorValue
             self.saveState = self.saveColorState
-    
-    def setValue(self, value, blockSignal=None):
-        if self.opts['type'] == 'int':
-            value = int(value)
-        Parameter.setValue(self, value, blockSignal)
 
     def colorValue(self):
         return fn.mkColor(Parameter.value(self))
