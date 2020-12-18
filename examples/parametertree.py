@@ -171,7 +171,6 @@ layout.addWidget(QtGui.QLabel("These are two views of the same data. They should
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
-win.resize(800,800)
 
 ## test save/restore
 s = p.saveState()

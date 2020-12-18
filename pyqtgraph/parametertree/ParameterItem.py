@@ -159,6 +159,11 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def titleChanged(self):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
         self.setText(0, self.param.title())
+        fm = QtGui.QFontMetrics(self.font(0))
+        size = fm.size(QtCore.Qt.TextSingleLine, self.text(0))
+        size.setHeight(size.height() * 1.35)
+        size.setWidth(size.width() * 1.15)
+        self.setSizeHint(0, size)
 
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""

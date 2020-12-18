@@ -48,6 +48,7 @@ class WidgetParameterItem(ParameterItem):
 
         if self.asSubItem:
             self.subItem = QtGui.QTreeWidgetItem()
+            self.subItem.depth = self.depth + 1
             self.addChild(self.subItem)
 
         self.defaultBtn = QtGui.QPushButton()
@@ -63,7 +64,8 @@ class WidgetParameterItem(ParameterItem):
         layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        layout.addWidget(w, 1)
+        if not self.asSubItem:
+            layout.addWidget(w, 1)
         layout.addWidget(self.displayLabel, 1)
         layout.addStretch(0)
         layout.addWidget(self.defaultBtn)
@@ -87,6 +89,30 @@ class WidgetParameterItem(ParameterItem):
         self.updateDefaultBtn()
         
         self.optsChanged(self.param, self.param.opts)
+
+        # set size hints
+        sw = self.widget.sizeHint()
+        sb = self.defaultBtn.sizeHint()
+        # shrink row heights a bit for more compact look
+        sw.setHeight(sw.height() * 0.9)
+        sb.setHeight(sb.height() * 0.9)
+        # manually override size hints for certain parameter types
+        t = self.param.opts['type']
+        if t == 'text':
+            sw.setWidth(100)
+            sw.setHeight(100)
+        elif t == 'color':
+            sw.setWidth(100)
+        elif t == 'colormap':
+            sw.setWidth(100)
+            sw.setHeight(35)
+        if self.asSubItem:
+            self.setSizeHint(1, sb)
+            self.subItem.setSizeHint(0, sw)
+        else:
+            w = sw.width() + sb.width()
+            h = max(sw.height(), sb.height())
+            self.setSizeHint(1, QtCore.QSize(w, h))
 
     def makeWidget(self):
         """
@@ -407,7 +433,9 @@ class GroupParameterItem(ParameterItem):
             self.addWidgetBox = w
             self.addItem = QtGui.QTreeWidgetItem([])
             self.addItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
+            self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
             
     def updateDepth(self, depth):
         ## Change item's appearance based on its depth in the tree
@@ -420,7 +448,6 @@ class GroupParameterItem(ParameterItem):
                 font.setBold(True)
                 font.setPointSize(font.pointSize()+1)
                 self.setFont(c, font)
-                self.setSizeHint(0, QtCore.QSize(0, 25))
         else:
             for c in [0,1]:
                 self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
@@ -429,8 +456,8 @@ class GroupParameterItem(ParameterItem):
                 font.setBold(True)
                 #font.setPointSize(font.pointSize()+1)
                 self.setFont(c, font)
-                self.setSizeHint(0, QtCore.QSize(0, 20))
-    
+        self.titleChanged()  # sets the size hint for column 0 which is based on the new font
+
     def addClicked(self):
         """Called when "add new" button is clicked
         The parameter MUST have an 'addNew' method defined.
@@ -620,12 +647,13 @@ class ActionParameterItem(ParameterItem):
         self.layout = QtGui.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
-        self.button = QtGui.QPushButton(param.title())
+        self.button = QtGui.QPushButton()
         #self.layout.addSpacing(100)
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
-        
+        self.titleChanged()
+
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
         tree = self.treeWidget()
@@ -637,7 +665,7 @@ class ActionParameterItem(ParameterItem):
 
     def titleChanged(self):
         self.button.setText(self.param.title())
-        ParameterItem.titleChanged(self)
+        self.setSizeHint(0, self.button.sizeHint())
         
     def buttonClicked(self):
         self.param.activate()
