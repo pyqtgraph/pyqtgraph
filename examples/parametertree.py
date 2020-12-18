@@ -64,7 +64,7 @@ class ScalableGroup(pTypes.GroupParameter):
 params = [
     {'name': 'Basic parameter data types', 'type': 'group', 'children': [
         {'name': 'Integer', 'type': 'int', 'value': 10},
-        {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1},
+        {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1, 'finite': False},
         {'name': 'String', 'type': 'str', 'value': "hi"},
         {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},

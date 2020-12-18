@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
@@ -283,15 +284,15 @@ class Parameter(QtCore.QObject):
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
             value = self._interpretValue(value)
-            if self.opts['value'] == value:
+            if fn.eq(self.opts['value'], value):
                 return value
             self.opts['value'] = value
-            self.sigValueChanged.emit(self, value)
+            self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
             if blockSignal is not None:
                 self.sigValueChanged.connect(blockSignal)
             
-        return value
+        return self.opts['value']
 
     def _interpretValue(self, v):
         return v

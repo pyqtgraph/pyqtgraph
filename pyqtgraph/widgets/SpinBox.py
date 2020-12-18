@@ -360,10 +360,9 @@ class SpinBox(QtGui.QAbstractSpinBox):
         if not isinstance(value, D):
             value = D(asUnicode(value))
 
-        changed = value != self.val
-        prev = self.val
-        
-        self.val = value
+        prev, self.val = self.val, value
+        changed = not fn.eq(value, prev)  # use fn.eq to handle nan
+
         if update and (changed or not bounded):
             self.updateText(prev=prev)
 
@@ -381,7 +380,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
     
     def delayedChange(self):
         try:
-            if self.val != self.lastValEmitted:
+            if not fn.eq(self.val, self.lastValEmitted):  # use fn.eq to handle nan
                 self.emitChanged()
         except RuntimeError:
             pass  ## This can happen if we try to handle a delayed signal after someone else has already deleted the underlying C++ object.
