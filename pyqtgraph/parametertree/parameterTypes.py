@@ -94,8 +94,8 @@ class WidgetParameterItem(ParameterItem):
         sw = self.widget.sizeHint()
         sb = self.defaultBtn.sizeHint()
         # shrink row heights a bit for more compact look
-        sw.setHeight(sw.height() * 0.9)
-        sb.setHeight(sb.height() * 0.9)
+        sw.setHeight(int(sw.height() * 0.9))
+        sb.setHeight(int(sb.height() * 0.9))
         # manually override size hints for certain parameter types
         t = self.param.opts['type']
         if t == 'text':
