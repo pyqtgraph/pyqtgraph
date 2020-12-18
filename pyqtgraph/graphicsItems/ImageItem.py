@@ -527,7 +527,9 @@ class ImageItem(GraphicsObject):
             if stepData.dtype.kind in "ui":
                 # For integer data, we select the bins carefully to avoid aliasing
                 step = self._xp.ceil((mx - mn) / 500.)
-                bins = self._xp.arange(int(mn), float(int(mx) + 1.01 * step), float(step), dtype=self._xp.int)
+                bins = []
+                if step > 0.0:
+                    bins = self._xp.arange(mn, mx + 1.01 * step, step, dtype=self._xp.int)
             else:
                 # for float data, let numpy select the bins.
                 bins = self._xp.linspace(mn, mx, 500)

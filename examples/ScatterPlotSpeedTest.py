@@ -38,20 +38,26 @@ win.show()
 p = ui.plot
 p.setRange(xRange=[-500, 500], yRange=[-500, 500])
 
-data = np.random.normal(size=(50,500), scale=100)
-sizeArray = (np.random.random(500) * 20.).astype(int)
+count = 500
+data = np.random.normal(size=(50,count), scale=100)
+sizeArray = (np.random.random(count) * 20.).astype(int)
+brushArray = [pg.mkBrush(x) for x in np.random.randint(0, 256, (count, 3))]
 ptr = 0
 lastTime = time()
 fps = None
+
+
 def update():
     global curve, data, ptr, p, lastTime, fps
     p.clear()
     if ui.randCheck.isChecked():
         size = sizeArray
+        brush = brushArray
     else:
         size = ui.sizeSpin.value()
-    curve = pg.ScatterPlotItem(x=data[ptr%50], y=data[(ptr+1)%50], 
-                               pen='w', brush='b', size=size, 
+        brush = 'b'
+    curve = pg.ScatterPlotItem(x=data[ptr % 50], y=data[(ptr+1) % 50],
+                               pen='w', brush=brush, size=size,
                                pxMode=ui.pixelModeCheck.isChecked())
     p.addItem(curve)
     ptr += 1
