@@ -8,9 +8,10 @@ pyqtgraph-0.11.1
     - #1310 Added `Pa` to Units
     - #1310 `debug.ThreadTrace` add support for thread names
     - #117 Flow Chart Nodes now resized based on number of inputs/outputs
-    - #1154 DateAxisItem
+    - #1154 `DateAxisItem`
     - #1285 Improve control over ROI/handle pens
-    - #1273 pColorMeshItem
+    - #1273 `PColorMeshItem`
+    - #1397 `LegendItem` enable customization of label text size
 
   Performance enhancement:
     - #1240/#345 GLImageItem clear need update flag
@@ -22,6 +23,9 @@ pyqtgraph-0.11.1
     - #816 Avoid constructing shadow pens when no shadow pen is set
     - #1311 HistogramLUTItem detect trivial gradients
     - #1312 avoid extra work when setLabelAngle would have no effect
+    - #1391 cache viewRect of `GraphicsItem` to reduce CPU load
+    - #150 Slight speedup to ViewBox panning
+
 
   API/Behavior Change:
     - #496 Always antialias lines between gradient and region in HistogramLUTItem
@@ -41,6 +45,16 @@ pyqtgraph-0.11.1
     - #1387 ScatterPlotItem: Make + and x symbols thicker
     - #1362 Make flowchart.Terminal sortable
     - #1360 Add "left" and "right" step Modes to PlotCurveItem and PlotDataItem
+    - #1414 Emit event with mouse clicks for some items
+    - #1413 `InfiniteLine.viewTransformChanged` now calls superclass-method
+    - #1411 Hide `WidgetParameterItem.defaultBtn` if param has no default
+    - #1410 add fontSize kwarg to `Dock`
+    - #159 Add wrapping option to `SpinBox`
+    - #330 Set parameter default button `autoDefault` value to `False`
+    - #157 Provide `WidgetGroupInterface` to `GradientWidget`
+    - #151 Optional provide custom `PlotItem` to `PlotWidget`
+    - #1140 Dynamic range limiting in `PlotDataItem`
+    - #1383 GraphicsView set a transparent background palette
 
   Bug Fixes:
     - #1239 Avoid adding PlotItem twice
@@ -85,6 +99,15 @@ pyqtgraph-0.11.1
     - #1306 Fix incorrect rendering of overlapping object in renderToArray()
     - #1349 Avoid calling method on undefined attribute
     - #1367 AxisItem: Account for empty strings in the visibility of text and units
+    - #1356 Fix `ParameterTree` tree name and title handling
+    - #1419 Fix `DataTreeWidget` dict sorting crash
+    - #1408 Fix mouse interaction issues with `DockLabel`
+    - #329 Fix bug where `int` and `float` parameter limits are not always set
+    - #158 Make `DockArea` compatible with Qt Designer
+    - #1405 Fix name setting in `ScatterPlotItem` options
+    - #1403 Do not apply transparent background to Qt4
+
+
     
   Maintenance:
     - #389 Revert workaround for upstream QT bug regarding mouse events
@@ -113,6 +136,12 @@ pyqtgraph-0.11.1
     - #1382 Autoformat LegendItem
     - #1396 Add tests for GraphicsView
     - #1399 Disable mouse rate limiting on test_ROI
+    - #1409 Prepend conda-forge channel prior to env creation in CI
+    - #1302 Fix Example app now works with Qt4/Python2
+    - #1402 Handle case of version string having no `+`
+    - #1400 Fix sphinx warnings on `PColorMeshItem`
+    - #1328 Add docs build job to CI
+
 
 
 pyqtgraph-0.11.0
