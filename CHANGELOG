@@ -9,6 +9,8 @@ pyqtgraph-0.11.1
     - #1310 `debug.ThreadTrace` add support for thread names
     - #117 Flow Chart Nodes now resized based on number of inputs/outputs
     - #1154 DateAxisItem
+    - #1285 Improve control over ROI/handle pens
+    - #1273 pColorMeshItem
 
   Performance enhancement:
     - #1240/#345 GLImageItem clear need update flag
@@ -36,6 +38,9 @@ pyqtgraph-0.11.1
     - #1257 Make painter tick font dependent for AxisItem
     - #1256 Added `setState`, `setState` and `saveState` to `ROI`
     - #1324 Pass through kwargs from MultiPlotItem.plot to PlotItem.plot
+    - #1387 ScatterPlotItem: Make + and x symbols thicker
+    - #1362 Make flowchart.Terminal sortable
+    - #1360 Add "left" and "right" step Modes to PlotCurveItem and PlotDataItem
 
   Bug Fixes:
     - #1239 Avoid adding PlotItem twice
@@ -71,7 +76,15 @@ pyqtgraph-0.11.1
     - #1045 Raise AttributeError in __getattr__ in TabWindow
     - #960 Work around PySide setOverrideCursor bug in BusyCursor
     - #309 Encode QPropertyAnimation property name if not passed as bytes
-
+    - #1072 Fix storing of ragged curves in HDF5Exporter
+    - #1275 Fix Parameter.hasDefault
+    - #1291 Get ImageView ROI working with both row and col major data
+    - #1377 Consolidate and fix downsample factor computation in ImageItem
+    - #1376 Fix PlotItem.setAxisItems
+    - #1392 SignalProxy: Correct initialization without slot argument
+    - #1306 Fix incorrect rendering of overlapping object in renderToArray()
+    - #1349 Avoid calling method on undefined attribute
+    - #1367 AxisItem: Account for empty strings in the visibility of text and units
     
   Maintenance:
     - #389 Revert workaround for upstream QT bug regarding mouse events
@@ -90,6 +103,16 @@ pyqtgraph-0.11.1
     - #308 Fix opt name for SpinBox: range -> bounds in UnsharpMaskNode example
     - #887 Update collections.abc imports
     - #1142 Miscellaneous doc fixups
+    - #1169 Avoid using mutable default argument value
+    - #1073 Python3 fixes
+    - #1284 Update doc strings to clarify getArrayRegion API for ROI subclasses
+    - #1042 Close windows at the end of test functions
+    - #1374 Test warnings cleanup
+    - #1375 Add targeted Vector test coverage
+    - #1384 GLViewWidget.pan docstring typo
+    - #1382 Autoformat LegendItem
+    - #1396 Add tests for GraphicsView
+    - #1399 Disable mouse rate limiting on test_ROI
 
 
 pyqtgraph-0.11.0
