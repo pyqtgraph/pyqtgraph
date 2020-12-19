@@ -1,3 +1,35 @@
+pyqtgraph-0.11.1
+
+New Features:
+    - #800 Legend for bar graphs
+    - #1244 Arrow scatter symbols
+    - #161 Allow hiding individulal points in scatter plot
+    - #395 LegendItem display options
+
+Performance enhancement:
+    - #1240/#345 GLImageItem clear need update flag
+    - #977 Faster computation option for pseudoscatter
+
+API/Behavior Change:
+    - #496 Always antialias lines between gradient and region in HistogramLUTItem
+    - #385 Add headWidth parameter to arrows
+    - #551 fps variable on ImageView
+    - #1251 Allow explict utcOffset timezone in DateAxisItem
+
+Bug Fixes:
+    - #1239 Avoid adding PlotItem twice
+    - #508 siScale precision
+    - #503 Fix butg in RawImageWidget which resulted in mirrored image
+    - #1242 Add the mouse event to the sigClicked signal in PlotCurveItem
+    - #1247 Restore the now-deprecated PlotWindow and ImageWindow classes
+    - #1249 Remove ScatterPlotItem's SpotItems during addItem call
+    - #1252 Fix incorrect tick text boundaries calculation on axis by setting the font
+
+Maintenance:
+    - #389 Revert workaround for upstream QT bug regarding mouse events
+    - #1243 Ensure setPos in ROI is initialized correctly
+    - #1241 Pin pytest-xvfb version on py2
+
 pyqtgraph-0.11.0
 
   NOTICE: This is the _last_ feature release to support Python 2 and Qt 4 (PyQt4 or pyside 1)
