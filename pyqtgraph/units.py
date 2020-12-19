@@ -12,8 +12,8 @@
 import unicodedata
 
 # All unicode identifiers get normalized automatically
-SI_PREFIXES = unicodedata.normalize("NFKC", "yzafpnµm kMGTPEZY")
-UNITS = unicodedata.normalize("NFKC", "m,s,g,W,J,V,A,F,T,Hz,Ohm,Ω,S,N,C,px,b,B,Pa").split(",")
+SI_PREFIXES = unicodedata.normalize("NFKC", u"yzafpnµm kMGTPEZY")
+UNITS = unicodedata.normalize("NFKC", u"m,s,g,W,J,V,A,F,T,Hz,Ohm,Ω,S,N,C,px,b,B,Pa").split(",")
 allUnits = {}
 
 
