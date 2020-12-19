@@ -12,6 +12,10 @@ pyqtgraph-0.11.1
     - #1285 Improve control over ROI/handle pens
     - #1273 `PColorMeshItem`
     - #1397 `LegendItem` enable customization of label text size
+    - #1422 Permit entry of non-finite values into float `SpinBox`
+    - #1442 `TickSliderItem.allowRemote` property added
+    - #1441 `Tick.removeAllowed` is now a regular property and used with `TickSliderItem`
+    - #1388 Emit a signal when `GraphicsScene` `addItem` or `removeItem` methods called
 
   Performance enhancement:
     - #1240/#345 GLImageItem clear need update flag
@@ -25,7 +29,7 @@ pyqtgraph-0.11.1
     - #1312 avoid extra work when setLabelAngle would have no effect
     - #1391 cache viewRect of `GraphicsItem` to reduce CPU load
     - #150 Slight speedup to ViewBox panning
-
+    - #1420 Many ScatterPlot Improvements
 
   API/Behavior Change:
     - #496 Always antialias lines between gradient and region in HistogramLUTItem
@@ -55,6 +59,7 @@ pyqtgraph-0.11.1
     - #151 Optional provide custom `PlotItem` to `PlotWidget`
     - #1140 Dynamic range limiting in `PlotDataItem`
     - #1383 GraphicsView set a transparent background palette
+    - #1428 Add default color for `ColorMap` type in `ColorMapWidget`
 
   Bug Fixes:
     - #1239 Avoid adding PlotItem twice
@@ -106,8 +111,22 @@ pyqtgraph-0.11.1
     - #158 Make `DockArea` compatible with Qt Designer
     - #1405 Fix name setting in `ScatterPlotItem` options
     - #1403 Do not apply transparent background to Qt4
-
-
+    - #1468 Allow zero step in `ImageItem`
+    - #1464 Remove `ViewBox.childGroup`'s `ItemClipsChildrenToShape` flag
+    - #1461 arrayToQPath revert to old behavior of `connect=ndarray` parameter
+    - #1459 Fix `TickSliderItem` to avoid ghost ticks
+    - #1456 Resolve issue with `PlotCurveItem` with merging PRs in an incorrect order
+    - #1287 Fill in non-finite plot values for Qt versions >= 5.12.3
+    - #1447 Clipped AxisItem tick value labels to prevent drawing artifacts
+    - #1435 Fix autosize not taking to the correct range with `TextItem` in view
+    - #1452 merge `InfiniteLine` caching calls
+    - #1446 Fix `PlotDataItem.setData([], [])`
+    - #1443 Fix Viewbox axis zoom in RectMode
+    - #1439 Fix `TickSliderItem.setTickValue` when it references a `GradientEditorItem` method
+    - #1361 Prevent item duplication in `Node` context menu
+    - #1423 Fix typo in `kwargs` for `GridItem.setTextPen`
+    - #1401 Fix width, height and background in SVG exporter
+    - #1416 Handle case in `ROI` when `shape`, `vectors`, or `origin` keywords are passed in
     
   Maintenance:
     - #389 Revert workaround for upstream QT bug regarding mouse events
@@ -141,8 +160,9 @@ pyqtgraph-0.11.1
     - #1402 Handle case of version string having no `+`
     - #1400 Fix sphinx warnings on `PColorMeshItem`
     - #1328 Add docs build job to CI
-
-
+    - #1464 Use `conda-forge` on pyside2+linux
+    - #1448 Fixes for `examples/CustomPlot.py`
+    - #1432 ExampleApp fix to use `pg` module from directory
 
 pyqtgraph-0.11.0
 
