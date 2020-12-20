@@ -136,10 +136,11 @@ setup(
               'mergetest': helpers.MergeTestCommand,
               'style': helpers.StyleCommand},
     packages=allPackages,
+    python_requires=">=3.7",
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg']},
     install_requires = [
-        'numpy>=1.8.0',
+        'numpy>=1.17.0',
         ],
     **setupOpts
 )
