@@ -15,15 +15,15 @@ jobs:
     steps:
       # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Setup Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       # Runs the Super-Linter action
       - name: Style check
         run: |
           pip install flake8
-          python setup.py style 
+          python -m flake8 .
       - name: Build Docs
         run: |
           cd doc
