@@ -36,11 +36,11 @@ class WidgetParameterItem(ParameterItem):
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
 
-        self.asSubItem = False
+        self.asSubItem = False  # place in a child item's column 0 instead of column 1
         self.hideWidget = True  ## hide edit widget, replace with label when not selected
                                 ## set this to False to keep the editor widget always visible
         
-        ## build widget into column 1 with a display label and default button.
+        # build widget with a display label and default button
         w = self.makeWidget()  
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
@@ -48,6 +48,7 @@ class WidgetParameterItem(ParameterItem):
         if self.asSubItem:
             self.subItem = QtGui.QTreeWidgetItem()
             self.subItem.depth = self.depth + 1
+            self.subItem.setFlags(QtCore.Qt.NoItemFlags)
             self.addChild(self.subItem)
 
         self.defaultBtn = QtGui.QPushButton()
@@ -105,7 +106,10 @@ class WidgetParameterItem(ParameterItem):
 
     def makeWidget(self):
         """
-        Return a single widget that should be placed in the second tree column.
+        Return a single widget whose position in the tree is determined by the
+        value of self.asSubItem. If True, it will be placed in the second tree
+        column, and if False, the first tree column of a child item.
+
         The widget must be given three attributes:
         
         ==========  ============================================================
