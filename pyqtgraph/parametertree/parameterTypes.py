@@ -245,9 +245,7 @@ class WidgetParameterItem(ParameterItem):
         Called when the widget's value is changing, but not finalized.
         For example: editing text before pressing enter or changing focus.
         """
-        # This is a bit sketchy: assume the last argument of each signal is
-        # the value..
-        self.param.sigValueChanging.emit(self.param, args[-1])
+        self.param.sigValueChanging.emit(self.param, self.widget.value())
         
     def selected(self, sel):
         """Called when this item has been selected (sel=True) OR deselected (sel=False)"""
