@@ -1,5 +1,4 @@
 import os
-import warnings
 
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
@@ -96,16 +95,6 @@ class WidgetParameterItem(ParameterItem):
         # shrink row heights a bit for more compact look
         sw.setHeight(int(sw.height() * 0.9))
         sb.setHeight(int(sb.height() * 0.9))
-        # manually override size hints for certain parameter types
-        t = self.param.opts['type']
-        if t == 'text':
-            sw.setWidth(100)
-            sw.setHeight(100)
-        elif t == 'color':
-            sw.setWidth(100)
-        elif t == 'colormap':
-            sw.setWidth(100)
-            sw.setHeight(35)
         if self.asSubItem:
             self.setSizeHint(1, sb)
             self.subItem.setSizeHint(0, sw)
@@ -162,17 +151,10 @@ class WidgetParameterItem(ParameterItem):
             w.value = lambda: asUnicode(w.text())
             w.setValue = lambda v: w.setText(asUnicode(v))
             w.sigChanging = w.textChanged
-        elif t == 'text':
-            w = QtGui.QTextEdit()
-            w.setMaximumHeight(100)
-            w.setReadOnly(opts.get('readonly', False))
-            w.value = lambda: str(w.toPlainText())
-            w.setValue = w.setPlainText
-            w.sigChanged = w.textChanged
-            self.hideWidget = False
-            self.asSubItem = True
         elif t == 'color':
             w = ColorButton()
+            h = w.sizeHint().height()
+            w.sizeHint = lambda: QtCore.QSize(100, h)
             w.sigChanged = w.sigColorChanged
             w.sigChanging = w.sigColorChanging
             w.value = w.color
@@ -183,6 +165,7 @@ class WidgetParameterItem(ParameterItem):
         elif t == 'colormap':
             from ..widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
             w = GradientWidget(orientation='bottom')
+            w.sizeHint = lambda: QtCore.QSize(300, 35)
             w.sigChanged = w.sigGradientChangeFinished
             w.sigChanging = w.sigGradientChanged
             w.value = w.colorMap
@@ -377,7 +360,6 @@ class SimpleParameter(Parameter):
             'float': float,
             'bool': bool,
             'str': asUnicode,
-            'text': asUnicode,
             'color': self._interpColor,
             'colormap': self._interpColormap,
         }[self.opts['type']]
@@ -396,7 +378,6 @@ registerParameterType('int', SimpleParameter, override=True)
 registerParameterType('float', SimpleParameter, override=True)
 registerParameterType('bool', SimpleParameter, override=True)
 registerParameterType('str', SimpleParameter, override=True)
-registerParameterType('text', SimpleParameter, override=True)
 registerParameterType('color', SimpleParameter, override=True)
 registerParameterType('colormap', SimpleParameter, override=True)
 
@@ -681,49 +662,21 @@ registerParameterType('action', ActionParameter, override=True)
 
 
 class TextParameterItem(WidgetParameterItem):
-    def __init__(self, param, depth):
-        warnings.warn(
-            "This functionality is now handled directly by WidgetParameterItem.",
-            DeprecationWarning, stacklevel=2
-        )
-        WidgetParameterItem.__init__(self, param, depth)
-        self.hideWidget = False
-        self.subItem = QtGui.QTreeWidgetItem()
-        self.addChild(self.subItem)
-
-    def treeWidgetChanged(self):
-        ## TODO: fix so that superclass method can be called
-        ## (WidgetParameter should just natively support this style)
-        #WidgetParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-
-        tw.setFirstItemColumnSpanned(self.subItem, True)
-        tw.setItemWidget(self.subItem, 0, self.textBox)
-        
-        # for now, these are copied from ParameterItem.treeWidgetChanged
-        self.setHidden(not self.param.opts.get('visible', True))
-        self.setExpanded(self.param.opts.get('expanded', True))
-        
     def makeWidget(self):
-        self.textBox = QtGui.QTextEdit()
-        self.textBox.setMaximumHeight(100)
-        self.textBox.setReadOnly(self.param.opts.get('readonly', False))
-        self.textBox.value = lambda: str(self.textBox.toPlainText())
-        self.textBox.setValue = self.textBox.setPlainText
-        self.textBox.sigChanged = self.textBox.textChanged
-        return self.textBox
+        self.hideWidget = False
+        self.asSubItem = True
+        self.textBox = w = QtGui.QTextEdit()
+        w.sizeHint = lambda: QtCore.QSize(300, 100)
+        w.setReadOnly(self.param.opts.get('readonly', False))
+        w.value = lambda: str(w.toPlainText())
+        w.setValue = w.setPlainText
+        w.sigChanged = w.textChanged
+        return w
 
 
 class TextParameter(Parameter):
     """Editable string; displayed as large text box in the tree."""
     itemClass = TextParameterItem
-    def __init__(self, *args, **kwargs):
-        warnings.warn(
-            "This functionality is now handled directly by SimpleParameter.",
-            DeprecationWarning, stacklevel=2
-        )
-        super().__init__(*args, **kwargs)
 
-# registerParameterType('text', TextParameter, override=True)
+
+registerParameterType('text', TextParameter, override=True)
