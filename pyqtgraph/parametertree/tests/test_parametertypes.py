@@ -147,11 +147,21 @@ def test_limits_enforcement():
 
 
 def test_data_race():
+    # Ensure widgets don't override user setting of param values whether
+    # they connect the signal before or after it's added to a tree
     p = pt.Parameter.create(name='int', type='int', value=0)
-
-    p.sigValueChanged.connect(lambda: p.setValue(1))  # connect signal before adding to tree to ensure priority
     t = pt.ParameterTree()
+
+    def override():
+        p.setValue(1)
+
+    p.sigValueChanged.connect(override)
     t.setParameters(p)
-    pi = t.nextFocusableChild(t.invisibleRootItem())
+    pi, = t.listAllItems()
+    assert pi.param is p
+    pi.widget.setValue(2)
+    assert p.value() == pi.widget.value() == 1
+    p.sigValueChanged.disconnect(override)
+    p.sigValueChanged.connect(override)
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
