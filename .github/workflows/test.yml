@@ -49,7 +49,7 @@ jobs:
       run: |
         pip install ${{ matrix.qt-lib }}${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py six matplotlib
         pip install .
-        pip install pytest pytest-cov coverage pytest-xdist
+        pip install pytest pytest-cov coverage
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -73,7 +73,6 @@ jobs:
     - name: Run Tests
       run: |
         pytest . -v \
-          -n 1 \
           --junitxml=junit/test-results.xml \
           --cov pyqtgraph --cov-report=xml --cov-report=html
       shell: bash
