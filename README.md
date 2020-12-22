@@ -1,4 +1,4 @@
-![Build Status](https://github.com/j9ac9k/pyqtgraph/workflows/.github/workflows/main.yml/badge.svg?branch=migrate-to-github-actions)
+[![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 
 PyQtGraph

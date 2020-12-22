@@ -4,6 +4,8 @@ on: [push]
 
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +22,6 @@ jobs:
           - python-version: "3.9"
             qt-version: ""
             numpy-version: ""
-    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
     - name: Setup Python ${{ matrix.python-version }}
@@ -94,3 +95,58 @@ jobs:
       with:
         name: Unit Test Results (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
         path: junit/test-results.xml
+
+  build-docs:
+    # Name the Job
+    name: Build Docs
+    # Set the type of machine to run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v2
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Build Docs
+        run: |
+          cd doc
+          python -m pip install -r requirements.txt
+          make html SPHINXOPTS='-W -v'
+    
+  linting:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      # Runs the Super-Linter action
+      - name: Style check
+        run: |
+          pip install flake8
+          python -m flake8 .
+
+  build-wheel:
+    name: Build Wheel
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Build Wheel
+        run: |
+          python -m pip install setuptools wheel
+          python setup.py bdist_wheel
+      - name: Archive pyqtgraph wheel
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheel
+          path: |
+            dist
