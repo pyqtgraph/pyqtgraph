@@ -194,8 +194,8 @@ class WidgetParameterItem(ParameterItem):
         self.showEditor()
         
     def isFocusable(self):
-        return self.param.writable()        
-        
+        return self.param.opts['visible'] and self.param.opts['enabled'] and self.param.writable()
+
     def valueChanged(self, param, val, force=False):
         ## called when the parameter's value has changed
         ParameterItem.valueChanged(self, param, val)
