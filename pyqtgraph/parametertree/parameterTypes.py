@@ -213,7 +213,8 @@ class WidgetParameterItem(ParameterItem):
         
     def updateDefaultBtn(self):
         ## enable/disable default btn 
-        self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
+        self.defaultBtn.setEnabled(
+            not self.param.valueIsDefault() and self.param.opts['enabled'] and self.param.writable())
         
         # hide / show
         self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
@@ -301,13 +302,17 @@ class WidgetParameterItem(ParameterItem):
         """Called when any options are changed that are not
         name, value, default, or limits"""
         ParameterItem.optsChanged(self, param, opts)
-        
+
+        if 'enabled' in opts:
+            self.updateDefaultBtn()
+            self.widget.setEnabled(opts['enabled'])
+
         if 'readonly' in opts:
             self.updateDefaultBtn()
             if hasattr(self.widget, 'setReadOnly'):
                 self.widget.setReadOnly(opts['readonly'])
             else:
-                self.widget.setEnabled(not opts['readonly'])
+                self.widget.setEnabled(self.param.opts['enabled'] and not opts['readonly'])
 
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])
@@ -415,7 +420,9 @@ class GroupParameterItem(ParameterItem):
             self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
             self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
-            
+
+        self.optsChanged(self.param, self.param.opts)
+
     def updateDepth(self, depth):
         ## Change item's appearance based on its depth in the tree
         ## This allows highest-level groups to be displayed more prominently.
@@ -474,7 +481,10 @@ class GroupParameterItem(ParameterItem):
         
         if 'addList' in opts:
             self.updateAddList()
-                
+
+        if 'enabled' in opts and hasattr(self, 'addWidget'):
+            self.addWidget.setEnabled(opts['enabled'])
+
     def updateAddList(self):
         self.addWidget.blockSignals(True)
         try:
@@ -632,6 +642,7 @@ class ActionParameterItem(ParameterItem):
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
         self.titleChanged()
+        self.optsChanged(self.param, self.param.opts)
 
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -645,7 +656,13 @@ class ActionParameterItem(ParameterItem):
     def titleChanged(self):
         self.button.setText(self.param.title())
         self.setSizeHint(0, self.button.sizeHint())
-        
+
+    def optsChanged(self, param, opts):
+        ParameterItem.optsChanged(self, param, opts)
+
+        if 'enabled' in opts:
+            self.button.setEnabled(opts['enabled'])
+
     def buttonClicked(self):
         self.param.activate()
         
