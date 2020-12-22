@@ -5,7 +5,7 @@
 PyQtGraph
 =========
 
-A pure-Python graphics library for PyQt/PySide/PyQt5/PySide2
+A pure-Python graphics library for PyQt5/PySide2
 
 Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
 
@@ -19,10 +19,23 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-* Python 2.7, or 3.x
+pyqtgraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
+
+This project supports:
+
+* All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
+
+* All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
+* All minor versions of Qt 5 currently supported by upstream Qt (Note, Qt 6 support is not yet implemented)
+
+
+Currently this means:
+
+* Python 3.7+
+* Qt 5.12, 5.15
 * Required
-  * PyQt 4.8+, PySide, PyQt5, or PySide2
-  * `numpy`
+  * PyQt5, or PySide2
+  * `numpy` 1.17+
 * Optional
   * `scipy` for image processing
   * `pyopengl` for 3D graphics
@@ -33,17 +46,12 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
-| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
-| PyQt-4         | :white_check_mark: | :x:                | :x:                | :x:                |
-| PySide1        | :white_check_mark: | :x:                | :x:                | :x:                |
-| PyQt5-5.9      | :x:                | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.13   | :x:                | :x:                | :white_check_mark: | :x:                |
-| PyQt5-Latest   | :x:                | :x:                | :x:                | :white_check_mark: |
-| PySide2-Latest | :x:                | :x:                | :x:                | :white_check_mark: |
-
-* pyqtgraph has had some incompatibilities with PySide2 versions 5.6-5.11, and we recommend you avoid those versions if possible
-* on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work reliably
+| Qt-Bindings    | Python 3.6         | Python 3.7         | Python 3.8         |
+| :------------- | :----------------: | :----------------: | :----------------: |
+| PyQt5-5.9      | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.13   | :x:                | :white_check_mark: | :x:                |
+| PyQt5-Latest   | :x:                | :x:                | :white_check_mark: |
+| PySide2-Latest | :x:                | :x:                | :white_check_mark: |
 
 Support
 -------
