@@ -156,8 +156,6 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanging = w.textChanged
         elif t == 'color':
             w = ColorButton()
-            h = w.sizeHint().height()
-            w.sizeHint = lambda: QtCore.QSize(100, h)
             w.sigChanged = w.sigColorChanged
             w.sigChanging = w.sigColorChanging
             w.value = w.color
