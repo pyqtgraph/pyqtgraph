@@ -157,7 +157,7 @@ def test_data_race():
 
     p.sigValueChanged.connect(override)
     t.setParameters(p)
-    pi, = t.listAllItems()
+    pi = next(iter(p.items))
     assert pi.param is p
     pi.widget.setValue(2)
     assert p.value() == pi.widget.value() == 1
