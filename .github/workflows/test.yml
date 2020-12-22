@@ -53,8 +53,8 @@ jobs:
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get install -y libxkbcommon-x11-0 xvfb x11-utils
-        sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
+        sudo apt-get install -y libxkbcommon-x11-0 x11-utils
+        sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
         pip install pytest-xvfb
     - name: 'Debug Info'
       run: |
@@ -65,11 +65,19 @@ jobs:
         pip list
         echo pyqtgraph system info
         python -c "import pyqtgraph as pg; pg.systemInfo()"
-        echo display information
-
       shell: bash
       env:
         QT_DEBUG_PLUGINS: 1
+    - name: 'XVFB Display Info'
+      run: |
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -c "from pyqtgraph.opengl.glInfo import GLTest"
+        xvfb-run --server-args="-screen 0, 1920x1200x24 -ac +extension GLX +render -noreset" python -m pyqtgraph.util.get_resolution
+      if: runner.os == 'Linux'
+    - name: 'Display Info'
+      run: |
+        python -c "from pyqtgraph.opengl.glInfo import GLTest"
+        python -m pyqtgraph.util.get_resolution
+      if: runner.os != 'Linux'
     - name: Run Tests
       run: |
         pytest . -v \
