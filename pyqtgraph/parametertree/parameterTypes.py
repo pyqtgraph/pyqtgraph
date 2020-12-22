@@ -146,7 +146,6 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanged = w.toggled
             w.value = w.isChecked
             w.setValue = w.setChecked
-            w.setEnabled(not opts.get('readonly', False))
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
@@ -165,7 +164,6 @@ class WidgetParameterItem(ParameterItem):
             w.setValue = w.setColor
             self.hideWidget = False
             w.setFlat(True)
-            w.setEnabled(not opts.get('readonly', False))            
         elif t == 'colormap':
             from ..widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
             w = GradientWidget(orientation='bottom')
@@ -308,9 +306,11 @@ class WidgetParameterItem(ParameterItem):
         
         if 'readonly' in opts:
             self.updateDefaultBtn()
-            if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
+            if hasattr(self.widget, 'setReadOnly'):
+                self.widget.setReadOnly(opts['readonly'])
+            else:
                 self.widget.setEnabled(not opts['readonly'])
-        
+
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])
         
@@ -669,7 +669,6 @@ class TextParameterItem(WidgetParameterItem):
         self.asSubItem = True
         self.textBox = w = QtGui.QTextEdit()
         w.sizeHint = lambda: QtCore.QSize(300, 100)
-        w.setReadOnly(self.param.opts.get('readonly', False))
         w.value = lambda: str(w.toPlainText())
         w.setValue = w.setPlainText
         w.sigChanged = w.textChanged
