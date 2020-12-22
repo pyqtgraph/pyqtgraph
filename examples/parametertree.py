@@ -93,6 +93,7 @@ params = [
     ]},
     {'name': 'Extra Parameter Options', 'type': 'group', 'children': [
         {'name': 'Read-only', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'readonly': True},
+        {'name': 'Disabled',  'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'enabled': False},
         {'name': 'Renamable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'renamable': True},
         {'name': 'Removable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'removable': True},
     ]},
