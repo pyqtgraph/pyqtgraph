@@ -1,9 +1,9 @@
 name: test pyqtgraph
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -82,41 +82,54 @@ jobs:
       if: runner.os != 'Linux'
     - name: Run Tests
       run: |
+        mkdir $SCREENSHOT_DIR
         pytest . -v \
           -n auto \
           --junitxml=junit/test-results.xml \
           --cov pyqtgraph --cov-report=xml --cov-report=html
       shell: bash
-      env:
-        AZURE: 1
+    - name: Upload Screenshots
+      uses: actions/upload-artifact@v2
+      with:
+        name: Screenshots (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
+        path: $SCREENSHOT_DIR
+        if-no-files-found: ignore
     - name: Upload Unit Test Results
       if: always()
       uses: actions/upload-artifact@v2
       with:
         name: Unit Test Results (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
         path: junit/test-results.xml
+    env:
+      SCREENSHOT_DIR: ./screenshots
 
   build-docs:
-    # Name the Job
-    name: Build Docs
-    # Set the type of machine to run on
+    name: build docs
     runs-on: ubuntu-latest
 
     steps:
-      # Checks out a copy of your repository on the ubuntu-latest machine
       - uses: actions/checkout@v2
       - name: Setup Python 3.9
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - name: Build Docs
+      - name: Install Dependencies
         run: |
           cd doc
           python -m pip install -r requirements.txt
+      - name: Build Documentation
+        run: |
+          cd doc
           make html SPHINXOPTS='-W -v'
+      - name: Upload Build Docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-docs
+          path: |
+            doc/build/html
     
   linting:
-    name: Linting
+    name: check linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -124,14 +137,15 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      # Runs the Super-Linter action
-      - name: Style check
+      - name: "Install Dependencies"
         run: |
           pip install flake8
+      - name: "Check Linting"
+        run: |
           python -m flake8 .
 
   build-wheel:
-    name: Build Wheel
+    name: build wheel
     runs-on: ubuntu-latest
 
     steps:
