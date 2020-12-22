@@ -180,14 +180,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.setHidden(not opts['visible'])
 
         if 'expanded' in opts:
-            if self.param.opts['syncExpanded']:
-                if self.isExpanded() != opts['expanded']:
-                    self.setExpanded(opts['expanded'])
-        
-        if 'syncExpanded' in opts:
-            if opts['syncExpanded']:
-                if self.isExpanded() != self.param.opts['expanded']:
-                    self.setExpanded(self.param.opts['expanded'])
+            if self.isExpanded() != opts['expanded']:
+                self.setExpanded(opts['expanded'])
 
         if 'title' in opts:
             self.titleChanged()
