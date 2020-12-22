@@ -31,8 +31,8 @@ jobs:
     - name: "Install Windows-Mesa OpenGL DLL"
       if: runner.os == 'Windows'
       run: |
-        curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.1.0/mesa3d-19.1.0-release-msvc.exe
-        7z x mesa3d-19.1.0-release-msvc.exe
+        curl -LJO https://github.com/pal1000/mesa-dist-win/releases/download/19.2.7/mesa3d-19.2.7-release-msvc.7z
+        7z x mesa3d-19.2.7-release-msvc.7z
         cd x64
         xcopy opengl32.dll C:\windows\system32\mesadrv.dll*
         xcopy opengl32.dll C:\windows\syswow64\mesadrv.dll*
