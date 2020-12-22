@@ -482,8 +482,12 @@ class GroupParameterItem(ParameterItem):
         if 'addList' in opts:
             self.updateAddList()
 
-        if 'enabled' in opts and hasattr(self, 'addWidget'):
-            self.addWidget.setEnabled(opts['enabled'])
+        if hasattr(self, 'addWidget'):
+            if 'enabled' in opts:
+                self.addWidget.setEnabled(opts['enabled'])
+
+            if 'tip' in opts:
+                self.addWidget.setToolTip(opts['tip'])
 
     def updateAddList(self):
         self.addWidget.blockSignals(True)
@@ -662,6 +666,9 @@ class ActionParameterItem(ParameterItem):
 
         if 'enabled' in opts:
             self.button.setEnabled(opts['enabled'])
+
+        if 'tip' in opts:
+            self.button.setToolTip(opts['tip'])
 
     def buttonClicked(self):
         self.param.activate()
