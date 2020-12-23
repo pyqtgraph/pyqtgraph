@@ -598,7 +598,7 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x = np.log10(x)
                 if self.opts['logMode'][1]:
-                    y = np.log10(y)
+                    y = np.sign(y) * np.log10(np.abs(y)+1)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):
