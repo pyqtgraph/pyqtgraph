@@ -1,4 +1,4 @@
-name: test pyqtgraph
+name: main
 
 on: [push, pull_request]
 
@@ -85,7 +85,7 @@ jobs:
         mkdir $SCREENSHOT_DIR
         pytest . -v \
           -n auto \
-          --junitxml=junit/test-results.xml \
+          --junitxml pytest.xml \
           --cov pyqtgraph --cov-report=xml --cov-report=html
       shell: bash
     - name: Upload Screenshots
@@ -99,9 +99,27 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Unit Test Results (Python ${{ matrix.python-version }} - Qt-Bindings ${{ matrix.qt-lib }} - OS ${{ matrix.os }})
-        path: junit/test-results.xml
+        path: pytest.xml
     env:
       SCREENSHOT_DIR: ./screenshots
+
+  publish-test-results:
+    name: "Publish Unit Test Results"
+    needs: test
+    runs-on: ubuntu-latest
+    if: success() || failure()
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: Unit Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: "artifacts/**/pytest.xml"
 
   build-docs:
     name: build docs
@@ -127,22 +145,6 @@ jobs:
           name: html-docs
           path: |
             doc/build/html
-    
-  linting:
-    name: check linting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: "Install Dependencies"
-        run: |
-          pip install flake8
-      - name: "Check Linting"
-        run: |
-          python -m flake8 .
 
   build-wheel:
     name: build wheel
