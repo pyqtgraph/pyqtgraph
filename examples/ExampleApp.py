@@ -215,9 +215,9 @@ class PythonHighlighter(QSyntaxHighlighter):
     # Python operators
     operators = [
         r'=',
-        # # Comparison
+        # Comparison
         r'==', r'!=', r'<', r'<=', r'>', r'>=',
-        # # Arithmetic
+        # Arithmetic
         r'\+', r"-", r'\*', r'/', r'//', r'%', r'\*\*',
         # In-place
         r'\+=', r'-=', r'\*=', r'/=', r'\%=',
@@ -234,8 +234,6 @@ class PythonHighlighter(QSyntaxHighlighter):
         QSyntaxHighlighter.__init__(self, document)
 
         # Multi-line strings (expression, flag, style)
-        # FIXME: The triple-quotes in these two lines will mess up the
-        # syntax highlighting from this point onward
         self.tri_single = (QRegularExpression("'''"), 1, 'string2')
         self.tri_double = (QRegularExpression('"""'), 2, 'string2')
 
@@ -346,7 +344,6 @@ class PythonHighlighter(QSyntaxHighlighter):
             return True
         else:
             return False
-
 
 
 
