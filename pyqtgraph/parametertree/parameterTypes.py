@@ -199,7 +199,6 @@ class WidgetParameterItem(ParameterItem):
     def valueChanged(self, param, val, force=False):
         ## called when the parameter's value has changed
         ParameterItem.valueChanged(self, param, val)
-        val = self.param.value()  # val might not have been current
         if force or not fn.eq(val, self.widget.value()):
             try:
                 self.widget.sigChanged.disconnect(self.widgetValueChanged)
