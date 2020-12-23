@@ -212,7 +212,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             else:
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile, upload=True)
-                elif os.getenv('AZURE') is not None:
+                elif os.getenv('CI') is not None:
                     standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
                     saveFailedTest(image, stdImage, standardFile)
                 print(graphstate)
@@ -509,7 +509,7 @@ def getTestDataRepo():
         if not os.path.isdir(parentPath):
             os.makedirs(parentPath)
 
-        if os.getenv('TRAVIS') is not None or os.getenv('AZURE') is not None:
+        if os.getenv('TRAVIS') is not None or os.getenv('CI') is not None:
             # Create a shallow clone of the test-data repository (to avoid
             # downloading more data than is necessary)
             os.makedirs(dataPath)

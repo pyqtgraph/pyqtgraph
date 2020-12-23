@@ -1,9 +1,13 @@
-
-[![Build Status](https://pyqtgraph.visualstudio.com/pyqtgraph/_apis/build/status/pyqtgraph.pyqtgraph?branchName=master)](https://pyqtgraph.visualstudio.com/pyqtgraph/_build/latest?definitionId=17&branchName=master)
-[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
-
 PyQtGraph
 =========
+
+[![PyPi](https://img.shields.io/pypi/v/pyqtgraph.svg)](https://pypi.org/project/pyqtgraph/)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/pyqtgraph.svg)](https://anaconda.org/conda-forge/pyqtgraph)
+[![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)
+[![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql-analysis/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql-analysis/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
 
 A pure-Python graphics library for PyQt5/PySide2
 
@@ -24,21 +28,20 @@ pyqtgraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_polic
 This project supports:
 
 * All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
-
 * All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
 * All minor versions of Qt 5 currently supported by upstream Qt (Note, Qt 6 support is not yet implemented)
-
 
 Currently this means:
 
 * Python 3.7+
-* Qt 5.12, 5.15
+* Qt 5.12-5.15
 * Required
-  * PyQt5, or PySide2
+  * PyQt5 or PySide2
   * `numpy` 1.17+
 * Optional
   * `scipy` for image processing
   * `pyopengl` for 3D graphics
+    * `pyopengl` on macOS Big Sur only works with python 3.9.1+
   * `hdf5` for large hdf5 binary format support
 
 Qt Bindings Test Matrix
@@ -46,12 +49,12 @@ Qt Bindings Test Matrix
 
 The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 3.6         | Python 3.7         | Python 3.8         |
+| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
 | :------------- | :----------------: | :----------------: | :----------------: |
-| PyQt5-5.9      | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.13   | :x:                | :white_check_mark: | :x:                |
-| PyQt5-Latest   | :x:                | :x:                | :white_check_mark: |
-| PySide2-Latest | :x:                | :x:                | :white_check_mark: |
+| PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
+| PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.15   | :x:                | :white_check_mark: | :white_check_mark: |
+| PyQt5-5.15     | :x:                | :white_check_mark: | :white_check_mark: |
 
 Support
 -------
