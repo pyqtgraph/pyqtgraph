@@ -1,4 +1,4 @@
-name: analyze pyqtgraph
+name: codeql
 
 on: pull_request
 

@@ -3,8 +3,8 @@ PyQtGraph
 
 [![PyPi](https://img.shields.io/pypi/v/pyqtgraph.svg)](https://pypi.org/project/pyqtgraph/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/pyqtgraph.svg)](https://anaconda.org/conda-forge/pyqtgraph)
-[![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)
-[![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql-analysis/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql-analysis/badge.svg)
+[![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
+[![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Acodeql)
 [![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
@@ -78,6 +78,6 @@ Installation Methods
 Documentation
 -------------
 
-The official documentation lives at https://pyqtgraph.readthedocs.io
+The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
