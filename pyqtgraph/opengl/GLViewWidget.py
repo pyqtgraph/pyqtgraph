@@ -27,6 +27,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                          (usually this value is 1-2). Defaults to None.
         rotationMethod   (str): Mechanimsm to drive the rotation method, options are 
                          'euler' and 'quaternion'. Defaults to 'euler'.
+        ================ ==============================================================
         """
 
         global ShareWidget
