@@ -1,11 +1,16 @@
 name: main
 
-on: [push, pull_request]
+on: [push, pull_request_target]
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # always run on push events, but only run on pull_request_target event when pull request pulls from fork repository
+    # for pull requests within the same repository, the pull event is sufficient
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:
