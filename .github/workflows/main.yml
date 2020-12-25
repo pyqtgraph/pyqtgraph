@@ -114,7 +114,7 @@ jobs:
       - name: Build Documentation
         run: |
           cd doc
-          make html SPHINXOPTS='-W --keep-going -n -v'
+          make html SPHINXOPTS='-W --keep-going -v'
       - name: Upload Build Docs
         uses: actions/upload-artifact@v2
         with:
