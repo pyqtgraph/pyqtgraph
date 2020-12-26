@@ -115,12 +115,6 @@ jobs:
         run: |
           cd doc
           make html SPHINXOPTS='-W --keep-going -v'
-      - name: Upload Build Docs
-        uses: actions/upload-artifact@v2
-        with:
-          name: html-docs
-          path: |
-            doc/build/html
 
   build-wheel:
     name: build wheel
@@ -136,9 +130,3 @@ jobs:
         run: |
           python -m pip install setuptools wheel
           python setup.py bdist_wheel
-      - name: Archive pyqtgraph wheel
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheel
-          path: |
-            dist
