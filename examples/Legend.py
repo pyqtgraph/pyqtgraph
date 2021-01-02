@@ -32,7 +32,7 @@ s1.addPoints(spots)
 win.addItem(s1)
 
 # # option2: generic method------------------------------------------------
-legend = pg.LegendItem((80,60), offset=(70,20), itemStyle=0, labelTextSize='10pt')
+legend = pg.LegendItem((80,60), offset=(70,20))
 legend.setParentItem(win.graphicsItem())
 legend.addItem(bg1, 'bar')
 legend.addItem(c1, 'curve1')
