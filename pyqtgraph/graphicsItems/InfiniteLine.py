@@ -550,8 +550,7 @@ class InfLineLabel(TextItem):
     def setVisible(self, v):
         TextItem.setVisible(self, v)
         if v:
-            self.updateText()
-            self.updatePosition()
+            self.valueChanged()
             
     def setMovable(self, m):
         """Set whether this label is movable by dragging along the line.
