@@ -20,8 +20,10 @@ except (ImportError, AttributeError):
 
 try:
     import cupy as cp
+    has_cupy = True
 except ImportError:
-    from pyqtgraph.util import empty_cupy as cp
+    cp = None
+    has_cupy = False
 
 
 class RawImageWidget(QtGui.QWidget):
@@ -56,8 +58,8 @@ class RawImageWidget(QtGui.QWidget):
             return
         if self.image is None:
             argb, alpha = fn.makeARGB(self.opts[0], *self.opts[1], **self.opts[2])
-            if cp.get_array_module(argb) == cp:
-                argb = argb.get()
+            if has_cupy and cp.get_array_module(argb) == cp:
+                argb = argb.get()  # transfer GPU data back to the CPU
             self.image = fn.makeQImage(argb, alpha)
             self.opts = ()
         # if self.pixmap is None:

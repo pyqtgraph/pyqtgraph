@@ -12,8 +12,10 @@ from ..Qt import QtGui, QtCore
 
 try:
     import cupy as cp
+    has_cupy = True
 except ImportError:
-    from ..util import empty_cupy as cp
+    cp = None
+    has_cupy = False
 
 try:
     from collections.abc import Callable
@@ -274,7 +276,7 @@ class ImageItem(GraphicsObject):
                 return
         else:
             old_xp = self._xp
-            self._xp = cp.get_array_module(image)
+            self._xp = cp.get_array_module(image) if has_cupy else numpy
             gotNewData = True
             processingSubstrateChanged = old_xp != self._xp
             if processingSubstrateChanged:
@@ -545,12 +547,18 @@ class ImageItem(GraphicsObject):
                 stepChan = stepData[..., i]
                 stepChan = stepChan[self._xp.isfinite(stepChan)]
                 h = self._xp.histogram(stepChan, **kwds)
-                hist.append((cp.asnumpy(h[1][:-1]), cp.asnumpy(h[0])))
+                if has_cupy:
+                    hist.append((cp.asnumpy(h[1][:-1]), cp.asnumpy(h[0])))
+                else:
+                    hist.append((h[1][:-1], h[0]))
             return hist
         else:
             stepData = stepData[self._xp.isfinite(stepData)]
             hist = self._xp.histogram(stepData, **kwds)
-            return cp.asnumpy(hist[1][:-1]), cp.asnumpy(hist[0])
+            if has_cupy:
+                return cp.asnumpy(hist[1][:-1]), cp.asnumpy(hist[0])
+            else:
+                return hist[1][:-1], hist[0]
 
     def setPxMode(self, b):
         """

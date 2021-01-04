@@ -17,8 +17,10 @@ import warnings
 import numpy as np
 try:
     import cupy as cp
+    has_cupy = True
 except ImportError:
-    from .util import empty_cupy as cp
+    cp = None
+    has_cupy = False
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
@@ -949,28 +951,27 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         data => (data-offset) * scale
 
     """
-    xp = cp.get_array_module(data)
     if dtype is None:
         dtype = data.dtype
     else:
-        dtype = xp.dtype(dtype)
+        dtype = np.dtype(dtype)
     
-    #p = xp.poly1d([scale, -offset*scale])
-    #d2 = p(data)
-    d2 = data.astype(xp.float) - float(offset)
+    # p = np.poly1d([scale, -offset*scale])
+    # d2 = p(data)
+    d2 = data.astype(np.float) - float(offset)
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
     if dtype.kind in 'ui':
-        lim = xp.iinfo(dtype)
+        lim = np.iinfo(dtype)
         if clip is None:
             # don't let rescale cause integer overflow
-            d2 = xp.clip(d2, lim.min, lim.max)
+            d2 = np.clip(d2, lim.min, lim.max)
         else:
-            d2 = xp.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+            d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
     else:
         if clip is not None:
-            d2 = xp.clip(d2, *clip)
+            d2 = np.clip(d2, *clip)
     data = d2.astype(dtype)
     return data
 
@@ -988,16 +989,14 @@ def applyLookupTable(data, lut):
         Either cupy or numpy arrays are accepted, though this function has
         problems in cupy on windows with some versions of the cuda toolkit.
     """
-    xp = cp.get_array_module(data)
-
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
 
-    if xp == cp:
-        # CuPy only supports "wrap" mode
-        return xp.take(lut, xp.clip(data, 0, lut.shape[0] - 1), axis=0)
+    if has_cupy and cp.get_array_module(data) == cp:
+        # cupy.take only supports "wrap" mode
+        return cp.take(lut, cp.clip(data, 0, lut.shape[0] - 1), axis=0)
     else:
-        return xp.take(lut, data, axis=0, mode='clip')
+        return np.take(lut, data, axis=0, mode='clip')
     
 
 def makeRGBA(*args, **kwds):
@@ -1046,7 +1045,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    is BGRA).
     ============== ==================================================================================
     """
-    xp = cp.get_array_module(data)  # either numpy or cupy
+    xp = cp.get_array_module(data) if has_cupy else np
     profile = debug.Profiler()
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
@@ -1351,7 +1350,7 @@ def gaussianFilter(data, sigma):
     (note: results are only approximately equal to the output of
      gaussian_filter)
     """
-    xp = cp.get_array_module(data)  # either numpy or cupy
+    xp = cp.get_array_module(data) if has_cupy else np
     if xp.isscalar(sigma):
         sigma = (sigma,) * data.ndim
         
