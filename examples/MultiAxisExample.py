@@ -6,7 +6,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
-app = QtGui.QApplication([])
+app = pg.mkQApp()
 mw = QtGui.QMainWindow()
 mw.resize(800, 800)
 pg.setConfigOption("background", "w")
