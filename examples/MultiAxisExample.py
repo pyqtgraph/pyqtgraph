@@ -17,6 +17,8 @@ mpw = pg.MultiAxisPlotWidget()
 mw.setCentralWidget(mpw)
 mw.show()
 
+# LEGEND
+mpw.addLegend(offset=(0, 0))
 # TITLE
 mpw.setTitle("MultiAxisPlotWidget Example")
 # AXYS
@@ -30,8 +32,6 @@ mpw.addChart("Dataset 2", "sin1", "samples2")
 mpw.addChart("Dataset 3", "sin2", "samples2")
 # make and display chart
 mpw.makeLayout()
-# LEGEND
-mpw.addLegend(offset=(0, 0))
 
 data1 = np.array(np.sin(np.linspace(0, 2 * np.pi, num=1000)))
 mpw.charts["Dataset 1"].setData(data1)
