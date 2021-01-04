@@ -76,7 +76,9 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
         if sampleType is not None:
-            assert issubclass(sampleType, GraphicsWidget)
+            if not issubclass(sampleType, GraphicsWidget):
+                raise RuntimeError("Only classes of type `GraphicsWidgets` "
+                                   "are allowed as `sampleType`")
             self.sampleType = sampleType
         else:
             self.sampleType = ItemSample
@@ -92,7 +94,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def setSampleType(self, sample):
         """Set the new sample item claspes"""
-        if sample == self.sampleType:
+        if sample is self.sampleType:
             return
 
         # Clear the legend, but before create a list of items
