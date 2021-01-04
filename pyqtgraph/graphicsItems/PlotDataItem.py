@@ -234,6 +234,14 @@ class PlotDataItem(GraphicsObject):
         self.informViewBoundsChanged()
 
     def setLogMode(self, xMode, yMode):
+        """
+        To enable log scaling for y<0 and y>0, the following formula is used:
+            scaled = sign(y) * log10(abs(y) + eps)
+        where eps is the smallest unit of y.dtype.
+        This allows for handling of 0. values, scaling of large values,
+        as well as the typical log scaling of values in the range -1 < x < 1.
+        Note that for values within this range, the signs are inverted.
+        """
         if self.opts['logMode'] == [xMode, yMode]:
             return
         self.opts['logMode'] = [xMode, yMode]
@@ -598,7 +606,11 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x = np.log10(x)
                 if self.opts['logMode'][1]:
-                    y = np.sign(y) * np.log10(np.abs(y)+1)
+                    if np.issubdtype(y.dtype, np.floating):
+                        eps = np.finfo(y.dtype).eps
+                    else:
+                        eps = 1
+                    y = np.sign(y) * np.log10(np.abs(y)+eps)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):
