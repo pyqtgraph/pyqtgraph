@@ -315,9 +315,18 @@ class ItemSample(GraphicsWidget):
 
     def paint(self, p, *args):
         opts = self.item.opts
-
         if opts.get('antialias'):
             p.setRenderHint(p.Antialiasing)
+
+        visible = self.item.isVisible()
+        if not visible:
+            p.setPen(fn.mkPen('d', width=2))
+            rect = (0, 0, 18, 18)
+            p.drawRect(QtCore.QRectF(*rect))
+            p.fillRect(QtCore.QRectF(*rect), fn.mkBrush('w'))
+            p.drawLine(2, 2, 16, 16)
+            p.drawLine(16, 2, 2, 16)
+            return
 
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
@@ -342,3 +351,13 @@ class ItemSample(GraphicsWidget):
         if isinstance(self.item, BarGraphItem):
             p.setBrush(fn.mkBrush(opts['brush']))
             p.drawRect(QtCore.QRectF(2, 2, 18, 18))
+
+    def mouseClickEvent(self, event):
+        """Use the mouseClick event to toggle the visibility of the plotItem
+        """
+        if event.button() == QtCore.Qt.LeftButton:
+            visible = self.item.isVisible()
+            self.item.setVisible(not visible)
+
+        event.accept()
+        self.update()
