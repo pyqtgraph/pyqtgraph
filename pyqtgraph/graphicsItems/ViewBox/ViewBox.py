@@ -41,7 +41,6 @@ class ChildGroup(ItemGroup):
 
     def __init__(self, parent):
         ItemGroup.__init__(self, parent)
-        self.setFlag(self.ItemClipsChildrenToShape)
 
         # Used as callback to inform ViewBox when items are added/removed from
         # the group.
@@ -67,12 +66,6 @@ class ChildGroup(ItemGroup):
                 for listener in itemsChangedListeners:
                     listener.itemsChanged()
         return ret
-
-    def shape(self):
-        return self.mapFromParent(self.parentItem().shape())
-
-    def boundingRect(self):
-        return self.mapRectFromParent(self.parentItem().boundingRect())
 
 
 class ViewBox(GraphicsWidget):
@@ -440,7 +433,6 @@ class ViewBox(GraphicsWidget):
     def resizeEvent(self, ev):
         if ev.oldSize() != ev.newSize():
             self._matrixNeedsUpdate = True
-            self.childGroup.prepareGeometryChange()
 
             self.linkedXChanged()
             self.linkedYChanged()

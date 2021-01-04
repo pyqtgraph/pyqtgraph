@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore, QT_LIB
 import matplotlib
 
-if QT_LIB != 'PyQt5':
+if QT_LIB not in ['PyQt5', "PySide2"]:
     if QT_LIB == 'PySide':
         matplotlib.rcParams['backend.qt4']='PySide'
 
