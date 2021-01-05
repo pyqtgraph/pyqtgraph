@@ -236,7 +236,9 @@ class PlotDataItem(GraphicsObject):
     def setLogMode(self, xMode, yMode):
         """
         To enable log scaling for y<0 and y>0, the following formula is used:
-            scaled = sign(y) * log10(abs(y) + eps) \n
+        
+            scaled = sign(y) * log10(abs(y) + eps)
+
         where eps is the smallest unit of y.dtype.
         This allows for handling of 0. values, scaling of large values,
         as well as the typical log scaling of values in the range -1 < x < 1.
