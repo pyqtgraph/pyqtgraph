@@ -17,7 +17,7 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp()
 
 ## Create window with ImageView widget
 win = QtGui.QMainWindow()
@@ -51,8 +51,7 @@ lw.addLabel('=== local color maps ===')
 num_bars += 1
 lw.nextRow()
 list_of_maps = pg.colormap.listMaps()
-for map_name in list_of_maps: # [:3]:
-    # print(map_name)
+for map_name in list_of_maps:
     num_bars += 1
     lw.addLabel(map_name)
     cmap = pg.colormap.get(map_name)
@@ -67,8 +66,7 @@ lw.addLabel('=== Matplotlib import ===')
 num_bars += 1
 lw.nextRow()
 list_of_maps = pg.colormap.listMaps('matplotlib')
-for map_name in list_of_maps: # [:3]:
-    # print(map_name)
+for map_name in list_of_maps:
     num_bars += 1
     lw.addLabel(map_name)
     cmap = pg.colormap.get(map_name, source='matplotlib', skipCache=True)
@@ -83,9 +81,8 @@ for map_name in list_of_maps: # [:3]:
 lw.addLabel('=== ColorCET import ===')
 num_bars += 1
 lw.nextRow()
-list_of_maps = pg.colormap.listMaps('colorcet')
-for map_name in list_of_maps: # [:3]:
-    # print(map_name)
+list_of_maps = pg.colormap.listMaps('colorcet')   
+for map_name in list_of_maps:
     num_bars += 1
     lw.addLabel(map_name)
     cmap = pg.colormap.get(map_name, source='colorcet', skipCache=True)
