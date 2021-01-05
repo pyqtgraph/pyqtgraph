@@ -43,6 +43,7 @@ Currently this means:
   * `pyopengl` for 3D graphics
     * `pyopengl` on macOS Big Sur only works with python 3.9.1+
   * `hdf5` for large hdf5 binary format support
+  * `colorcet` for supplimental colormaps
 
 Qt Bindings Test Matrix
 -----------------------
