@@ -1,9 +1,7 @@
-import pytest
 import pyqtgraph as pg
 
-
 def test_legend_item_basics():
-    app = pg.mkQApp()
+    pg.mkQApp()
 
     legend = pg.LegendItem()
 
@@ -21,6 +19,7 @@ def test_legend_item_basics():
     assert legend.labelTextSize() == '9pt'
     assert legend.brush() == pg.mkBrush(None)
     assert legend.pen() == pg.mkPen(None)
+    assert legend.sampleType is pg.ItemSample
 
     # Set brush
     # ----------------------------------------------------
