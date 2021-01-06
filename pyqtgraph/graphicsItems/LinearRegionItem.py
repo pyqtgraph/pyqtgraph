@@ -191,8 +191,8 @@ class LinearRegionItem(GraphicsObject):
         self.update()
 
     def boundingRect(self):
-        br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
-        
+        br = QtCore.QRectF(self.viewRect())  # bounds of containing ViewBox mapped to local coords.
+
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
