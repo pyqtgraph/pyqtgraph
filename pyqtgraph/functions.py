@@ -15,12 +15,7 @@ import sys
 import warnings
 
 import numpy as np
-try:
-    import cupy as cp
-    has_cupy = True
-except ImportError:
-    cp = None
-    has_cupy = False
+from pyqtgraph.util.cupy_helper import getCupy
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
@@ -992,7 +987,8 @@ def applyLookupTable(data, lut):
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
 
-    if has_cupy and cp.get_array_module(data) == cp:
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
         # cupy.take only supports "wrap" mode
         return cp.take(lut, cp.clip(data, 0, lut.shape[0] - 1), axis=0)
     else:
@@ -1045,7 +1041,8 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    is BGRA).
     ============== ==================================================================================
     """
-    xp = cp.get_array_module(data) if has_cupy else np
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
     profile = debug.Profiler()
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
@@ -1350,7 +1347,8 @@ def gaussianFilter(data, sigma):
     (note: results are only approximately equal to the output of
      gaussian_filter)
     """
-    xp = cp.get_array_module(data) if has_cupy else np
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
     if xp.isscalar(sigma):
         sigma = (sigma,) * data.ndim
         

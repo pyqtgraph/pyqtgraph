@@ -26,10 +26,11 @@ else:
 
 try:
     import cupy as cp
+    pg.setConfigOption("useCupy", True)
     _has_cupy = True
 except ImportError:
-    _has_cupy = False
     cp = None
+    _has_cupy = False
 
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
 parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")

@@ -61,6 +61,7 @@ CONFIG_OPTIONS = {
                                  # For 'col-major', image data is expected in reversed (col, row) order.
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
+    'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
 } 
 
 
