@@ -16,6 +16,8 @@ if QT_LIB == 'PySide':
     from exampleLoaderTemplate_pyside import Ui_Form
 elif QT_LIB == 'PySide2':
     from exampleLoaderTemplate_pyside2 import Ui_Form
+elif QT_LIB == 'PySide6':
+    from exampleLoaderTemplate_pyside6 import Ui_Form
 elif QT_LIB == 'PyQt5':
     from exampleLoaderTemplate_pyqt5 import Ui_Form
 else:

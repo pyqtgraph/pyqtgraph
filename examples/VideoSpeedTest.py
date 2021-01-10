@@ -19,6 +19,8 @@ if QT_LIB == 'PySide':
     import VideoTemplate_pyside as VideoTemplate
 elif QT_LIB == 'PySide2':
     import VideoTemplate_pyside2 as VideoTemplate
+elif QT_LIB == 'PySide6':
+    import VideoTemplate_pyside6 as VideoTemplate
 elif QT_LIB == 'PyQt5':
     import VideoTemplate_pyqt5 as VideoTemplate
 else:

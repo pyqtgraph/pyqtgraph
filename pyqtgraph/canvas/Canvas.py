@@ -11,6 +11,8 @@ elif QT_LIB == 'PyQt4':
     from .CanvasTemplate_pyqt import *
 elif QT_LIB == 'PySide2':
     from .CanvasTemplate_pyside2 import *
+elif QT_LIB == 'PySide6':
+    from .CanvasTemplate_pyside6 import *
 elif QT_LIB == 'PyQt5':
     from .CanvasTemplate_pyqt5 import *
     

@@ -8,6 +8,8 @@ if QT_LIB == 'PySide':
     from . import exportDialogTemplate_pyside as exportDialogTemplate
 elif QT_LIB == 'PySide2':
     from . import exportDialogTemplate_pyside2 as exportDialogTemplate
+elif QT_LIB == 'PySide6':
+    from . import exportDialogTemplate_pyside6 as exportDialogTemplate
 elif QT_LIB == 'PyQt5':
     from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
 else:

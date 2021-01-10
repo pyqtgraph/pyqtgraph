@@ -20,6 +20,8 @@ if QT_LIB == 'PySide':
     from .ImageViewTemplate_pyside import *
 elif QT_LIB == 'PySide2':
     from .ImageViewTemplate_pyside2 import *
+elif QT_LIB == 'PySide6':
+    from .ImageViewTemplate_pyside6 import *
 elif QT_LIB == 'PyQt5':
     from .ImageViewTemplate_pyqt5 import *
 else:

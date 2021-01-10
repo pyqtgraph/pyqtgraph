@@ -11,6 +11,8 @@ if QT_LIB == 'PySide':
     from . import template_pyside as template
 elif QT_LIB == 'PySide2':
     from . import template_pyside2 as template
+elif QT_LIB == 'PySide6':
+    from . import template_pyside6 as template
 elif QT_LIB == 'PyQt5':
     from . import template_pyqt5 as template
 else:

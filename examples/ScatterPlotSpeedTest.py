@@ -24,6 +24,8 @@ if QT_LIB == 'PySide':
     from ScatterPlotSpeedTestTemplate_pyside import Ui_Form
 elif QT_LIB == 'PySide2':
     from ScatterPlotSpeedTestTemplate_pyside2 import Ui_Form
+elif QT_LIB == 'PySide6':
+    from ScatterPlotSpeedTestTemplate_pyside6 import Ui_Form
 elif QT_LIB == 'PyQt5':
     from ScatterPlotSpeedTestTemplate_pyqt5 import Ui_Form
 else:

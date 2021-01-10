@@ -12,6 +12,9 @@ if QT_LIB == 'PySide':
 elif QT_LIB == 'PySide2':
     from . import FlowchartTemplate_pyside2 as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyside2 as FlowchartCtrlTemplate
+elif QT_LIB == 'PySide6':
+    from . import FlowchartTemplate_pyside6 as FlowchartTemplate
+    from . import FlowchartCtrlTemplate_pyside6 as FlowchartCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
     from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
