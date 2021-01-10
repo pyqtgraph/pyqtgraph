@@ -207,7 +207,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     now = ptime.time()
                     init = False
                     ## keep track of which buttons are involved in dragging
-                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
+                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MiddleButton, QtCore.Qt.RightButton]:
                         if int(ev.buttons() & btn) == 0:
                             continue
                         if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
