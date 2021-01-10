@@ -626,9 +626,10 @@ class GradientEditorItem(TickSliderItem):
     def getGradient(self):
         """Return a QLinearGradient object."""
         g = QtGui.QLinearGradient(QtCore.QPointF(0,0), QtCore.QPointF(self.length,0))
+        stops = []
         if self.colorMode == 'rgb':
             ticks = self.listTicks()
-            g.setStops([(x, QtGui.QColor(t.color)) for t,x in ticks])
+            stops = [(x, QtGui.QColor(t.color)) for t,x in ticks]
         elif self.colorMode == 'hsv':  ## HSV mode is approximated for display by interpolating 10 points between each stop
             ticks = self.listTicks()
             stops = []
@@ -641,7 +642,12 @@ class GradientEditorItem(TickSliderItem):
                     x = x1 + dx*j
                     stops.append((x, self.getColor(x)))
                 stops.append((x2, self.getColor(x2)))
+        if hasattr(g, 'setStops'):
             g.setStops(stops)
+        else:
+            # PySide6 has a missing setStops binding
+            for pos, col in stops:
+                g.setColorAt(pos, col)
         return g
         
     def getColor(self, x, toQColor=True):
