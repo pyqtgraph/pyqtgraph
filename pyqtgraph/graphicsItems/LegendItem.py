@@ -3,6 +3,7 @@ from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..icons import get_graph_icon
 from ..Point import Point
 from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 from .PlotDataItem import PlotDataItem
@@ -320,12 +321,8 @@ class ItemSample(GraphicsWidget):
 
         visible = self.item.isVisible()
         if not visible:
-            p.setPen(fn.mkPen('d', width=2))
-            rect = (0, 0, 18, 18)
-            p.drawRect(QtCore.QRectF(*rect))
-            p.fillRect(QtCore.QRectF(*rect), fn.mkBrush('w'))
-            p.drawLine(2, 2, 16, 16)
-            p.drawLine(16, 2, 2, 16)
+            icon = get_graph_icon('invisibleEye')
+            p.drawPixmap(QtCore.QPoint(0, 0), icon.pixmap(18, 18))
             return
 
         if not isinstance(self.item, ScatterPlotItem):
