@@ -16,6 +16,7 @@ from .python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
+PYSIDE6 = 'PySide6'
 PYQT4 = 'PyQt4'
 PYQT5 = 'PyQt5'
 
@@ -26,7 +27,7 @@ QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
 if QT_LIB is None:
-    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2]
+    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2, PYSIDE6]
 
     for lib in libOrder:
         if lib in sys.modules:
@@ -43,7 +44,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PySide or PySide2; none of these packages could be imported.")
+    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PySide, PySide2 or PySide6; none of these packages could be imported.")
 
 
 class FailedImport(object):
@@ -119,10 +120,12 @@ def _loadUiType(uiFile):
 
     # convert ui file to python code
     if pysideuic is None:
-        pyside2version = tuple(map(int, PySide2.__version__.split(".")))
-        if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
-            warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
-        uipy = subprocess.check_output(['pyside2-uic', uiFile])
+        if QT_LIB == PYSIDE2:
+            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
+            if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
+                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
+        uic_executable = QT_LIB.lower() + '-uic'
+        uipy = subprocess.check_output([uic_executable, uiFile])
     else:
         o = _StringIO()
         with open(uiFile, 'r') as f:
@@ -243,12 +246,38 @@ elif QT_LIB == PYSIDE2:
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
+elif QT_LIB == PYSIDE6:
+    from PySide6 import QtGui, QtCore, QtWidgets
+
+    try:
+        from PySide6 import QtSvg
+    except ImportError as err:
+        QtSvg = FailedImport(err)
+    try:
+        from PySide6 import QtOpenGL
+    except ImportError as err:
+        QtOpenGL = FailedImport(err)
+    try:
+        from PySide6 import QtTest
+        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
+    except ImportError as err:
+        QtTest = FailedImport(err)
+
+    try:
+        import shiboken6
+        isQObjectAlive = shiboken6.isValid
+    except ImportError:
+        # use approximate version
+        isQObjectAlive = _isQObjectAlive
+    import PySide6
+    VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
+
 else:
     raise ValueError("Invalid Qt lib '%s'" % QT_LIB)
 
 
-# common to PyQt5 and PySide2
-if QT_LIB in [PYQT5, PYSIDE2]:
+# common to PyQt5, PySide2 and PySide6
+if QT_LIB in [PYQT5, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
     
@@ -299,8 +328,21 @@ if QT_LIB in [PYQT5, PYSIDE2]:
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
 
-# Common to PySide and PySide2
-if QT_LIB in [PYSIDE, PYSIDE2]:
+if QT_LIB == PYSIDE6:
+    # We're using Qt6 which has a different structure so we're going to use a shim to
+    # recreate the Qt5 structure
+
+    import PySide6.QtOpenGLWidgets
+
+    class __QGLWidget(PySide6.QtOpenGLWidgets.QOpenGLWidget):
+        def __init__(self, parent=None, shareWidget=None):
+            super().__init__(parent)
+
+    QtOpenGL.QGLWidget = __QGLWidget
+
+
+# Common to PySide, PySide2 and PySide6
+if QT_LIB in [PYSIDE, PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
     loadUiType = _loadUiType
         
@@ -349,7 +391,7 @@ class App(QtGui.QApplication):
 
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
-        if QT_LIB in ['PyQt5', 'PySide2']:
+        if QT_LIB in ['PyQt5', 'PySide2', 'PySide6']:
             # qt4 does not have paletteChanged signal!
             self.paletteChanged.connect(self.onPaletteChange)
         self.onPaletteChange(self.palette())
