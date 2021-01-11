@@ -21,3 +21,36 @@ def test_PlotItem_shared_axis_items(orientation):
 
     with pytest.raises(RuntimeError):
         pi2.setAxisItems({orientation: ax1})
+
+
+def test_plotitem_menu_initialize():
+    """Test the menu initialization of the plotitem"""
+    item = pg.PlotItem()
+    assert item._menuEnabled is True
+    viewbox = item.vb
+    assert viewbox is not None
+    assert viewbox.menu is not None
+    assert viewbox.menuEnabled() is True
+
+    item = pg.PlotItem(enableMenu=False)
+    assert item._menuEnabled is False
+    viewbox = item.vb
+    assert viewbox is not None
+    assert viewbox.menu is None
+    assert viewbox.menuEnabled() is False
+
+    viewbox = pg.ViewBox()
+    item = pg.PlotItem(viewBox=viewbox, enableMenu=False)
+    assert item._menuEnabled is False
+    viewbox = item.vb
+    assert viewbox is not None
+    assert viewbox.menu is not None
+    assert viewbox.menuEnabled() is True
+
+    viewbox = pg.ViewBox(enableMenu=False)
+    item = pg.PlotItem(viewBox=viewbox)
+    assert item._menuEnabled is True
+    viewbox = item.vb
+    assert viewbox is not None
+    assert viewbox.menu is None
+    assert viewbox.menuEnabled() is False

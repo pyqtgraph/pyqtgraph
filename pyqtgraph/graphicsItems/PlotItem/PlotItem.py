@@ -134,12 +134,14 @@ class PlotItem(GraphicsWidget):
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
         self.layout.setVerticalSpacing(0)
-        
+
         if viewBox is None:
-            viewBox = ViewBox(parent=self)
+            viewBox = ViewBox(parent=self, enableMenu=enableMenu)
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
-        self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
+
+        # Enable or disable plotItem menu
+        self.setMenuEnabled(enableMenu, None)
         
         if name is not None:
             self.vb.register(name)
