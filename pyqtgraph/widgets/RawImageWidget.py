@@ -142,7 +142,9 @@ if HAVE_OPENGL:
             if not self.uploaded:
                 self.uploadTexture()
 
-            glViewport(0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
+            dpr = self.devicePixelRatio()
+            vp = (0, 0, int(self.width() * dpr), int(self.height() * dpr))
+            glViewport(*vp)
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.texture)
             glColor4f(1, 1, 1, 1)
