@@ -143,23 +143,25 @@ def mkData():
         frames = ui.framesSpin.value()
         width = ui.widthSpin.value()
         height = ui.heightSpin.value()
-        dtype = (ui.dtypeCombo.currentText(), ui.rgbCheck.isChecked(), frames, width, height)
-        if dtype not in cache:
-            if dtype[0] == 'uint8':
+        cacheKey = (ui.dtypeCombo.currentText(), ui.rgbCheck.isChecked(), frames, width, height)
+        if cacheKey not in cache:
+            if cacheKey[0] == 'uint8':
                 dt = xp.uint8
                 loc = 128
                 scale = 64
                 mx = 255
-            elif dtype[0] == 'uint16':
+            elif cacheKey[0] == 'uint16':
                 dt = xp.uint16
                 loc = 4096
                 scale = 1024
                 mx = 2**16
-            elif dtype[0] == 'float':
+            elif cacheKey[0] == 'float':
                 dt = xp.float
                 loc = 1.0
                 scale = 0.1
                 mx = 1.0
+            else:
+                raise ValueError(f"unable to handle dtype: {cacheKey[0]}")
             
             if ui.rgbCheck.isChecked():
                 data = xp.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
@@ -167,15 +169,15 @@ def mkData():
             else:
                 data = xp.random.normal(size=(frames,width,height), loc=loc, scale=scale)
                 data = pg.gaussianFilter(data, (0, 6, 6))
-            if dtype[0] != 'float':
+            if cacheKey[0] != 'float':
                 data = xp.clip(data, 0, mx)
             data = data.astype(dt)
             data[:, 10, 10:50] = mx
             data[:, 9:12, 48] = mx
             data[:, 8:13, 47] = mx
-            cache = {dtype: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
+            cache = {cacheKey: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
 
-        data = cache[dtype]
+        data = cache[cacheKey]
         updateLUT()
         updateSize()
 
