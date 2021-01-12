@@ -379,7 +379,7 @@ def getGitVersion(tagPrefix):
                       'describe',
                       '--tags',
                       '--dirty',
-                      '--match=%s*'%tagPrefix]).strip().decode('utf-8')
+                      '--match="%s*"'%tagPrefix]).strip().decode('utf-8')
 
     # chop off prefix
     assert v.startswith(tagPrefix)
