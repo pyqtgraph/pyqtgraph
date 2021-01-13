@@ -217,6 +217,13 @@ class PlotDataItem(GraphicsObject):
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
 
+    def setPos(self, x, y):
+        GraphicsObject.setPos(self, x, y)
+        # to update viewRect:
+        self.viewTransformChanged()
+        # to update displayed point sets, e.g. when clipping (which uses viewRect):
+        self.viewRangeChanged()
+
     def setAlpha(self, alpha, auto):
         if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
             return
@@ -552,7 +559,6 @@ class PlotDataItem(GraphicsObject):
         profiler('emit')
 
     def updateItems(self):
-
         curveArgs = {}
         for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
