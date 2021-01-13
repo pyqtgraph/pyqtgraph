@@ -44,6 +44,8 @@ Currently this means:
     * `pyopengl` on macOS Big Sur only works with python 3.9.1+
   * `hdf5` for large hdf5 binary format support
   * `colorcet` for supplimental colormaps
+  * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
+    * On Windows, CUDA toolkit must be >= 11.1
 
 Qt Bindings Test Matrix
 -----------------------

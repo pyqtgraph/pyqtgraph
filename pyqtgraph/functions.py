@@ -980,9 +980,10 @@ def applyLookupTable(data, lut):
 
     Parameters
     ----------
+    data : ndarray
     lut : ndarray
-        Either cupy or numpy arrays are accepted, though this function has
-        problems in cupy on windows with some versions of the cuda toolkit.
+        Either cupy or numpy arrays are accepted, though this function has only
+        consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
