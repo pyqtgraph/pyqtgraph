@@ -21,7 +21,6 @@ class GraphicsItem(object):
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
     _pixelVectorGlobalCache = LRUCache(100, 70)
-    _mapRectFromViewGlobalCache = LRUCache(100, 70)
 
     def __init__(self, register=None):
         if not hasattr(self, '_qtBaseClass'):
@@ -373,21 +372,8 @@ class GraphicsItem(object):
         vt = self.viewTransform()
         if vt is None:
             return None
-
-        cache = self._mapRectFromViewGlobalCache
-        k = (
-            vt.m11(), vt.m12(), vt.m13(),
-            vt.m21(), vt.m22(), vt.m23(),
-            vt.m31(), vt.m32(), vt.m33(),
-        )
-
-        try:
-            inv_vt = cache[k]
-        except KeyError:
-            inv_vt = fn.invertQTransform(vt)
-            cache[k] = inv_vt
-
-        return inv_vt.mapRect(obj)
+        vt = fn.invertQTransform(vt)
+        return vt.mapRect(obj)
 
     def pos(self):
         return Point(self._qtBaseClass.pos(self))
