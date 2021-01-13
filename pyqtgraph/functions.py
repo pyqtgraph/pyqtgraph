@@ -944,15 +944,12 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     The scaling operation is::
 
         data => (data-offset) * scale
-
     """
     if dtype is None:
         dtype = data.dtype
     else:
         dtype = np.dtype(dtype)
     
-    # p = np.poly1d([scale, -offset*scale])
-    # d2 = p(data)
     d2 = data.astype(np.float) - float(offset)
     d2 *= scale
 
