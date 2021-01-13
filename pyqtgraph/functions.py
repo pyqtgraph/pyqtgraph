@@ -6,18 +6,22 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
-import warnings
-import numpy as np
-import decimal, re
+
 import ctypes
-import sys, struct
+import decimal
+import re
+import struct
+import sys
+import warnings
+
+import numpy as np
+from pyqtgraph.util.cupy_helper import getCupy
+
+from . import debug, reload
+from .Qt import QtGui, QtCore, QT_LIB, QtVersion
+from .metaarray import MetaArray
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import getConfigOption, setConfigOptions
-from . import debug, reload
-from .metaarray import MetaArray
-
 
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
@@ -940,80 +944,53 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     The scaling operation is::
 
         data => (data-offset) * scale
-
     """
     if dtype is None:
         dtype = data.dtype
     else:
         dtype = np.dtype(dtype)
     
-    try:
-        if not getConfigOption('useWeave'):
-            raise Exception('Weave is disabled; falling back to slower version.')
-        try:
-            import scipy.weave
-        except ImportError:
-            raise Exception('scipy.weave is not importable; falling back to slower version.')
-        
-        ## require native dtype when using weave
-        if not data.dtype.isnative:
-            data = data.astype(data.dtype.newbyteorder('='))
-        if not dtype.isnative:
-            weaveDtype = dtype.newbyteorder('=')
+    d2 = data.astype(np.float) - float(offset)
+    d2 *= scale
+
+    # Clip before converting dtype to avoid overflow
+    if dtype.kind in 'ui':
+        lim = np.iinfo(dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            d2 = np.clip(d2, lim.min, lim.max)
         else:
-            weaveDtype = dtype
-        
-        newData = np.empty((data.size,), dtype=weaveDtype)
-        flat = np.ascontiguousarray(data).reshape(data.size)
-        size = data.size
-        
-        code = """
-        double sc = (double)scale;
-        double off = (double)offset;
-        for( int i=0; i<size; i++ ) {
-            newData[i] = ((double)flat[i] - off) * sc;
-        }
-        """
-        scipy.weave.inline(code, ['flat', 'newData', 'size', 'offset', 'scale'], compiler='gcc')
-        if dtype != weaveDtype:
-            newData = newData.astype(dtype)
-        data = newData.reshape(data.shape)
-    except:
-        if getConfigOption('useWeave'):
-            if getConfigOption('weaveDebug'):
-                debug.printExc("Error; disabling weave.")
-            setConfigOptions(useWeave=False)
-        
-        #p = np.poly1d([scale, -offset*scale])
-        #d2 = p(data)
-        d2 = data - float(offset)
-        d2 *= scale
-        
-        # Clip before converting dtype to avoid overflow
-        if dtype.kind in 'ui':
-            lim = np.iinfo(dtype)
-            if clip is None:
-                # don't let rescale cause integer overflow
-                d2 = np.clip(d2, lim.min, lim.max)
-            else:
-                d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
-        else:
-            if clip is not None:
-                d2 = np.clip(d2, *clip)
-        data = d2.astype(dtype)
+            d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+    else:
+        if clip is not None:
+            d2 = np.clip(d2, *clip)
+    data = d2.astype(dtype)
     return data
-    
+
+
 def applyLookupTable(data, lut):
     """
     Uses values in *data* as indexes to select values from *lut*.
     The returned data has shape data.shape + lut.shape[1:]
     
     Note: color gradient lookup tables can be generated using GradientWidget.
+
+    Parameters
+    ----------
+    data : ndarray
+    lut : ndarray
+        Either cupy or numpy arrays are accepted, though this function has only
+        consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
-    
-    return np.take(lut, data, axis=0, mode='clip')  
+
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # cupy.take only supports "wrap" mode
+        return cp.take(lut, cp.clip(data, 0, lut.shape[0] - 1), axis=0)
+    else:
+        return np.take(lut, data, axis=0, mode='clip')
     
 
 def makeRGBA(*args, **kwds):
@@ -1022,8 +999,8 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrder='rgba', output=None):
-    """ 
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
+    """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
     
@@ -1064,29 +1041,31 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
                    'rgba'.
     ============== ==================================================================================
     """
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
     profile = debug.Profiler()
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
         raise TypeError("data.shape[2] must be <= 4")
     
-    if lut is not None and not isinstance(lut, np.ndarray):
-        lut = np.array(lut)
+    if lut is not None and not isinstance(lut, xp.ndarray):
+        lut = xp.array(lut)
     
     if levels is None:
         # automatically decide levels based on data dtype
         if data.dtype.kind == 'u':
-            levels = np.array([0, 2**(data.itemsize*8)-1])
+            levels = xp.array([0, 2**(data.itemsize*8)-1])
         elif data.dtype.kind == 'i':
             s = 2**(data.itemsize*8 - 1)
-            levels = np.array([-s, s-1])
+            levels = xp.array([-s, s-1])
         elif data.dtype.kind == 'b':
-            levels = np.array([0,1])
+            levels = xp.array([0,1])
         else:
             raise Exception('levels argument is required for float input types')
-    if not isinstance(levels, np.ndarray):
-        levels = np.array(levels)
-    levels = levels.astype(np.float)
+    if not isinstance(levels, xp.ndarray):
+        levels = xp.array(levels)
+    levels = levels.astype(xp.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -1109,28 +1088,28 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
 
     # Decide on the dtype we want after scaling
     if lut is None:
-        dtype = np.ubyte
+        dtype = xp.ubyte
     else:
-        dtype = np.min_scalar_type(lut.shape[0]-1)
+        dtype = xp.min_scalar_type(lut.shape[0]-1)
 
     # awkward, but fastest numpy native nan evaluation
     # 
     nanMask = None
-    if data.dtype.kind == 'f' and np.isnan(data.min()):
-        nanMask = np.isnan(data)
+    if data.dtype.kind == 'f' and xp.isnan(data.min()):
+        nanMask = xp.isnan(data)
         if data.ndim > 2:
-            nanMask = np.any(nanMask, axis=-1)
+            nanMask = xp.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
-        if isinstance(levels, np.ndarray) and levels.ndim == 2:
+        if isinstance(levels, xp.ndarray) and levels.ndim == 2:
             # we are going to rescale each channel independently
             if levels.shape[0] != data.shape[-1]:
                 raise Exception("When rescaling multi-channel data, there must be the same number of levels as channels (data.shape[-1] == levels.shape[0])")
-            newData = np.empty(data.shape, dtype=int)
+            newData = xp.empty(data.shape, dtype=int)
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                    maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1140,7 +1119,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                    maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 data = rescaleData(data, scale/rng, minVal, dtype=dtype)
@@ -1151,14 +1130,14 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
     if lut is not None:
         data = applyLookupTable(data, lut)
     else:
-        if data.dtype != np.ubyte:
-            data = np.clip(data, 0, 255).astype(np.ubyte)
+        if data.dtype != xp.ubyte:
+            data = xp.clip(data, 0, 255).astype(xp.ubyte)
 
     profile('apply lut')
 
     # this will be the final image array
     if output is None:
-        imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
+        imgData = xp.empty(data.shape[:2]+(4,), dtype=xp.ubyte)
     else:
         imgData = output
 
@@ -1173,7 +1152,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, channelOrde
     # copy data into image array
     if data.ndim == 2:
         # This is tempting:
-        #   imgData[..., :3] = data[..., np.newaxis]
+        #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
             imgData[..., i] = data
@@ -1381,7 +1360,9 @@ def gaussianFilter(data, sigma):
     (note: results are only approximately equal to the output of
      gaussian_filter)
     """
-    if np.isscalar(sigma):
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
+    if xp.isscalar(sigma):
         sigma = (sigma,) * data.ndim
         
     baseline = data.mean()
@@ -1393,17 +1374,17 @@ def gaussianFilter(data, sigma):
         
         # generate 1D gaussian kernel
         ksize = int(s * 6)
-        x = np.arange(-ksize, ksize)
-        kernel = np.exp(-x**2 / (2*s**2))
+        x = xp.arange(-ksize, ksize)
+        kernel = xp.exp(-x**2 / (2*s**2))
         kshape = [1,] * data.ndim
         kshape[ax] = len(kernel)
         kernel = kernel.reshape(kshape)
         
         # convolve as product of FFTs
         shape = data.shape[ax] + ksize
-        scale = 1.0 / (abs(s) * (2*np.pi)**0.5)
-        filtered = scale * np.fft.irfft(np.fft.rfft(filtered, shape, axis=ax) * 
-                                        np.fft.rfft(kernel, shape, axis=ax), 
+        scale = 1.0 / (abs(s) * (2*xp.pi)**0.5)
+        filtered = scale * xp.fft.irfft(xp.fft.rfft(filtered, shape, axis=ax) *
+                                        xp.fft.rfft(kernel, shape, axis=ax),
                                         axis=ax)
         
         # clip off extra data
