@@ -13,7 +13,7 @@ import ctypes
 import sys, struct
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, QT_LIB
+from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import getConfigOption, setConfigOptions
 from . import debug, reload
 from .metaarray import MetaArray
@@ -38,7 +38,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
     
@@ -1501,19 +1501,37 @@ def arrayToQPath(x, y, connect='all'):
 
     path = QtGui.QPainterPath()
 
-    #profiler = debug.Profiler()
     n = x.shape[0]
+
     # create empty array, pad with extra space on either end
     arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
+
     # write first two integers
-    #profiler('allocate empty')
     byteview = arr.view(dtype=np.ubyte)
     byteview[:16] = 0
     byteview.data[16:20] = struct.pack('>i', n)
-    #profiler('pack header')
+
     # Fill array with vertex values
     arr[1:-1]['x'] = x
     arr[1:-1]['y'] = y
+
+    # inf/nans completely prevent the plot from being displayed starting on 
+    # Qt version 5.12.3; these must now be manually cleaned out.
+    isfinite = None
+    qtver = [int(x) for x in QtVersion.split('.')]
+    if qtver >= [5, 12, 3]:
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not np.all(isfinite):
+            # credit: Divakar https://stackoverflow.com/a/41191127/643629
+            mask = ~isfinite
+            idx = np.arange(len(x))
+            idx[mask] = -1
+            np.maximum.accumulate(idx, out=idx)
+            first = np.searchsorted(idx, 0)
+            if first < len(x):
+                # Replace all non-finite entries from beginning of arr with the first finite one
+                idx[:first] = first
+                arr[1:-1] = arr[1:-1][idx]
 
     # decide which points are connected by lines
     if eq(connect, 'all'):
@@ -1526,18 +1544,19 @@ def arrayToQPath(x, y, connect='all'):
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        arr[2:]['c'] = np.isfinite(x) & np.isfinite(y)
+        if isfinite is None:
+            isfinite = np.isfinite(x) & np.isfinite(y)
+        arr[2:]['c'] = isfinite
     elif isinstance(connect, np.ndarray):
-        arr[1:-1]['c'] = connect
+        arr[2:-1]['c'] = connect[:-1]
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
     arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
 
-    #profiler('fill array')
     byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
     byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
-    #profiler('footer')
+
     # create datastream object and stream into path
 
     ## Avoiding this method because QByteArray(str) leaks memory in PySide
@@ -1548,11 +1567,9 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
         buf = QtCore.QByteArray(bytes(path.strn))
-    #profiler('create buffer')
-    ds = QtCore.QDataStream(buf)
 
+    ds = QtCore.QDataStream(buf)
     ds >> path
-    #profiler('load')
 
     return path
 
@@ -2326,26 +2343,32 @@ def isosurface(data, level):
         
     return vertexes, faces
 
-
     
+def _pinv_fallback(tr):
+    arr = np.array([tr.m11(), tr.m12(), tr.m13(),
+                    tr.m21(), tr.m22(), tr.m23(),
+                    tr.m31(), tr.m32(), tr.m33()])
+    arr.shape = (3, 3)
+    pinv = np.linalg.pinv(arr)
+    return QtGui.QTransform(*pinv.ravel().tolist())
+
+
 def invertQTransform(tr):
     """Return a QTransform that is the inverse of *tr*.
-    Rasises an exception if tr is not invertible.
+    A pseudo-inverse is returned if tr is not invertible.
     
     Note that this function is preferred over QTransform.inverted() due to
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
     try:
-        import numpy.linalg
-        arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-        inv = numpy.linalg.inv(arr)
-        return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
-    except ImportError:
-        inv = tr.inverted()
-        if inv[1] is False:
-            raise Exception("Transform is not invertible.")
-        return inv[0]
+        det = tr.determinant()
+        detr = 1.0 / det    # let singular matrices raise ZeroDivisionError
+        inv = tr.adjoint()
+        inv *= detr
+        return inv
+    except ZeroDivisionError:
+        return _pinv_fallback(tr)
     
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):

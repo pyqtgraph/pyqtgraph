@@ -213,6 +213,16 @@ class Parameter(QtCore.QObject):
         """Return the name of this Parameter."""
         return self.opts['name']
 
+    def title(self):
+        """Return the title of this Parameter.
+        
+        By default, the title is the same as the name unless it has been explicitly specified
+        otherwise."""
+        title = self.opts.get('title', None)
+        if title is None:
+            title = self.name()
+        return title
+
     def contextMenu(self, name):
         """"A context menu entry was clicked"""
         self.sigContextMenu.emit(self, name)

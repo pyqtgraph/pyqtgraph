@@ -9,7 +9,7 @@ from .PlotDataItem import PlotDataItem
 from .GraphicsWidgetAnchor import GraphicsWidgetAnchor
 from .BarGraphItem import BarGraphItem
 
-__all__ = ['LegendItem']
+__all__ = ['LegendItem', 'ItemSample']
 
 
 class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
@@ -29,7 +29,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
-                 labelTextSize='9pt', rowCount=1, colCount=1, **kwargs):
+                 labelTextSize='9pt', rowCount=1, colCount=1,
+                 sampleType=None, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -52,6 +53,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         labelTextSize   Size to use when drawing legend text. Accepts CSS style
                         string arguments, e.g. '9pt'.
+        sampleType      Customizes the item sample class of the `LegendItem`.
         ==============  ===============================================================
 
         """
@@ -73,6 +75,14 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
+        if sampleType is not None:
+            if not issubclass(sampleType, GraphicsWidget):
+                raise RuntimeError("Only classes of type `GraphicsWidgets` "
+                                   "are allowed as `sampleType`")
+            self.sampleType = sampleType
+        else:
+            self.sampleType = ItemSample
+
         self.opts = {
             'pen': fn.mkPen(pen),
             'brush': fn.mkBrush(brush),
@@ -80,8 +90,25 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             'labelTextSize': labelTextSize,
             'offset': offset,
         }
-
         self.opts.update(kwargs)
+
+    def setSampleType(self, sample):
+        """Set the new sample item claspes"""
+        if sample is self.sampleType:
+            return
+
+        # Clear the legend, but before create a list of items
+        items = list(self.items)
+        self.sampleType = sample
+        self.clear()
+
+        # Refill the legend with the item list and new sample item
+        for sample, label in items:
+            plot_item = sample.item
+            plot_name = label.text
+            self.addItem(plot_item, plot_name)
+
+        self.updateSize()
 
     def offset(self):
         """Get the offset position relative to the parent."""
@@ -183,10 +210,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         """
         label = LabelItem(name, color=self.opts['labelTextColor'],
                           justify='left', size=self.opts['labelTextSize'])
-        if isinstance(item, ItemSample):
+        if isinstance(item, self.sampleType):
             sample = item
         else:
-            sample = ItemSample(item)
+            sample = self.sampleType(item)
         self.items.append((sample, label))
         self._addItemToLayout(sample, label)
         self.updateSize()
@@ -301,11 +328,8 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
 class ItemSample(GraphicsWidget):
     """Class responsible for drawing a single item in a LegendItem (sans label)
-
-    This may be subclassed to draw custom graphics in a Legend.
     """
 
-    # TODO: make this more generic; let items decide how it should be look.
     def __init__(self, item):
         GraphicsWidget.__init__(self)
         self.item = item

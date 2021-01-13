@@ -249,7 +249,7 @@ class InfiniteLine(GraphicsObject):
 
         if self.p != newPos:
             self.p = newPos
-            self._invalidateCache()
+            self.viewTransformChanged()
             GraphicsObject.setPos(self, Point(self.p))
             self.sigPositionChanged.emit(self)
 
@@ -292,9 +292,6 @@ class InfiniteLine(GraphicsObject):
         if self.span != (mn, mx):
             self.span = (mn, mx)
             self.update()
-
-    def _invalidateCache(self):
-        self._boundingRect = None
 
     def _computeBoundingRect(self):
         #br = UIGraphicsItem.boundingRect(self)
@@ -432,8 +429,8 @@ class InfiniteLine(GraphicsObject):
         Called whenever the transformation matrix of the view has changed.
         (eg, the view range has changed or the view was resized)
         """
+        self._boundingRect = None
         GraphicsItem.viewTransformChanged(self)
-        self._invalidateCache()
         
     def setName(self, name):
         self._name = name
@@ -553,8 +550,7 @@ class InfLineLabel(TextItem):
     def setVisible(self, v):
         TextItem.setVisible(self, v)
         if v:
-            self.updateText()
-            self.updatePosition()
+            self.valueChanged()
             
     def setMovable(self, m):
         """Set whether this label is movable by dragging along the line.

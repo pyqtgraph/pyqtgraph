@@ -649,7 +649,6 @@ class AxisItem(GraphicsWidget):
         self.picture = None
         self.update()
 
-
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
 
@@ -1149,6 +1148,8 @@ class AxisItem(GraphicsWidget):
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
+        bounding = self.boundingRect().toAlignedRect()
+        p.setClipRect(bounding)
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
 
