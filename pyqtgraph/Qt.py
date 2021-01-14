@@ -19,6 +19,7 @@ PYSIDE2 = 'PySide2'
 PYSIDE6 = 'PySide6'
 PYQT4 = 'PyQt4'
 PYQT5 = 'PyQt5'
+PYQT6 = 'PyQt6'
 
 QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 
@@ -254,9 +255,9 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtSvg = FailedImport(err)
     try:
-        from PySide6 import QtOpenGL
+        from PySide6 import QtOpenGLWidgets
     except ImportError as err:
-        QtOpenGL = FailedImport(err)
+        QtOpenGLWidgets = FailedImport(err)
     try:
         from PySide6 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
@@ -328,17 +329,11 @@ if QT_LIB in [PYQT5, PYSIDE2, PYSIDE6]:
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
 
-if QT_LIB == PYSIDE6:
+if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
 
-    import PySide6.QtOpenGLWidgets
-
-    class __QGLWidget(PySide6.QtOpenGLWidgets.QOpenGLWidget):
-        def __init__(self, parent=None, shareWidget=None):
-            super().__init__(parent)
-
-    QtOpenGL.QGLWidget = __QGLWidget
+    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
 
 
 # Common to PySide, PySide2 and PySide6
