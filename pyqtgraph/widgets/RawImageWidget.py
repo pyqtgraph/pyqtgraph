@@ -8,7 +8,7 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 from ..Qt import QtCore, QtGui
 
 try:
-    from ..Qt import QtOpenGL
+    from ..Qt import QtWidgets
     from OpenGL.GL import *
 
     HAVE_OPENGL = True
@@ -74,7 +74,7 @@ class RawImageWidget(QtGui.QWidget):
 
 
 if HAVE_OPENGL:
-    class RawImageGLWidget(QtOpenGL.QGLWidget):
+    class RawImageGLWidget(QtWidgets.QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
         Perfomance varies between platforms; see examples/VideoSpeedTest for benchmarking.
@@ -83,7 +83,7 @@ if HAVE_OPENGL:
         """
 
         def __init__(self, parent=None, scaled=False):
-            QtOpenGL.QGLWidget.__init__(self, parent)
+            QtWidgets.QOpenGLWidget.__init__(self, parent)
             self.scaled = scaled
             self.image = None
             self.uploaded = False
