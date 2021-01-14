@@ -362,9 +362,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtGui.QApplication.instance()
-        if QT_LIB in ['PyQt5', 'PySide2']:
-            # Qt4 does not have a paletteChanged signal
-            app.paletteChanged.connect(self.updateTheme)
+        app.paletteChanged.connect(self.updateTheme)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
