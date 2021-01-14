@@ -4,16 +4,9 @@ from .. import functions as fn
 from ..graphicsItems.ViewBox import ViewBox
 from ..graphicsItems.PlotItem import PlotItem
 
-if QT_LIB == 'PySide':
-    from . import exportDialogTemplate_pyside as exportDialogTemplate
-elif QT_LIB == 'PySide2':
-    from . import exportDialogTemplate_pyside2 as exportDialogTemplate
-elif QT_LIB == 'PySide6':
-    from . import exportDialogTemplate_pyside6 as exportDialogTemplate
-elif QT_LIB == 'PyQt5':
-    from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
-else:
-    from . import exportDialogTemplate_pyqt as exportDialogTemplate
+import importlib
+ui_template = importlib.import_module(
+    f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)
 
 
 class ExportDialog(QtGui.QWidget):
@@ -30,7 +23,7 @@ class ExportDialog(QtGui.QWidget):
         self.selectBox.hide()
         self.scene.addItem(self.selectBox)
         
-        self.ui = exportDialogTemplate.Ui_Form()
+        self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         
         self.ui.closeBtn.clicked.connect(self.close)

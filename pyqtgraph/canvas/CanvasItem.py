@@ -3,16 +3,9 @@ import numpy as np
 from ..Qt import QtGui, QtCore, QtSvg, QT_LIB
 from ..graphicsItems.ROI import ROI
 from .. import SRTTransform, ItemGroup
-if QT_LIB == 'PySide':
-    from . import TransformGuiTemplate_pyside as TransformGuiTemplate
-elif QT_LIB == 'PyQt4':
-    from . import TransformGuiTemplate_pyqt as TransformGuiTemplate
-elif QT_LIB == 'PySide2':
-    from . import TransformGuiTemplate_pyside2 as TransformGuiTemplate
-elif QT_LIB == 'PySide6':
-    from . import TransformGuiTemplate_pyside6 as TransformGuiTemplate
-elif QT_LIB == 'PyQt5':
-    from . import TransformGuiTemplate_pyqt5 as TransformGuiTemplate
+import importlib
+ui_template = importlib.import_module(
+    f'.TransformGuiTemplate_{QT_LIB.lower()}', package=__package__)
 
 from .. import debug
 
@@ -80,7 +73,7 @@ class CanvasItem(QtCore.QObject):
         self.pasteBtn = QtGui.QPushButton('Paste')
         
         self.transformWidget = QtGui.QWidget()
-        self.transformGui = TransformGuiTemplate.Ui_Form()
+        self.transformGui = ui_template.Ui_Form()
         self.transformGui.setupUi(self.transformWidget)
         self.layout.addWidget(self.transformWidget, 3, 0, 1, 2)
         self.transformGui.mirrorImageBtn.clicked.connect(self.mirrorY)

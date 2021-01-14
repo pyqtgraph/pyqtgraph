@@ -3,16 +3,9 @@ from ...Qt import QtCore, QtGui, QT_LIB
 from ...python2_3 import asUnicode
 from ...WidgetGroup import WidgetGroup
 
-if QT_LIB == 'PyQt4':
-    from .axisCtrlTemplate_pyqt import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PySide':
-    from .axisCtrlTemplate_pyside import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PyQt5':
-    from .axisCtrlTemplate_pyqt5 import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PySide2':
-    from .axisCtrlTemplate_pyside2 import Ui_Form as AxisCtrlTemplate
-elif QT_LIB == 'PySide6':
-    from .axisCtrlTemplate_pyside6 import Ui_Form as AxisCtrlTemplate
+import importlib
+ui_template = importlib.import_module(
+    f'.axisCtrlTemplate_{QT_LIB.lower()}', package=__package__)
 
 import weakref 
 
@@ -37,7 +30,7 @@ class ViewBoxMenu(QtGui.QMenu):
             m = QtGui.QMenu()
             m.setTitle("%s Axis" % axis)
             w = QtGui.QWidget()
-            ui = AxisCtrlTemplate()
+            ui = ui_template.Ui_Form()
             ui.setupUi(w)
             a = QtGui.QWidgetAction(self)
             a.setDefaultWidget(w)

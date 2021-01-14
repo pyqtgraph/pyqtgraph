@@ -5,22 +5,9 @@ from ..pgcollections import OrderedDict
 from ..widgets.TreeWidget import *
 from .. import FileDialog, DataTreeWidget
 
-## pyside and pyqt use incompatible ui files.
-if QT_LIB == 'PySide':
-    from . import FlowchartTemplate_pyside as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyside as FlowchartCtrlTemplate
-elif QT_LIB == 'PySide2':
-    from . import FlowchartTemplate_pyside2 as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyside2 as FlowchartCtrlTemplate
-elif QT_LIB == 'PySide6':
-    from . import FlowchartTemplate_pyside6 as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyside6 as FlowchartCtrlTemplate
-elif QT_LIB == 'PyQt5':
-    from . import FlowchartTemplate_pyqt5 as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyqt5 as FlowchartCtrlTemplate
-else:
-    from . import FlowchartTemplate_pyqt as FlowchartTemplate
-    from . import FlowchartCtrlTemplate_pyqt as FlowchartCtrlTemplate
+import importlib
+FlowchartCtrlTemplate = importlib.import_module(
+    f'.FlowchartCtrlTemplate_{QT_LIB.lower()}', package=__package__)
     
 from .Terminal import Terminal
 from numpy import ndarray
