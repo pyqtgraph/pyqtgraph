@@ -11,9 +11,8 @@ def test_basics_graphics_view():
 
     palette = view.palette()
 
-    if pg.Qt.QT_LIB in ["PySide2", "PyQt5"]:
-        assert palette.isBrushSet(QtGui.QPalette.Active, QtGui.QPalette.Window)
-        assert palette.color(QtGui.QPalette.Window) == QtCore.Qt.transparent
+    assert palette.isBrushSet(QtGui.QPalette.Active, QtGui.QPalette.Window)
+    assert palette.color(QtGui.QPalette.Window) == QtCore.Qt.transparent
     assert view.backgroundBrush().color() == QtGui.QColor(0, 0, 0, 255)
 
     assert view.focusPolicy() == QtCore.Qt.StrongFocus
@@ -39,10 +38,8 @@ def test_basics_graphics_view():
     view.setBackground("w")
     assert view._background == "w"
     palette = view.palette()
-    if pg.Qt.QT_LIB in ["PySide2", "PyQt5"]:
-
-        assert palette.isBrushSet(QtGui.QPalette.Active, QtGui.QPalette.Window)
-        assert palette.color(QtGui.QPalette.Window) == QtCore.Qt.transparent
+    assert palette.isBrushSet(QtGui.QPalette.Active, QtGui.QPalette.Window)
+    assert palette.color(QtGui.QPalette.Window) == QtCore.Qt.transparent
     assert view.backgroundBrush().color() == QtCore.Qt.white
 
     # Set anti aliasing
