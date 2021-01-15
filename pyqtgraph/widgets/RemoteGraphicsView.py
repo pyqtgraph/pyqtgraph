@@ -187,7 +187,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         return QtGui.QWidget.keyEvent(self, ev)
         
     def enterEvent(self, ev):
-        self._view.enterEvent(int(ev.type()), _callSync='off')
+        lws = ev.localPos(), ev.windowPos(), ev.screenPos()
+        self._view.enterEvent(lws, _callSync='off')
         return QtGui.QWidget.enterEvent(self, ev)
         
     def leaveEvent(self, ev):
@@ -325,8 +326,8 @@ class Renderer(GraphicsView):
         GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
         return ev.accepted()
         
-    def enterEvent(self, typ):
-        ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
+    def enterEvent(self, lws):
+        ev = QtGui.QEnterEvent(*lws)
         return GraphicsView.enterEvent(self, ev)
 
     def leaveEvent(self, typ):
