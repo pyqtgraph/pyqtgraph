@@ -3,7 +3,7 @@ import time
 import weakref
 import warnings
 
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, isQObjectAlive
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
@@ -298,7 +298,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in prevItems:
             event.currentItem = item
             try:
-                if item.scene() is self:
+                # NOTE: isQObjectAlive(item) was added for PySide6 where
+                #       verlet_chain_demo.py triggers a RuntimeError.
+                if isQObjectAlive(item) and item.scene() is self:
                     item.hoverEvent(event)
             except:
                 debug.printExc("Error sending hover exit event:")
