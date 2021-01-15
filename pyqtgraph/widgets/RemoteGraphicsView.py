@@ -274,9 +274,8 @@ class Renderer(GraphicsView):
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
-            if QT_LIB in ['PySide', 'PySide2']:
+            if QT_LIB.startswith('PySide'):
                 ch = ctypes.c_char.from_buffer(self.shm, 0)
-                #ch = ctypes.c_char_p(address)
                 self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
             else:
                 address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
