@@ -3,7 +3,7 @@ import time
 import weakref
 import warnings
 
-from ..Qt import QtCore, QtGui, isQObjectAlive
+from ..Qt import QtCore, QtGui, QT_LIB, isQObjectAlive
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
@@ -14,15 +14,9 @@ from .. import getConfigOption
 getMillis = lambda: int(round(time.time() * 1000))
 
 
-if hasattr(QtCore, 'PYQT_VERSION'):
-    try:
-        try:
-            from PyQt5 import sip
-        except ImportError:
-            import sip
-        HAVE_SIP = True
-    except ImportError:
-        HAVE_SIP = False
+if QT_LIB.startswith('PyQt'):
+    from ..Qt import sip
+    HAVE_SIP = True
 else:
     HAVE_SIP = False
 

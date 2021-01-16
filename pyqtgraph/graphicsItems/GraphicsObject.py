@@ -1,9 +1,6 @@
 from ..Qt import QtGui, QtCore, QT_LIB
-if QT_LIB in ['PyQt4', 'PyQt5']:
-    try:
-        from PyQt5 import sip
-    except ImportError:
-        import sip
+if QT_LIB.startswith('PyQt'):
+    from ..Qt import sip
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsObject']
