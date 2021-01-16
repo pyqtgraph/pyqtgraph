@@ -820,7 +820,7 @@ class ROI(GraphicsObject):
         """
         return True
 
-    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True, coords='parent'):
+    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True, coords='parent'):
         ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
         
@@ -1415,7 +1415,7 @@ class Handle(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
-    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
+    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True):
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return
