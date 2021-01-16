@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
@@ -1103,18 +1103,27 @@ class AxisItem(GraphicsWidget):
                 width = textRect.width()
                 #self.textHeight = height
                 offset = max(0,self.style['tickLength']) + textOffset
+
                 if self.orientation == 'left':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
+
+                if QT_LIB == 'PyQt6':
+                    # PyQt6 doesn't allow or-ing of different enum types
+                    # so we need to take its value property
+                    textFlags = alignFlags.value | QtCore.Qt.TextDontClip.value
+                else:
+                    # for PyQt5, the following expression is not commutative!
+                    textFlags = alignFlags | QtCore.Qt.TextDontClip
 
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
