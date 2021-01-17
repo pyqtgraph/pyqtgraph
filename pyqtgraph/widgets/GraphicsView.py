@@ -25,6 +25,7 @@ from .. import getConfigOption
 
 __all__ = ['GraphicsView']
 
+
 class GraphicsView(QtGui.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
     viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
@@ -356,8 +357,9 @@ class GraphicsView(QtGui.QGraphicsView):
 
         if not self.mouseEnabled:
             return
-        self.lastMousePos = Point(ev.pos())
-        self.mousePressPos = ev.pos()
+        lpos = ev.localPos()
+        self.lastMousePos = lpos
+        self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
         if not self.clickAccepted:
             self.scene().clearSelection()
@@ -372,15 +374,16 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
+        lpos = ev.localPos()
         if self.lastMousePos is None:
-            self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - self.lastMousePos.toQPoint())
-        self.lastMousePos = Point(ev.pos())
+            self.lastMousePos = lpos
+        delta = Point(lpos - self.lastMousePos)
+        self.lastMousePos = lpos
 
         super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
-        self.sigSceneMouseMoved.emit(self.mapToScene(ev.pos()))
+        self.sigSceneMouseMoved.emit(self.mapToScene(lpos))
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
