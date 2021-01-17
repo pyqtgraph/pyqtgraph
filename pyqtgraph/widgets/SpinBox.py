@@ -114,7 +114,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
         self.editingFinished.connect(self.editingFinishedEvent)
 
     def event(self, ev):
-        ret = QtGui.QAbstractSpinBox.event(self, ev)
+        ret = super().event(ev)
         if ev.type() == QtCore.QEvent.KeyPress and ev.key() == QtCore.Qt.Key_Return:
             ret = True  ## For some reason, spinbox pretends to ignore return key press
         return ret
@@ -596,7 +596,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
     def paintEvent(self, ev):
         self._updateHeight()
-        QtGui.QAbstractSpinBox.paintEvent(self, ev)
+        super().paintEvent(ev)
 
 
 class ErrorBox(QtGui.QWidget):

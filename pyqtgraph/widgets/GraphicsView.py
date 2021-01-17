@@ -157,11 +157,11 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.paintEvent(self, ev)
+        return super().paintEvent(ev)
     
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.render(self, *args, **kwds)
+        return super().render(*args, **kwds)
         
     
     def close(self):
@@ -328,10 +328,9 @@ class GraphicsView(QtGui.QGraphicsView):
         GraphicsView.setRange(self, r1, padding=[0, padding], propagate=False)
         
     def wheelEvent(self, ev):
-        QtGui.QGraphicsView.wheelEvent(self, ev)
+        super().wheelEvent(ev)
         if not self.mouseEnabled:
             return
-        
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
@@ -352,7 +351,7 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scene().leaveEvent(ev)  ## inform scene when mouse leaves
         
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsView.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         
 
         if not self.mouseEnabled:
@@ -365,7 +364,7 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseReleaseEvent(self, ev):
-        QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         if not self.mouseEnabled:
             return 
         self.sigMouseReleased.emit(ev)
@@ -378,7 +377,7 @@ class GraphicsView(QtGui.QGraphicsView):
         delta = Point(ev.pos() - self.lastMousePos.toQPoint())
         self.lastMousePos = Point(ev.pos())
 
-        QtGui.QGraphicsView.mouseMoveEvent(self, ev)
+        super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
         self.sigSceneMouseMoved.emit(self.mapToScene(ev.pos()))

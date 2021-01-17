@@ -64,14 +64,14 @@ class JoystickButton(QtGui.QPushButton):
         self.sigStateChanged.emit(self, self.state)
         
     def paintEvent(self, ev):
-        QtGui.QPushButton.paintEvent(self, ev)
+        super().paintEvent(ev)
         p = QtGui.QPainter(self)
         p.setBrush(QtGui.QBrush(QtGui.QColor(0,0,0)))
         p.drawEllipse(self.spotPos.x()-3,self.spotPos.y()-3,6,6)
         
     def resizeEvent(self, ev):
         self.setState(*self.state)
-        QtGui.QPushButton.resizeEvent(self, ev)
+        super().resizeEvent(ev)
         
         
         

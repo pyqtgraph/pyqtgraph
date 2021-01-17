@@ -140,4 +140,4 @@ class ExportDialog(QtGui.QWidget):
 
     def closeEvent(self, event):
         self.close()
-        QtGui.QWidget.closeEvent(self, event)
+        super().closeEvent(event)

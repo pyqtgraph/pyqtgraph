@@ -18,7 +18,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         GraphicsItem.__init__(self)
         
     def itemChange(self, change, value):
-        ret = QtGui.QGraphicsObject.itemChange(self, change, value)
+        ret = super().itemChange(change, value)
         if change in [self.ItemParentHasChanged, self.ItemSceneHasChanged]:
             self.parentChanged()
         try:

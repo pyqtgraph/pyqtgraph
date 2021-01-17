@@ -366,7 +366,7 @@ class TableWidget(QtGui.QTableWidget):
             ev.accept()
             self.copySel()
         else:
-            QtGui.QTableWidget.keyPressEvent(self, ev)
+            super().keyPressEvent(ev)
 
     def handleItemChanged(self, item):
         item.itemChanged()

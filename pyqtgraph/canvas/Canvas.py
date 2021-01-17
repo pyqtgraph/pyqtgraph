@@ -107,7 +107,7 @@ class Canvas(QtGui.QWidget):
 
     def resizeEvent(self, ev=None):
         if ev is not None:
-            QtGui.QWidget.resizeEvent(self, ev)
+            super().resizeEvent(ev)
         self.hideBtn.move(self.ui.view.size().width() - self.hideBtn.width(), 0)
         
         if not self.sizeApplied:

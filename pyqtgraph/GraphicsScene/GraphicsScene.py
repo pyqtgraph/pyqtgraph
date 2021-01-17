@@ -152,7 +152,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self._moveDistance = d
 
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsScene.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             if self.lastHoverEvent is not None:
                 # If the mouse has moved since the last hover event, send a new one.
@@ -191,12 +191,12 @@ class GraphicsScene(QtGui.QGraphicsScene):
             self.sigMouseMoved.emit(ev.scenePos())
 
             # First allow QGraphicsScene to eliver hoverEvent/Move/Exit Events
-            QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+            super().mouseMoveEvent(ev)
             # Next Deliver our own Hover Events
             self.sendHoverEvents(ev)
             if ev.buttons():
                 # button is pressed' send mouseMoveEvents and mouseDragEvents
-                QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+                super().mouseMoveEvent(ev)
                 if self.mouseGrabberItem() is None:
                     now = ptime.time()
                     init = False
@@ -219,7 +219,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             ev.accept()
 
         else:
-            QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+            super().mouseMoveEvent(ev)
             # if you do not accept event (which is ignored) then cursor will disappear
             ev.accept()
                 
@@ -247,12 +247,12 @@ class GraphicsScene(QtGui.QGraphicsScene):
             self.dragButtons = []
             self.clickEvents = []
             self.lastDrag = None
-        QtGui.QGraphicsScene.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         
         self.sendHoverEvents(ev)  ## let items prepare for next click/drag
 
     def mouseDoubleClickEvent(self, ev):
-        QtGui.QGraphicsScene.mouseDoubleClickEvent(self, ev)
+        super().mouseDoubleClickEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             self.clickEvents.append(MouseClickEvent(ev, double=True))
         
