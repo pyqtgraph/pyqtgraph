@@ -245,7 +245,7 @@ class LinearRegionItem(GraphicsObject):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
-        if not self.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+        if not self.movable or ev.button() != QtCore.Qt.LeftButton:
             return
         ev.accept()
         

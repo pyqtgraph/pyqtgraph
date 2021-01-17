@@ -251,7 +251,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     childGroup = g1  ## add children directly to this node unless we are clipping
     if not isinstance(item, QtGui.QGraphicsScene):
         ## See if this item clips its children
-        if int(item.flags() & item.ItemClipsChildrenToShape) > 0:
+        if item.flags() & item.ItemClipsChildrenToShape:
             ## Generate svg for just the path
             path = QtGui.QGraphicsPathItem(item.mapToScene(item.shape()))
             item.scene().addItem(path)
@@ -414,7 +414,7 @@ def itemTransform(item, root):
         return tr
         
     
-    if int(item.flags() & item.ItemIgnoresTransformations) > 0:
+    if item.flags() & item.ItemIgnoresTransformations:
         pos = item.pos()
         parent = item.parentItem()
         if parent is not None:
@@ -431,7 +431,7 @@ def itemTransform(item, root):
             if nextRoot is None:
                 nextRoot = root
                 break
-            if nextRoot is root or int(nextRoot.flags() & nextRoot.ItemIgnoresTransformations) > 0:
+            if nextRoot is root or (nextRoot.flags() & nextRoot.ItemIgnoresTransformations):
                 break
         
         if isinstance(nextRoot, QtGui.QGraphicsScene):
