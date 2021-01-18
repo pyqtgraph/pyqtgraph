@@ -9,7 +9,7 @@ PyQtGraph
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
 
-A pure-Python graphics library for PyQt5/PySide2/PySide6
+A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
 Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
 
@@ -36,7 +36,7 @@ Currently this means:
 * Python 3.7+
 * Qt 5.12-6.0
 * Required
-  * PyQt5, PySide2 or PySide6
+  * PyQt5, PyQt6, PySide2 or PySide6
   * `numpy` 1.17+
 * Optional
   * `scipy` for image processing
@@ -57,8 +57,9 @@ The following table represents the python environments we test in our CI system.
 | PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
 | PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
 | PySide2-5.15   | :x:                | :white_check_mark: | :x:                |
-| PyQt5-5.15     | :x:                | :white_check_mark: | :white_check_mark: |
+| PyQt5-5.15     | :x:                | :white_check_mark: | :x:                |
 | PySide6-6.0    | :x:                | :x:                | :white_check_mark: |
+| PyQt6-6.0      | :x:                | :x:                | :white_check_mark: |
 
 Support
 -------

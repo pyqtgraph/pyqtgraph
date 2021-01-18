@@ -35,10 +35,10 @@ def buildFileList(examples, files=None):
 path = os.path.abspath(os.path.dirname(__file__))
 files = sorted(set(buildFileList(examples)))
 frontends = {
-    Qt.PYQT4: False,
     Qt.PYQT5: False,
-    Qt.PYSIDE: False,
-    Qt.PYSIDE2: False
+    Qt.PYQT6: False,
+    Qt.PYSIDE2: False,
+    Qt.PYSIDE6: False,
 }
 # sort out which of the front ends are available
 for frontend in frontends.keys():
@@ -65,13 +65,6 @@ conditionalExamples = {
     "RemoteSpeedTest.py": exceptionCondition(
         False,
         reason="Test is being problematic on CI machines"
-    ),
-    "optics_demos.py": exceptionCondition(
-        not frontends[Qt.PYSIDE],
-        reason=(
-            "Test fails due to PySide bug: ",
-            "https://bugreports.qt.io/browse/PYSIDE-671"
-        )
     ),
     'GLVolumeItem.py': exceptionCondition(
         not(platform.system() == "Darwin" and
