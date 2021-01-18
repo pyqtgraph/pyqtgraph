@@ -377,11 +377,11 @@ def correctCoordinates(node, defs, item, options):
                 families = ch.getAttribute('font-family').split(',')
                 if len(families) == 1:
                     font = QtGui.QFont(families[0].strip('" '))
-                    if font.style() == font.SansSerif:
+                    if font.styleHint() == font.StyleHint.SansSerif:
                         families.append('sans-serif')
-                    elif font.style() == font.Serif:
+                    elif font.styleHint() == font.StyleHint.Serif:
                         families.append('serif')
-                    elif font.style() == font.Courier:
+                    elif font.styleHint() == font.StyleHint.Courier:
                         families.append('monospace')
                     ch.setAttribute('font-family', ', '.join([f if ' ' not in f else '"%s"'%f for f in families]))
                 
