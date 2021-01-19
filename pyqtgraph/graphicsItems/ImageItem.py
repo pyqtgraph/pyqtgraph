@@ -284,7 +284,6 @@ class ImageItem(GraphicsObject):
                 if 'autoDownsample' not in kargs:
                     kargs['autoDownsample'] = True
             if shapeChanged:
-                self._buffer = None
                 self.prepareGeometryChange()
                 self.informViewBoundsChanged()
 

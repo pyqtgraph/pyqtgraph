@@ -1037,8 +1037,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                    The default is False, which returns in ARGB order for use with QImage 
                    (Note that 'ARGB' is a term used by the Qt documentation; the *actual* order 
                    is BGRA).
-    channelOrder   Specifies the ordering of color channels in the input data. By default, this is
-                   'rgba'.
     ============== ==================================================================================
     """
     cp = getCupy()
@@ -1093,7 +1091,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         dtype = xp.min_scalar_type(lut.shape[0]-1)
 
     # awkward, but fastest numpy native nan evaluation
-    # 
     nanMask = None
     if data.dtype.kind == 'f' and xp.isnan(data.min()):
         nanMask = xp.isnan(data)
@@ -1218,11 +1215,11 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if imgData.ndim == 2:
         imgFormat = QtGui.QImage.Format_Grayscale8
     elif imgData.ndim == 3:
-        ## If we didn't explicitly specify alpha, check the array shape.
+        # If we didn't explicitly specify alpha, check the array shape.
         if alpha is None:
             alpha = (imgData.shape[2] == 4)
             
-        if imgData.shape[2] == 3:  ## need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
+        if imgData.shape[2] == 3:  # need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
             if copy is True:
                 d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
                 d2[:,:,:3] = imgData
@@ -1242,7 +1239,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         raise TypeError("Image array must have ndim = 2 or 3.")
         
     if transpose:
-        imgData = imgData.transpose((1, 0, 2))  ## QImage expects row-major order
+        imgData = imgData.transpose((1, 0, 2))  # QImage expects row-major order
 
     if not imgData.flags['C_CONTIGUOUS']:
         if copy is False:
