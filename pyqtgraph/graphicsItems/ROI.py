@@ -2330,7 +2330,7 @@ class RulerROI(LineSegmentROI):
         p.resetTransform()
 
         txt = fn.siFormat(length, suffix='m') + '\n%0.1f deg' % angle
-        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter, txt)
+        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignCenter, txt)
 
     def boundingRect(self):
         r = LineSegmentROI.boundingRect(self)
