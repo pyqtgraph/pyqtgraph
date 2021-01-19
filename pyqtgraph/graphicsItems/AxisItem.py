@@ -1110,10 +1110,10 @@ class AxisItem(GraphicsWidget):
                     textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
+                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
+                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
 
                 #p.setPen(self.pen())
