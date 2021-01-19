@@ -1271,7 +1271,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
                 # mutable, but leaks memory
                 img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
                 
-    img.data = imgData    
+    img.data = imgData
     return img
 
 def imageToArray(img, copy=False, transpose=True):
