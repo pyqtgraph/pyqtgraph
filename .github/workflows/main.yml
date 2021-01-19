@@ -84,7 +84,7 @@ jobs:
       run: |
         mkdir $SCREENSHOT_DIR
         pytest . -v \
-          -n 1 \
+          -n auto \
           --junitxml pytest.xml \
           --cov pyqtgraph --cov-report=xml --cov-report=html
       shell: bash

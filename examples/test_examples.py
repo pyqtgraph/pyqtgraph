@@ -21,9 +21,8 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
 
 
 def buildFileList(examples, files=None):
-    # if files is None:
-    #     files = [("Example App", "test_ExampleApp.py")]
-    files = []
+    if files is None:
+        files = [("Example App", "test_ExampleApp.py")]
     for key, val in examples.items():
         if isinstance(val, basestring):
             files.append((key,val))
@@ -55,6 +54,10 @@ installedFrontends = sorted([
 
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
+    "test_ExampleApp.py": exceptionCondition(
+        not(platform.system() == "Linux" and frontends[Qt.PYSIDE2]),
+        reason="Unexplained, intermittent segfault and subsequent timeout on CI"
+    ),
     "hdf5.py": exceptionCondition(
         False,
         reason="Example requires user interaction"
