@@ -59,4 +59,3 @@ for data in ['float', 'uint16', 'uint8']:
         for lut in [None, 'uint8', 'uint16']:
             name = 'time_makeARGB_%s_%s_%slut' % (data, 'levels' if levels else 'nolevels', lut or 'no')
             setattr(TimeSuite, name, make_test(data, levels, lut, name))
-
