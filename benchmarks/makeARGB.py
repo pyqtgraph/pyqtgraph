@@ -1,6 +1,6 @@
 import numpy as np
 
-import pyqtgraph as pg
+from pyqtgraph.functions import makeARGB
 
 
 class TimeSuite(object):
@@ -50,7 +50,7 @@ class TimeSuite(object):
 def make_test(dtype, use_levels, lut_name, func_name):
     def time_test(self):
         data = getattr(self, dtype + '_data')
-        pg.makeARGB(
+        makeARGB(
             data['data'],
             lut=getattr(self, lut_name + '_lut', None),
             levels=use_levels and data['levels'],
@@ -65,3 +65,8 @@ for dt in ['float', 'uint16', 'uint8']:
         for ln in [None, 'uint8', 'uint16']:
             name = f'time_makeARGB_{dt}_{"" if levels else "no"}levels_{ln or "no"}lut'
             setattr(TimeSuite, name, make_test(dt, levels, ln, name))
+
+
+if __name__ == "__main__":
+    ts = TimeSuite()
+    ts.setup()
