@@ -1000,7 +1000,7 @@ def makeRGBA(*args, **kwds):
 
 
 def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
-    """ 
+    """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
     
@@ -1091,7 +1091,6 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         dtype = xp.min_scalar_type(lut.shape[0]-1)
 
     # awkward, but fastest numpy native nan evaluation
-    # 
     nanMask = None
     if data.dtype.kind == 'f' and xp.isnan(data.min()):
         nanMask = xp.isnan(data)
@@ -1128,7 +1127,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     if lut is not None:
         data = applyLookupTable(data, lut)
     else:
-        if data.dtype is not xp.ubyte:
+        if data.dtype != xp.ubyte:
             data = xp.clip(data, 0, 255).astype(xp.ubyte)
 
     profile('apply lut')
@@ -1189,10 +1188,14 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     
     ============== ===================================================================
     **Arguments:**
-    imgData        Array of data to convert. Must have shape (width, height, 3 or 4) 
-                   and dtype=ubyte. The order of values in the 3rd axis must be 
-                   (b, g, r, a).
-    alpha          If True, the QImage returned will have format ARGB32. If False,
+    imgData        Array of data to convert. Must have shape (height, width),
+                   (height, width, 3), or (height, width, 4). If transpose is
+                   True, then the first two axes are swapped. The array dtype
+                   must be ubyte. For 2D arrays, the value is interpreted as 
+                   greyscale. For 3D arrays, the order of values in the 3rd
+                   axis must be (b, g, r, a). 
+    alpha          If the input array is 3D and *alpha* is True, the QImage 
+                   returned will have format ARGB32. If False,
                    the format will be RGB32. By default, _alpha_ is True if
                    array.shape[2] == 4.
     copy           If True, the data is copied before converting to QImage.
@@ -1208,30 +1211,35 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     ## create QImage from buffer
     profile = debug.Profiler()
     
-    ## If we didn't explicitly specify alpha, check the array shape.
-    if alpha is None:
-        alpha = (imgData.shape[2] == 4)
-        
     copied = False
-    if imgData.shape[2] == 3:  ## need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
-        if copy is True:
-            d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
-            d2[:,:,:3] = imgData
-            d2[:,:,3] = 255
-            imgData = d2
-            copied = True
+    if imgData.ndim == 2:
+        imgFormat = QtGui.QImage.Format_Grayscale8
+    elif imgData.ndim == 3:
+        # If we didn't explicitly specify alpha, check the array shape.
+        if alpha is None:
+            alpha = (imgData.shape[2] == 4)
+            
+        if imgData.shape[2] == 3:  # need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
+            if copy is True:
+                d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
+                d2[:,:,:3] = imgData
+                d2[:,:,3] = 255
+                imgData = d2
+                copied = True
+            else:
+                raise Exception('Array has only 3 channels; cannot make QImage without copying.')
+        
+        profile("add alpha channel")
+        
+        if alpha:
+            imgFormat = QtGui.QImage.Format_ARGB32
         else:
-            raise Exception('Array has only 3 channels; cannot make QImage without copying.')
-    
-    if alpha:
-        imgFormat = QtGui.QImage.Format_ARGB32
+            imgFormat = QtGui.QImage.Format_RGB32
     else:
-        imgFormat = QtGui.QImage.Format_RGB32
+        raise TypeError("Image array must have ndim = 2 or 3.")
         
     if transpose:
-        imgData = imgData.transpose((1, 0, 2))  ## QImage expects the row/column order to be opposite
-
-    profile()
+        imgData = imgData.transpose((1, 0, 2))  # QImage expects row-major order
 
     if not imgData.flags['C_CONTIGUOUS']:
         if copy is False:
@@ -1240,9 +1248,12 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         imgData = np.ascontiguousarray(imgData)
         copied = True
         
+    profile("ascontiguousarray")
+    
     if copy is True and copied is False:
         imgData = imgData.copy()
         
+    profile("copy")
     if QT_LIB == 'PySide':
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)

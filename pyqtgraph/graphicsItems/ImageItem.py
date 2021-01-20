@@ -50,7 +50,6 @@ class ImageItem(GraphicsObject):
         self.qimage = None  ## rendered image for display
 
         self.paintMode = None
-
         self.levels = None  ## [min, max] or [[redMin, redMax], ...]
         self.lut = None
         self.autoDownsample = False
