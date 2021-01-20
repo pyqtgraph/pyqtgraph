@@ -65,7 +65,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             subnode = QtGui.QTreeWidgetItem(["", "", ""])
             node.addChild(subnode)
             self.setItemWidget(subnode, 0, widget)
-            self.setFirstItemColumnSpanned(subnode, True)
+            subnode.setFirstColumnSpanned(True)
             
         # recurse to children
         for key, data in childs.items():

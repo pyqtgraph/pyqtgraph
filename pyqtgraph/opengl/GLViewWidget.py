@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QtOpenGL, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
@@ -9,7 +9,7 @@ from .. import functions as fn
 
 ShareWidget = None
 
-class GLViewWidget(QtOpenGL.QGLWidget):
+class GLViewWidget(QtWidgets.QOpenGLWidget):
     
     def __init__(self, parent=None, devicePixelRatio=None, rotationMethod='euler'):
         """    
@@ -30,13 +30,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         ================ ==============================================================
         """
 
-        global ShareWidget
-
-        if ShareWidget is None:
-            ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
-            ShareWidget = QtOpenGL.QGLWidget()
-            
-        QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
+        QtWidgets.QOpenGLWidget.__init__(self, parent)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
@@ -132,10 +126,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if dpr is not None:
             return dpr
         
-        if hasattr(QtOpenGL.QGLWidget, 'devicePixelRatio'):
-            return QtOpenGL.QGLWidget.devicePixelRatio(self)
-        else:
-            return 1.0
+        return QtWidgets.QOpenGLWidget.devicePixelRatio(self)
         
     def resizeGL(self, w, h):
         pass
@@ -421,7 +412,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 self.pan(diff.x(), diff.y(), 0, relative='view')
             else:
                 self.orbit(-diff.x(), diff.y())
-        elif ev.buttons() == QtCore.Qt.MidButton:
+        elif ev.buttons() == QtCore.Qt.MiddleButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative='view-upright')
             else:

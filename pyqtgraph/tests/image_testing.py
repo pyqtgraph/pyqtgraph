@@ -257,7 +257,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     assert im1.dtype == im2.dtype
 
     if pxCount == -1:
-        if QT_LIB in {'PyQt5', 'PySide2'}:
+        if QT_LIB in {'PyQt5', 'PySide2', 'PySide6'}:
             # Qt5 generates slightly different results; relax the tolerance
             # until test images are updated.
             pxCount = int(im1.shape[0] * im1.shape[1] * 0.01)
@@ -469,7 +469,10 @@ def getTestDataRepo():
     """
     global testDataTag
 
-    dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
+    if os.environ["CI"]:
+        dataPath = os.path.join(os.environ["GITHUB_WORKSPACE"], '.pyqtgraph', 'test-data')
+    else:
+        dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
     gitPath = 'https://github.com/pyqtgraph/test-data'
     gitbase = gitCmdBase(dataPath)
 

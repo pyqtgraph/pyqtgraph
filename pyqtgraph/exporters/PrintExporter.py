@@ -45,7 +45,7 @@ class PrintExporter(Exporter):
         #res = printer.resolution()
         sr = self.getSourceRect()
         #res = sr.width() * .4 / (self.params['width'] * 100 / 2.54)
-        res = QtGui.QDesktopWidget().physicalDpiX()
+        res = QtGui.QGuiApplication.primaryScreen().physicalDotsPerInchX()
         printer.setResolution(res)
         rect = printer.pageRect()
         center = rect.center()

@@ -6,7 +6,16 @@ pytest.importorskip("matplotlib")
 
 app = pg.mkQApp()
 
+skip_qt6 = pytest.mark.skipif(
+    pg.QT_LIB == "PySide6",
+    reason= (
+        "Matplotlib has no Qt6 support yet, "
+        "see https://github.com/matplotlib/matplotlib/pull/19255"
+    )
+)
 
+
+@skip_qt6
 def test_MatplotlibExporter():
     plt = pg.plot()
 
@@ -20,7 +29,7 @@ def test_MatplotlibExporter():
     exp = MatplotlibExporter(plt.getPlotItem())
     exp.export()
 
-
+@skip_qt6
 def test_MatplotlibExporter_nonplotitem():
     # attempting to export something other than a PlotItem raises an exception
     plt = pg.plot()
@@ -29,7 +38,7 @@ def test_MatplotlibExporter_nonplotitem():
     with pytest.raises(Exception):
         exp.export()
 
-
+@skip_qt6
 @pytest.mark.parametrize('scale', [1e10, 1e-9])
 def test_MatplotlibExporter_siscale(scale):
     # coarse test to verify that plot data is scaled before export when
