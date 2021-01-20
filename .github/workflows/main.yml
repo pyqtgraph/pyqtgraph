@@ -23,7 +23,13 @@ jobs:
             qt-version: ""
             numpy-version: ""
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkout test-data
+      uses: actions/checkout@v2
+      with:
+        repository: pyqtgraph/test-data
+        path: .pyqtgraph/test-data
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
