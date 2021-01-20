@@ -469,7 +469,7 @@ def getTestDataRepo():
     """
     global testDataTag
 
-    if os.environ["CI"]:
+    if os.getenv("CI"):
         dataPath = os.path.join(os.environ["GITHUB_WORKSPACE"], '.pyqtgraph', 'test-data')
     else:
         dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
