@@ -359,7 +359,13 @@ class ColorMap(object):
         
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(list(zip(pos, color)))
+        stops = zip(pos, color)
+        if hasattr(g, 'setStops'):
+            g.setStops(list(stops))
+        else:
+            # PySide6 has a missing setStops binding
+            for pos, col in stops:
+                g.setColorAt(pos, col)
         return g
 
     def getColors(self, mode=None):

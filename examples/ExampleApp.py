@@ -12,14 +12,9 @@ path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
 app = pg.mkQApp()
 
-if QT_LIB == 'PySide':
-    from exampleLoaderTemplate_pyside import Ui_Form
-elif QT_LIB == 'PySide2':
-    from exampleLoaderTemplate_pyside2 import Ui_Form
-elif QT_LIB == 'PyQt5':
-    from exampleLoaderTemplate_pyqt5 import Ui_Form
-else:
-    from exampleLoaderTemplate_pyqt import Ui_Form
+import importlib
+ui_template = importlib.import_module(
+    f'exampleLoaderTemplate_{QT_LIB.lower()}')
 
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
@@ -350,7 +345,7 @@ class PythonHighlighter(QSyntaxHighlighter):
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
-        self.ui = Ui_Form()
+        self.ui = ui_template.Ui_Form()
         self.cw = QtGui.QWidget()
         self.setCentralWidget(self.cw)
         self.ui.setupUi(self.cw)
@@ -360,9 +355,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.codeView.setLayout(self.codeLayout)
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtGui.QApplication.instance()
-        if QT_LIB in ['PyQt5', 'PySide2']:
-            # Qt4 does not have a paletteChanged signal
-            app.paletteChanged.connect(self.updateTheme)
+        app.paletteChanged.connect(self.updateTheme)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()

@@ -15,14 +15,8 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 
-if QT_LIB == 'PySide':
-    import VideoTemplate_pyside as VideoTemplate
-elif QT_LIB == 'PySide2':
-    import VideoTemplate_pyside2 as VideoTemplate
-elif QT_LIB == 'PyQt5':
-    import VideoTemplate_pyqt5 as VideoTemplate
-else:
-    import VideoTemplate_pyqt as VideoTemplate
+import importlib
+ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
     
 
 #QtGui.QApplication.setGraphicsSystem('raster')
@@ -30,7 +24,7 @@ app = QtGui.QApplication([])
 
 win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
-ui = VideoTemplate.Ui_MainWindow()
+ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 
