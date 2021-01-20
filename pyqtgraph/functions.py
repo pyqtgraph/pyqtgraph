@@ -1243,9 +1243,11 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if QT_LIB in ['PySide', 'PySide2']:
+    if QT_LIB == 'PySide':
         ch = ctypes.c_char.from_buffer(imgData, 0)
         img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+    elif QT_LIB in ['PySide2', 'PySide6']:
+        img = QtGui.QImage(imgData, imgData.shape[1], imgData.shape[0], imgFormat)
     else:
         ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
         ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
@@ -1271,7 +1273,7 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if QT_LIB in ['PySide', 'PySide2']:
+    if QT_LIB in ['PySide', 'PySide2', 'PySide6']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
         ptr.setsize(img.byteCount())

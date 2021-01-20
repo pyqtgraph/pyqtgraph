@@ -15,14 +15,8 @@ import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 
-if QT_LIB == 'PySide':
-    import VideoTemplate_pyside as VideoTemplate
-elif QT_LIB == 'PySide2':
-    import VideoTemplate_pyside2 as VideoTemplate
-elif QT_LIB == 'PyQt5':
-    import VideoTemplate_pyqt5 as VideoTemplate
-else:
-    import VideoTemplate_pyqt as VideoTemplate
+import importlib
+ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
 
 try:
     import cupy as cp
@@ -43,13 +37,12 @@ parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
 args = parser.parse_args(sys.argv[1:])
 
-
 #QtGui.QApplication.setGraphicsSystem('raster')
 app = QtGui.QApplication([])
 
 win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')
-ui = VideoTemplate.Ui_MainWindow()
+ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 

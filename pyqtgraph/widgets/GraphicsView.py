@@ -131,10 +131,9 @@ class GraphicsView(QtGui.QGraphicsView):
         self.clickAccepted = False
 
         # Set a transparent background QPalette!
-        if QT_LIB in ["PySide2", "PyQt5"]:
-            palette = self.palette()
-            palette.setColor(QtGui.QPalette.Background, QtCore.Qt.transparent)
-            self.setPalette(palette)
+        palette = self.palette()
+        palette.setColor(QtGui.QPalette.Window, QtCore.Qt.transparent)
+        self.setPalette(palette)
 
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
@@ -393,7 +392,7 @@ class GraphicsView(QtGui.QGraphicsView):
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
-        elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
+        elif ev.buttons() in [QtCore.Qt.MiddleButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             

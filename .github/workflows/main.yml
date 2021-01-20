@@ -9,21 +9,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        qt-lib: [pyqt5, pyside2]
+        os: [ubuntu-20.04 , windows-latest, macos-latest]
+        qt-lib: [pyqt, pyside]
         python-version: [3.7, 3.8, 3.9]
         include:
           - python-version: "3.7"
-            qt-version: "~=5.12.0"
+            qt-lib: "pyqt"
+            qt-version: "PyQt5~=5.12.0"
+            numpy-version: "~=1.17.0"
+          - python-version: "3.7"
+            qt-lib: "pyside"
+            qt-version: "PySide2~=5.12.0"
             numpy-version: "~=1.17.0"
           - python-version: "3.8"
-            qt-version: "~=5.15.0"
+            qt-lib: "pyqt"
+            qt-version: "PyQt5~=5.15.0"
+            numpy-version: "~=1.19.0"
+          - python-version: "3.8"
+            qt-lib: "pyside"
+            qt-version: "PySide2~=5.15.0"
             numpy-version: "~=1.19.0"
           - python-version: "3.9"
-            qt-version: ""
-            numpy-version: ""
+            qt-lib: "pyqt"
+            qt-version: "PyQt5~=5.15"
+            numpy-version: "~=1.19.0"
+          - python-version: "3.9"
+            qt-lib: "pyside"
+            qt-version: "PySide6"
+            numpy-version: "~=1.19.0"
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkout test-data
+      uses: actions/checkout@v2
+      with:
+        repository: pyqtgraph/test-data
+        path: .pyqtgraph/test-data
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -49,7 +70,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install --upgrade pip
-        pip install ${{ matrix.qt-lib }}${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py six matplotlib
+        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py six matplotlib
         pip install .
         pip install pytest pytest-cov pytest-xdist coverage
     - name: "Install Linux VirtualDisplay"
@@ -57,6 +78,7 @@ jobs:
       run: |
         sudo apt-get install -y libxkbcommon-x11-0 x11-utils
         sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
+        sudo apt-get install -y libopengl0
         pip install pytest-xvfb
     - name: 'Debug Info'
       run: |

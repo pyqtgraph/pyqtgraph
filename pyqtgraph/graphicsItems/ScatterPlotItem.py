@@ -34,7 +34,7 @@ __all__ = ['ScatterPlotItem', 'SpotItem']
 # as the separate calls to this method are the current bottleneck.
 # See: https://bugreports.qt.io/browse/PYSIDE-163
 
-_USE_QRECT = QT_LIB != 'PySide2'
+_USE_QRECT = QT_LIB not in ['PySide2', 'PySide6']
 
 ## Build all symbol paths
 name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',

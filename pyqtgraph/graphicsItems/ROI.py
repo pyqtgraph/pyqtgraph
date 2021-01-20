@@ -721,7 +721,7 @@ class ROI(GraphicsObject):
             if self.translatable and ev.acceptDrags(QtCore.Qt.LeftButton):
                 hover=True
                 
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
                 if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
                     hover=True
             if self.contextMenuEnabled():
@@ -731,7 +731,7 @@ class ROI(GraphicsObject):
             self.setMouseHover(True)
             ev.acceptClicks(QtCore.Qt.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
             ev.acceptClicks(QtCore.Qt.RightButton)
-            ev.acceptClicks(QtCore.Qt.MidButton)
+            ev.acceptClicks(QtCore.Qt.MiddleButton)
             self.sigHoverEvent.emit(self)
         else:
             self.setMouseHover(False)
@@ -1342,7 +1342,7 @@ class Handle(UIGraphicsItem):
         if not ev.isExit():
             if ev.acceptDrags(QtCore.Qt.LeftButton):
                 hover=True
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
                 if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
                     hover=True
                     
