@@ -5,6 +5,7 @@ Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from .. import getConfigOption, functions as fn, getCupy
 from ..Qt import QtCore, QtGui
 
 try:
@@ -16,8 +17,6 @@ except (ImportError, AttributeError):
     # Would prefer `except ImportError` here, but some versions of pyopengl generate
     # AttributeError upon import
     HAVE_OPENGL = False
-
-from .. import getConfigOption, functions as fn
 
 
 class RawImageWidget(QtGui.QWidget):
@@ -37,6 +36,7 @@ class RawImageWidget(QtGui.QWidget):
         self.scaled = scaled
         self.opts = None
         self.image = None
+        self._cp = getCupy()
 
     def setImage(self, img, *args, **kargs):
         """
@@ -52,6 +52,8 @@ class RawImageWidget(QtGui.QWidget):
             return
         if self.image is None:
             argb, alpha = fn.makeARGB(self.opts[0], *self.opts[1], **self.opts[2])
+            if self._cp and self._cp.get_array_module(argb) == self._cp:
+                argb = argb.get()  # transfer GPU data back to the CPU
             self.image = fn.makeQImage(argb, alpha)
             self.opts = ()
         # if self.pixmap is None:

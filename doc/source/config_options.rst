@@ -30,6 +30,8 @@ useWeave           bool                False              Use weave to speed up 
 weaveDebug         bool                False              Print full error message if weave compile fails.
 useOpenGL          bool                False              Enable OpenGL in GraphicsView. This can have unpredictable effects on stability
                                                           and performance.
+useCupy            bool                False              Use cupy to perform calculations on the GPU. Only currently applies to
+                                                          ImageItem and its associated functions.
 enableExperimental bool                False              Enable experimental features (the curious can search for this key in the code).
 crashWarning       bool                False              If True, print warnings about situations that may result in a crash.
 ================== =================== ================== ================================================================================
