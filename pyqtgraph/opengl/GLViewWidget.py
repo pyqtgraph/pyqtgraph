@@ -374,7 +374,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 elev = np.radians(self.opts['elevation'])
                 azim = np.radians(self.opts['azimuth'])
                 fov = np.radians(self.opts['fov'])
-                dist = (self.opts['center'] - self.camerPosition()).length()
+                dist = (self.opts['center'] - self.cameraPosition()).length()
                 fov_factor = np.tan(fov / 2) * 2
                 scale_factor = dist * fov_factor / self.width()
                 z = scale_factor * np.cos(elev) * dy
