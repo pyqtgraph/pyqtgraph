@@ -50,7 +50,7 @@ class PenSelectorDialog(QtGui.QDialog):
             self.ui.comboBoxPenCapStyle.setCurrentIndex(self.ui.comboBoxPenCapStyle.findData(initialPen.capStyle()))
             self.ui.comboBoxPenJoinStyle.setCurrentIndex(self.ui.comboBoxPenJoinStyle.findData(initialPen.joinStyle()))
             self.ui.pushButtonPenColor.setColor(initialPen.color())
-            self.ui.doubleSpinBoxPenWidth.setValue(initialPen.width())
+            self.ui.doubleSpinBoxPenWidth.setValue(initialPen.widthF())
             self.blockSignals(False)
 
         self.updatePen(0)
