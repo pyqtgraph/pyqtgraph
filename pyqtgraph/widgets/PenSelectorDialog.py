@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 import PenSelectorDialogbox
 
 class PenSelectorDialog(QtGui.QDialog):
@@ -83,4 +83,3 @@ class PenSelectorDialog(QtGui.QDialog):
         painter.end()
         self.ui.labelPenPreview.setPixmap(p)
         self.penChanged.emit(self.pen)
-
