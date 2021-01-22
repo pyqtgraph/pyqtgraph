@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from .Terminal import *
@@ -436,6 +436,24 @@ class Node(QtCore.QObject):
             t.disconnectAll()
     
 
+class TextItem(QtWidgets.QGraphicsTextItem):
+    def __init__(self, text, parent, on_update):
+        super().__init__(text, parent)
+        self.on_update = on_update
+
+    def focusOutEvent(self, ev):
+        super().focusOutEvent(ev)
+        if self.on_update is not None:
+            self.on_update()
+
+    def keyPressEvent(self, ev):
+        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
+            if self.on_update is not None:
+                self.on_update()
+                return
+        super().keyPressEvent(ev)
+
+
 #class NodeGraphicsItem(QtGui.QGraphicsItem):
 class NodeGraphicsItem(GraphicsObject):
     def __init__(self, node):
@@ -461,16 +479,13 @@ class NodeGraphicsItem(GraphicsObject):
 
         self.setFlags(flags)
         self.bounds = QtCore.QRectF(0, 0, 100, 100)
-        self.nameItem = QtGui.QGraphicsTextItem(self.node.name(), self)
+        self.nameItem = TextItem(self.node.name(), self, self.labelChanged)
         self.nameItem.setDefaultTextColor(QtGui.QColor(50, 50, 50))
         self.nameItem.moveBy(self.bounds.width()/2. - self.nameItem.boundingRect().width()/2., 0)
         self.nameItem.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         self.updateTerminals()
         #self.setZValue(10)
 
-        self.nameItem.focusOutEvent = self.labelFocusOut
-        self.nameItem.keyPressEvent = self.labelKeyPress
-        
         self.menu = None
         self.buildMenu()
         
@@ -480,16 +495,6 @@ class NodeGraphicsItem(GraphicsObject):
         #for t, item in self.terminals.values():
             #item.setZValue(z+1)
         #GraphicsObject.setZValue(self, z)
-        
-    def labelFocusOut(self, ev):
-        QtGui.QGraphicsTextItem.focusOutEvent(self.nameItem, ev)
-        self.labelChanged()
-        
-    def labelKeyPress(self, ev):
-        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
-            self.labelChanged()
-        else:
-            QtGui.QGraphicsTextItem.keyPressEvent(self.nameItem, ev)
         
     def labelChanged(self):
         newName = str(self.nameItem.toPlainText())
@@ -574,7 +579,7 @@ class NodeGraphicsItem(GraphicsObject):
 
     def mouseClickEvent(self, ev):
         #print "Node.mouseClickEvent called."
-        if int(ev.button()) == int(QtCore.Qt.LeftButton):
+        if ev.button() == QtCore.Qt.LeftButton:
             ev.accept()
             #print "    ev.button: left"
             sel = self.isSelected()
@@ -587,7 +592,7 @@ class NodeGraphicsItem(GraphicsObject):
                 self.update()
             #return ret
         
-        elif int(ev.button()) == int(QtCore.Qt.RightButton):
+        elif ev.button() == QtCore.Qt.RightButton:
             #print "    ev.button: right"
             ev.accept()
             #pos = ev.screenPos()

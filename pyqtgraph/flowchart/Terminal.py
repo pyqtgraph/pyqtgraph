@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
@@ -273,6 +273,25 @@ class Terminal(object):
         """
         return self._name < other._name
 
+
+class TextItem(QtWidgets.QGraphicsTextItem):
+    def __init__(self, text, parent, on_update):
+        super().__init__(text, parent)
+        self.on_update = on_update
+
+    def focusOutEvent(self, ev):
+        super().focusOutEvent(ev)
+        if self.on_update is not None:
+            self.on_update()
+
+    def keyPressEvent(self, ev):
+        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
+            if self.on_update is not None:
+                self.on_update()
+                return
+        super().keyPressEvent(ev)
+
+
 class TerminalGraphicsItem(GraphicsObject):
     
     def __init__(self, term, parent=None):
@@ -280,27 +299,16 @@ class TerminalGraphicsItem(GraphicsObject):
         GraphicsObject.__init__(self, parent)
         self.brush = fn.mkBrush(0,0,0)
         self.box = QtGui.QGraphicsRectItem(0, 0, 10, 10, self)
-        self.label = QtGui.QGraphicsTextItem(self.term.name(), self)
+        on_update = self.labelChanged if self.term.isRenamable() else None
+        self.label = TextItem(self.term.name(), self, on_update)
         self.label.scale(0.7, 0.7)
         self.newConnection = None
         self.setFiltersChildEvents(True)  ## to pick up mouse events on the rectitem
         if self.term.isRenamable():
             self.label.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
-            self.label.focusOutEvent = self.labelFocusOut
-            self.label.keyPressEvent = self.labelKeyPress
         self.setZValue(1)
         self.menu = None
 
-    def labelFocusOut(self, ev):
-        QtGui.QGraphicsTextItem.focusOutEvent(self.label, ev)
-        self.labelChanged()
-        
-    def labelKeyPress(self, ev):
-        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
-            self.labelChanged()
-        else:
-            QtGui.QGraphicsTextItem.keyPressEvent(self.label, ev)
-        
     def labelChanged(self):
         newName = str(self.label.toPlainText())
         if newName != self.term.name():
