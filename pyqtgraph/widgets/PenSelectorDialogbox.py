@@ -9,7 +9,6 @@
 from ..Qt import QtCore, QtGui
 from .ColorButton import ColorButton
 
-try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
