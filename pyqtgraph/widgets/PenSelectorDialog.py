@@ -6,7 +6,7 @@ class PenSelectorDialog(QtGui.QDialog):
 
     def __init__(self, initialPen = None, parent = None):
         QtGui.QDialog.__init__(self, parent)
-        self.ui = PenSelectorDialogbox.Ui_Dialog()
+        self.ui = PenSelectorDialogbox()
         self.ui.setupUi(self)
 
         self.lineStyles = [QtCore.Qt.SolidLine,QtCore.Qt.DashLine,QtCore.Qt.DotLine,QtCore.Qt.DashDotLine,QtCore.Qt.DashDotDotLine]#,QtCore.Qt.CustomDashLine]
