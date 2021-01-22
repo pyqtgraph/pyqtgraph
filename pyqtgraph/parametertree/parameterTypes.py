@@ -872,7 +872,7 @@ class PenParameterItem(ParameterItem):
 
     def buttonClicked(self):
         #open up the pen selector dialog
-        self.oldPen = fn.mkPen(self.pen)
+        self.oldPen = fn.mkPen(self.param.value())
         self.pdialog = PenSelectorDialog(fn.mkPen(self.pen),QtGui.QApplication.activeWindow())
         self.pdialog.penChanged.connect(self.penChanged)
         self.pdialog.finished.connect(self.penChangeFinished)
