@@ -916,6 +916,7 @@ class PenParameter(Parameter):
     sigPenChanged = QtCore.Signal(object,object)
 
     def penChanged(self,pen):
+        self.opts['value'] = pen
         self.sigPenChanged.emit(self, pen)
         self.emitStateChanged('penChanged', pen)
 
