@@ -97,7 +97,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
         self.label_3.setText(_translate("Dialog", "Pen cap style ", None))
-        self.label_2.setText(_translate("Dialog", "Pen style", None))
+        self.label_2.setText("Pen style")
         self.label_4.setText(_translate("Dialog", "Pen join style ", None))
         self.label.setText(_translate("Dialog", "Pen width", None))
         self.label_5.setText(_translate("Dialog", "Pen color", None))
