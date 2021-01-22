@@ -6,7 +6,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from ..Qt import QtCore, QtGui
+from .ColorButton import ColorButton
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -111,4 +112,3 @@ if __name__ == "__main__":
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
-
