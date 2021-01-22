@@ -390,6 +390,15 @@ if QT_LIB in [PYQT4, PYQT5, PYQT6]:
     QtCore.Signal = QtCore.pyqtSignal
     
 
+if QT_LIB == PYSIDE6:
+    # PySide6 6.0 has a missing binding
+    if not hasattr(QtGui.QGradient, 'setStops'):
+        def __setStops(self, stops):
+            for pos, color in stops:
+                self.setColorAt(pos, color)
+        QtGui.QGradient.setStops = __setStops
+
+
 if QT_LIB == PYQT6:
     # module.Class.EnumClass.Enum -> module.Class.Enum
     def promote_enums(module):
