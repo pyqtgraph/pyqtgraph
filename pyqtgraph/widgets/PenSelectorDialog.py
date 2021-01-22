@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui
 from . import PenSelectorDialogbox
 from ..functions import mkColor
 
@@ -7,7 +7,7 @@ class PenSelectorDialog(QtGui.QDialog):
 
     def __init__(self, initialPen = None, parent = None):
         QtGui.QDialog.__init__(self, parent)
-        self.ui = PenSelectorDialogbox.Ui_Dialog()
+        self.ui = PenSelectorDialogbox()
         self.ui.setupUi(self)
         # Combo boxes don't like enum values, so they get converted to int. But, PySide/Qt6 doesn't accept int
         # pen constructor values, so map the int to enum values. PySide/Qt6 Enums let you iterate over them, but
@@ -59,7 +59,7 @@ class PenSelectorDialog(QtGui.QDialog):
             self.ui.comboBoxPenCapStyle.setCurrentIndex(self.ui.comboBoxPenCapStyle.findData(initialPen.capStyle()))
             self.ui.comboBoxPenJoinStyle.setCurrentIndex(self.ui.comboBoxPenJoinStyle.findData(initialPen.joinStyle()))
             self.ui.pushButtonPenColor.setColor(initialPen.color())
-            self.ui.doubleSpinBoxPenWidth.setValue(initialPen.width())
+            self.ui.doubleSpinBoxPenWidth.setValue(initialPen.widthF())
             self.blockSignals(False)
 
         self.updatePen(0)
@@ -96,4 +96,3 @@ class PenSelectorDialog(QtGui.QDialog):
         painter.end()
         self.ui.labelPenPreview.setPixmap(p)
         self.penChanged.emit(self.pen)
-
