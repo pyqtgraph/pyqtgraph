@@ -2,7 +2,7 @@ import os.path as op
 
 from ..Qt import QtGui
 
-__all__ = ['get_graph_icon']
+__all__ = ['getGraphIcon']
 
 _ICON_REGISTRY = {}
 
@@ -24,14 +24,15 @@ class GraphIcon:
         return self._icon
 
 
-def get_graph_icon(name):
-    """Return a `PyQtGraph icon from the registry by `name`"""
+def getGraphIcon(name):
+    """Return a `PyQtGraph` icon from the registry by `name`"""
     icon = _ICON_REGISTRY[name]
     if isinstance(icon, GraphIcon):
         icon = icon.qicon
         _ICON_REGISTRY[name] = icon
 
     return icon
+
 
 # Note: List all graph icons here ...
 invisibleEye = GraphIcon("invisibleEye.svg")
