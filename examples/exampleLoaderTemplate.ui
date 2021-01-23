@@ -66,22 +66,22 @@
          </item>
          <item>
           <property name="text">
-           <string>PyQt4</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PySide</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
            <string>PyQt5</string>
           </property>
          </item>
          <item>
           <property name="text">
            <string>PySide2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PySide6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PyQt6</string>
           </property>
          </item>
         </widget>
