@@ -1397,7 +1397,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if int(item.flags() & item.ItemHasNoContents) > 0:
+                if item.flags() & item.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))

@@ -19,6 +19,7 @@ from pyqtgraph.util.cupy_helper import getCupy
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
+from . import Qt
 from .metaarray import MetaArray
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
@@ -1254,23 +1255,28 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         imgData = imgData.copy()
         
     profile("copy")
-    if QT_LIB == 'PySide':
-        ch = ctypes.c_char.from_buffer(imgData, 0)
-        img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
-    elif QT_LIB in ['PySide2', 'PySide6']:
-        img = QtGui.QImage(imgData, imgData.shape[1], imgData.shape[0], imgFormat)
+
+    # C++ QImage has two kind of constructors
+    # - QImage(const uchar*, ...)
+    # - QImage(uchar*, ...)
+    # If the const constructor is used, subsequently calling any non-const method
+    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+
+    if QT_LIB == 'PyQt5':
+        # PyQt5 -> non-const constructor
+        img_ptr = imgData.ctypes.data
+    elif QT_LIB == 'PyQt6':
+        # PyQt5 -> const constructor
+        # PyQt6 -> non-const constructor
+        img_ptr = Qt.sip.voidptr(imgData)
     else:
-        ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
-        ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        try:
-            img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
-        except:
-            if copy:
-                # does not leak memory, is not mutable
-                img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
-            else:
-                # mutable, but leaks memory
-                img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+        # bindings that support ndarray
+        # PyQt5   -> const constructor
+        # PySide2 -> non-const constructor
+        # PySide6 -> non-const constructor
+        img_ptr = imgData
+
+    img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)
                 
     img.data = imgData
     return img
@@ -1287,12 +1293,16 @@ def imageToArray(img, copy=False, transpose=True):
     if QT_LIB in ['PySide', 'PySide2', 'PySide6']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
-        ptr.setsize(img.byteCount())
+        try:
+            # removed in Qt6
+            nbytes = img.byteCount()
+        except AttributeError:
+            # introduced in Qt 5.10
+            # however Python 3.7 + PyQt5-5.12 in the CI fails with
+            # "TypeError: QImage.sizeInBytes() is a private method"
+            nbytes = img.sizeInBytes()
+        ptr.setsize(nbytes)
         arr = np.asarray(ptr)
-        if img.byteCount() != arr.size * arr.itemsize:
-            # Required for Python 2.6, PyQt 4.10
-            # If this works on all platforms, then there is no need to use np.asarray..
-            arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
     
     arr = arr.reshape(img.height(), img.width(), 4)
     if fmt == img.Format_RGB32:
@@ -1546,6 +1556,9 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
         buf = QtCore.QByteArray(bytes(path.strn))
+    except AttributeError:
+        # PyQt6 raises AttributeError
+        buf = QtCore.QByteArray(path.strn, path.strn.nbytes)
 
     ds = QtCore.QDataStream(buf)
     ds >> path

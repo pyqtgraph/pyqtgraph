@@ -401,11 +401,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         return xDist / self.width()
         
     def mousePressEvent(self, ev):
-        self.mousePos = ev.pos()
+        self.mousePos = ev.localPos()
         
     def mouseMoveEvent(self, ev):
-        diff = ev.pos() - self.mousePos
-        self.mousePos = ev.pos()
+        lpos = ev.localPos()
+        diff = lpos - self.mousePos
+        self.mousePos = lpos
         
         if ev.buttons() == QtCore.Qt.LeftButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):

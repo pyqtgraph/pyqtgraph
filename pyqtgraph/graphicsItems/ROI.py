@@ -722,7 +722,7 @@ class ROI(GraphicsObject):
                 hover=True
                 
             for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
-                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
             if self.contextMenuEnabled():
                 ev.acceptClicks(QtCore.Qt.RightButton)
@@ -794,7 +794,7 @@ class ROI(GraphicsObject):
         if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
             self.raiseContextMenu(ev)
             ev.accept()
-        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+        elif ev.button() & self.acceptedMouseButtons():
             ev.accept()
             self.sigClicked.emit(self, ev)
         else:
@@ -820,7 +820,7 @@ class ROI(GraphicsObject):
         """
         return True
 
-    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True, coords='parent'):
+    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True, coords='parent'):
         ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
         
@@ -1343,7 +1343,7 @@ class Handle(UIGraphicsItem):
             if ev.acceptDrags(QtCore.Qt.LeftButton):
                 hover=True
             for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
-                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
                     
         if hover:
@@ -1358,7 +1358,7 @@ class Handle(UIGraphicsItem):
             self.isMoving = False  ## prevents any further motion
             self.movePoint(self.startPos, finish=True)
             ev.accept()
-        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+        elif ev.button() & self.acceptedMouseButtons():
             ev.accept()
             if ev.button() == QtCore.Qt.RightButton and self.deletable:
                 self.raiseContextMenu(ev)
@@ -1415,7 +1415,7 @@ class Handle(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
-    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
+    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True):
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return

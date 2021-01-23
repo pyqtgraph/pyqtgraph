@@ -35,7 +35,7 @@ class ColorButton(QtGui.QPushButton):
         self.setMinimumWidth(15)
         
     def paintEvent(self, ev):
-        QtGui.QPushButton.paintEvent(self, ev)
+        super().paintEvent(ev)
         p = QtGui.QPainter(self)
         rect = self.rect().adjusted(6, 6, -6, -6)
         ## draw white base, then texture for indicating transparency, then actual color

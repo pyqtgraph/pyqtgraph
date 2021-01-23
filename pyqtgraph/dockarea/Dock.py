@@ -5,6 +5,7 @@ from .DockDrop import *
 from ..widgets.VerticalLabel import VerticalLabel
 from ..python2_3 import asUnicode
 
+
 class Dock(QtGui.QWidget, DockDrop):
 
     sigStretchChanged = QtCore.Signal()
@@ -328,13 +329,13 @@ class DockLabel(VerticalLabel):
         self.updateStyle()
 
     def mousePressEvent(self, ev):
-        self.pressPos = ev.pos()
+        self.pressPos = ev.localPos()
         self.mouseMoved = False
         ev.accept()
 
     def mouseMoveEvent(self, ev):
         if not self.mouseMoved:
-            self.mouseMoved = (ev.pos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance()
+            self.mouseMoved = (ev.localPos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance()
 
         if self.mouseMoved and ev.buttons() == QtCore.Qt.LeftButton:
             self.dock.startDrag()

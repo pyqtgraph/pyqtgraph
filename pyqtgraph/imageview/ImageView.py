@@ -450,7 +450,7 @@ class ImageView(QtGui.QWidget):
             self.keysPressed[ev.key()] = 1
             self.evalKeyState()
         else:
-            QtGui.QWidget.keyPressEvent(self, ev)
+            super().keyPressEvent(ev)
 
     def keyReleaseEvent(self, ev):
         if ev.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_Home, QtCore.Qt.Key_End]:
@@ -465,7 +465,7 @@ class ImageView(QtGui.QWidget):
                 self.keysPressed = {}
             self.evalKeyState()
         else:
-            QtGui.QWidget.keyReleaseEvent(self, ev)
+            super().keyReleaseEvent(ev)
         
     def evalKeyState(self):
         if len(self.keysPressed) == 1:

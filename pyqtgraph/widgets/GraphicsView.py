@@ -25,6 +25,7 @@ from .. import getConfigOption
 
 __all__ = ['GraphicsView']
 
+
 class GraphicsView(QtGui.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
     viewed coordinate range. Also automatically creates a GraphicsScene and a central QGraphicsWidget
@@ -157,11 +158,11 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.paintEvent(self, ev)
+        return super().paintEvent(ev)
     
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.render(self, *args, **kwds)
+        return super().render(*args, **kwds)
         
     
     def close(self):
@@ -328,10 +329,9 @@ class GraphicsView(QtGui.QGraphicsView):
         GraphicsView.setRange(self, r1, padding=[0, padding], propagate=False)
         
     def wheelEvent(self, ev):
-        QtGui.QGraphicsView.wheelEvent(self, ev)
+        super().wheelEvent(ev)
         if not self.mouseEnabled:
             return
-        
         delta = 0
         if QT_LIB in ['PyQt4', 'PySide']:
             delta = ev.delta()
@@ -352,20 +352,21 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scene().leaveEvent(ev)  ## inform scene when mouse leaves
         
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsView.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         
 
         if not self.mouseEnabled:
             return
-        self.lastMousePos = Point(ev.pos())
-        self.mousePressPos = ev.pos()
+        lpos = ev.localPos()
+        self.lastMousePos = lpos
+        self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
         if not self.clickAccepted:
             self.scene().clearSelection()
         return   ## Everything below disabled for now..
         
     def mouseReleaseEvent(self, ev):
-        QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         if not self.mouseEnabled:
             return 
         self.sigMouseReleased.emit(ev)
@@ -373,15 +374,16 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
+        lpos = ev.localPos()
         if self.lastMousePos is None:
-            self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - self.lastMousePos.toQPoint())
-        self.lastMousePos = Point(ev.pos())
+            self.lastMousePos = lpos
+        delta = Point(lpos - self.lastMousePos)
+        self.lastMousePos = lpos
 
-        QtGui.QGraphicsView.mouseMoveEvent(self, ev)
+        super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
-        self.sigSceneMouseMoved.emit(self.mapToScene(ev.pos()))
+        self.sigSceneMouseMoved.emit(self.mapToScene(lpos))
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return

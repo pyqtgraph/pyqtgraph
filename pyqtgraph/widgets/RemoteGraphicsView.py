@@ -1,9 +1,6 @@
 from ..Qt import QtGui, QtCore, QT_LIB
-if QT_LIB in ['PyQt4', 'PyQt5']:
-    try:
-        from PyQt5 import sip
-    except ImportError:
-        import sip
+if QT_LIB.startswith('PyQt'):
+    from ..Qt import sip
 from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 from .. import CONFIG_OPTIONS
@@ -12,55 +9,6 @@ import mmap, tempfile, ctypes, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
         
-class SerializableWheelEvent:
-    """
-    Contains all information of a QWheelEvent, is serializable and can generate QWheelEvents.
-    
-    Methods have the functionality of their QWheelEvent equivalent.
-    """
-    def __init__(self, _pos, _globalPos, _delta, _buttons, _modifiers, _orientation):
-        self._pos = _pos
-        self._globalPos = _globalPos
-        self._delta = _delta
-        self._buttons = _buttons
-        self._modifiers = _modifiers
-        self._orientation_vertical = _orientation == QtCore.Qt.Vertical
-        
-    def pos(self):
-        return self._pos
-
-    def globalPos(self):
-        return self._globalPos
-    
-    def delta(self):
-        return self._delta
-    
-    def orientation(self):
-        if self._orientation_vertical:
-            return QtCore.Qt.Vertical
-        else:
-            return QtCore.Qt.Horizontal
-    
-    def angleDelta(self):
-        if self._orientation_vertical:
-            return QtCore.QPoint(0, self._delta)
-        else:
-            return QtCore.QPoint(self._delta, 0)
-
-    def buttons(self):
-        return QtCore.Qt.MouseButtons(self._buttons)
-    
-    def modifiers(self):
-        return QtCore.Qt.KeyboardModifiers(self._modifiers)
-    
-    def toQWheelEvent(self):
-        """
-        Generate QWheelEvent from SerializableWheelEvent.
-        """
-        if QT_LIB in ['PyQt4', 'PySide']:
-            return QtGui.QWheelEvent(self.pos(), self.globalPos(), self.delta(), self.buttons(), self.modifiers(), self.orientation())
-        else:
-            return QtGui.QWheelEvent(self.pos(), self.globalPos(), QtCore.QPoint(), self.angleDelta(), self.delta(), self.orientation(), self.buttons(), self.modifiers())
 
 class RemoteGraphicsView(QtGui.QWidget):
     """
@@ -114,7 +62,7 @@ class RemoteGraphicsView(QtGui.QWidget):
             setattr(self, method, getattr(self._view, method))
         
     def resizeEvent(self, ev):
-        ret = QtGui.QWidget.resizeEvent(self, ev)
+        ret = super().resizeEvent(ev)
         self._view.resize(self.size(), _callSync='off')
         return ret
         
@@ -148,52 +96,60 @@ class RemoteGraphicsView(QtGui.QWidget):
         p = QtGui.QPainter(self)
         p.drawImage(self.rect(), self._img, QtCore.QRect(0, 0, self._img.width(), self._img.height()))
         p.end()
-        
+
+    def serialize_mouse_common(self, ev):
+        if QT_LIB == 'PyQt6':
+            # PyQt6 can pickle MouseButtons and KeyboardModifiers but cannot cast to int
+            btns = ev.buttons()
+            mods = ev.modifiers()
+        else:
+            # PyQt5, PySide2, PySide6 cannot pickle MouseButtons and KeyboardModifiers
+            btns = int(ev.buttons())
+            mods = int(ev.modifiers())
+        return (btns, mods)
+
+    def serialize_mouse_event(self, ev):
+        # lpos, gpos = ev.localPos(), ev.screenPos()
+        # RemoteGraphicsView Renderer assumes to be at (0, 0)
+        gpos = lpos = ev.localPos()
+        btns, mods = self.serialize_mouse_common(ev)
+        return (ev.type(), lpos, gpos, ev.button(), btns, mods)
+
+    def serialize_wheel_event(self, ev):
+        # lpos, gpos = ev.position(), globalPosition()
+        # RemoteGraphicsView Renderer assumes to be at (0, 0)
+        gpos = lpos = ev.position()
+        btns, mods = self.serialize_mouse_common(ev)
+        return (lpos, gpos, ev.pixelDelta(), ev.angleDelta(), btns, mods, ev.phase(), ev.inverted())
+
     def mousePressEvent(self, ev):
-        self._view.mousePressEvent(int(ev.type()), ev.pos(), ev.pos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mousePressEvent(self.serialize_mouse_event(ev), _callSync='off')
         ev.accept()
-        return QtGui.QWidget.mousePressEvent(self, ev)
+        return super().mousePressEvent(ev)
 
     def mouseReleaseEvent(self, ev):
-        self._view.mouseReleaseEvent(int(ev.type()), ev.pos(), ev.pos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mouseReleaseEvent(self.serialize_mouse_event(ev), _callSync='off')
         ev.accept()
-        return QtGui.QWidget.mouseReleaseEvent(self, ev)
+        return super().mouseReleaseEvent(ev)
 
     def mouseMoveEvent(self, ev):
-        self._view.mouseMoveEvent(int(ev.type()), ev.pos(), ev.pos(), int(ev.button()), int(ev.buttons()), int(ev.modifiers()), _callSync='off')
+        self._view.mouseMoveEvent(self.serialize_mouse_event(ev), _callSync='off')
         ev.accept()
-        return QtGui.QWidget.mouseMoveEvent(self, ev)
+        return super().mouseMoveEvent(ev)
         
     def wheelEvent(self, ev):
-        delta = 0
-        orientation = QtCore.Qt.Horizontal
-        if QT_LIB in ['PyQt4', 'PySide']:
-            delta = ev.delta()
-            orientation = ev.orientation()
-        else:
-            delta = ev.angleDelta().x()
-            if delta == 0:
-                orientation = QtCore.Qt.Vertical
-                delta = ev.angleDelta().y()
-                
-        serializableEvent = SerializableWheelEvent(ev.pos(), ev.pos(), delta, int(ev.buttons()), int(ev.modifiers()), orientation)
-        self._view.wheelEvent(serializableEvent, _callSync='off')
+        self._view.wheelEvent(self.serialize_wheel_event(ev), _callSync='off')
         ev.accept()
-        return QtGui.QWidget.wheelEvent(self, ev)
-    
-    def keyEvent(self, ev):
-        if self._view.keyEvent(int(ev.type()), int(ev.modifiers()), text, autorep, count):
-            ev.accept()
-        return QtGui.QWidget.keyEvent(self, ev)
-        
+        return super().wheelEvent(ev)
+
     def enterEvent(self, ev):
         lws = ev.localPos(), ev.windowPos(), ev.screenPos()
         self._view.enterEvent(lws, _callSync='off')
-        return QtGui.QWidget.enterEvent(self, ev)
+        return super().enterEvent(ev)
         
     def leaveEvent(self, ev):
-        self._view.leaveEvent(int(ev.type()), _callSync='off')
-        return QtGui.QWidget.leaveEvent(self, ev)
+        self._view.leaveEvent(ev.type(), _callSync='off')
+        return super().leaveEvent(ev)
         
     def remoteProcess(self):
         """Return the remote process handle. (see multiprocess.remoteproxy.RemoteEventHandler)"""
@@ -243,11 +199,11 @@ class Renderer(GraphicsView):
         
     def update(self):
         self.img = None
-        return GraphicsView.update(self)
+        return super().update()
         
     def resize(self, size):
         oldSize = self.size()
-        GraphicsView.resize(self, size)
+        super().resize(size)
         self.resizeEvent(QtGui.QResizeEvent(size, oldSize))
         self.update()
         
@@ -275,62 +231,60 @@ class Renderer(GraphicsView):
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
+            ctypes_obj = ctypes.c_char.from_buffer(self.shm, 0)
             if QT_LIB.startswith('PySide'):
-                ch = ctypes.c_char.from_buffer(self.shm, 0)
-                self.img = QtGui.QImage(ch, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                # PySide2, PySide6
+                img_ptr = ctypes_obj
             else:
-                address = ctypes.addressof(ctypes.c_char.from_buffer(self.shm, 0))
+                # PyQt5, PyQt6
+                img_ptr = sip.voidptr(ctypes.addressof(ctypes_obj))
 
-                # different versions of pyqt have different requirements here..
-                try:
-                    self.img = QtGui.QImage(sip.voidptr(address), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
-                except TypeError:
-                    try:
-                        self.img = QtGui.QImage(memoryview(buffer(self.shm)), self.width(), self.height(), QtGui.QImage.Format_ARGB32)
-                    except TypeError:
-                        # Works on PyQt 4.9.6
-                        self.img = QtGui.QImage(address, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+                if QT_LIB == 'PyQt6':
+                    img_ptr.setsize(size)
+
+            self.img = QtGui.QImage(img_ptr, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())
             p.end()
             self.sceneRendered.emit((self.width(), self.height(), self.shm.size(), self.shmFileName()))
 
-    def mousePressEvent(self, typ, pos, gpos, btn, btns, mods):
-        typ = QtCore.QEvent.Type(typ)
-        btn = QtCore.Qt.MouseButton(btn)
+    def deserialize_mouse_event(self, mouse_event):
+        typ, pos, gpos, btn, btns, mods = mouse_event
+        typ = QtCore.QEvent.Type(typ)       # this line needed by PyQt5 only
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return GraphicsView.mousePressEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+        return QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods)
 
-    def mouseMoveEvent(self, typ, pos, gpos, btn, btns, mods):
-        typ = QtCore.QEvent.Type(typ)
-        btn = QtCore.Qt.MouseButton(btn)
+    def deserialize_wheel_event(self, wheel_event):
+        pos, gpos, pixelDelta, angleDelta, btns, mods, scrollPhase, inverted = wheel_event
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return GraphicsView.mouseMoveEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+        return QtGui.QWheelEvent(pos, gpos, pixelDelta, angleDelta, btns, mods, scrollPhase, inverted)
 
-    def mouseReleaseEvent(self, typ, pos, gpos, btn, btns, mods):
-        typ = QtCore.QEvent.Type(typ)
-        btn = QtCore.Qt.MouseButton(btn)
-        btns = QtCore.Qt.MouseButtons(btns)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
-        return GraphicsView.mouseReleaseEvent(self, QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods))
+    def mousePressEvent(self, mouse_event):
+        ev = self.deserialize_mouse_event(mouse_event)
+        return super().mousePressEvent(ev)
+
+    def mouseMoveEvent(self, mouse_event):
+        ev = self.deserialize_mouse_event(mouse_event)
+        return super().mouseMoveEvent(ev)
+
+    def mouseReleaseEvent(self, mouse_event):
+        ev = self.deserialize_mouse_event(mouse_event)
+        return super().mouseReleaseEvent(ev)
     
-    def wheelEvent(self, ev):
-        return GraphicsView.wheelEvent(self, ev.toQWheelEvent())
+    def wheelEvent(self, wheel_event):
+        ev = self.deserialize_wheel_event(wheel_event)
+        return super().wheelEvent(ev)
 
-    def keyEvent(self, typ, mods, text, autorep, count):
-        typ = QtCore.QEvent.Type(typ)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
-        GraphicsView.keyEvent(self, QtGui.QKeyEvent(typ, mods, text, autorep, count))
-        return ev.accepted()
-        
     def enterEvent(self, lws):
         ev = QtGui.QEnterEvent(*lws)
-        return GraphicsView.enterEvent(self, ev)
+        return super().enterEvent(ev)
 
     def leaveEvent(self, typ):
-        ev = QtCore.QEvent(QtCore.QEvent.Type(typ))
-        return GraphicsView.leaveEvent(self, ev)
+        typ = QtCore.QEvent.Type(typ)   # this line needed by PyQt5 only
+        ev = QtCore.QEvent(typ)
+        return super().leaveEvent(ev)
 

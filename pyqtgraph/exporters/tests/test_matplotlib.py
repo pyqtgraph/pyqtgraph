@@ -7,7 +7,7 @@ pytest.importorskip("matplotlib")
 app = pg.mkQApp()
 
 skip_qt6 = pytest.mark.skipif(
-    pg.QT_LIB == "PySide6",
+    pg.QT_LIB in ["PySide6", "PyQt6"],
     reason= (
         "Matplotlib has no Qt6 support yet, "
         "see https://github.com/matplotlib/matplotlib/pull/19255"

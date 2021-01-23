@@ -31,7 +31,7 @@ jobs:
             numpy-version: "~=1.19.0"
           - python-version: "3.9"
             qt-lib: "pyqt"
-            qt-version: "PyQt5~=5.15"
+            qt-version: "PyQt6"
             numpy-version: "~=1.19.0"
           - python-version: "3.9"
             qt-lib: "pyside"
