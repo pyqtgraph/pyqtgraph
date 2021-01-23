@@ -416,6 +416,8 @@ class PlotCurveItem(GraphicsObject):
             self.setShadowPen(kargs['shadowPen'])
         if 'fillLevel' in kargs and kargs['fillLevel'] is not None:
             self.setFillLevel(kargs['fillLevel'])
+        if 'fillOutline' in kargs:
+            self.opts['fillOutline'] = kargs['fillOutline']
         if 'brush' in kargs and kargs['brush'] is not None:
             self.setBrush(kargs['brush'])
         if 'antialias' in kargs:
@@ -534,7 +536,10 @@ class PlotCurveItem(GraphicsObject):
             cp = fn.mkPen(self.opts['pen'])
 
         p.setPen(cp)
-        p.drawPath(path)
+        if self.opts['fillOutline'] and self.fillPath is not None:
+            p.drawPath(self.fillPath)
+        else:
+            p.drawPath(path)
         profiler('drawPath')
 
     def paintGL(self, p, opt, widget):

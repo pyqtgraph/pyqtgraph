@@ -42,6 +42,11 @@ def test_setData():
     pdi.setData(x, y)
     assert len(pdi.xData) == 150
     assert len(pdi.yData) == 150
+    
+    #test clear by empty call
+    pdi.setData()
+    assert pdi.xData is None
+    assert pdi.yData is None
 
     #test dict of x, y list
     y += list(np.random.normal(size=50))
@@ -50,14 +55,19 @@ def test_setData():
     assert len(pdi.xData) == 200
     assert len(pdi.yData) == 200
 
+    #test clear by zero length arrays call
+    pdi.setData([],[])
+    assert pdi.xData is None
+    assert pdi.yData is None
+
 def test_clear():
     y = list(np.random.normal(size=100))
     x = np.linspace(5, 10, 100)
     pdi = pg.PlotDataItem(x, y)
     pdi.clear()
 
-    assert pdi.xData == None
-    assert pdi.yData == None
+    assert pdi.xData is None
+    assert pdi.yData is None
 
 def test_clear_in_step_mode():
     w = pg.PlotWidget()
@@ -72,12 +82,9 @@ def test_clipping():
     w = pg.PlotWidget(autoRange=True, downsample=5)
     c = pg.PlotDataItem(x, y)
     w.addItem(c)
-    w.show()
 
     c.setClipToView(True)
-
     w.setXRange(200, 600)
-
     for x_min in range(100, 2**10 - 100, 100):
         w.setXRange(x_min, x_min + 100)
 

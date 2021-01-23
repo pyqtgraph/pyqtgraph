@@ -65,7 +65,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             subnode = QtGui.QTreeWidgetItem(["", "", ""])
             node.addChild(subnode)
             self.setItemWidget(subnode, 0, widget)
-            self.setFirstItemColumnSpanned(subnode, True)
+            subnode.setFirstColumnSpanned(True)
             
         # recurse to children
         for key, data in childs.items():
@@ -93,7 +93,10 @@ class DataTreeWidget(QtGui.QTreeWidget):
             if isinstance(data, OrderedDict):
                 childs = data
             else:
-                childs = OrderedDict(sorted(data.items()))
+                try:
+                    childs = OrderedDict(sorted(data.items()))
+                except TypeError: # if sorting falls
+                    childs = OrderedDict(data.items())
         elif isinstance(data, (list, tuple)):
             desc = "length=%d" % len(data)
             childs = OrderedDict(enumerate(data))

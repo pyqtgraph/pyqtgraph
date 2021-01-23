@@ -17,7 +17,7 @@ def init_viewbox():
     """
     global win, vb
     
-    win = pg.GraphicsWindow()
+    win = pg.GraphicsLayoutWidget()
     win.ci.layout.setContentsMargins(0,0,0,0)
     win.resize(200, 200)
     win.show()
@@ -80,6 +80,7 @@ def test_ViewBox_setMenuEnabled():
     assert vb.menu is not None
     vb.setMenuEnabled(False)
     assert vb.menu is None
+
 
 
 skipreason = "Skipping this test until someone has time to fix it."

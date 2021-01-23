@@ -11,13 +11,17 @@ This module exists to smooth out some of the differences between PySide and PyQt
 """
 
 import os, sys, re, time, subprocess, warnings
+import importlib
+import enum
 
 from .python2_3 import asUnicode
 
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
+PYSIDE6 = 'PySide6'
 PYQT4 = 'PyQt4'
 PYQT5 = 'PyQt5'
+PYQT6 = 'PyQt6'
 
 QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 
@@ -26,7 +30,7 @@ QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 ## This is done by first checking to see whether one of the libraries
 ## is already imported. If not, then attempt to import PyQt4, then PySide.
 if QT_LIB is None:
-    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2]
+    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2, PYSIDE6, PYQT6]
 
     for lib in libOrder:
         if lib in sys.modules:
@@ -43,7 +47,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PySide or PySide2; none of these packages could be imported.")
+    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PyQt6, PySide, PySide2 or PySide6; none of these packages could be imported.")
 
 
 class FailedImport(object):
@@ -119,10 +123,12 @@ def _loadUiType(uiFile):
 
     # convert ui file to python code
     if pysideuic is None:
-        pyside2version = tuple(map(int, PySide2.__version__.split(".")))
-        if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
-            warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
-        uipy = subprocess.check_output(['pyside2-uic', uiFile])
+        if QT_LIB == PYSIDE2:
+            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
+            if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
+                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
+        uic_executable = QT_LIB.lower() + '-uic'
+        uipy = subprocess.check_output([uic_executable, uiFile])
     else:
         o = _StringIO()
         with open(uiFile, 'r') as f:
@@ -217,6 +223,25 @@ elif QT_LIB == PYQT5:
 
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
+elif QT_LIB == PYQT6:
+    from PyQt6 import QtGui, QtCore, QtWidgets, uic
+
+    try:
+        from PyQt6 import QtSvg
+    except ImportError as err:
+        QtSvg = FailedImport(err)
+    try:
+        from PyQt6 import QtOpenGLWidgets
+    except ImportError as err:
+        QtOpenGLWidgets = FailedImport(err)
+    try:
+        from PyQt6 import QtTest
+        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
+    except ImportError as err:
+        QtTest = FailedImport(err)
+
+    VERSION_INFO = 'PyQt6 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
+
 elif QT_LIB == PYSIDE2:
     from PySide2 import QtGui, QtCore, QtWidgets
     
@@ -243,12 +268,38 @@ elif QT_LIB == PYSIDE2:
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
+elif QT_LIB == PYSIDE6:
+    from PySide6 import QtGui, QtCore, QtWidgets
+
+    try:
+        from PySide6 import QtSvg
+    except ImportError as err:
+        QtSvg = FailedImport(err)
+    try:
+        from PySide6 import QtOpenGLWidgets
+    except ImportError as err:
+        QtOpenGLWidgets = FailedImport(err)
+    try:
+        from PySide6 import QtTest
+        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
+    except ImportError as err:
+        QtTest = FailedImport(err)
+
+    try:
+        import shiboken6
+        isQObjectAlive = shiboken6.isValid
+    except ImportError:
+        # use approximate version
+        isQObjectAlive = _isQObjectAlive
+    import PySide6
+    VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
+
 else:
     raise ValueError("Invalid Qt lib '%s'" % QT_LIB)
 
 
-# common to PyQt5 and PySide2
-if QT_LIB in [PYQT5, PYSIDE2]:
+# common to PyQt5, PyQt6, PySide2 and PySide6
+if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
     
@@ -299,8 +350,15 @@ if QT_LIB in [PYQT5, PYSIDE2]:
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
 
-# Common to PySide and PySide2
-if QT_LIB in [PYSIDE, PYSIDE2]:
+if QT_LIB in [PYQT6, PYSIDE6]:
+    # We're using Qt6 which has a different structure so we're going to use a shim to
+    # recreate the Qt5 structure
+
+    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+
+
+# Common to PySide, PySide2 and PySide6
+if QT_LIB in [PYSIDE, PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
     loadUiType = _loadUiType
         
@@ -316,13 +374,13 @@ if QT_LIB in [PYSIDE, PYSIDE2]:
             QtTest.QTest.qWait = qWait
 
 
-# Common to PyQt4 and 5
-if QT_LIB in [PYQT4, PYQT5]:
+# Common to PyQt4, PyQt5 and PyQt6
+if QT_LIB in [PYQT4, PYQT5, PYQT6]:
     QtVersion = QtCore.QT_VERSION_STR
     
     try:
-        from PyQt5 import sip
-    except ImportError:
+        sip = importlib.import_module(QT_LIB + '.sip')
+    except ModuleNotFoundError:
         import sip
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)
@@ -331,6 +389,67 @@ if QT_LIB in [PYQT4, PYQT5]:
 
     QtCore.Signal = QtCore.pyqtSignal
     
+
+if QT_LIB == PYSIDE6:
+    # PySide6 6.0 has a missing binding
+    if not hasattr(QtGui.QGradient, 'setStops'):
+        def __setStops(self, stops):
+            for pos, color in stops:
+                self.setColorAt(pos, color)
+        QtGui.QGradient.setStops = __setStops
+
+
+if QT_LIB == PYQT6:
+    # module.Class.EnumClass.Enum -> module.Class.Enum
+    def promote_enums(module):
+        class_names = [x for x in dir(module) if x[0] == 'Q']
+        for class_name in class_names:
+            klass = getattr(module, class_name)
+            if not isinstance(klass, sip.wrappertype):
+                continue
+            attrib_names = [x for x in dir(klass) if x[0].isupper()]
+            for attrib_name in attrib_names:
+                attrib = getattr(klass, attrib_name)
+                if not isinstance(attrib, enum.EnumMeta):
+                    continue
+                for e in attrib:
+                    setattr(klass, e.name, e)
+
+    promote_enums(QtCore)
+    promote_enums(QtGui)
+    promote_enums(QtWidgets)
+
+    # QKeyEvent::key() returns an int
+    # so comparison with a Key_* enum will always be False
+    # here we convert the enum to its int value
+    for e in QtCore.Qt.Key:
+        setattr(QtCore.Qt, e.name, e.value)
+
+    # shim the old names for QPointF mouse coords
+    QtGui.QSinglePointEvent.localPos = lambda o : o.position()
+    QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()
+    QtGui.QSinglePointEvent.screenPos = lambda o : o.globalPosition()
+    QtGui.QDropEvent.posF = lambda o : o.position()
+
+    QtWidgets.QApplication.exec_ = QtWidgets.QApplication.exec
+    QtWidgets.QDialog.exec_ = lambda o : o.exec()
+    QtGui.QDrag.exec_ = lambda o : o.exec()
+
+    # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
+    # by the Qt library.
+    try:
+        # 213 is a known failing value
+        QtCore.QEvent.Type(213)
+    except ValueError:
+        def new_method(self, old_method=QtCore.QEvent.type):
+            try:
+                typ = old_method(self)
+            except ValueError:
+                typ = QtCore.QEvent.Type.None_
+            return typ
+        QtCore.QEvent.type = new_method
+        del new_method
+
 
 # USE_XXX variables are deprecated
 USE_PYSIDE = QT_LIB == PYSIDE
@@ -344,6 +463,24 @@ m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
+
+class App(QtGui.QApplication):
+
+    def __init__(self, *args, **kwargs):
+        super(App, self).__init__(*args, **kwargs)
+        if QT_LIB in ['PyQt5', 'PySide2', 'PySide6']:
+            # qt4 does not have paletteChanged signal!
+            self.paletteChanged.connect(self.onPaletteChange)
+        self.onPaletteChange(self.palette())
+
+    def onPaletteChange(self, palette):
+        if QT_LIB in ['PyQt4', 'PySide']:
+            # Qt4 this is a QString
+            color = str(palette.base().color().name())
+        else:
+            # Qt5 has this as a str
+            color = palette.base().color().name()
+        self.dark_mode = color.lower() != "#ffffff"
 
 
 QAPP = None
@@ -359,7 +496,8 @@ def mkQApp(name=None):
     global QAPP
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+        QAPP = App(sys.argv or ["pyqtgraph"])
+
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP

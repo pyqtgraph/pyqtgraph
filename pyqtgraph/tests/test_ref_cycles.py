@@ -38,7 +38,7 @@ def mkrefs(*objs):
     return [weakref.ref(obj) for obj in allObjs.values()]
 
 
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide'}, reason=skipreason)
 def test_PlotWidget():
     def mkobjs(*args, **kwds):
         w = pg.PlotWidget(*args, **kwds)
@@ -56,7 +56,7 @@ def test_PlotWidget():
     for i in range(5):
         assert_alldead(mkobjs())
     
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2', 'PySide6'}, reason=skipreason)
 def test_ImageView():
     def mkobjs():
         iv = pg.ImageView()
@@ -69,7 +69,7 @@ def test_ImageView():
         assert_alldead(mkobjs())
 
 
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
+@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide'}, reason=skipreason)
 def test_GraphicsWindow():
     def mkobjs():
         w = pg.GraphicsWindow()

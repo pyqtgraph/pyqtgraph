@@ -19,8 +19,8 @@ app = QtGui.QApplication([])
 
 
 spins = [
-    ("Floating-point spin box, min=0, no maximum.", 
-     pg.SpinBox(value=5.0, bounds=[0, None])),
+    ("Floating-point spin box, min=0, no maximum.<br>Non-finite values (nan, inf) are permitted.",
+     pg.SpinBox(value=5.0, bounds=[0, None], finite=False)),
     ("Integer spin box, dec stepping<br>(1-9, 10-90, 100-900, etc), decimals=4", 
      pg.SpinBox(value=10, int=True, dec=True, minStep=1, step=1, decimals=4)),
     ("Float with SI-prefixed units<br>(n, u, m, k, M, etc)", 
@@ -39,7 +39,7 @@ spins = [
                 regex='(0x)?(?P<number>[0-9a-fA-F]+)$',
                 evalFunc=lambda s: ast.literal_eval('0x'+s))),
     ("Integer with bounds=[10, 20] and wrapping",
-     pg.SpinBox(value=10, bounds=[10, 20], int=False, minStep=1, step=1, wrapping=True)),
+     pg.SpinBox(value=10, bounds=[10, 20], int=True, minStep=1, step=1, wrapping=True)),
 ]
 
 

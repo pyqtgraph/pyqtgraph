@@ -16,14 +16,9 @@ import os, sys
 import numpy as np
 
 from ..Qt import QtCore, QtGui, QT_LIB
-if QT_LIB == 'PySide':
-    from .ImageViewTemplate_pyside import *
-elif QT_LIB == 'PySide2':
-    from .ImageViewTemplate_pyside2 import *
-elif QT_LIB == 'PyQt5':
-    from .ImageViewTemplate_pyqt5 import *
-else:
-    from .ImageViewTemplate_pyqt import *
+import importlib
+ui_template = importlib.import_module(
+    f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
     
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *
@@ -126,7 +121,7 @@ class ImageView(QtGui.QWidget):
         self.image = None
         self.axes = {}
         self.imageDisp = None
-        self.ui = Ui_Form()
+        self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.scene = self.ui.graphicsView.scene()
         self.ui.histogram.setLevelMode(levelMode)
@@ -455,7 +450,7 @@ class ImageView(QtGui.QWidget):
             self.keysPressed[ev.key()] = 1
             self.evalKeyState()
         else:
-            QtGui.QWidget.keyPressEvent(self, ev)
+            super().keyPressEvent(ev)
 
     def keyReleaseEvent(self, ev):
         if ev.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_Home, QtCore.Qt.Key_End]:
@@ -470,7 +465,7 @@ class ImageView(QtGui.QWidget):
                 self.keysPressed = {}
             self.evalKeyState()
         else:
-            QtGui.QWidget.keyReleaseEvent(self, ev)
+            super().keyReleaseEvent(ev)
         
     def evalKeyState(self):
         if len(self.keysPressed) == 1:

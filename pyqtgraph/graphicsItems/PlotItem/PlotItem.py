@@ -19,14 +19,9 @@ from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 
-if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
-elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
-elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
-elif QT_LIB == 'PySide2':
-    from .plotConfigTemplate_pyside2 import *
+import importlib
+ui_template = importlib.import_module(
+    f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
 
 __all__ = ['PlotItem']
 
@@ -134,12 +129,14 @@ class PlotItem(GraphicsWidget):
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
         self.layout.setVerticalSpacing(0)
-        
+
         if viewBox is None:
-            viewBox = ViewBox(parent=self)
+            viewBox = ViewBox(parent=self, enableMenu=enableMenu)
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
-        self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
+
+        # Enable or disable plotItem menu
+        self.setMenuEnabled(enableMenu, None)
         
         if name is not None:
             self.vb.register(name)
@@ -187,7 +184,7 @@ class PlotItem(GraphicsWidget):
         ### Set up context menu
         
         w = QtGui.QWidget()
-        self.ctrl = c = Ui_Form()
+        self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
         

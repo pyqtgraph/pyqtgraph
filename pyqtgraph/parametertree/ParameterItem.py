@@ -16,10 +16,7 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     """
     
     def __init__(self, param, depth=0):
-        title = param.opts.get('title', None)
-        if title is None:
-            title = param.name()
-        QtGui.QTreeWidgetItem.__init__(self, [title, ''])
+        QtGui.QTreeWidgetItem.__init__(self, [param.title(), ''])
 
         self.param = param
         self.param.registerItem(self)  ## let parameter know this item is connected to it (for debugging)
@@ -157,8 +154,12 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def nameChanged(self, param, name):
         ## called when the parameter's name has changed.
         if self.param.opts.get('title', None) is None:
-            self.setText(0, name)
-    
+            self.titleChanged()
+
+    def titleChanged(self):
+        # called when the user-visble title has changed (either opts['title'], or name if title is None)
+        self.setText(0, self.param.title())
+
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
         pass
@@ -183,8 +184,10 @@ class ParameterItem(QtGui.QTreeWidgetItem):
                 if self.isExpanded() != self.param.opts['expanded']:
                     self.setExpanded(self.param.opts['expanded'])
 
-        self.updateFlags()
+        if 'title' in opts:
+            self.titleChanged()
 
+        self.updateFlags()
 
     def contextMenuTriggered(self, name):
         def trigger():

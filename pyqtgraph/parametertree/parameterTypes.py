@@ -186,7 +186,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
         
         # hide / show
-        self.defaultBtn.setVisible(not self.param.readonly())
+        self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
 
     def updateDisplayLabel(self, value=None):
         """Update the display label to reflect the value of the parameter."""
@@ -429,11 +429,11 @@ class GroupParameterItem(ParameterItem):
         tw = self.treeWidget()
         if tw is None:
             return
-        tw.setFirstItemColumnSpanned(self, True)
+        self.setFirstColumnSpanned(True)
         if self.addItem is not None:
             tw.setItemWidget(self.addItem, 0, self.addWidgetBox)
-            tw.setFirstItemColumnSpanned(self.addItem, True)
-        
+            self.addItem.setFirstColumnSpanned(True)
+
     def addChild(self, child):  ## make sure added childs are actually inserted before add btn
         if self.addItem is not None:
             ParameterItem.insertChild(self, self.childCount()-1, child)
@@ -597,16 +597,11 @@ class ActionParameterItem(ParameterItem):
         self.layout = QtGui.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
-        title = param.opts.get('title', None)
-        if title is None:
-            title = param.name()
-        self.button = QtGui.QPushButton(title)
+        self.button = QtGui.QPushButton(param.title())
         #self.layout.addSpacing(100)
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
-        param.sigNameChanged.connect(self.paramRenamed)
-        self.setText(0, '')
         
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
@@ -614,11 +609,12 @@ class ActionParameterItem(ParameterItem):
         if tree is None:
             return
         
-        tree.setFirstItemColumnSpanned(self, True)
+        self.setFirstColumnSpanned(True)
         tree.setItemWidget(self, 0, self.layoutWidget)
-        
-    def paramRenamed(self, param, name):
-        self.button.setText(name)
+
+    def titleChanged(self):
+        self.button.setText(self.param.title())
+        ParameterItem.titleChanged(self)
         
     def buttonClicked(self):
         self.param.activate()
@@ -650,7 +646,7 @@ class TextParameterItem(WidgetParameterItem):
         if tw is None:
             return
 
-        tw.setFirstItemColumnSpanned(self.subItem, True)
+        self.subItem.setFirstColumnSpanned(True)
         tw.setItemWidget(self.subItem, 0, self.textBox)
         
         # for now, these are copied from ParameterItem.treeWidgetChanged

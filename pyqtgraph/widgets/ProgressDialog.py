@@ -195,7 +195,7 @@ class ProgressDialog(QtGui.QProgressDialog):
         if self._nestingReady:
             # don't let progress dialog manage widgets anymore.
             return
-        return QtGui.QProgressDialog.resizeEvent(self, ev)
+        return super().resizeEvent(ev)
 
     ## wrap all other functions to make sure they aren't being called from non-gui threads
     

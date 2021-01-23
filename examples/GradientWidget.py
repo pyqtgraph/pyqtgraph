@@ -27,15 +27,18 @@ cw.setLayout(l)
 w1 = pg.GradientWidget(orientation='top')
 w2 = pg.GradientWidget(orientation='right', allowAdd=False)
 #w2.setTickColor(1, QtGui.QColor(255,255,255))
-w3 = pg.GradientWidget(orientation='bottom')
+w3 = pg.GradientWidget(orientation='bottom', allowAdd=False, allowRemove=False)
 w4 = pg.GradientWidget(orientation='left')
 w4.loadPreset('spectrum')
 label = QtGui.QLabel("""
 - Click a triangle to change its color
 - Drag triangles to move
+- Right-click a gradient to load triangle presets
 - Click in an empty area to add a new color
-    (adding is disabled for the right-side widget)
+    (adding is disabled for the bottom-side and right-side widgets)
 - Right click a triangle to remove
+    (only possible if more than two triangles are visible)
+    (removing is disabled for the bottom-side widget)
 """)
 
 l.addWidget(w1, 0, 1)
