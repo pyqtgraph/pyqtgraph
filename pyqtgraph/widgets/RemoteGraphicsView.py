@@ -97,30 +97,31 @@ class RemoteGraphicsView(QtGui.QWidget):
         p.drawImage(self.rect(), self._img, QtCore.QRect(0, 0, self._img.width(), self._img.height()))
         p.end()
 
-    def serialize_mouse_common(self, ev):
-        if QT_LIB == 'PyQt6':
-            # PyQt6 can pickle MouseButtons and KeyboardModifiers but cannot cast to int
-            btns = ev.buttons()
-            mods = ev.modifiers()
-        else:
-            # PyQt5, PySide2, PySide6 cannot pickle MouseButtons and KeyboardModifiers
-            btns = int(ev.buttons())
-            mods = int(ev.modifiers())
-        return (btns, mods)
+    def serialize_mouse_enum(self, *args):
+        # PyQt6 can pickle enums and flags but cannot cast to int
+        # PyQt5 5.12, PyQt5 5.15, PySide2 5.15, PySide6 can pickle enums but not flags
+        # PySide2 5.12 cannot pickle enums nor flags
+        # MouseButtons and KeyboardModifiers are flags
+        if QT_LIB != 'PyQt6':
+            args = [int(x) for x in args]
+        return args
 
     def serialize_mouse_event(self, ev):
-        # lpos, gpos = ev.localPos(), ev.screenPos()
-        # RemoteGraphicsView Renderer assumes to be at (0, 0)
-        gpos = lpos = ev.localPos()
-        btns, mods = self.serialize_mouse_common(ev)
-        return (ev.type(), lpos, gpos, ev.button(), btns, mods)
+        lpos, gpos = ev.localPos(), ev.screenPos()
+        typ, btn, btns, mods = self.serialize_mouse_enum(
+            ev.type(), ev.button(), ev.buttons(), ev.modifiers())
+        return (typ, lpos, gpos, btn, btns, mods)
 
     def serialize_wheel_event(self, ev):
-        # lpos, gpos = ev.position(), globalPosition()
-        # RemoteGraphicsView Renderer assumes to be at (0, 0)
-        gpos = lpos = ev.position()
-        btns, mods = self.serialize_mouse_common(ev)
-        return (lpos, gpos, ev.pixelDelta(), ev.angleDelta(), btns, mods, ev.phase(), ev.inverted())
+        # {PyQt6, PySide6}      have position()
+        # {PyQt5, PySide2} 5.15 have position()
+        # {PyQt5, PySide2} 5.15 have posF() (contrary to C++ docs)
+        # {PyQt5, PySide2} 5.12 have posF()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.posF()
+        # gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.globalPosF()
+        gpos = lpos     # RemoteGraphicsView Renderer assumes to be at (0, 0)
+        btns, mods, phase = self.serialize_mouse_enum(ev.buttons(), ev.modifiers(), ev.phase())
+        return (lpos, gpos, ev.pixelDelta(), ev.angleDelta(), btns, mods, phase, ev.inverted())
 
     def mousePressEvent(self, ev):
         self._view.mousePressEvent(self.serialize_mouse_event(ev), _callSync='off')
@@ -148,7 +149,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         return super().enterEvent(ev)
         
     def leaveEvent(self, ev):
-        self._view.leaveEvent(ev.type(), _callSync='off')
+        typ, = self.serialize_mouse_enum(ev.type())
+        self._view.leaveEvent(typ, _callSync='off')
         return super().leaveEvent(ev)
         
     def remoteProcess(self):
@@ -252,16 +254,19 @@ class Renderer(GraphicsView):
 
     def deserialize_mouse_event(self, mouse_event):
         typ, pos, gpos, btn, btns, mods = mouse_event
-        typ = QtCore.QEvent.Type(typ)       # this line needed by PyQt5 only
-        btns = QtCore.Qt.MouseButtons(btns)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
+        if QT_LIB != 'PyQt6':
+            typ = QtCore.QEvent.Type(typ)
+            btn = QtCore.Qt.MouseButton(btn)
+            btns = QtCore.Qt.MouseButtons(btns)
+            mods = QtCore.Qt.KeyboardModifiers(mods)
         return QtGui.QMouseEvent(typ, pos, gpos, btn, btns, mods)
 
     def deserialize_wheel_event(self, wheel_event):
-        pos, gpos, pixelDelta, angleDelta, btns, mods, scrollPhase, inverted = wheel_event
+        pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted = wheel_event
         btns = QtCore.Qt.MouseButtons(btns)
         mods = QtCore.Qt.KeyboardModifiers(mods)
-        return QtGui.QWheelEvent(pos, gpos, pixelDelta, angleDelta, btns, mods, scrollPhase, inverted)
+        phase = QtCore.Qt.ScrollPhase(phase)
+        return QtGui.QWheelEvent(pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted)
 
     def mousePressEvent(self, mouse_event):
         ev = self.deserialize_mouse_event(mouse_event)
@@ -284,7 +289,7 @@ class Renderer(GraphicsView):
         return super().enterEvent(ev)
 
     def leaveEvent(self, typ):
-        typ = QtCore.QEvent.Type(typ)   # this line needed by PyQt5 only
+        typ = QtCore.QEvent.Type(typ)
         ev = QtCore.QEvent(typ)
         return super().leaveEvent(ev)
 
