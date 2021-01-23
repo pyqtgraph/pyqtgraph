@@ -494,6 +494,11 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
+    # this replaces QT_AUTO_SCREEN_SCALE_FACTOR but only used in 5.14+
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
         QAPP = App(sys.argv or ["pyqtgraph"])
