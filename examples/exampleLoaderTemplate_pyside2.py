@@ -3,16 +3,13 @@
 ################################################################################
 ## Form generated from reading UI file 'exampleLoaderTemplate.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.0
+## Created by: Qt User Interface Compiler version 5.15.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-    QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-    QPixmap, QRadialGradient)
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 
@@ -84,7 +81,6 @@ class Ui_Form(object):
         self.loadedFileLabel.setObjectName(u"loadedFileLabel")
         font = QFont()
         font.setBold(True)
-        font.setWeight(75)
         self.loadedFileLabel.setFont(font)
         self.loadedFileLabel.setAlignment(Qt.AlignCenter)
 
@@ -116,10 +112,10 @@ class Ui_Form(object):
         self.graphicsSystemCombo.setItemText(3, QCoreApplication.translate("Form", u"opengl", None))
 
         self.qtLibCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
-        self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt4", None))
-        self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide", None))
-        self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PyQt5", None))
-        self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PySide2", None))
+        self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt5", None))
+        self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide2", None))
+        self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PySide6", None))
+        self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PyQt6", None))
 
         self.label_2.setText(QCoreApplication.translate("Form", u"Graphics System:", None))
         self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
