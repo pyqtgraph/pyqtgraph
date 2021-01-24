@@ -11,15 +11,15 @@ import sys
 import time
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore, uic
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtWidgets, QtCore, loadUiType
 
 pg.setConfigOption('background', 'w')
 pg.setConfigOption('foreground', 'k')
 
 BLUE = pg.mkPen('#1f77b4')
 
-Design, _ = uic.loadUiType('DateAxisItem_QtDesigner.ui')
+Design, _ = loadUiType('DateAxisItem_QtDesigner.ui')
 
 class ExampleApp(QtWidgets.QMainWindow, Design):
     def __init__(self):
@@ -34,7 +34,7 @@ class ExampleApp(QtWidgets.QMainWindow, Design):
         self.plotWidget.setAxisItems({'bottom': pg.DateAxisItem()})
         self.plotWidget.showGrid(x=True, y=True)
 
-app = QtWidgets.QApplication(sys.argv)
+app = pg.mkQApp("DateAxisItem_QtDesigner Example")
 app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
 app.setPalette(QtWidgets.QApplication.style().standardPalette())
 window = ExampleApp()

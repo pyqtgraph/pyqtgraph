@@ -9,7 +9,7 @@ import time
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Process Dialog Example")
 
 
 def runStage(i):
