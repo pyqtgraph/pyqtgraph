@@ -28,7 +28,6 @@ examples = OrderedDict([
     ('Image Analysis', 'imageAnalysis.py'),
     ('ViewBox Features', 'ViewBoxFeatures.py'),
     ('Dock widgets', 'dockarea.py'),
-    ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
     ('Beeswarm plot', 'beeswarm.py'),
     ('Symbols', 'Symbols.py'),
@@ -36,6 +35,12 @@ examples = OrderedDict([
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
     ('HDF5 big data', 'hdf5.py'),
+    ('logAxis', 'logAxis.py'),
+    ('PanningPlot', 'PanningPlot.py'),
+    ('MultiplePlotAxes', 'MultiplePlotAxes.py'),
+    ('ROItypes', 'ROItypes.py'),
+    ('ScaleBar', 'ScaleBar.py'),
+    ('InfiniteLine', 'InfiniteLine.py'),
     ('Demos', OrderedDict([
         ('Optics', 'optics_demos.py'),
         ('Special relativity', 'relativity_demo.py'),
@@ -58,15 +63,20 @@ examples = OrderedDict([
         ('Text Item', 'text.py'),
         ('Linked Views', 'linkedViews.py'),
         ('Arrow', 'Arrow.py'),
-        ('ViewBox', 'ViewBoxFeatures.py'),
+        ('ViewBox', 'ViewBox.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
+        ('GradientEditor', 'GradientEditor.py'),
+        ('Non-uniform Image', 'NonUniformImage.py'),
+        ('PColorMeshItem', 'PColorMeshItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
         ('Line Plot update', 'PlotSpeedTest.py'),
         ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
         ('Multiple plots', 'MultiPlotSpeedTest.py'),
+        ('multiplePlotSpeedTest', 'multiplePlotSpeedTest.py'),
+        ('infiniteLine performance', 'infiniteline_performance.py'),
     ])),
     ('3D Graphics', OrderedDict([
         ('Volumetric', 'GLVolumeItem.py'),
@@ -77,6 +87,8 @@ examples = OrderedDict([
         ('Line Plot', 'GLLinePlotItem.py'),
         ('Mesh', 'GLMeshItem.py'),
         ('Image', 'GLImageItem.py'),
+        ('Bar Graph', 'GLBarGraphItem.py'),
+        ('GLViewWidget', 'GLViewWidget.py'),
     ])),
     ('Widgets', OrderedDict([
         ('PlotWidget', 'PlotWidget.py'),
@@ -92,9 +104,27 @@ examples = OrderedDict([
         #('CheckTable', '../widgets/CheckTable.py'),
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', 'JoystickButton.py'),
+        ('DiffTreeWidget', 'DiffTreeWidget.py'),
+        ('MultiPlotWidget', 'MultiPlotWidget.py'),
+        ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
     ])),
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
+    ('Miscellaneous', OrderedDict([
+        ('colorMaps', 'colorMaps.py'),
+        ('contextMenu', 'contextMenu.py'),
+        ('designerExample', 'designerExample.py'),
+        ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
+        ('GraphicsScene', 'GraphicsScene.py'),
+        ('MouseSelection', 'MouseSelection.py'),
+        ('ProgressDialog', 'ProgressDialog.py'),
+    ])),
+    ('Simple', OrderedDict([
+        # examples that are subsumed in other examples
+        ('SimplePlot', 'SimplePlot.py'),        # Plotting.py
+        ('LogPlotTest', 'LogPlotTest.py'),      # Plotting.py
+        ('ViewLimits', 'ViewLimits.py'),        # ViewBoxFeatures.py
+    ])),
 ])
 
 

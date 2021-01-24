@@ -66,6 +66,14 @@ conditionalExamples = {
         False,
         reason="Test is being problematic on CI machines"
     ),
+    "RemoteGraphicsView.py": exceptionCondition(
+        not(platform.system() == "Darwin"),
+        reason="FileNotFoundError for pyqtgraph_shmem_* file"
+    ),
+    "ProgressDialog.py": exceptionCondition(
+        not(platform.system() == "Linux"),
+        reason="QXcbConnection: XCB error"
+    ),
     'GLVolumeItem.py': exceptionCondition(
         not(platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
@@ -139,6 +147,26 @@ conditionalExamples = {
     'GLImageItem.py': exceptionCondition(
         not(platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
+            (sys.version_info <= (3, 8, 7) or
+            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
+        reason=(
+            "pyopenGL cannot find openGL libray on big sur: "
+            "https://github.com/python/cpython/pull/21241"
+        )
+    ),
+    'GLBarGraphItem.py': exceptionCondition(
+        not(platform.system() == "Darwin" and
+            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
+            (sys.version_info <= (3, 8, 7) or
+            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
+        reason=(
+            "pyopenGL cannot find openGL libray on big sur: "
+            "https://github.com/python/cpython/pull/21241"
+        )
+    ),
+    'GLViewWidget.py': exceptionCondition(
+        not(platform.system() == "Darwin" and
+            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
             (sys.version_info <= (3, 8, 7) or
             (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
         reason=(

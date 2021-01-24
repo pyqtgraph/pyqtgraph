@@ -9,9 +9,10 @@ import initExample ## Add path to library (just for examples; you do not need th
 
 import sys
 import time
+import os
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore, uic
+from pyqtgraph.Qt import QtCore, QtWidgets
 import pyqtgraph as pg
 
 pg.setConfigOption('background', 'w')
@@ -19,7 +20,9 @@ pg.setConfigOption('foreground', 'k')
 
 BLUE = pg.mkPen('#1f77b4')
 
-Design, _ = uic.loadUiType('DateAxisItem_QtDesigner.ui')
+path = os.path.dirname(os.path.abspath(__file__))
+uiFile = os.path.join(path, 'DateAxisItem_QtDesigner.ui')
+Design, _ = pg.Qt.loadUiType(uiFile)
 
 class ExampleApp(QtWidgets.QMainWindow, Design):
     def __init__(self):
@@ -34,8 +37,19 @@ class ExampleApp(QtWidgets.QMainWindow, Design):
         self.plotWidget.setAxisItems({'bottom': pg.DateAxisItem()})
         self.plotWidget.showGrid(x=True, y=True)
 
+# Qt docs have the following warning regarding the following function:
+#   "To ensure that the application's style is set correctly, it is best
+#   to call this function before the QApplication constructor, if possible"
+QtWidgets.QApplication.setStyle('Fusion')
 app = QtWidgets.QApplication(sys.argv)
-app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
+if 0:
+    # PyQt6 6.0 seems to have a reference counting bug which will cause
+    # a crash
+    #   in PySide2, PySide6, PyQt5, we get refcount=3
+    #   in PyQt6, we get refcount=2
+    style = QtWidgets.QStyleFactory.create('Fusion')
+    app.setStyle(style)
+    print(sys.getrefcount(style))
 app.setPalette(QtWidgets.QApplication.style().standardPalette())
 window = ExampleApp()
 window.setWindowTitle('pyqtgraph example: DateAxisItem_QtDesigner')
