@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import subprocess
+from argparse import Namespace
 import pyqtgraph as pg
 from pyqtgraph.python2_3 import basestring
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
@@ -18,7 +19,7 @@ ui_template = importlib.import_module(
 
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
-    ('Basic Plotting', 'Plotting.py'),
+    ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
@@ -26,7 +27,7 @@ examples = OrderedDict([
     ('Plot Customization', 'customPlot.py'),
     ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
-    ('ViewBox Features', 'ViewBoxFeatures.py'),
+    ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
     ('Histograms', 'histogram.py'),
     ('Beeswarm plot', 'beeswarm.py'),
@@ -427,15 +428,23 @@ class ExampleLoader(QtGui.QMainWindow):
         self.hl = PythonHighlighter(self.ui.codeView.document())
 
     def populateTree(self, root, examples):
+        bold_font = None
         for key, val in examples.items():
             item = QtGui.QTreeWidgetItem([key])
             self.itemCache.append(item) # PyQt 4.9.6 no longer keeps references to these wrappers,
                                         # so we need to make an explicit reference or else the .file
                                         # attribute will disappear.
-            if isinstance(val, basestring):
-                item.file = val
-            else:
+            if isinstance(val, OrderedDict):
                 self.populateTree(item, val)
+            elif isinstance(val, Namespace):
+                item.file = val.filename
+                if 'recommended' in val:
+                    if bold_font is None:
+                        bold_font = item.font(0)
+                        bold_font.setBold(True)
+                    item.setFont(0, bold_font)
+            else:
+                item.file = val
             root.addChild(item)
 
     def currentFile(self):
