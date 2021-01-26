@@ -56,7 +56,7 @@ class SVGExporter(Exporter):
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if toBytes is False and copy is False and fileName is None:
-            self.fileSaveDialog(filter=f"{translate('Exporter', 'Scalable Vector Graphics)'} (*.svg)")
+            self.fileSaveDialog(filter=f"{translate('Exporter', 'Scalable Vector Graphics')} (*.svg)")
             return
         
         ## Qt's SVG generator is not complete. (notably, it lacks clipping)
