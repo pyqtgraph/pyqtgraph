@@ -113,12 +113,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
         
         self.editingFinished.connect(self.editingFinishedEvent)
 
-    def event(self, ev):
-        ret = super().event(ev)
-        if ev.type() == QtCore.QEvent.KeyPress and ev.key() == QtCore.Qt.Key_Return:
-            ret = True  ## For some reason, spinbox pretends to ignore return key press
-        return ret
-        
     def setOpts(self, **opts):
         """Set options affecting the behavior of the SpinBox.
         
