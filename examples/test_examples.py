@@ -3,6 +3,7 @@ from __future__ import print_function, division, absolute_import
 from collections import namedtuple
 from pyqtgraph import Qt
 from pyqtgraph.python2_3 import basestring
+from pyqtgraph.pgcollections import OrderedDict
 from .ExampleApp import examples
 
 import errno
@@ -13,6 +14,7 @@ import os, sys
 import platform
 import subprocess
 import time
+from argparse import Namespace
 if __name__ == "__main__" and (__package__ is None or __package__==''):
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, parent_dir)
@@ -24,10 +26,12 @@ def buildFileList(examples, files=None):
     if files is None:
         files = [("Example App", "test_ExampleApp.py")]
     for key, val in examples.items():
-        if isinstance(val, basestring):
-            files.append((key,val))
-        else:
+        if isinstance(val, OrderedDict):
             buildFileList(val, files)
+        elif isinstance(val, Namespace):
+            files.append((key, val.filename))
+        else:
+            files.append((key,val))
     return files
 
 
