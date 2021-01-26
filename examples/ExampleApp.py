@@ -5,9 +5,9 @@ import sys
 import subprocess
 from argparse import Namespace
 import pyqtgraph as pg
-from pyqtgraph.python2_3 import basestring
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 from pyqtgraph.pgcollections import OrderedDict
+from .utils import examples
 
 path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, path)
@@ -16,118 +16,6 @@ app = pg.mkQApp()
 import importlib
 ui_template = importlib.import_module(
     f'exampleLoaderTemplate_{QT_LIB.lower()}')
-
-examples = OrderedDict([
-    ('Command-line usage', 'CLIexample.py'),
-    ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
-    ('ImageView', 'ImageView.py'),
-    ('ParameterTree', 'parametertree.py'),
-    ('Crosshair / Mouse interaction', 'crosshair.py'),
-    ('Data Slicing', 'DataSlicing.py'),
-    ('Plot Customization', 'customPlot.py'),
-    ('Timestamps on x axis', 'DateAxisItem.py'),
-    ('Image Analysis', 'imageAnalysis.py'),
-    ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
-    ('Dock widgets', 'dockarea.py'),
-    ('Histograms', 'histogram.py'),
-    ('Beeswarm plot', 'beeswarm.py'),
-    ('Symbols', 'Symbols.py'),
-    ('Auto-range', 'PlotAutoRange.py'),
-    ('Remote Plotting', 'RemoteSpeedTest.py'),
-    ('Scrolling plots', 'scrollingPlots.py'),
-    ('HDF5 big data', 'hdf5.py'),
-    ('logAxis', 'logAxis.py'),
-    ('PanningPlot', 'PanningPlot.py'),
-    ('MultiplePlotAxes', 'MultiplePlotAxes.py'),
-    ('ROItypes', 'ROItypes.py'),
-    ('ScaleBar', 'ScaleBar.py'),
-    ('InfiniteLine', 'InfiniteLine.py'),
-    ('Demos', OrderedDict([
-        ('Optics', 'optics_demos.py'),
-        ('Special relativity', 'relativity_demo.py'),
-        ('Verlet chain', 'verlet_chain_demo.py'),
-        ('Koch Fractal', 'fractal.py'),
-    ])),
-    ('GraphicsItems', OrderedDict([
-        ('Scatter Plot', 'ScatterPlot.py'),
-        #('PlotItem', 'PlotItem.py'),
-        ('IsocurveItem', 'isocurve.py'),
-        ('GraphItem', 'GraphItem.py'),
-        ('ErrorBarItem', 'ErrorBarItem.py'),
-        ('FillBetweenItem', 'FillBetweenItem.py'),
-        ('ImageItem - video', 'ImageItem.py'),
-        ('ImageItem - draw', 'Draw.py'),
-        ('Region-of-Interest', 'ROIExamples.py'),
-        ('Bar Graph', 'BarGraphItem.py'),
-        ('GraphicsLayout', 'GraphicsLayout.py'),
-        ('LegendItem', 'Legend.py'),
-        ('Text Item', 'text.py'),
-        ('Linked Views', 'linkedViews.py'),
-        ('Arrow', 'Arrow.py'),
-        ('ViewBox', 'ViewBox.py'),
-        ('Custom Graphics', 'customGraphicsItem.py'),
-        ('Labeled Graph', 'CustomGraphItem.py'),
-        ('GradientEditor', 'GradientEditor.py'),
-        ('Non-uniform Image', 'NonUniformImage.py'),
-        ('PColorMeshItem', 'PColorMeshItem.py'),
-    ])),
-    ('Benchmarks', OrderedDict([
-        ('Video speed test', 'VideoSpeedTest.py'),
-        ('Line Plot update', 'PlotSpeedTest.py'),
-        ('Scatter Plot update', 'ScatterPlotSpeedTest.py'),
-        ('Multiple plots', 'MultiPlotSpeedTest.py'),
-        ('multiplePlotSpeedTest', 'multiplePlotSpeedTest.py'),
-        ('infiniteLine performance', 'infiniteline_performance.py'),
-    ])),
-    ('3D Graphics', OrderedDict([
-        ('Volumetric', 'GLVolumeItem.py'),
-        ('Isosurface', 'GLIsosurface.py'),
-        ('Surface Plot', 'GLSurfacePlot.py'),
-        ('Scatter Plot', 'GLScatterPlotItem.py'),
-        ('Shaders', 'GLshaders.py'),
-        ('Line Plot', 'GLLinePlotItem.py'),
-        ('Mesh', 'GLMeshItem.py'),
-        ('Image', 'GLImageItem.py'),
-        ('Bar Graph', 'GLBarGraphItem.py'),
-        ('GLViewWidget', 'GLViewWidget.py'),
-    ])),
-    ('Widgets', OrderedDict([
-        ('PlotWidget', 'PlotWidget.py'),
-        ('SpinBox', 'SpinBox.py'),
-        ('ConsoleWidget', 'ConsoleWidget.py'),
-        ('Histogram / lookup table', 'HistogramLUT.py'),
-        ('TreeWidget', 'TreeWidget.py'),
-        ('ScatterPlotWidget', 'ScatterPlotWidget.py'),
-        ('DataTreeWidget', 'DataTreeWidget.py'),
-        ('GradientWidget', 'GradientWidget.py'),
-        ('TableWidget', 'TableWidget.py'),
-        ('ColorButton', 'ColorButton.py'),
-        #('CheckTable', '../widgets/CheckTable.py'),
-        #('VerticalLabel', '../widgets/VerticalLabel.py'),
-        ('JoystickButton', 'JoystickButton.py'),
-        ('DiffTreeWidget', 'DiffTreeWidget.py'),
-        ('MultiPlotWidget', 'MultiPlotWidget.py'),
-        ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
-    ])),
-    ('Flowcharts', 'Flowchart.py'),
-    ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
-    ('Miscellaneous', OrderedDict([
-        ('colorMaps', 'colorMaps.py'),
-        ('contextMenu', 'contextMenu.py'),
-        ('designerExample', 'designerExample.py'),
-        ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
-        ('GraphicsScene', 'GraphicsScene.py'),
-        ('MouseSelection', 'MouseSelection.py'),
-        ('ProgressDialog', 'ProgressDialog.py'),
-    ])),
-    ('Simple', OrderedDict([
-        # examples that are subsumed in other examples
-        ('SimplePlot', 'SimplePlot.py'),        # Plotting.py
-        ('LogPlotTest', 'LogPlotTest.py'),      # Plotting.py
-        ('ViewLimits', 'ViewLimits.py'),        # ViewBoxFeatures.py
-    ])),
-])
-
 
 
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting

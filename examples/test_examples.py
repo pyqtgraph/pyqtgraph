@@ -2,9 +2,6 @@
 from __future__ import print_function, division, absolute_import
 from collections import namedtuple
 from pyqtgraph import Qt
-from pyqtgraph.python2_3 import basestring
-from pyqtgraph.pgcollections import OrderedDict
-from .ExampleApp import examples
 
 import errno
 import importlib
@@ -21,23 +18,26 @@ if __name__ == "__main__" and (__package__ is None or __package__==''):
     import examples
     __package__ = "examples"
 
+from . import utils
 
 def buildFileList(examples, files=None):
     if files is None:
-        files = [("Example App", "test_ExampleApp.py")]
+        files = []
     for key, val in examples.items():
-        if isinstance(val, OrderedDict):
+        if isinstance(val, dict):
             buildFileList(val, files)
         elif isinstance(val, Namespace):
             files.append((key, val.filename))
         else:
-            files.append((key,val))
+            files.append((key, val))
     return files
 
 
-
 path = os.path.abspath(os.path.dirname(__file__))
-files = sorted(set(buildFileList(examples)))
+files = [("Example App", "test_ExampleApp.py")]
+for ex in [utils.examples, utils.others]:
+    files = buildFileList(ex, files)
+files = sorted(set(files))
 frontends = {
     Qt.PYQT5: False,
     Qt.PYQT6: False,
