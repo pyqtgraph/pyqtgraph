@@ -9,6 +9,7 @@ ui_template = importlib.import_module(
 
 import weakref 
 
+translate = QtCore.QCoreApplication.translate
 class ViewBoxMenu(QtGui.QMenu):
     def __init__(self, view):
         QtGui.QMenu.__init__(self)
@@ -63,15 +64,15 @@ class ViewBoxMenu(QtGui.QMenu):
         #self.setExportMethods(view.exportMethods)
         #self.addMenu(self.export)
         
-        self.leftMenu = QtGui.QMenu("Mouse Mode")
+        self.leftMenu = QtGui.QMenu(translate("ViewBox", "Mouse Mode"))
         group = QtGui.QActionGroup(self)
         
         # This does not work! QAction _must_ be initialized with a permanent 
         # object as the parent or else it may be collected prematurely.
         #pan = self.leftMenu.addAction("3 button", self.set3ButtonMode)
         #zoom = self.leftMenu.addAction("1 button", self.set1ButtonMode)
-        pan = QtGui.QAction("3 button", self.leftMenu)
-        zoom = QtGui.QAction("1 button", self.leftMenu)
+        pan = QtGui.QAction(translate("ViewBox", "3 button"), self.leftMenu)
+        zoom = QtGui.QAction(translate("ViewBox", "1 button"), self.leftMenu)
         self.leftMenu.addAction(pan)
         self.leftMenu.addAction(zoom)
         pan.triggered.connect(self.set3ButtonMode)

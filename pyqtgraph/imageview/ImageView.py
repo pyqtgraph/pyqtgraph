@@ -37,6 +37,7 @@ try:
 except ImportError:
     from numpy import nanmin, nanmax
 
+translate = QtCore.QCoreApplication.translate
 
 class PlotROI(ROI):
     def __init__(self, size):
@@ -817,11 +818,11 @@ class ImageView(QtGui.QWidget):
         
     def buildMenu(self):
         self.menu = QtGui.QMenu()
-        self.normAction = QtGui.QAction("Normalization", self.menu)
+        self.normAction = QtGui.QAction(translate("ImageView", "Normalization"), self.menu)
         self.normAction.setCheckable(True)
         self.normAction.toggled.connect(self.normToggled)
         self.menu.addAction(self.normAction)
-        self.exportAction = QtGui.QAction("Export", self.menu)
+        self.exportAction = QtGui.QAction(translate("ImageView", "Export"), self.menu)
         self.exportAction.triggered.connect(self.exportClicked)
         self.menu.addAction(self.exportAction)
         
