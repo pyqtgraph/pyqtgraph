@@ -1,14 +1,10 @@
-from __future__ import division, print_function, absolute_import
-import os
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.python2_3 import basestring
-
-path = os.path.abspath(os.path.dirname(__file__))
+from collections import OrderedDict
+from argparse import Namespace
 
 
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
-    ('Basic Plotting', 'Plotting.py'),
+    ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
@@ -16,7 +12,7 @@ examples = OrderedDict([
     ('Plot Customization', 'customPlot.py'),
     ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
-    ('ViewBox Features', 'ViewBoxFeatures.py'),
+    ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
@@ -90,14 +86,35 @@ examples = OrderedDict([
 ])
 
 
-def buildFileList(examples, files=None):
-    if files == None:
-        files = []
-    for key, val in examples.items():
-        #item = QtGui.QTreeWidgetItem([key])
-        if isinstance(val, basestring):
-            #item.file = val
-            files.append((key,val))
-        else:
-            buildFileList(val, files)
-    return files
+# don't care about ordering
+# but actually from Python 3.7, dict is ordered
+others = dict([
+    ('logAxis', 'logAxis.py'),
+    ('PanningPlot', 'PanningPlot.py'),
+    ('MultiplePlotAxes', 'MultiplePlotAxes.py'),
+    ('ROItypes', 'ROItypes.py'),
+    ('ScaleBar', 'ScaleBar.py'),
+    ('InfiniteLine', 'InfiniteLine.py'),
+    ('ViewBox', 'ViewBox.py'),
+    ('GradientEditor', 'GradientEditor.py'),
+    ('GLBarGraphItem', 'GLBarGraphItem.py'),
+    ('GLViewWidget', 'GLViewWidget.py'),
+    ('DiffTreeWidget', 'DiffTreeWidget.py'),
+    ('MultiPlotWidget', 'MultiPlotWidget.py'),
+    ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
+    ('colorMaps', 'colorMaps.py'),
+    ('contextMenu', 'contextMenu.py'),
+    ('designerExample', 'designerExample.py'),
+    ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
+    ('GraphicsScene', 'GraphicsScene.py'),
+    ('MouseSelection', 'MouseSelection.py'),
+    ('ProgressDialog', 'ProgressDialog.py'),
+])
+
+
+# examples that are subsumed into other examples
+trivial = dict([
+    ('SimplePlot', 'SimplePlot.py'),    # Plotting.py
+    ('LogPlotTest', 'LogPlotTest.py'),  # Plotting.py
+    ('ViewLimits', 'ViewLimits.py'),    # ViewBoxFeatures.py
+])
