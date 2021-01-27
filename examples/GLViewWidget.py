@@ -6,10 +6,10 @@ Very basic 3D graphics example; create a view widget and add a few items.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, mkQApp
 import pyqtgraph.opengl as gl
 
-app = pg.mkQApp("GLViewWidget Example")
+app = mkQApp("GLViewWidget Example")
 w = gl.GLViewWidget()
 w.opts['distance'] = 20
 w.show()
