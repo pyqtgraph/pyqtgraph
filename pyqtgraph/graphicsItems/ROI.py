@@ -23,6 +23,8 @@ from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .. import getConfigOption
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = [
     'ROI', 
     'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
@@ -770,8 +772,8 @@ class ROI(GraphicsObject):
     def getMenu(self):
         if self.menu is None:
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("ROI")
-            remAct = QtGui.QAction("Remove ROI", self.menu)
+            self.menu.setTitle(translate("ROI", "ROI"))
+            remAct = QtGui.QAction(translate("ROI", "Remove ROI"), self.menu)
             remAct.triggered.connect(self.removeClicked)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct
@@ -1368,8 +1370,8 @@ class Handle(UIGraphicsItem):
                 
     def buildMenu(self):
         menu = QtGui.QMenu()
-        menu.setTitle("Handle")
-        self.removeAction = menu.addAction("Remove handle", self.removeClicked) 
+        menu.setTitle(translate("ROI", "Handle"))
+        self.removeAction = menu.addAction(translate("ROI", "Remove handle"), self.removeClicked) 
         return menu
         
     def getMenu(self):

@@ -5,6 +5,7 @@ from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from ..Point import Point
 
+translate = QtCore.QCoreApplication.translate
 
 class Terminal(object):
     def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, removable=False, multiable=False, bypass=None):
@@ -373,14 +374,14 @@ class TerminalGraphicsItem(GraphicsObject):
     def getMenu(self):
         if self.menu is None:
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("Terminal")
-            remAct = QtGui.QAction("Remove terminal", self.menu)
+            self.menu.setTitle(translate("Context Menu", "Terminal"))
+            remAct = QtGui.QAction(translate("Context Menu", "Remove terminal"), self.menu)
             remAct.triggered.connect(self.removeSelf)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct
             if not self.term.isRemovable():
                 remAct.setEnabled(False)
-            multiAct = QtGui.QAction("Multi-value", self.menu)
+            multiAct = QtGui.QAction(translate("Context Menu", "Multi-value"), self.menu)
             multiAct.setCheckable(True)
             multiAct.setChecked(self.term.isMultiValue())
             multiAct.setEnabled(self.term.isMultiable())

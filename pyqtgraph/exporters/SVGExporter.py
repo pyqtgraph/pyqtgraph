@@ -8,11 +8,12 @@ import re
 import xml.dom.minidom as xml
 import numpy as np
 
+translate = QtCore.QCoreApplication.translate
 
 __all__ = ['SVGExporter']
 
 class SVGExporter(Exporter):
-    Name = "Scalable Vector Graphics (SVG)"
+    Name = translate("Exporter", "Scalable Vector Graphics (SVG)")
     allowCopy=True
     
     def __init__(self, item):
@@ -29,42 +30,42 @@ class SVGExporter(Exporter):
             bg.setAlpha(0)
 
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'background', 'type': 'color', 'value': bg},
-            {'name': 'width', 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
-            {'name': 'height', 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
+            {'name': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
+            {'name': translate("Exporter", 'width'), 'type': 'float', 'value': tr.width(), 'limits': (0, None)},
+            {'name': translate("Exporter", 'height'), 'type': 'float', 'value': tr.height(), 'limits': (0, None)},
             #{'name': 'viewbox clipping', 'type': 'bool', 'value': True},
             #{'name': 'normalize coordinates', 'type': 'bool', 'value': True},
-            {'name': 'scaling stroke', 'type': 'bool', 'value': False, 'tip': "If False, strokes are non-scaling, "
+            {'name': translate("Exporter", 'scaling stroke'), 'type': 'bool', 'value': False, 'tip': "If False, strokes are non-scaling, "
              "which means that they appear the same width on screen regardless of how they are scaled or how the view is zoomed."},
         ])
-        self.params.param('width').sigValueChanged.connect(self.widthChanged)
-        self.params.param('height').sigValueChanged.connect(self.heightChanged)
+        self.params.param(translate("Exporter", 'width')).sigValueChanged.connect(self.widthChanged)
+        self.params.param(translate("Exporter", 'height')).sigValueChanged.connect(self.heightChanged)
 
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = sr.height() / sr.width()
-        self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
+        self.params.param(translate("Exporter", 'height')).setValue(self.params[translate("Exporter", 'width')] * ar, blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = sr.width() / sr.height()
-        self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
+        self.params.param(translate("Exporter", 'width')).setValue(self.params[translate("Exporter", 'height')] * ar, blockSignal=self.widthChanged)
         
     def parameters(self):
         return self.params
     
     def export(self, fileName=None, toBytes=False, copy=False):
         if toBytes is False and copy is False and fileName is None:
-            self.fileSaveDialog(filter="Scalable Vector Graphics (*.svg)")
+            self.fileSaveDialog(filter=f"{translate('Exporter', 'Scalable Vector Graphics')} (*.svg)")
             return
         
         ## Qt's SVG generator is not complete. (notably, it lacks clipping)
         ## Instead, we will use Qt to generate SVG for each item independently,
         ## then manually reconstruct the entire document.
         options = {ch.name():ch.value() for ch in self.params.children()}
-        options['background'] = self.params['background']
-        options['width'] = self.params['width']
-        options['height'] = self.params['height']
+        options['background'] = self.params[translate("Exporter", 'background')]
+        options['width'] = self.params[translate("Exporter", 'width')]
+        options['height'] = self.params[translate("Exporter", 'height')]
         xml = generateSvg(self.item, options)
         
         if toBytes:

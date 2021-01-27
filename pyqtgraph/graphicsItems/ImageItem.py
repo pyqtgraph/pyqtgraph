@@ -17,6 +17,8 @@ except ImportError:
     # fallback for python < 3.3
     from collections import Callable
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['ImageItem']
 
 
@@ -634,8 +636,8 @@ class ImageItem(GraphicsObject):
             if not self.removable:
                 return None
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("Image")
-            remAct = QtGui.QAction("Remove image", self.menu)
+            self.menu.setTitle(translate("ImageItem", "Image"))
+            remAct = QtGui.QAction(translate("ImageItem", "Remove image"), self.menu)
             remAct.triggered.connect(self.removeClicked)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct

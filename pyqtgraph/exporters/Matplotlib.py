@@ -4,6 +4,8 @@ from .Exporter import Exporter
 from .. import PlotItem
 from .. import functions as fn
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['MatplotlibExporter']
 
 """
@@ -30,7 +32,7 @@ publication. Fonts are not vectorized (outlined), and window colors are white.
 """
     
 class MatplotlibExporter(Exporter):
-    Name = "Matplotlib Window"
+    Name = translate('Exporter', "Matplotlib Window")
     windows = []
 
     def __init__(self, item):

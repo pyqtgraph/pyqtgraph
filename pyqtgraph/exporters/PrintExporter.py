@@ -3,6 +3,8 @@ from ..parametertree import Parameter
 from ..Qt import QtGui, QtCore, QtSvg
 import re
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['PrintExporter']  
 #__all__ = []   ## Printer is disabled for now--does not work very well.
 
@@ -12,8 +14,8 @@ class PrintExporter(Exporter):
         Exporter.__init__(self, item)
         tr = self.getTargetRect()
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'width', 'type': 'float', 'value': 0.1, 'limits': (0, None), 'suffix': 'm', 'siPrefix': True},
-            {'name': 'height', 'type': 'float', 'value': (0.1 * tr.height()) / tr.width(), 'limits': (0, None), 'suffix': 'm', 'siPrefix': True},
+            {'name': translate("Exporter", 'width'), 'type': 'float', 'value': 0.1, 'limits': (0, None), 'suffix': 'm', 'siPrefix': True},
+            {'name': translate("Exporter", 'height'), 'type': 'float', 'value': (0.1 * tr.height()) / tr.width(), 'limits': (0, None), 'suffix': 'm', 'siPrefix': True},
         ])
         self.params.param('width').sigValueChanged.connect(self.widthChanged)
         self.params.param('height').sigValueChanged.connect(self.heightChanged)
@@ -21,12 +23,12 @@ class PrintExporter(Exporter):
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = sr.height() / sr.width()
-        self.params.param('height').setValue(self.params['width'] * ar, blockSignal=self.heightChanged)
+        self.params.param(translate("Exporter", 'height')).setValue(self.params[translate("Exporter", 'width')] * ar, blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = sr.width() / sr.height()
-        self.params.param('width').setValue(self.params['height'] * ar, blockSignal=self.widthChanged)
+        self.params.param(translate("Exporter", 'width')).setValue(self.params[translate("Exporter", 'height')] * ar, blockSignal=self.widthChanged)
         
     def parameters(self):
         return self.params
@@ -34,7 +36,7 @@ class PrintExporter(Exporter):
     def export(self, fileName=None):
         printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
         dialog = QtGui.QPrintDialog(printer)
-        dialog.setWindowTitle("Print Document")
+        dialog.setWindowTitle(translate('Exporter', "Print Document"))
         if dialog.exec_() != QtGui.QDialog.Accepted:
             return
             

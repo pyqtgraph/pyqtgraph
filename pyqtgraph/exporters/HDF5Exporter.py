@@ -9,20 +9,22 @@ try:
     HAVE_HDF5 = True
 except ImportError:
     HAVE_HDF5 = False
-    
+
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['HDF5Exporter']
 
     
 class HDF5Exporter(Exporter):
-    Name = "HDF5 Export: plot (x,y)"
+    Name = translate("Exporter", "HDF5 Export: plot (x,y)")
     windows = []
     allowCopy = False
 
     def __init__(self, item):
         Exporter.__init__(self, item)
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'Name', 'type': 'str', 'value': 'Export',},
-            {'name': 'columnMode', 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
+            {'name': translate("Exporter", 'Name'), 'type': 'str', 'value': 'Export',},
+            {'name': translate("Exporter", 'columnMode'), 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
         ])
         
     def parameters(self):
@@ -39,11 +41,11 @@ class HDF5Exporter(Exporter):
         if fileName is None:
             self.fileSaveDialog(filter=["*.h5", "*.hdf", "*.hd5"])
             return
-        dsname = self.params['Name']
+        dsname = self.params[translate("Exporter", 'Name')]
         fd = h5py.File(fileName, 'a') # forces append to file... 'w' doesn't seem to "delete/overwrite"
         data = []
 
-        appendAllX = self.params['columnMode'] == '(x,y) per plot'
+        appendAllX = self.params[translate("Exporter", 'columnMode')] == '(x,y) per plot'
         # Check if the arrays are ragged
         len_first = len(self.item.curves[0].getData()[0]) if self.item.curves[0] else None
         ragged = any(len(i.getData()[0]) != len_first for i in self.item.curves)
