@@ -7,11 +7,12 @@ Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
+import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("GLScatterPlotItem Example")
 w = gl.GLViewWidget()
 w.opts['distance'] = 20
 w.show()
