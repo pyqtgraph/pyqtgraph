@@ -1724,17 +1724,14 @@ def arrayToQPath(x, y, connect='all'):
 
     n = x.shape[0]
 
-    # create empty array, pad with extra space on either end
-    arr = np.empty(n+2, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')])
-
-    # write first two integers
-    byteview = arr.view(dtype=np.ubyte)
-    byteview[:16] = 0
-    byteview.data[16:20] = struct.pack('>i', n)
+    backstore = bytearray(4 + n*20 + 8)
+    arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+        count=n, offset=4)
+    struct.pack_into('>i', backstore, 0, n)
 
     # Fill array with vertex values
-    arr[1:-1]['x'] = x
-    arr[1:-1]['y'] = y
+    arr['x'] = x
+    arr['y'] = y
 
     # inf/nans completely prevent the plot from being displayed starting on 
     # Qt version 5.12.3; these must now be manually cleaned out.
@@ -1752,14 +1749,14 @@ def arrayToQPath(x, y, connect='all'):
             if first < len(x):
                 # Replace all non-finite entries from beginning of arr with the first finite one
                 idx[:first] = first
-                arr[1:-1] = arr[1:-1][idx]
+                arr[:] = arr[:][idx]
 
     # decide which points are connected by lines
     if eq(connect, 'all'):
-        arr[1:-1]['c'] = 1
+        arr[:]['c'] = 1
     elif eq(connect, 'pairs'):
-        arr[1:-1]['c'][::2] = 0
-        arr[1:-1]['c'][1::2] = 1  # connect every 2nd point to every 1st one
+        arr[:]['c'][::2] = 0
+        arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
@@ -1767,31 +1764,25 @@ def arrayToQPath(x, y, connect='all'):
         # the next point of an invalid point.
         if isfinite is None:
             isfinite = np.isfinite(x) & np.isfinite(y)
-        arr[2:]['c'] = isfinite
+        arr[1:]['c'] = isfinite[:-1]
     elif isinstance(connect, np.ndarray):
-        arr[2:-1]['c'] = connect[:-1]
+        arr[1:]['c'] = connect[:-1]
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
-    arr[1]['c'] = 0  # the first vertex has no previous vertex to connect
+    arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
 
-    byteview.data[-20:-16] = struct.pack('>i', 0)  # cStart
-    byteview.data[-16:-12] = struct.pack('>i', 0)  # fillRule (Qt.OddEvenFill)
+    # cStart, fillRule (Qt.OddEvenFill)
+    struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
-    # create datastream object and stream into path
-
-    ## Avoiding this method because QByteArray(str) leaks memory in PySide
-    #buf = QtCore.QByteArray(arr.data[12:lastInd+4])  # I think one unnecessary copy happens here
-
-    path.strn = byteview.data[16:-12]  # make sure data doesn't run away
-    try:
-        buf = QtCore.QByteArray.fromRawData(path.strn)
-    except TypeError:
-        buf = QtCore.QByteArray(bytes(path.strn))
-    except AttributeError:
-        # PyQt6 raises AttributeError
-        buf = QtCore.QByteArray(path.strn, path.strn.nbytes)
-
+    # create QDataStream object and stream into QPainterPath
+    path.strn = backstore
+    if QT_LIB == "PyQt6":
+        # due to issue detailed here:
+        # https://www.riverbankcomputing.com/pipermail/pyqt/2021-May/043942.html
+        buf = QtCore.QByteArray(path.strn, len(path.strn))
+    else:
+        buf = QtCore.QByteArray(path.strn)
     ds = QtCore.QDataStream(buf)
     ds >> path
 
