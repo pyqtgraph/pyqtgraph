@@ -13,7 +13,7 @@ import pyqtgraph.opengl as gl
 import numpy as np
 
 ## Create a GL View widget to display data
-app = pg.mkQApp("GLSurfacePlot Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GLSurfacePlot')

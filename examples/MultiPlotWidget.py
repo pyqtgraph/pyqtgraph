@@ -14,7 +14,7 @@ except:
     print("MultiPlot is only used with MetaArray for now (and you do not have the metaarray package)")
     exit()
 
-app = pg.mkQApp("MultiPlot Widget Example")
+app = QtGui.QApplication([])
 mw = QtGui.QMainWindow()
 mw.resize(800,800)
 pw = MultiPlotWidget()

@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import pyqtgraph as pg
 
-app = pg.mkQApp("Draw Example")
+app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
 w = pg.GraphicsView()

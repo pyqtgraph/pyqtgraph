@@ -10,7 +10,7 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-app = pg.mkQApp("Symbols Examples")
+app = QtGui.QApplication([])
 win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")
 win.resize(1000,600)
 

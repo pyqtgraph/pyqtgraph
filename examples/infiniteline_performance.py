@@ -5,7 +5,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
-app = pg.mkQApp("Infinite Line Performance")
+app = QtGui.QApplication([])
 
 p = pg.plot()
 p.setWindowTitle('pyqtgraph performance: InfiniteLine')

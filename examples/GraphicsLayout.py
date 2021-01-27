@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
-app = pg.mkQApp("Gradiant Layout Example")
+app = QtGui.QApplication([])
 view = pg.GraphicsView()
 l = pg.GraphicsLayout(border=(100,100,100))
 view.setCentralItem(l)

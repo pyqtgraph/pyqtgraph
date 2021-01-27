@@ -15,7 +15,7 @@ import pyqtgraph as pg
 import numpy as np
 from pyqtgraph import Point
 
-app = pg.mkQApp("Optics Demo")
+app = pg.QtGui.QApplication([])
 
 w = pg.GraphicsLayoutWidget(show=True, border=0.5)
 w.resize(1000, 900)

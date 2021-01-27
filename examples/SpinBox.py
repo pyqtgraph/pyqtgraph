@@ -15,7 +15,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 import ast
 
-app = pg.mkQApp("SpinBox Example")
+app = QtGui.QApplication([])
 
 
 spins = [

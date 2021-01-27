@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = pg.mkQApp("Histogram Lookup Table Example")
+app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
 win.resize(800,600)
 win.show()

@@ -20,7 +20,7 @@ import pyqtgraph as pg
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')
 
-app = pg.mkQApp("ImageView Example")
+app = QtGui.QApplication([])
 
 ## Create window with ImageView widget
 win = QtGui.QMainWindow()

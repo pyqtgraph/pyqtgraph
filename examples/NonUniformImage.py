@@ -41,7 +41,7 @@ P_loss[P_mech > 1.5e5] = np.NaN
 # green - orange - red
 Gradients['gor'] = {'ticks': [(0.0, (74, 158, 71)), (0.5, (255, 230, 0)), (1, (191, 79, 76))], 'mode': 'rgb'}
 
-app = pg.mkQApp("NonUniform Image Example")
+app = QtGui.QApplication([])
 
 win = QtGui.QMainWindow()
 cw = pg.GraphicsLayoutWidget()

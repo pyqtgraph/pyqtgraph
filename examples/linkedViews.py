@@ -13,7 +13,7 @@ import numpy as np
 import pyqtgraph as pg
 
 #QtGui.QApplication.setGraphicsSystem('raster')
-app = pg.mkQApp("Linked Views Example")
+app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 

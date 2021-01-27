@@ -11,7 +11,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 
-app = pg.mkQApp("GLLinePlotItem Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.opts['distance'] = 40
 w.show()
