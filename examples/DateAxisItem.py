@@ -12,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui
 
-app = pg.mkQApp("DateAxisItem Example")
+app = QtGui.QApplication([])
 
 # Create a plot with a date-time axis
 w = pg.PlotWidget(axisItems = {'bottom': pg.DateAxisItem()})

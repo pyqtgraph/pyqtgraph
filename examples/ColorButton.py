@@ -11,7 +11,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-app = pg.mkQApp("ColorButton Example")
+app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
 btn = pg.ColorButton()
 win.setCentralWidget(btn)

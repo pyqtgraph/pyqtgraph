@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = pg.mkQApp("Log Axis Example")
+app = QtGui.QApplication([])
 
 w = pg.GraphicsLayoutWidget(show=True)
 w.setWindowTitle('pyqtgraph example: logAxis')

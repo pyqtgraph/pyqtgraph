@@ -11,7 +11,7 @@ import pyqtgraph as pg
 pg.setConfigOptions(imageAxisOrder='row-major')
 
 ## create GUI
-app = pg.mkQApp("ROI Types Examples")
+app = QtGui.QApplication([])
 
 w = pg.GraphicsLayoutWidget(show=True, size=(800,800), border=True)
 v = w.addViewBox(colspan=2)

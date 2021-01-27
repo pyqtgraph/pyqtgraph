@@ -9,7 +9,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-app = pg.mkQApp("Fractal Example")
+app = QtGui.QApplication([])
 
 # Set up UI widgets
 win = pg.QtGui.QWidget()

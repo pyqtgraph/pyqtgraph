@@ -457,8 +457,8 @@ USE_PYQT4 = QT_LIB == PYQT4
 USE_PYQT5 = QT_LIB == PYQT5
 
     
-## Make sure we have Qt >= 5.12
-versionReq = [5, 12]
+## Make sure we have Qt >= 4.7
+versionReq = [4, 7]
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
@@ -482,6 +482,7 @@ class App(QtGui.QApplication):
             color = palette.base().color().name()
         self.dark_mode = color.lower() != "#ffffff"
 
+
 QAPP = None
 def mkQApp(name=None):
     """
@@ -493,20 +494,8 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
-    
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
-        # hidpi handling
-        qtVersionCompare = tuple(map(int, QtVersion.split(".")))
-        if qtVersionCompare > (6, 0):
-            # Qt6 seems to support hidpi without needing to do anything so continue
-            pass
-        elif qtVersionCompare > (5, 14):
-            os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-            QtGui.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-        else:  # qt 5.12 and 5.13
-            QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-            QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
         QAPP = App(sys.argv or ["pyqtgraph"])
 
     if name is not None:

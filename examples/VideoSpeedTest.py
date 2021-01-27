@@ -38,7 +38,7 @@ parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) fo
 args = parser.parse_args(sys.argv[1:])
 
 #QtGui.QApplication.setGraphicsSystem('raster')
-app = pg.mkQApp("Video Speed Test Example")
+app = QtGui.QApplication([])
 
 win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: VideoSpeedTest')

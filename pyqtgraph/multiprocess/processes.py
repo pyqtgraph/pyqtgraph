@@ -451,7 +451,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     app = QtGui.QApplication.instance()
     #print app
     if app is None:
-        app = pg.mkQApp()
+        app = QtGui.QApplication([])
         app.setQuitOnLastWindowClosed(False)  ## generally we want the event loop to stay open 
                                               ## until it is explicitly closed by the parent process.
     

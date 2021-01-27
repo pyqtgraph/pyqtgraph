@@ -11,7 +11,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 
-app = pg.mkQApp("PColorMesh Example")
+app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
 win = pg.GraphicsLayoutWidget()

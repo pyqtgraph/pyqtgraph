@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
-app = pg.mkQApp("MultiPlot Speed Test")
+app = QtGui.QApplication([])
 
 plot = pg.plot()
 plot.setWindowTitle('pyqtgraph example: MultiPlotSpeedTest')

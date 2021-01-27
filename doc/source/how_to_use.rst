@@ -54,28 +54,6 @@ For the serious application developer, all of the functionality in pyqtgraph is 
 See the designer documentation for more information on promoting widgets. The "VideoSpeedTest" and "ScatterPlotSpeedTest" examples both demonstrate the use of .ui files that are compiled to .py modules using pyuic5 or pyside-uic. The "designerExample" example demonstrates dynamically generating python classes from .ui files (no pyuic5 / pyside-uic needed).
 
 
-HiDPI Displays
---------------
-
-PyQtGraph has a method :func:`mkQApp <pyqtgraph.Qt.mkQApp>` that by default sets what we have tested to be the best combination of options to support hidpi displays, when in combination with non-hidpi secondary displays.  For your application, you may have instantiated ``QApplication`` yourself, in which case we advise setting these options *before* runing ``QApplication.exec_()``.  
-
-For Qt6 bindings, this functionally "just works" without having to set any attributes.
-
-On Versions of Qt >= 5.14 and < 6; you can get ideal behavior with the following lines::
-
-    os.environ["QT_ENABLE_HIDPI_SCALING"] = "1" 
-    QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
-If you are on Qt >= 5.6 and < 5.14; you can get near ideal behavior with the following lines::
-
-    QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-
-With the later, ideal behavior was not achieved.
-
-.. autofunction:: pyqtgraph.Qt.mkQApp
-
-
 PyQt and PySide
 ---------------
 
@@ -85,9 +63,8 @@ pyqtgraph is first imported, it automatically determines which library to use by
     
 #. If PyQt5 is already imported, use that
 #. Else, if PySide2 is already imported, use that
-#. Else, if PySide6 is already imported, use that
-#. Else, if PyQt6 is already imported, use that
-#. Else, attempt to import PyQt5, PySide2, PySide6, PyQt6, in that order.
+#. Else, attempt to import PyQt5
+#. If that import fails, attempt to import PySide2. 
 
 If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
 make sure it is imported before pyqtgraph::

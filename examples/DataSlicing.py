@@ -14,7 +14,7 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-app = pg.mkQApp("Data Slicing Example")
+app = QtGui.QApplication([])
 
 ## Create window with two ImageView widgets
 win = QtGui.QMainWindow()

@@ -13,7 +13,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 
-app = pg.mkQApp("GLImageItem Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.opts['distance'] = 200
 w.show()

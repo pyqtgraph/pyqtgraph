@@ -17,7 +17,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
 #QtGui.QApplication.setGraphicsSystem('raster')
-app = pg.mkQApp("Scatter Plot Speed Test")
+app = QtGui.QApplication([])
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 import importlib

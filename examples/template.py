@@ -8,10 +8,10 @@ Description of example
 import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, mkQApp
+from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-app = mkQApp()
+app = QtGui.QApplication([])
 
 # win.setWindowTitle('pyqtgraph example: ____')
 

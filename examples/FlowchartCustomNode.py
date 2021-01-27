@@ -13,7 +13,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
-app = pg.mkQApp("Flowchart Custom Node Example")
+app = QtGui.QApplication([])
 
 ## Create main window with a grid layout inside
 win = QtGui.QMainWindow()

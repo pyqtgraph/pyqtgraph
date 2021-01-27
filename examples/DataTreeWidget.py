@@ -22,7 +22,7 @@ def some_func2():
         return sys.exc_info()[2]
 
 
-app = pg.mkQApp("DataTreeWidget Example")
+app = QtGui.QApplication([])
 d = {
     'a list': [1,2,3,4,5,6, {'nested1': 'aaaaa', 'nested2': 'bbbbb'}, "seven"],
     'a dict': {

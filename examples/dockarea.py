@@ -24,7 +24,7 @@ import numpy as np
 
 from pyqtgraph.dockarea import *
 
-app = pg.mkQApp("DockArea Example")
+app = QtGui.QApplication([])
 win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
