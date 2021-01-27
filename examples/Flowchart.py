@@ -19,7 +19,7 @@ import pyqtgraph as pg
 import numpy as np
 import pyqtgraph.metaarray as metaarray
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Flowchart Example")
 
 ## Create main window with grid layout
 win = QtGui.QMainWindow()

@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("DiffTreeWidget Example")
 A = {
     'a list': [1,2,2,4,5,6, {'nested1': 'aaaa', 'nested2': 'bbbbb'}, "seven"],
     'a dict': {

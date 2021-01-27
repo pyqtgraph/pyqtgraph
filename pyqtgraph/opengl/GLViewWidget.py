@@ -56,9 +56,41 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-        
         self.makeCurrent()
+
+
+    @property
+    def _dpiRatio(self):
+        return self.devicePixelRatioF() or 1
+
+    def _updateScreen(self, screen):
+        self._updatePixelRatio()
+        if screen is not None:
+            screen.physicalDotsPerInchChanged.connect(self._updatePixelRatio)
+            screen.logicalDotsPerInchChanged.connect(self._updatePixelRatio)
+    
+    def _updatePixelRatio(self):
+        event = QtGui.QResizeEvent(self.size(), self.size())
+        self.resizeEvent(event)
+    
+    def showEvent(self, event):
+        window = self.window().windowHandle()
+        window.screenChanged.connect(self._updateScreen)
+        self._updateScreen(window.screen())
         
+    def width(self):
+        if self._dpiRatio.is_integer():
+            return super().width()
+        else:
+            return int(super().width() * self._dpiRatio)
+    
+    def height(self):
+        if self._dpiRatio.is_integer():
+            return super().height()
+        else:
+            return int(super().height() * self._dpiRatio)
+
+
     def reset(self):
         """
         Initialize the widget state or reset the current state to the original state.
