@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'examples\exampleLoaderTemplate.ui'
+# Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
 #
 # Created by: PyQt6 UI code generator 6.0.0
 #
@@ -84,10 +84,10 @@ class Ui_Form(object):
         self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster"))
         self.graphicsSystemCombo.setItemText(3, _translate("Form", "opengl"))
         self.qtLibCombo.setItemText(0, _translate("Form", "default"))
-        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4"))
-        self.qtLibCombo.setItemText(2, _translate("Form", "PySide"))
-        self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5"))
-        self.qtLibCombo.setItemText(4, _translate("Form", "PySide2"))
+        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt5"))
+        self.qtLibCombo.setItemText(2, _translate("Form", "PySide2"))
+        self.qtLibCombo.setItemText(3, _translate("Form", "PySide6"))
+        self.qtLibCombo.setItemText(4, _translate("Form", "PyQt6"))
         self.label_2.setText(_translate("Form", "Graphics System:"))
         self.label.setText(_translate("Form", "Qt Library:"))
         self.loadBtn.setText(_translate("Form", "Run Example"))

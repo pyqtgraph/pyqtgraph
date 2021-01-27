@@ -112,10 +112,10 @@ class Ui_Form(object):
         self.graphicsSystemCombo.setItemText(3, QCoreApplication.translate("Form", u"opengl", None))
 
         self.qtLibCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
-        self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt4", None))
-        self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide", None))
-        self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PyQt5", None))
-        self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PySide2", None))
+        self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt5", None))
+        self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide2", None))
+        self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PySide6", None))
+        self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PyQt6", None))
 
         self.label_2.setText(QCoreApplication.translate("Form", u"Graphics System:", None))
         self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))

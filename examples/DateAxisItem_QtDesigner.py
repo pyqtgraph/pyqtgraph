@@ -9,6 +9,7 @@ import initExample ## Add path to library (just for examples; you do not need th
 
 import sys
 import time
+import os
 
 import numpy as np
 import pyqtgraph as pg
@@ -19,7 +20,9 @@ pg.setConfigOption('foreground', 'k')
 
 BLUE = pg.mkPen('#1f77b4')
 
-Design, _ = loadUiType('DateAxisItem_QtDesigner.ui')
+path = os.path.dirname(os.path.abspath(__file__))
+uiFile = os.path.join(path, 'DateAxisItem_QtDesigner.ui')
+Design, _ = loadUiType(uiFile)
 
 class ExampleApp(QtWidgets.QMainWindow, Design):
     def __init__(self):
@@ -35,8 +38,6 @@ class ExampleApp(QtWidgets.QMainWindow, Design):
         self.plotWidget.showGrid(x=True, y=True)
 
 app = pg.mkQApp("DateAxisItem_QtDesigner Example")
-app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
-app.setPalette(QtWidgets.QApplication.style().standardPalette())
 window = ExampleApp()
 window.setWindowTitle('pyqtgraph example: DateAxisItem_QtDesigner')
 window.show()
