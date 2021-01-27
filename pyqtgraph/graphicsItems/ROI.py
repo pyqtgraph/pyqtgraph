@@ -572,6 +572,8 @@ class ROI(GraphicsObject):
         """
         pos = Point(pos)
         center = Point(center)
+        if pos[0] == center[0] and pos[1] == center[1]:
+            raise Exception("Scale/rotate handles cannot be at their center point.")
         return self.addHandle({'name': name, 'type': 'sr', 'center': center, 'pos': pos, 'item': item}, index=index)
     
     def addRotateFreeHandle(self, pos, center, axes=None, item=None, name=None, index=None):
@@ -961,21 +963,22 @@ class ROI(GraphicsObject):
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
                 ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
-            
-            newState['size'][0] = self.state['size'][0] * lp1.length() / lp0.length()
-            newState['size'][1] = self.state['size'][1] * lp1.length() / lp0.length()
-            #if self.scaleSnap or (modifiers & QtCore.Qt.ControlModifier):
-            if self.scaleSnap:  ## use CTRL only for angular snap here.
-                newState['size'][0] = round(newState['size'][0] / self.snapSize) * self.snapSize
-                newState['size'][1] = round(newState['size'][1] / self.snapSize) * self.snapSize
+
+            if self.aspectLocked or h['center'][0] != h['pos'][0]:
+                newState['size'][0] = self.state['size'][0] * lp1.length() / lp0.length()
+                if self.scaleSnap:  # use CTRL only for angular snap here.
+                    newState['size'][0] = round(newState['size'][0] / self.snapSize) * self.snapSize
+
+            if self.aspectLocked or h['center'][1] != h['pos'][1]:
+                newState['size'][1] = self.state['size'][1] * lp1.length() / lp0.length()
+                if self.scaleSnap:  # use CTRL only for angular snap here.
+                    newState['size'][1] = round(newState['size'][1] / self.snapSize) * self.snapSize
+
             if newState['size'][0] == 0:
                 newState['size'][0] = 1
             if newState['size'][1] == 0:
                 newState['size'][1] = 1
-            # MC TODO what about this:
-            # if self.aspectLocked:
-            #     newState['size'][nonScaleAxis] = newState['size'][scaleAxis]
-                
+
             c1 = c * newState['size']
             tr = QtGui.QTransform()
             tr.rotate(ang)
