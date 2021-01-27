@@ -18,8 +18,8 @@ class ViewBoxMenu(QtGui.QMenu):
         self.valid = False  ## tells us whether the ui needs to be updated
         self.viewMap = weakref.WeakValueDictionary()  ## weakrefs to all views listed in the link combos
 
-        self.setTitle("ViewBox options")
-        self.viewAll = QtGui.QAction("View All", self)
+        self.setTitle(translate("ViewBox", "ViewBox options"))
+        self.viewAll = QtGui.QAction(translate("ViewBox", "View All"), self)
         self.viewAll.triggered.connect(self.autoRange)
         self.addAction(self.viewAll)
         
@@ -29,7 +29,7 @@ class ViewBoxMenu(QtGui.QMenu):
         self.dv = QtGui.QDoubleValidator(self)
         for axis in 'XY':
             m = QtGui.QMenu()
-            m.setTitle("%s Axis" % axis)
+            m.setTitle(f"{axis} {translate('ViewBox', 'axis')}")
             w = QtGui.QWidget()
             ui = ui_template.Ui_Form()
             ui.setupUi(w)

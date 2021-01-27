@@ -8,7 +8,7 @@ translate = QtCore.QCoreApplication.translate
 __all__ = ['ImageExporter']
 
 class ImageExporter(Exporter):
-    Name = "Image File (PNG, TIF, JPG, ...)"
+    Name = f"{translate('Exporter', 'Image File')} (PNG, TIF, JPG, ...)"
     allowCopy = True
     
     def __init__(self, item):

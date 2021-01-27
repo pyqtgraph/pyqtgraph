@@ -2,6 +2,8 @@ from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode
 import os, weakref, re
 
+translate = QtCore.QCoreApplication.translate
+
 class ParameterItem(QtGui.QTreeWidgetItem):
     """
     Abstract ParameterTree item. 
@@ -111,9 +113,9 @@ class ParameterItem(QtGui.QTreeWidgetItem):
         self.contextMenu = QtGui.QMenu() # Put in global name space to prevent garbage collection
         self.contextMenu.addSeparator()
         if opts.get('renamable', False):
-            self.contextMenu.addAction('Rename').triggered.connect(self.editName)
+            self.contextMenu.addAction(translate("ParameterItem", 'Rename')).triggered.connect(self.editName)
         if opts.get('removable', False):
-            self.contextMenu.addAction("Remove").triggered.connect(self.requestRemove)
+            self.contextMenu.addAction(translate("ParameterItem", "Remove")).triggered.connect(self.requestRemove)
         
         # context menu
         context = opts.get('context', None)

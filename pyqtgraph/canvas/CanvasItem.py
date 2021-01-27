@@ -9,6 +9,8 @@ ui_template = importlib.import_module(
 
 from .. import debug
 
+translate = QtCore.QCoreApplication.translate
+
 class SelectBox(ROI):
     def __init__(self, scalable=False, rotatable=True):
         #QtGui.QGraphicsRectItem.__init__(self, 0, 0, size[0], size[1])
@@ -61,7 +63,7 @@ class CanvasItem(QtCore.QObject):
         self.layout.setContentsMargins(0,0,0,0)
         self.ctrl.setLayout(self.layout)
         
-        self.alphaLabel = QtGui.QLabel("Alpha")
+        self.alphaLabel = QtGui.QLabel(translate("CanvasItem", "Alpha"))
         self.alphaSlider = QtGui.QSlider()
         self.alphaSlider.setMaximum(1023)
         self.alphaSlider.setOrientation(QtCore.Qt.Horizontal)
