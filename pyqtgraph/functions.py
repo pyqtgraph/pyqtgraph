@@ -951,7 +951,12 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     else:
         dtype = np.dtype(dtype)
     
-    d2 = data.astype(np.float) - float(offset)
+    if np.can_cast(data, np.float32):
+        work_dtype = np.float32
+    else:
+        work_dtype = np.float64
+    d2 = data.astype(work_dtype, copy=True)
+    d2 -= offset
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
@@ -959,13 +964,14 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         lim = np.iinfo(dtype)
         if clip is None:
             # don't let rescale cause integer overflow
-            d2 = np.clip(d2, lim.min, lim.max)
+            np.clip(d2, lim.min, lim.max, out=d2)
         else:
-            d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
     else:
         if clip is not None:
-            d2 = np.clip(d2, *clip)
-    data = d2.astype(dtype)
+            np.clip(d2, *clip, out=d2)
+    # don't copy if no change in dtype
+    data = d2.astype(dtype, copy=False)
     return data
 
 
