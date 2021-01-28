@@ -11,7 +11,7 @@ __all__ = ['CSVExporter']
     
     
 class CSVExporter(Exporter):
-    Name = translate("Exporter", "CSV from plot data")
+    Name = "CSV from plot data"
     windows = []
     def __init__(self, item):
         Exporter.__init__(self, item)

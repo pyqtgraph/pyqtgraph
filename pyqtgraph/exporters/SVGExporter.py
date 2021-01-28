@@ -13,7 +13,7 @@ translate = QtCore.QCoreApplication.translate
 __all__ = ['SVGExporter']
 
 class SVGExporter(Exporter):
-    Name = translate("Exporter", "Scalable Vector Graphics (SVG)")
+    Name = "Scalable Vector Graphics (SVG)"
     allowCopy=True
     
     def __init__(self, item):
@@ -129,9 +129,9 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     ## 1) Qt SVG does not implement clipping paths. This is absurd.
     ##    The solution is to let Qt generate SVG for each item independently,
     ##    then glue them together manually with clipping.
-    ##    
+    ##
     ##    The format Qt generates for all items looks like this:
-    ##    
+    ##
     ##    <g>
     ##        <g transform="matrix(...)">
     ##            one or more of: <path/> or <polyline/> or <text/>
@@ -141,21 +141,21 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     ##        </g>
     ##        . . .
     ##    </g>
-    ##    
+    ##
     ## 2) There seems to be wide disagreement over whether path strokes
-    ##    should be scaled anisotropically. 
+    ##    should be scaled anisotropically.
     ##      see: http://web.mit.edu/jonas/www/anisotropy/
     ##    Given that both inkscape and illustrator seem to prefer isotropic
-    ##    scaling, we will optimize for those cases.  
-    ##    
-    ## 3) Qt generates paths using non-scaling-stroke from SVG 1.2, but 
-    ##    inkscape only supports 1.1. 
-    ##    
+    ##    scaling, we will optimize for those cases.
+    ##
+    ## 3) Qt generates paths using non-scaling-stroke from SVG 1.2, but
+    ##    inkscape only supports 1.1.
+    ##
     ##    Both 2 and 3 can be addressed by drawing all items in world coordinates.
     
     profiler = debug.Profiler()
     
-    if nodes is None:  ## nodes maps all node IDs to their XML element. 
+    if nodes is None:  ## nodes maps all node IDs to their XML element.
                        ## this allows us to ensure all elements receive unique names.
         nodes = {}
         
@@ -426,7 +426,7 @@ def itemTransform(item, root):
         tr.translate(pos.x(), pos.y())
         tr = item.transform() * tr
     else:
-        ## find next parent that is either the root item or 
+        ## find next parent that is either the root item or
         ## an item that ignores its transformation
         nextRoot = item
         while True:

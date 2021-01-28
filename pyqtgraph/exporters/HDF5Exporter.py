@@ -16,7 +16,7 @@ __all__ = ['HDF5Exporter']
 
     
 class HDF5Exporter(Exporter):
-    Name = translate("Exporter", "HDF5 Export: plot (x,y)")
+    Name = "HDF5 Export: plot (x,y)"
     windows = []
     allowCopy = False
 
