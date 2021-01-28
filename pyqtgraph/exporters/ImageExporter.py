@@ -22,26 +22,28 @@ class ImageExporter(Exporter):
         bg = bgbrush.color()
         if bgbrush.style() == QtCore.Qt.NoBrush:
             bg.setAlpha(0)
-            
+
         self.params = Parameter(name='params', type='group', children=[
-            {'name': translate("Exporter", 'width'), 'type': 'int', 'value': int(tr.width()), 'limits': (0, None)},
-            {'name': translate("Exporter", 'height'), 'type': 'int', 'value': int(tr.height()), 'limits': (0, None)},
-            {'name': translate("Exporter", 'antialias'), 'type': 'bool', 'value': True},
-            {'name': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
-            {'name': translate("Exporter", 'invertValue'), 'type': 'bool', 'value': False}
+            {'name': 'width', 'title': translate("Exporter", 'width'), 'type': 'int', 'value': int(tr.width()),
+             'limits': (0, None)},
+            {'name': 'height', 'title': translate("Exporter", 'height'), 'type': 'int', 'value': int(tr.height()),
+             'limits': (0, None)},
+            {'name': 'antialias', 'title': translate("Exporter", 'antialias'), 'type': 'bool', 'value': True},
+            {'name': 'background', 'title': translate("Exporter", 'background'), 'type': 'color', 'value': bg},
+            {'name': 'invertValue', 'title': translate("Exporter", 'invertValue'), 'type': 'bool', 'value': False}
         ])
-        self.params.param(translate("Exporter", 'width')).sigValueChanged.connect(self.widthChanged)
-        self.params.param(translate("Exporter", 'height')).sigValueChanged.connect(self.heightChanged)
+        self.params.param('width').sigValueChanged.connect(self.widthChanged)
+        self.params.param('height').sigValueChanged.connect(self.heightChanged)
         
     def widthChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.height()) / sr.width()
-        self.params.param(translate("Exporter", 'height')).setValue(int(self.params[translate("Exporter", 'width')] * ar), blockSignal=self.heightChanged)
+        self.params.param('height').setValue(int(self.params['width'] * ar), blockSignal=self.heightChanged)
         
     def heightChanged(self):
         sr = self.getSourceRect()
         ar = float(sr.width()) / sr.height()
-        self.params.param(translate("Exporter", 'width')).setValue(int(self.params[translate("Exporter", 'height')] * ar), blockSignal=self.widthChanged)
+        self.params.param('width').setValue(int(self.params['height'] * ar), blockSignal=self.widthChanged)
         
     def parameters(self):
         return self.params
@@ -62,8 +64,8 @@ class ImageExporter(Exporter):
             self.fileSaveDialog(filter=filter)
             return
 
-        w = int(self.params[translate("Exporter", 'width')])
-        h = int(self.params[translate("Exporter", 'height')])
+        w = int(self.params['width'])
+        h = int(self.params['height'])
         if w == 0 or h == 0:
             raise Exception("Cannot export image with size=0 (requested "
                             "export size is %dx%d)" % (w, h))
@@ -72,7 +74,7 @@ class ImageExporter(Exporter):
         sourceRect = self.getSourceRect()
 
         bg = np.empty((h, w, 4), dtype=np.ubyte)
-        color = self.params[translate("Exporter", 'background')]
+        color = self.params['background']
         bg[:,:,0] = color.blue()
         bg[:,:,1] = color.green()
         bg[:,:,2] = color.red()
@@ -91,11 +93,11 @@ class ImageExporter(Exporter):
         #dtr = painter.deviceTransform()
         try:
             self.setExportMode(True, {
-                'antialias': self.params[translate("Exporter", 'antialias')],
-                'background': self.params[translate("Exporter", 'background')],
+                'antialias': self.params['antialias'],
+                'background': self.params['background'],
                 'painter': painter,
                 'resolutionScale': resolutionScale})
-            painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params[translate("Exporter", 'antialias')])
+            painter.setRenderHint(QtGui.QPainter.Antialiasing, self.params['antialias'])
             self.getScene().render(painter, QtCore.QRectF(targetRect), QtCore.QRectF(sourceRect))
         finally:
             self.setExportMode(False)
@@ -114,5 +116,4 @@ class ImageExporter(Exporter):
         else:
             return self.png.save(fileName)
         
-ImageExporter.register()        
-        
+ImageExporter.register()
