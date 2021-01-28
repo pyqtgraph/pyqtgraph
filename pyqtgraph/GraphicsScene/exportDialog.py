@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from .. import exporters as exporters
 from .. import functions as fn
 from ..graphicsItems.ViewBox import ViewBox
@@ -7,6 +7,12 @@ from ..graphicsItems.PlotItem import PlotItem
 import importlib
 ui_template = importlib.import_module(
     f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)
+
+
+class FormatExportListWidgetItem(QtWidgets.QListWidgetItem):
+    def __init__(self, expClass, *args, **kwargs):
+        QtWidgets.QListWidgetItem.__init__(self, *args, **kwargs)
+        self.expClass = expClass
 
 
 class ExportDialog(QtGui.QWidget):
@@ -94,16 +100,14 @@ class ExportDialog(QtGui.QWidget):
         
     def updateFormatList(self):
         current = self.ui.formatList.currentItem()
-        if current is not None:
-            current = str(current.text())
+
         self.ui.formatList.clear()
-        self.exporterClasses = {}
         gotCurrent = False
         for exp in exporters.listExporters():
-            self.ui.formatList.addItem(exp.Name)
-            self.exporterClasses[exp.Name] = exp
-            if exp.Name == current:
-                self.ui.formatList.setCurrentRow(self.ui.formatList.count()-1)
+            item = FormatExportListWidgetItem(exp, QtCore.QCoreApplication.translate('Exporter', exp.Name))
+            self.ui.formatList.addItem(item)
+            if item == current:
+                self.ui.formatList.setCurrentRow(self.ui.formatList.count() - 1)
                 gotCurrent = True
                 
         if not gotCurrent:
@@ -114,7 +118,7 @@ class ExportDialog(QtGui.QWidget):
             self.currentExporter = None
             self.ui.paramTree.clear()
             return
-        expClass = self.exporterClasses[str(item.text())]
+        expClass = item.expClass
         exp = expClass(item=self.ui.itemTree.currentItem().gitem)
 
         params = exp.parameters()
