@@ -3,6 +3,7 @@ from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
+from ..icons import invisibleEye
 from ..Point import Point
 from .ScatterPlotItem import ScatterPlotItem, drawSymbol
 from .PlotDataItem import PlotDataItem
@@ -339,9 +340,14 @@ class ItemSample(GraphicsWidget):
 
     def paint(self, p, *args):
         opts = self.item.opts
-
         if opts.get('antialias'):
             p.setRenderHint(p.Antialiasing)
+
+        visible = self.item.isVisible()
+        if not visible:
+            icon = invisibleEye.qicon
+            p.drawPixmap(QtCore.QPoint(1, 1), icon.pixmap(18, 18))
+            return
 
         if not isinstance(self.item, ScatterPlotItem):
             p.setPen(fn.mkPen(opts['pen']))
@@ -366,3 +372,13 @@ class ItemSample(GraphicsWidget):
         if isinstance(self.item, BarGraphItem):
             p.setBrush(fn.mkBrush(opts['brush']))
             p.drawRect(QtCore.QRectF(2, 2, 18, 18))
+
+    def mouseClickEvent(self, event):
+        """Use the mouseClick event to toggle the visibility of the plotItem
+        """
+        if event.button() == QtCore.Qt.LeftButton:
+            visible = self.item.isVisible()
+            self.item.setVisible(not visible)
+
+        event.accept()
+        self.update()
