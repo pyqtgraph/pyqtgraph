@@ -483,7 +483,8 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        if HAVE_OPENGL and getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
+        if HAVE_OPENGL and getConfigOption('enableExperimental') and \
+                hasattr(QtOpenGL, 'QGLWidget') and isinstance(widget, QtOpenGL.QGLWidget):
             self.paintGL(p, opt, widget)
             return
 

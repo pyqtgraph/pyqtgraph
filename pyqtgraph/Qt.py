@@ -354,7 +354,8 @@ if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
 
-    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+    if not isinstance(QtOpenGLWidgets, FailedImport):
+        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
 
 
 # Common to PySide, PySide2 and PySide6

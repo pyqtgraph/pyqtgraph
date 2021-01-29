@@ -5,14 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, QT_LIB
-
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except ImportError:
-    HAVE_OPENGL = False
-
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
 import sys, os
 import warnings
@@ -58,7 +51,7 @@ class GraphicsView(QtGui.QGraphicsView):
         useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
                         rendering. This can improve performance on some systems,
                         but may also introduce bugs (the combination of 
-                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        QGraphicsView and QOpenGLWidget is still an 'experimental'
                         feature of Qt)
         background      Set the background color of the GraphicsView. Accepts any
                         single argument accepted by 
@@ -176,9 +169,22 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def useOpenGL(self, b=True):
         if b:
-            if not HAVE_OPENGL:
-                raise Exception("Requested to use OpenGL with QGraphicsView, but QtOpenGL module is not available.")
-            v = QtOpenGL.QGLWidget()
+            widget_name = ''
+            try:
+                if getConfigOption('enableExperimental'):
+                    # legacy QGLWidget has been dropped in Qt6.
+                    # however, this library's enableExperimental drawing code in PlotCurveItem.py
+                    # is broken when using QOpenGLWidget.
+                    widget_name = 'QGLWidget'
+                    from ..Qt import QtOpenGL
+                    GLWidget = QtOpenGL.QGLWidget
+                else:
+                    widget_name = 'QOpenGLWidget'
+                    GLWidget = getattr(QtWidgets, 'QOpenGLWidget')
+            except:
+                raise Exception(f"Requested to use OpenGL with QGraphicsView, but {widget_name} is not available.")
+
+            v = GLWidget()
         else:
             v = QtGui.QWidget()
             
