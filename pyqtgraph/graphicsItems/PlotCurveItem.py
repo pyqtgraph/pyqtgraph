@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except:
-    HAVE_OPENGL = False
+from ..Qt import QtCore, QtGui, QtWidgets
+HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
 
 import warnings
 import numpy as np
@@ -483,9 +479,10 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        if HAVE_OPENGL and getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
-            self.paintGL(p, opt, widget)
-            return
+        if getConfigOption('enableExperimental'):
+            if HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget):
+                self.paintGL(p, opt, widget)
+                return
 
         x = None
         y = None

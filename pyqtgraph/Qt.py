@@ -212,10 +212,6 @@ elif QT_LIB == PYQT5:
     except ImportError as err:
         QtSvg = FailedImport(err)
     try:
-        from PyQt5 import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
-    try:
         from PyQt5 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
@@ -249,10 +245,6 @@ elif QT_LIB == PYSIDE2:
         from PySide2 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PySide2 import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
     try:
         from PySide2 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
@@ -354,7 +346,8 @@ if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
 
-    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+    if not isinstance(QtOpenGLWidgets, FailedImport):
+        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
 
 
 # Common to PySide, PySide2 and PySide6
