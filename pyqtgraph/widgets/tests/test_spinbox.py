@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 pg.mkQApp()
 
@@ -14,7 +15,7 @@ def test_spinbox_formatting():
         (100, '100', dict()),
         (1000000, '1e+06', dict()),
         (1000, '1e+03', dict(decimals=2)),
-        (1000000, '1e+06', dict(int=True, decimals=6)),
+        (1000000, '1000000 V', dict(int=True, suffix='V')),
         (12345678955, '12345678955', dict(int=True, decimals=100)),
         (1.45e-9, '1.45e-09 A', dict(int=False, decimals=6, suffix='A', siPrefix=False)),
         (1.45e-9, '1.45 nA', dict(int=False, decimals=6, suffix='A', siPrefix=True)),
@@ -24,7 +25,7 @@ def test_spinbox_formatting():
     ]
     
     for (value, text, opts) in conds:
-        sb.setOpts(**opts)
+        sb = pg.SpinBox(**opts)
         sb.setValue(value)
         assert sb.value() == value
         assert pg.asUnicode(sb.text()) == text
