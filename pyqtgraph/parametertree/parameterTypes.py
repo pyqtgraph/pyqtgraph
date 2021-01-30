@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
@@ -303,9 +304,27 @@ class EventProxy(QtCore.QObject):
 
 
 class SimpleParameter(Parameter):
+    """Parameter representing a single value.
+
+    This parameter is backed by :class:`WidgetParameterItem` to represent the
+    following parameter names:
+
+    - 'int'
+    - 'float'
+    - 'bool'
+    - 'str'
+    - 'color'
+    - 'colormap'
+    """
     itemClass = WidgetParameterItem
-    
+
     def __init__(self, *args, **kargs):
+        """Initialize the parameter.
+
+        This is normally called implicitly through :meth:`Parameter.create`.
+        The keyword arguments avaialble to :meth:`Parameter.__init__` are
+        applicable.
+        """
         Parameter.__init__(self, *args, **kargs)
         
         ## override a few methods for color parameters
@@ -547,6 +566,21 @@ class ListParameterItem(WidgetParameterItem):
 
 
 class ListParameter(Parameter):
+    """Parameter with a list of acceptable values.
+
+    By default, this parameter is represtented by a :class:`ListParameterItem`,
+    displaying a combo box to select a value from the list.
+
+    In addition to the generic :class:`~pyqtgraph.parametertree.Parameter`
+    options, this parameter type accepts a ``limits`` argument specifying the
+    list of allowed values.  ``values`` is an alias and may be used instead.
+
+    The values may generally be of any data type, as long as they can be
+    represented as a string. If the string representation provided is
+    undesirable, the values may be given as a dictionary mapping the desired
+    string representation to the value.
+    """
+
     itemClass = ListParameterItem
 
     def __init__(self, **opts):
@@ -562,6 +596,7 @@ class ListParameter(Parameter):
         self.setLimits(opts['limits'])
         
     def setLimits(self, limits):
+        """Change the list of allowed values."""
         self.forward, self.reverse = self.mapping(limits)
         
         Parameter.setLimits(self, limits)
@@ -591,6 +626,7 @@ registerParameterType('list', ListParameter, override=True)
 
 
 class ActionParameterItem(ParameterItem):
+    """ParameterItem displaying a clickable button."""
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
         self.layoutWidget = QtGui.QWidget()
@@ -620,7 +656,10 @@ class ActionParameterItem(ParameterItem):
         self.param.activate()
         
 class ActionParameter(Parameter):
-    """Used for displaying a button within the tree."""
+    """Used for displaying a button within the tree.
+
+    ``sigActivated(self)`` is emitted when the button is clicked.
+    """
     itemClass = ActionParameterItem
     sigActivated = QtCore.Signal(object)
     
@@ -632,6 +671,7 @@ registerParameterType('action', ActionParameter, override=True)
 
 
 class TextParameterItem(WidgetParameterItem):
+    """ParameterItem displaying a QTextEdit widget."""
     def __init__(self, param, depth):
         WidgetParameterItem.__init__(self, param, depth)
         self.hideWidget = False
@@ -663,7 +703,7 @@ class TextParameterItem(WidgetParameterItem):
         return self.textBox
         
 class TextParameter(Parameter):
-    """Editable string; displayed as large text box in the tree."""
+    """Editable string, displayed as large text box in the tree."""
     itemClass = TextParameterItem
     
     
