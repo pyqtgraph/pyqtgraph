@@ -171,7 +171,7 @@ class GraphicsView(QtGui.QGraphicsView):
         if b:
             widget_name = ''
             try:
-                if getConfigOption('enableExperimental'):
+                if getConfigOption('enableExperimental') and QT_LIB in ['PyQt5', 'PySide2']:
                     # legacy QGLWidget has been dropped in Qt6.
                     # however, this library's enableExperimental drawing code in PlotCurveItem.py
                     # is broken when using QOpenGLWidget.

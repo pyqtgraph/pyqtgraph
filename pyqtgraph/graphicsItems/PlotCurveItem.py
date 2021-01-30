@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtCore, QtGui, QtWidgets
 try:
     from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
+    HAVE_LEGACY_OPENGL = hasattr(QtOpenGL, 'QGLWidget')
+except:
+    HAVE_LEGACY_OPENGL = False
+try:
+    HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
 except:
     HAVE_OPENGL = False
 
@@ -483,10 +487,11 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        if HAVE_OPENGL and getConfigOption('enableExperimental') and \
-                hasattr(QtOpenGL, 'QGLWidget') and isinstance(widget, QtOpenGL.QGLWidget):
-            self.paintGL(p, opt, widget)
-            return
+        if getConfigOption('enableExperimental'):
+            if (HAVE_LEGACY_OPENGL and isinstance(widget, QtOpenGL.QGLWidget)) or \
+                    (HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget)):
+                self.paintGL(p, opt, widget)
+                return
 
         x = None
         y = None
