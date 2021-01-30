@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
-try:
-    from ..Qt import QtOpenGL
-    HAVE_LEGACY_OPENGL = hasattr(QtOpenGL, 'QGLWidget')
-except:
-    HAVE_LEGACY_OPENGL = False
-try:
-    HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
-except:
-    HAVE_OPENGL = False
+HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
 
 import warnings
 import numpy as np
@@ -488,8 +480,7 @@ class PlotCurveItem(GraphicsObject):
             return
 
         if getConfigOption('enableExperimental'):
-            if (HAVE_LEGACY_OPENGL and isinstance(widget, QtOpenGL.QGLWidget)) or \
-                    (HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget)):
+            if HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget):
                 self.paintGL(p, opt, widget)
                 return
 

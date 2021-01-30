@@ -169,22 +169,11 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def useOpenGL(self, b=True):
         if b:
-            widget_name = ''
-            try:
-                if getConfigOption('enableExperimental') and QT_LIB in ['PyQt5', 'PySide2']:
-                    # legacy QGLWidget has been dropped in Qt6.
-                    # however, this library's enableExperimental drawing code in PlotCurveItem.py
-                    # is broken when using QOpenGLWidget.
-                    widget_name = 'QGLWidget'
-                    from ..Qt import QtOpenGL
-                    GLWidget = QtOpenGL.QGLWidget
-                else:
-                    widget_name = 'QOpenGLWidget'
-                    GLWidget = getattr(QtWidgets, 'QOpenGLWidget')
-            except:
-                raise Exception(f"Requested to use OpenGL with QGraphicsView, but {widget_name} is not available.")
+            HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
+            if not HAVE_OPENGL:
+                raise Exception("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
 
-            v = GLWidget()
+            v = QtWidgets.QOpenGLWidget()
         else:
             v = QtGui.QWidget()
             
