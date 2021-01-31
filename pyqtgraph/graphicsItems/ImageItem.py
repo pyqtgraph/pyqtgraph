@@ -203,9 +203,10 @@ class ImageItem(GraphicsObject):
 
     def setRect(self, rect):
         """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
-        self.resetTransform()
-        self.translate(rect.left(), rect.top())
-        self.scale(rect.width() / self.width(), rect.height() / self.height())
+        tr = QtGui.QTransform()
+        tr.translate(rect.left(), rect.top())
+        tr.scale(rect.width() / self.width(), rect.height() / self.height())
+        self.setTransform(tr)
 
     def clear(self):
         self.image = None

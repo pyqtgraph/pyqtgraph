@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pytest
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtTest
+from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick, TransposedImageItem, resizeWindow
 import pytest
 
@@ -122,9 +122,8 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
         app.processEvents()
         assertImageApproved(win, name+'/roi_getarrayregion_resize', 'Simple ROI region selection, resized.')
 
-    img1.scale(1, -1)
     img1.setPos(0, img1.height())
-    img1.rotate(20)
+    img1.setTransform(QtGui.QTransform().scale(1, -1).rotate(20), True)
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
@@ -142,9 +141,8 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     assertImageApproved(win, name+'/roi_getarrayregion_inverty', 'Simple ROI region selection, view inverted.', pxCount=pxCount)
 
     roi.setState(initState)
-    img1.resetTransform()
     img1.setPos(0, 0)
-    img1.scale(1, 0.5)
+    img1.setTransform(QtGui.QTransform.fromScale(1, 0.5))
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()

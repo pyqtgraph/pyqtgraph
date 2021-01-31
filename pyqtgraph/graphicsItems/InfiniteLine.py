@@ -220,7 +220,7 @@ class InfiniteLine(GraphicsObject):
         """
         self.angle = angle #((angle+45) % 180) - 45   ##  -45 <= angle < 135
         self.resetTransform()
-        self.rotate(self.angle)
+        self.setRotation(self.angle)
         self.update()
 
     def setPos(self, pos):

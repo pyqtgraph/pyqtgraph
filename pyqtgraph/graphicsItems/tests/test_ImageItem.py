@@ -92,7 +92,7 @@ def test_ImageItem(transpose=False):
     img2 = TransposedImageItem(transpose=transpose)
     img2.setImage(np.fromfunction(lambda x,y: (x+y)%2, (10, 10)), levels=[-1,2])
     view.addItem(img2)
-    img2.scale(10, 10)
+    img2.setScale(10)
     img2.setZValue(-10)
     
     data[..., 0] *= 1e-9

@@ -41,7 +41,7 @@ v.addItem(im1)
 v.addItem(im2)
 im2.moveBy(110, 20)
 v.setRange(QtCore.QRectF(0, 0, 200, 120))
-im1.scale(0.8, 0.5)
+im1.setTransform(QtGui.QTransform.fromScale(0.8, 0.5))
 
 im3 = pg.ImageItem()
 v2 = w.addViewBox(1,0)
