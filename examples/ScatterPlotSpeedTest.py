@@ -17,21 +17,16 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.ptime import time
 #QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
+app = pg.mkQApp("Scatter Plot Speed Test")
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
-if QT_LIB == 'PySide':
-    from ScatterPlotSpeedTestTemplate_pyside import Ui_Form
-elif QT_LIB == 'PySide2':
-    from ScatterPlotSpeedTestTemplate_pyside2 import Ui_Form
-elif QT_LIB == 'PyQt5':
-    from ScatterPlotSpeedTestTemplate_pyqt5 import Ui_Form
-else:
-    from ScatterPlotSpeedTestTemplate_pyqt import Ui_Form
+import importlib
+ui_template = importlib.import_module(
+    f'ScatterPlotSpeedTestTemplate_{QT_LIB.lower()}')
 
 win = QtGui.QWidget()
 win.setWindowTitle('pyqtgraph example: ScatterPlotSpeedTest')
-ui = Ui_Form()
+ui = ui_template.Ui_Form()
 ui.setupUi(win)
 win.show()
 

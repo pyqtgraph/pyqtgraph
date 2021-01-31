@@ -23,6 +23,8 @@ from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .. import getConfigOption
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = [
     'ROI', 
     'TestROI', 'RectROI', 'EllipseROI', 'CircleROI', 'PolygonROI', 
@@ -721,8 +723,8 @@ class ROI(GraphicsObject):
             if self.translatable and ev.acceptDrags(QtCore.Qt.LeftButton):
                 hover=True
                 
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
-                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
+                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
             if self.contextMenuEnabled():
                 ev.acceptClicks(QtCore.Qt.RightButton)
@@ -731,7 +733,7 @@ class ROI(GraphicsObject):
             self.setMouseHover(True)
             ev.acceptClicks(QtCore.Qt.LeftButton)  ## If the ROI is hilighted, we should accept all clicks to avoid confusion.
             ev.acceptClicks(QtCore.Qt.RightButton)
-            ev.acceptClicks(QtCore.Qt.MidButton)
+            ev.acceptClicks(QtCore.Qt.MiddleButton)
             self.sigHoverEvent.emit(self)
         else:
             self.setMouseHover(False)
@@ -770,8 +772,8 @@ class ROI(GraphicsObject):
     def getMenu(self):
         if self.menu is None:
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("ROI")
-            remAct = QtGui.QAction("Remove ROI", self.menu)
+            self.menu.setTitle(translate("ROI", "ROI"))
+            remAct = QtGui.QAction(translate("ROI", "Remove ROI"), self.menu)
             remAct.triggered.connect(self.removeClicked)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct
@@ -794,7 +796,7 @@ class ROI(GraphicsObject):
         if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
             self.raiseContextMenu(ev)
             ev.accept()
-        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+        elif ev.button() & self.acceptedMouseButtons():
             ev.accept()
             self.sigClicked.emit(self, ev)
         else:
@@ -820,7 +822,7 @@ class ROI(GraphicsObject):
         """
         return True
 
-    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True, coords='parent'):
+    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True, coords='parent'):
         ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
         
@@ -1342,8 +1344,8 @@ class Handle(UIGraphicsItem):
         if not ev.isExit():
             if ev.acceptDrags(QtCore.Qt.LeftButton):
                 hover=True
-            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MidButton]:
-                if int(self.acceptedMouseButtons() & btn) > 0 and ev.acceptClicks(btn):
+            for btn in [QtCore.Qt.LeftButton, QtCore.Qt.RightButton, QtCore.Qt.MiddleButton]:
+                if (self.acceptedMouseButtons() & btn) and ev.acceptClicks(btn):
                     hover=True
                     
         if hover:
@@ -1358,7 +1360,7 @@ class Handle(UIGraphicsItem):
             self.isMoving = False  ## prevents any further motion
             self.movePoint(self.startPos, finish=True)
             ev.accept()
-        elif int(ev.button() & self.acceptedMouseButtons()) > 0:
+        elif ev.button() & self.acceptedMouseButtons():
             ev.accept()
             if ev.button() == QtCore.Qt.RightButton and self.deletable:
                 self.raiseContextMenu(ev)
@@ -1368,8 +1370,8 @@ class Handle(UIGraphicsItem):
                 
     def buildMenu(self):
         menu = QtGui.QMenu()
-        menu.setTitle("Handle")
-        self.removeAction = menu.addAction("Remove handle", self.removeClicked) 
+        menu.setTitle(translate("ROI", "Handle"))
+        self.removeAction = menu.addAction(translate("ROI", "Remove handle"), self.removeClicked) 
         return menu
         
     def getMenu(self):
@@ -1415,7 +1417,7 @@ class Handle(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
-    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifier(), finish=True):
+    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True):
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return
@@ -2330,7 +2332,7 @@ class RulerROI(LineSegmentROI):
         p.resetTransform()
 
         txt = fn.siFormat(length, suffix='m') + '\n%0.1f deg' % angle
-        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter, txt)
+        p.drawText(QtCore.QRectF(pos.x()-50, pos.y()-50, 100, 100), QtCore.Qt.AlignCenter, txt)
 
     def boundingRect(self):
         r = LineSegmentROI.boundingRect(self)

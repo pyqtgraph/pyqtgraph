@@ -14,7 +14,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Parameter Tree Example")
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
 

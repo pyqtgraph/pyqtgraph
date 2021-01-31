@@ -10,6 +10,11 @@ PARAM_TYPES = {}
 PARAM_NAMES = {}
 
 def registerParameterType(name, cls, override=False):
+    """Register a parameter type in the parametertree system.
+
+    This enables construction of custom Parameter classes by name in
+    :meth:`~pyqtgraph.parametertree.Parameter.create`.
+    """
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
         raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)

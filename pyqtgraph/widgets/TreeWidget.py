@@ -144,7 +144,7 @@ class TreeWidget(QtGui.QTreeWidget):
         return items
             
     def dropEvent(self, ev):
-        QtGui.QTreeWidget.dropEvent(self, ev)
+        super().dropEvent(ev)
         self.updateDropFlags()
 
     def updateDropFlags(self):

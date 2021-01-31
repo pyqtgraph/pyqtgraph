@@ -6,18 +6,23 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import division
-import warnings
-import numpy as np
-import decimal, re
+
 import ctypes
-import sys, struct
+import decimal
+import re
+import struct
+import sys
+import warnings
+
+import numpy as np
+from pyqtgraph.util.cupy_helper import getCupy
+
+from . import debug, reload
+from .Qt import QtGui, QtCore, QT_LIB, QtVersion
+from . import Qt
+from .metaarray import MetaArray
 from .pgcollections import OrderedDict
 from .python2_3 import asUnicode, basestring
-from .Qt import QtGui, QtCore, QT_LIB, QtVersion
-from . import getConfigOption, setConfigOptions
-from . import debug, reload
-from .metaarray import MetaArray
-
 
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
@@ -38,7 +43,7 @@ SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
 SI_PREFIX_EXPONENTS = dict([(SI_PREFIXES[i], (i-8)*3) for i in range(len(SI_PREFIXES))])
 SI_PREFIX_EXPONENTS['u'] = -6
 
-FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i)(nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
+FLOAT_REGEX = re.compile(r'(?P<number>[+-]?((((\d+(\.\d*)?)|(\d*\.\d+))([eE][+-]?\d+)?)|((?i:nan)|(inf))))\s*((?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>\w.*))?$')
 INT_REGEX = re.compile(r'(?P<number>[+-]?\d+)\s*(?P<siPrefix>[u' + SI_PREFIXES + r']?)(?P<suffix>.*)$')
 
     
@@ -947,80 +952,59 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     The scaling operation is::
 
         data => (data-offset) * scale
-
     """
     if dtype is None:
         dtype = data.dtype
     else:
         dtype = np.dtype(dtype)
     
-    try:
-        if not getConfigOption('useWeave'):
-            raise Exception('Weave is disabled; falling back to slower version.')
-        try:
-            import scipy.weave
-        except ImportError:
-            raise Exception('scipy.weave is not importable; falling back to slower version.')
-        
-        ## require native dtype when using weave
-        if not data.dtype.isnative:
-            data = data.astype(data.dtype.newbyteorder('='))
-        if not dtype.isnative:
-            weaveDtype = dtype.newbyteorder('=')
+    if np.can_cast(data, np.float32):
+        work_dtype = np.float32
+    else:
+        work_dtype = np.float64
+    d2 = data.astype(work_dtype, copy=True)
+    d2 -= offset
+    d2 *= scale
+
+    # Clip before converting dtype to avoid overflow
+    if dtype.kind in 'ui':
+        lim = np.iinfo(dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            np.clip(d2, lim.min, lim.max, out=d2)
         else:
-            weaveDtype = dtype
-        
-        newData = np.empty((data.size,), dtype=weaveDtype)
-        flat = np.ascontiguousarray(data).reshape(data.size)
-        size = data.size
-        
-        code = """
-        double sc = (double)scale;
-        double off = (double)offset;
-        for( int i=0; i<size; i++ ) {
-            newData[i] = ((double)flat[i] - off) * sc;
-        }
-        """
-        scipy.weave.inline(code, ['flat', 'newData', 'size', 'offset', 'scale'], compiler='gcc')
-        if dtype != weaveDtype:
-            newData = newData.astype(dtype)
-        data = newData.reshape(data.shape)
-    except:
-        if getConfigOption('useWeave'):
-            if getConfigOption('weaveDebug'):
-                debug.printExc("Error; disabling weave.")
-            setConfigOptions(useWeave=False)
-        
-        #p = np.poly1d([scale, -offset*scale])
-        #d2 = p(data)
-        d2 = data - float(offset)
-        d2 *= scale
-        
-        # Clip before converting dtype to avoid overflow
-        if dtype.kind in 'ui':
-            lim = np.iinfo(dtype)
-            if clip is None:
-                # don't let rescale cause integer overflow
-                d2 = np.clip(d2, lim.min, lim.max)
-            else:
-                d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
-        else:
-            if clip is not None:
-                d2 = np.clip(d2, *clip)
-        data = d2.astype(dtype)
+            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
+    else:
+        if clip is not None:
+            np.clip(d2, *clip, out=d2)
+    # don't copy if no change in dtype
+    data = d2.astype(dtype, copy=False)
     return data
-    
+
+
 def applyLookupTable(data, lut):
     """
     Uses values in *data* as indexes to select values from *lut*.
     The returned data has shape data.shape + lut.shape[1:]
     
     Note: color gradient lookup tables can be generated using GradientWidget.
+
+    Parameters
+    ----------
+    data : ndarray
+    lut : ndarray
+        Either cupy or numpy arrays are accepted, though this function has only
+        consistently behaved correctly on windows with cuda toolkit version >= 11.1.
     """
     if data.dtype.kind not in ('i', 'u'):
         data = data.astype(int)
-    
-    return np.take(lut, data, axis=0, mode='clip')  
+
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # cupy.take only supports "wrap" mode
+        return cp.take(lut, cp.clip(data, 0, lut.shape[0] - 1), axis=0)
+    else:
+        return np.take(lut, data, axis=0, mode='clip')
     
 
 def makeRGBA(*args, **kwds):
@@ -1029,8 +1013,8 @@ def makeRGBA(*args, **kwds):
     return makeARGB(*args, **kwds)
 
 
-def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False): 
-    """ 
+def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None):
+    """
     Convert an array of values into an ARGB array suitable for building QImages,
     OpenGL textures, etc.
     
@@ -1069,29 +1053,31 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
                    is BGRA).
     ============== ==================================================================================
     """
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
     profile = debug.Profiler()
     if data.ndim not in (2, 3):
         raise TypeError("data must be 2D or 3D")
     if data.ndim == 3 and data.shape[2] > 4:
         raise TypeError("data.shape[2] must be <= 4")
     
-    if lut is not None and not isinstance(lut, np.ndarray):
-        lut = np.array(lut)
+    if lut is not None and not isinstance(lut, xp.ndarray):
+        lut = xp.array(lut)
     
     if levels is None:
         # automatically decide levels based on data dtype
         if data.dtype.kind == 'u':
-            levels = np.array([0, 2**(data.itemsize*8)-1])
+            levels = xp.array([0, 2**(data.itemsize*8)-1])
         elif data.dtype.kind == 'i':
             s = 2**(data.itemsize*8 - 1)
-            levels = np.array([-s, s-1])
+            levels = xp.array([-s, s-1])
         elif data.dtype.kind == 'b':
-            levels = np.array([0,1])
+            levels = xp.array([0,1])
         else:
             raise Exception('levels argument is required for float input types')
-    if not isinstance(levels, np.ndarray):
-        levels = np.array(levels)
-    levels = levels.astype(np.float)
+    if not isinstance(levels, xp.ndarray):
+        levels = xp.array(levels)
+    levels = levels.astype(xp.float)
     if levels.ndim == 1:
         if levels.shape[0] != 2:
             raise Exception('levels argument must have length 2')
@@ -1103,7 +1089,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     else:
         raise Exception("levels argument must be 1D or 2D (got shape=%s)." % repr(levels.shape))
 
-    profile()
+    profile('check inputs')
 
     # Decide on maximum scaled value
     if scale is None:
@@ -1114,28 +1100,27 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
 
     # Decide on the dtype we want after scaling
     if lut is None:
-        dtype = np.ubyte
+        dtype = xp.ubyte
     else:
-        dtype = np.min_scalar_type(lut.shape[0]-1)
+        dtype = xp.min_scalar_type(lut.shape[0]-1)
 
     # awkward, but fastest numpy native nan evaluation
-    # 
     nanMask = None
-    if data.dtype.kind == 'f' and np.isnan(data.min()):
-        nanMask = np.isnan(data)
+    if data.dtype.kind == 'f' and xp.isnan(data.min()):
+        nanMask = xp.isnan(data)
         if data.ndim > 2:
-            nanMask = np.any(nanMask, axis=-1)
+            nanMask = xp.any(nanMask, axis=-1)
     # Apply levels if given
     if levels is not None:
-        if isinstance(levels, np.ndarray) and levels.ndim == 2:
+        if isinstance(levels, xp.ndarray) and levels.ndim == 2:
             # we are going to rescale each channel independently
             if levels.shape[0] != data.shape[-1]:
                 raise Exception("When rescaling multi-channel data, there must be the same number of levels as channels (data.shape[-1] == levels.shape[0])")
-            newData = np.empty(data.shape, dtype=int)
+            newData = xp.empty(data.shape, dtype=int)
             for i in range(data.shape[-1]):
                 minVal, maxVal = levels[i]
                 if minVal == maxVal:
-                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                    maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
@@ -1145,25 +1130,29 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
             minVal, maxVal = levels
             if minVal != 0 or maxVal != scale:
                 if minVal == maxVal:
-                    maxVal = np.nextafter(maxVal, 2*maxVal)
+                    maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
                 data = rescaleData(data, scale/rng, minVal, dtype=dtype)
 
-    profile()
+    profile('apply levels')
+
     # apply LUT if given
     if lut is not None:
         data = applyLookupTable(data, lut)
     else:
-        if data.dtype is not np.ubyte:
-            data = np.clip(data, 0, 255).astype(np.ubyte)
+        if data.dtype != xp.ubyte:
+            data = xp.clip(data, 0, 255).astype(xp.ubyte)
 
-    profile()
+    profile('apply lut')
 
     # this will be the final image array
-    imgData = np.empty(data.shape[:2]+(4,), dtype=np.ubyte)
+    if output is None:
+        imgData = xp.empty(data.shape[:2]+(4,), dtype=xp.ubyte)
+    else:
+        imgData = output
 
-    profile()
+    profile('allocate')
 
     # decide channel order
     if useRGBA:
@@ -1174,7 +1163,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
     # copy data into image array
     if data.ndim == 2:
         # This is tempting:
-        #   imgData[..., :3] = data[..., np.newaxis]
+        #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
             imgData[..., i] = data
@@ -1185,7 +1174,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         for i in range(0, data.shape[2]):
             imgData[..., i] = data[..., order[i]] 
         
-    profile()
+    profile('reorder channels')
     
     # add opaque alpha channel if needed
     if data.ndim == 2 or data.shape[2] == 3:
@@ -1199,7 +1188,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False):
         alpha = True
         imgData[nanMask, 3] = 0
 
-    profile()
+    profile('alpha channel')
     return imgData, alpha
 
 
@@ -1213,10 +1202,14 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     
     ============== ===================================================================
     **Arguments:**
-    imgData        Array of data to convert. Must have shape (width, height, 3 or 4) 
-                   and dtype=ubyte. The order of values in the 3rd axis must be 
-                   (b, g, r, a).
-    alpha          If True, the QImage returned will have format ARGB32. If False,
+    imgData        Array of data to convert. Must have shape (height, width),
+                   (height, width, 3), or (height, width, 4). If transpose is
+                   True, then the first two axes are swapped. The array dtype
+                   must be ubyte. For 2D arrays, the value is interpreted as 
+                   greyscale. For 3D arrays, the order of values in the 3rd
+                   axis must be (b, g, r, a). 
+    alpha          If the input array is 3D and *alpha* is True, the QImage 
+                   returned will have format ARGB32. If False,
                    the format will be RGB32. By default, _alpha_ is True if
                    array.shape[2] == 4.
     copy           If True, the data is copied before converting to QImage.
@@ -1232,30 +1225,35 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     ## create QImage from buffer
     profile = debug.Profiler()
     
-    ## If we didn't explicitly specify alpha, check the array shape.
-    if alpha is None:
-        alpha = (imgData.shape[2] == 4)
-        
     copied = False
-    if imgData.shape[2] == 3:  ## need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
-        if copy is True:
-            d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
-            d2[:,:,:3] = imgData
-            d2[:,:,3] = 255
-            imgData = d2
-            copied = True
+    if imgData.ndim == 2:
+        imgFormat = QtGui.QImage.Format_Grayscale8
+    elif imgData.ndim == 3:
+        # If we didn't explicitly specify alpha, check the array shape.
+        if alpha is None:
+            alpha = (imgData.shape[2] == 4)
+            
+        if imgData.shape[2] == 3:  # need to make alpha channel (even if alpha==False; QImage requires 32 bpp)
+            if copy is True:
+                d2 = np.empty(imgData.shape[:2] + (4,), dtype=imgData.dtype)
+                d2[:,:,:3] = imgData
+                d2[:,:,3] = 255
+                imgData = d2
+                copied = True
+            else:
+                raise Exception('Array has only 3 channels; cannot make QImage without copying.')
+        
+        profile("add alpha channel")
+        
+        if alpha:
+            imgFormat = QtGui.QImage.Format_ARGB32
         else:
-            raise Exception('Array has only 3 channels; cannot make QImage without copying.')
-    
-    if alpha:
-        imgFormat = QtGui.QImage.Format_ARGB32
+            imgFormat = QtGui.QImage.Format_RGB32
     else:
-        imgFormat = QtGui.QImage.Format_RGB32
+        raise TypeError("Image array must have ndim = 2 or 3.")
         
     if transpose:
-        imgData = imgData.transpose((1, 0, 2))  ## QImage expects the row/column order to be opposite
-
-    profile()
+        imgData = imgData.transpose((1, 0, 2))  # QImage expects row-major order
 
     if not imgData.flags['C_CONTIGUOUS']:
         if copy is False:
@@ -1264,24 +1262,34 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         imgData = np.ascontiguousarray(imgData)
         copied = True
         
+    profile("ascontiguousarray")
+    
     if copy is True and copied is False:
         imgData = imgData.copy()
         
-    if QT_LIB in ['PySide', 'PySide2']:
-        ch = ctypes.c_char.from_buffer(imgData, 0)
-        img = QtGui.QImage(ch, imgData.shape[1], imgData.shape[0], imgFormat)
+    profile("copy")
+
+    # C++ QImage has two kind of constructors
+    # - QImage(const uchar*, ...)
+    # - QImage(uchar*, ...)
+    # If the const constructor is used, subsequently calling any non-const method
+    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+
+    if QT_LIB == 'PyQt5':
+        # PyQt5 -> non-const constructor
+        img_ptr = imgData.ctypes.data
+    elif QT_LIB == 'PyQt6':
+        # PyQt5 -> const constructor
+        # PyQt6 -> non-const constructor
+        img_ptr = Qt.sip.voidptr(imgData)
     else:
-        ## PyQt API for QImage changed between 4.9.3 and 4.9.6 (I don't know exactly which version it was)
-        ## So we first attempt the 4.9.6 API, then fall back to 4.9.3
-        try:
-            img = QtGui.QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], imgFormat)
-        except:
-            if copy:
-                # does not leak memory, is not mutable
-                img = QtGui.QImage(buffer(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
-            else:
-                # mutable, but leaks memory
-                img = QtGui.QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], imgFormat)
+        # bindings that support ndarray
+        # PyQt5   -> const constructor
+        # PySide2 -> non-const constructor
+        # PySide6 -> non-const constructor
+        img_ptr = imgData
+
+    img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)
                 
     img.data = imgData
     return img
@@ -1295,15 +1303,19 @@ def imageToArray(img, copy=False, transpose=True):
     """
     fmt = img.format()
     ptr = img.bits()
-    if QT_LIB in ['PySide', 'PySide2']:
+    if QT_LIB in ['PySide', 'PySide2', 'PySide6']:
         arr = np.frombuffer(ptr, dtype=np.ubyte)
     else:
-        ptr.setsize(img.byteCount())
+        try:
+            # removed in Qt6
+            nbytes = img.byteCount()
+        except AttributeError:
+            # introduced in Qt 5.10
+            # however Python 3.7 + PyQt5-5.12 in the CI fails with
+            # "TypeError: QImage.sizeInBytes() is a private method"
+            nbytes = img.sizeInBytes()
+        ptr.setsize(nbytes)
         arr = np.asarray(ptr)
-        if img.byteCount() != arr.size * arr.itemsize:
-            # Required for Python 2.6, PyQt 4.10
-            # If this works on all platforms, then there is no need to use np.asarray..
-            arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
     
     arr = arr.reshape(img.height(), img.width(), 4)
     if fmt == img.Format_RGB32:
@@ -1369,7 +1381,9 @@ def gaussianFilter(data, sigma):
     (note: results are only approximately equal to the output of
      gaussian_filter)
     """
-    if np.isscalar(sigma):
+    cp = getCupy()
+    xp = cp.get_array_module(data) if cp else np
+    if xp.isscalar(sigma):
         sigma = (sigma,) * data.ndim
         
     baseline = data.mean()
@@ -1381,17 +1395,17 @@ def gaussianFilter(data, sigma):
         
         # generate 1D gaussian kernel
         ksize = int(s * 6)
-        x = np.arange(-ksize, ksize)
-        kernel = np.exp(-x**2 / (2*s**2))
+        x = xp.arange(-ksize, ksize)
+        kernel = xp.exp(-x**2 / (2*s**2))
         kshape = [1,] * data.ndim
         kshape[ax] = len(kernel)
         kernel = kernel.reshape(kshape)
         
         # convolve as product of FFTs
         shape = data.shape[ax] + ksize
-        scale = 1.0 / (abs(s) * (2*np.pi)**0.5)
-        filtered = scale * np.fft.irfft(np.fft.rfft(filtered, shape, axis=ax) * 
-                                        np.fft.rfft(kernel, shape, axis=ax), 
+        scale = 1.0 / (abs(s) * (2*xp.pi)**0.5)
+        filtered = scale * xp.fft.irfft(xp.fft.rfft(filtered, shape, axis=ax) *
+                                        xp.fft.rfft(kernel, shape, axis=ax),
                                         axis=ax)
         
         # clip off extra data
@@ -1555,6 +1569,9 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray.fromRawData(path.strn)
     except TypeError:
         buf = QtCore.QByteArray(bytes(path.strn))
+    except AttributeError:
+        # PyQt6 raises AttributeError
+        buf = QtCore.QByteArray(path.strn, path.strn.nbytes)
 
     ds = QtCore.QDataStream(buf)
     ds >> path
@@ -2331,26 +2348,32 @@ def isosurface(data, level):
         
     return vertexes, faces
 
-
     
+def _pinv_fallback(tr):
+    arr = np.array([tr.m11(), tr.m12(), tr.m13(),
+                    tr.m21(), tr.m22(), tr.m23(),
+                    tr.m31(), tr.m32(), tr.m33()])
+    arr.shape = (3, 3)
+    pinv = np.linalg.pinv(arr)
+    return QtGui.QTransform(*pinv.ravel().tolist())
+
+
 def invertQTransform(tr):
     """Return a QTransform that is the inverse of *tr*.
-    Rasises an exception if tr is not invertible.
+    A pseudo-inverse is returned if tr is not invertible.
     
     Note that this function is preferred over QTransform.inverted() due to
     bugs in that method. (specifically, Qt has floating-point precision issues
     when determining whether a matrix is invertible)
     """
     try:
-        import numpy.linalg
-        arr = np.array([[tr.m11(), tr.m12(), tr.m13()], [tr.m21(), tr.m22(), tr.m23()], [tr.m31(), tr.m32(), tr.m33()]])
-        inv = numpy.linalg.inv(arr)
-        return QtGui.QTransform(inv[0,0], inv[0,1], inv[0,2], inv[1,0], inv[1,1], inv[1,2], inv[2,0], inv[2,1])
-    except ImportError:
-        inv = tr.inverted()
-        if inv[1] is False:
-            raise Exception("Transform is not invertible.")
-        return inv[0]
+        det = tr.determinant()
+        detr = 1.0 / det    # let singular matrices raise ZeroDivisionError
+        inv = tr.adjoint()
+        inv *= detr
+        return inv
+    except ZeroDivisionError:
+        return _pinv_fallback(tr)
     
 
 def pseudoScatter(data, spacing=None, shuffle=True, bidir=False, method='exact'):

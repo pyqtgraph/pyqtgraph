@@ -30,9 +30,9 @@ class DockDrop(object):
         
     def dragMoveEvent(self, ev):
         #print "drag move"
-        ld = ev.pos().x()
+        ld = ev.posF().x()
         rd = self.width() - ld
-        td = ev.pos().y()
+        td = ev.posF().y()
         bd = self.height() - td
         
         mn = min(ld, rd, td, bd)

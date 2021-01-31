@@ -25,12 +25,14 @@ class InfiniteLine(GraphicsObject):
     sigDragged(self)
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
+    sigclicked(self, ev)
     =============================== ===================================================
     """
 
     sigDragged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
     sigPositionChanged = QtCore.Signal(object)
+    sigClicked = QtCore.Signal(object, object)
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=None, labelOpts=None, span=(0, 1), markers=None, 
@@ -400,6 +402,7 @@ class InfiniteLine(GraphicsObject):
                 self.sigPositionChangeFinished.emit(self)
 
     def mouseClickEvent(self, ev):
+        self.sigClicked.emit(self, ev)
         if self.moving and ev.button() == QtCore.Qt.RightButton:
             ev.accept()
             self.setPos(self.startPosition)
@@ -550,8 +553,7 @@ class InfLineLabel(TextItem):
     def setVisible(self, v):
         TextItem.setVisible(self, v)
         if v:
-            self.updateText()
-            self.updatePosition()
+            self.valueChanged()
             
     def setMovable(self, m):
         """Set whether this label is movable by dragging along the line.

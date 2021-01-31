@@ -1243,7 +1243,7 @@ class ViewBox(GraphicsWidget):
             mask[1-axis] = 0.0
 
         ## Scale or translate based on mouse button
-        if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
+        if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MiddleButton):
             if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
@@ -1397,7 +1397,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if int(item.flags() & item.ItemHasNoContents) > 0:
+                if item.flags() & item.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))

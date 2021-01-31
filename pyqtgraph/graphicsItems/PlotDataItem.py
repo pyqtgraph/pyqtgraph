@@ -217,6 +217,13 @@ class PlotDataItem(GraphicsObject):
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
 
+    def setPos(self, x, y):
+        GraphicsObject.setPos(self, x, y)
+        # to update viewRect:
+        self.viewTransformChanged()
+        # to update displayed point sets, e.g. when clipping (which uses viewRect):
+        self.viewRangeChanged()
+
     def setAlpha(self, alpha, auto):
         if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
             return
@@ -234,6 +241,16 @@ class PlotDataItem(GraphicsObject):
         self.informViewBoundsChanged()
 
     def setLogMode(self, xMode, yMode):
+        """
+        To enable log scaling for y<0 and y>0, the following formula is used:
+        
+            scaled = sign(y) * log10(abs(y) + eps)
+
+        where eps is the smallest unit of y.dtype.
+        This allows for handling of 0. values, scaling of large values,
+        as well as the typical log scaling of values in the range -1 < x < 1.
+        Note that for values within this range, the signs are inverted.
+        """
         if self.opts['logMode'] == [xMode, yMode]:
             return
         self.opts['logMode'] = [xMode, yMode]
@@ -542,7 +559,6 @@ class PlotDataItem(GraphicsObject):
         profiler('emit')
 
     def updateItems(self):
-
         curveArgs = {}
         for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
@@ -598,7 +614,11 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x = np.log10(x)
                 if self.opts['logMode'][1]:
-                    y = np.log10(y)
+                    if np.issubdtype(y.dtype, np.floating):
+                        eps = np.finfo(y.dtype).eps
+                    else:
+                        eps = 1
+                    y = np.sign(y) * np.log10(np.abs(y)+eps)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):

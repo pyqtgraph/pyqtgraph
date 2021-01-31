@@ -157,11 +157,12 @@ class ParameterTree(TreeWidget):
         self.lastSel = sel[0]
         if hasattr(sel[0], 'selected'):
             sel[0].selected(True)
-        return TreeWidget.selectionChanged(self, *args)
+        return super().selectionChanged(*args)
         
+    # commented out due to being unreliable
     # def wheelEvent(self, ev):
     #     self.clearSelection()
-    #     return TreeWidget.wheelEvent(self, ev)
+    #     return super().wheelEvent(ev)
 
     def sizeHint(self):
         w, h = 0, 0

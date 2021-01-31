@@ -7,7 +7,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Gradiant Editor Example")
 mw = pg.GraphicsView()
 mw.resize(800,800)
 mw.show()
