@@ -320,14 +320,6 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
         self.setTransform(tr)
     QtWidgets.QGraphicsItem.translate = translate
 
-    def setMargin(self, i):
-        self.setContentsMargins(i, i, i, i)
-    QtWidgets.QGridLayout.setMargin = setMargin
-
-    def setResizeMode(self, *args):
-        self.setSectionResizeMode(*args)
-    QtWidgets.QHeaderView.setResizeMode = setResizeMode
-
     
     QtGui.QApplication = QtWidgets.QApplication
     QtGui.QGraphicsScene = QtWidgets.QGraphicsScene

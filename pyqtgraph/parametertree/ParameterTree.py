@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
 from ..widgets.TreeWidget import TreeWidget
 import os, weakref, re
 from .ParameterItem import ParameterItem
@@ -25,7 +25,7 @@ class ParameterTree(TreeWidget):
         self.setHeaderLabels(["Parameter", "Value"])
         self.setAlternatingRowColors(True)
         self.paramSet = None
-        self.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.setHeaderHidden(not showHeader)
         self.itemChanged.connect(self.itemChangedEvent)
         self.itemExpanded.connect(self.itemExpandedEvent)
