@@ -395,7 +395,7 @@ if QT_LIB == PYSIDE6:
 if QT_LIB == PYQT6:
     # module.Class.EnumClass.Enum -> module.Class.Enum
     def promote_enums(module):
-        class_names = [x for x in dir(module) if x[0] == 'Q']
+        class_names = [x for x in dir(module) if x.startswith('Q')]
         for class_name in class_names:
             klass = getattr(module, class_name)
             if not isinstance(klass, sip.wrappertype):

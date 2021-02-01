@@ -64,8 +64,8 @@ class ScalableGroup(pTypes.GroupParameter):
 params = [
     {'name': 'Basic parameter data types', 'type': 'group', 'children': [
         {'name': 'Integer', 'type': 'int', 'value': 10},
-        {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1},
-        {'name': 'String', 'type': 'str', 'value': "hi"},
+        {'name': 'Float', 'type': 'float', 'value': 10.5, 'step': 0.1, 'finite': False},
+        {'name': 'String', 'type': 'str', 'value': "hi", 'tip': 'Well hello'},
         {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
@@ -76,7 +76,7 @@ params = [
             {'name': 'Sub-param 2', 'type': 'float', 'value': 1.2e6},
         ]},
         {'name': 'Text Parameter', 'type': 'text', 'value': 'Some text...'},
-        {'name': 'Action Parameter', 'type': 'action'},
+        {'name': 'Action Parameter', 'type': 'action', 'tip': 'Click me'},
     ]},
     {'name': 'Numerical Parameter Options', 'type': 'group', 'children': [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
@@ -93,6 +93,7 @@ params = [
     ]},
     {'name': 'Extra Parameter Options', 'type': 'group', 'children': [
         {'name': 'Read-only', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'readonly': True},
+        {'name': 'Disabled',  'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'enabled': False},
         {'name': 'Renamable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'renamable': True},
         {'name': 'Removable', 'type': 'float', 'value': 1.2e6, 'siPrefix': True, 'suffix': 'Hz', 'removable': True},
     ]},
@@ -107,7 +108,7 @@ params = [
         }},
     ]},
     ComplexParameter(name='Custom parameter group (reciprocal values)'),
-    ScalableGroup(name="Expandable Parameter Group", children=[
+    ScalableGroup(name="Expandable Parameter Group", tip='Click to add children', children=[
         {'name': 'ScalableParam 1', 'type': 'str', 'value': "default param 1"},
         {'name': 'ScalableParam 2', 'type': 'str', 'value': "default param 2"},
     ]),
@@ -171,7 +172,6 @@ layout.addWidget(QtGui.QLabel("These are two views of the same data. They should
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
-win.resize(800,800)
 
 ## test save/restore
 s = p.saveState()

@@ -1,7 +1,7 @@
 import numpy as np
 from .Qt import QtGui, QtCore
 from .python2_3 import basestring
-from .functions import mkColor
+from .functions import mkColor, eq
 from os import path, listdir
 import collections
 
@@ -176,7 +176,6 @@ def _get_from_colorcet(name):
         color=color_list) #, names=color_names)
     _mapCache[name] = cm
     return cm
-
 
 
 class ColorMap(object):
@@ -443,3 +442,8 @@ class ColorMap(object):
         pos = repr(self.pos).replace('\n', '')
         color = repr(self.color).replace('\n', '')
         return "ColorMap(%s, %s)" % (pos, color)
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return eq(self.pos, other.pos) and eq(self.color, other.color)

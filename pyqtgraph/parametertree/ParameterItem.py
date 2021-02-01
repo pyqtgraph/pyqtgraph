@@ -1,4 +1,4 @@
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..python2_3 import asUnicode
 import os, weakref, re
 
@@ -161,6 +161,18 @@ class ParameterItem(QtGui.QTreeWidgetItem):
     def titleChanged(self):
         # called when the user-visble title has changed (either opts['title'], or name if title is None)
         self.setText(0, self.param.title())
+        fm = QtGui.QFontMetrics(self.font(0))
+
+        if QT_LIB == 'PyQt6':
+            # PyQt6 doesn't allow or-ing of different enum types
+            # so we need to take its value property
+            textFlags = QtCore.Qt.TextSingleLine.value
+        else:
+            textFlags = QtCore.Qt.TextSingleLine
+        size = fm.size(textFlags, self.text(0))
+        size.setHeight(int(size.height() * 1.35))
+        size.setWidth(int(size.width() * 1.15))
+        self.setSizeHint(0, size)
 
     def limitsChanged(self, param, limits):
         """Called when the parameter's limits have changed"""
@@ -177,14 +189,8 @@ class ParameterItem(QtGui.QTreeWidgetItem):
             self.setHidden(not opts['visible'])
 
         if 'expanded' in opts:
-            if self.param.opts['syncExpanded']:
-                if self.isExpanded() != opts['expanded']:
-                    self.setExpanded(opts['expanded'])
-        
-        if 'syncExpanded' in opts:
-            if opts['syncExpanded']:
-                if self.isExpanded() != self.param.opts['expanded']:
-                    self.setExpanded(self.param.opts['expanded'])
+            if self.isExpanded() != opts['expanded']:
+                self.setExpanded(opts['expanded'])
 
         if 'title' in opts:
             self.titleChanged()

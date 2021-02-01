@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+import os
 from ..Qt import QtCore, QtGui
 from ..python2_3 import asUnicode
 from .Parameter import Parameter, registerParameterType
@@ -8,7 +8,6 @@ from ..widgets.ColorButton import ColorButton
 from ..colormap import ColorMap
 from .. import pixmaps as pixmaps
 from .. import functions as fn
-import os, sys
 from ..pgcollections import OrderedDict
 
 
@@ -35,15 +34,22 @@ class WidgetParameterItem(ParameterItem):
     """
     def __init__(self, param, depth):
         ParameterItem.__init__(self, param, depth)
-        
+
+        self.asSubItem = False  # place in a child item's column 0 instead of column 1
         self.hideWidget = True  ## hide edit widget, replace with label when not selected
                                 ## set this to False to keep the editor widget always visible
         
-        ## build widget into column 1 with a display label and default button.
+        # build widget with a display label and default button
         w = self.makeWidget()  
         self.widget = w
         self.eventProxy = EventProxy(w, self.widgetEventFilter)
-        
+
+        if self.asSubItem:
+            self.subItem = QtGui.QTreeWidgetItem()
+            self.subItem.depth = self.depth + 1
+            self.subItem.setFlags(QtCore.Qt.NoItemFlags)
+            self.addChild(self.subItem)
+
         self.defaultBtn = QtGui.QPushButton()
         self.defaultBtn.setAutoDefault(False)
         self.defaultBtn.setFixedWidth(20)
@@ -57,8 +63,10 @@ class WidgetParameterItem(ParameterItem):
         layout = QtGui.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        layout.addWidget(w)
-        layout.addWidget(self.displayLabel)
+        if not self.asSubItem:
+            layout.addWidget(w, 1)
+        layout.addWidget(self.displayLabel, 1)
+        layout.addStretch(0)
         layout.addWidget(self.defaultBtn)
         self.layoutWidget = QtGui.QWidget()
         self.layoutWidget.setLayout(layout)
@@ -81,9 +89,26 @@ class WidgetParameterItem(ParameterItem):
         
         self.optsChanged(self.param, self.param.opts)
 
+        # set size hints
+        sw = self.widget.sizeHint()
+        sb = self.defaultBtn.sizeHint()
+        # shrink row heights a bit for more compact look
+        sw.setHeight(int(sw.height() * 0.9))
+        sb.setHeight(int(sb.height() * 0.9))
+        if self.asSubItem:
+            self.setSizeHint(1, sb)
+            self.subItem.setSizeHint(0, sw)
+        else:
+            w = sw.width() + sb.width()
+            h = max(sw.height(), sb.height())
+            self.setSizeHint(1, QtCore.QSize(w, h))
+
     def makeWidget(self):
         """
-        Return a single widget that should be placed in the second tree column.
+        Return a single widget whose position in the tree is determined by the
+        value of self.asSubItem. If True, it will be placed in the second tree
+        column, and if False, the first tree column of a child item.
+
         The widget must be given three attributes:
         
         ==========  ============================================================
@@ -120,7 +145,6 @@ class WidgetParameterItem(ParameterItem):
             w.sigChanged = w.toggled
             w.value = w.isChecked
             w.setValue = w.setChecked
-            w.setEnabled(not opts.get('readonly', False))
             self.hideWidget = False
         elif t == 'str':
             w = QtGui.QLineEdit()
@@ -137,15 +161,16 @@ class WidgetParameterItem(ParameterItem):
             w.setValue = w.setColor
             self.hideWidget = False
             w.setFlat(True)
-            w.setEnabled(not opts.get('readonly', False))            
         elif t == 'colormap':
             from ..widgets.GradientWidget import GradientWidget ## need this here to avoid import loop
             w = GradientWidget(orientation='bottom')
+            w.sizeHint = lambda: QtCore.QSize(300, 35)
             w.sigChanged = w.sigGradientChangeFinished
             w.sigChanging = w.sigGradientChanged
             w.value = w.colorMap
             w.setValue = w.setColorMap
             self.hideWidget = False
+            self.asSubItem = True
         else:
             raise Exception("Unknown type '%s'" % asUnicode(t))
         return w
@@ -168,23 +193,27 @@ class WidgetParameterItem(ParameterItem):
         self.showEditor()
         
     def isFocusable(self):
-        return self.param.writable()        
-        
+        return self.param.opts['visible'] and self.param.opts['enabled'] and self.param.writable()
+
     def valueChanged(self, param, val, force=False):
         ## called when the parameter's value has changed
         ParameterItem.valueChanged(self, param, val)
-        self.widget.sigChanged.disconnect(self.widgetValueChanged)
-        try:
-            if force or val != self.widget.value():
+        if force or not fn.eq(val, self.widget.value()):
+            try:
+                self.widget.sigChanged.disconnect(self.widgetValueChanged)
+                self.param.sigValueChanged.disconnect(self.valueChanged)
                 self.widget.setValue(val)
-            self.updateDisplayLabel(val)  ## always make sure label is updated, even if values match!
-        finally:
-            self.widget.sigChanged.connect(self.widgetValueChanged)
+                self.param.setValue(self.widget.value())
+            finally:
+                self.widget.sigChanged.connect(self.widgetValueChanged)
+                self.param.sigValueChanged.connect(self.valueChanged)
+        self.updateDisplayLabel()  ## always make sure label is updated, even if values match!
         self.updateDefaultBtn()
         
     def updateDefaultBtn(self):
         ## enable/disable default btn 
-        self.defaultBtn.setEnabled(not self.param.valueIsDefault() and self.param.writable())        
+        self.defaultBtn.setEnabled(
+            not self.param.valueIsDefault() and self.param.opts['enabled'] and self.param.writable())
         
         # hide / show
         self.defaultBtn.setVisible(self.param.hasDefault() and not self.param.readonly())
@@ -212,9 +241,7 @@ class WidgetParameterItem(ParameterItem):
         Called when the widget's value is changing, but not finalized.
         For example: editing text before pressing enter or changing focus.
         """
-        # This is a bit sketchy: assume the last argument of each signal is
-        # the value..
-        self.param.sigValueChanging.emit(self.param, args[-1])
+        self.param.sigValueChanging.emit(self.param, self.widget.value())
         
     def selected(self, sel):
         """Called when this item has been selected (sel=True) OR deselected (sel=False)"""
@@ -260,9 +287,12 @@ class WidgetParameterItem(ParameterItem):
             tree = self.treeWidget()
             if tree is None:
                 return
+            if self.asSubItem:
+                self.subItem.setFirstColumnSpanned(True)
+                tree.setItemWidget(self.subItem, 0, self.widget)
             tree.setItemWidget(self, 1, self.layoutWidget)
             self.displayLabel.hide()
-            self.selected(False)            
+            self.selected(False)
 
     def defaultClicked(self):
         self.param.setToDefault()
@@ -271,12 +301,18 @@ class WidgetParameterItem(ParameterItem):
         """Called when any options are changed that are not
         name, value, default, or limits"""
         ParameterItem.optsChanged(self, param, opts)
-        
+
+        if 'enabled' in opts:
+            self.updateDefaultBtn()
+            self.widget.setEnabled(opts['enabled'])
+
         if 'readonly' in opts:
             self.updateDefaultBtn()
-            if isinstance(self.widget, (QtGui.QCheckBox,ColorButton)):
-                self.widget.setEnabled(not opts['readonly'])
-        
+            if hasattr(self.widget, 'setReadOnly'):
+                self.widget.setReadOnly(opts['readonly'])
+            else:
+                self.widget.setEnabled(self.param.opts['enabled'] and not opts['readonly'])
+
         if 'tip' in opts:
             self.widget.setToolTip(opts['tip'])
         
@@ -331,11 +367,6 @@ class SimpleParameter(Parameter):
         if self.opts['type'] == 'color':
             self.value = self.colorValue
             self.saveState = self.saveColorState
-    
-    def setValue(self, value, blockSignal=None):
-        if self.opts['type'] == 'int':
-            value = int(value)
-        Parameter.setValue(self, value, blockSignal)
 
     def colorValue(self):
         return fn.mkColor(Parameter.value(self))
@@ -403,8 +434,12 @@ class GroupParameterItem(ParameterItem):
             self.addWidgetBox = w
             self.addItem = QtGui.QTreeWidgetItem([])
             self.addItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
-            
+            self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
+
+        self.optsChanged(self.param, self.param.opts)
+
     def updateDepth(self, depth):
         ## Change item's appearance based on its depth in the tree
         ## This allows highest-level groups to be displayed more prominently.
@@ -416,7 +451,6 @@ class GroupParameterItem(ParameterItem):
                 font.setBold(True)
                 font.setPointSize(font.pointSize()+1)
                 self.setFont(c, font)
-                self.setSizeHint(0, QtCore.QSize(0, 25))
         else:
             for c in [0,1]:
                 self.setBackground(c, QtGui.QBrush(QtGui.QColor(220,220,220)))
@@ -425,8 +459,8 @@ class GroupParameterItem(ParameterItem):
                 font.setBold(True)
                 #font.setPointSize(font.pointSize()+1)
                 self.setFont(c, font)
-                self.setSizeHint(0, QtCore.QSize(0, 20))
-    
+        self.titleChanged()  # sets the size hint for column 0 which is based on the new font
+
     def addClicked(self):
         """Called when "add new" button is clicked
         The parameter MUST have an 'addNew' method defined.
@@ -464,7 +498,14 @@ class GroupParameterItem(ParameterItem):
         
         if 'addList' in opts:
             self.updateAddList()
-                
+
+        if hasattr(self, 'addWidget'):
+            if 'enabled' in opts:
+                self.addWidget.setEnabled(opts['enabled'])
+
+            if 'tip' in opts:
+                self.addWidget.setToolTip(opts['tip'])
+
     def updateAddList(self):
         self.addWidget.blockSignals(True)
         try:
@@ -633,12 +674,14 @@ class ActionParameterItem(ParameterItem):
         self.layout = QtGui.QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layoutWidget.setLayout(self.layout)
-        self.button = QtGui.QPushButton(param.title())
+        self.button = QtGui.QPushButton()
         #self.layout.addSpacing(100)
         self.layout.addWidget(self.button)
         self.layout.addStretch()
         self.button.clicked.connect(self.buttonClicked)
-        
+        self.titleChanged()
+        self.optsChanged(self.param, self.param.opts)
+
     def treeWidgetChanged(self):
         ParameterItem.treeWidgetChanged(self)
         tree = self.treeWidget()
@@ -650,8 +693,17 @@ class ActionParameterItem(ParameterItem):
 
     def titleChanged(self):
         self.button.setText(self.param.title())
-        ParameterItem.titleChanged(self)
-        
+        self.setSizeHint(0, self.button.sizeHint())
+
+    def optsChanged(self, param, opts):
+        ParameterItem.optsChanged(self, param, opts)
+
+        if 'enabled' in opts:
+            self.button.setEnabled(opts['enabled'])
+
+        if 'tip' in opts:
+            self.button.setToolTip(opts['tip'])
+
     def buttonClicked(self):
         self.param.activate()
         
@@ -672,39 +724,21 @@ registerParameterType('action', ActionParameter, override=True)
 
 class TextParameterItem(WidgetParameterItem):
     """ParameterItem displaying a QTextEdit widget."""
-    def __init__(self, param, depth):
-        WidgetParameterItem.__init__(self, param, depth)
-        self.hideWidget = False
-        self.subItem = QtGui.QTreeWidgetItem()
-        self.addChild(self.subItem)
-
-    def treeWidgetChanged(self):
-        ## TODO: fix so that superclass method can be called
-        ## (WidgetParameter should just natively support this style)
-        #WidgetParameterItem.treeWidgetChanged(self)
-        tw = self.treeWidget()
-        if tw is None:
-            return
-
-        self.subItem.setFirstColumnSpanned(True)
-        tw.setItemWidget(self.subItem, 0, self.textBox)
-        
-        # for now, these are copied from ParameterItem.treeWidgetChanged
-        self.setHidden(not self.param.opts.get('visible', True))
-        self.setExpanded(self.param.opts.get('expanded', True))
-        
+    
     def makeWidget(self):
-        self.textBox = QtGui.QTextEdit()
-        self.textBox.setMaximumHeight(100)
-        self.textBox.setReadOnly(self.param.opts.get('readonly', False))
-        self.textBox.value = lambda: str(self.textBox.toPlainText())
-        self.textBox.setValue = self.textBox.setPlainText
-        self.textBox.sigChanged = self.textBox.textChanged
-        return self.textBox
-        
+        self.hideWidget = False
+        self.asSubItem = True
+        self.textBox = w = QtGui.QTextEdit()
+        w.sizeHint = lambda: QtCore.QSize(300, 100)
+        w.value = lambda: str(w.toPlainText())
+        w.setValue = w.setPlainText
+        w.sigChanged = w.textChanged
+        return w
+
+
 class TextParameter(Parameter):
     """Editable string, displayed as large text box in the tree."""
     itemClass = TextParameterItem
-    
-    
+
+
 registerParameterType('text', TextParameter, override=True)

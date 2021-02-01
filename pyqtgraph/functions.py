@@ -425,17 +425,24 @@ def eq(a, b):
     
     This function has some important differences from the == operator:
     
-    1. Returns True if a IS b, even if a==b still evaluates to False, such as with nan values.
-    2. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
+    1. Returns True if a IS b, even if a==b still evaluates to False.
+    2. While a is b will catch the case with np.nan values, special handling is done for distinct
+       float('nan') instances using np.isnan.
+    3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
-    3. When comparing arrays, returns False if the array shapes are not the same.
-    4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
+    4. When comparing arrays, returns False if the array shapes are not the same.
+    5. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
-    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
-       consequence is that comparing a dict to an OrderedDict will always return False. 
+    6. Collections (dict, list, etc.) must have the same type to be considered equal. One
+       consequence is that comparing a dict to an OrderedDict will always return False.
     """
     if a is b:
         return True
+
+    # The above catches np.nan, but not float('nan')
+    if isinstance(a, float) and isinstance(b, float):
+        if np.isnan(a) and np.isnan(b):
+            return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
     aIsArr = isinstance(a, (np.ndarray, MetaArray))
