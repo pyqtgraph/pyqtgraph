@@ -418,18 +418,6 @@ if QT_LIB == PYQT6:
     for e in QtCore.Qt.Key:
         setattr(QtCore.Qt, e.name, e.value)
 
-    # TextFlags are not accepted as appropriate types
-    # Example:
-    # TypeError: QFontMetric.size(
-    #               self,
-    #               int,
-    #               str,
-    #               tabStops: int = 0, 
-    #               tabArray: Optional[List[int]] = 0
-    # ): argument 1 has unexpected type 'TextFlag'
-    for e in QtCore.Qt.TextFlag:
-        setattr(QtCore.Qt, e.name, e.value)
-
     # shim the old names for QPointF mouse coords
     QtGui.QSinglePointEvent.localPos = lambda o : o.position()
     QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()
