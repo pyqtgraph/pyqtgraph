@@ -32,7 +32,7 @@ class GraphItem(GraphicsObject):
         **Arguments:**
         pos             (N,2) array of the positions of each node in the graph.
         adj             (M,2) array of connection data. Each row contains indexes
-                        of two nodes that are connected.
+                        of two nodes that are connected or None to hide lines
         pen             The pen to use when drawing lines between connected
                         nodes. May be one of:
                      
@@ -56,7 +56,7 @@ class GraphItem(GraphicsObject):
         if 'adj' in kwds:
             self.adjacency = kwds.pop('adj')
             if self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
-                raise Exception("adjacency array must have int or unsigned type.")
+                raise Exception("adjacency must be None or an array of either int or unsigned type.")
             self._update()
         if 'pos' in kwds:
             self.pos = kwds['pos']
