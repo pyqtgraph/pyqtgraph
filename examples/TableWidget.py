@@ -9,7 +9,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Table Widget Example")
 
 w = pg.TableWidget()
 w.show()

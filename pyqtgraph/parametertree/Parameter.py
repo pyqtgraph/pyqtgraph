@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
@@ -9,6 +10,11 @@ PARAM_TYPES = {}
 PARAM_NAMES = {}
 
 def registerParameterType(name, cls, override=False):
+    """Register a parameter type in the parametertree system.
+
+    This enables construction of custom Parameter classes by name in
+    :meth:`~pyqtgraph.parametertree.Parameter.create`.
+    """
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
         raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)
@@ -283,15 +289,15 @@ class Parameter(QtCore.QObject):
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
             value = self._interpretValue(value)
-            if self.opts['value'] == value:
+            if fn.eq(self.opts['value'], value):
                 return value
             self.opts['value'] = value
-            self.sigValueChanged.emit(self, value)
+            self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
             if blockSignal is not None:
                 self.sigValueChanged.connect(blockSignal)
             
-        return value
+        return self.opts['value']
 
     def _interpretValue(self, v):
         return v

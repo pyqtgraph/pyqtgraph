@@ -5,7 +5,7 @@ from .. import multiprocess as mp
 from .GraphicsView import GraphicsView
 from .. import CONFIG_OPTIONS
 import numpy as np
-import mmap, tempfile, ctypes, atexit, sys, random
+import mmap, tempfile, os, atexit, sys, random
 
 __all__ = ['RemoteGraphicsView']
         
@@ -78,10 +78,6 @@ class RemoteGraphicsView(QtGui.QWidget):
             if sys.platform.startswith('win'):
                 self.shmtag = newfile   ## on windows, we create a new tag for every resize
                 self.shm = mmap.mmap(-1, size, self.shmtag) ## can't use tmpfile on windows because the file can only be opened once.
-            elif sys.platform == 'darwin':
-                self.shmFile.close()
-                self.shmFile = open(self._view.shmFileName(), 'r')
-                self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
             else:
                 self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_READ)
         self.shm.seek(0)
@@ -159,6 +155,7 @@ class RemoteGraphicsView(QtGui.QWidget):
 
     def close(self):
         """Close the remote process. After this call, the widget will no longer be updated."""
+        self._view.sceneRendered.disconnect()
         self._proc.close()
 
 
@@ -224,25 +221,20 @@ class Renderer(GraphicsView):
                     self.shm = mmap.mmap(-1, size, self.shmtag)
                 elif sys.platform == 'darwin':
                     self.shm.close()
-                    self.shmFile.close()
-                    self.shmFile = tempfile.NamedTemporaryFile(prefix='pyqtgraph_shmem_')
-                    self.shmFile.write(b'\x00' * (size + 1))
-                    self.shmFile.flush()
-                    self.shm = mmap.mmap(self.shmFile.fileno(), size, mmap.MAP_SHARED, mmap.PROT_WRITE)
+                    fd = self.shmFile.fileno()
+                    os.ftruncate(fd, size + 1)
+                    self.shm = mmap.mmap(fd, size, mmap.MAP_SHARED, mmap.PROT_WRITE)
                 else:
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
-            ctypes_obj = ctypes.c_char.from_buffer(self.shm, 0)
-            if QT_LIB.startswith('PySide'):
-                # PySide2, PySide6
-                img_ptr = ctypes_obj
+            if QT_LIB == 'PyQt5':
+                img_ptr = int(sip.voidptr(self.shm))
+            elif QT_LIB == 'PyQt6':
+                img_ptr = sip.voidptr(self.shm)
             else:
-                # PyQt5, PyQt6
-                img_ptr = sip.voidptr(ctypes.addressof(ctypes_obj))
-
-                if QT_LIB == 'PyQt6':
-                    img_ptr.setsize(size)
+                # PySide2, PySide6
+                img_ptr = self.shm
 
             self.img = QtGui.QImage(img_ptr, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
 

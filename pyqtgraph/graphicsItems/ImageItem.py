@@ -17,6 +17,8 @@ except ImportError:
     # fallback for python < 3.3
     from collections import Callable
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['ImageItem']
 
 
@@ -201,9 +203,10 @@ class ImageItem(GraphicsObject):
 
     def setRect(self, rect):
         """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
-        self.resetTransform()
-        self.translate(rect.left(), rect.top())
-        self.scale(rect.width() / self.width(), rect.height() / self.height())
+        tr = QtGui.QTransform()
+        tr.translate(rect.left(), rect.top())
+        tr.scale(rect.width() / self.width(), rect.height() / self.height())
+        self.setTransform(tr)
 
     def clear(self):
         self.image = None
@@ -634,8 +637,8 @@ class ImageItem(GraphicsObject):
             if not self.removable:
                 return None
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("Image")
-            remAct = QtGui.QAction("Remove image", self.menu)
+            self.menu.setTitle(translate("ImageItem", "Image"))
+            remAct = QtGui.QAction(translate("ImageItem", "Remove image"), self.menu)
             remAct.triggered.connect(self.removeClicked)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct

@@ -212,10 +212,6 @@ elif QT_LIB == PYQT5:
     except ImportError as err:
         QtSvg = FailedImport(err)
     try:
-        from PyQt5 import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
-    try:
         from PyQt5 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
@@ -249,10 +245,6 @@ elif QT_LIB == PYSIDE2:
         from PySide2 import QtSvg
     except ImportError as err:
         QtSvg = FailedImport(err)
-    try:
-        from PySide2 import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
     try:
         from PySide2 import QtTest
         QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
@@ -303,58 +295,20 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
     
-    __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
-
-    def scale(self, *args):
-        if args:
-            sx, sy = args
-            tr = self.transform()
-            tr.scale(sx, sy)
-            self.setTransform(tr)
-        else:
-            return __QGraphicsItem_scale(self)
-
-    QtWidgets.QGraphicsItem.scale = scale
-
-    def rotate(self, angle):
-        tr = self.transform()
-        tr.rotate(angle)
-        self.setTransform(tr)
-    QtWidgets.QGraphicsItem.rotate = rotate
-
-    def translate(self, dx, dy):
-        tr = self.transform()
-        tr.translate(dx, dy)
-        self.setTransform(tr)
-    QtWidgets.QGraphicsItem.translate = translate
-
-    def setMargin(self, i):
-        self.setContentsMargins(i, i, i, i)
-    QtWidgets.QGridLayout.setMargin = setMargin
-
-    def setResizeMode(self, *args):
-        self.setSectionResizeMode(*args)
-    QtWidgets.QHeaderView.setResizeMode = setResizeMode
-
-    
-    QtGui.QApplication = QtWidgets.QApplication
-    QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
-    QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
-    QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
-
-    QtGui.QApplication.setGraphicsSystem = None
-    
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
         if o.startswith('Q'):
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
+    QtGui.QApplication.setGraphicsSystem = None
+
 
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
 
-    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+    if not isinstance(QtOpenGLWidgets, FailedImport):
+        QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
 
 
 # Common to PySide, PySide2 and PySide6
@@ -402,7 +356,7 @@ if QT_LIB == PYSIDE6:
 if QT_LIB == PYQT6:
     # module.Class.EnumClass.Enum -> module.Class.Enum
     def promote_enums(module):
-        class_names = [x for x in dir(module) if x[0] == 'Q']
+        class_names = [x for x in dir(module) if x.startswith('Q')]
         for class_name in class_names:
             klass = getattr(module, class_name)
             if not isinstance(klass, sip.wrappertype):
@@ -457,8 +411,8 @@ USE_PYQT4 = QT_LIB == PYQT4
 USE_PYQT5 = QT_LIB == PYQT5
 
     
-## Make sure we have Qt >= 4.7
-versionReq = [4, 7]
+## Make sure we have Qt >= 5.12
+versionReq = [5, 12]
 m = re.match(r'(\d+)\.(\d+).*', QtVersion)
 if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
@@ -482,7 +436,6 @@ class App(QtGui.QApplication):
             color = palette.base().color().name()
         self.dark_mode = color.lower() != "#ffffff"
 
-
 QAPP = None
 def mkQApp(name=None):
     """
@@ -494,8 +447,20 @@ def mkQApp(name=None):
     ============== ========================================================
     """
     global QAPP
+    
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
+        # hidpi handling
+        qtVersionCompare = tuple(map(int, QtVersion.split(".")))
+        if qtVersionCompare > (6, 0):
+            # Qt6 seems to support hidpi without needing to do anything so continue
+            pass
+        elif qtVersionCompare > (5, 14):
+            os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+            QtGui.QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+        else:  # qt 5.12 and 5.13
+            QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+            QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
         QAPP = App(sys.argv or ["pyqtgraph"])
 
     if name is not None:

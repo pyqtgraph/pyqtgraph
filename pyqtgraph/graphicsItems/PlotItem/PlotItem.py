@@ -19,6 +19,8 @@ from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 
+translate = QtCore.QCoreApplication.translate
+
 import importlib
 ui_template = importlib.import_module(
     f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
@@ -189,18 +191,18 @@ class PlotItem(GraphicsWidget):
         dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
-            ('Transforms', c.transformGroup),
-            ('Downsample', c.decimateGroup),
-            ('Average', c.averageGroup),
-            ('Alpha', c.alphaGroup),
-            ('Grid', c.gridGroup),
-            ('Points', c.pointsGroup),
+            (translate("PlotItem", 'Transforms'), c.transformGroup),
+            (translate("PlotItem", 'Downsample'), c.decimateGroup),
+            (translate("PlotItem", 'Average'), c.averageGroup),
+            (translate("PlotItem", 'Alpha'), c.alphaGroup),
+            (translate("PlotItem", 'Grid'), c.gridGroup),
+            (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
         
         
         self.ctrlMenu = QtGui.QMenu()
         
-        self.ctrlMenu.setTitle('Plot Options')
+        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
             sm = QtGui.QMenu(name)

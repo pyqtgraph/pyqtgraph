@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/graphicsItems/PlotItem/plotConfigTemplate.ui'
+# Form implementation generated from reading ui file 'plotConfigTemplate.ui'
 #
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -73,24 +74,24 @@ class Ui_Form(object):
         self.transformGroup.setGeometry(QtCore.QRect(10, 10, 171, 101))
         self.transformGroup.setObjectName("transformGroup")
         self.gridLayout = QtWidgets.QGridLayout(self.transformGroup)
-        self.gridLayout.setObjectName("gridLayout")
-        self.gridLayout.setMargin(0)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
-        self.logXCheck = QtGui.QCheckBox(self.transformGroup)
-        self.logXCheck.setObjectName("logXCheck")
-        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
-        self.fftCheck = QtGui.QCheckBox(self.transformGroup)
-        self.fftCheck.setObjectName("fftCheck")
-        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
-        self.derivativeCheck = QtGui.QCheckBox(self.transformGroup)
-        self.derivativeCheck.setObjectName("derivativeCheck")
-        self.gridLayout.addWidget(self.derivativeCheck, 3, 0, 1, 1)
-        self.phasemapCheck = QtGui.QCheckBox(self.transformGroup)
-        self.phasemapCheck.setObjectName("phasemapCheck")
-        self.gridLayout.addWidget(self.phasemapCheck, 4, 0, 1, 1)
+        self.gridLayout.setObjectName("gridLayout")
         self.logYCheck = QtWidgets.QCheckBox(self.transformGroup)
         self.logYCheck.setObjectName("logYCheck")
         self.gridLayout.addWidget(self.logYCheck, 2, 0, 1, 1)
+        self.logXCheck = QtWidgets.QCheckBox(self.transformGroup)
+        self.logXCheck.setObjectName("logXCheck")
+        self.gridLayout.addWidget(self.logXCheck, 1, 0, 1, 1)
+        self.fftCheck = QtWidgets.QCheckBox(self.transformGroup)
+        self.fftCheck.setObjectName("fftCheck")
+        self.gridLayout.addWidget(self.fftCheck, 0, 0, 1, 1)
+        self.derivativeCheck = QtWidgets.QCheckBox(self.transformGroup)
+        self.derivativeCheck.setObjectName("derivativeCheck")
+        self.gridLayout.addWidget(self.derivativeCheck, 3, 0, 1, 1)
+        self.phasemapCheck = QtWidgets.QCheckBox(self.transformGroup)
+        self.phasemapCheck.setObjectName("phasemapCheck")
+        self.gridLayout.addWidget(self.phasemapCheck, 4, 0, 1, 1)
         self.pointsGroup = QtWidgets.QGroupBox(Form)
         self.pointsGroup.setGeometry(QtCore.QRect(10, 550, 234, 58))
         self.pointsGroup.setCheckable(True)
@@ -164,11 +165,11 @@ class Ui_Form(object):
         self.autoDownsampleCheck.setText(_translate("Form", "Auto"))
         self.downsampleSpin.setToolTip(_translate("Form", "Downsample data before plotting. (plot every Nth sample)"))
         self.downsampleSpin.setSuffix(_translate("Form", "x"))
-        self.logXCheck.setText(_translate("Form", "Log X", None))
-        self.fftCheck.setText(_translate("Form", "Power Spectrum (FFT)", None))
-        self.derivativeCheck.setText(_translate("Form", "dy/dx", None))
-        self.phasemapCheck.setText(_translate("Form", "Y vs. Y\'", None))
         self.logYCheck.setText(_translate("Form", "Log Y"))
+        self.logXCheck.setText(_translate("Form", "Log X"))
+        self.fftCheck.setText(_translate("Form", "Power Spectrum (FFT)"))
+        self.derivativeCheck.setText(_translate("Form", "dy/dx"))
+        self.phasemapCheck.setText(_translate("Form", "Y vs. Y\'"))
         self.pointsGroup.setTitle(_translate("Form", "Points"))
         self.autoPointsCheck.setText(_translate("Form", "Auto"))
         self.xGridCheck.setText(_translate("Form", "Show X Grid"))
@@ -176,4 +177,3 @@ class Ui_Form(object):
         self.label.setText(_translate("Form", "Opacity"))
         self.alphaGroup.setTitle(_translate("Form", "Alpha"))
         self.autoAlphaCheck.setText(_translate("Form", "Auto"))
-

@@ -14,7 +14,7 @@ import numpy as np
 from collections import namedtuple
 from itertools import chain
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Scatter Plot Item Example") 
 mw = QtGui.QMainWindow()
 mw.resize(800,800)
 view = pg.GraphicsLayoutWidget()  ## GraphicsView with GraphicsLayout inserted by default

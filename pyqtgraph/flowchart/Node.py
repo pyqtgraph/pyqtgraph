@@ -8,6 +8,8 @@ from ..debug import *
 import numpy as np
 
 
+translate = QtCore.QCoreApplication.translate
+
 def strDict(d):
     return dict([(str(k), v) for k, v in d.items()])
 
@@ -639,14 +641,14 @@ class NodeGraphicsItem(GraphicsObject):
         
     def buildMenu(self):
         self.menu = QtGui.QMenu()
-        self.menu.setTitle("Node")
-        a = self.menu.addAction("Add input", self.addInputFromMenu)
+        self.menu.setTitle(translate("Context Menu", "Node"))
+        a = self.menu.addAction(translate("Context Menu","Add input"), self.addInputFromMenu)
         if not self.node._allowAddInput:
             a.setEnabled(False)
-        a = self.menu.addAction("Add output", self.addOutputFromMenu)
+        a = self.menu.addAction(translate("Context Menu", "Add output"), self.addOutputFromMenu)
         if not self.node._allowAddOutput:
             a.setEnabled(False)
-        a = self.menu.addAction("Remove node", self.node.close)
+        a = self.menu.addAction(translate("Context Menu", "Remove node"), self.node.close)
         if not self.node._allowRemove:
             a.setEnabled(False)
         

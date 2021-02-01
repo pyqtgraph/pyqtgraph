@@ -425,17 +425,24 @@ def eq(a, b):
     
     This function has some important differences from the == operator:
     
-    1. Returns True if a IS b, even if a==b still evaluates to False, such as with nan values.
-    2. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
+    1. Returns True if a IS b, even if a==b still evaluates to False.
+    2. While a is b will catch the case with np.nan values, special handling is done for distinct
+       float('nan') instances using np.isnan.
+    3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
-    3. When comparing arrays, returns False if the array shapes are not the same.
-    4. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
+    4. When comparing arrays, returns False if the array shapes are not the same.
+    5. When comparing arrays of the same shape, returns True only if all elements are equal (whereas
        the == operator would return a boolean array).
-    5. Collections (dict, list, etc.) must have the same type to be considered equal. One 
-       consequence is that comparing a dict to an OrderedDict will always return False. 
+    6. Collections (dict, list, etc.) must have the same type to be considered equal. One
+       consequence is that comparing a dict to an OrderedDict will always return False.
     """
     if a is b:
         return True
+
+    # The above catches np.nan, but not float('nan')
+    if isinstance(a, float) and isinstance(b, float):
+        if np.isnan(a) and np.isnan(b):
+            return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
     aIsArr = isinstance(a, (np.ndarray, MetaArray))
@@ -951,7 +958,12 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     else:
         dtype = np.dtype(dtype)
     
-    d2 = data.astype(np.float) - float(offset)
+    if np.can_cast(data, np.float32):
+        work_dtype = np.float32
+    else:
+        work_dtype = np.float64
+    d2 = data.astype(work_dtype, copy=True)
+    d2 -= offset
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
@@ -959,13 +971,14 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         lim = np.iinfo(dtype)
         if clip is None:
             # don't let rescale cause integer overflow
-            d2 = np.clip(d2, lim.min, lim.max)
+            np.clip(d2, lim.min, lim.max, out=d2)
         else:
-            d2 = np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max))
+            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
     else:
         if clip is not None:
-            d2 = np.clip(d2, *clip)
-    data = d2.astype(dtype)
+            np.clip(d2, *clip, out=d2)
+    # don't copy if no change in dtype
+    data = d2.astype(dtype, copy=False)
     return data
 
 

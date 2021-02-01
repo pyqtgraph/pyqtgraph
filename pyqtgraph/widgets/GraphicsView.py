@@ -5,14 +5,7 @@ Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, QT_LIB
-
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except ImportError:
-    HAVE_OPENGL = False
-
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
 import sys, os
 import warnings
@@ -58,7 +51,7 @@ class GraphicsView(QtGui.QGraphicsView):
         useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
                         rendering. This can improve performance on some systems,
                         but may also introduce bugs (the combination of 
-                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        QGraphicsView and QOpenGLWidget is still an 'experimental'
                         feature of Qt)
         background      Set the background color of the GraphicsView. Accepts any
                         single argument accepted by 
@@ -176,9 +169,11 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def useOpenGL(self, b=True):
         if b:
+            HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
             if not HAVE_OPENGL:
-                raise Exception("Requested to use OpenGL with QGraphicsView, but QtOpenGL module is not available.")
-            v = QtOpenGL.QGLWidget()
+                raise Exception("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
+
+            v = QtWidgets.QOpenGLWidget()
         else:
             v = QtGui.QWidget()
             

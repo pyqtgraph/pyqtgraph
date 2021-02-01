@@ -16,6 +16,7 @@ import gc
 from .CanvasManager import CanvasManager
 from .CanvasItem import CanvasItem, GroupCanvasItem
 
+translate = QtCore.QCoreApplication.translate
 
 class Canvas(QtGui.QWidget):
     
@@ -78,7 +79,7 @@ class Canvas(QtGui.QWidget):
             self.ui.redirectCombo.setHostName(self.registeredName)
             
         self.menu = QtGui.QMenu()
-        remAct = QtGui.QAction("Remove item", self.menu)
+        remAct = QtGui.QAction(translate("Context Menu", "Remove item"), self.menu)
         remAct.triggered.connect(self.removeClicked)
         self.menu.addAction(remAct)
         self.menu.remAct = remAct

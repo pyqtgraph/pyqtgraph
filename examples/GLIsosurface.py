@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("GLIsosurface Example")
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GLIsosurface')
