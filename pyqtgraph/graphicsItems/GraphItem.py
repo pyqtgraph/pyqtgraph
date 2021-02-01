@@ -55,7 +55,7 @@ class GraphItem(GraphicsObject):
         """
         if 'adj' in kwds:
             self.adjacency = kwds.pop('adj')
-            if self.adjacency.dtype.kind not in 'iu' and self.adjacency is not None:
+            if self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
                 raise Exception("adjacency array must have int or unsigned type.")
             self._update()
         if 'pos' in kwds:
