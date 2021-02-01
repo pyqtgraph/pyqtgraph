@@ -288,7 +288,7 @@ class WidgetParameterItem(ParameterItem):
             if tree is None:
                 return
             if self.asSubItem:
-                tree.setFirstItemColumnSpanned(self.subItem, True)
+                self.subItem.setFirstColumnSpanned(True)
                 tree.setItemWidget(self.subItem, 0, self.widget)
             tree.setItemWidget(self, 1, self.layoutWidget)
             self.displayLabel.hide()
