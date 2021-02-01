@@ -295,18 +295,13 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
     
-    QtGui.QApplication = QtWidgets.QApplication
-    QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
-    QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
-    QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
-
-    QtGui.QApplication.setGraphicsSystem = None
-    
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
         if o.startswith('Q'):
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
+    QtGui.QApplication.setGraphicsSystem = None
+
 
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
