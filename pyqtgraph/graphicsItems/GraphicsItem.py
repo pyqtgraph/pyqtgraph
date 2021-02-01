@@ -1,3 +1,5 @@
+import warnings
+from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
 from ..Point import Point
@@ -20,8 +22,8 @@ class GraphicsItem(object):
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
     _pixelVectorGlobalCache = LRUCache(100, 70)
-    
-    def __init__(self, register=True):
+
+    def __init__(self, register=None):
         if not hasattr(self, '_qtBaseClass'):
             for b in self.__class__.__bases__:
                 if issubclass(b, QtGui.QGraphicsItem):
@@ -29,15 +31,19 @@ class GraphicsItem(object):
                     break
         if not hasattr(self, '_qtBaseClass'):
             raise Exception('Could not determine Qt base class for GraphicsItem: %s' % str(self))
-        
+
         self._pixelVectorCache = [None, None]
         self._viewWidget = None
         self._viewBox = None
         self._connectedView = None
         self._exportOpts = False   ## If False, not currently exporting. Otherwise, contains dict of export options.
-        if register:
-            GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
-                    
+        self._cachedView = None
+        if register is not None and register:
+            warnings.warn(
+                "'register' argument is deprecated and does nothing",
+                DeprecationWarning, stacklevel=2
+            )
+
     def getViewWidget(self):
         """
         Return the view widget for this item. 
@@ -98,9 +104,6 @@ class GraphicsItem(object):
         Return the transform that converts local item coordinates to device coordinates (usually pixels).
         Extends deviceTransform to automatically determine the viewportTransform.
         """
-        if self._exportOpts is not False and 'painter' in self._exportOpts: ## currently exporting; device transform may be different.
-            return self._exportOpts['painter'].deviceTransform() * self.sceneTransform()
-            
         if viewportTransform is None:
             view = self.getViewWidget()
             if view is None:
@@ -153,6 +156,10 @@ class GraphicsItem(object):
     def viewRect(self):
         """Return the visible bounds of this item's ViewBox or GraphicsWidget,
         in the local coordinate system of the item."""
+        if self._cachedView is not None:
+            return self._cachedView
+
+        # Note that in cases of early returns here, the view cache stays empty (None).
         view = self.getViewBox()
         if view is None:
             return None
@@ -162,10 +169,12 @@ class GraphicsItem(object):
 
         bounds = bounds.normalized()
         
+        self._cachedView = bounds
+            
         ## nah.
         #for p in self.getBoundingParents():
             #bounds &= self.mapRectFromScene(p.sceneBoundingRect())
-            
+
         return bounds
         
         
@@ -189,24 +198,23 @@ class GraphicsItem(object):
         ## (such as when looking at unix timestamps), we can get floating-point errors.
         dt.setMatrix(dt.m11(), dt.m12(), 0, dt.m21(), dt.m22(), 0, 0, 0, 1)
         
+        if direction is None:
+            direction = QtCore.QPointF(1, 0)
+        elif direction.manhattanLength() == 0:
+            raise Exception("Cannot compute pixel length for 0-length vector.")
+
+        key = (dt.m11(), dt.m21(), dt.m12(), dt.m22(), direction.x(), direction.y())
+
         ## check local cache
-        if direction is None and dt == self._pixelVectorCache[0]:
+        if key == self._pixelVectorCache[0]:
             return tuple(map(Point, self._pixelVectorCache[1]))  ## return a *copy*
-        
+
         ## check global cache
-        #key = (dt.m11(), dt.m21(), dt.m31(), dt.m12(), dt.m22(), dt.m32(), dt.m31(), dt.m32())
-        key = (dt.m11(), dt.m21(), dt.m12(), dt.m22())
         pv = self._pixelVectorGlobalCache.get(key, None)
-        if direction is None and pv is not None:
-            self._pixelVectorCache = [dt, pv]
+        if pv is not None:
+            self._pixelVectorCache = [key, pv]
             return tuple(map(Point,pv))  ## return a *copy*
         
-        
-        if direction is None:
-            direction = QtCore.QPointF(1, 0)  
-        if direction.manhattanLength() == 0:
-            raise Exception("Cannot compute pixel length for 0-length vector.")
-            
         ## attempt to re-scale direction vector to fit within the precision of the coordinate system
         ## Here's the problem: we need to map the vector 'direction' from the item to the device, via transform 'dt'.
         ## In some extreme cases, this mapping can fail unless the length of 'direction' is cleverly chosen.
@@ -535,8 +543,9 @@ class GraphicsItem(object):
         """
         Called whenever the transformation matrix of the view has changed.
         (eg, the view range has changed or the view was resized)
+        Invalidates the viewRect cache.
         """
-        pass
+        self._cachedView = None
     
     #def prepareGeometryChange(self):
         #self._qtBaseClass.prepareGeometryChange(self)

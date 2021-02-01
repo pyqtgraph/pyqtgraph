@@ -17,7 +17,7 @@ PyQtGraph fits into this scheme by providing its own QWidget subclasses to be in
 
 Example::
     
-    from PyQt4 import QtGui  # (the example applies equally well to PySide)
+    from PyQt5 import QtGui  # (the example applies equally well to PySide2)
     import pyqtgraph as pg
         
     ## Always start by initializing Qt (only once per application)
@@ -99,4 +99,3 @@ QTimer, Multi-Threading
 
 Multi-threading vs Multi-processing in Qt
 -----------------------------------------
-

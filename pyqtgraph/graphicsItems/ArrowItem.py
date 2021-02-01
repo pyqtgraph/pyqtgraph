@@ -11,23 +11,25 @@ class ArrowItem(QtGui.QGraphicsPathItem):
     """
     
     
-    def __init__(self, **opts):
+    def __init__(self, parent=None, **opts):
         """
         Arrows can be initialized with any keyword arguments accepted by 
         the setStyle() method.
         """
         self.opts = {}
-        QtGui.QGraphicsPathItem.__init__(self, opts.get('parent', None))
+        QtGui.QGraphicsPathItem.__init__(self, parent)
 
         if 'size' in opts:
             opts['headLen'] = opts['size']
         if 'width' in opts:
             opts['headWidth'] = opts['width']
+        pos = opts.pop('pos', (0, 0))
+
         defaultOpts = {
             'pxMode': True,
             'angle': -150,   ## If the angle is 0, the arrow points left
-            'pos': (0,0),
             'headLen': 20,
+            'headWidth': None,
             'tipAngle': 25,
             'baseAngle': 0,
             'tailLen': None,
@@ -38,8 +40,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         defaultOpts.update(opts)
         
         self.setStyle(**defaultOpts)
-        
-        self.moveBy(*self.opts['pos'])
+
+        # for backward compatibility
+        self.setPos(*pos)
     
     def setStyle(self, **opts):
         """
@@ -52,10 +55,10 @@ class ArrowItem(QtGui.QGraphicsPathItem):
                                 0; arrow pointing to the left.
         headLen                 Length of the arrow head, from tip to base.
                                 default=20
-        headWidth               Width of the arrow head at its base.
+        headWidth               Width of the arrow head at its base. If
+                                headWidth is specified, it overrides tipAngle.
         tipAngle                Angle of the tip of the arrow in degrees. Smaller
-                                values make a 'sharper' arrow. If tipAngle is
-                                specified, ot overrides headWidth. default=25
+                                values make a 'sharper' arrow. default=25
         baseAngle               Angle of the base of the arrow head. Default is
                                 0, which means that the base of the arrow head
                                 is perpendicular to the arrow tail.
@@ -66,11 +69,25 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         tailWidth               Width of the tail. default=3
         pen                     The pen used to draw the outline of the arrow.
         brush                   The brush used to fill the arrow.
+        pxMode                  If True, then the arrow is drawn as a fixed size
+                                regardless of the scale of its parents (including
+                                the ViewBox zoom level). 
         ======================  =================================================
         """
-        self.opts.update(opts)
+        arrowOpts = ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth', 'headWidth']
+        allowedOpts = ['angle', 'pen', 'brush', 'pxMode'] + arrowOpts
+        needUpdate = False
+        for k,v in opts.items():
+            if k not in allowedOpts:
+                raise KeyError('Invalid arrow style option "%s"' % k)
+            if self.opts.get(k) != v:
+                needUpdate = True
+            self.opts[k] = v
+
+        if not needUpdate:
+            return
         
-        opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
+        opt = dict([(k,self.opts[k]) for k in arrowOpts if k in self.opts])
         tr = QtGui.QTransform()
         tr.rotate(self.opts['angle'])
         self.path = tr.map(fn.makeArrowPath(**opt))
@@ -85,10 +102,9 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         else:
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
 
-
     def paint(self, p, *args):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
-        QtGui.QGraphicsPathItem.paint(self, p, *args)
+        super().paint(p, *args)
         
         #p.setPen(fn.mkPen('r'))
         #p.setBrush(fn.mkBrush(None))

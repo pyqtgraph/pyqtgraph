@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QtWidgets, QT_LIB
 from .GraphicsView import GraphicsView
 from ..graphicsItems.GradientEditorItem import GradientEditorItem
 import weakref
@@ -40,7 +40,18 @@ class GradientWidget(GraphicsView):
         self.setOrientation(orientation)
         self.setCacheMode(self.CacheNone)
         self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
-        self.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
+
+        if QT_LIB == 'PyQt6':
+            # PyQt6 doesn't allow or-ing of different enum types
+            # so we need to take its value property
+            NoFrame = QtWidgets.QFrame.Shape.NoFrame.value
+            Plain = QtWidgets.QFrame.Shadow.Plain.value
+        else:
+            NoFrame = QtWidgets.QFrame.NoFrame
+            Plain = QtWidgets.QFrame.Plain
+        frame_style = NoFrame | Plain
+
+        self.setFrameStyle(frame_style)
         #self.setBackgroundRole(QtGui.QPalette.NoRole)
         #self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.NoBrush))
         #self.setAutoFillBackground(False)
@@ -70,5 +81,8 @@ class GradientWidget(GraphicsView):
     def __getattr__(self, attr):
         ### wrap methods from GradientEditorItem
         return getattr(self.item, attr)
+
+    def widgetGroupInterface(self):
+        return (self.sigGradientChanged, self.saveState, self.restoreState)
 
 

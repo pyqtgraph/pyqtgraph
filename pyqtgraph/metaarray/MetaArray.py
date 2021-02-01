@@ -2,7 +2,7 @@
 """
 MetaArray.py -  Class encapsulating ndarray with meta data
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 MetaArray is an array class based on numpy.ndarray that allows storage of per-axis meta data
 such as axis values, names, units, column names, etc. It also enables several
@@ -12,16 +12,22 @@ More info at http://www.scipy.org/Cookbook/MetaArray
 
 import types, copy, threading, os, re
 import pickle
-from functools import reduce
 import numpy as np
 from ..python2_3 import basestring
-#import traceback
+
 
 ## By default, the library will use HDF5 when writing files.
 ## This can be overridden by setting USE_HDF5 = False
 USE_HDF5 = True
 try:
     import h5py
+
+    # Older h5py versions tucked Group and Dataset deeper inside the library:
+    if not hasattr(h5py, 'Group'):
+        import h5py.highlevel
+        h5py.Group = h5py.highlevel.Group
+        h5py.Dataset = h5py.highlevel.Dataset
+        
     HAVE_HDF5 = True
 except:
     USE_HDF5 = False
@@ -103,7 +109,7 @@ class MetaArray(object):
         since the actual values are described (name and units) in the column info for the first axis.
     """
   
-    version = '2'
+    version = u'2'
 
     # Default hdf5 compression to use when writing
     #   'gzip' is widely available and somewhat slow
@@ -125,7 +131,6 @@ class MetaArray(object):
   
     def __init__(self, data=None, info=None, dtype=None, file=None, copy=False, **kwargs):
         object.__init__(self)
-        #self._infoOwned = False
         self._isHDF = False
         
         if file is not None:
@@ -191,58 +196,22 @@ class MetaArray(object):
             return ['MetaArray']
         else:
             return name == 'MetaArray'
-    
-    #def __array_finalize__(self,obj):
-        ### array_finalize is called every time a MetaArray is created 
-        ### (whereas __new__ is not necessarily called every time)
-        
-        ### obj is the object from which this array was generated (for example, when slicing or view()ing)
-        
-        ## We use the getattr method to set a default if 'obj' doesn't have the 'info' attribute
-        ##print "Create new MA from object", str(type(obj))
-        ##import traceback
-        ##traceback.print_stack()
-        ##print "finalize", type(self), type(obj)
-        #if not hasattr(self, '_info'):
-            ##if isinstance(obj, MetaArray):
-                ##print "  copy info:", obj._info
-            #self._info = getattr(obj, '_info', [{}]*(obj.ndim+1))
-            #self._infoOwned = False  ## Do not make changes to _info until it is copied at least once
-        ##print "  self info:", self._info
-      
-        ## We could have checked first whether self._info was already defined:
-        ##if not hasattr(self, 'info'):
-        ##    self._info = getattr(obj, 'info', {})
-    
   
     def __getitem__(self, ind):
-        #print "getitem:", ind
-        
-        ## should catch scalar requests as early as possible to speed things up (?)
-        
         nInd = self._interpretIndexes(ind)
-        
-        #a = np.ndarray.__getitem__(self, nInd)
+
         a = self._data[nInd]
         if len(nInd) == self.ndim:
-            if np.all([not isinstance(ind, slice) for ind in nInd]):  ## no slices; we have requested a single value from the array
+            if np.all([not isinstance(ind, (slice, np.ndarray)) for ind in nInd]):  ## no slices; we have requested a single value from the array
                 return a
-        #if type(a) != type(self._data) and not isinstance(a, np.ndarray):  ## indexing returned single value
-            #return a
         
         ## indexing returned a sub-array; generate new info array to go with it
-        #print "   new MA:", type(a), a.shape
         info = []
         extraInfo = self._info[-1].copy()
         for i in range(0, len(nInd)):   ## iterate over all axes
-            #print "   axis", i
             if type(nInd[i]) in [slice, list] or isinstance(nInd[i], np.ndarray):  ## If the axis is sliced, keep the info but chop if necessary
-                #print "      slice axis", i, nInd[i]
-                #a._info[i] = self._axisSlice(i, nInd[i])
-                #print "         info:", a._info[i]
                 info.append(self._axisSlice(i, nInd[i]))
             else: ## If the axis is indexed, then move the information from that single index to the last info dictionary
-                #print "indexed:", i, nInd[i], type(nInd[i])
                 newInfo = self._axisSlice(i, nInd[i])
                 name = None
                 colName = None
@@ -271,16 +240,8 @@ class MetaArray(object):
                         else:
                             extraInfo['name'] = name
                         
-                        
-                #print "Lost info:", newInfo
-                #a._info[i] = None
-                #if 'name' in newInfo:
-                    #a._info[-1][newInfo['name']] = newInfo
         info.append(extraInfo)
         
-        #self._infoOwned = False
-        #while None in a._info:
-            #a._info.remove(None)
         return MetaArray(a, info=info)
   
     @property
@@ -314,22 +275,15 @@ class MetaArray(object):
             return getattr(self._data, attr)
         else:
             raise AttributeError(attr)
-            #return lambda *args, **kwargs: MetaArray(getattr(a.view(ndarray), attr)(*args, **kwargs)
         
     def __eq__(self, b):
         return self._binop('__eq__', b)
         
     def __ne__(self, b):
         return self._binop('__ne__', b)
-        #if isinstance(b, MetaArray):
-            #b = b.asarray()
-        #return self.asarray() != b
         
     def __sub__(self, b):
         return self._binop('__sub__', b)
-        #if isinstance(b, MetaArray):
-            #b = b.asarray()
-        #return MetaArray(self.asarray() - b, info=self.infoCopy())
 
     def __add__(self, b):
         return self._binop('__add__', b)
@@ -358,9 +312,12 @@ class MetaArray(object):
         else:
             return np.array(self._data)
             
-    def __array__(self):
+    def __array__(self, dtype=None):
         ## supports np.array(metaarray_instance) 
-        return self.asarray()
+        if dtype is None:
+            return self.asarray()
+        else:
+            return self.asarray().astype(dtype)
             
     def view(self, typ):
         ## deprecated; kept for backward compatibility
@@ -496,14 +453,7 @@ class MetaArray(object):
         numOk = True  ## Named indices not started yet; numbered sill ok
         for i in range(0,len(ind)):
             (axis, index, isNamed) = self._interpretIndex(ind[i], i, numOk)
-            #try:
             nInd[axis] = index
-            #except:
-                #print "ndim:", self.ndim
-                #print "axis:", axis
-                #print "index spec:", ind[i]
-                #print "index num:", index
-                #raise
             if isNamed:
                 numOk = False
         return tuple(nInd)
@@ -682,9 +632,7 @@ class MetaArray(object):
     def __str__(self):
         return self.__repr__()
 
-
     def axisCollapsingFn(self, fn, axis=None, *args, **kargs):
-        #arr = self.view(np.ndarray)
         fn = getattr(self._data, fn)
         if axis is None:
             return fn(axis, *args, **kargs)
@@ -741,7 +689,7 @@ class MetaArray(object):
         ## decide which read function to use
         with open(filename, 'rb') as fd:
             magic = fd.read(8)
-            if magic == '\x89HDF\r\n\x1a\n':
+            if magic == b'\x89HDF\r\n\x1a\n':
                 fd.close()
                 self._readHDF5(filename, **kwargs)
                 self._isHDF = True
@@ -766,7 +714,7 @@ class MetaArray(object):
         """Read meta array from the top of a file. Read lines until a blank line is reached.
         This function should ideally work for ALL versions of MetaArray.
         """
-        meta = ''
+        meta = u''
         ## Read meta information until the first blank line
         while True:
             line = fd.readline().strip()
@@ -776,7 +724,7 @@ class MetaArray(object):
         ret = eval(meta)
         #print ret
         return ret
-
+    
     def _readData1(self, fd, meta, mmap=False, **kwds):
         ## Read array data from the file descriptor for MetaArray v1 files
         ## read in axis values for any axis that specifies a length
@@ -821,8 +769,6 @@ class MetaArray(object):
 
         ## No axes are dynamic, just read the entire array in at once
         if dynAxis is None:
-            #if rewriteDynamic is not None:
-                #raise Exception("")
             if meta['type'] == 'object':
                 if mmap:
                     raise Exception('memmap not supported for arrays with dtype=object')
@@ -832,9 +778,7 @@ class MetaArray(object):
                     subarr = np.memmap(fd, dtype=meta['type'], mode='r', shape=meta['shape'])
                 else:
                     subarr = np.fromstring(fd.read(), dtype=meta['type'])
-            #subarr = subarr.view(subtype)
             subarr.shape = meta['shape']
-            #subarr._info = meta['info']
         ## One axis is dynamic, read in a frame at a time
         else:
             if mmap:
@@ -844,7 +788,7 @@ class MetaArray(object):
             frames = []
             frameShape = list(meta['shape'])
             frameShape[dynAxis] = 1
-            frameSize = reduce(lambda a,b: a*b, frameShape)
+            frameSize = np.prod(frameShape)
             n = 0
             while True:
                 ## Extract one non-blank line
@@ -886,10 +830,8 @@ class MetaArray(object):
                     newSubset = list(subset[:])
                     newSubset[dynAxis] = slice(dStart, dStop)
                     if dStop > dStart:
-                        #print n, data.shape, " => ", newSubset, data[tuple(newSubset)].shape
                         frames.append(data[tuple(newSubset)].copy())
                 else:
-                    #data = data[subset].copy()  ## what's this for??
                     frames.append(data)
                 
                 n += inf['numFrames']
@@ -900,12 +842,8 @@ class MetaArray(object):
                 ax['values'] = np.array(xVals, dtype=ax['values_type'])
             del ax['values_len']
             del ax['values_type']
-        #subarr = subarr.view(subtype)
-        #subarr._info = meta['info']
         self._info = meta['info']
         self._data = subarr
-        #raise Exception()  ## stress-testing
-        #return subarr
 
     def _readHDF5(self, fileName, readAllData=None, writable=False, **kargs):
         if 'close' in kargs and readAllData is None: ## for backward compatibility
@@ -935,6 +873,10 @@ class MetaArray(object):
         f = h5py.File(fileName, mode)
         
         ver = f.attrs['MetaArray']
+        try:
+            ver = ver.decode('utf-8')
+        except:
+            pass
         if ver > MetaArray.version:
             print("Warning: This file was written with MetaArray version %s, but you are using version %s. (Will attempt to read anyway)" % (str(ver), str(MetaArray.version)))
         meta = MetaArray.readHDF5Meta(f['info'])
@@ -964,11 +906,6 @@ class MetaArray(object):
         ma = MetaArray._h5py_metaarray.MetaArray(file=fileName)
         self._data = ma.asarray()._getValue()
         self._info = ma._info._getValue()
-        #print MetaArray._hdf5Process
-        #import inspect
-        #print MetaArray, id(MetaArray), inspect.getmodule(MetaArray)
-        
-        
 
     @staticmethod
     def mapHDF5Array(data, writable=False):
@@ -980,9 +917,6 @@ class MetaArray(object):
         if off is None:
             raise Exception("This dataset uses chunked storage; it can not be memory-mapped. (store using mappable=True)")
         return np.memmap(filename=data.file.filename, offset=off, dtype=data.dtype, shape=data.shape, mode=mode)
-        
-
-
 
     @staticmethod
     def readHDF5Meta(root, mmap=False):
@@ -991,6 +925,8 @@ class MetaArray(object):
         ## Pull list of values from attributes and child objects
         for k in root.attrs:
             val = root.attrs[k]
+            if isinstance(val, bytes):
+                val = val.decode()
             if isinstance(val, basestring):  ## strings need to be re-evaluated to their original types
                 try:
                     val = eval(val)
@@ -999,9 +935,9 @@ class MetaArray(object):
             data[k] = val
         for k in root:
             obj = root[k]
-            if isinstance(obj, h5py.highlevel.Group):
+            if isinstance(obj, h5py.Group):
                 val = MetaArray.readHDF5Meta(obj)
-            elif isinstance(obj, h5py.highlevel.Dataset):
+            elif isinstance(obj, h5py.Dataset):
                 if mmap:
                     val = MetaArray.mapHDF5Array(obj)
                 else:
@@ -1011,6 +947,10 @@ class MetaArray(object):
             data[k] = val
         
         typ = root.attrs['_metaType_']
+        try:
+            typ = typ.decode('utf-8')
+        except:
+            pass
         del data['_metaType_']
         
         if typ == 'dict':
@@ -1024,7 +964,6 @@ class MetaArray(object):
             return d2
         else:
             raise Exception("Don't understand metaType '%s'" % typ)
-        
 
     def write(self, fileName, **opts):
         """Write this object to a file. The object can be restored by calling MetaArray(file=fileName)
@@ -1033,12 +972,13 @@ class MetaArray(object):
             appendKeys: a list of keys (other than "values") for metadata to append to on the appendable axis.
             compression: None, 'gzip' (good compression), 'lzf' (fast compression), etc.
             chunks: bool or tuple specifying chunk shape
-        """
-        
-        if USE_HDF5 and HAVE_HDF5:
+        """        
+        if USE_HDF5 is False:
+            return self.writeMa(fileName, **opts)
+        elif HAVE_HDF5 is True:
             return self.writeHDF5(fileName, **opts)
         else:
-            return self.writeMa(fileName, **opts)
+            raise Exception("h5py is required for writing .ma hdf5 files, but it could not be imported.")
 
     def writeMeta(self, fileName):
         """Used to re-write meta info to the given file.
@@ -1050,7 +990,6 @@ class MetaArray(object):
         
         self.writeHDF5Meta(f, 'info', self._info)
         f.close()
-
 
     def writeHDF5(self, fileName, **opts):
         ## default options for writing datasets
@@ -1087,8 +1026,7 @@ class MetaArray(object):
         ## update options if they were passed in
         for k in dsOpts:
             if k in opts:
-                dsOpts[k] = opts[k]
-        
+                dsOpts[k] = opts[k]        
         
         ## If mappable is in options, it disables chunking/compression
         if opts.get('mappable', False):
@@ -1260,89 +1198,6 @@ class MetaArray(object):
             file.close()
         else:
             return ret
-        
-
-
-#class H5MetaList():
-    
-
-#def rewriteContiguous(fileName, newName):
-    #"""Rewrite a dynamic array file as contiguous"""
-    #def _readData2(fd, meta, subtype, mmap):
-        ### read in axis values
-        #dynAxis = None
-        #frameSize = 1
-        ### read in axis values for any axis that specifies a length
-        #for i in range(len(meta['info'])):
-            #ax = meta['info'][i]
-            #if ax.has_key('values_len'):
-                #if ax['values_len'] == 'dynamic':
-                    #if dynAxis is not None:
-                        #raise Exception("MetaArray has more than one dynamic axis! (this is not allowed)")
-                    #dynAxis = i
-                #else:
-                    #ax['values'] = fromstring(fd.read(ax['values_len']), dtype=ax['values_type'])
-                    #frameSize *= ax['values_len']
-                    #del ax['values_len']
-                    #del ax['values_type']
-                    
-        ### No axes are dynamic, just read the entire array in at once
-        #if dynAxis is None:
-            #raise Exception('Array has no dynamic axes.')
-        ### One axis is dynamic, read in a frame at a time
-        #else:
-            #if mmap:
-                #raise Exception('memmap not supported for non-contiguous arrays. Use rewriteContiguous() to convert.')
-            #ax = meta['info'][dynAxis]
-            #xVals = []
-            #frames = []
-            #frameShape = list(meta['shape'])
-            #frameShape[dynAxis] = 1
-            #frameSize = reduce(lambda a,b: a*b, frameShape)
-            #n = 0
-            #while True:
-                ### Extract one non-blank line
-                #while True:
-                    #line = fd.readline()
-                    #if line != '\n':
-                        #break
-                #if line == '':
-                    #break
-                    
-                ### evaluate line
-                #inf = eval(line)
-                
-                ### read data block
-                ##print "read %d bytes as %s" % (inf['len'], meta['type'])
-                #if meta['type'] == 'object':
-                    #data = pickle.loads(fd.read(inf['len']))
-                #else:
-                    #data = fromstring(fd.read(inf['len']), dtype=meta['type'])
-                
-                #if data.size != frameSize * inf['numFrames']:
-                    ##print data.size, frameSize, inf['numFrames']
-                    #raise Exception("Wrong frame size in MetaArray file! (frame %d)" % n)
-                    
-                ### read in data block
-                #shape = list(frameShape)
-                #shape[dynAxis] = inf['numFrames']
-                #data.shape = shape
-                #frames.append(data)
-                
-                #n += inf['numFrames']
-                #if 'xVals' in inf:
-                    #xVals.extend(inf['xVals'])
-            #subarr = np.concatenate(frames, axis=dynAxis)
-            #if len(xVals)> 0:
-                #ax['values'] = array(xVals, dtype=ax['values_type'])
-            #del ax['values_len']
-            #del ax['values_type']
-        #subarr = subarr.view(subtype)
-        #subarr._info = meta['info']
-        #return subarr
-    
-
-
   
   
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 """
-SVG export test
+CSV export test
 """
 from __future__ import division, print_function, absolute_import
 import pyqtgraph as pg
@@ -28,13 +28,14 @@ def test_CSVExporter():
     
     y3 = [1,5,2,3,4,6,1,2,4,2,3,5,3]
     x3 = pg.np.linspace(0, 1.0, len(y3)+1)
-    plt.plot(x=x3, y=y3, stepMode=True)
+    plt.plot(x=x3, y=y3, stepMode="center")
     
     ex = pg.exporters.CSVExporter(plt.plotItem)
     ex.export(fileName=tempfilename)
 
-    r = csv.reader(open(tempfilename, 'r'))
-    lines = [line for line in r]
+    with open(tempfilename, 'r') as csv_file:
+        r = csv.reader(csv_file)
+        lines = [line for line in r]
     header = lines.pop(0)
     assert header == ['myPlot_x', 'myPlot_y', 'x0001', 'y0001', 'x0002', 'y0002']
     

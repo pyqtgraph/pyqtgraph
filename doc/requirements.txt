@@ -1,0 +1,5 @@
+pyside2
+numpy
+pyopengl
+sphinx
+sphinx_rtd_theme

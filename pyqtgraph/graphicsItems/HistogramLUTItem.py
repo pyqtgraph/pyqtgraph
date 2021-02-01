@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 GraphicsWidget displaying an image histogram along with gradient editor. Can be used to adjust the appearance of images.
 """
@@ -32,22 +33,20 @@ class HistogramLUTItem(GraphicsWidget):
     - Movable region over histogram to select black/white levels
     - Gradient editor to define color lookup table for single-channel images
     
-    Parameters
-    ----------
-    image : ImageItem or None
-        If *image* is provided, then the control will be automatically linked to
-        the image and changes to the control will be immediately reflected in
-        the image's appearance.
-    fillHistogram : bool
-        By default, the histogram is rendered with a fill.
-        For performance, set *fillHistogram* = False.    
-    rgbHistogram : bool
-        Sets whether the histogram is computed once over all channels of the
-        image, or once per channel.
-    levelMode : 'mono' or 'rgba'
-        If 'mono', then only a single set of black/whilte level lines is drawn,
-        and the levels apply to all channels in the image. If 'rgba', then one
-        set of levels is drawn for each channel.
+    ================ ===========================================================
+    image            (:class:`~pyqtgraph.ImageItem` or ``None``) If *image* is
+                     provided, then the control will be automatically linked to
+                     the image and changes to the control will be immediately
+                     reflected in the image's appearance.
+    fillHistogram    (bool) By default, the histogram is rendered with a fill.
+                     For performance, set ``fillHistogram=False``
+    rgbHistogram     (bool) Sets whether the histogram is computed once over all
+                     channels of the image, or once per channel.
+    levelMode        'mono' or 'rgba'. If 'mono', then only a single set of
+                     black/white level lines is drawn, and the levels apply to
+                     all channels in the image. If 'rgba', then one set of
+                     levels is drawn for each channel.
+    ================ ===========================================================
     """
     
     sigLookupTableChanged = QtCore.Signal(object)
@@ -119,6 +118,7 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
+            plot.setRotation(90)
             self.vb.addItem(plot)
         
         self.fillHistogram(fillHistogram)
@@ -148,6 +148,7 @@ class HistogramLUTItem(GraphicsWidget):
         p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
         p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
         gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
         for pen in [fn.mkPen((0, 0, 0, 100), width=3), pen]:
             p.setPen(pen)
             p.drawLine(p1 + Point(0, 5), gradRect.bottomLeft())
@@ -170,7 +171,7 @@ class HistogramLUTItem(GraphicsWidget):
         """
         self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
-        img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+        self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
         
@@ -190,19 +191,22 @@ class HistogramLUTItem(GraphicsWidget):
     
     def gradientChanged(self):
         if self.imageItem() is not None:
-            if self.gradient.isLookupTrivial():
-                self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
-            else:
-                self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+            self._setImageLookupTable()
             
         self.lut = None
         self.sigLookupTableChanged.emit(self)
+
+    def _setImageLookupTable(self):
+        if self.gradient.isLookupTrivial():
+            self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
+        else:
+            self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
 
     def getLookupTable(self, img=None, n=None, alpha=None):
         """Return a lookup table from the color gradient defined by this 
         HistogramLUTItem.
         """
-        if self.levelMode is not 'mono':
+        if self.levelMode != 'mono':
             return None
         if n is None:
             if img.dtype == np.uint8:
@@ -222,9 +226,9 @@ class HistogramLUTItem(GraphicsWidget):
 
     def regionChanging(self):
         if self.imageItem() is not None:
-            self.imageItem().setLevels(self.region.getRegion())
-        self.sigLevelsChanged.emit(self)
+            self.imageItem().setLevels(self.getLevels())
         self.update()
+        self.sigLevelsChanged.emit(self)
 
     def imageChanged(self, autoLevel=False, autoRange=False):
         self.updatePlots()
@@ -320,7 +324,8 @@ class HistogramLUTItem(GraphicsWidget):
         }
     
     def restoreState(self, state):
-        self.setLevelMode(state['mode'])
+        if 'mode' in state:
+            self.setLevelMode(state['mode'])
         self.gradient.restoreState(state['gradient'])
         self.setLevels(*state['levels'])
 

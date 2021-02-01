@@ -11,7 +11,7 @@ import pyqtgraph as pg
 pg.setConfigOptions(imageAxisOrder='row-major')
 
 ## create GUI
-app = QtGui.QApplication([])
+app = pg.mkQApp("ROI Types Examples")
 
 w = pg.GraphicsLayoutWidget(show=True, size=(800,800), border=True)
 v = w.addViewBox(colspan=2)
@@ -41,7 +41,7 @@ v.addItem(im1)
 v.addItem(im2)
 im2.moveBy(110, 20)
 v.setRange(QtCore.QRectF(0, 0, 200, 120))
-im1.scale(0.8, 0.5)
+im1.setTransform(QtGui.QTransform.fromScale(0.8, 0.5))
 
 im3 = pg.ImageItem()
 v2 = w.addViewBox(1,0)
@@ -92,10 +92,10 @@ def updateRoiPlot(roi, data=None):
 rois = []
 rois.append(pg.TestROI([0,  0], [20, 20], maxBounds=QtCore.QRectF(-10, -10, 230, 140), pen=(0,9)))
 rois.append(pg.LineROI([0,  0], [20, 20], width=5, pen=(1,9)))
-rois.append(pg.MultiLineROI([[0, 50], [50, 60], [60, 30]], width=5, pen=(2,9)))
+rois.append(pg.MultiRectROI([[0, 50], [50, 60], [60, 30]], width=5, pen=(2,9)))
 rois.append(pg.EllipseROI([110, 10], [30, 20], pen=(3,9)))
 rois.append(pg.CircleROI([110, 50], [20, 20], pen=(4,9)))
-rois.append(pg.PolygonROI([[2,0], [2.1,0], [2,.1]], pen=(5,9)))
+rois.append(pg.PolyLineROI([[2,0], [2.1,0], [2,.1]], pen=(5,9)))
 #rois.append(SpiralROI([20,30], [1,1], pen=mkPen(0)))
 
 ## Add each ROI to the scene and link its data to a plot curve with the same color

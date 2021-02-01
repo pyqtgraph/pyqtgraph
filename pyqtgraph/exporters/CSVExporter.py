@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 from .Exporter import Exporter
 from ..parametertree import Parameter
 from .. import PlotItem
+from ..python2_3 import asUnicode
+
+translate = QtCore.QCoreApplication.translate
 
 __all__ = ['CSVExporter']
     
@@ -12,9 +16,9 @@ class CSVExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'separator', 'type': 'list', 'value': 'comma', 'values': ['comma', 'tab']},
-            {'name': 'precision', 'type': 'int', 'value': 10, 'limits': [0, None]},
-            {'name': 'columnMode', 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']}
+            {'name': 'separator', 'title': translate("Exporter", 'separator'), 'type': 'list', 'value': 'comma', 'values': ['comma', 'tab']},
+            {'name': 'precision', 'title': translate("Exporter", 'precision'), 'type': 'int', 'value': 10, 'limits': [0, None]},
+            {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']}
         ])
         
     def parameters(self):
@@ -29,7 +33,6 @@ class CSVExporter(Exporter):
             self.fileSaveDialog(filter=["*.csv", "*.tsv"])
             return
 
-        fd = open(fileName, 'w')
         data = []
         header = []
 
@@ -55,29 +58,28 @@ class CSVExporter(Exporter):
             sep = ','
         else:
             sep = '\t'
-            
-        fd.write(sep.join(header) + '\n')
-        i = 0
-        numFormat = '%%0.%dg' % self.params['precision']
-        numRows = max([len(d[0]) for d in data])
-        for i in range(numRows):
-            for j, d in enumerate(data):
-                # write x value if this is the first column, or if we want x 
-                # for all rows
-                if appendAllX or j == 0:
-                    if d is not None and i < len(d[0]):
-                        fd.write(numFormat % d[0][i] + sep)
+
+        with open(fileName, 'w') as fd:
+            fd.write(sep.join(map(asUnicode, header)) + '\n')
+            i = 0
+            numFormat = '%%0.%dg' % self.params['precision']
+            numRows = max([len(d[0]) for d in data])
+            for i in range(numRows):
+                for j, d in enumerate(data):
+                    # write x value if this is the first column, or if we want
+                    # x for all rows
+                    if appendAllX or j == 0:
+                        if d is not None and i < len(d[0]):
+                            fd.write(numFormat % d[0][i] + sep)
+                        else:
+                            fd.write(' %s' % sep)
+
+                    # write y value
+                    if d is not None and i < len(d[1]):
+                        fd.write(numFormat % d[1][i] + sep)
                     else:
                         fd.write(' %s' % sep)
-                
-                # write y value 
-                if d is not None and i < len(d[1]):
-                    fd.write(numFormat % d[1][i] + sep)
-                else:
-                    fd.write(' %s' % sep)
-            fd.write('\n')
-        fd.close()
+                fd.write('\n')
+
 
 CSVExporter.register()        
-                
-        

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
@@ -8,6 +10,11 @@ PARAM_TYPES = {}
 PARAM_NAMES = {}
 
 def registerParameterType(name, cls, override=False):
+    """Register a parameter type in the parametertree system.
+
+    This enables construction of custom Parameter classes by name in
+    :meth:`~pyqtgraph.parametertree.Parameter.create`.
+    """
     global PARAM_TYPES
     if name in PARAM_TYPES and not override:
         raise Exception("Parameter type '%s' already exists (use override=True to replace)" % name)
@@ -55,6 +62,7 @@ class Parameter(QtCore.QObject):
     sigDefaultChanged(self, default)     Emitted when this parameter's default value has changed
     sigNameChanged(self, name)           Emitted when this parameter's name has changed
     sigOptionsChanged(self, opts)        Emitted when any of this parameter's options have changed
+    sigContextMenu(self, name)           Emitted when a context menu was clicked
     ===================================  =========================================================
     """
     ## name, type, limits, etc.
@@ -81,7 +89,8 @@ class Parameter(QtCore.QObject):
     ## (but only if monitorChildren() is called)
     sigTreeStateChanged = QtCore.Signal(object, object)  # self, changes
                                                          # changes = [(param, change, info), ...]
-    
+    sigContextMenu = QtCore.Signal(object, object)       # self, name
+
     # bad planning.
     #def __new__(cls, *args, **opts):
         #try:
@@ -135,9 +144,12 @@ class Parameter(QtCore.QObject):
                                      (default=False)
         removable                    If True, the user may remove this Parameter.
                                      (default=False)
-        expanded                     If True, the Parameter will appear expanded when
-                                     displayed in a ParameterTree (its children will be
-                                     visible). (default=True)
+        expanded                     If True, the Parameter will initially be expanded in
+                                     ParameterTrees: Its children will be visible.
+                                     (default=True)
+        syncExpanded                 If True, the `expanded` state of this Parameter is
+                                     synchronized with all ParameterTrees it is displayed in.
+                                     (default=False)
         title                        (str or None) If specified, then the parameter will be 
                                      displayed to the user using this string as its name. 
                                      However, the parameter will still be referred to 
@@ -159,6 +171,7 @@ class Parameter(QtCore.QObject):
             'removable': False,
             'strictNaming': False,  # forces name to be usable as a python variable
             'expanded': True,
+            'syncExpanded': False,
             'title': None,
             #'limits': None,  ## This is a bad plan--each parameter type may have a different data type for limits.
         }
@@ -182,13 +195,11 @@ class Parameter(QtCore.QObject):
         
         self.addChildren(self.opts.pop('children', []))
         
-        self.opts['value'] = None
         if value is not None:
             self.setValue(value)
 
         if 'default' not in self.opts:
             self.opts['default'] = None
-            self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
@@ -199,12 +210,28 @@ class Parameter(QtCore.QObject):
         self.sigDefaultChanged.connect(lambda param, data: self.emitStateChanged('default', data))
         self.sigNameChanged.connect(lambda param, data: self.emitStateChanged('name', data))
         self.sigOptionsChanged.connect(lambda param, data: self.emitStateChanged('options', data))
+        self.sigContextMenu.connect(lambda param, data: self.emitStateChanged('contextMenu', data))
+
         
         #self.watchParam(self)  ## emit treechange signals if our own state changes
         
     def name(self):
         """Return the name of this Parameter."""
         return self.opts['name']
+
+    def title(self):
+        """Return the title of this Parameter.
+        
+        By default, the title is the same as the name unless it has been explicitly specified
+        otherwise."""
+        title = self.opts.get('title', None)
+        if title is None:
+            title = self.name()
+        return title
+
+    def contextMenu(self, name):
+        """"A context menu entry was clicked"""
+        self.sigContextMenu.emit(self, name)
 
     def setName(self, name):
         """Attempt to change the name of this parameter; return the actual name. 
@@ -262,15 +289,15 @@ class Parameter(QtCore.QObject):
             if blockSignal is not None:
                 self.sigValueChanged.disconnect(blockSignal)
             value = self._interpretValue(value)
-            if self.opts['value'] == value:
+            if fn.eq(self.opts['value'], value):
                 return value
             self.opts['value'] = value
-            self.sigValueChanged.emit(self, value)
+            self.sigValueChanged.emit(self, value)  # value might change after signal is received by tree item
         finally:
             if blockSignal is not None:
                 self.sigValueChanged.connect(blockSignal)
             
-        return value
+        return self.opts['value']
 
     def _interpretValue(self, v):
         return v
@@ -408,7 +435,7 @@ class Parameter(QtCore.QObject):
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
-        return 'default' in self.opts
+        return self.opts['default'] is not None
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""
@@ -453,7 +480,7 @@ class Parameter(QtCore.QObject):
         Set any arbitrary options on this parameter.
         The exact behavior of this function will depend on the parameter type, but
         most parameters will accept a common set of options: value, name, limits,
-        default, readonly, removable, renamable, visible, enabled, and expanded.
+        default, readonly, removable, renamable, visible, enabled, expanded and syncExpanded.
         
         See :func:`Parameter.__init__ <pyqtgraph.parametertree.Parameter.__init__>`
         for more information on default options.
@@ -559,8 +586,8 @@ class Parameter(QtCore.QObject):
             self.childs.insert(pos, child)
             
             child.parentChanged(self)
-            self.sigChildAdded.emit(self, child, pos)
             child.sigTreeStateChanged.connect(self.treeStateChanged)
+            self.sigChildAdded.emit(self, child, pos)
         return child
         
     def removeChild(self, child):
@@ -571,11 +598,11 @@ class Parameter(QtCore.QObject):
         del self.names[name]
         self.childs.pop(self.childs.index(child))
         child.parentChanged(None)
-        self.sigChildRemoved.emit(self, child)
         try:
             child.sigTreeStateChanged.disconnect(self.treeStateChanged)
         except (TypeError, RuntimeError):  ## already disconnected
             pass
+        self.sigChildRemoved.emit(self, child)
 
     def clearChildren(self):
         """Remove all child parameters."""
@@ -612,7 +639,7 @@ class Parameter(QtCore.QObject):
 
     def incrementName(self, name):
         ## return an unused name by adding a number to the name given
-        base, num = re.match('(.*)(\d*)', name).groups()
+        base, num = re.match(r'(.*)(\d*)', name).groups()
         numLen = len(num)
         if numLen == 0:
             num = 2

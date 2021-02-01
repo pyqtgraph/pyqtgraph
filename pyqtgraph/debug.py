@@ -2,7 +2,7 @@
 """
 debug.py - Functions to aid in debugging 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from __future__ import print_function
@@ -1083,7 +1083,10 @@ def listQThreads():
     """Prints Thread IDs (Qt's, not OS's) for all QThreads."""
     thr = findObj('[Tt]hread')
     thr = [t for t in thr if isinstance(t, QtCore.QThread)]
-    import sip
+    try:
+        from PyQt5 import sip
+    except ImportError:
+        import sip
     for t in thr:
         print("--> ", t)
         print("     Qt ID: 0x%x" % sip.unwrapinstance(t))
@@ -1151,7 +1154,22 @@ class ThreadTrace(object):
             for id, frame in sys._current_frames().items():
                 if id == threading.current_thread().ident:
                     continue
-                print("<< thread %d >>" % id)
+
+                # try to determine a thread name
+                try:
+                    name = threading._active.get(id, None)
+                except:
+                    name = None
+                if name is None:
+                    try:
+                        # QThread._names must be manually set by thread creators.
+                        name = QtCore.QThread._names.get(id)
+                    except:
+                        name = None
+                if name is None:
+                    name = "???"
+
+                print("<< thread %d \"%s\" >>" % (id, name))
                 traceback.print_stack(frame)
             print("===============================================\n")
             

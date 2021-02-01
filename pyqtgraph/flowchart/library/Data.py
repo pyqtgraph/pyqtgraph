@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from ..Node import Node
-from ...Qt import QtGui, QtCore
+from ...Qt import QtGui, QtCore, QtWidgets
 import numpy as np
+import sys
 from .common import *
 from ...SRTTransform import SRTTransform
 from ...Point import Point
@@ -172,6 +173,20 @@ class RegionSelectNode(CtrlNode):
         self.update()
         
         
+class TextEdit(QtWidgets.QTextEdit):
+    def __init__(self, on_update):
+        super().__init__()
+        self.on_update = on_update
+        self.lastText = None
+
+    def focusOutEvent(self, ev):
+        text = str(self.toPlainText())
+        if text != self.lastText:
+            self.lastText = text
+            self.on_update()
+        super().focusOutEvent(ev)
+
+
 class EvalNode(Node):
     """Return the output of a string evaluated/executed by the python interpreter.
     The string may be either an expression or a python script, and inputs are accessed as the name of the terminal. 
@@ -189,14 +204,11 @@ class EvalNode(Node):
         
         self.ui = QtGui.QWidget()
         self.layout = QtGui.QGridLayout()
-        self.text = QtGui.QTextEdit()
+        self.text = TextEdit(self.update)
         self.text.setTabStopWidth(30)
         self.text.setPlainText("# Access inputs as args['input_name']\nreturn {'output': None} ## one key per output terminal")
         self.layout.addWidget(self.text, 1, 0, 1, 2)
         self.ui.setLayout(self.layout)
-        
-        self.text.focusOutEvent = self.focusOutEvent
-        self.lastText = None
         
     def ctrlWidget(self):
         return self.ui
@@ -220,13 +232,6 @@ class EvalNode(Node):
     def code(self):
         return self.text.toPlainText()
         
-    def focusOutEvent(self, ev):
-        text = str(self.text.toPlainText())
-        if text != self.lastText:
-            self.lastText = text
-            self.update()
-        return QtGui.QTextEdit.focusOutEvent(self.text, ev)
-        
     def process(self, display=True, **args):
         l = locals()
         l.update(args)
@@ -238,7 +243,12 @@ class EvalNode(Node):
             fn = "def fn(**args):\n"
             run = "\noutput=fn(**args)\n"
             text = fn + "\n".join(["    "+l for l in str(self.text.toPlainText()).split('\n')]) + run
-            exec(text)
+            if sys.version_info.major == 2:
+                exec(text)
+            elif sys.version_info.major == 3:
+                ldict = locals()
+                exec(text, globals(), ldict)
+                output = ldict['output']
         except:
             print("Error processing node: %s" % self.name())
             raise

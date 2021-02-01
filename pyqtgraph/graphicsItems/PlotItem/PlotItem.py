@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import warnings
 import weakref
 import numpy as np
 import os
@@ -18,14 +19,11 @@ from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 
-if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
-elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
-elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
-elif QT_LIB == 'PySide2':
-    from .plotConfigTemplate_pyside2 import *
+translate = QtCore.QCoreApplication.translate
+
+import importlib
+ui_template = importlib.import_module(
+    f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
 
 __all__ = ['PlotItem']
 
@@ -96,7 +94,7 @@ class PlotItem(GraphicsWidget):
     def __init__(self, parent=None, name=None, labels=None, title=None, viewBox=None, axisItems=None, enableMenu=True, **kargs):
         """
         Create a new PlotItem. All arguments are optional.
-        Any extra keyword arguments are passed to PlotItem.plot().
+        Any extra keyword arguments are passed to :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`.
         
         ==============  ==========================================================================================
         **Arguments:**
@@ -134,12 +132,14 @@ class PlotItem(GraphicsWidget):
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
         self.layout.setVerticalSpacing(0)
-        
+
         if viewBox is None:
-            viewBox = ViewBox(parent=self)
+            viewBox = ViewBox(parent=self, enableMenu=enableMenu)
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
-        self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
+
+        # Enable or disable plotItem menu
+        self.setMenuEnabled(enableMenu, None)
         
         if name is not None:
             self.vb.register(name)
@@ -157,20 +157,9 @@ class PlotItem(GraphicsWidget):
         
         self.legend = None
         
-        ## Create and place axis items
-        if axisItems is None:
-            axisItems = {}
+        # Initialize axis items
         self.axes = {}
-        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
-            if k in axisItems:
-                axis = axisItems[k]
-            else:
-                axis = AxisItem(orientation=k, parent=self)
-            axis.linkToView(self.vb)
-            self.axes[k] = {'item': axis, 'pos': pos}
-            self.layout.addItem(axis, *pos)
-            axis.setZValue(-1000)
-            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+        self.setAxisItems(axisItems)
         
         self.titleLabel = LabelItem('', size='11pt', parent=self)
         self.layout.addItem(self.titleLabel, 0, 1)
@@ -201,23 +190,23 @@ class PlotItem(GraphicsWidget):
         ### Set up context menu
         
         w = QtGui.QWidget()
-        self.ctrl = c = Ui_Form()
+        self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
-            ('Transforms', c.transformGroup),
-            ('Downsample', c.decimateGroup),
-            ('Average', c.averageGroup),
-            ('Alpha', c.alphaGroup),
-            ('Grid', c.gridGroup),
-            ('Points', c.pointsGroup),
+            (translate("PlotItem", 'Transforms'), c.transformGroup),
+            (translate("PlotItem", 'Downsample'), c.decimateGroup),
+            (translate("PlotItem", 'Average'), c.averageGroup),
+            (translate("PlotItem", 'Alpha'), c.alphaGroup),
+            (translate("PlotItem", 'Grid'), c.gridGroup),
+            (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
         
         
         self.ctrlMenu = QtGui.QMenu()
         
-        self.ctrlMenu.setTitle('Plot Options')
+        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
             sm = QtGui.QMenu(name)
@@ -244,6 +233,8 @@ class PlotItem(GraphicsWidget):
         c.fftCheck.toggled.connect(self.updateSpectrumMode)
         c.logXCheck.toggled.connect(self.updateLogMode)
         c.logYCheck.toggled.connect(self.updateLogMode)
+        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
+        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -257,11 +248,6 @@ class PlotItem(GraphicsWidget):
         
         self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
-        
-        self.hideAxis('right')
-        self.hideAxis('top')
-        self.showAxis('left')
-        self.showAxis('bottom')
         
         if labels is None:
             labels = {}
@@ -304,6 +290,61 @@ class PlotItem(GraphicsWidget):
         locals()[m] = _create_method(m)
         
     del _create_method
+    
+    def setAxisItems(self, axisItems=None):
+        """
+        Place axis items as given by `axisItems`. Initializes non-existing axis items.
+        
+        ==============  ==========================================================================================
+        **Arguments:**
+        *axisItems*     Optional dictionary instructing the PlotItem to use pre-constructed items
+                        for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+                        and the values must be instances of AxisItem (or at least compatible with AxisItem).
+        ==============  ==========================================================================================
+        """
+        
+                
+        if axisItems is None:
+            axisItems = {}
+        
+        # Array containing visible axis items
+        # Also containing potentially hidden axes, but they are not touched so it does not matter
+        visibleAxes = ['left', 'bottom']
+        visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
+                                             # some values to visibleAxes a second time
+        
+        for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
+            if k in self.axes:
+                if k not in axisItems:
+                    continue # Nothing to do here
+                
+                # Remove old axis
+                oldAxis = self.axes[k]['item']
+                self.layout.removeItem(oldAxis)
+                oldAxis.scene().removeItem(oldAxis)
+                oldAxis.unlinkFromView()
+            
+            # Create new axis
+            if k in axisItems:
+                axis = axisItems[k]
+                if axis.scene() is not None:
+                    if k not in self.axes or axis != self.axes[k]["item"]:
+                        raise RuntimeError(
+                            "Can't add an axis to multiple plots. Shared axes"
+                            " can be achieved with multiple AxisItem instances"
+                            " and set[X/Y]Link.")
+            else:
+                axis = AxisItem(orientation=k, parent=self)
+            
+            # Set up new axis
+            axis.linkToView(self.vb)
+            self.axes[k] = {'item': axis, 'pos': pos}
+            self.layout.addItem(axis, *pos)
+            axis.setZValue(-1000)
+            axis.setFlag(axis.ItemNegativeZStacksBehindParent)
+            
+            axisVisible = k in visibleAxes
+            self.showAxis(k, axisVisible)
         
     def setLogMode(self, x=None, y=None):
         """
@@ -484,6 +525,9 @@ class PlotItem(GraphicsWidget):
         If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
         be included in analysis performed by the PlotItem.
         """
+        if item in self.items:
+            warnings.warn('Item already added to PlotItem, ignoring.')
+            return
         self.items.append(item)
         vbargs = {}
         if 'ignoreBounds' in kargs:
@@ -551,9 +595,9 @@ class PlotItem(GraphicsWidget):
         :func:`InfiniteLine.__init__() <pyqtgraph.InfiniteLine.__init__>`.
         Returns the item created.
         """
-        pos = kwds.get('pos', x if x is not None else y)
-        angle = kwds.get('angle', 0 if x is None else 90)
-        line = InfiniteLine(pos, angle, **kwds)
+        kwds['pos'] = kwds.get('pos', x if x is not None else y)
+        kwds['angle'] = kwds.get('angle', 0 if x is None else 90)
+        line = InfiniteLine(**kwds)
         self.addItem(line)
         if z is not None:
             line.setZValue(z)
@@ -569,8 +613,8 @@ class PlotItem(GraphicsWidget):
         if item in self.dataItems:
             self.dataItems.remove(item)
             
-        if item.scene() is not None:
-            self.vb.removeItem(item)
+        self.vb.removeItem(item)
+        
         if item in self.curves:
             self.curves.remove(item)
             self.updateDecimation()
@@ -615,17 +659,20 @@ class PlotItem(GraphicsWidget):
         
         return item
 
-    def addLegend(self, size=None, offset=(30, 30)):
+    def addLegend(self, offset=(30, 30), **kwargs):
         """
-        Create a new LegendItem and anchor it over the internal ViewBox.
-        Plots will be automatically displayed in the legend if they
-        are created with the 'name' argument.
+        Create a new :class:`~pyqtgraph.LegendItem` and anchor it over the
+        internal ViewBox. Plots will be automatically displayed in the legend
+        if they are created with the 'name' argument.
 
         If a LegendItem has already been created using this method, that
         item will be returned rather than creating a new one.
+
+        Accepts the same arguments as :meth:`~pyqtgraph.LegendItem`.
         """
+
         if self.legend is None:
-            self.legend = LegendItem(size, offset)
+            self.legend = LegendItem(offset=offset, **kwargs)
             self.legend.setParentItem(self.vb)
         return self.legend
         
@@ -683,7 +730,6 @@ class PlotItem(GraphicsWidget):
         xRange = rect.left(), rect.right() 
         
         svg = ""
-        fh = open(fileName, 'w')
 
         dx = max(rect.right(),0) - min(rect.left(),0)
         ymn = min(rect.top(), rect.bottom())
@@ -697,52 +743,68 @@ class PlotItem(GraphicsWidget):
             sy *= 1000
         sy *= -1
 
-        fh.write('<svg>\n')
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M%f,0 L%f,0"/>\n' % (rect.left()*sx, rect.right()*sx))
-        fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" stroke-width="1" d="M0,%f L0,%f"/>\n' % (rect.top()*sy, rect.bottom()*sy))
+        with open(fileName, 'w') as fh:
+            # fh.write('<svg viewBox="%f %f %f %f">\n' % (rect.left() * sx,
+            #                                             rect.top() * sx,
+            #                                             rect.width() * sy,
+            #                                             rect.height()*sy))
+            fh.write('<svg>\n')
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M%f,0 L%f,0"/>\n' % (
+                        rect.left() * sx, rect.right() * sx))
+            fh.write('<path fill="none" stroke="#000000" stroke-opacity="0.5" '
+                     'stroke-width="1" d="M0,%f L0,%f"/>\n' % (
+                        rect.top() * sy, rect.bottom() * sy))
 
-        for item in self.curves:
-            if isinstance(item, PlotCurveItem):
-                color = fn.colorStr(item.pen.color())
-                opacity = item.pen.color().alpha() / 255.
-                color = color[:6]
-                x, y = item.getData()
-                mask = (x > xRange[0]) * (x < xRange[1])
-                mask[:-1] += mask[1:]
-                m2 = mask.copy()
-                mask[1:] += m2[:-1]
-                x = x[mask]
-                y = y[mask]
-                
-                x *= sx
-                y *= sy
-                
-                fh.write('<path fill="none" stroke="#%s" stroke-opacity="%f" stroke-width="1" d="M%f,%f ' % (color, opacity, x[0], y[0]))
-                for i in range(1, len(x)):
-                    fh.write('L%f,%f ' % (x[i], y[i]))
-                
-                fh.write('"/>')
-
-        for item in self.dataItems:
-            if isinstance(item, ScatterPlotItem):
-                
-                pRect = item.boundingRect()
-                vRect = pRect.intersected(rect)
-                
-                for point in item.points():
-                    pos = point.pos()
-                    if not rect.contains(pos):
-                        continue
-                    color = fn.colorStr(point.brush.color())
-                    opacity = point.brush.color().alpha() / 255.
+            for item in self.curves:
+                if isinstance(item, PlotCurveItem):
+                    color = fn.colorStr(item.pen.color())
+                    opacity = item.pen.color().alpha() / 255.
                     color = color[:6]
-                    x = pos.x() * sx
-                    y = pos.y() * sy
-                    
-                    fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" stroke="none" fill-opacity="%f"/>\n' % (x, y, color, opacity))
-        
-        fh.write("</svg>\n")
-    
+                    x, y = item.getData()
+                    mask = (x > xRange[0]) * (x < xRange[1])
+                    mask[:-1] += mask[1:]
+                    m2 = mask.copy()
+                    mask[1:] += m2[:-1]
+                    x = x[mask]
+                    y = y[mask]
+
+                    x *= sx
+                    y *= sy
+
+                    # fh.write('<g fill="none" stroke="#%s" '
+                    #          'stroke-opacity="1" stroke-width="1">\n' % (
+                    #           color, ))
+                    fh.write('<path fill="none" stroke="#%s" '
+                             'stroke-opacity="%f" stroke-width="1" '
+                             'd="M%f,%f ' % (color, opacity, x[0], y[0]))
+                    for i in range(1, len(x)):
+                        fh.write('L%f,%f ' % (x[i], y[i]))
+
+                    fh.write('"/>')
+                    # fh.write("</g>")
+
+            for item in self.dataItems:
+                if isinstance(item, ScatterPlotItem):
+                    pRect = item.boundingRect()
+                    vRect = pRect.intersected(rect)
+
+                    for point in item.points():
+                        pos = point.pos()
+                        if not rect.contains(pos):
+                            continue
+                        color = fn.colorStr(point.brush.color())
+                        opacity = point.brush.color().alpha() / 255.
+                        color = color[:6]
+                        x = pos.x() * sx
+                        y = pos.y() * sy
+
+                        fh.write('<circle cx="%f" cy="%f" r="1" fill="#%s" '
+                                 'stroke="none" fill-opacity="%f"/>\n' % (
+                                    x, y, color, opacity))
+
+            fh.write("</svg>\n")
+
     def writeSvg(self, fileName=None):
         if fileName is None:
             self._chooseFilenameDialog(handler=self.writeSvg)
@@ -772,22 +834,21 @@ class PlotItem(GraphicsWidget):
         fileName = str(fileName)
         PlotItem.lastFileDir = os.path.dirname(fileName)
         
-        fd = open(fileName, 'w')
         data = [c.getData() for c in self.curves]
-        i = 0
-        while True:
-            done = True
-            for d in data:
-                if i < len(d[0]):
-                    fd.write('%g,%g,'%(d[0][i], d[1][i]))
-                    done = False
-                else:
-                    fd.write(' , ,')
-            fd.write('\n')
-            if done:
-                break
-            i += 1
-        fd.close()
+        with open(fileName, 'w') as fd:
+            i = 0
+            while True:
+                done = True
+                for d in data:
+                    if i < len(d[0]):
+                        fd.write('%g,%g,' % (d[0][i], d[1][i]))
+                        done = False
+                    else:
+                        fd.write(' , ,')
+                fd.write('\n')
+                if done:
+                    break
+                i += 1
 
     def saveState(self):
         state = self.stateGroup.state()
@@ -851,6 +912,23 @@ class PlotItem(GraphicsWidget):
         #self.vb.enableAutoRange()
         #self.vb.enableAutoRange(x=are[0],y=are[1])
         self.recomputeAverages()
+    
+    def updateDerivativeMode(self):
+        d = self.ctrl.derivativeCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setDerivativeMode'):
+                i.setDerivativeMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
+    def updatePhasemapMode(self):
+        d = self.ctrl.phasemapCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setPhasemapMode'):
+                i.setPhasemapMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+        
         
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.
@@ -934,15 +1012,13 @@ class PlotItem(GraphicsWidget):
             
         curves = self.curves[:]
         split = len(curves) - numCurves
-        for i in range(len(curves)):
-            if numCurves == -1 or i >= split:
-                curves[i].show()
-            else:
+        for curve in curves[split:]:
+            if numCurves != -1:
                 if self.ctrl.forgetTracesCheck.isChecked():
-                    curves[i].clear()
+                    curve.clear()
                     self.removeItem(curves[i])
                 else:
-                    curves[i].hide()        
+                    curve.hide()        
       
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
@@ -996,8 +1072,8 @@ class PlotItem(GraphicsWidget):
         self._menuEnabled = enableMenu
         if enableViewBoxMenu is None:
             return
-        if enableViewBoxMenu is 'same':
-            enableViewBoxMenu = enableMenu 
+        if enableViewBoxMenu == 'same':
+            enableViewBoxMenu = enableMenu
         self.vb.setMenuEnabled(enableViewBoxMenu)
     
     def menuEnabled(self):

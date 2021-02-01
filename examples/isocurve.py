@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Isocurve Example")
 
 ## make pretty looping data
 frames = 200

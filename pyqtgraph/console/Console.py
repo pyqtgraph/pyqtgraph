@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys, re, os, time, traceback, subprocess
 import pickle
 
@@ -6,14 +7,9 @@ from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-if QT_LIB == 'PySide':
-    from . import template_pyside as template
-elif QT_LIB == 'PySide2':
-    from . import template_pyside2 as template
-elif QT_LIB == 'PyQt5':
-    from . import template_pyqt5 as template
-else:
-    from . import template_pyqt as template
+import importlib
+ui_template = importlib.import_module(
+    f'.template_{QT_LIB.lower()}', package=__package__)
 
 
 class ConsoleWidget(QtGui.QWidget):
@@ -59,7 +55,7 @@ class ConsoleWidget(QtGui.QWidget):
         self.inCmd = False
         self.frames = []  # stack frames to access when an item in the stack list is selected
         
-        self.ui = template.Ui_Form()
+        self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.output = self.ui.output
         self.input = self.ui.input
@@ -98,16 +94,20 @@ class ConsoleWidget(QtGui.QWidget):
     def loadHistory(self):
         """Return the list of previously-invoked command strings (or None)."""
         if self.historyFile is not None:
-            return pickle.load(open(self.historyFile, 'rb'))
+            with open(self.historyFile, 'rb') as pf:
+                return pickle.load(pf)
         
     def saveHistory(self, history):
         """Store the list of previously-invoked command strings."""
         if self.historyFile is not None:
-            pickle.dump(open(self.historyFile, 'wb'), history)
+            with open(self.historyFile, 'wb') as pf:
+                pickle.dump(pf, history)
         
     def runCmd(self, cmd):
-        self.stdout = sys.stdout
-        self.stderr = sys.stderr
+        #cmd = str(self.input.lastCmd)
+
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
         encCmd = re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', cmd))
         encCmd = re.sub(r' ', '&nbsp;', encCmd)
         
@@ -129,8 +129,8 @@ class ConsoleWidget(QtGui.QWidget):
                 self.write("</div>\n", html=True, scrollToBottom=True)
                 
         finally:
-            sys.stdout = self.stdout
-            sys.stderr = self.stderr
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
             
             sb = self.ui.historyList.verticalScrollBar()
             sb.setValue(sb.maximum())
@@ -161,21 +161,25 @@ class ConsoleWidget(QtGui.QWidget):
         try:
             output = eval(cmd, self.globals(), self.locals())
             self.write(repr(output) + '\n')
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-            except:
+            pass
+        except:
+            self.displayException()
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
         except:
             self.displayException()
             
     def execMulti(self, nextLine):
-        #self.stdout.write(nextLine+"\n")
         if nextLine.strip() != '':
             self.multiline += "\n" + nextLine
             return
@@ -186,22 +190,28 @@ class ConsoleWidget(QtGui.QWidget):
             output = eval(cmd, self.globals(), self.locals())
             self.write(str(output) + '\n')
             self.multiline = None
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-                self.multiline = None
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-                    self.multiline = None
-            except:
+            pass
+        except:
+            self.displayException()
+            self.multiline = None
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+            self.multiline = None
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
                 self.multiline = None
         except:
             self.displayException()
             self.multiline = None
+
 
     def write(self, strn, html=False, scrollToBottom='auto'):
         """Write a string into the console.
@@ -211,7 +221,7 @@ class ConsoleWidget(QtGui.QWidget):
         """
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         if not isGuiThread:
-            self.stdout.write(strn)
+            sys.__stdout__.write(strn)
             return
 
         sb = self.output.verticalScrollBar()
@@ -233,6 +243,11 @@ class ConsoleWidget(QtGui.QWidget):
             sb.setValue(sb.maximum())
         else:
             sb.setValue(scroll)
+
+    
+    def fileno(self):
+        # Need to implement this since we temporarily occlude sys.stdout, and someone may be looking for it (faulthandler, for example)
+        return 1
 
     def displayException(self):
         """
@@ -316,8 +331,8 @@ class ConsoleWidget(QtGui.QWidget):
         if editor is None:
             return
         tb = self.currentFrame()
-        lineNum = tb.tb_lineno
-        fileName = tb.tb_frame.f_code.co_filename
+        lineNum = tb.f_lineno
+        fileName = tb.f_code.co_filename
         subprocess.Popen(self.editor.format(fileName=fileName, lineNum=lineNum), shell=True)
         
     def updateSysTrace(self):
@@ -438,7 +453,7 @@ class ConsoleWidget(QtGui.QWidget):
         filterStr = str(self.ui.filterText.text())
         if filterStr != '':
             if isinstance(exc, Exception):
-                msg = exc.message
+                msg = traceback.format_exception_only(type(exc), exc)
             elif isinstance(exc, basestring):
                 msg = exc
             else:

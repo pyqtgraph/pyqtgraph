@@ -28,45 +28,50 @@ def test_plotscene():
     ex.export(fileName=tempfilename)
     # clean up after the test is done
     os.unlink(tempfilename)
+    w.close()
 
 def test_simple():
     tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
     print("using %s as a temporary file" % tempfilename)
-    scene = pg.QtGui.QGraphicsScene()
-    #rect = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
-    #scene.addItem(rect)
-    #rect.setPos(20,20)
-    #rect.translate(50, 50)
-    #rect.rotate(30)
-    #rect.scale(0.5, 0.5)
     
-    #rect1 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
-    #rect1.setParentItem(rect)
-    #rect1.setFlag(rect1.ItemIgnoresTransformations)
-    #rect1.setPos(20, 20)
-    #rect1.scale(2,2)
-    
-    #el1 = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 100)
-    #el1.setParentItem(rect1)
-    ##grp = pg.ItemGroup()
-    #grp.setParentItem(rect)
-    #grp.translate(200,0)
-    ##grp.rotate(30)
-    
-    #rect2 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 25)
-    #rect2.setFlag(rect2.ItemClipsChildrenToShape)
-    #rect2.setParentItem(grp)
-    #rect2.setPos(0,25)
-    #rect2.rotate(30)
-    #el = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 50)
-    #el.translate(10,-5)
-    #el.scale(0.5,2)
+    view = pg.GraphicsView()
+    view.show()
 
-    #el.setParentItem(rect2)
+    scene = view.sceneObj
+
+    rect = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
+    scene.addItem(rect)
+    rect.setPos(20,20)
+    tr = pg.QtGui.QTransform()
+    rect.setTransform(tr.translate(50, 50).rotate(30).scale(0.5, 0.5))
+    
+    rect1 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 100)
+    rect1.setParentItem(rect)
+    rect1.setFlag(rect1.ItemIgnoresTransformations)
+    rect1.setPos(20, 20)
+    rect1.setScale(2)
+    
+    el1 = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 100)
+    el1.setParentItem(rect1)
+    grp = pg.ItemGroup()
+    grp.setParentItem(rect)
+    tr = pg.QtGui.QTransform()
+    grp.setTransform(tr.translate(200, 0).rotate(30))
+    
+    rect2 = pg.QtGui.QGraphicsRectItem(0, 0, 100, 25)
+    rect2.setFlag(rect2.ItemClipsChildrenToShape)
+    rect2.setParentItem(grp)
+    rect2.setPos(0,25)
+    rect2.setRotation(30)
+    el = pg.QtGui.QGraphicsEllipseItem(0, 0, 100, 50)
+    tr = pg.QtGui.QTransform()
+    el.setTransform(tr.translate(10, -5).scale(0.5, 2))
+
+    el.setParentItem(rect2)
 
     grp2 = pg.ItemGroup()
     scene.addItem(grp2)
-    grp2.scale(100,100)
+    grp2.setScale(100)
 
     rect3 = pg.QtGui.QGraphicsRectItem(0,0,2,2)
     rect3.setPen(pg.mkPen(width=1, cosmetic=False))

@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtWidgets
 from ..widgets.TreeWidget import TreeWidget
 import os, weakref, re
 from .ParameterItem import ParameterItem
@@ -25,9 +25,11 @@ class ParameterTree(TreeWidget):
         self.setHeaderLabels(["Parameter", "Value"])
         self.setAlternatingRowColors(True)
         self.paramSet = None
-        self.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.setHeaderHidden(not showHeader)
         self.itemChanged.connect(self.itemChangedEvent)
+        self.itemExpanded.connect(self.itemExpandedEvent)
+        self.itemCollapsed.connect(self.itemCollapsedEvent)
         self.lastSel = None
         self.setRootIsDecorated(False)
         
@@ -134,6 +136,14 @@ class ParameterTree(TreeWidget):
     def itemChangedEvent(self, item, col):
         if hasattr(item, 'columnChangedEvent'):
             item.columnChangedEvent(col)
+    
+    def itemExpandedEvent(self, item):
+        if hasattr(item, 'expandedChangedEvent'):
+            item.expandedChangedEvent(True)
+    
+    def itemCollapsedEvent(self, item):
+        if hasattr(item, 'expandedChangedEvent'):
+            item.expandedChangedEvent(False)
             
     def selectionChanged(self, *args):
         sel = self.selectedItems()
@@ -147,8 +157,38 @@ class ParameterTree(TreeWidget):
         self.lastSel = sel[0]
         if hasattr(sel[0], 'selected'):
             sel[0].selected(True)
-        return TreeWidget.selectionChanged(self, *args)
+        return super().selectionChanged(*args)
         
-    def wheelEvent(self, ev):
-        self.clearSelection()
-        return TreeWidget.wheelEvent(self, ev)
+    # commented out due to being unreliable
+    # def wheelEvent(self, ev):
+    #     self.clearSelection()
+    #     return super().wheelEvent(ev)
+
+    def sizeHint(self):
+        w, h = 0, 0
+        ind = self.indentation()
+        for x in self.listAllItems():
+            if x.isHidden():
+                continue
+            try:
+                depth = x.depth
+            except AttributeError:
+                depth = 0
+
+            s0 = x.sizeHint(0)
+            s1 = x.sizeHint(1)
+            w = max(w, depth * ind + max(0, s0.width()) + max(0, s1.width()))
+            h += max(0, s0.height(), s1.height())
+            # typ = x.param.opts['type'] if isinstance(x, ParameterItem) else x
+            # print(typ, depth * ind, (s0.width(), s0.height()), (s1.width(), s1.height()), (w, h))
+
+        # todo: find out if this alternative can be made to work (currently fails when color or colormap are present)
+        # print('custom', (w, h))
+        # w = self.sizeHintForColumn(0) + self.sizeHintForColumn(1)
+        # h = self.viewportSizeHint().height()
+        # print('alternative', (w, h))
+
+        if not self.header().isHidden():
+            h += self.header().height()
+
+        return QtCore.QSize(w, h)

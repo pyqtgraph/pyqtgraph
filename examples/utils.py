@@ -1,25 +1,18 @@
-from __future__ import division, print_function, absolute_import
-import subprocess
-import time
-import os
-import sys
-import errno
-from pyqtgraph.pgcollections import OrderedDict
-from pyqtgraph.python2_3 import basestring
-
-path = os.path.abspath(os.path.dirname(__file__))
+from collections import OrderedDict
+from argparse import Namespace
 
 
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
-    ('Basic Plotting', 'Plotting.py'),
+    ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
     ('ImageView', 'ImageView.py'),
     ('ParameterTree', 'parametertree.py'),
     ('Crosshair / Mouse interaction', 'crosshair.py'),
     ('Data Slicing', 'DataSlicing.py'),
     ('Plot Customization', 'customPlot.py'),
+    ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
-    ('ViewBox Features', 'ViewBoxFeatures.py'),
+    ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
     ('Histograms', 'histogram.py'),
@@ -44,6 +37,7 @@ examples = OrderedDict([
         ('FillBetweenItem', 'FillBetweenItem.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
+        ('Non-uniform Image', 'NonUniformImage.py'),
         ('Region-of-Interest', 'ROIExamples.py'),
         ('Bar Graph', 'BarGraphItem.py'),
         ('GraphicsLayout', 'GraphicsLayout.py'),
@@ -54,6 +48,7 @@ examples = OrderedDict([
         ('ViewBox', 'ViewBoxFeatures.py'),
         ('Custom Graphics', 'customGraphicsItem.py'),
         ('Labeled Graph', 'CustomGraphItem.py'),
+        ('PColorMeshItem', 'PColorMeshItem.py'),
     ])),
     ('Benchmarks', OrderedDict([
         ('Video speed test', 'VideoSpeedTest.py'),
@@ -86,90 +81,40 @@ examples = OrderedDict([
         #('VerticalLabel', '../widgets/VerticalLabel.py'),
         ('JoystickButton', 'JoystickButton.py'),
     ])),
-
     ('Flowcharts', 'Flowchart.py'),
     ('Custom Flowchart Nodes', 'FlowchartCustomNode.py'),
 ])
 
 
-def buildFileList(examples, files=None):
-    if files == None:
-        files = []
-    for key, val in examples.items():
-        #item = QtGui.QTreeWidgetItem([key])
-        if isinstance(val, basestring):
-            #item.file = val
-            files.append((key,val))
-        else:
-            buildFileList(val, files)
-    return files
+# don't care about ordering
+# but actually from Python 3.7, dict is ordered
+others = dict([
+    ('logAxis', 'logAxis.py'),
+    ('PanningPlot', 'PanningPlot.py'),
+    ('MultiplePlotAxes', 'MultiplePlotAxes.py'),
+    ('ROItypes', 'ROItypes.py'),
+    ('ScaleBar', 'ScaleBar.py'),
+    ('InfiniteLine', 'InfiniteLine.py'),
+    ('ViewBox', 'ViewBox.py'),
+    ('GradientEditor', 'GradientEditor.py'),
+    ('GLBarGraphItem', 'GLBarGraphItem.py'),
+    ('GLViewWidget', 'GLViewWidget.py'),
+    ('DiffTreeWidget', 'DiffTreeWidget.py'),
+    ('MultiPlotWidget', 'MultiPlotWidget.py'),
+    ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
+    ('colorMaps', 'colorMaps.py'),
+    ('contextMenu', 'contextMenu.py'),
+    ('designerExample', 'designerExample.py'),
+    ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
+    ('GraphicsScene', 'GraphicsScene.py'),
+    ('MouseSelection', 'MouseSelection.py'),
+    ('ProgressDialog', 'ProgressDialog.py'),
+])
 
-def testFile(name, f, exe, lib, graphicsSystem=None):
-    global path
-    fn = os.path.join(path,f)
-    #print "starting process: ", fn
-    os.chdir(path)
-    sys.stdout.write(name)
-    sys.stdout.flush()
 
-    import1 = "import %s" % lib if lib != '' else ''
-    import2 = os.path.splitext(os.path.split(fn)[1])[0]
-    graphicsSystem = '' if graphicsSystem is None else "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
-    code = """
-try:
-    %s
-    import initExample
-    import pyqtgraph as pg
-    %s
-    import %s
-    import sys
-    print("test complete")
-    sys.stdout.flush()
-    import time
-    while True:  ## run a little event loop
-        pg.QtGui.QApplication.processEvents()
-        time.sleep(0.01)
-except:
-    print("test failed")
-    raise
-
-""" % (import1, graphicsSystem, import2)
-
-    if sys.platform.startswith('win'):
-        process = subprocess.Popen([exe], stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close()
-    else:
-        process = subprocess.Popen(['exec %s -i' % (exe)], shell=True, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        process.stdin.write(code.encode('UTF-8'))
-        process.stdin.close() ##?
-    output = ''
-    fail = False
-    while True:
-        try:
-            c = process.stdout.read(1).decode()
-        except IOError as err:
-            if err.errno == errno.EINTR:
-                # Interrupted system call; just try again.
-                c = ''
-            else:
-                raise
-        output += c
-        #sys.stdout.write(c)
-        #sys.stdout.flush()
-        if output.endswith('test complete'):
-            break
-        if output.endswith('test failed'):
-            fail = True
-            break
-    time.sleep(1)
-    process.kill()
-    #res = process.communicate()
-    res = (process.stdout.read(), process.stderr.read())
-
-    if fail or 'exception' in res[1].decode().lower() or 'error' in res[1].decode().lower():
-        print('.' * (50-len(name)) + 'FAILED')
-        print(res[0].decode())
-        print(res[1].decode())
-    else:
-        print('.' * (50-len(name)) + 'passed')
+# examples that are subsumed into other examples
+trivial = dict([
+    ('SimplePlot', 'SimplePlot.py'),    # Plotting.py
+    ('LogPlotTest', 'LogPlotTest.py'),  # Plotting.py
+    ('ViewLimits', 'ViewLimits.py'),    # ViewBoxFeatures.py
+])
