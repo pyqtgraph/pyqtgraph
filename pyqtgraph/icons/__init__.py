@@ -52,6 +52,8 @@ def getPixmap(name, size=(20, 20)):
 
     (eg. getPixmap('auto') loads pyqtgraph/icons/auto.png)
     """
+    print("Warning: getPixmap is deprecated."
+          " Use getGraphPixmap(name, size) instead.")
     return getGraphPixmap(name, size=size)
 
 
