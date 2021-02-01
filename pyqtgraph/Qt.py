@@ -395,7 +395,7 @@ if QT_LIB == PYSIDE6:
 if QT_LIB == PYQT6:
     # module.Class.EnumClass.Enum -> module.Class.Enum
     def promote_enums(module):
-        class_names = [x for x in dir(module) if x[0] == 'Q']
+        class_names = [x for x in dir(module) if x.startswith('Q')]
         for class_name in class_names:
             klass = getattr(module, class_name)
             if not isinstance(klass, sip.wrappertype):
@@ -416,6 +416,18 @@ if QT_LIB == PYQT6:
     # so comparison with a Key_* enum will always be False
     # here we convert the enum to its int value
     for e in QtCore.Qt.Key:
+        setattr(QtCore.Qt, e.name, e.value)
+
+    # TextFlags are not accepted as appropriate types
+    # Example:
+    # TypeError: QFontMetric.size(
+    #               self,
+    #               int,
+    #               str,
+    #               tabStops: int = 0, 
+    #               tabArray: Optional[List[int]] = 0
+    # ): argument 1 has unexpected type 'TextFlag'
+    for e in QtCore.Qt.TextFlag:
         setattr(QtCore.Qt, e.name, e.value)
 
     # shim the old names for QPointF mouse coords
