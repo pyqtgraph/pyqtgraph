@@ -5,7 +5,7 @@ import weakref
 import numpy as np
 import os
 from ...Qt import QtGui, QtCore, QT_LIB
-from ... import pixmaps
+from ... import icons
 from ... import functions as fn
 from ...widgets.FileDialog import FileDialog
 from .. PlotDataItem import PlotDataItem
@@ -120,7 +120,7 @@ class PlotItem(GraphicsWidget):
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
-        self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
+        self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
