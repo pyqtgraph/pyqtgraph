@@ -295,52 +295,13 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
     
-    __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale
-
-    def scale(self, *args):
-        if args:
-            sx, sy = args
-            tr = self.transform()
-            tr.scale(sx, sy)
-            self.setTransform(tr)
-        else:
-            return __QGraphicsItem_scale(self)
-
-    QtWidgets.QGraphicsItem.scale = scale
-
-    def rotate(self, angle):
-        tr = self.transform()
-        tr.rotate(angle)
-        self.setTransform(tr)
-    QtWidgets.QGraphicsItem.rotate = rotate
-
-    def translate(self, dx, dy):
-        tr = self.transform()
-        tr.translate(dx, dy)
-        self.setTransform(tr)
-    QtWidgets.QGraphicsItem.translate = translate
-
-    def setMargin(self, i):
-        self.setContentsMargins(i, i, i, i)
-    QtWidgets.QGridLayout.setMargin = setMargin
-
-    def setResizeMode(self, *args):
-        self.setSectionResizeMode(*args)
-    QtWidgets.QHeaderView.setResizeMode = setResizeMode
-
-    
-    QtGui.QApplication = QtWidgets.QApplication
-    QtGui.QGraphicsScene = QtWidgets.QGraphicsScene
-    QtGui.QGraphicsObject = QtWidgets.QGraphicsObject
-    QtGui.QGraphicsWidget = QtWidgets.QGraphicsWidget
-
-    QtGui.QApplication.setGraphicsSystem = None
-    
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
         if o.startswith('Q'):
             setattr(QtGui, o, getattr(QtWidgets,o) )
     
+    QtGui.QApplication.setGraphicsSystem = None
+
 
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to

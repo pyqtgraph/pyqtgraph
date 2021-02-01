@@ -302,7 +302,7 @@ class TerminalGraphicsItem(GraphicsObject):
         self.box = QtGui.QGraphicsRectItem(0, 0, 10, 10, self)
         on_update = self.labelChanged if self.term.isRenamable() else None
         self.label = TextItem(self.term.name(), self, on_update)
-        self.label.scale(0.7, 0.7)
+        self.label.setScale(0.7)
         self.newConnection = None
         self.setFiltersChildEvents(True)  ## to pick up mouse events on the rectitem
         if self.term.isRenamable():

@@ -97,8 +97,9 @@ class LinearRegionItem(GraphicsObject):
                 # and down in horizontal mode. 
                 InfiniteLine(QtCore.QPointF(0, values[0]), angle=0, **lineKwds), 
                 InfiniteLine(QtCore.QPointF(0, values[1]), angle=0, **lineKwds)]
-            self.lines[0].scale(1, -1)
-            self.lines[1].scale(1, -1)
+            tr = QtGui.QTransform.fromScale(1, -1)
+            self.lines[0].setTransform(tr, True)
+            self.lines[1].setTransform(tr, True)
         elif orientation in ('vertical', LinearRegionItem.Vertical):
             self.lines = [
                 InfiniteLine(QtCore.QPointF(values[0], 0), angle=90, **lineKwds), 

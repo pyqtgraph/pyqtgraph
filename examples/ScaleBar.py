@@ -17,7 +17,7 @@ vb.setAspectLocked()
 
 img = pg.ImageItem()
 img.setImage(np.random.normal(size=(100,100)))
-img.scale(0.01, 0.01)
+img.setScale(0.01)
 vb.addItem(img)
 
 scale = pg.ScaleBar(size=0.1)

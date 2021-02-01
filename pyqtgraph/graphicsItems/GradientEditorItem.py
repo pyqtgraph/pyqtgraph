@@ -151,7 +151,8 @@ class TickSliderItem(GraphicsWidget):
         elif ort != 'bottom':
             raise Exception("%s is not a valid orientation. Options are 'left', 'right', 'top', and 'bottom'" %str(ort))
         
-        self.translate(self.tickSize/2., 0)
+        tr = QtGui.QTransform.fromTranslate(self.tickSize/2., 0)
+        self.setTransform(tr, True)
     
     def addTick(self, x, color=None, movable=True, finish=True):
         ## public
@@ -521,7 +522,8 @@ class GradientEditorItem(TickSliderItem):
         ==============  ===================================================================
         """
         TickSliderItem.setOrientation(self, orientation)
-        self.translate(0, self.rectSize)
+        tr = QtGui.QTransform.fromTranslate(0, self.rectSize)
+        self.setTransform(tr, True)
     
     def showMenu(self, ev):
         #private

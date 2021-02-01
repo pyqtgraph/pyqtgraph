@@ -50,7 +50,7 @@ class AxisItem(GraphicsWidget):
         if orientation not in ['left', 'right', 'top', 'bottom']:
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
-            self.label.rotate(-90)
+            self.label.setRotation(-90)
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
