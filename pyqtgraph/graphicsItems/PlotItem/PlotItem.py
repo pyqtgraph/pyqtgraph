@@ -1019,7 +1019,7 @@ class PlotItem(GraphicsWidget):
             if numCurves != -1:
                 if self.ctrl.forgetTracesCheck.isChecked():
                     curve.clear()
-                    self.removeItem(curves[i])
+                    self.removeItem(curve)
                 else:
                     curve.hide()        
       
