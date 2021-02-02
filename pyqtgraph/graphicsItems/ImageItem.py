@@ -555,11 +555,11 @@ class ImageItem(GraphicsObject):
                     first_edge = first_edge - 0.5
                 last_edge = last_edge + 0.5
                 bin_type = self._xp.result_type(first_edge, last_edge, stepData)
-                if self._xp.issubdtype(bin_type, np.integer):
+                if self._xp.issubdtype(bin_type, self._xp.integer):
                     bin_type = self._xp.result_type(bin_type, float)
 
                 if log:
-                    first_edge, last_edge = np.log10((first_edge, last_edge))
+                    first_edge, last_edge = self._xp.log10((first_edge, last_edge))
                     bins = self._xp.logspace(first_edge, last_edge, targetHistogramSize + 1, endpoint=True, dtype=bin_type)
                 else:
                     # for float data, let numpy select the bins.

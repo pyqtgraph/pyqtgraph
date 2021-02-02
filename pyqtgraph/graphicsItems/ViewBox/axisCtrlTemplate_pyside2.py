@@ -1,89 +1,147 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './pyqtgraph/graphicsItems/ViewBox/axisCtrlTemplate.ui'
-#
-# Created: Wed Mar 26 15:09:28 2014
-#      by: PyQt5 UI code generator 5.0.1
-#
-# WARNING! All changes made in this file will be lost!
+################################################################################
+## Form generated from reading UI file 'axisCtrlTemplate.ui'
+##
+## Created by: Qt User Interface Compiler version 5.15.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.resize(186, 154)
-        Form.setMaximumSize(QtCore.QSize(200, 16777215))
-        self.gridLayout = QtWidgets.QGridLayout(Form)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(200, 174)
+        Form.setMaximumSize(QSize(200, 16777215))
+        self.gridLayout = QGridLayout(Form)
         self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName("gridLayout")
-        self.label = QtWidgets.QLabel(Form)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 7, 0, 1, 2)
-        self.linkCombo = QtWidgets.QComboBox(Form)
-        self.linkCombo.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.linkCombo.setObjectName("linkCombo")
-        self.gridLayout.addWidget(self.linkCombo, 7, 2, 1, 2)
-        self.autoPercentSpin = QtWidgets.QSpinBox(Form)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.label = QLabel(Form)
+        self.label.setObjectName(u"label")
+
+        self.gridLayout.addWidget(self.label, 8, 0, 1, 2)
+
+        self.linkCombo = QComboBox(Form)
+        self.linkCombo.setObjectName(u"linkCombo")
+        self.linkCombo.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+
+        self.gridLayout.addWidget(self.linkCombo, 8, 2, 1, 2)
+
+        self.autoPercentSpin = QSpinBox(Form)
+        self.autoPercentSpin.setObjectName(u"autoPercentSpin")
         self.autoPercentSpin.setEnabled(True)
         self.autoPercentSpin.setMinimum(1)
         self.autoPercentSpin.setMaximum(100)
         self.autoPercentSpin.setSingleStep(1)
-        self.autoPercentSpin.setProperty("value", 100)
-        self.autoPercentSpin.setObjectName("autoPercentSpin")
+        self.autoPercentSpin.setValue(100)
+
         self.gridLayout.addWidget(self.autoPercentSpin, 2, 2, 1, 2)
-        self.autoRadio = QtWidgets.QRadioButton(Form)
+
+        self.autoRadio = QRadioButton(Form)
+        self.autoRadio.setObjectName(u"autoRadio")
         self.autoRadio.setChecked(True)
-        self.autoRadio.setObjectName("autoRadio")
+
         self.gridLayout.addWidget(self.autoRadio, 2, 0, 1, 2)
-        self.manualRadio = QtWidgets.QRadioButton(Form)
-        self.manualRadio.setObjectName("manualRadio")
+
+        self.manualRadio = QRadioButton(Form)
+        self.manualRadio.setObjectName(u"manualRadio")
+
         self.gridLayout.addWidget(self.manualRadio, 1, 0, 1, 2)
-        self.minText = QtWidgets.QLineEdit(Form)
-        self.minText.setObjectName("minText")
+
+        self.minText = QLineEdit(Form)
+        self.minText.setObjectName(u"minText")
+
         self.gridLayout.addWidget(self.minText, 1, 2, 1, 1)
-        self.maxText = QtWidgets.QLineEdit(Form)
-        self.maxText.setObjectName("maxText")
+
+        self.maxText = QLineEdit(Form)
+        self.maxText.setObjectName(u"maxText")
+
         self.gridLayout.addWidget(self.maxText, 1, 3, 1, 1)
-        self.invertCheck = QtWidgets.QCheckBox(Form)
-        self.invertCheck.setObjectName("invertCheck")
+
+        self.invertCheck = QCheckBox(Form)
+        self.invertCheck.setObjectName(u"invertCheck")
+
         self.gridLayout.addWidget(self.invertCheck, 5, 0, 1, 4)
-        self.mouseCheck = QtWidgets.QCheckBox(Form)
+
+        self.mouseCheck = QCheckBox(Form)
+        self.mouseCheck.setObjectName(u"mouseCheck")
         self.mouseCheck.setChecked(True)
-        self.mouseCheck.setObjectName("mouseCheck")
-        self.gridLayout.addWidget(self.mouseCheck, 6, 0, 1, 4)
-        self.visibleOnlyCheck = QtWidgets.QCheckBox(Form)
-        self.visibleOnlyCheck.setObjectName("visibleOnlyCheck")
+
+        self.gridLayout.addWidget(self.mouseCheck, 7, 0, 1, 4)
+
+        self.visibleOnlyCheck = QCheckBox(Form)
+        self.visibleOnlyCheck.setObjectName(u"visibleOnlyCheck")
+
         self.gridLayout.addWidget(self.visibleOnlyCheck, 3, 2, 1, 2)
-        self.autoPanCheck = QtWidgets.QCheckBox(Form)
-        self.autoPanCheck.setObjectName("autoPanCheck")
+
+        self.autoPanCheck = QCheckBox(Form)
+        self.autoPanCheck.setObjectName(u"autoPanCheck")
+
         self.gridLayout.addWidget(self.autoPanCheck, 4, 2, 1, 2)
 
+        self.logCheck = QCheckBox(Form)
+        self.logCheck.setObjectName(u"logCheck")
+
+        self.gridLayout.addWidget(self.logCheck, 6, 0, 1, 4)
+
+
         self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
 
     def retranslateUi(self, Form):
-        _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.label.setText(_translate("Form", "Link Axis:"))
-        self.linkCombo.setToolTip(_translate("Form", "<html><head/><body><p>Links this axis with another view. When linked, both views will display the same data range.</p></body></html>"))
-        self.autoPercentSpin.setToolTip(_translate("Form", "<html><head/><body><p>Percent of data to be visible when auto-scaling. It may be useful to decrease this value for data with spiky noise.</p></body></html>"))
-        self.autoPercentSpin.setSuffix(_translate("Form", "%"))
-        self.autoRadio.setToolTip(_translate("Form", "<html><head/><body><p>Automatically resize this axis whenever the displayed data is changed.</p></body></html>"))
-        self.autoRadio.setText(_translate("Form", "Auto"))
-        self.manualRadio.setToolTip(_translate("Form", "<html><head/><body><p>Set the range for this axis manually. This disables automatic scaling. </p></body></html>"))
-        self.manualRadio.setText(_translate("Form", "Manual"))
-        self.minText.setToolTip(_translate("Form", "<html><head/><body><p>Minimum value to display for this axis.</p></body></html>"))
-        self.minText.setText(_translate("Form", "0"))
-        self.maxText.setToolTip(_translate("Form", "<html><head/><body><p>Maximum value to display for this axis.</p></body></html>"))
-        self.maxText.setText(_translate("Form", "0"))
-        self.invertCheck.setToolTip(_translate("Form", "<html><head/><body><p>Inverts the display of this axis. (+y points downward instead of upward)</p></body></html>"))
-        self.invertCheck.setText(_translate("Form", "Invert Axis"))
-        self.mouseCheck.setToolTip(_translate("Form", "<html><head/><body><p>Enables mouse interaction (panning, scaling) for this axis.</p></body></html>"))
-        self.mouseCheck.setText(_translate("Form", "Mouse Enabled"))
-        self.visibleOnlyCheck.setToolTip(_translate("Form", "<html><head/><body><p>When checked, the axis will only auto-scale to data that is visible along the orthogonal axis.</p></body></html>"))
-        self.visibleOnlyCheck.setText(_translate("Form", "Visible Data Only"))
-        self.autoPanCheck.setToolTip(_translate("Form", "<html><head/><body><p>When checked, the axis will automatically pan to center on the current data, but the scale along this axis will not change.</p></body></html>"))
-        self.autoPanCheck.setText(_translate("Form", "Auto Pan Only"))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"PyQtGraph", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Link Axis:", None))
+#if QT_CONFIG(tooltip)
+        self.linkCombo.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Links this axis with another view. When linked, both views will display the same data range.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.autoPercentSpin.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Percent of data to be visible when auto-scaling. It may be useful to decrease this value for data with spiky noise.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.autoPercentSpin.setSuffix(QCoreApplication.translate("Form", u"%", None))
+#if QT_CONFIG(tooltip)
+        self.autoRadio.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Automatically resize this axis whenever the displayed data is changed.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.autoRadio.setText(QCoreApplication.translate("Form", u"Auto", None))
+#if QT_CONFIG(tooltip)
+        self.manualRadio.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Set the range for this axis manually. This disables automatic scaling. </p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.manualRadio.setText(QCoreApplication.translate("Form", u"Manual", None))
+#if QT_CONFIG(tooltip)
+        self.minText.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Minimum value to display for this axis.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.minText.setText(QCoreApplication.translate("Form", u"0", None))
+#if QT_CONFIG(tooltip)
+        self.maxText.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Maximum value to display for this axis.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.maxText.setText(QCoreApplication.translate("Form", u"0", None))
+#if QT_CONFIG(tooltip)
+        self.invertCheck.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Inverts the display of this axis. (+y points downward instead of upward)</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.invertCheck.setText(QCoreApplication.translate("Form", u"Invert Axis", None))
+#if QT_CONFIG(tooltip)
+        self.mouseCheck.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Enables mouse interaction (panning, scaling) for this axis.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.mouseCheck.setText(QCoreApplication.translate("Form", u"Mouse Enabled", None))
+#if QT_CONFIG(tooltip)
+        self.visibleOnlyCheck.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>When checked, the axis will only auto-scale to data that is visible along the orthogonal axis.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.visibleOnlyCheck.setText(QCoreApplication.translate("Form", u"Visible Data Only", None))
+#if QT_CONFIG(tooltip)
+        self.autoPanCheck.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>When checked, the axis will automatically pan to center on the current data, but the scale along this axis will not change.</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.autoPanCheck.setText(QCoreApplication.translate("Form", u"Auto Pan Only", None))
+#if QT_CONFIG(tooltip)
+        self.logCheck.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Use log scale</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.logCheck.setText(QCoreApplication.translate("Form", u"Log scale", None))
+    # retranslateUi
 

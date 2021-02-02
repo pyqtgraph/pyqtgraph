@@ -153,7 +153,6 @@ class ViewBox(GraphicsWidget):
             'autoVisibleOnly': [False, False], ## whether to auto-range only to the visible portion of a plot
             'linkedViews': [None, None],  ## may be None, "viewName", or weakref.ref(view)
                                           ## a name string indicates that the view *should* link to another, but no view with that name exists yet.
-
             'mouseEnabled': [enableMouse, enableMouse],
             'mouseMode': ViewBox.PanMode if getConfigOption('leftButtonPan') else ViewBox.RectMode,
             'enableMenu': enableMenu,
@@ -1132,6 +1131,9 @@ class ViewBox(GraphicsWidget):
         if self.state[key] == inv:
             return
         
+        if 'range' not in self.state.keys():
+            self.state["range"] = self.targetRange()
+
         self.state[key] = inv
         if ax == 0:
             self.setRange(xRange=self.state['range'][0], padding=0, disableAutoRange=False)
@@ -1382,7 +1384,7 @@ class ViewBox(GraphicsWidget):
         """Set the visible range to the given rectangle
         Passes keyword arguments to setRange
         """
-        self.setRange(ax.normalized(), , inner=True, **kwargs) # be sure w, h are correct coordinates
+        self.setRange(ax.normalized(), inner=True, **kwargs) # be sure w, h are correct coordinates
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
 
     def allChildren(self, item=None):

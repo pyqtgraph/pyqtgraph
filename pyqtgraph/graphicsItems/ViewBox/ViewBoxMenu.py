@@ -113,6 +113,8 @@ class ViewBoxMenu(QtGui.QMenu):
             self.mouseModes[1].setChecked(True)
             
         for i in [0,1]:  # x, y
+            if 'range' not in state.keys():
+                continue
             tr = state['range'][i]
             self.ctrl[i].minText.setText("%0.5g" % tr[0])
             self.ctrl[i].maxText.setText("%0.5g" % tr[1])
