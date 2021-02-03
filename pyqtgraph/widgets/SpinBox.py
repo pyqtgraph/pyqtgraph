@@ -466,7 +466,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
         # format the string 
         val = self.value()
-        if self.opts['siPrefix'] is True and len(self.opts['suffix']) > 0:
+        if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
             if self.val == 0 and prev is not None:
@@ -545,7 +545,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return False
             
         # check suffix
-        if suffix != self.opts['suffix'] or (suffix == '' and siprefix != ''):
+        if suffix != self.opts['suffix']:
             return False
            
         # generate value
