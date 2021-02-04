@@ -31,6 +31,8 @@ spins = [
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=0.5, minStep=0.01)),
     ("Float with SI-prefixed units,<br>dec step=1.0, minStep=0.001", 
      pg.SpinBox(value=1.0, suffix='V', siPrefix=True, dec=True, step=1.0, minStep=0.001)),
+    ("Float with SI prefix but no suffix",
+     pg.SpinBox(value=1e9, siPrefix=True)),
     ("Float with custom formatting", 
      pg.SpinBox(value=23.07, format='${value:0.02f}',
                 regex='\$?(?P<number>(-?\d+(\.\d+)?)|(-?\.\d+))$')),

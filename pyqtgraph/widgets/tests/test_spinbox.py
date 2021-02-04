@@ -23,6 +23,7 @@ def test_SpinBox_defaults():
     (1.45, '1.45 PSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
     (1.45e-3, '1.45 mPSI', dict(int=False, decimals=6, suffix='PSI', siPrefix=True)),
     (-2500.3427, '$-2500.34', dict(int=False, format='${value:0.02f}')),
+    (1000, '1 k', dict(siPrefix=True, suffix="")),
 ])
 def test_SpinBox_formatting(value, expected_text, opts):
     sb = pg.SpinBox(**opts)
@@ -35,10 +36,11 @@ def test_SpinBox_formatting(value, expected_text, opts):
 @pytest.mark.parametrize("suffix", ["", "V"])
 def test_SpinBox_gui_set_value(suffix):
     sb = pg.SpinBox(suffix=suffix)
+
     sb.lineEdit().setText('0.1' + suffix)
     sb.editingFinishedEvent()
     assert sb.value() == 0.1
-    if suffix != '':
-        sb.lineEdit().setText('0.1 m' + suffix)
-        sb.editingFinishedEvent()
-        assert sb.value() == 0.1e-3
+
+    sb.lineEdit().setText('0.1 m' + suffix)
+    sb.editingFinishedEvent()
+    assert sb.value() == 0.1e-3

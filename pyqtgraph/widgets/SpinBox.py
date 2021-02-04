@@ -132,8 +132,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
         siPrefix       (bool) If True, then an SI prefix is automatically prepended
                        to the units and the value is scaled accordingly. For example,
                        if value=0.003 and suffix='V', then the SpinBox will display
-                       "300 mV" (but a call to SpinBox.value will still return 0.003). Default
-                       is False.
+                       "300 mV" (but a call to SpinBox.value will still return 0.003). In case
+                       the value represents a dimensionless quantity that might span many
+                       orders of magnitude, such as a Reynold's number, an SI
+                       prefix is allowed with no suffix. Default is False.
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
                        keyboard arrows while the widget has keyboard focus. Note that
@@ -466,7 +468,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
         # format the string 
         val = self.value()
-        if self.opts['siPrefix'] is True and len(self.opts['suffix']) > 0:
+        if self.opts['siPrefix'] is True:
             # SI prefix was requested, so scale the value accordingly
 
             if self.val == 0 and prev is not None:
@@ -545,7 +547,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
             return False
             
         # check suffix
-        if suffix != self.opts['suffix'] or (suffix == '' and siprefix != ''):
+        if suffix != self.opts['suffix']:
             return False
            
         # generate value
