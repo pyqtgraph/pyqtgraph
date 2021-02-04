@@ -139,7 +139,8 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
         Suffix to check for in ``s``. The default (None) indicates there may or
         may not be a suffix contained in the string and it is returned if
         found. An empty string ``""`` is handled differently: if the string
-        contains a suffix, it is discarded.
+        contains a suffix, it is discarded. This enables interpreting
+        characters following the numerical value as an SI prefix.
     """
     s = asUnicode(s)
     s = s.strip()
