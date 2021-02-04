@@ -134,7 +134,7 @@ class SpinBox(QtGui.QAbstractSpinBox):
                        if value=0.003 and suffix='V', then the SpinBox will display
                        "300 mV" (but a call to SpinBox.value will still return 0.003). In case
                        the value represents a dimensionless quantity that might span many
-                       orders of magnitude, such as a Reynold's number, an SI
+                       orders of magnitude, such as a Reynolds number, an SI
                        prefix is allowed with no suffix. Default is False.
         step           (float) The size of a single step. This is used when clicking the up/
                        down arrows, when rolling the mouse wheel, or when pressing 
