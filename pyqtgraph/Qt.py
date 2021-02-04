@@ -232,7 +232,6 @@ elif QT_LIB == PYQT6:
         QtOpenGLWidgets = FailedImport(err)
     try:
         from PyQt6 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 
@@ -273,7 +272,6 @@ elif QT_LIB == PYSIDE6:
         QtOpenGLWidgets = FailedImport(err)
     try:
         from PySide6 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 

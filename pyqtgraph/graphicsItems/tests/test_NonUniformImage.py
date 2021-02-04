@@ -70,7 +70,7 @@ def test_NonUniformImage_lut():
     h = image.getHistogram()
     lut.plot.setData(*h)
 
-    QtTest.QTest.qWaitForWindowShown(window)
+    QtTest.QTest.qWaitForWindowExposed(window)
     QtTest.QTest.qWait(100)
 
     assertImageApproved(window, 'nonuniform_image/lut-3x3')
@@ -98,7 +98,7 @@ def test_NonUniformImage_colormap():
 
     viewbox.addItem(image)
 
-    QtTest.QTest.qWaitForWindowShown(window)
+    QtTest.QTest.qWaitForWindowExposed(window)
     QtTest.QTest.qWait(100)
 
     assertImageApproved(window, 'nonuniform_image/colormap-3x3')

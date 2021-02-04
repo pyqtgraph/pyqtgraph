@@ -28,7 +28,7 @@ def test_ImageItem(transpose=False):
     data[3, :10] = dmax + 13
     img.setImage(data)
     
-    QtTest.QTest.qWaitForWindowShown(w)
+    QtTest.QTest.qWaitForWindowExposed(w)
     time.sleep(0.1)
     app.processEvents()
     assertImageApproved(w, 'imageitem/init', 'Init image item. View is auto-scaled, image axis 0 marked by 1 line, axis 1 is marked by 2 lines. Origin in bottom-left.')
