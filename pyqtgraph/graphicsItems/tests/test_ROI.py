@@ -174,7 +174,7 @@ def test_PolyLineROI():
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
     # seemingly arbitrary requirements; might need longer wait time for some platforms..
-    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
     
     for r, name in rois:
