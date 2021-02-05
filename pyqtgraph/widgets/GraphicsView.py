@@ -8,7 +8,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
 import sys, os
-import warnings
 from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
 import numpy as np
