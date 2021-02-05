@@ -1,4 +1,5 @@
 import os.path as op
+import warnings
 
 from ..Qt import QtGui
 
@@ -8,7 +9,18 @@ _ICON_REGISTRY = {}
 
 
 class GraphIcon:
-    """An icon place holder for lazy loading of QIcons"""
+    """An icon place holder for lazy loading of QIcons
+
+    The icon must reside in the icons folder and the path refers to the full
+    name including suffix of the icon file, e.g.:
+
+        tiny = GraphIcon("tiny.png")
+
+    Icons can be later retrieved via the function `getGraphIcon` and providing
+    the name:
+
+        tiny = getGraphIcon("tiny")
+    """
 
     def __init__(self, path):
         self._path = path
@@ -52,8 +64,10 @@ def getPixmap(name, size=(20, 20)):
 
     (eg. getPixmap('auto') loads pyqtgraph/icons/auto.png)
     """
-    print("Warning: getPixmap is deprecated."
-          " Use getGraphPixmap(name, size) instead.")
+    warnings.warn(
+        "'getPixmap' is deprecated and will be removed soon, "
+        "please use `getGraphPixmap` in the future",
+        DeprecationWarning, stacklevel=2)
     return getGraphPixmap(name, size=size)
 
 
