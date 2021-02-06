@@ -429,7 +429,10 @@ class ImageView(QtGui.QWidget):
         self.setParent(None)
         
     def keyPressEvent(self, ev):
-        #print ev.key()
+        if not self.hasTimeAxis():
+            super().keyPressEvent(ev)
+            return
+
         if ev.key() == QtCore.Qt.Key_Space:
             if self.playRate == 0:
                 self.play()
@@ -454,6 +457,10 @@ class ImageView(QtGui.QWidget):
             super().keyPressEvent(ev)
 
     def keyReleaseEvent(self, ev):
+        if not self.hasTimeAxis():
+            super().keyReleaseEvent(ev)
+            return
+
         if ev.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_Home, QtCore.Qt.Key_End]:
             ev.accept()
         elif ev.key() in self.noRepeatKeys:
@@ -756,7 +763,7 @@ class ImageView(QtGui.QWidget):
             
     def timeIndex(self, slider):
         ## Return the time and frame index indicated by a slider
-        if self.image is None:
+        if not self.hasTimeAxis():
             return (0,0)
         
         t = slider.value()
