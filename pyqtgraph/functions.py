@@ -15,7 +15,7 @@ import sys
 import warnings
 
 import numpy as np
-from pyqtgraph.util.cupy_helper import getCupy
+from .util.cupy_helper import getCupy
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion

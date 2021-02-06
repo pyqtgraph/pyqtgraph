@@ -1,8 +1,7 @@
 import os
 from warnings import warn
 
-from pyqtgraph import getConfigOption
-
+from .. import getConfigOption
 
 def getCupy():
     if getConfigOption("useCupy"):
