@@ -250,8 +250,8 @@ class Renderer(GraphicsView):
 
     def deserialize_mouse_event(self, mouse_event):
         typ, pos, gpos, btn, btns, mods = mouse_event
+        typ = QtCore.QEvent.Type(typ)
         if QT_LIB != 'PyQt6':
-            typ = QtCore.QEvent.Type(typ)
             btn = QtCore.Qt.MouseButton(btn)
             btns = QtCore.Qt.MouseButtons(btns)
             mods = QtCore.Qt.KeyboardModifiers(mods)
