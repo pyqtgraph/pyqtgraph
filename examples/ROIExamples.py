@@ -32,7 +32,7 @@ arr[8:13, 44:46] = 10
 
 
 ## create GUI
-app = QtGui.QApplication([])
+app = pg.mkQApp("ROI Examples")
 w = pg.GraphicsLayoutWidget(show=True, size=(1000,800), border=True)
 w.setWindowTitle('pyqtgraph example: ROI Examples')
 

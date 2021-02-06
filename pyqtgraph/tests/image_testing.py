@@ -44,7 +44,7 @@ Procedure for unit-testing with images:
 # pyqtgraph should be tested against. When adding or changing test images,
 # create and push a new tag and update this variable. To test locally, begin
 # by creating the tag in your ~/.pyqtgraph/test-data repository.
-testDataTag = 'test-data-7'
+testDataTag = 'test-data-8'
 
 
 import time
@@ -212,7 +212,7 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
             else:
                 if os.getenv('TRAVIS') is not None:
                     saveFailedTest(image, stdImage, standardFile, upload=True)
-                elif os.getenv('AZURE') is not None:
+                elif os.getenv('CI') is not None:
                     standardFile = os.path.join(os.getenv("SCREENSHOT_DIR", "screenshots"), standardFile)
                     saveFailedTest(image, stdImage, standardFile)
                 print(graphstate)
@@ -257,7 +257,7 @@ def assertImageMatch(im1, im2, minCorr=None, pxThreshold=50.,
     assert im1.dtype == im2.dtype
 
     if pxCount == -1:
-        if QT_LIB in {'PyQt5', 'PySide2'}:
+        if QT_LIB in {'PyQt5', 'PySide2', 'PySide6', 'PyQt6'}:
             # Qt5 generates slightly different results; relax the tolerance
             # until test images are updated.
             pxCount = int(im1.shape[0] * im1.shape[1] * 0.01)
@@ -469,7 +469,10 @@ def getTestDataRepo():
     """
     global testDataTag
 
-    dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
+    if os.getenv("CI"):
+        dataPath = os.path.join(os.environ["GITHUB_WORKSPACE"], '.pyqtgraph', 'test-data')
+    else:
+        dataPath = os.path.join(os.path.expanduser('~'), '.pyqtgraph', 'test-data')
     gitPath = 'https://github.com/pyqtgraph/test-data'
     gitbase = gitCmdBase(dataPath)
 
@@ -509,7 +512,7 @@ def getTestDataRepo():
         if not os.path.isdir(parentPath):
             os.makedirs(parentPath)
 
-        if os.getenv('TRAVIS') is not None or os.getenv('AZURE') is not None:
+        if os.getenv('TRAVIS') is not None or os.getenv('CI') is not None:
             # Create a shallow clone of the test-data repository (to avoid
             # downloading more data than is necessary)
             os.makedirs(dataPath)

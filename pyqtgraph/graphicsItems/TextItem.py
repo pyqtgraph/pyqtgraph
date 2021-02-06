@@ -147,16 +147,10 @@ class TextItem(GraphicsObject):
         br = self.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.anchor
         self.textItem.setPos(-offset)
-        
-        ### Needed to maintain font size when rendering to image with increased resolution
-        #self.textItem.resetTransform()
-        ##self.textItem.rotate(self.angle)
-        #if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
-            #s = self._exportOpts['resolutionScale']
-            #self.textItem.scale(s, s)
+
         
     def boundingRect(self):
-        return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
+        return self.textItem.mapRectToParent(self.textItem.boundingRect())
 
     def viewTransformChanged(self):
         # called whenever view transform has changed.
@@ -216,10 +210,7 @@ class TextItem(GraphicsObject):
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
             a = np.arctan2(d.y(), d.x()) * 180 / np.pi
             angle += a
-        t.rotate(angle)
-        
+        t.rotate(angle)  
         self.setTransform(t)
-        
         self._lastTransform = pt
-        
         self.updateTextPos()

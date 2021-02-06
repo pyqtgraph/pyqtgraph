@@ -2,6 +2,7 @@
 ## we do this to make sure that, when running examples, the correct library
 ## version is imported (if there are multiple versions present).
 import sys, os
+import importlib
 
 if not hasattr(sys, 'frozen'):
     if __file__ == '<stdin>':
@@ -20,14 +21,10 @@ if not hasattr(sys, 'frozen'):
                 sys.path.insert(0, p)
 
 ## should force example to use PySide instead of PyQt
-if 'pyside' in sys.argv:  
-    from PySide import QtGui
-elif 'pyqt' in sys.argv: 
-    from PyQt4 import QtGui
-elif 'pyqt5' in sys.argv: 
-    from PyQt5 import QtGui
-elif 'pyside2' in sys.argv: 
-    from PySide2 import QtGui
+for module in ['PyQt5', 'PySide2', 'PySide6', 'PyQt6']:
+    if module.lower() in sys.argv:
+        QtGui = importlib.import_module(module + '.QtGui')
+        break
 else:
     from pyqtgraph.Qt import QtGui
 

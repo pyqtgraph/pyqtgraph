@@ -18,7 +18,7 @@ import numpy as np
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("ViewBox Example")
 mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: ViewBox')
 mw.show()

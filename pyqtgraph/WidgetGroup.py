@@ -218,9 +218,6 @@ class WidgetGroup(QtCore.QObject):
         v1 = self.cache[n]
         v2 = self.readWidget(w)
         if v1 != v2:
-            if QT_LIB != 'PyQt5':
-                # Old signal kept for backward compatibility.
-                self.emit(QtCore.SIGNAL('changed'), self.widgetList[w], v2)
             self.sigChanged.emit(self.widgetList[w], v2)
         
     def state(self):

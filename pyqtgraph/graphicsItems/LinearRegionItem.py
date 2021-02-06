@@ -97,8 +97,9 @@ class LinearRegionItem(GraphicsObject):
                 # and down in horizontal mode. 
                 InfiniteLine(QtCore.QPointF(0, values[0]), angle=0, **lineKwds), 
                 InfiniteLine(QtCore.QPointF(0, values[1]), angle=0, **lineKwds)]
-            self.lines[0].scale(1, -1)
-            self.lines[1].scale(1, -1)
+            tr = QtGui.QTransform.fromScale(1, -1)
+            self.lines[0].setTransform(tr, True)
+            self.lines[1].setTransform(tr, True)
         elif orientation in ('vertical', LinearRegionItem.Vertical):
             self.lines = [
                 InfiniteLine(QtCore.QPointF(values[0], 0), angle=90, **lineKwds), 
@@ -191,8 +192,8 @@ class LinearRegionItem(GraphicsObject):
         self.update()
 
     def boundingRect(self):
-        br = self.viewRect()  # bounds of containing ViewBox mapped to local coords.
-        
+        br = QtCore.QRectF(self.viewRect())  # bounds of containing ViewBox mapped to local coords.
+
         rng = self.getRegion()
         if self.orientation in ('vertical', LinearRegionItem.Vertical):
             br.setLeft(rng[0])
@@ -245,7 +246,7 @@ class LinearRegionItem(GraphicsObject):
         self.sigRegionChangeFinished.emit(self)
 
     def mouseDragEvent(self, ev):
-        if not self.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+        if not self.movable or ev.button() != QtCore.Qt.LeftButton:
             return
         ev.accept()
         
