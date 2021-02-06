@@ -81,7 +81,7 @@ def test_legend_item_basics():
     assert legend.columnCount == 2
     assert legend.rowCount == 2
 
-    assert legend.layout.rowCount() == 3
+    assert legend.layout.rowCount() == 2
 
     # Remove items
     # ----------------------------------------------------
