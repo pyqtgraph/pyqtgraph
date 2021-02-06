@@ -235,31 +235,37 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 # FIND RIGHT COLUMN
                 if not self.layout.itemAt(row, col):
                     break
-            if col + 2 == nCol:
-                # MAKE NEW ROW
-                col = 0
-                row += 1
+            else:
+                if col + 2 == nCol:
+                    # MAKE NEW ROW
+                    col = 0
+                    row += 1
         self.layout.addItem(sample, row, col)
         self.layout.addItem(label, row, col + 1)
         # Keep rowCount in sync with the number of rows if items are added
         self.rowCount = max(self.rowCount, row + 1)
+        print(f"_addItemToLayout set self.rowCount = {self.rowCount} \t row = {row} \t col = {col}")
 
     def setColumnCount(self, columnCount):
         """change the orientation of all items of the legend
         """
         if columnCount != self.columnCount:
             self.columnCount = columnCount
+
             self.rowCount = math.ceil(len(self.items) / columnCount)
+            print(f"setColumnCount set self.rowCount = {self.rowCount}")
             for i in range(self.layout.count() - 1, -1, -1):
                 self.layout.removeAt(i)  # clear layout
             for sample, label in self.items:
                 self._addItemToLayout(sample, label)
             self.updateSize()
+            print(f"end result is self.rowCount = {self.rowCount}")
+            print("\n")
 
     def getLabel(self, plotItem):
         """Return the labelItem inside the legend for a given plotItem
 
-        The label-text can be changed via labenItem.setText
+        The label-text can be changed via labelItem.setText
         """
         out = [(it, lab) for it, lab in self.items if it.item == plotItem]
         try:
