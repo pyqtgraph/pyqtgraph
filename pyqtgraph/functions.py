@@ -1298,18 +1298,22 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     # If the const constructor is used, subsequently calling any non-const method
     # will trigger the COW mechanism, i.e. a copy is made under the hood.
 
-    if QT_LIB == 'PyQt5':
-        # PyQt5 -> non-const constructor
-        img_ptr = imgData.ctypes.data
-    elif QT_LIB == 'PyQt6':
-        # PyQt5 -> const constructor
-        # PyQt6 -> non-const constructor
-        img_ptr = Qt.sip.voidptr(imgData)
+    if QT_LIB.startswith('PyQt'):
+        if QtCore.PYQT_VERSION == 0x60000:
+            # PyQt5          -> const
+            # PyQt6 >= 6.0.1 -> const
+            # PyQt6 == 6.0.0 -> non-const
+            img_ptr = Qt.sip.voidptr(imgData)
+        else:
+            # PyQt5          -> non-const
+            # PyQt6 >= 6.0.1 -> non-const
+            img_ptr = int(Qt.sip.voidptr(imgData))  # or imgData.ctypes.data
     else:
         # bindings that support ndarray
-        # PyQt5   -> const constructor
-        # PySide2 -> non-const constructor
-        # PySide6 -> non-const constructor
+        # PyQt5          -> const
+        # PyQt6 >= 6.0.1 -> const
+        # PySide2        -> non-const
+        # PySide6        -> non-const
         img_ptr = imgData
 
     img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)
