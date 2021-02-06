@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import math
+
 from .GraphicsWidget import GraphicsWidget
 from .LabelItem import LabelItem
 from ..Qt import QtGui, QtCore
@@ -30,8 +32,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
 
     def __init__(self, size=None, offset=None, horSpacing=25, verSpacing=0,
                  pen=None, brush=None, labelTextColor=None, frame=True,
-                 labelTextSize='9pt', rowCount=1, colCount=1,
-                 sampleType=None, **kwargs):
+                 labelTextSize='9pt', colCount=1, sampleType=None, **kwargs):
         """
         ==============  ===============================================================
         **Arguments:**
@@ -54,6 +55,10 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                         accepted by :func:`mkPen <pyqtgraph.mkPen>` is allowed.
         labelTextSize   Size to use when drawing legend text. Accepts CSS style
                         string arguments, e.g. '9pt'.
+        colCount        Specifies the integer number of columns that the legend should
+                        be divided into. The number of rows will be calculated
+                        based on this argument. This is useful for plots with many
+                        curves displayed simultaneously. Default: 1 column.
         sampleType      Customizes the item sample class of the `LegendItem`.
         ==============  ===============================================================
 
@@ -71,8 +76,7 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.offset = offset
         self.frame = frame
         self.columnCount = colCount
-        self.rowCount = rowCount
-        self.curRow = 0
+        self.rowCount = 1
         if size is not None:
             self.setGeometry(QtCore.QRectF(0, 0, self.size[0], self.size[1]))
 
@@ -231,29 +235,37 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
                 # FIND RIGHT COLUMN
                 if not self.layout.itemAt(row, col):
                     break
-            if col + 2 == nCol:
-                # MAKE NEW ROW
-                col = 0
-                row += 1
+            else:
+                if col + 2 == nCol:
+                    # MAKE NEW ROW
+                    col = 0
+                    row += 1
         self.layout.addItem(sample, row, col)
         self.layout.addItem(label, row, col + 1)
+        # Keep rowCount in sync with the number of rows if items are added
+        self.rowCount = max(self.rowCount, row + 1)
+        print(f"_addItemToLayout set self.rowCount = {self.rowCount} \t row = {row} \t col = {col}")
 
     def setColumnCount(self, columnCount):
         """change the orientation of all items of the legend
         """
         if columnCount != self.columnCount:
             self.columnCount = columnCount
-            self.rowCount = int(len(self.items) / columnCount)
+
+            self.rowCount = math.ceil(len(self.items) / columnCount)
+            print(f"setColumnCount set self.rowCount = {self.rowCount}")
             for i in range(self.layout.count() - 1, -1, -1):
                 self.layout.removeAt(i)  # clear layout
             for sample, label in self.items:
                 self._addItemToLayout(sample, label)
             self.updateSize()
+            print(f"end result is self.rowCount = {self.rowCount}")
+            print("\n")
 
     def getLabel(self, plotItem):
         """Return the labelItem inside the legend for a given plotItem
 
-        The label-text can be changed via labenItem.setText
+        The label-text can be changed via labelItem.setText
         """
         out = [(it, lab) for it, lab in self.items if it.item == plotItem]
         try:
@@ -297,13 +309,13 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         width = 0
         for row in range(self.layout.rowCount()):
             row_height = 0
-            col_witdh = 0
+            col_width = 0
             for col in range(self.layout.columnCount()):
                 item = self.layout.itemAt(row, col)
                 if item:
-                    col_witdh += item.width() + 3
+                    col_width += item.width() + 3
                     row_height = max(row_height, item.height())
-            width = max(width, col_witdh)
+            width = max(width, col_width)
             height += row_height
         self.setGeometry(0, 0, width, height)
         return
