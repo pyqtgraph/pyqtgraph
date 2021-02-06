@@ -4,7 +4,6 @@ import sys
 import subprocess
 import tempfile
 import pyqtgraph as pg
-import six
 import pytest
 import textwrap
 import time

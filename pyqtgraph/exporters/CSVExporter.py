@@ -5,6 +5,8 @@ from ..parametertree import Parameter
 from .. import PlotItem
 from ..python2_3 import asUnicode
 
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['CSVExporter']
     
     
@@ -14,9 +16,9 @@ class CSVExporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'separator', 'type': 'list', 'value': 'comma', 'values': ['comma', 'tab']},
-            {'name': 'precision', 'type': 'int', 'value': 10, 'limits': [0, None]},
-            {'name': 'columnMode', 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']}
+            {'name': 'separator', 'title': translate("Exporter", 'separator'), 'type': 'list', 'value': 'comma', 'values': ['comma', 'tab']},
+            {'name': 'precision', 'title': translate("Exporter", 'precision'), 'type': 'int', 'value': 10, 'limits': [0, None]},
+            {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']}
         ])
         
     def parameters(self):
@@ -81,5 +83,3 @@ class CSVExporter(Exporter):
 
 
 CSVExporter.register()        
-                
-        

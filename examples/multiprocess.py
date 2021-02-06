@@ -40,7 +40,7 @@ print( "process finished")
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-app = pg.QtGui.QApplication([])
+app = pg.mkQApp("Multiprocess Example")
 
 print( "\n=================\nStart QtProcess")
 import sys

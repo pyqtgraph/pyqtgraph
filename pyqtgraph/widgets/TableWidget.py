@@ -4,6 +4,7 @@ from ..Qt import QtGui, QtCore
 from ..python2_3 import asUnicode, basestring
 from .. import metaarray
 
+translate = QtCore.QCoreApplication.translate
 
 __all__ = ['TableWidget']
 
@@ -74,10 +75,10 @@ class TableWidget(QtGui.QTableWidget):
         self.itemChanged.connect(self.handleItemChanged)
         
         self.contextMenu = QtGui.QMenu()
-        self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
-        self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
-        self.contextMenu.addAction('Save Selection').triggered.connect(self.saveSel)
-        self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
+        self.contextMenu.addAction(translate("TableWidget", 'Copy Selection')).triggered.connect(self.copySel)
+        self.contextMenu.addAction(translate("TableWidget", 'Copy All')).triggered.connect(self.copyAll)
+        self.contextMenu.addAction(translate("TableWidget", 'Save Selection')).triggered.connect(self.saveSel)
+        self.contextMenu.addAction(translate("TableWidget", 'Save All')).triggered.connect(self.saveAll)
         
     def clear(self):
         """Clear all contents from the table."""
@@ -350,7 +351,12 @@ class TableWidget(QtGui.QTableWidget):
         self.save(self.serialize(useSelection=False))
 
     def save(self, data):
-        fileName = QtGui.QFileDialog.getSaveFileName(self, "Save As..", "", "Tab-separated values (*.tsv)")
+        fileName = QtGui.QFileDialog.getSaveFileName(
+            self,
+            f"{translate('TableWidget', 'Save As')}...",
+            "",
+            f"{translate('TableWidget', 'Tab-separated values')} (*.tsv)"
+        )
         if isinstance(fileName, tuple):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
@@ -366,7 +372,7 @@ class TableWidget(QtGui.QTableWidget):
             ev.accept()
             self.copySel()
         else:
-            QtGui.QTableWidget.keyPressEvent(self, ev)
+            super().keyPressEvent(ev)
 
     def handleItemChanged(self, item):
         item.itemChanged()

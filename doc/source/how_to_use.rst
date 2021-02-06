@@ -51,7 +51,29 @@ For the serious application developer, all of the functionality in pyqtgraph is 
 #. Under "Header file", enter "pyqtgraph".
 #. Click "Add", then click "Promote".
 
-See the designer documentation for more information on promoting widgets. The "VideoSpeedTest" and "ScatterPlotSpeedTest" examples both demonstrate the use of .ui files that are compiled to .py modules using pyuic4 or pyside-uic. The "designerExample" example demonstrates dynamically generating python classes from .ui files (no pyuic4 / pyside-uic needed).
+See the designer documentation for more information on promoting widgets. The "VideoSpeedTest" and "ScatterPlotSpeedTest" examples both demonstrate the use of .ui files that are compiled to .py modules using pyuic5 or pyside-uic. The "designerExample" example demonstrates dynamically generating python classes from .ui files (no pyuic5 / pyside-uic needed).
+
+
+HiDPI Displays
+--------------
+
+PyQtGraph has a method :func:`mkQApp <pyqtgraph.Qt.mkQApp>` that by default sets what we have tested to be the best combination of options to support hidpi displays, when in combination with non-hidpi secondary displays.  For your application, you may have instantiated ``QApplication`` yourself, in which case we advise setting these options *before* runing ``QApplication.exec_()``.  
+
+For Qt6 bindings, this functionally "just works" without having to set any attributes.
+
+On Versions of Qt >= 5.14 and < 6; you can get ideal behavior with the following lines::
+
+    os.environ["QT_ENABLE_HIDPI_SCALING"] = "1" 
+    QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
+If you are on Qt >= 5.6 and < 5.14; you can get near ideal behavior with the following lines::
+
+    QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+
+With the later, ideal behavior was not achieved.
+
+.. autofunction:: pyqtgraph.Qt.mkQApp
 
 
 PyQt and PySide
@@ -61,15 +83,16 @@ PyQtGraph supports two popular python wrappers for the Qt library: PyQt and PySi
 APIs and functionality, but for various reasons (discussed elsewhere) you may prefer to use one package or the other. When
 pyqtgraph is first imported, it automatically determines which library to use by making the fillowing checks:
     
-#. If PyQt4 is already imported, use that
-#. Else, if PySide is already imported, use that
-#. Else, attempt to import PyQt4
-#. If that import fails, attempt to import PySide. 
+#. If PyQt5 is already imported, use that
+#. Else, if PySide2 is already imported, use that
+#. Else, if PySide6 is already imported, use that
+#. Else, if PyQt6 is already imported, use that
+#. Else, attempt to import PyQt5, PySide2, PySide6, PyQt6, in that order.
 
 If you have both libraries installed on your system and you wish to force pyqtgraph to use one or the other, simply
 make sure it is imported before pyqtgraph::
     
-    import PySide  ## this will force pyqtgraph to use PySide instead of PyQt4
+    import PySide2  ## this will force pyqtgraph to use PySide2 instead of PyQt5
     import pyqtgraph as pg
 
 

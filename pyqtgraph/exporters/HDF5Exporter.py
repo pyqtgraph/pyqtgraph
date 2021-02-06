@@ -9,7 +9,9 @@ try:
     HAVE_HDF5 = True
 except ImportError:
     HAVE_HDF5 = False
-    
+
+translate = QtCore.QCoreApplication.translate
+
 __all__ = ['HDF5Exporter']
 
     
@@ -21,8 +23,9 @@ class HDF5Exporter(Exporter):
     def __init__(self, item):
         Exporter.__init__(self, item)
         self.params = Parameter(name='params', type='group', children=[
-            {'name': 'Name', 'type': 'str', 'value': 'Export',},
-            {'name': 'columnMode', 'type': 'list', 'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
+            {'name': 'Name', 'title': translate("Exporter", 'Name'), 'type': 'str', 'value': 'Export', },
+            {'name': 'columnMode', 'title': translate("Exporter", 'columnMode'), 'type': 'list',
+             'values': ['(x,y) per plot', '(x,y,y,y) for all plots']},
         ])
         
     def parameters(self):
@@ -40,7 +43,7 @@ class HDF5Exporter(Exporter):
             self.fileSaveDialog(filter=["*.h5", "*.hdf", "*.hd5"])
             return
         dsname = self.params['Name']
-        fd = h5py.File(fileName, 'a') # forces append to file... 'w' doesn't seem to "delete/overwrite"
+        fd = h5py.File(fileName, 'a')  # forces append to file... 'w' doesn't seem to "delete/overwrite"
         data = []
 
         appendAllX = self.params['columnMode'] == '(x,y) per plot'

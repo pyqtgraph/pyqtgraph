@@ -269,10 +269,10 @@ class DateAxisItem(AxisItem):
         # Size in pixels a specific tick label will take
         if self.orientation in ['bottom', 'top']:
             def sizeOf(text):
-                return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+                return self.fontMetrics.boundingRect(text).width() + padding
         else:
             def sizeOf(text):
-                return self.fontMetrics.boundingRect(text).height() + padding*self.fontScaleFactor
+                return self.fontMetrics.boundingRect(text).height() + padding
         
         # Fallback zoom level: Years/Months
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
@@ -314,6 +314,5 @@ class DateAxisItem(AxisItem):
         self.fontMetrics = p.fontMetrics()
         
         # Get font scale factor by current window resolution
-        self.fontScaleFactor = p.device().logicalDpiX() / 96
         
         return super(DateAxisItem, self).generateDrawSpecs(p)

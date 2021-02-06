@@ -5,10 +5,11 @@ Copyright 2010-2016 Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
+from .. import getConfigOption, functions as fn, getCupy
 from ..Qt import QtCore, QtGui
 
 try:
-    from ..Qt import QtOpenGL
+    from ..Qt import QtWidgets
     from OpenGL.GL import *
 
     HAVE_OPENGL = True
@@ -16,8 +17,6 @@ except (ImportError, AttributeError):
     # Would prefer `except ImportError` here, but some versions of pyopengl generate
     # AttributeError upon import
     HAVE_OPENGL = False
-
-from .. import getConfigOption, functions as fn
 
 
 class RawImageWidget(QtGui.QWidget):
@@ -37,6 +36,7 @@ class RawImageWidget(QtGui.QWidget):
         self.scaled = scaled
         self.opts = None
         self.image = None
+        self._cp = getCupy()
 
     def setImage(self, img, *args, **kargs):
         """
@@ -52,6 +52,8 @@ class RawImageWidget(QtGui.QWidget):
             return
         if self.image is None:
             argb, alpha = fn.makeARGB(self.opts[0], *self.opts[1], **self.opts[2])
+            if self._cp and self._cp.get_array_module(argb) == self._cp:
+                argb = argb.get()  # transfer GPU data back to the CPU
             self.image = fn.makeQImage(argb, alpha)
             self.opts = ()
         # if self.pixmap is None:
@@ -74,7 +76,7 @@ class RawImageWidget(QtGui.QWidget):
 
 
 if HAVE_OPENGL:
-    class RawImageGLWidget(QtOpenGL.QGLWidget):
+    class RawImageGLWidget(QtWidgets.QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
         Perfomance varies between platforms; see examples/VideoSpeedTest for benchmarking.
@@ -83,7 +85,7 @@ if HAVE_OPENGL:
         """
 
         def __init__(self, parent=None, scaled=False):
-            QtOpenGL.QGLWidget.__init__(self, parent)
+            QtWidgets.QOpenGLWidget.__init__(self, parent)
             self.scaled = scaled
             self.image = None
             self.uploaded = False
@@ -142,7 +144,9 @@ if HAVE_OPENGL:
             if not self.uploaded:
                 self.uploadTexture()
 
-            glViewport(0, 0, self.width() * self.devicePixelRatio(), self.height() * self.devicePixelRatio())
+            dpr = self.devicePixelRatio()
+            vp = (0, 0, int(self.width() * dpr), int(self.height() * dpr))
+            glViewport(*vp)
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.texture)
             glColor4f(1, 1, 1, 1)

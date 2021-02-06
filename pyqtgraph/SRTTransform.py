@@ -172,7 +172,7 @@ if __name__ == '__main__':
     from . import widgets
     import GraphicsView
     from .functions import *
-    app = QtGui.QApplication([])
+    app = pg.mkQApp()
     win = QtGui.QMainWindow()
     win.show()
     cw = GraphicsView.GraphicsView()

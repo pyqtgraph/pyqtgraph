@@ -10,7 +10,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Log Plot Example")
 
 win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
 win.resize(1000,600)

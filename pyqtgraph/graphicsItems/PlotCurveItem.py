@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except:
-    HAVE_OPENGL = False
+from ..Qt import QtCore, QtGui, QtWidgets
+HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
 
 import warnings
 import numpy as np
@@ -416,6 +412,8 @@ class PlotCurveItem(GraphicsObject):
             self.setShadowPen(kargs['shadowPen'])
         if 'fillLevel' in kargs and kargs['fillLevel'] is not None:
             self.setFillLevel(kargs['fillLevel'])
+        if 'fillOutline' in kargs:
+            self.opts['fillOutline'] = kargs['fillOutline']
         if 'brush' in kargs and kargs['brush'] is not None:
             self.setBrush(kargs['brush'])
         if 'antialias' in kargs:
@@ -481,9 +479,10 @@ class PlotCurveItem(GraphicsObject):
         if self.xData is None or len(self.xData) == 0:
             return
 
-        if HAVE_OPENGL and getConfigOption('enableExperimental') and isinstance(widget, QtOpenGL.QGLWidget):
-            self.paintGL(p, opt, widget)
-            return
+        if getConfigOption('enableExperimental'):
+            if HAVE_OPENGL and isinstance(widget, QtWidgets.QOpenGLWidget):
+                self.paintGL(p, opt, widget)
+                return
 
         x = None
         y = None
@@ -534,7 +533,10 @@ class PlotCurveItem(GraphicsObject):
             cp = fn.mkPen(self.opts['pen'])
 
         p.setPen(cp)
-        p.drawPath(path)
+        if self.opts['fillOutline'] and self.fillPath is not None:
+            p.drawPath(self.fillPath)
+        else:
+            p.drawPath(path)
         profiler('drawPath')
 
     def paintGL(self, p, opt, widget):

@@ -39,7 +39,6 @@ legend.addItem(c1, 'curve1')
 legend.addItem(c2, 'curve2')
 legend.addItem(s1, 'scatter')
 
-
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys
