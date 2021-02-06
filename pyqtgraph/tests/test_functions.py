@@ -139,7 +139,7 @@ def test_rescaleData():
                 else:
                     lim = (-np.inf, np.inf)
                 s1 = np.clip(float(scale) * (data-float(offset)), *lim).astype(dtype2)
-                s2 = pg.rescaleData(data, scale, offset, 0, dtype2)
+                s2 = pg.rescaleData(data, scale, offset, dtype2)
                 assert s1.dtype == s2.dtype
                 if dtype2.kind in 'iu':
                     assert np.all(s1 == s2)
