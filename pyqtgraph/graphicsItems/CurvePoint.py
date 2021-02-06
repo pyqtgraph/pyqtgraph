@@ -80,7 +80,7 @@ class CurvePoint(GraphicsObject):
         ang = np.arctan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
         self.resetTransform()
         if self._rotate:
-            self.rotate(180+ ang * 180 / np.pi) ## takes degrees
+            self.setRotation(180 + np.rad2deg(ang)) ## takes degrees
         QtGui.QGraphicsItem.setPos(self, *newPos)
         return True
         

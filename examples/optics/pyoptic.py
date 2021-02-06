@@ -147,10 +147,9 @@ class Optic(pg.GraphicsObject, ParamObj):
         self.setParams(**defaults)
         
     def updateTransform(self):
-        self.resetTransform()
         self.setPos(0, 0)
-        self.translate(Point(self['pos']))
-        self.rotate(self['angle'])
+        tr = QtGui.QTransform()
+        self.setTransform(tr.translate(Point(self['pos'])).rotate(self['angle']))
         
     def setParam(self, param, val):
         ParamObj.setParam(self, param, val)
@@ -160,7 +159,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         # Move graphics item
         self.gitem.setPos(Point(self['pos']))
         self.gitem.resetTransform()
-        self.gitem.rotate(self['angle'])
+        self.gitem.setRotation(self['angle'])
         
         # Move ROI to match
         try:
@@ -179,7 +178,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         pos = self.roi.pos()
         # rotate gitem temporarily so we can decide where it will need to move
         self.gitem.resetTransform()
-        self.gitem.rotate(self.roi.angle())
+        self.gitem.setRotation(self.roi.angle())
         br = self.gitem.boundingRect()
         o1 = self.gitem.mapToParent(br.topLeft())
         self.setParams(angle=self.roi.angle(), pos=pos + (self.gitem.pos() - o1))

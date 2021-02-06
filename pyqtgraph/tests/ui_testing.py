@@ -1,5 +1,5 @@
 import time
-from ..Qt import QtCore, QtGui, QtTest, QT_LIB
+from ..Qt import QtCore, QtGui, QtTest
 
 
 def resizeWindow(win, w, h, timeout=2.0):
@@ -10,8 +10,8 @@ def resizeWindow(win, w, h, timeout=2.0):
     """
     QtGui.QApplication.processEvents()
     # Sometimes the window size will switch multiple times before settling
-    # on its final size. Adding qWaitForWindowShown seems to help with this.
-    QtTest.QTest.qWaitForWindowShown(win)
+    # on its final size. Adding qWaitForWindowExposed seems to help with this.
+    QtTest.QTest.qWaitForWindowExposed(win)
     win.resize(w, h)
     start = time.time()
     while True:
@@ -32,8 +32,6 @@ def mousePress(widget, pos, button, modifier=None):
         widget = widget.viewport()
     if modifier is None:
         modifier = QtCore.Qt.NoModifier
-    if QT_LIB != 'PyQt5' and isinstance(pos, QtCore.QPointF):
-        pos = pos.toPoint()
     event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonPress, pos, button, QtCore.Qt.NoButton, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 
@@ -43,8 +41,6 @@ def mouseRelease(widget, pos, button, modifier=None):
         widget = widget.viewport()
     if modifier is None:
         modifier = QtCore.Qt.NoModifier
-    if QT_LIB != 'PyQt5' and isinstance(pos, QtCore.QPointF):
-        pos = pos.toPoint()
     event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease, pos, button, QtCore.Qt.NoButton, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 
@@ -56,8 +52,6 @@ def mouseMove(widget, pos, buttons=None, modifier=None):
         modifier = QtCore.Qt.NoModifier
     if buttons is None:
         buttons = QtCore.Qt.NoButton
-    if QT_LIB != 'PyQt5' and isinstance(pos, QtCore.QPointF):
-        pos = pos.toPoint()
     event = QtGui.QMouseEvent(QtCore.QEvent.MouseMove, pos, QtCore.Qt.NoButton, buttons, modifier)
     QtGui.QApplication.sendEvent(widget, event)
 

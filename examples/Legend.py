@@ -13,7 +13,7 @@ win = pg.plot()
 win.setWindowTitle('pyqtgraph example: BarGraphItem')
 
 # # option1: only for .plot(), following c1,c2 for example-----------------------
-# win.addLegend(frame=False, rowCount=1, colCount=2)
+# win.addLegend(frame=False, colCount=2)
 
 # bar graph
 x = np.arange(10)
@@ -38,7 +38,6 @@ legend.addItem(bg1, 'bar')
 legend.addItem(c1, 'curve1')
 legend.addItem(c2, 'curve2')
 legend.addItem(s1, 'scatter')
-
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

@@ -65,6 +65,8 @@ SI Unit Conversion Functions
 
 .. autofunction:: pyqtgraph.siEval
 
+.. autofunction:: pyqtgraph.siParse
+
 
 Image Preparation Functions
 ---------------------------
@@ -100,5 +102,3 @@ Miscellaneous Functions
 .. autofunction:: pyqtgraph.systemInfo
 
 .. autofunction:: pyqtgraph.exit
-
-

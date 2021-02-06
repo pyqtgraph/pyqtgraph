@@ -112,7 +112,7 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
-            plot.rotate(90)
+            plot.setRotation(90)
             self.vb.addItem(plot)
         
         self.fillHistogram(fillHistogram)

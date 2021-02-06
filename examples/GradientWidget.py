@@ -12,7 +12,7 @@ import numpy as np
 
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Gradiant Widget Example")
 w = QtGui.QMainWindow()
 w.show()
 w.setWindowTitle('pyqtgraph example: GradientWidget')

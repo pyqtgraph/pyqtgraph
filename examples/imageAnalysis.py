@@ -71,8 +71,8 @@ hist.setLevels(data.min(), data.max())
 iso.setData(pg.gaussianFilter(data, (2, 2)))
 
 # set position and scale of image
-img.scale(0.2, 0.2)
-img.translate(-50, 0)
+tr = QtGui.QTransform()
+img.setTransform(tr.scale(0.2, 0.2).translate(-50, 0))
 
 # zoom to fit imageo
 p1.autoRange()  

@@ -109,7 +109,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     def setAngle(self, angle):
         self.angle = angle
         self.item.resetTransform()
-        self.item.rotate(angle)
+        self.item.setRotation(angle)
         self.updateMin()
         
         

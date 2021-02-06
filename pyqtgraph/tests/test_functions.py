@@ -423,6 +423,30 @@ def test_eq():
     assert eq(set(range(10)), set(range(10)))
     assert not eq(set(range(10)), set(range(9)))
 
-    
-if __name__ == '__main__':
-    test_interpolateArray()
+
+@pytest.mark.parametrize("s,suffix,expected", [
+    # usual cases
+    ("100 uV", "V", ("100", "u", "V")),
+    ("100 µV", "V", ("100", "µ", "V")),
+    ("4.2 nV", None, ("4.2", "n", "V")),
+    ("1.2 m", "m", ("1.2", "", "m")),
+    ("1.2 m", None, ("1.2", "", "m")),
+    ("5.0e9", None, ("5.0e9", "", "")),
+    ("2 units", "units", ("2", "", "units")),
+    # siPrefix with explicit empty suffix
+    ("1.2 m", "", ("1.2", "m", "")),
+    ("5.0e-9 M", "", ("5.0e-9", "M", "")),
+    # weirder cases that should return the reasonable thing
+    ("4.2 nV", "nV", ("4.2", "", "nV")),
+    ("4.2 nV", "", ("4.2", "n", "")),
+    ("1.2 j", "", ("1.2", "", "")),
+    ("1.2 j", None, ("1.2", "", "j")),
+    # expected error cases
+    ("100 uV", "v", ValueError),
+])
+def test_siParse(s, suffix, expected):
+    if isinstance(expected, tuple):
+        assert pg.siParse(s, suffix=suffix) == expected
+    else:
+        with pytest.raises(expected):
+            pg.siParse(s, suffix=suffix)
