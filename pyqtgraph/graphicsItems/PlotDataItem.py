@@ -805,6 +805,7 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
+        self.xBuffer = self.yBuffer = None
         self._dataRect = None
         self.curve.clear()
         self.scatter.clear()
