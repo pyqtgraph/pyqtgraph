@@ -154,6 +154,8 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
+        self.xBuffer = self.yBuffer = None
+
         #self.dataMask = None
         #self.curves = []
         #self.scatters = []
@@ -557,9 +559,19 @@ class PlotDataItem(GraphicsObject):
         if not append or self.yData is None:
             self.xData = x # set to new data
             self.yData = y
+            self.xBuffer = self.yBuffer = None # discard internal buffer for user-supplied array
+        # appended data is added to an over-allocated buffer to improve performance
         elif y is not None: # append; note that x cannot be None if y is given
-            self.xData = np.append(self.xData, x)
-            self.yData = np.append(self.yData, y)
+            old_length = len(self.yData)
+            new_length = old_length + len(y)
+            if self.yBuffer is None or new_length > len(self.yBuffer):
+                new_buffer_length = int(1.5 * new_length) # over-allocate by 50%
+                self.xBuffer = np.resize(self.xData, new_buffer_length)
+                self.yBuffer = np.resize(self.yData, new_buffer_length)
+            self.xData = self.xBuffer[:new_length] # set data as view of first elements in buffer
+            self.yData = self.yBuffer[:new_length]
+            self.xData[old_length:] = x # fill in the appended data, this also affects the buffer
+            self.yData[old_length:] = y
 
         self._dataRect = None
         self.xDisp = None

@@ -1,7 +1,8 @@
 import os
 from warnings import warn
 
-from pyqtgraph import getConfigOption
+# from pyqtgraph import getConfigOption
+from .. import getConfigOption
 
 
 def getCupy():
