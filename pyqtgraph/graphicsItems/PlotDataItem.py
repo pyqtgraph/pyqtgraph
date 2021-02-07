@@ -704,10 +704,11 @@ class PlotDataItem(GraphicsObject):
                         # never clip data if it fits into +/- (extended) limit * view height
                         if data_range.height() > 2 * hyst * limit * view_height:
                             # check if cached display data can be reused:
-                            if self.yDisp is not None: # top is minimum value, bottom is maximum value?
+                            if self.yDisp is not None: # top is minimum value, bottom is maximum value
+                                # how many multiples of the current view height does the clipped plot extend to the top and bottom?
                                 top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height 
                                 bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
-                                print(top_exc, bot_exc, hyst)
+                                # print(top_exc, bot_exc, hyst)
                                 if (    top_exc >= limit / hyst and top_exc <= limit * hyst
                                     and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
                                     # restore cached values
@@ -715,12 +716,19 @@ class PlotDataItem(GraphicsObject):
                                     y = self.yDisp
                                 else:
                                     min_val = view_range.bottom() - limit * view_height
-                                    max_val = view_range.top()    + limit * view_height
+                                    max_val = view_range.top()    + limit * view_height                                    
                                     if(     min_val >= self._drlLastClip[0]
                                         and max_val <= self._drlLastClip[1] ):
-                                        print('x', end='')
-                                    y = np.clip(y, a_min=min_val, a_max=max_val)
-                                    print('A:{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                        # if we need to clip further, we can work in-place on the output buffer
+                                        # print('in-place:', end='')
+                                        np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                        x = self.xDisp
+                                        y = self.yDisp
+                                    else:
+                                        # otherwise we need to recopy from the full data
+                                        # print('alloc:', end='')
+                                        y = np.clip(y, a_min=min_val, a_max=max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
                                     self._drlLastClip = (min_val, max_val)
 
             self.xDisp = x
