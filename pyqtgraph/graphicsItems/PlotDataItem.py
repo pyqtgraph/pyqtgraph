@@ -166,7 +166,9 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.scatterHovered)
 
+        self._viewRangeWasChanged = False
         self._dataRect = None
+        self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
         self.opts = {
             'connect': 'all',
@@ -200,6 +202,7 @@ class PlotDataItem(GraphicsObject):
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
+            'dynamicRangeHyst': 3.0,
 
             'data': None,
         }
@@ -400,19 +403,28 @@ class PlotDataItem(GraphicsObject):
         self.xDisp = self.yDisp = None
         self.updateItems()
 
-    def setDynamicRangeLimit(self, limit):
+    def setDynamicRangeLimit(self, limit=1e06, hysteresis=3.):
         """
         Limit the off-screen positions of data points at large magnification
         This avoids errors with plots not displaying because their visibility is incorrectly determined. The default setting repositions far-off points to be within +-1E+06 times the viewport height.
 
         =============== ================================================================
         **Arguments:**
-        limit           (float or None) Maximum allowed vertical distance of plotted 
-                        points in units of viewport height.
+        limit           (float or None) Any data outside the range of limit * hysteresis
+                        will be constrained to the limit value limit.
+                        All values are relative to the viewport height.
                         'None' disables the check for a minimal increase in performance.
                         Default is 1E+06.
+                        
+        hysteresis      (float) Hysteresis factor that controls how much change
+                        in zoom level (vertical height) is allowed before recalculating
+                        Default is 3.0
         =============== ================================================================
         """
+        if hysteresis < 1.0: 
+            hysteresis = 1.0
+        self.opts['dynamicRangeHyst']  = hysteresis
+
         if limit == self.opts['dynamicRangeLimit']:
             return # avoid update if there is no change
         self.opts['dynamicRangeLimit'] = limit # can be None
@@ -592,7 +604,7 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
 
-        if self.xDisp is None:
+        if self.xDisp is None or self._viewRangeWasChanged:
             x = self.xData
             y = self.yData
 
@@ -687,14 +699,33 @@ class PlotDataItem(GraphicsObject):
                     data_range = self.dataRect()
                     if data_range is not None:
                         view_height = view_range.height()
-                        lim = self.opts['dynamicRangeLimit']
-                        if data_range.height() > lim * view_height:
-                            min_val = view_range.top()    - lim * view_height
-                            max_val = view_range.bottom() + lim * view_height
-                            y = np.clip(y, a_min=min_val, a_max=max_val)
+                        limit = self.opts['dynamicRangeLimit']
+                        hyst  = self.opts['dynamicRangeHyst']
+                        # never clip data if it fits into +/- (extended) limit * view height
+                        if data_range.height() > 2 * hyst * limit * view_height:
+                            # check if cached display data can be reused:
+                            if self.yDisp is not None: # top is minimum value, bottom is maximum value?
+                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height 
+                                bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
+                                print(top_exc, bot_exc, hyst)
+                                if (    top_exc >= limit / hyst and top_exc <= limit * hyst
+                                    and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
+                                    # restore cached values
+                                    x = self.xDisp
+                                    y = self.yDisp
+                                else:
+                                    min_val = view_range.bottom() - limit * view_height
+                                    max_val = view_range.top()    + limit * view_height
+                                    if(     min_val >= self._drlLastClip[0]
+                                        and max_val <= self._drlLastClip[1] ):
+                                        print('x', end='')
+                                    y = np.clip(y, a_min=min_val, a_max=max_val)
+                                    print('A:{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    self._drlLastClip = (min_val, max_val)
 
             self.xDisp = x
             self.yDisp = y
+            self._viewRangeWasChanged = False
         return self.xDisp, self.yDisp
 
     def dataRect(self):
@@ -797,11 +828,14 @@ class PlotDataItem(GraphicsObject):
 
     def viewRangeChanged(self):
         # view range has changed; re-plot if needed
+        self._viewRangeWasChanged = True
         if( self.opts['clipToView']
             or self.opts['autoDownsample']
-            or self.opts['dynamicRangeLimit'] is not None
         ):
             self.xDisp = self.yDisp = None
+            self.updateItems()
+        elif self.opts['dynamicRangeLimit'] is not None:
+            # do not discard cached display data
             self.updateItems()
 
     def _fourierTransform(self, x, y):
