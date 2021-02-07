@@ -8,7 +8,6 @@ import weakref
 import operator
 from ..util.lru_cache import LRUCache
 
-
 class GraphicsItem(object):
     """
     **Bases:** :class:`object`
@@ -374,6 +373,42 @@ class GraphicsItem(object):
             return None
         vt = fn.invertQTransform(vt)
         return vt.mapRect(obj)
+
+    def mapRectFromParent(self, obj):
+    # QRectF QGraphicsItem::mapRectFromParent(const QRectF &rect) const
+    # {
+    #     // COMBINE
+    #     if (!d_ptr->transformData)
+    #         return rect.translated(-d_ptr->pos);
+    #     return d_ptr->transformToParent().inverted().mapRect(rect);
+    # }
+
+    # inline QTransform QGraphicsItemPrivate::transformToParent() const
+    # {
+    #     QTransform matrix;
+    #     combineTransformToParent(&matrix);
+    #     return matrix;
+    # }
+
+    # void QGraphicsItemPrivate::combineTransformToParent(QTransform *x, const QTransform *viewTransform) const
+    # {
+    #     // COMBINE
+    #     if (viewTransform && itemIsUntransformable()) {
+    #         *x = q_ptr->deviceTransform(*viewTransform);
+    #     } else {
+    #         if (transformData)
+    #             *x *= transformData->computedFullTransform();
+    #         if (!pos.isNull())
+    #             *x *= QTransform::fromTranslate(pos.x(), pos.y());
+    #     }
+    # }
+        vt = QtGui.QTransform()
+        if not self.pos().isNull():
+            vt *= QtGui.QTransform.fromTranslate(self.pos().x(), self.pos().y())
+
+        ivt = fn.invertQTransform(vt)
+        return  ivt.mapRect(obj)
+
 
     def pos(self):
         return Point(self._qtBaseClass.pos(self))
