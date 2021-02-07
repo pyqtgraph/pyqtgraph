@@ -90,31 +90,22 @@ class ErrorBarItem(GraphicsObject):
             y2s = np.column_stack((y2, y2)).flatten()
             y1s = np.column_stack((y1, y1)).flatten()
             
+            verticalLines = fn.arrayToQPath(xs, y1_y2, connect="pairs")
+            p.addPath(verticalLines)
 
-            partial = fn.arrayToQPath(xs, y1_y2, connect="pairs")
-            p.connectPath(partial)
-            # for i in range(len(x)):
-            #     p.moveTo(x[i], y1[i])
-            #     p.lineTo(x[i], y2[i])
-                
             if beam is not None and beam > 0:
                 x1 = x - beam/2.
                 x2 = x + beam/2.
 
-                x1_x2 = np.column_stack((x1, x2)).flatten()
+                x1_x2 = np.column_stack((x2, x1)).flatten()
                 if height is not None or top is not None:
-                    # partial = fn.arrayToQPath(x1_x2[:-1], y2s[:-1], connect="pairs")
-                    # p.connectPath(partial)
-                    for i in range(len(x)):
-                        p.moveTo(x1[i], y2[i])
-                        p.lineTo(x2[i], y2[i])
+                    tops = fn.arrayToQPath(x1_x2, y2s, connect="pairs")
+                    p.addPath(tops)
+
                 if height is not None or bottom is not None:
-                    # partial = fn.arrayToQPath(x1_x2, y1s, connect="pairs")
-                    # p.connectPath(partial)
-                    for i in range(len(x)):
-                        p.moveTo(x1[i], y1[i])
-                        p.lineTo(x2[i], y1[i])
-        
+                    partial = fn.arrayToQPath(x1_x2, y1s, connect="pairs")
+                    p.addPath(partial)
+
         width, right, left = self.opts['width'], self.opts['right'], self.opts['left']
         if width is not None or right is not None or left is not None:
             ## draw vertical error bars
@@ -136,11 +127,8 @@ class ErrorBarItem(GraphicsObject):
             x1s = np.column_stack((x1, x1)).flatten()
 
             ends = fn.arrayToQPath(x1_x2, ys, connect='pairs')
-            p.connectPath(ends)
-            # for i in range(len(x)):
-            #     p.moveTo(x1[i], y[i])
-            #     p.lineTo(x2[i], y[i])
-                
+            p.addPath(ends)
+
             if beam is not None and beam > 0:
                 y1 = y - beam/2.
                 y2 = y + beam/2.
@@ -148,16 +136,11 @@ class ErrorBarItem(GraphicsObject):
 
                 if width is not None or right is not None:
                     partial = fn.arrayToQPath(x2s, y1_y2, connect="pairs")
-                    p.connectPath(partial)
-                    # for i in range(len(x)):
-                        # p.moveTo(x2[i], y1[i])
-                        # p.lineTo(x2[i], y2[i])
+                    p.addPath(partial)
+
                 if width is not None or left is not None:
                     partial = fn.arrayToQPath(x1s, y1_y2, connect="pairs")
-                    p.connectPath(partial)
-                    # for i in range(len(x)):
-                    #     p.moveTo(x1[i], y1[i])
-                    #     p.lineTo(x1[i], y2[i])
+                    p.addPath(partial)
                     
         self.path = p
         self.prepareGeometryChange()
