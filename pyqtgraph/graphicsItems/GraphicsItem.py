@@ -409,6 +409,26 @@ class GraphicsItem(object):
         ivt = fn.invertQTransform(vt)
         return  ivt.mapRect(obj)
 
+    def mapRectFromScene(self, obj):
+        print("QGraphicsItem.mapRectFromScene called")
+        return super().mapRectFromScene(obj)
+
+    def mapFromParent(self, obj):
+        print("QGraphicsItem.mapFromParent called")
+        return super().mapFromParent(obj)
+    
+    def mapFromScene(self, point):
+    # QPointF QGraphicsItem::mapFromScene(const QPointF &point) const
+    # {
+    #     if (d_ptr->hasTranslateOnlySceneTransform())
+    #         return QPointF(point.x() - d_ptr->sceneTransform.dx(), point.y() - d_ptr->sceneTransform.dy());
+    #     return d_ptr->sceneTransform.inverted().map(point);
+    # }
+        # if self.hasTranslateOnlySceneTransform():
+        #     return QtCore.QPointF(point.x() - self.sceneTransform.dx(), point.y() - self.sceneTransform.dy())
+        st = self.sceneTransform()
+        ist = fn.invertQTransform(st)
+        return ist.map(point)
 
     def pos(self):
         return Point(self._qtBaseClass.pos(self))
