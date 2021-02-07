@@ -244,7 +244,6 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.layout.addItem(label, row, col + 1)
         # Keep rowCount in sync with the number of rows if items are added
         self.rowCount = max(self.rowCount, row + 1)
-        print(f"_addItemToLayout set self.rowCount = {self.rowCount} \t row = {row} \t col = {col}")
 
     def setColumnCount(self, columnCount):
         """change the orientation of all items of the legend
@@ -253,14 +252,11 @@ class LegendItem(GraphicsWidget, GraphicsWidgetAnchor):
             self.columnCount = columnCount
 
             self.rowCount = math.ceil(len(self.items) / columnCount)
-            print(f"setColumnCount set self.rowCount = {self.rowCount}")
             for i in range(self.layout.count() - 1, -1, -1):
                 self.layout.removeAt(i)  # clear layout
             for sample, label in self.items:
                 self._addItemToLayout(sample, label)
             self.updateSize()
-            print(f"end result is self.rowCount = {self.rowCount}")
-            print("\n")
 
     def getLabel(self, plotItem):
         """Return the labelItem inside the legend for a given plotItem

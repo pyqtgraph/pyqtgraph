@@ -603,7 +603,7 @@ def runSubprocess(command, return_code=False, **kwargs):
     if p.returncode != 0:
         print(output)
         err_fun = sp.CalledProcessError.__init__
-        if 'output' in inspect.getargspec(err_fun).args:
+        if 'output' in inspect.getfullargspec(err_fun).args:
             raise sp.CalledProcessError(p.returncode, command, output)
         else:
             raise sp.CalledProcessError(p.returncode, command)
