@@ -199,7 +199,7 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
         svg = QtSvg.QSvgGenerator()
         svg.setOutputDevice(buf)
         dpi = QtGui.QGuiApplication.primaryScreen().logicalDotsPerInchX()
-        svg.setResolution(dpi)
+        svg.setResolution(int(dpi))
 
         p = QtGui.QPainter()
         p.begin(svg)

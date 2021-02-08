@@ -15,7 +15,7 @@ import sys
 import warnings
 
 import numpy as np
-from pyqtgraph.util.cupy_helper import getCupy
+from .util.cupy_helper import getCupy
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
@@ -119,10 +119,28 @@ def siFormat(x, precision=3, suffix='', space=True, error=None, minVal=1e-25, al
 
 def siParse(s, regex=FLOAT_REGEX, suffix=None):
     """Convert a value written in SI notation to a tuple (number, si_prefix, suffix).
-    
+
     Example::
-    
-        siParse('100 μV")  # returns ('100', 'μ', 'V')
+
+        siParse('100 µV")  # returns ('100', 'µ', 'V')
+
+    Note that in the above example, the µ symbol is the "micro sign" (UTF-8
+    0xC2B5), as opposed to the Greek letter mu (UTF-8 0xCEBC).
+
+    Parameters
+    ----------
+    s : str
+        The string to parse.
+    regex : re.Pattern, optional
+        Compiled regular expression object for parsing. The default is a
+        general-purpose regex for parsing floating point expressions,
+        potentially containing an SI prefix and a suffix.
+    suffix : str, optional
+        Suffix to check for in ``s``. The default (None) indicates there may or
+        may not be a suffix contained in the string and it is returned if
+        found. An empty string ``""`` is handled differently: if the string
+        contains a suffix, it is discarded. This enables interpreting
+        characters following the numerical value as an SI prefix.
     """
     s = asUnicode(s)
     s = s.strip()
@@ -130,15 +148,20 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
         if s[-len(suffix):] != suffix:
             raise ValueError("String '%s' does not have the expected suffix '%s'" % (s, suffix))
         s = s[:-len(suffix)] + 'X'  # add a fake suffix so the regex still picks up the si prefix
-        
+
+    # special case: discard any extra characters if suffix is explicitly empty
+    if suffix == "":
+        s += 'X'
+
     m = regex.match(s)
     if m is None:
         raise ValueError('Cannot parse number "%s"' % s)
+
     try:
         sip = m.group('siPrefix')
     except IndexError:
         sip = ''
-    
+
     if suffix is None:
         try:
             suf = m.group('suffix')
@@ -146,8 +169,8 @@ def siParse(s, regex=FLOAT_REGEX, suffix=None):
             suf = ''
     else:
         suf = suffix
-    
-    return m.group('number'), '' if sip is None else sip, '' if suf is None else suf 
+
+    return m.group('number'), '' if sip is None else sip, '' if suf is None else suf
 
 
 def siEval(s, typ=float, regex=FLOAT_REGEX, suffix=None):
@@ -1275,18 +1298,22 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     # If the const constructor is used, subsequently calling any non-const method
     # will trigger the COW mechanism, i.e. a copy is made under the hood.
 
-    if QT_LIB == 'PyQt5':
-        # PyQt5 -> non-const constructor
-        img_ptr = imgData.ctypes.data
-    elif QT_LIB == 'PyQt6':
-        # PyQt5 -> const constructor
-        # PyQt6 -> non-const constructor
-        img_ptr = Qt.sip.voidptr(imgData)
+    if QT_LIB.startswith('PyQt'):
+        if QtCore.PYQT_VERSION == 0x60000:
+            # PyQt5          -> const
+            # PyQt6 >= 6.0.1 -> const
+            # PyQt6 == 6.0.0 -> non-const
+            img_ptr = Qt.sip.voidptr(imgData)
+        else:
+            # PyQt5          -> non-const
+            # PyQt6 >= 6.0.1 -> non-const
+            img_ptr = int(Qt.sip.voidptr(imgData))  # or imgData.ctypes.data
     else:
         # bindings that support ndarray
-        # PyQt5   -> const constructor
-        # PySide2 -> non-const constructor
-        # PySide6 -> non-const constructor
+        # PyQt5          -> const
+        # PyQt6 >= 6.0.1 -> const
+        # PySide2        -> non-const
+        # PySide6        -> non-const
         img_ptr = imgData
 
     img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)

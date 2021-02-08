@@ -108,7 +108,6 @@ others = dict([
     ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),
     ('GraphicsScene', 'GraphicsScene.py'),
     ('MouseSelection', 'MouseSelection.py'),
-    ('ProgressDialog', 'ProgressDialog.py'),
 ])
 
 
@@ -117,4 +116,9 @@ trivial = dict([
     ('SimplePlot', 'SimplePlot.py'),    # Plotting.py
     ('LogPlotTest', 'LogPlotTest.py'),  # Plotting.py
     ('ViewLimits', 'ViewLimits.py'),    # ViewBoxFeatures.py
+])
+
+# examples that are not suitable for CI testing
+skiptest = dict([
+    ('ProgressDialog', 'ProgressDialog.py'),    # modal dialog
 ])

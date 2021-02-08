@@ -228,10 +228,14 @@ class Renderer(GraphicsView):
                     self.shm.resize(size)
             
             ## render the scene directly to shared memory
-            if QT_LIB == 'PyQt5':
-                img_ptr = int(sip.voidptr(self.shm))
-            elif QT_LIB == 'PyQt6':
-                img_ptr = sip.voidptr(self.shm)
+
+            # see functions.py::makeQImage() for rationale
+            if QT_LIB.startswith('PyQt'):
+                if QtCore.PYQT_VERSION == 0x60000:
+                    img_ptr = sip.voidptr(self.shm)
+                else:
+                    # PyQt5, PyQt6 >= 6.0.1
+                    img_ptr = int(sip.voidptr(self.shm))
             else:
                 # PySide2, PySide6
                 img_ptr = self.shm
@@ -246,8 +250,8 @@ class Renderer(GraphicsView):
 
     def deserialize_mouse_event(self, mouse_event):
         typ, pos, gpos, btn, btns, mods = mouse_event
+        typ = QtCore.QEvent.Type(typ)
         if QT_LIB != 'PyQt6':
-            typ = QtCore.QEvent.Type(typ)
             btn = QtCore.Qt.MouseButton(btn)
             btns = QtCore.Qt.MouseButtons(btns)
             mods = QtCore.Qt.KeyboardModifiers(mods)

@@ -10,8 +10,8 @@ def resizeWindow(win, w, h, timeout=2.0):
     """
     QtGui.QApplication.processEvents()
     # Sometimes the window size will switch multiple times before settling
-    # on its final size. Adding qWaitForWindowShown seems to help with this.
-    QtTest.QTest.qWaitForWindowShown(win)
+    # on its final size. Adding qWaitForWindowExposed seems to help with this.
+    QtTest.QTest.qWaitForWindowExposed(win)
     win.resize(w, h)
     start = time.time()
     while True:
