@@ -212,22 +212,23 @@ def testExamples(frontend, f):
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
     code = """
 try:
-    %s
+    {0}
     import initExample
     import pyqtgraph as pg
-    import %s
+    import {1}
     import sys
     print("test complete")
     sys.stdout.flush()
-    import time
-    while True:  ## run a little event loop
-        pg.QtGui.QApplication.processEvents()
-        time.sleep(0.01)
+    pg.Qt.QtCore.QTimer.singleShot(1000, pg.Qt.QtWidgets.QApplication.quit)
+    pg.Qt.QtWidgets.QApplication.instance().exec_()
+    names = [x for x in dir({1}) if not x.startswith('_')]
+    for name in names:
+        delattr({1}, name)
 except:
     print("test failed")
     raise
 
-""" % (import1, import2)
+""".format(import1, import2)
     if sys.platform.startswith('win'):
         process = subprocess.Popen([sys.executable],
                                     stdin=subprocess.PIPE,
@@ -259,8 +260,13 @@ except:
         if output.endswith('test failed'):
             fail = True
             break
-    time.sleep(1)
-    process.kill()
+    start = time.time()
+    killed = False
+    while process.poll() is None:
+        time.sleep(0.1)
+        if time.time() - start > 2.0 and not killed:
+            process.kill()
+            killed = True
     #res = process.communicate()
     res = (process.stdout.read(), process.stderr.read())
     if (fail or
