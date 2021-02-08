@@ -224,7 +224,7 @@ class SymbolAtlas(object):
                     squareness=1.0 if n == 0 else 2 * w * h / (w**2 + h**2))
 
     def _keys(self, styles):
-        return [(id(symbol), size, id(pen), id(brush)) for symbol, size, pen, brush in styles]
+        return [(symbol, size, (pen.style(), pen.capStyle(), pen.joinStyle()), (brush.color().rgba(), brush.style())) for symbol, size, pen, brush in styles]
 
     def _itemData(self, keys):
         for key in keys:
