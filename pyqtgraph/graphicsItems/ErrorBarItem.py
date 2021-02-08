@@ -99,12 +99,12 @@ class ErrorBarItem(GraphicsObject):
 
                 x1_x2 = np.column_stack((x2, x1)).flatten()
                 if height is not None or top is not None:
-                    tops = fn.arrayToQPath(x1_x2, y2s, connect="pairs")
-                    p.addPath(tops)
+                    topEnds = fn.arrayToQPath(x1_x2, y2s, connect="pairs")
+                    p.addPath(topEnds)
 
                 if height is not None or bottom is not None:
-                    partial = fn.arrayToQPath(x1_x2, y1s, connect="pairs")
-                    p.addPath(partial)
+                    bottomEnds = fn.arrayToQPath(x1_x2, y1s, connect="pairs")
+                    p.addPath(bottomEnds)
 
         width, right, left = self.opts['width'], self.opts['right'], self.opts['left']
         if width is not None or right is not None or left is not None:
@@ -135,12 +135,12 @@ class ErrorBarItem(GraphicsObject):
                 y1_y2 = np.column_stack((y1, y2)).flatten()
 
                 if width is not None or right is not None:
-                    partial = fn.arrayToQPath(x2s, y1_y2, connect="pairs")
-                    p.addPath(partial)
+                    rightEnds = fn.arrayToQPath(x2s, y1_y2, connect="pairs")
+                    p.addPath(rightEnds)
 
                 if width is not None or left is not None:
-                    partial = fn.arrayToQPath(x1s, y1_y2, connect="pairs")
-                    p.addPath(partial)
+                    leftEnds = fn.arrayToQPath(x1s, y1_y2, connect="pairs")
+                    p.addPath(leftEnds)
                     
         self.path = p
         self.prepareGeometryChange()
