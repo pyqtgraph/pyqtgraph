@@ -231,7 +231,7 @@ class SymbolAtlas(object):
             try:
                 return obj._id
             except AttributeError:
-                obj._id = next(self._idGenerator)
+                obj._id = next(SymbolAtlas._idGenerator)
                 return obj._id
 
         return [
