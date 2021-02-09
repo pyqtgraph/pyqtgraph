@@ -5,6 +5,7 @@ try:
     from itertools import imap
 except ImportError:
     imap = map
+import itertools
 import numpy as np
 import weakref
 from ..Qt import QtGui, QtCore, QT_LIB
@@ -161,6 +162,8 @@ class SymbolAtlas(object):
         pm = atlas.pixmap
 
     """
+    _idGenerator = itertools.count()
+
     def __init__(self):
         self._data = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
         self._coords = {}
@@ -224,13 +227,16 @@ class SymbolAtlas(object):
                     squareness=1.0 if n == 0 else 2 * w * h / (w**2 + h**2))
 
     def _keys(self, styles):
+        def getId(obj):
+            try:
+                return obj._id
+            except AttributeError:
+                obj._id = next(SymbolAtlas._idGenerator)
+                return obj._id
+
         return [
-            (
-                symbol if isinstance(symbol, (str, int)) else f"{symbol.boundingRect()} + {symbol.elementCount()} elements",
-                size,
-                (pen.style(), pen.capStyle(), pen.joinStyle()),
-                (brush.color().rgba(), brush.style())
-            ) for symbol, size, pen, brush in styles
+            (symbol if isinstance(symbol, (str, int)) else getId(symbol), size, getId(pen), getId(brush))
+            for symbol, size, pen, brush in styles
         ]
 
     def _itemData(self, keys):
