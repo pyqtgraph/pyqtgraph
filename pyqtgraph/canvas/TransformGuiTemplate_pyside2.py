@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'TransformGuiTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/canvas/TransformGuiTemplate.ui',
+# licensing of 'pyqtgraph/canvas/TransformGuiTemplate.ui' applies.
 #
-# Created: Sun Sep 18 19:18:41 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Tue Feb  9 12:11:12 2021
+#      by: pyside2-uic  running on PySide2 5.12.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -46,7 +47,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "PyQtGraph", None, -1))
         self.translateLabel.setText(QtWidgets.QApplication.translate("Form", "Translate:", None, -1))
         self.rotateLabel.setText(QtWidgets.QApplication.translate("Form", "Rotate:", None, -1))
         self.scaleLabel.setText(QtWidgets.QApplication.translate("Form", "Scale:", None, -1))

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'FlowchartCtrlTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/flowchart/FlowchartCtrlTemplate.ui',
+# licensing of 'pyqtgraph/flowchart/FlowchartCtrlTemplate.ui' applies.
 #
-# Created: Sun Sep 18 19:16:46 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Tue Feb  9 12:11:09 2021
+#      by: pyside2-uic  running on PySide2 5.12.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -43,7 +44,6 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.ctrlList, 3, 0, 1, 4)
         self.fileNameLabel = QtWidgets.QLabel(Form)
         font = QtGui.QFont()
-        font.setWeight(75)
         font.setBold(True)
         self.fileNameLabel.setFont(font)
         self.fileNameLabel.setText("")
@@ -55,12 +55,12 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "PyQtGraph", None, -1))
         self.loadBtn.setText(QtWidgets.QApplication.translate("Form", "Load..", None, -1))
         self.saveBtn.setText(QtWidgets.QApplication.translate("Form", "Save", None, -1))
         self.saveAsBtn.setText(QtWidgets.QApplication.translate("Form", "As..", None, -1))
         self.reloadBtn.setText(QtWidgets.QApplication.translate("Form", "Reload Libs", None, -1))
         self.showChartBtn.setText(QtWidgets.QApplication.translate("Form", "Flowchart", None, -1))
 
-from ..widgets.FeedbackButton import FeedbackButton
 from ..widgets.TreeWidget import TreeWidget
+from ..widgets.FeedbackButton import FeedbackButton

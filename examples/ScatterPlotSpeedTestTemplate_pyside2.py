@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ScatterPlotSpeedTestTemplate.ui'
+# Form implementation generated from reading ui file 'examples/ScatterPlotSpeedTestTemplate.ui',
+# licensing of 'examples/ScatterPlotSpeedTestTemplate.ui' applies.
 #
-# Created: Sun Sep 18 19:21:36 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Tue Feb  9 12:18:12 2021
+#      by: pyside2-uic  running on PySide2 5.12.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -36,7 +37,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "PyQtGraph", None, -1))
         self.pixelModeCheck.setText(QtWidgets.QApplication.translate("Form", "pixel mode", None, -1))
         self.label.setText(QtWidgets.QApplication.translate("Form", "Size", None, -1))
         self.randCheck.setText(QtWidgets.QApplication.translate("Form", "Randomize", None, -1))

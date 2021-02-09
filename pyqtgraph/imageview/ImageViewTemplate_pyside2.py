@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ImageViewTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/imageview/ImageViewTemplate.ui',
+# licensing of 'pyqtgraph/imageview/ImageViewTemplate.ui' applies.
 #
-# Created: Sun Sep 18 19:17:41 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Tue Feb  9 12:11:07 2021
+#      by: pyside2-uic  running on PySide2 5.12.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -73,21 +74,18 @@ class Ui_Form(object):
         self.gridLayout_2.addWidget(self.normDivideRadio, 0, 1, 1, 1)
         self.label_5 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setWeight(75)
         font.setBold(True)
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
         self.gridLayout_2.addWidget(self.label_5, 0, 0, 1, 1)
         self.label_3 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setWeight(75)
         font.setBold(True)
         self.label_3.setFont(font)
         self.label_3.setObjectName("label_3")
         self.gridLayout_2.addWidget(self.label_3, 1, 0, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.normGroup)
         font = QtGui.QFont()
-        font.setWeight(75)
         font.setBold(True)
         self.label_4.setFont(font)
         self.label_4.setObjectName("label_4")
@@ -132,7 +130,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
+        Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "PyQtGraph", None, -1))
         self.roiBtn.setText(QtWidgets.QApplication.translate("Form", "ROI", None, -1))
         self.menuBtn.setText(QtWidgets.QApplication.translate("Form", "Menu", None, -1))
         self.normGroup.setTitle(QtWidgets.QApplication.translate("Form", "Normalization", None, -1))
@@ -149,6 +147,6 @@ class Ui_Form(object):
         self.normTimeRangeCheck.setText(QtWidgets.QApplication.translate("Form", "Time range", None, -1))
         self.normFrameCheck.setText(QtWidgets.QApplication.translate("Form", "Frame", None, -1))
 
-from ..widgets.HistogramLUTWidget import HistogramLUTWidget
-from ..widgets.PlotWidget import PlotWidget
 from ..widgets.GraphicsView import GraphicsView
+from ..widgets.PlotWidget import PlotWidget
+from ..widgets.HistogramLUTWidget import HistogramLUTWidget

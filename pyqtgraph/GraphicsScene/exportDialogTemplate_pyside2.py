@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'exportDialogTemplate.ui'
+# Form implementation generated from reading ui file 'pyqtgraph/GraphicsScene/exportDialogTemplate.ui',
+# licensing of 'pyqtgraph/GraphicsScene/exportDialogTemplate.ui' applies.
 #
-# Created: Sun Sep 18 19:19:58 2016
-#      by: pyside2-uic  running on PySide2 2.0.0~alpha0
+# Created: Tue Feb  9 12:21:46 2021
+#      by: pyside2-uic  running on PySide2 5.12.6
 #
 # WARNING! All changes made in this file will be lost!
 
