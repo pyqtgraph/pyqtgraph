@@ -229,10 +229,10 @@ class SymbolAtlas(object):
     def _keys(self, styles):
         def getId(obj):
             try:
-                return obj.id
+                return obj._id
             except AttributeError:
-                obj.id = next(self._idGenerator)
-                return obj.id
+                obj._id = next(self._idGenerator)
+                return obj._id
 
         return [
             (symbol if isinstance(symbol, (str, int)) else getId(symbol), size, getId(pen), getId(brush))
