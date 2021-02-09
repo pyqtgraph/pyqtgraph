@@ -387,10 +387,7 @@ if QT_LIB == PYQT6:
 
     # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
     # by the Qt library.
-    try:
-        # 213 is a known failing value
-        QtCore.QEvent.Type(213)
-    except ValueError:
+    if QtCore.PYQT_VERSION == 0x60000:
         def new_method(self, old_method=QtCore.QEvent.type):
             try:
                 typ = old_method(self)
