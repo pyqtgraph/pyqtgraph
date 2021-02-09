@@ -86,6 +86,3 @@ def test_basics_graphics_view():
     assert view.currentItem is None
     assert view.sceneObj is None
     assert view.closed is True
-
-    del view
-    app.deleteLater()
