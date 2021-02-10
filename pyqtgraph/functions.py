@@ -662,6 +662,35 @@ def affineSlice(data, shape, origin, vectors, axes, order=1, returnCoords=False,
         return output
 
 
+def interweaveArrays(*args):
+    """
+    Parameters
+    ----------
+
+    args : numpy.ndarray
+           series of 1D numpy arrays of the same length and dtype
+    
+    Returns
+    -------
+    numpy.ndarray
+        A numpy array with all the input numpy arrays interwoven
+
+    Examples
+    --------
+
+    >>> result = interweaveArrays(numpy.ndarray([0, 2, 4]), numpy.ndarray([1, 3, 5]))
+    >>> result
+    array([0, 1, 2, 3, 4, 5])
+    """
+
+    size = sum(x.size for x in args)
+    result = np.empty((size,), dtype=args[0].dtype)
+    n = len(args)
+    for index, array in enumerate(args):
+        result[index::n] = array
+    return result
+
+
 def interpolateArray(data, x, default=0.0, order=1):
     """
     N-dimensional interpolation similar to scipy.ndimage.map_coordinates.
