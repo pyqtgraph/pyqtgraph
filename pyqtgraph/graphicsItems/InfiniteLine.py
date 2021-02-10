@@ -225,7 +225,7 @@ class InfiniteLine(GraphicsObject):
 
     def setPos(self, pos):
 
-        if type(pos) in [list, tuple, np.ndarray]:
+        if isinstance(pos, (list, tuple, np.ndarray)) and not np.ndim(pos) == 0:
             newPos = list(pos)
         elif isinstance(pos, QtCore.QPointF):
             newPos = [pos.x(), pos.y()]
