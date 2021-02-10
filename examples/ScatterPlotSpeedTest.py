@@ -16,16 +16,18 @@ from pyqtgraph.ptime import time
 import pyqtgraph.parametertree as ptree
 import pyqtgraph.graphicsItems.ScatterPlotItem
 
+translate = QtCore.QCoreApplication.translate
+
 app = pg.mkQApp()
-param = ptree.Parameter.create(name='Parameters', type='group', children=[
-    dict(name='paused', title='Paused:    ', type='bool', value=False),
-    dict(name='count', title='Count:    ', type='int', limits=[1, None], value=500, step=100),
-    dict(name='size', title='Size:    ', type='int', limits=[1, None], value=10),
-    dict(name='randomize', title='Randomize:    ', type='bool', value=False),
+param = ptree.Parameter.create(name=translate('ScatterPlot', 'Parameters'), type='group', children=[
+    dict(name='paused', title=translate('ScatterPlot', 'Paused:    '), type='bool', value=False),
+    dict(name='count', title=translate('ScatterPlot', 'Count:    '), type='int', limits=[1, None], value=500, step=100),
+    dict(name='size', title=translate('ScatterPlot', 'Size:    '), type='int', limits=[1, None], value=10),
+    dict(name='randomize', title=translate('ScatterPlot', 'Randomize:    '), type='bool', value=False),
     dict(name='_USE_QRECT', title='_USE_QRECT:    ', type='bool', value=pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT),
     dict(name='pxMode', title='pxMode:    ', type='bool', value=True),
     dict(name='useCache', title='useCache:    ', type='bool', value=True),
-    dict(name='mode', title='Mode:    ', type='list', values={'New Item': 'newItem', 'Reuse Item': 'reuseItem', 'Simulate Pan/Zoom': 'panZoom'}, value='reuseItem'),
+    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', values={'New Item': 'newItem', 'Reuse Item': 'reuseItem', 'Simulate Pan/Zoom': 'panZoom'}, value='reuseItem'),
 ])
 for c in param.children():
     c.setDefault(c.value())
