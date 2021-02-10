@@ -35,10 +35,10 @@ for c in param.children():
 pt.setParameters(param)
 p = pg.PlotWidget()
 
-sp = QtWidgets.QSplitter()
-sp.addWidget(pt)
-sp.addWidget(p)
-sp.show()
+splitter = QtWidgets.QSplitter()
+splitter.addWidget(pt)
+splitter.addWidget(p)
+splitter.show()
 
 data = {}
 item = pg.ScatterPlotItem()
