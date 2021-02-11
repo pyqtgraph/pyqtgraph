@@ -1358,21 +1358,23 @@ def imageToArray(img, copy=False, transpose=True):
     The array will have shape (width, height, (b,g,r,a)).
     """
     fmt = img.format()
-    ptr = img.bits()
-    if QT_LIB in ['PySide', 'PySide2', 'PySide6']:
-        arr = np.frombuffer(ptr, dtype=np.ubyte)
-    else:
+    img_ptr = img.bits()
+
+    if QT_LIB.startswith('PyQt'):
+        # sizeInBytes() was introduced in Qt 5.10
+        # however PyQt5 5.12 will fail with:
+        #   "TypeError: QImage.sizeInBytes() is a private method"
+        # note that sizeInBytes() works fine with:
+        #   PyQt5 5.15, PySide2 5.12, PySide2 5.15
         try:
-            # removed in Qt6
-            nbytes = img.byteCount()
-        except AttributeError:
-            # introduced in Qt 5.10
-            # however Python 3.7 + PyQt5-5.12 in the CI fails with
-            # "TypeError: QImage.sizeInBytes() is a private method"
+            # 64-bits size
             nbytes = img.sizeInBytes()
-        ptr.setsize(nbytes)
-        arr = np.asarray(ptr)
-    
+        except (TypeError, AttributeError):
+            # 32-bits size
+            nbytes = img.byteCount()
+        img_ptr.setsize(nbytes)
+
+    arr = np.frombuffer(img_ptr, dtype=np.ubyte)
     arr = arr.reshape(img.height(), img.width(), 4)
     if fmt == img.Format_RGB32:
         arr[...,3] = 255
