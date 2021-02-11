@@ -137,12 +137,14 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         QtGui.QApplication.processEvents()
 
         graphstate = scenegraphState(w, standardFile)
-        image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
-        qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+        qimg = QtGui.QImage(w.size(), QtGui.QImage.Format.Format_ARGB32)
+        qimg.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
         
+        image = fn.imageToArray(qimg, copy=False, transpose=False)
+
         # transpose BGRA to RGBA
         image = image[..., [2, 1, 0, 3]]
 
