@@ -27,7 +27,7 @@ param = ptree.Parameter.create(name=translate('ScatterPlot', 'Parameters'), type
     dict(name='_USE_QRECT', title='_USE_QRECT:    ', type='bool', value=pyqtgraph.graphicsItems.ScatterPlotItem._USE_QRECT),
     dict(name='pxMode', title='pxMode:    ', type='bool', value=True),
     dict(name='useCache', title='useCache:    ', type='bool', value=True),
-    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', values={'New Item': 'newItem', 'Reuse Item': 'reuseItem', 'Simulate Pan/Zoom': 'panZoom'}, value='reuseItem'),
+    dict(name='mode', title=translate('ScatterPlot', 'Mode:    '), type='list', values={translate('ScatterPlot', 'New Item'): 'newItem', translate('ScatterPlot', 'Reuse Item'): 'reuseItem', translate('ScatterPlot', 'Simulate Pan/Zoom'): 'panZoom', translate('ScatterPlot', 'Simulate Hover'): 'hover'}, value='reuseItem'),
 ])
 for c in param.children():
     c.setDefault(c.value())
@@ -42,6 +42,7 @@ splitter.show()
 
 data = {}
 item = pg.ScatterPlotItem()
+hoverBrush = pg.mkBrush('y')
 ptr = 0
 lastTime = time()
 fps = None
@@ -88,13 +89,21 @@ def getData():
 
 def update():
     global ptr, lastTime, fps
-    if param['mode'] == 'newItem':
+    mode = param['mode']
+    if mode == 'newItem':
         mkItem()
-    elif param['mode'] == 'reuseItem':
+    elif mode == 'reuseItem':
         item.setData(**getData())
-    elif param['mode'] == 'panZoom':
+    elif mode == 'panZoom':
         item.viewTransformChanged()
         item.update()
+    elif mode == 'hover':
+        pts = item.points()
+        old = pts[(ptr - 1) % len(pts)]
+        new = pts[ptr % len(pts)]
+        item.pointsAt(new.pos())
+        old.resetBrush()  # reset old's brush before setting new's to better simulate hovering
+        new.setBrush(hoverBrush)
 
     ptr += 1
     now = time()

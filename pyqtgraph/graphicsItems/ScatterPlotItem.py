@@ -776,14 +776,21 @@ class ScatterPlotItem(GraphicsObject):
             mask = dataSet['sourceRect']['w'] == 0
             if np.any(mask):
                 invalidate = True
-                dataSet['sourceRect'][mask] = self.fragmentAtlas[
+                coords = self.fragmentAtlas[
                     list(zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask)))
                 ]
+                dataSet['sourceRect'][mask] = coords
                 if _USE_QRECT:
-                    sr = dataSet['sourceRect'][mask]
-                    sru = np.unique(sr)
-                    list(imap(self._sourceQRect.__setitem__, imap(tuple, sru), imap(QtCore.QRectF, *zip(*sru))))
-                    dataSet['sourceQRect'][mask] = list(imap(self._sourceQRect.__getitem__, imap(tuple, sr)))
+                    rects = []
+                    for c in coords:
+                        try:
+                            rect = self._sourceQRect[c]
+                        except KeyError:
+                            rect = QtCore.QRectF(*c)
+                            self._sourceQRect[c] = rect
+                        rects.append(rect)
+
+                    dataSet['sourceQRect'][mask] = rects
                     dataSet['targetQRectValid'][mask] = False
 
             self._maybeRebuildAtlas()
