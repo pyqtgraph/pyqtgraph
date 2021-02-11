@@ -27,7 +27,7 @@ elapsed = 0
 
 def timeit(func):
     def wrapper(*args, **kwargs):
-        global elapsed
+        global elapsed, ptr, p
         # Empty the eventloop stack before!
         app.processEvents(QtCore.QEventLoop.AllEvents, 20)
         t_start = perf_counter()
