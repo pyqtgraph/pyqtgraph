@@ -5,12 +5,14 @@ Update a simple plot as rapidly as possible to measure speed.
 """
 
 ## Add path to library (just for examples; you do not need this)
+from time import perf_counter
+
 import initExample
 
 from pyqtgraph.Qt import QtGui, QtCore
+
 import numpy as np
 import pyqtgraph as pg
-from time import perf_counter
 
 app = pg.mkQApp("Plot Speed Test")
 
@@ -37,8 +39,8 @@ def timeit(func):
 
         elapsed += perf_counter() - t_start
         average = elapsed / ptr
-        print("{} average {} seconds".format(func.__name__, average))
-        p.setTitle('%0.5f sec avg' % average)
+        fps = 1 / average
+        p.setTitle('%0.2f fps - %0.5fs avg' % (fps, average))
         return ret
 
     return wrapper
