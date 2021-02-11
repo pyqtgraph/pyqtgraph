@@ -27,30 +27,23 @@ ptr = 0
 elapsed = 0
 
 
-def timeit(func):
-    def wrapper(*args, **kwargs):
-        global elapsed, ptr, p
-        # Empty the eventloop stack before!
-        app.processEvents(QtCore.QEventLoop.AllEvents, 20)
-        t_start = perf_counter()
-        ret = func(*args, **kwargs)
-        # And process now
-        app.processEvents(QtCore.QEventLoop.AllEvents)
-
-        elapsed += perf_counter() - t_start
-        average = elapsed / ptr
-        fps = 1 / average
-        p.setTitle('%0.2f fps - %0.5fs avg' % (fps, average))
-        return ret
-
-    return wrapper
-
-
-@timeit
 def update():
-    global curve, data, ptr
-    curve.setData(data[ptr % 10])
+    global curve, data, ptr, elapsed, ptr
+
     ptr += 1
+    # Empty the eventloop stack before!
+    app.processEvents(QtCore.QEventLoop.AllEvents, 20)
+
+    # Measure
+    t_start = perf_counter()
+    curve.setData(data[ptr % 10])
+    app.processEvents(QtCore.QEventLoop.AllEvents)
+
+    # Statistics
+    elapsed += perf_counter() - t_start
+    average = elapsed / ptr
+    fps = 1 / average
+    p.setTitle('%0.2f fps - %0.5fs avg' % (fps, average))
 
 
 timer = QtCore.QTimer()
