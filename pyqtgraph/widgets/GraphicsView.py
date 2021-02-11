@@ -123,11 +123,6 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
 
-        # Set a transparent background QPalette!
-        palette = self.palette()
-        palette.setColor(QtGui.QPalette.Window, QtCore.Qt.transparent)
-        self.setPalette(palette)
-
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
