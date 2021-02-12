@@ -10,11 +10,11 @@ app = pg.mkQApp()
 
 def test_ImageItem(transpose=False):
     
-    w = pg.GraphicsWindow()    
+    w = pg.GraphicsLayoutWidget()
+    w.show()
     view = pg.ViewBox()
     w.setCentralWidget(view)
     w.resize(200, 200)
-    w.show()
     img = TransposedImageItem(border=0.5, transpose=transpose)
 
     view.addItem(img)
