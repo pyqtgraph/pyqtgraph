@@ -22,6 +22,7 @@ from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .. import getConfigOption
+import warnings
 
 translate = QtCore.QCoreApplication.translate
 
@@ -1890,16 +1891,20 @@ class CircleROI(EllipseROI):
 
 
 class PolygonROI(ROI):
-    ## deprecated. Use PloyLineROI instead.
-    
+   
     def __init__(self, positions, pos=None, **args):
+        warnings.warn(
+            'PolygonROI has been deprecated, will be removed in 0.13'
+            'use PolyLineROI instead',
+            DeprecationWarning, stacklevel=2
+        )
+
         if pos is None:
             pos = [0,0]
         ROI.__init__(self, pos, [1,1], **args)
         for p in positions:
             self.addFreeHandle(p)
         self.setZValue(1000)
-        print("Warning: PolygonROI is deprecated. Use PolyLineROI instead.")
             
     def listPoints(self):
         return [p['item'].pos() for p in self.handles]

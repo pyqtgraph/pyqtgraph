@@ -2,7 +2,7 @@
 from .Qt import QtCore, QtGui
 from .Point import Point
 import numpy as np
-
+import warnings
 
 class SRTTransform(QtGui.QTransform):
     """Transform that can always be represented as a combination of 3 matrices: scale * rotate * translate
@@ -35,7 +35,11 @@ class SRTTransform(QtGui.QTransform):
         return self._state['scale']
         
     def getAngle(self):  
-        ## deprecated; for backward compatibility
+        warnings.warn(
+            'SRTTransform.getAngle() is deprecated, use SRTTransform.getRotation() instead'
+            'will be removed in 0.13',
+            DeprecationWarning, stacklevel=2
+        )
         return self.getRotation()
         
     def getRotation(self):

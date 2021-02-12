@@ -9,6 +9,7 @@ import weakref
 from .. import functions as fn
 from .. import getConfigOption
 from .GraphicsWidget import GraphicsWidget
+import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -459,6 +460,12 @@ class AxisItem(GraphicsWidget):
         """
         # Deprecated usage, kept for backward compatibility
         if scale is None:
+            warnings.warn(
+                'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
+                'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
+                'SI prefix scaling',                
+                DeprecationWarning, stacklevel=2
+            )
             scale = 1.0
             self.enableAutoSIPrefix(True)
 

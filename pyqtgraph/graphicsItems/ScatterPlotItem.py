@@ -119,7 +119,8 @@ def renderSymbol(symbol, size, pen, brush, device=None):
 
 def makeSymbolPixmap(size, pen, brush, symbol):
     warnings.warn(
-        "This is an internal function that is no longer being used.",
+        "This is an internal function that is no longer being used. "
+        "Will be removed in 0.13",
         DeprecationWarning, stacklevel=2
     )
     img = renderSymbol(symbol, size, pen, brush)
@@ -462,7 +463,6 @@ class ScatterPlotItem(GraphicsObject):
         *hoverSize*            A single size to use for hovered spots. Set to -1 to keep size unchanged. Default is -1.
         *hoverPen*             A single pen to use for hovered spots. Set to None to keep pen unchanged. Default is None.
         *hoverBrush*           A single brush to use for hovered spots. Set to None to keep brush unchanged. Default is None.
-        *identical*            *Deprecated*. This functionality is handled automatically now.
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
@@ -474,7 +474,8 @@ class ScatterPlotItem(GraphicsObject):
         """
         if 'identical' in kargs:
             warnings.warn(
-                "The *identical* functionality is handled automatically now.",
+                "The *identical* functionality is handled automatically now. "
+                "Will be removed in 0.13.",
                 DeprecationWarning, stacklevel=2
             )
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
@@ -614,7 +615,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def setPoints(self, *args, **kargs):
         warnings.warn(
-            "Use setData instead.",
+            "ScatterPlotItem.setPoints is deprecated, use ScatterPlotItem.setData "
+            "instead.  Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         return self.setData(*args, **kargs)
@@ -863,7 +865,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def getSpotOpts(self, recs, scale=1.0):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used.  Will be "
+            "removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         if recs.ndim == 0:
@@ -892,7 +895,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def measureSpotSizes(self, dataSet):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13.",
             DeprecationWarning, stacklevel=2
         )
         for size, pen in zip(*self._style(['size', 'pen'], data=dataSet)):
@@ -998,7 +1002,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def mapPointsToDevice(self, pts):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         # Map point locations to device
@@ -1014,7 +1019,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def getViewMask(self, pts):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         # Return bool mask indicating all points that are within viewbox

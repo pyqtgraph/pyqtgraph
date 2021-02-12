@@ -171,10 +171,8 @@ class GridItem(UIGraphicsItem):
                     linePen.setCosmetic(False)
                     if ax == 0:
                         linePen.setWidthF(self.pixelWidth())
-                        #print "ax 0 height", self.pixelHeight()
                     else:
                         linePen.setWidthF(self.pixelHeight())
-                        #print "ax 1 width", self.pixelWidth()
                     p.setPen(linePen)
                     p1 = np.array([0.,0.])
                     p2 = np.array([0.,0.])
@@ -195,7 +193,6 @@ class GridItem(UIGraphicsItem):
                             y = p1[1] + unit[1]
                         texts.append((QtCore.QPointF(x, y), "%g"%p1[ax]))
         tr = self.deviceTransform()
-        #tr.scale(1.5, 1.5)
         p.setWorldTransform(fn.invertQTransform(tr))
 
         if textPen is not None and len(texts) > 0:
