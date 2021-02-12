@@ -108,7 +108,7 @@ class TickSpec:
     def skipFactor(self, minSpc):
         if self.autoSkip is None or minSpc < self.spacing:
             return 1
-        factors = np.array(self.autoSkip, dtype=np.float)
+        factors = np.array(self.autoSkip, dtype=np.float64)
         while True:
             for f in factors:
                 spc = self.spacing * f
