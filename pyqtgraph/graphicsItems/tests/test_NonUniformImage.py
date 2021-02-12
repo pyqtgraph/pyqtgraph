@@ -48,7 +48,7 @@ def test_NonUniformImage_data_dimensions():
 
 def test_NonUniformImage_lut():
 
-    window = pg.GraphicsWindow()
+    window = pg.GraphicsLayoutWidget()
     viewbox = pg.ViewBox()
     window.setCentralWidget(viewbox)
     window.resize(200, 200)
@@ -78,7 +78,7 @@ def test_NonUniformImage_lut():
 
 def test_NonUniformImage_colormap():
 
-    window = pg.GraphicsWindow()
+    window = pg.GraphicsLayoutWidget()
     viewbox = pg.ViewBox()
     window.setCentralWidget(viewbox)
     window.resize(200, 200)
