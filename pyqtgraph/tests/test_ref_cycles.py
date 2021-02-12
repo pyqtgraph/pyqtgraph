@@ -6,6 +6,7 @@ Test for unwanted reference cycles
 import pyqtgraph as pg
 import numpy as np
 import weakref
+import warnings
 app = pg.mkQApp()
 
 def assert_alldead(refs):
@@ -36,7 +37,9 @@ def mkrefs(*objs):
 
 def test_PlotWidget():
     def mkobjs(*args, **kwds):
-        w = pg.PlotWidget(*args, **kwds)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            w = pg.PlotWidget(*args, **kwds)
         data = pg.np.array([1,5,2,4,3])
         c = w.plot(data, name='stuff')
         w.addLegend()
@@ -50,7 +53,19 @@ def test_PlotWidget():
     
     for i in range(5):
         assert_alldead(mkobjs())
+
+def test_GraphicsWindow():
+    def mkobjs():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            w = pg.GraphicsWindow()
+        p1 = w.addPlot()
+        v1 = w.addViewBox()
+        return mkrefs(w, p1, v1)
     
+    for i in range(5):
+        assert_alldead(mkobjs())
+
 def test_ImageView():
     def mkobjs():
         iv = pg.ImageView()
@@ -63,15 +78,7 @@ def test_ImageView():
         assert_alldead(mkobjs())
 
 
-def test_GraphicsWindow():
-    def mkobjs():
-        w = pg.GraphicsWindow()
-        p1 = w.addPlot()
-        v1 = w.addViewBox()
-        return mkrefs(w, p1, v1)
-    
-    for i in range(5):
-        assert_alldead(mkobjs())
+
 
     
     
