@@ -435,7 +435,6 @@ if QT_LIB == PYQT6:
     QtGui.QDropEvent.posF = lambda o : o.position()
 
     QtWidgets.QApplication.exec_ = QtWidgets.QApplication.exec
-    QtWidgets.QDialog.exec_ = lambda o : o.exec()
     QtGui.QDrag.exec_ = lambda o : o.exec()
 
     # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
