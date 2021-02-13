@@ -432,10 +432,8 @@ if QT_LIB == PYQT6:
     QtGui.QSinglePointEvent.localPos = lambda o : o.position()
     QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()
     QtGui.QSinglePointEvent.screenPos = lambda o : o.globalPosition()
-    QtGui.QDropEvent.posF = lambda o : o.position()
 
     QtWidgets.QApplication.exec_ = QtWidgets.QApplication.exec
-    QtGui.QDrag.exec_ = lambda o : o.exec()
 
     # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
     # by the Qt library.
