@@ -6,7 +6,7 @@ from .Terminal import *
 from ..pgcollections import OrderedDict
 from ..debug import *
 import numpy as np
-
+import warnings
 
 translate = QtCore.QCoreApplication.translate
 
@@ -191,6 +191,12 @@ class Node(QtCore.QObject):
     ## this is just bad planning. Causes too many bugs.
     def __getattr__(self, attr):
         """Return the terminal with the given name"""
+        warnings.warn(
+            "Use of note.terminalName is deprecated, use node['terminalName'] instead"
+            "Will be removed from 0.13.0",
+            DeprecationWarning, stacklevel=2
+        )
+        
         if attr not in self.terminals:
             raise AttributeError(attr)
         else:

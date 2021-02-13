@@ -77,7 +77,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
             'step': D('0.01'),  ## if 'dec' is false, the spinBox steps by 'step' every time
                                 ## if 'dec' is True, the step size is relative to the value
                                 ## 'step' needs to be an integral divisor of ten, ie 'step'*n=10 for some integer value of n (but only if dec is True)
-            'log': False,   # deprecated
             'dec': False,   ## if true, does decimal stepping. ie from 1-10 it steps by 'step', from 10 to 100 it steps by 10*'step', etc. 
                             ## if true, minStep must be set in order to cross zero.
             
@@ -402,13 +401,6 @@ class SpinBox(QtGui.QAbstractSpinBox):
         val = self.val
         
         for i in range(int(abs(n))):
-            
-            if self.opts['log']:
-                raise Exception("Log mode no longer supported.")
-            #    step = abs(val) * self.opts['step']
-            #    if 'minStep' in self.opts:
-            #        step = max(step, self.opts['minStep'])
-            #    val += step * s
             if self.opts['dec']:
                 if val == 0:
                     step = self.opts['minStep']

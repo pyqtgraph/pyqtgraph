@@ -510,7 +510,11 @@ class PlotItem(GraphicsWidget):
         """
         Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.
         """
-        print("Warning: enableAutoScale is deprecated. Use enableAutoRange(axis, enable) instead.")
+        warnings.warn(
+            'PlotItem.enableAutoScale is deprecated, and will be removed in 0.13'
+            'Use PlotItem.enableAutoRange(axis, enable) instead',
+            DeprecationWarning, stacklevel=2
+        )
         self.vb.enableAutoRange(self.vb.XYAxes)
 
     def addItem(self, item, *args, **kargs):
@@ -567,7 +571,11 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def addDataItem(self, item, *args):
-        print("PlotItem.addDataItem is deprecated. Use addItem instead.")
+        warnings.warn(
+            'PlotItem.addDataItem is deprecated and will be removed in 0.13. '
+            'Use PlotItem.addItem instead',
+            DeprecationWarning, stacklevel=2
+        )    
         self.addItem(item, *args)
         
     def listDataItems(self):
@@ -576,7 +584,12 @@ class PlotItem(GraphicsWidget):
         return self.dataItems[:]
         
     def addCurve(self, c, params=None):
-        print("PlotItem.addCurve is deprecated. Use addItem instead.")
+        warnings.warn(
+            'PlotItem.addCurve is deprecated and will be removed in 0.13. '
+            'Use PlotItem.addItem instead.',
+            DeprecationWarning, stacklevel=2
+        )    
+
         self.addItem(c, params)
 
     def addLine(self, x=None, y=None, z=None, **kwds):
@@ -1163,7 +1176,11 @@ class PlotItem(GraphicsWidget):
         self.showAxis(axis, False)
             
     def showScale(self, *args, **kargs):
-        print("Deprecated. use showAxis() instead")
+        warnings.warn(
+            'PlotItem.showScale has been deprecated and will be removed in 0.13. '
+            'Use PlotItem.showAxis() instead',
+            DeprecationWarning, stacklevel=2
+        )    
         return self.showAxis(*args, **kargs)
             
     def hideButtons(self):

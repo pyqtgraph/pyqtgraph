@@ -290,6 +290,59 @@ else:
 if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
+
+    if QT_LIB in [PYQT5, PYSIDE2]:
+        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale	
+
+        def scale(self, *args):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            if args:	
+                sx, sy = args	
+                tr = self.transform()	
+                tr.scale(sx, sy)	
+                self.setTransform(tr)	
+            else:	
+                return __QGraphicsItem_scale(self)
+        QtWidgets.QGraphicsItem.scale = scale	
+
+        def rotate(self, angle):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            tr = self.transform()	
+            tr.rotate(angle)	
+            self.setTransform(tr)	
+        QtWidgets.QGraphicsItem.rotate = rotate	
+
+        def translate(self, dx, dy):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            tr = self.transform()	
+            tr.translate(dx, dy)	
+            self.setTransform(tr)	
+        QtWidgets.QGraphicsItem.translate = translate	
+
+        def setMargin(self, i):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            self.setContentsMargins(i, i, i, i)	
+        QtWidgets.QGridLayout.setMargin = setMargin	
+
+        def setResizeMode(self, *args):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            self.setSectionResizeMode(*args)
+        QtWidgets.QHeaderView.setResizeMode = setResizeMode	
     
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):

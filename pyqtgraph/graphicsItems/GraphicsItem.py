@@ -39,7 +39,7 @@ class GraphicsItem(object):
         self._cachedView = None
         if register is not None and register:
             warnings.warn(
-                "'register' argument is deprecated and does nothing",
+                "'register' argument is deprecated and does nothing, will be removed in 0.13",
                 DeprecationWarning, stacklevel=2
             )
 

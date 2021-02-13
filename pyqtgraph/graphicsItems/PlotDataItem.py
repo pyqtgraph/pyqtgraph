@@ -9,6 +9,7 @@ from .ScatterPlotItem import ScatterPlotItem
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
+import warnings
 
 
 class PlotDataItem(GraphicsObject):
@@ -438,10 +439,20 @@ class PlotDataItem(GraphicsObject):
         """
         #self.clear()
         if kargs.get("stepMode", None) is True:
-            import warnings
             warnings.warn(
                 'stepMode=True is deprecated, use stepMode="center" instead',
                 DeprecationWarning, stacklevel=3
+            )
+        if 'decimate' in kargs.keys():
+            warnings.warn(
+                'decimate kwarg has been deprecated, it has no effect',
+                DeprecationWarning, stacklevel=2
+            )
+        
+        if 'identical' in kargs.keys():
+            warnings.warn(
+                'identical kwarg has been deprecated, it has no effect',
+                DeprecationWarning, stacklevel=2
             )
         profiler = debug.Profiler()
         y = None

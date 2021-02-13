@@ -14,7 +14,7 @@ def test_plotscene():
     tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
     print("using %s as a temporary file" % tempfilename)
     pg.setConfigOption('foreground', (0,0,0))
-    w = pg.GraphicsWindow()
+    w = pg.GraphicsLayoutWidget()
     w.show()        
     p1 = w.addPlot()
     p2 = w.addPlot()
