@@ -262,7 +262,7 @@ def mkColor(*args):
                 a = int(c[6:8], 16)
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
-        elif isinstance(args[0], float):
+        elif np.issubdtype(type(args[0]), np.floating):
             r = g = b = int(args[0] * 255)
             a = 255
         elif hasattr(args[0], '__len__'):
@@ -275,7 +275,7 @@ def mkColor(*args):
                 return intColor(*args[0])
             else:
                 raise TypeError(err)
-        elif type(args[0]) == int:
+        elif np.issubdtype(type(args[0]), np.integer):
             return intColor(args[0])
         else:
             raise TypeError(err)
