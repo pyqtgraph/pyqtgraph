@@ -425,7 +425,10 @@ if QT_LIB == PYQT6:
     # QKeyEvent::key() returns an int
     # so comparison with a Key_* enum will always be False
     # here we convert the enum to its int value
-    for e in QtCore.Qt.Key:
+    keys = ['Up', 'Down', 'Right', 'Left', 'Return', 'Enter', 'Delete', 'Backspace',
+            'PageUp', 'PageDown', 'Home', 'End', 'Tab', 'Backtab', 'Escape', 'Space']
+    for name in keys:
+        e = getattr(QtCore.Qt.Key, 'Key_' + name)
         setattr(QtCore.Qt, e.name, e.value)
 
     # shim the old names for QPointF mouse coords
