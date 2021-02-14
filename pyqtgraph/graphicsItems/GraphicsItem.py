@@ -9,11 +9,12 @@ import weakref
 import operator
 
 
-# Recipe from https://docs.python.org/3.7/library/collections.html#collections.OrderedDict
+# Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
+# slightly adapted for Python 3.7 compatibility
 class LRU(OrderedDict):
     'Limit size, evicting the least recently looked-up key when full'
 
-    def __init__(self, maxsize=128, /, *args, **kwds):
+    def __init__(self, maxsize=128, *args, **kwds):
         self.maxsize = maxsize
         super().__init__(*args, **kwds)
 
