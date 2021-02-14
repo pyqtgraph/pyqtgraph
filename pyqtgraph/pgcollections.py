@@ -14,11 +14,7 @@ import threading
 import sys
 import copy
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    # fallback: try to use the ordereddict backport when using python 2.6
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 try:
     from collections.abc import Sequence
