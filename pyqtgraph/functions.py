@@ -21,7 +21,7 @@ from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import Qt
 from .metaarray import MetaArray
-from .pgcollections import OrderedDict
+from collections import OrderedDict
 from .python2_3 import asUnicode, basestring
 
 Colors = {

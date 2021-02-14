@@ -11,7 +11,7 @@ as it can be converted to/from a string using repr and eval.
 
 import re, os, sys, datetime
 import numpy
-from .pgcollections import OrderedDict
+from collections import OrderedDict
 from . import units
 from .python2_3 import asUnicode, basestring
 from .Qt import QtCore

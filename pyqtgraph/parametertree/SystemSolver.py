@@ -1,4 +1,4 @@
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 import numpy as np
 import copy
 

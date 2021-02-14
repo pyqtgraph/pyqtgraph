@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QT_LIB
 from .Node import *
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..widgets.TreeWidget import *
 from .. import FileDialog, DataTreeWidget
 

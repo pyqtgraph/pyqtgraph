@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 import numpy as np
-from pyqtgraph.pgcollections import OrderedDict
+from collections import OrderedDict
 
 app = pg.mkQApp()
 

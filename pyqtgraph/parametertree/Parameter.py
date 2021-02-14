@@ -2,7 +2,7 @@
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
