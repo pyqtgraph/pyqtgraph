@@ -14,7 +14,7 @@ from .. import functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
 

@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore
 from .. import parametertree as ptree
 import numpy as np
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .. import functions as fn
 from ..python2_3 import basestring
 

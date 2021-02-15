@@ -6,7 +6,7 @@ import subprocess
 from argparse import Namespace
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
-from pyqtgraph.pgcollections import OrderedDict
+from collections import OrderedDict
 from .utils import examples
 
 path = os.path.abspath(os.path.dirname(__file__))

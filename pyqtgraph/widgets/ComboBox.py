@@ -1,7 +1,7 @@
 import sys
 from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .TableWidget import TableWidget
 from ..python2_3 import asUnicode
 import types, traceback

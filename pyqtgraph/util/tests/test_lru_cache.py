@@ -1,4 +1,9 @@
-from pyqtgraph.util.lru_cache import LRUCache
+import warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    from pyqtgraph.util.lru_cache import LRUCache
+
 
 def testLRU():
     lru = LRUCache(2, 1)

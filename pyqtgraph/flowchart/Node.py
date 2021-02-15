@@ -3,7 +3,7 @@ from ..Qt import QtCore, QtGui, QtWidgets
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from .Terminal import *
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..debug import *
 import numpy as np
 import warnings

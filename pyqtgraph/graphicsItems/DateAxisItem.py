@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from .AxisItem import AxisItem
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 
 __all__ = ['DateAxisItem']
 

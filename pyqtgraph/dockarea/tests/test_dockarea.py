@@ -2,7 +2,7 @@
 
 import pytest
 import pyqtgraph as pg
-from pyqtgraph.ordereddict import OrderedDict
+from collections import OrderedDict
 pg.mkQApp()
 
 import pyqtgraph.dockarea as da

@@ -8,7 +8,7 @@ from ..widgets.ColorButton import ColorButton
 from ..colormap import ColorMap
 from .. import icons as icons
 from .. import functions as fn
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 
 
 class WidgetParameterItem(ParameterItem):
