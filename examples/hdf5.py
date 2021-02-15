@@ -70,6 +70,7 @@ class DataSampler:
         self.y = y
         self.sampleLimit = sampleLimit  # at most 4 times this number of samples will be plotted
         self.cacheLimit = cacheLimit  # at most 8 times this number of samples will be cached
+        self.cacheSize = 0
         self.padding = padding
         self._minCacheLevel = max(2, (len(self) // self.cacheLimit).bit_length())  # n < 2 (ds < 4) has no effect
         self._maxCacheLevel = (len(self) // self.sampleLimit).bit_length()
@@ -110,7 +111,14 @@ class DataSampler:
                     del self._t
                 y = self._loadLevel(n)[2 * i1 // ds: 2 * i2 // ds + 1]
             i = np.arange(i1, i1 + len(y) * ds // 2, ds // 2)
-
+        print('loaded:', dict(
+            range=[i1, i2],
+            ds=ds,
+            n=n,
+            size=i2-i1,
+            downsampled_size=len(y),
+            cached=n >= self._minCacheLevel
+        ))
         x = i if self.x is None else self.x[i]
         return x, y
 
@@ -144,7 +152,15 @@ class DataSampler:
         else:
             lv = self._loadLevel(n - 1)
             out = downsample(lv, ds=4)
-        print('loaded level', n, 'with size', len(out))
+        self.cacheSize += len(out)
+
+        print('new cache entry:', dict(
+            level=n,
+            level_size=len(out),
+            cache_size=self.cacheSize,
+            data_size=len(self.y),
+            ratio=len(self.y) // self.cacheSize
+        ))
         return out
 
 
