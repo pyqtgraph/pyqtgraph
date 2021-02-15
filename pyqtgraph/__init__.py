@@ -395,7 +395,7 @@ def plot(*args, **kargs):
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
-    mkQApp()      
+    mkQApp()
     pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}

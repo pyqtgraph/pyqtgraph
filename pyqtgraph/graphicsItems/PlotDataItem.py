@@ -9,7 +9,6 @@ from .ScatterPlotItem import ScatterPlotItem
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
-import warnings
 
 
 class PlotDataItem(GraphicsObject):
