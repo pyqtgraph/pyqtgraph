@@ -1182,6 +1182,35 @@ class ROI(GraphicsObject):
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
+    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), **kwds):
+        """
+        Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
+        the shape of the ROI. Values outside the ROI shape are set to 0.
+
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
+        arguments.
+
+        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
+        """
+        br = self.boundingRect()
+        if br.width() > 1000:
+            raise Exception()
+        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
+
+        if img.axisOrder == "col-major":
+            mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
+        else:
+            mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
+            mask = mask.T
+
+        # reshape mask to ensure it is applied to the correct data axes
+        shape = [1] * data.ndim
+        shape[axes[0]] = sliced.shape[axes[0]]
+        shape[axes[1]] = sliced.shape[axes[1]]
+        mask = mask.reshape(shape)
+
+        return sliced * mask
+
     def getAffineSliceParams(self, data, img, axes=(0,1), fromBoundingRect=False):
         """
         Returns the parameters needed to use :func:`affineSlice <pyqtgraph.affineSlice>`
@@ -2102,34 +2131,8 @@ class PolyLineROI(ROI):
         p.lineTo(self.handles[0]['item'].pos())
         return p
 
-    def getArrayRegion(self, data, img, axes=(0,1), **kwds):
-        """
-        Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
-        the shape of the ROI. Values outside the ROI shape are set to 0.
-
-        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
-        arguments.
-
-        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
-        """
-        br = self.boundingRect()
-        if br.width() > 1000:
-            raise Exception()
-        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
-        
-        if img.axisOrder == 'col-major':
-            mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
-        else:
-            mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
-            mask = mask.T
-            
-        # reshape mask to ensure it is applied to the correct data axes
-        shape = [1] * data.ndim
-        shape[axes[0]] = sliced.shape[axes[0]]
-        shape[axes[1]] = sliced.shape[axes[1]]
-        mask = mask.reshape(shape)
-
-        return sliced * mask
+    def getArrayRegion(self, *args, **kwds):
+        return self._getArrayRegionForArbitraryShape(*args, **kwds)
 
     def setPen(self, *args, **kwds):
         ROI.setPen(self, *args, **kwds)
@@ -2383,4 +2386,5 @@ class TriangleROI(ROI):
         self.path.addPolygon(self.poly)
         return t.map(self.path)
 
-    ##todo: getArrayRegion
+    def getArrayRegion(self, *args, **kwds):
+        return self._getArrayRegionForArbitraryShape(*args, **kwds)
