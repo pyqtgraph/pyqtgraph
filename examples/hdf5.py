@@ -18,7 +18,6 @@ import initExample  # Add path to library (just for examples; you do not need th
 
 import os
 import sys
-import math
 import threading
 from functools import lru_cache
 
@@ -72,10 +71,10 @@ class DataSampler:
         self.sampleLimit = sampleLimit  # at most 4 times this number of samples will be plotted
         self.cacheLimit = cacheLimit  # at most 8 times this number of samples will be cached
         self.padding = padding
-        self._minCacheLevel = max(1, int(math.log2(max(1, int(len(self) / self.cacheLimit)))))
-        self._maxCacheLevel = max(1, int(math.log2(max(1, int(len(self) / self.sampleLimit)))))
+        self._minCacheLevel = max(2, (len(self) // self.cacheLimit).bit_length())  # n < 2 (ds < 4) has no effect
+        self._maxCacheLevel = (len(self) // self.sampleLimit).bit_length()
         self._last = None
-        if eager:
+        if eager and (self._maxCacheLevel >= self._minCacheLevel):
             # spawn a thread to eagerly downsample data up to self._maxCacheLevel so
             # it will be ready for when the user zooms out
             self._t = threading.Thread(target=lambda: self._loadLevel(self._maxCacheLevel))
@@ -98,7 +97,7 @@ class DataSampler:
 
         i1, i2, ds, n = self._last = self._range(item.start, item.stop)
 
-        if ds < 4:
+        if n < 2:
             # downsampling has no effect
             y = self.y[i1:i2]
             i = np.arange(i1, i2)
@@ -109,8 +108,8 @@ class DataSampler:
                 if hasattr(self, '_t'):
                     self._t.join()
                     del self._t
-                y = self._loadLevel(n)[2 * int(i1 / ds): 2 * int(i2 / ds) + 1]
-            i = np.arange(i1, i1 + len(y) * ds / 2, ds / 2)
+                y = self._loadLevel(n)[2 * i1 // ds: 2 * i2 // ds + 1]
+            i = np.arange(i1, i1 + len(y) * ds // 2, ds // 2)
 
         x = i if self.x is None else self.x[i]
         return x, y
@@ -126,14 +125,14 @@ class DataSampler:
             i1 = max(0, min(len(self), int(x1)))
             i2 = max(0, min(len(self), int(x2)))
         else:
-            i1, i2 = np.searchsorted(self.x, [x1, x2])
-        ds = max(1, int((i2 - i1) / self.sampleLimit))
-        n = int(math.log2(ds))
+            i1, i2 = np.searchsorted(self.x, [x1, x2]).tolist()
+        ds = max(1, (i2 - i1) // self.sampleLimit)
+        n = ds.bit_length()
         ds = 2 ** n
-        i1 = int(i1 / ds - 1) * ds
-        i2 = int(i2 / ds + 1) * ds
-        i1 = max(0, min(len(self), int(i1)))
-        i2 = max(0, min(len(self), int(i2)))
+        i1 = (i1 // ds - 1) * ds
+        i2 = (i2 // ds + 1) * ds
+        i1 = max(0, min(len(self), i1))
+        i2 = max(0, min(len(self), i2))
         return i1, i2, ds, n
 
     @lru_cache(maxsize=None)
@@ -232,7 +231,3 @@ plt.addItem(curve)
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
-
-
-
-
