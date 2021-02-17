@@ -43,6 +43,8 @@ class RawImageWidget(QtGui.QWidget):
         img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
         Extra arguments are sent to functions.makeARGB
         """
+        if getConfigOption('imageAxisOrder') == 'row-major':
+            img = img.transpose((1, 0, 2))
         self.opts = (img, args, kargs)
         self.image = None
         self.update()
@@ -79,7 +81,7 @@ if HAVE_OPENGL:
     class RawImageGLWidget(QtWidgets.QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
-        Perfomance varies between platforms; see examples/VideoSpeedTest for benchmarking.
+        Performance varies between platforms; see examples/VideoSpeedTest for benchmarking.
 
         Checks if setConfigOptions(imageAxisOrder='row-major') was set.
         """
@@ -91,7 +93,6 @@ if HAVE_OPENGL:
             self.uploaded = False
             self.smooth = False
             self.opts = None
-            self.row_major = getConfigOption('imageAxisOrder') == 'row-major'
 
         def setImage(self, img, *args, **kargs):
             """
@@ -118,20 +119,20 @@ if HAVE_OPENGL:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
             # glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
-
-            if self.row_major:
+            if getConfigOption('imageAxisOrder') == 'row-major':
                 image = self.image
             else:
                 image = self.image.transpose((1, 0, 2))
 
-            # ## Test texture dimensions first
+            ## Test texture dimensions first
             # shape = self.image.shape
             # glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, shape[0], shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
             # if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
-            # raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
+                # raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.shape[1], image.shape[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
             glDisable(GL_TEXTURE_2D)
+            self.uploaded = True
 
         def paintGL(self):
             glClear(GL_COLOR_BUFFER_BIT)
