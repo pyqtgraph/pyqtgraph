@@ -43,10 +43,13 @@ def remove_cache(mod):
         shutil.rmtree(cachedir)
 
 @pytest.mark.skipif(
-    pg.Qt.QT_LIB == "PySide2"
-    and pg.Qt.PySide2.__version__.startswith("5.15")
-    and sys.version_info > (3, 9),
-    reason="Unknown Issue")
+    (
+        (pg.Qt.QT_LIB == "PySide2" and pg.Qt.QtVersion.startswith("5.15"))
+        or (pg.Qt.QT_LIB == "PySide6")
+    ) and (sys.version_info > (3, 9))
+    or (sys.version_info >= (3, 10)),
+    reason="Unknown Issue"
+)
 def test_reload():
     py3 = sys.version_info >= (3,)
 

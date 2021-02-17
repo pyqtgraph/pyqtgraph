@@ -166,7 +166,9 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.scatterHovered)
 
+        self._viewRangeWasChanged = False
         self._dataRect = None
+        self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
         self.opts = {
             'connect': 'all',
@@ -200,6 +202,7 @@ class PlotDataItem(GraphicsObject):
             'autoDownsampleFactor': 5.,  # draw ~5 samples per pixel
             'clipToView': False,
             'dynamicRangeLimit': 1e6,
+            'dynamicRangeHyst': 3.0,
 
             'data': None,
         }
@@ -216,6 +219,13 @@ class PlotDataItem(GraphicsObject):
 
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
+
+    def setPos(self, x, y):
+        GraphicsObject.setPos(self, x, y)
+        # to update viewRect:
+        self.viewTransformChanged()
+        # to update displayed point sets, e.g. when clipping (which uses viewRect):
+        self.viewRangeChanged()
 
     def setAlpha(self, alpha, auto):
         if self.opts['alphaHint'] == alpha and self.opts['alphaMode'] == auto:
@@ -234,6 +244,16 @@ class PlotDataItem(GraphicsObject):
         self.informViewBoundsChanged()
 
     def setLogMode(self, xMode, yMode):
+        """
+        To enable log scaling for y<0 and y>0, the following formula is used:
+        
+            scaled = sign(y) * log10(abs(y) + eps)
+
+        where eps is the smallest unit of y.dtype.
+        This allows for handling of 0. values, scaling of large values,
+        as well as the typical log scaling of values in the range -1 < x < 1.
+        Note that for values within this range, the signs are inverted.
+        """
         if self.opts['logMode'] == [xMode, yMode]:
             return
         self.opts['logMode'] = [xMode, yMode]
@@ -383,19 +403,28 @@ class PlotDataItem(GraphicsObject):
         self.xDisp = self.yDisp = None
         self.updateItems()
 
-    def setDynamicRangeLimit(self, limit):
+    def setDynamicRangeLimit(self, limit=1e06, hysteresis=3.):
         """
         Limit the off-screen positions of data points at large magnification
         This avoids errors with plots not displaying because their visibility is incorrectly determined. The default setting repositions far-off points to be within +-1E+06 times the viewport height.
 
         =============== ================================================================
         **Arguments:**
-        limit           (float or None) Maximum allowed vertical distance of plotted 
-                        points in units of viewport height.
+        limit           (float or None) Any data outside the range of limit * hysteresis
+                        will be constrained to the limit value limit.
+                        All values are relative to the viewport height.
                         'None' disables the check for a minimal increase in performance.
                         Default is 1E+06.
+                        
+        hysteresis      (float) Hysteresis factor that controls how much change
+                        in zoom level (vertical height) is allowed before recalculating
+                        Default is 3.0
         =============== ================================================================
         """
+        if hysteresis < 1.0: 
+            hysteresis = 1.0
+        self.opts['dynamicRangeHyst']  = hysteresis
+
         if limit == self.opts['dynamicRangeLimit']:
             return # avoid update if there is no change
         self.opts['dynamicRangeLimit'] = limit # can be None
@@ -409,10 +438,20 @@ class PlotDataItem(GraphicsObject):
         """
         #self.clear()
         if kargs.get("stepMode", None) is True:
-            import warnings
             warnings.warn(
                 'stepMode=True is deprecated, use stepMode="center" instead',
                 DeprecationWarning, stacklevel=3
+            )
+        if 'decimate' in kargs.keys():
+            warnings.warn(
+                'decimate kwarg has been deprecated, it has no effect',
+                DeprecationWarning, stacklevel=2
+            )
+        
+        if 'identical' in kargs.keys():
+            warnings.warn(
+                'identical kwarg has been deprecated, it has no effect',
+                DeprecationWarning, stacklevel=2
             )
         profiler = debug.Profiler()
         y = None
@@ -542,7 +581,6 @@ class PlotDataItem(GraphicsObject):
         profiler('emit')
 
     def updateItems(self):
-
         curveArgs = {}
         for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
             curveArgs[v] = self.opts[k]
@@ -576,7 +614,7 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
 
-        if self.xDisp is None:
+        if self.xDisp is None or self._viewRangeWasChanged:
             x = self.xData
             y = self.yData
 
@@ -598,7 +636,11 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x = np.log10(x)
                 if self.opts['logMode'][1]:
-                    y = np.log10(y)
+                    if np.issubdtype(y.dtype, np.floating):
+                        eps = np.finfo(y.dtype).eps
+                    else:
+                        eps = 1
+                    y = np.sign(y) * np.log10(np.abs(y)+eps)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -667,14 +709,41 @@ class PlotDataItem(GraphicsObject):
                     data_range = self.dataRect()
                     if data_range is not None:
                         view_height = view_range.height()
-                        lim = self.opts['dynamicRangeLimit']
-                        if data_range.height() > lim * view_height:
-                            min_val = view_range.top()    - lim * view_height
-                            max_val = view_range.bottom() + lim * view_height
-                            y = np.clip(y, a_min=min_val, a_max=max_val)
+                        limit = self.opts['dynamicRangeLimit']
+                        hyst  = self.opts['dynamicRangeHyst']
+                        # never clip data if it fits into +/- (extended) limit * view height
+                        if data_range.height() > 2 * hyst * limit * view_height:
+                            # check if cached display data can be reused:
+                            if self.yDisp is not None: # top is minimum value, bottom is maximum value
+                                # how many multiples of the current view height does the clipped plot extend to the top and bottom?
+                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height 
+                                bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
+                                # print(top_exc, bot_exc, hyst)
+                                if (    top_exc >= limit / hyst and top_exc <= limit * hyst
+                                    and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
+                                    # restore cached values
+                                    x = self.xDisp
+                                    y = self.yDisp
+                                else:
+                                    min_val = view_range.bottom() - limit * view_height
+                                    max_val = view_range.top()    + limit * view_height                                    
+                                    if(     min_val >= self._drlLastClip[0]
+                                        and max_val <= self._drlLastClip[1] ):
+                                        # if we need to clip further, we can work in-place on the output buffer
+                                        # print('in-place:', end='')
+                                        np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                        x = self.xDisp
+                                        y = self.yDisp
+                                    else:
+                                        # otherwise we need to recopy from the full data
+                                        # print('alloc:', end='')
+                                        y = np.clip(y, a_min=min_val, a_max=max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    self._drlLastClip = (min_val, max_val)
 
             self.xDisp = x
             self.yDisp = y
+            self._viewRangeWasChanged = False
         return self.xDisp, self.yDisp
 
     def dataRect(self):
@@ -777,11 +846,14 @@ class PlotDataItem(GraphicsObject):
 
     def viewRangeChanged(self):
         # view range has changed; re-plot if needed
+        self._viewRangeWasChanged = True
         if( self.opts['clipToView']
             or self.opts['autoDownsample']
-            or self.opts['dynamicRangeLimit'] is not None
         ):
             self.xDisp = self.yDisp = None
+            self.updateItems()
+        elif self.opts['dynamicRangeLimit'] is not None:
+            # do not discard cached display data
             self.updateItems()
 
     def _fourierTransform(self, x, y):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ...pgcollections import OrderedDict
+from collections import OrderedDict
 import os, types
 from ...debug import printExc
 from ..NodeLibrary import NodeLibrary, isNodeClass

@@ -1246,13 +1246,13 @@ class ViewBox(GraphicsWidget):
         dif = dif * -1
 
         ## Ignore axes if mouse is disabled
-        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float)
+        mouseEnabled = np.array(self.state['mouseEnabled'], dtype=np.float64)
         mask = mouseEnabled.copy()
         if axis is not None:
             mask[1-axis] = 0.0
 
         ## Scale or translate based on mouse button
-        if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MidButton):
+        if ev.button() & (QtCore.Qt.LeftButton | QtCore.Qt.MiddleButton):
             if self.state['mouseMode'] == ViewBox.RectMode and axis is None:
                 if ev.isFinish():  ## This is the final move in the drag; change the view scale now
                     #print "finish"
@@ -1344,8 +1344,8 @@ class ViewBox(GraphicsWidget):
         r = QtCore.QRectF(p1, p2)
         r = self.childGroup.mapRectFromParent(r)
         self.rbScaleBox.setPos(r.topLeft())
-        self.rbScaleBox.resetTransform()
-        self.rbScaleBox.scale(r.width(), r.height())
+        tr = QtGui.QTransform.fromScale(r.width(), r.height())
+        self.rbScaleBox.setTransform(tr)
         self.rbScaleBox.show()
 
     def showAxRect(self, ax, **kwargs):
@@ -1422,7 +1422,7 @@ class ViewBox(GraphicsWidget):
 
                 itemBounds.append((bounds, useX, useY, pxPad))
             else:
-                if int(item.flags() & item.ItemHasNoContents) > 0:
+                if item.flags() & item.ItemHasNoContents:
                     continue
                 bounds = self.mapFromItemToView(item, item.boundingRect()).boundingRect()
                 itemBounds.append((bounds, True, True, 0))

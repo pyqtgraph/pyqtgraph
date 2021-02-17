@@ -10,7 +10,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("TreeWidget Example")
 
 w = pg.TreeWidget()
 w.setColumnCount(2)

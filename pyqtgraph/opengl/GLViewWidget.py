@@ -1,15 +1,15 @@
-from ..Qt import QtCore, QtGui, QtOpenGL, QT_LIB
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from OpenGL.GL import *
 import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
-
+import warnings
 ##Vector = QtGui.QVector3D
 
 ShareWidget = None
 
-class GLViewWidget(QtOpenGL.QGLWidget):
+class GLViewWidget(QtWidgets.QOpenGLWidget):
     
     def __init__(self, parent=None, devicePixelRatio=None, rotationMethod='euler'):
         """    
@@ -30,13 +30,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         ================ ==============================================================
         """
 
-        global ShareWidget
-
-        if ShareWidget is None:
-            ## create a dummy widget to allow sharing objects (textures, shaders, etc) between views
-            ShareWidget = QtOpenGL.QGLWidget()
-            
-        QtOpenGL.QGLWidget.__init__(self, parent, ShareWidget)
+        QtWidgets.QOpenGLWidget.__init__(self, parent)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
@@ -62,9 +56,41 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         self.keysPressed = {}
         self.keyTimer = QtCore.QTimer()
         self.keyTimer.timeout.connect(self.evalKeyState)
-        
         self.makeCurrent()
+
+
+    @property
+    def _dpiRatio(self):
+        return self.devicePixelRatioF() or 1
+
+    def _updateScreen(self, screen):
+        self._updatePixelRatio()
+        if screen is not None:
+            screen.physicalDotsPerInchChanged.connect(self._updatePixelRatio)
+            screen.logicalDotsPerInchChanged.connect(self._updatePixelRatio)
+    
+    def _updatePixelRatio(self):
+        event = QtGui.QResizeEvent(self.size(), self.size())
+        self.resizeEvent(event)
+    
+    def showEvent(self, event):
+        window = self.window().windowHandle()
+        window.screenChanged.connect(self._updateScreen)
+        self._updateScreen(window.screen())
         
+    def width(self):
+        if self._dpiRatio.is_integer():
+            return super().width()
+        else:
+            return int(super().width() * self._dpiRatio)
+    
+    def height(self):
+        if self._dpiRatio.is_integer():
+            return super().height()
+        else:
+            return int(super().height() * self._dpiRatio)
+
+
     def reset(self):
         """
         Initialize the widget state or reset the current state to the original state.
@@ -132,10 +158,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         if dpr is not None:
             return dpr
         
-        if hasattr(QtOpenGL.QGLWidget, 'devicePixelRatio'):
-            return QtOpenGL.QGLWidget.devicePixelRatio(self)
-        else:
-            return 1.0
+        return QtWidgets.QOpenGLWidget.devicePixelRatio(self)
         
     def resizeGL(self, w, h):
         pass
@@ -336,7 +359,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         *relative*      String that determines the direction of dx,dy,dz. 
                         If "global", then the global coordinate system is used.
                         If "view", then the z axis is aligned with the view
-                        direction, and x and y axes are inthe plane of the
+                        direction, and x and y axes are in the plane of the
                         view: +x points right, +y points up. 
                         If "view-upright", then x is in the global xy plane and
                         points to the right side of the view, y is in the
@@ -351,8 +374,13 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         False (global). These values are deprecated but still recognized.
         """
         # for backward compatibility:
+        if isinstance(relative, bool):
+            warnings.warn(
+                "'relative' as a boolean is deprecated, and will not be recognized in 0.13. "
+                "Acceptable values are 'global', 'view', or 'view-upright'",
+                DeprecationWarning, stacklevel=2
+            )    
         relative = {True: "view-upright", False: "global"}.get(relative, relative)
-        
         if relative == 'global':
             self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
         elif relative == 'view-upright':
@@ -383,7 +411,7 @@ class GLViewWidget(QtOpenGL.QGLWidget):
                 elev = np.radians(self.opts['elevation'])
                 azim = np.radians(self.opts['azimuth'])
                 fov = np.radians(self.opts['fov'])
-                dist = (self.opts['center'] - self.camerPosition()).length()
+                dist = (self.opts['center'] - self.cameraPosition()).length()
                 fov_factor = np.tan(fov / 2) * 2
                 scale_factor = dist * fov_factor / self.width()
                 z = scale_factor * np.cos(elev) * dy
@@ -410,18 +438,19 @@ class GLViewWidget(QtOpenGL.QGLWidget):
         return xDist / self.width()
         
     def mousePressEvent(self, ev):
-        self.mousePos = ev.pos()
+        self.mousePos = ev.localPos()
         
     def mouseMoveEvent(self, ev):
-        diff = ev.pos() - self.mousePos
-        self.mousePos = ev.pos()
+        lpos = ev.localPos()
+        diff = lpos - self.mousePos
+        self.mousePos = lpos
         
         if ev.buttons() == QtCore.Qt.LeftButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), diff.y(), 0, relative='view')
             else:
                 self.orbit(-diff.x(), diff.y())
-        elif ev.buttons() == QtCore.Qt.MidButton:
+        elif ev.buttons() == QtCore.Qt.MiddleButton:
             if (ev.modifiers() & QtCore.Qt.ControlModifier):
                 self.pan(diff.x(), 0, diff.y(), relative='view-upright')
             else:

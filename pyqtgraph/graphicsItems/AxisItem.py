@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
@@ -9,6 +9,7 @@ import weakref
 from .. import functions as fn
 from .. import getConfigOption
 from .GraphicsWidget import GraphicsWidget
+import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
@@ -50,7 +51,7 @@ class AxisItem(GraphicsWidget):
         if orientation not in ['left', 'right', 'top', 'bottom']:
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
-            self.label.rotate(-90)
+            self.label.setRotation(-90)
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
@@ -459,6 +460,12 @@ class AxisItem(GraphicsWidget):
         """
         # Deprecated usage, kept for backward compatibility
         if scale is None:
+            warnings.warn(
+                'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
+                'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
+                'SI prefix scaling',                
+                DeprecationWarning, stacklevel=2
+            )
             scale = 1.0
             self.enableAutoSIPrefix(True)
 
@@ -1103,18 +1110,27 @@ class AxisItem(GraphicsWidget):
                 width = textRect.width()
                 #self.textHeight = height
                 offset = max(0,self.style['tickLength']) + textOffset
+
                 if self.orientation == 'left':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
+
+                if QT_LIB == 'PyQt6':
+                    # PyQt6 doesn't allow or-ing of different enum types
+                    # so we need to take its value property
+                    textFlags = alignFlags.value | QtCore.Qt.TextDontClip.value
+                else:
+                    # for PyQt5, the following expression is not commutative!
+                    textFlags = alignFlags | QtCore.Qt.TextDontClip
 
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)

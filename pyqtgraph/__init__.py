@@ -61,6 +61,7 @@ CONFIG_OPTIONS = {
                                  # For 'col-major', image data is expected in reversed (col, row) order.
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
+    'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
 } 
 
 
@@ -384,29 +385,18 @@ def exit():
     os._exit(0)
     
 
-
 ## Convenience functions for command-line use
-
 plots = []
 images = []
 QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWindow <pyqtgraph.PlotWindow>` 
-    (this is just a window with :class:`PlotWidget <pyqtgraph.PlotWidget>` inside), plot data in it.
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
-    #if 'title' in kargs:
-        #w = PlotWindow(title=kargs['title'])
-        #del kargs['title']
-    #else:
-        #w = PlotWindow()
-    #if len(args)+len(kargs) > 0:
-        #w.plot(*args, **kargs)
-        
     pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
@@ -415,44 +405,32 @@ def plot(*args, **kargs):
             pwArgs[k] = kargs[k]
         else:
             dataArgs[k] = kargs[k]
-        
-    w = PlotWindow(**pwArgs)
-    w.sigClosed.connect(_plotWindowClosed)
+    windowTitle = pwArgs.pop("title", "PlotWidget")
+    w = PlotWidget(**pwArgs)
+    w.setWindowTitle(windowTitle)
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
 
-def _plotWindowClosed(w):
-    w.close()
-    try:
-        plots.remove(w)
-    except ValueError:
-        pass
-
 def image(*args, **kargs):
     """
-    Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
-    (this is just a window with :class:`ImageView <pyqtgraph.ImageView>` widget inside), show image data inside.
+    Create and return an :class:`ImageView <pyqtgraph.ImageView>` 
     Will show 2D or 3D image data.
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
     """
     mkQApp()
-    w = ImageWindow(*args, **kargs)
-    w.sigClosed.connect(_imageWindowClosed)
+    w = ImageView()
+    windowTitle = kargs.pop("title", "ImageView")
+    w.setWindowTitle(windowTitle)
+    w.setImage(*args, **kargs)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
 
-def _imageWindowClosed(w):
-    w.close()
-    try:
-        images.remove(w)
-    except ValueError:
-        pass
 
 def dbg(*args, **kwds):
     """

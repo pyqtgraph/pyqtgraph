@@ -5,7 +5,7 @@ import weakref
 import numpy as np
 import os
 from ...Qt import QtGui, QtCore, QT_LIB
-from ... import pixmaps
+from ... import icons
 from ... import functions as fn
 from ...widgets.FileDialog import FileDialog
 from .. PlotDataItem import PlotDataItem
@@ -19,14 +19,11 @@ from .. InfiniteLine import InfiniteLine
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
 
-if QT_LIB == 'PyQt4':
-    from .plotConfigTemplate_pyqt import *
-elif QT_LIB == 'PySide':
-    from .plotConfigTemplate_pyside import *
-elif QT_LIB == 'PyQt5':
-    from .plotConfigTemplate_pyqt5 import *
-elif QT_LIB == 'PySide2':
-    from .plotConfigTemplate_pyside2 import *
+translate = QtCore.QCoreApplication.translate
+
+import importlib
+ui_template = importlib.import_module(
+    f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
 
 __all__ = ['PlotItem']
 
@@ -123,7 +120,7 @@ class PlotItem(GraphicsWidget):
         
         ## Set up control buttons
         path = os.path.dirname(__file__)
-        self.autoBtn = ButtonItem(pixmaps.getPixmap('auto'), 14, self)
+        self.autoBtn = ButtonItem(icons.getGraphPixmap('auto'), 14, self)
         self.autoBtn.mode = 'auto'
         self.autoBtn.clicked.connect(self.autoBtnClicked)
         self.buttonsHidden = False ## whether the user has requested buttons to be hidden
@@ -134,12 +131,14 @@ class PlotItem(GraphicsWidget):
         self.setLayout(self.layout)
         self.layout.setHorizontalSpacing(0)
         self.layout.setVerticalSpacing(0)
-        
+
         if viewBox is None:
-            viewBox = ViewBox(parent=self)
+            viewBox = ViewBox(parent=self, enableMenu=enableMenu)
         self.vb = viewBox
         self.vb.sigStateChanged.connect(self.viewStateChanged)
-        self.setMenuEnabled(enableMenu, enableMenu) ## en/disable plotitem and viewbox menus
+
+        # Enable or disable plotItem menu
+        self.setMenuEnabled(enableMenu, None)
         
         if name is not None:
             self.vb.register(name)
@@ -187,23 +186,23 @@ class PlotItem(GraphicsWidget):
         ### Set up context menu
         
         w = QtGui.QWidget()
-        self.ctrl = c = Ui_Form()
+        self.ctrl = c = ui_template.Ui_Form()
         c.setupUi(w)
         dv = QtGui.QDoubleValidator(self)
         
         menuItems = [
-            ('Transforms', c.transformGroup),
-            ('Downsample', c.decimateGroup),
-            ('Average', c.averageGroup),
-            ('Alpha', c.alphaGroup),
-            ('Grid', c.gridGroup),
-            ('Points', c.pointsGroup),
+            (translate("PlotItem", 'Transforms'), c.transformGroup),
+            (translate("PlotItem", 'Downsample'), c.decimateGroup),
+            (translate("PlotItem", 'Average'), c.averageGroup),
+            (translate("PlotItem", 'Alpha'), c.alphaGroup),
+            (translate("PlotItem", 'Grid'), c.gridGroup),
+            (translate("PlotItem", 'Points'), c.pointsGroup),
         ]
         
         
         self.ctrlMenu = QtGui.QMenu()
         
-        self.ctrlMenu.setTitle('Plot Options')
+        self.ctrlMenu.setTitle(translate("PlotItem", 'Plot Options'))
         self.subMenus = []
         for name, grp in menuItems:
             sm = QtGui.QMenu(name)
@@ -511,7 +510,11 @@ class PlotItem(GraphicsWidget):
         """
         Enable auto-scaling. The plot will continuously scale to fit the boundaries of its data.
         """
-        print("Warning: enableAutoScale is deprecated. Use enableAutoRange(axis, enable) instead.")
+        warnings.warn(
+            'PlotItem.enableAutoScale is deprecated, and will be removed in 0.13'
+            'Use PlotItem.enableAutoRange(axis, enable) instead',
+            DeprecationWarning, stacklevel=2
+        )
         self.vb.enableAutoRange(self.vb.XYAxes)
 
     def addItem(self, item, *args, **kargs):
@@ -568,7 +571,11 @@ class PlotItem(GraphicsWidget):
             self.legend.addItem(item, name=name)            
 
     def addDataItem(self, item, *args):
-        print("PlotItem.addDataItem is deprecated. Use addItem instead.")
+        warnings.warn(
+            'PlotItem.addDataItem is deprecated and will be removed in 0.13. '
+            'Use PlotItem.addItem instead',
+            DeprecationWarning, stacklevel=2
+        )    
         self.addItem(item, *args)
         
     def listDataItems(self):
@@ -577,7 +584,12 @@ class PlotItem(GraphicsWidget):
         return self.dataItems[:]
         
     def addCurve(self, c, params=None):
-        print("PlotItem.addCurve is deprecated. Use addItem instead.")
+        warnings.warn(
+            'PlotItem.addCurve is deprecated and will be removed in 0.13. '
+            'Use PlotItem.addItem instead.',
+            DeprecationWarning, stacklevel=2
+        )    
+
         self.addItem(c, params)
 
     def addLine(self, x=None, y=None, z=None, **kwds):
@@ -1164,7 +1176,11 @@ class PlotItem(GraphicsWidget):
         self.showAxis(axis, False)
             
     def showScale(self, *args, **kargs):
-        print("Deprecated. use showAxis() instead")
+        warnings.warn(
+            'PlotItem.showScale has been deprecated and will be removed in 0.13. '
+            'Use PlotItem.showAxis() instead',
+            DeprecationWarning, stacklevel=2
+        )    
         return self.showAxis(*args, **kargs)
             
     def hideButtons(self):

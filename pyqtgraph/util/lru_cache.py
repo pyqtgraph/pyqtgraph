@@ -1,3 +1,9 @@
+import warnings
+warnings.warn(
+    "No longer used in pyqtgraph. Will be removed in 0.13",
+    DeprecationWarning, stacklevel=2
+)
+
 import operator
 import sys
 import itertools

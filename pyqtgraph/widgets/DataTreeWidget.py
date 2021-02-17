@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .TableWidget import TableWidget
 from ..python2_3 import asUnicode
 import types, traceback
@@ -65,7 +65,7 @@ class DataTreeWidget(QtGui.QTreeWidget):
             subnode = QtGui.QTreeWidgetItem(["", "", ""])
             node.addChild(subnode)
             self.setItemWidget(subnode, 0, widget)
-            self.setFirstItemColumnSpanned(subnode, True)
+            subnode.setFirstColumnSpanned(True)
             
         # recurse to children
         for key, data in childs.items():
