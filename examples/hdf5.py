@@ -4,22 +4,15 @@ In this example we create a subclass of PlotCurveItem for displaying a very larg
 data set from an HDF5 file that does not fit in memory. 
 
 The basic approach is to override PlotCurveItem.viewRangeChanged such that it
-displays only the visible portion of the data after downsampling. The data is downsampled
-and the results are cached. Downsampling is done at scales of powers of two to reduce
-computation and cache size, and is displayed with padding at the boundaries so fewer plot
-updates are required. Downsampling and caching begins eagerly in a separate thread when
-the item is initialized so that the data is ready (or closer to ready) when
-the user needs it. This could alternatively be precomputed and stored in the HDF5 file.
-Cache sizes are limited, and a relatively small amount of cached data
-at the largest scales is required to fluidly navigate through large data sets.
+displays only the visible portion of downsampled data, plus some padding to reduce the frequency
+of plot updates. Further, a relatively small amount of downsampled data is precomputed and stored
+in the HDF5 file, which is sufficient for navigation of the entire data set without aliasing or lag.
 """
 
 import initExample  # Add path to library (just for examples; you do not need this)
 
 import os
 import sys
-import threading
-from functools import lru_cache
 
 import h5py
 import numpy as np
@@ -36,18 +29,18 @@ plt.setXRange(0, 500)
 
 class BigDataPlot(pg.PlotCurveItem):
     def __init__(self, *args, **kwds):
-        self.sampler = None
+        self._plotData = None
         pg.PlotCurveItem.__init__(self, *args, **kwds)
-        
-    def setDataSampler(self, sampler):
-        self.sampler = sampler
-        self.loadData()
+
+    def setPlotData(self, plotData):
+        self._plotData = plotData
+        self.replot()
 
     def viewRangeChanged(self):
-        self.loadData(lazy=True)
+        self.replot(lazy=True)
 
-    def loadData(self, lazy=False):
-        if self.sampler is None:
+    def replot(self, lazy=False):
+        if self._plotData is None:
             self.setData([])
             return
 
@@ -56,120 +49,89 @@ class BigDataPlot(pg.PlotCurveItem):
             return  # no ViewBox yet
 
         x1, x2 = vb.viewRange()[0]
-        if not lazy or not self.sampler.isRangeValid(x1, x2):
-            x, y = self.sampler[x1:x2]
-            self.setData(x, y)  # update the plot
+        data = self._plotData.sample(x1, x2, lazy=lazy)
+
+        if data is not None:
+            self.setData(*data)  # update the plot
 
 
-class DataSampler:
-    def __init__(self, x, y, sampleLimit=2500, cacheLimit=10000000, padding=0.3, eager=True):
-        if x is not None and len(x) != len(y):
+class PlotData:
+    def __init__(self, x, y, cache=None):
+        if x is None:
+            x = len(y)
+        elif len(x) != len(y):
             raise ValueError
 
-        self.x = x
-        self.y = y
-        self.sampleLimit = sampleLimit  # at most 4 times this number of samples will be plotted
-        self.cacheLimit = cacheLimit  # at most 8 times this number of samples will be cached
-        self.cacheSize = 0
-        self.padding = padding
-        self._minCacheLevel = max(2, (len(self) // self.cacheLimit).bit_length())  # n < 2 (ds < 4) has no effect
-        self._maxCacheLevel = (len(self) // self.sampleLimit).bit_length()
-        self._last = None
-        if eager and (self._maxCacheLevel >= self._minCacheLevel):
-            # spawn a thread to eagerly downsample data up to self._maxCacheLevel so
-            # it will be ready for when the user zooms out
-            self._t = threading.Thread(target=lambda: self._loadLevel(self._maxCacheLevel))
-            self._t.start()
+        self._x = x
+        self._y = y
+        self._cache = cache
+        self._lastRange = None
 
-    def isRangeValid(self, x1, x2):
-        if self._last is None:
-            return False
+    def sample(self, x1, x2, lazy=True, padding=0.3, **kwargs):
+        i1, i2, ds = plotDataRange(self._x, x1, x2, padding=padding, **kwargs)
 
-        i11, i21, ds1, n = self._last
-        i12, i22, ds2, n = self._range(x1, x2, pad=False)
-        if not (i11 <= i12 <= i22 <= i21):
-            return False
-        i12, i22, ds2, n = self._range(x1, x2, pad=True)
-        return ds1 == ds2
+        if lazy and self._lastRange is not None:
+            i11, i21, ds1 = self._lastRange
+            i12, i22, _ = plotDataRange(self._x, x1, x2, padding=0, **kwargs)
+            if (i11 <= i12 <= i22 <= i21) and (ds1 == ds):
+                return
 
-    def __getitem__(self, item):
-        if not isinstance(item, slice) or item.step is not None:
-            raise TypeError
+        i, y = downsample(data=self._y, start=i1, stop=i2, ds=ds, cache=self._cache)
 
-        i1, i2, ds, n = self._last = self._range(item.start, item.stop)
-
-        if n < 2:
-            # downsampling has no effect
-            y = self.y[i1:i2]
-            i = np.arange(i1, i2)
+        if isinstance(self._x, int):
+            x = np.arange(i.start, i.stop, i.step)
         else:
-            if n < self._minCacheLevel:
-                y = downsample(self.y, i1, i2, ds)
-            else:
-                if hasattr(self, '_t'):
-                    self._t.join()
-                    del self._t
-                y = self._loadLevel(n)[2 * i1 // ds: 2 * i2 // ds + 1]
-            i = np.arange(i1, i1 + len(y) * ds // 2, ds // 2)
-        print('loaded:', dict(
-            range=[i1, i2],
-            ds=ds,
-            n=n,
-            size=i2-i1,
-            downsampled_size=len(y),
-            cached=n >= self._minCacheLevel
-        ))
-        x = i if self.x is None else self.x[i]
+            x = self._x[i]
+
+        self._lastRange = (i1, i2, ds)
         return x, y
 
-    def __len__(self):
-        return len(self.y)
 
-    def _range(self, x1, x2, pad=True):
-        if pad:
-            pad = (x2 - x1) * self.padding
-            x1, x2 = x1 - pad, x2 + pad
-        if self.x is None:
-            i1 = max(0, min(len(self), int(x1)))
-            i2 = max(0, min(len(self), int(x2)))
-        else:
-            i1, i2 = np.searchsorted(self.x, [x1, x2]).tolist()
-        ds = max(1, (i2 - i1) // self.sampleLimit)
-        n = ds.bit_length()
-        ds = 2 ** n
+def plotDataRange(x, x1, x2, padding=0.3, sampleLimit=2500, regularize=True):
+    pad = (x2 - x1) * padding
+    x1, x2 = x1 - pad, x2 + pad
+
+    if isinstance(x, int):
+        n = x
+        i1 = max(0, min(n, int(x1)))
+        i2 = max(0, min(n, int(x2)))
+    else:
+        n = len(x)
+        i1, i2 = np.searchsorted(x, [x1, x2]).tolist()
+
+    ds = max(1, (i2 - i1) // sampleLimit)
+
+    if regularize:
+        lv = ds.bit_length()
+        ds = 2 ** lv
         i1 = (i1 // ds - 1) * ds
         i2 = (i2 // ds + 1) * ds
-        i1 = max(0, min(len(self), i1))
-        i2 = max(0, min(len(self), i2))
-        return i1, i2, ds, n
+        i1 = max(0, min(n, i1))
+        i2 = max(0, min(n, i2))
 
-    @lru_cache(maxsize=None)
-    def _loadLevel(self, n):
-        if n < self._minCacheLevel:
-            raise ValueError
-        elif n == self._minCacheLevel:
-            out = downsample(self.y, ds=2 ** self._minCacheLevel)
+    return i1, i2, ds
+
+
+def downsample(data, start, stop, ds, cache=None, **kwargs):
+    if not (0 <= start < stop <= len(data)):
+        raise ValueError
+    if ds <= 2:
+        # downsampling has no effect
+        dat = data[start:stop]
+        idx = slice(start, stop)
+    else:
+        if cache is not None and ds in cache:
+            dat = cache[ds][2 * start // ds: 2 * stop // ds + 1]
         else:
-            lv = self._loadLevel(n - 1)
-            out = downsample(lv, ds=4)
-        self.cacheSize += len(out)
-
-        print('new cache entry:', dict(
-            level=n,
-            level_size=len(out),
-            cache_size=self.cacheSize,
-            data_size=len(self.y),
-            ratio=len(self.y) // self.cacheSize
-        ))
-        return out
+            dat = _downsample(data=data, start=start, stop=stop, ds=ds, **kwargs)
+        idx = slice(start, start + len(dat) * ds // 2, ds // 2)
+    return idx, dat
 
 
-def downsample(data, start=0, stop=None, ds=4, chunksize=1000000):
+def _downsample(data, start, stop, ds, chunksize=1000000):
     # Here convert data into a down-sampled array suitable for visualizing.
     # Must do this piecewise to limit memory usage.
-    if stop is None:
-        stop = len(data)
-    stop = min(len(data), stop)
+
     samples = 1 + ((stop - start) // ds)
     visible = np.zeros(samples * 2, dtype=data.dtype)
     sourcePtr = start
@@ -177,7 +139,7 @@ def downsample(data, start=0, stop=None, ds=4, chunksize=1000000):
     chunksize = (chunksize // ds) * ds
 
     while sourcePtr < stop:
-        chunk = data[sourcePtr:min(stop, sourcePtr + chunksize)]
+        chunk = data[sourcePtr: min(stop, sourcePtr + chunksize)]
         sourcePtr += len(chunk)
 
         if len(chunk) % ds != 0:
@@ -192,11 +154,27 @@ def downsample(data, start=0, stop=None, ds=4, chunksize=1000000):
         chunkMin = chunk.min(axis=1)
 
         # interleave min and max into plot data to preserve envelope shape
-        visible[targetPtr:targetPtr + chunk.shape[0] * 2:2] = chunkMin
-        visible[1 + targetPtr:1 + targetPtr + chunk.shape[0] * 2:2] = chunkMax
+        visible[targetPtr: targetPtr + chunk.shape[0] * 2: 2] = chunkMin
+        visible[1 + targetPtr: 1 + targetPtr + chunk.shape[0] * 2: 2] = chunkMax
         targetPtr += chunk.shape[0] * 2
 
     return visible
+
+
+def computeDownsampleCache(data, minLevelSize=2500, maxLevelSize=10000000):
+    minLevel = max(2, (len(data) // maxLevelSize).bit_length())
+    maxLevel = (len(data) // minLevelSize).bit_length()
+
+    out = {}
+    dat = None
+    for lv in range(minLevel, maxLevel + 1):
+        ds = 2 ** lv
+        if dat is None:
+            dat = _downsample(data=data, start=0, stop=len(data), ds=ds)
+        else:
+            dat = _downsample(data=dat, start=0, stop=len(dat), ds=4)
+        out[ds] = dat
+    return out
 
 
 def createFile(finalSize=2000000000):
@@ -221,7 +199,11 @@ def createFile(finalSize=2000000000):
                 f.close()
                 os.remove('test.hdf5')
                 sys.exit()
-        dlg += 1
+
+    # cache a relatively small amount of downsampled data for quick plotting
+    for ds, dat in computeDownsampleCache(data).items():
+        f.create_dataset(f'/ds/{ds}', data=dat)
+
     f.close()
 
 
@@ -230,16 +212,27 @@ if len(sys.argv) > 1:
 else:
     fileName = 'test.hdf5'
     if not os.path.isfile(fileName):
-        size, ok = QtGui.QInputDialog.getDouble(None, "Create HDF5 Dataset?", "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.", 2.0)
+        size, ok = QtGui.QInputDialog.getDouble(
+            None,
+            "Create HDF5 Dataset?",
+            "This demo requires a large HDF5 array. To generate a file, enter the array size (in GB) and press OK.",
+            2.0
+        )
         if not ok:
             sys.exit(0)
         else:
             createFile(int(size*1e9))
         # raise Exception("No suitable HDF5 file found. Use createFile() to generate an example file.")
 
+
 f = h5py.File(fileName, 'r')
+x = None
+y = f['data']
+cache = {int(ds): dat for ds, dat in f['ds'].items()}
+# cache = computeDownsampleCache(y)
+
 curve = BigDataPlot()
-curve.setDataSampler(DataSampler(None, f['data']))
+curve.setPlotData(PlotData(x, y, cache=cache))
 plt.addItem(curve)
 
 
