@@ -132,6 +132,7 @@ if HAVE_OPENGL:
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.shape[1], image.shape[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
             glDisable(GL_TEXTURE_2D)
+            self.uploaded = True
 
         def paintGL(self):
             glClear(GL_COLOR_BUFFER_BIT)
