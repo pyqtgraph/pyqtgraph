@@ -480,7 +480,7 @@ class App(QtGui.QApplication):
         else:
             # Qt5 has this as a str
             color = palette.base().color().name()
-        self.dark_mode = color.lower() != "#ffffff"
+        self.setProperty('darkMode', color.lower() != "#ffffff")
 
 QAPP = None
 def mkQApp(name=None):
