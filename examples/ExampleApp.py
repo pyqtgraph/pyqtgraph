@@ -260,7 +260,6 @@ class PythonHighlighter(QSyntaxHighlighter):
             return False
 
 
-
 class ExampleLoader(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -275,9 +274,11 @@ class ExampleLoader(QtGui.QMainWindow):
         self.hl = PythonHighlighter(self.ui.codeView.document())
         app = QtGui.QApplication.instance()
         app.paletteChanged.connect(self.updateTheme)
+        app.paletteChanged.connect(self.updatePalette)
         self.codeLayout.addItem(QtGui.QSpacerItem(100,100,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding), 0, 0)
         self.codeLayout.addWidget(self.codeBtn, 1, 1)
         self.codeBtn.hide()
+        self.updatePalette()
 
         global examples
         self.itemCache = []
@@ -385,6 +386,16 @@ class ExampleLoader(QtGui.QMainWindow):
 
     def runEditedCode(self):
         self.loadFile(edited=True)
+
+    # @QtGui.QApplication.instance().paletteChanged.connect
+    def updatePalette(self):
+        palette = self.palette()
+        bg = palette.base().color().name()
+        fg = palette.windowText().color().name()
+        print(f"Settings background color to {bg}")
+        print(f"Setting foreground color to {fg}")
+        pg.setConfigOption('background', bg)
+        pg.setConfigOption('foreground', fg)
 
 
 def main():
