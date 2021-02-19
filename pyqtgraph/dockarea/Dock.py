@@ -198,7 +198,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.drag.setMimeData(mime)
         self.widgetArea.setStyleSheet(self.dragStyle)
         self.update()
-        action = self.drag.exec_()
+        action = self.drag.exec_() if hasattr(self.drag, 'exec_') else self.drag.exec()
         self.updateStyle()
 
     def float(self):

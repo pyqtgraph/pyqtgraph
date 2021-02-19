@@ -30,9 +30,12 @@ class DockDrop(object):
         
     def dragMoveEvent(self, ev):
         #print "drag move"
-        ld = ev.posF().x()
+        # QDragMoveEvent inherits QDropEvent which provides posF()
+        # PyQt6 provides only position()
+        posF = ev.posF() if hasattr(ev, 'posF') else ev.position()
+        ld = posF.x()
         rd = self.width() - ld
-        td = ev.posF().y()
+        td = posF.y()
         bd = self.height() - td
         
         mn = min(ld, rd, td, bd)
