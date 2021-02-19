@@ -468,19 +468,12 @@ class App(QtGui.QApplication):
 
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
-        if QT_LIB in ['PyQt5', 'PySide2', 'PySide6']:
-            # qt4 does not have paletteChanged signal!
-            self.paletteChanged.connect(self.onPaletteChange)
+        self.paletteChanged.connect(self.onPaletteChange)
         self.onPaletteChange(self.palette())
 
     def onPaletteChange(self, palette):
-        if QT_LIB in ['PyQt4', 'PySide']:
-            # Qt4 this is a QString
-            color = str(palette.base().color().name())
-        else:
-            # Qt5 has this as a str
-            color = palette.base().color().name()
-        self.dark_mode = color.lower() != "#ffffff"
+        color = palette.base().color().name()
+        self.setProperty('darkMode', color.lower() != "#ffffff")
 
 QAPP = None
 def mkQApp(name=None):
