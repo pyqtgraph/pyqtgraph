@@ -99,6 +99,8 @@ if HAVE_OPENGL:
             img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
             Extra arguments are sent to functions.makeARGB
             """
+            if getConfigOption('imageAxisOrder') == 'col-major':
+                img = img.swapaxes(0, 1)
             self.opts = (img, args, kargs)
             self.image = None
             self.uploaded = False
@@ -119,10 +121,6 @@ if HAVE_OPENGL:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
             # glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER)
-            if getConfigOption('imageAxisOrder') == 'row-major':
-                image = self.image
-            else:
-                image = self.image.transpose((1, 0, 2))
 
             ## Test texture dimensions first
             # shape = self.image.shape
@@ -130,7 +128,8 @@ if HAVE_OPENGL:
             # if glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH) == 0:
                 # raise Exception("OpenGL failed to create 2D texture (%dx%d); too large for this hardware." % shape[:2])
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.shape[1], image.shape[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, image)
+            h, w = self.image.shape[:2]
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, self.image)
             glDisable(GL_TEXTURE_2D)
             self.uploaded = True
 
