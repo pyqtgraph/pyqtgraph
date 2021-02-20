@@ -1019,7 +1019,7 @@ def rescaleData(data, scale, offset, dtype=None, clip=None, log=False):
     d2 = data.astype(work_dtype, copy=True)
     if log:
         with np.errstate(invalid='ignore', divide='ignore'):
-            d2 = np.log10(data, out=d2)
+            np.log10(d2, out=d2)
         d2 -= math.log10(offset)
     else:
         d2 -= offset

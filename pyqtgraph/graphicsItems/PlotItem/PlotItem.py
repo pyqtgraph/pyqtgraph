@@ -916,8 +916,9 @@ class PlotItem(GraphicsWidget):
         self.getAxis('top').setLogMode(x)
         self.getAxis('left').setLogMode(y)
         self.getAxis('right').setLogMode(y)
+        self.enableAutoRange()
         #are = self.vb.autoRangeEnabled()
-        #self.vb.enableAutoRange()
+        # self.vb.enableAutoRange()
         #self.vb.enableAutoRange(x=are[0],y=are[1])
         self.recomputeAverages()
     

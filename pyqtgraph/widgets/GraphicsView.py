@@ -219,7 +219,10 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def updateMatrix(self, propagate=True):
         self.setSceneRect(self.range)
-        if not self.autoPixelRange:
+        # if not self.autoPixelRange:
+        if self.autoPixelRange:
+            self.resetTransform()
+        else:
             if self.aspectLocked:
                 self.fitInView(self.range, QtCore.Qt.KeepAspectRatio)
             else:

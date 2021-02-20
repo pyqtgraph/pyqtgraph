@@ -607,6 +607,8 @@ class PlotCurveItem(GraphicsObject):
     def clear(self):
         self.xData = None  ## raw values
         self.yData = None
+        self.xDisp = None  ## display values (after log / fft)	
+        self.yDisp = None
         self.path = None
         self.fillPath = None
         self._mouseShape = None

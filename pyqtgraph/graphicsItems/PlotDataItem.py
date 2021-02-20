@@ -625,7 +625,7 @@ class PlotDataItem(GraphicsObject):
                 # Ignore the first bin for fft data if we have a logx scale
                 if self.opts['logMode'][0]:
                     x=x[1:]
-                    y=y[1:]                
+                    y=y[1:]
 
             if self.opts['derivativeMode']:  # plot dV/dt
                 y = np.diff(self.yData)/np.diff(self.xData)

@@ -508,7 +508,6 @@ class GradientEditorItem(TickSliderItem):
             self.menu.addSeparator()
             self.menu.addAction(self.lutCtrlAction)
 
-        if self.histogram is not None:
             self.histogram.sigLevelsChanged.connect(self.levelsChanged)
             self.lutCtrlWidget.logCheck.toggled.connect(self.logModeChanged)
             self.lutCtrlWidget.minText.editingFinished.connect(self.minTextChanged)

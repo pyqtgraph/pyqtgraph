@@ -522,7 +522,6 @@ class ImageItem(GraphicsObject):
         if self.image is None or self.image.size == 0:
             return None, None
 
-        data = self.image
         if step == 'auto':
             step = (max(1, int(self._xp.ceil(self.image.shape[0] / targetImageSize))),
                     max(1, int(self._xp.ceil(self.image.shape[1] / targetImageSize))))
