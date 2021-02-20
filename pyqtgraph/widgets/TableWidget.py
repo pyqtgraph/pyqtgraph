@@ -368,7 +368,7 @@ class TableWidget(QtGui.QTableWidget):
         self.contextMenu.popup(ev.globalPos())
         
     def keyPressEvent(self, ev):
-        if ev.key() == QtCore.Qt.Key_C and ev.modifiers() == QtCore.Qt.ControlModifier:
+        if ev.matches(QtGui.QKeySequence.Copy):
             ev.accept()
             self.copySel()
         else:

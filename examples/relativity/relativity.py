@@ -131,7 +131,7 @@ class RelativityGUI(QtGui.QWidget):
     def setAnimation(self, a):
         if a:
             self.lastAnimTime = pg.ptime.time()
-            self.animTimer.start(self.animDt*1000)
+            self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
             
@@ -654,15 +654,6 @@ class Animation(pg.ItemGroup):
             item = ClockItem(cl)
             self.addItem(item)
             self.items[name] = item
-            
-        #self.timer = timer
-        #self.timer.timeout.connect(self.step)
-        
-    #def run(self, run):
-        #if not run:
-            #self.timer.stop()
-        #else:
-            #self.timer.start(self.dt)
         
     def restart(self):
         for cl in self.items.values():

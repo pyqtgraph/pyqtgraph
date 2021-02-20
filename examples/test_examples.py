@@ -70,10 +70,6 @@ conditionalExamples = {
         False,
         reason="Test is being problematic on CI machines"
     ),
-    "ProgressDialog.py": exceptionCondition(
-        not(platform.system() == "Linux"),
-        reason="QXcbConnection: XCB error"
-    ),
     'GLVolumeItem.py': exceptionCondition(
         not(platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 

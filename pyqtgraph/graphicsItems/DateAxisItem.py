@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from .AxisItem import AxisItem
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 
 __all__ = ['DateAxisItem']
 
@@ -108,7 +108,7 @@ class TickSpec:
     def skipFactor(self, minSpc):
         if self.autoSkip is None or minSpc < self.spacing:
             return 1
-        factors = np.array(self.autoSkip, dtype=np.float)
+        factors = np.array(self.autoSkip, dtype=np.float64)
         while True:
             for f in factors:
                 spc = self.spacing * f

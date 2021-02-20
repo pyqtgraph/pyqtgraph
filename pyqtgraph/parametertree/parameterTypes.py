@@ -6,9 +6,9 @@ from .ParameterItem import ParameterItem
 from ..widgets.SpinBox import SpinBox
 from ..widgets.ColorButton import ColorButton
 from ..colormap import ColorMap
-from .. import pixmaps as pixmaps
+from .. import icons as icons
 from .. import functions as fn
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 
 
 class WidgetParameterItem(ParameterItem):
@@ -55,7 +55,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
         modDir = os.path.dirname(__file__)
-        self.defaultBtn.setIcon(QtGui.QIcon(pixmaps.getPixmap('default')))
+        self.defaultBtn.setIcon(icons.getGraphIcon('default'))
         self.defaultBtn.clicked.connect(self.defaultClicked)
         
         self.displayLabel = QtGui.QLabel()
@@ -130,7 +130,6 @@ class WidgetParameterItem(ParameterItem):
             if t == 'int':
                 defs['int'] = True
                 defs['minStep'] = 1.0
-                defs['format'] = '{value:d}'
             for k in defs:
                 if k in opts:
                     defs[k] = opts[k]

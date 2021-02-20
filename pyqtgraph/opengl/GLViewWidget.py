@@ -4,7 +4,7 @@ import OpenGL.GL.framebufferobjects as glfbo
 import numpy as np
 from .. import Vector
 from .. import functions as fn
-
+import warnings
 ##Vector = QtGui.QVector3D
 
 ShareWidget = None
@@ -359,7 +359,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         *relative*      String that determines the direction of dx,dy,dz. 
                         If "global", then the global coordinate system is used.
                         If "view", then the z axis is aligned with the view
-                        direction, and x and y axes are inthe plane of the
+                        direction, and x and y axes are in the plane of the
                         view: +x points right, +y points up. 
                         If "view-upright", then x is in the global xy plane and
                         points to the right side of the view, y is in the
@@ -374,8 +374,13 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         False (global). These values are deprecated but still recognized.
         """
         # for backward compatibility:
+        if isinstance(relative, bool):
+            warnings.warn(
+                "'relative' as a boolean is deprecated, and will not be recognized in 0.13. "
+                "Acceptable values are 'global', 'view', or 'view-upright'",
+                DeprecationWarning, stacklevel=2
+            )    
         relative = {True: "view-upright", False: "global"}.get(relative, relative)
-        
         if relative == 'global':
             self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
         elif relative == 'view-upright':

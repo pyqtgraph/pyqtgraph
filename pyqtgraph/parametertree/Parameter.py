@@ -2,9 +2,10 @@
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
+import warnings
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -703,7 +704,11 @@ class Parameter(QtCore.QObject):
     def __getattr__(self, attr):
         ## Leaving this undocumented because I might like to remove it in the future..
         #print type(self), attr
-        
+        warnings.warn(
+            'Use of Parameter.subParam is deprecated and will be removed in 0.13 '
+            'Use Parameter.param(name) instead.',
+            DeprecationWarning, stacklevel=2
+        )          
         if 'names' not in self.__dict__:
             raise AttributeError(attr)
         if attr in self.names:

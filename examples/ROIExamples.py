@@ -58,6 +58,7 @@ rois = []
 rois.append(pg.RectROI([20, 20], [20, 20], pen=(0,9)))
 rois[-1].addRotateHandle([1,0], [0.5, 0.5])
 rois.append(pg.LineROI([0, 60], [20, 80], width=5, pen=(1,9)))
+rois.append(pg.TriangleROI([80, 75], 20, pen=(5, 9)))
 rois.append(pg.MultiRectROI([[20, 90], [50, 60], [60, 90]], width=5, pen=(2,9)))
 rois.append(pg.EllipseROI([60, 10], [30, 20], pen=(3,9)))
 rois.append(pg.CircleROI([80, 50], [20, 20], pen=(4,9)))
@@ -126,7 +127,9 @@ r3b.addRotateHandle([0, 1], [1, 0])
 
 ## handles rotating/scaling around center
 r3b.addScaleRotateHandle([0, 0.5], [0.5, 0.5])
-r3b.addScaleRotateHandle([1, 0.5], [0.5, 0.5])
+
+# handles rotating/scaling around arbitrary point
+r3b.addScaleRotateHandle([0.3, 0], [0.9, 0.7])
 
 v3.disableAutoRange('xy')
 v3.autoRange()

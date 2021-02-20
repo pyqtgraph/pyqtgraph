@@ -1,4 +1,5 @@
 import warnings
+from collections import OrderedDict
 from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
 from ..GraphicsScene import GraphicsScene
@@ -7,7 +8,29 @@ from .. import functions as fn
 import math
 import weakref
 import operator
-from ..util.lru_cache import LRUCache
+
+
+# Recipe from https://docs.python.org/3.8/library/collections.html#collections.OrderedDict
+# slightly adapted for Python 3.7 compatibility
+class LRU(OrderedDict):
+    'Limit size, evicting the least recently looked-up key when full'
+
+    def __init__(self, maxsize=128, *args, **kwds):
+        self.maxsize = maxsize
+        super().__init__(*args, **kwds)
+
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key, value):
+        if key in self:
+            self.move_to_end(key)
+        super().__setitem__(key, value)
+        if len(self) > self.maxsize:
+            oldest = next(iter(self))
+            del self[oldest]
 
 
 class GraphicsItem(object):
@@ -21,7 +44,7 @@ class GraphicsItem(object):
 
     The GraphicsView system places a lot of emphasis on the notion that the graphics within the scene should be device independent--you should be able to take the same graphics and display them on screens of different resolutions, printers, export to SVG, etc. This is nice in principle, but causes me a lot of headache in practice. It means that I have to circumvent all the device-independent expectations any time I want to operate in pixel coordinates rather than arbitrary scene coordinates. A lot of the code in GraphicsItem is devoted to this task--keeping track of view widgets and device transforms, computing the size and shape of a pixel in local item coordinates, etc. Note that in item coordinates, a pixel does not have to be square or even rectangular, so just asking how to increase a bounding rect by 2px can be a rather complex task.
     """
-    _pixelVectorGlobalCache = LRUCache(100, 70)
+    _pixelVectorGlobalCache = LRU(100)
 
     def __init__(self, register=None):
         if not hasattr(self, '_qtBaseClass'):
@@ -40,7 +63,7 @@ class GraphicsItem(object):
         self._cachedView = None
         if register is not None and register:
             warnings.warn(
-                "'register' argument is deprecated and does nothing",
+                "'register' argument is deprecated and does nothing, will be removed in 0.13",
                 DeprecationWarning, stacklevel=2
             )
 

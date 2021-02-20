@@ -6,7 +6,7 @@ import subprocess
 from argparse import Namespace
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
-from pyqtgraph.pgcollections import OrderedDict
+from collections import OrderedDict
 from .utils import examples
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -189,7 +189,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     @property
     def styles(self):
         app = QtGui.QApplication.instance()
-        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+        return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
@@ -310,7 +310,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.codeView.setCurrentCharFormat(f)
         # finally, override application automatic detection
         app = QtGui.QApplication.instance()
-        app.dark_mode = True
+        app.setProperty('darkMode', True)
 
     def updateTheme(self):
         self.hl = PythonHighlighter(self.ui.codeView.document())

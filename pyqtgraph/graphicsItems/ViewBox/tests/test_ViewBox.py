@@ -27,7 +27,7 @@ def init_viewbox():
     vb.setRange(xRange=[0, 10], yRange=[0, 10], padding=0)
     
     # required to make mapFromView work properly.
-    qtest.qWaitForWindowShown(win)
+    qtest.qWaitForWindowExposed(win)
     
     g = pg.GridItem()
     vb.addItem(g)

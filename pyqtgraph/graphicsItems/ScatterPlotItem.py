@@ -5,6 +5,7 @@ try:
     from itertools import imap
 except ImportError:
     imap = map
+import itertools
 import numpy as np
 import weakref
 from ..Qt import QtGui, QtCore, QT_LIB
@@ -13,7 +14,7 @@ from .. import functions as fn
 from .GraphicsItem import GraphicsItem
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .. import debug
 from ..python2_3 import basestring
 
@@ -118,7 +119,8 @@ def renderSymbol(symbol, size, pen, brush, device=None):
 
 def makeSymbolPixmap(size, pen, brush, symbol):
     warnings.warn(
-        "This is an internal function that is no longer being used.",
+        "This is an internal function that is no longer being used. "
+        "Will be removed in 0.13",
         DeprecationWarning, stacklevel=2
     )
     img = renderSymbol(symbol, size, pen, brush)
@@ -161,6 +163,8 @@ class SymbolAtlas(object):
         pm = atlas.pixmap
 
     """
+    _idGenerator = itertools.count()
+
     def __init__(self):
         self._data = np.zeros((0, 0, 4), dtype=np.ubyte)  # numpy array of atlas image
         self._coords = {}
@@ -224,7 +228,17 @@ class SymbolAtlas(object):
                     squareness=1.0 if n == 0 else 2 * w * h / (w**2 + h**2))
 
     def _keys(self, styles):
-        return [(id(symbol), size, id(pen), id(brush)) for symbol, size, pen, brush in styles]
+        def getId(obj):
+            try:
+                return obj._id
+            except AttributeError:
+                obj._id = next(SymbolAtlas._idGenerator)
+                return obj._id
+
+        return [
+            (symbol if isinstance(symbol, (str, int)) else getId(symbol), size, getId(pen), getId(brush))
+            for symbol, size, pen, brush in styles
+        ]
 
     def _itemData(self, keys):
         for key in keys:
@@ -449,7 +463,6 @@ class ScatterPlotItem(GraphicsObject):
         *hoverSize*            A single size to use for hovered spots. Set to -1 to keep size unchanged. Default is -1.
         *hoverPen*             A single pen to use for hovered spots. Set to None to keep pen unchanged. Default is None.
         *hoverBrush*           A single brush to use for hovered spots. Set to None to keep brush unchanged. Default is None.
-        *identical*            *Deprecated*. This functionality is handled automatically now.
         *antialias*            Whether to draw symbols with antialiasing. Note that if pxMode is True, symbols are
                                always rendered with antialiasing (since the rendered symbols can be cached, this
                                incurs very little performance cost)
@@ -461,7 +474,8 @@ class ScatterPlotItem(GraphicsObject):
         """
         if 'identical' in kargs:
             warnings.warn(
-                "The *identical* functionality is handled automatically now.",
+                "The *identical* functionality is handled automatically now. "
+                "Will be removed in 0.13.",
                 DeprecationWarning, stacklevel=2
             )
         oldData = self.data  ## this causes cached pixmaps to be preserved while new data is registered.
@@ -601,7 +615,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def setPoints(self, *args, **kargs):
         warnings.warn(
-            "Use setData instead.",
+            "ScatterPlotItem.setPoints is deprecated, use ScatterPlotItem.setData "
+            "instead.  Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         return self.setData(*args, **kargs)
@@ -763,14 +778,21 @@ class ScatterPlotItem(GraphicsObject):
             mask = dataSet['sourceRect']['w'] == 0
             if np.any(mask):
                 invalidate = True
-                dataSet['sourceRect'][mask] = self.fragmentAtlas[
+                coords = self.fragmentAtlas[
                     list(zip(*self._style(['symbol', 'size', 'pen', 'brush'], data=dataSet, idx=mask)))
                 ]
+                dataSet['sourceRect'][mask] = coords
                 if _USE_QRECT:
-                    sr = dataSet['sourceRect'][mask]
-                    sru = np.unique(sr)
-                    list(imap(self._sourceQRect.__setitem__, imap(tuple, sru), imap(QtCore.QRectF, *zip(*sru))))
-                    dataSet['sourceQRect'][mask] = list(imap(self._sourceQRect.__getitem__, imap(tuple, sr)))
+                    rects = []
+                    for c in coords:
+                        try:
+                            rect = self._sourceQRect[c]
+                        except KeyError:
+                            rect = QtCore.QRectF(*c)
+                            self._sourceQRect[c] = rect
+                        rects.append(rect)
+
+                    dataSet['sourceQRect'][mask] = rects
                     dataSet['targetQRectValid'][mask] = False
 
             self._maybeRebuildAtlas()
@@ -843,7 +865,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def getSpotOpts(self, recs, scale=1.0):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used.  Will be "
+            "removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         if recs.ndim == 0:
@@ -872,7 +895,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def measureSpotSizes(self, dataSet):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13.",
             DeprecationWarning, stacklevel=2
         )
         for size, pen in zip(*self._style(['size', 'pen'], data=dataSet)):
@@ -978,7 +1002,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def mapPointsToDevice(self, pts):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         # Map point locations to device
@@ -994,7 +1019,8 @@ class ScatterPlotItem(GraphicsObject):
 
     def getViewMask(self, pts):
         warnings.warn(
-            "This is an internal method that is no longer being used.",
+            "This is an internal method that is no longer being used. "
+            "Will be removed in 0.13",
             DeprecationWarning, stacklevel=2
         )
         # Return bool mask indicating all points that are within viewbox

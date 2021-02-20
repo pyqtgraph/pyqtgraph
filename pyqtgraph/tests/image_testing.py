@@ -137,12 +137,14 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         QtGui.QApplication.processEvents()
 
         graphstate = scenegraphState(w, standardFile)
-        image = np.zeros((w.height(), w.width(), 4), dtype=np.ubyte)
-        qimg = fn.makeQImage(image, alpha=True, copy=False, transpose=False)
+        qimg = QtGui.QImage(w.size(), QtGui.QImage.Format.Format_ARGB32)
+        qimg.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
         
+        image = fn.imageToArray(qimg, copy=False, transpose=False)
+
         # transpose BGRA to RGBA
         image = image[..., [2, 1, 0, 3]]
 
@@ -603,7 +605,7 @@ def runSubprocess(command, return_code=False, **kwargs):
     if p.returncode != 0:
         print(output)
         err_fun = sp.CalledProcessError.__init__
-        if 'output' in inspect.getargspec(err_fun).args:
+        if 'output' in inspect.getfullargspec(err_fun).args:
             raise sp.CalledProcessError(p.returncode, command, output)
         else:
             raise sp.CalledProcessError(p.returncode, command)

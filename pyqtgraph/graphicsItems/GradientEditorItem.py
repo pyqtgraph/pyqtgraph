@@ -8,7 +8,7 @@ from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
 from ..widgets.SpinBox import SpinBox
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..colormap import ColorMap
 
 if QT_LIB == 'PyQt4':

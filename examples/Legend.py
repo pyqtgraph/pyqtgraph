@@ -13,7 +13,7 @@ win = pg.plot()
 win.setWindowTitle('pyqtgraph example: BarGraphItem')
 
 # # option1: only for .plot(), following c1,c2 for example-----------------------
-# win.addLegend(frame=False, rowCount=1, colCount=2)
+# win.addLegend(frame=False, colCount=2)
 
 # bar graph
 x = np.arange(10)

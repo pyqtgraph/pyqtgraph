@@ -213,7 +213,6 @@ elif QT_LIB == PYQT5:
         QtSvg = FailedImport(err)
     try:
         from PyQt5 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 
@@ -232,7 +231,6 @@ elif QT_LIB == PYQT6:
         QtOpenGLWidgets = FailedImport(err)
     try:
         from PyQt6 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 
@@ -247,7 +245,6 @@ elif QT_LIB == PYSIDE2:
         QtSvg = FailedImport(err)
     try:
         from PySide2 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 
@@ -273,7 +270,6 @@ elif QT_LIB == PYSIDE6:
         QtOpenGLWidgets = FailedImport(err)
     try:
         from PySide6 import QtTest
-        QtTest.QTest.qWaitForWindowShown = QtTest.QTest.qWaitForWindowExposed
     except ImportError as err:
         QtTest = FailedImport(err)
 
@@ -294,6 +290,59 @@ else:
 if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     # We're using Qt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure
+
+    if QT_LIB in [PYQT5, PYSIDE2]:
+        __QGraphicsItem_scale = QtWidgets.QGraphicsItem.scale	
+
+        def scale(self, *args):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            if args:	
+                sx, sy = args	
+                tr = self.transform()	
+                tr.scale(sx, sy)	
+                self.setTransform(tr)	
+            else:	
+                return __QGraphicsItem_scale(self)
+        QtWidgets.QGraphicsItem.scale = scale	
+
+        def rotate(self, angle):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            tr = self.transform()	
+            tr.rotate(angle)	
+            self.setTransform(tr)	
+        QtWidgets.QGraphicsItem.rotate = rotate	
+
+        def translate(self, dx, dy):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            tr = self.transform()	
+            tr.translate(dx, dy)	
+            self.setTransform(tr)	
+        QtWidgets.QGraphicsItem.translate = translate	
+
+        def setMargin(self, i):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            self.setContentsMargins(i, i, i, i)	
+        QtWidgets.QGridLayout.setMargin = setMargin	
+
+        def setResizeMode(self, *args):
+            warnings.warn(
+                "Deprecated Qt API, will be removed in 0.13.0.",
+                DeprecationWarning, stacklevel=2
+            )
+            self.setSectionResizeMode(*args)
+        QtWidgets.QHeaderView.setResizeMode = setResizeMode	
     
     # Import all QtWidgets objects into QtGui
     for o in dir(QtWidgets):
@@ -376,25 +425,22 @@ if QT_LIB == PYQT6:
     # QKeyEvent::key() returns an int
     # so comparison with a Key_* enum will always be False
     # here we convert the enum to its int value
-    for e in QtCore.Qt.Key:
+    keys = ['Up', 'Down', 'Right', 'Left', 'Return', 'Enter', 'Delete', 'Backspace',
+            'PageUp', 'PageDown', 'Home', 'End', 'Tab', 'Backtab', 'Escape', 'Space']
+    for name in keys:
+        e = getattr(QtCore.Qt.Key, 'Key_' + name)
         setattr(QtCore.Qt, e.name, e.value)
 
     # shim the old names for QPointF mouse coords
     QtGui.QSinglePointEvent.localPos = lambda o : o.position()
     QtGui.QSinglePointEvent.windowPos = lambda o : o.scenePosition()
     QtGui.QSinglePointEvent.screenPos = lambda o : o.globalPosition()
-    QtGui.QDropEvent.posF = lambda o : o.position()
 
     QtWidgets.QApplication.exec_ = QtWidgets.QApplication.exec
-    QtWidgets.QDialog.exec_ = lambda o : o.exec()
-    QtGui.QDrag.exec_ = lambda o : o.exec()
 
     # PyQt6 6.0.0 has a bug where it can't handle certain Type values returned
     # by the Qt library.
-    try:
-        # 213 is a known failing value
-        QtCore.QEvent.Type(213)
-    except ValueError:
+    if QtCore.PYQT_VERSION == 0x60000:
         def new_method(self, old_method=QtCore.QEvent.type):
             try:
                 typ = old_method(self)
@@ -422,19 +468,12 @@ class App(QtGui.QApplication):
 
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
-        if QT_LIB in ['PyQt5', 'PySide2', 'PySide6']:
-            # qt4 does not have paletteChanged signal!
-            self.paletteChanged.connect(self.onPaletteChange)
+        self.paletteChanged.connect(self.onPaletteChange)
         self.onPaletteChange(self.palette())
 
     def onPaletteChange(self, palette):
-        if QT_LIB in ['PyQt4', 'PySide']:
-            # Qt4 this is a QString
-            color = str(palette.base().color().name())
-        else:
-            # Qt5 has this as a str
-            color = palette.base().color().name()
-        self.dark_mode = color.lower() != "#ffffff"
+        color = palette.base().color().name()
+        self.setProperty('darkMode', color.lower() != "#ffffff")
 
 QAPP = None
 def mkQApp(name=None):
