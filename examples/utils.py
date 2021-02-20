@@ -37,6 +37,7 @@ examples = OrderedDict([
         ('FillBetweenItem', 'FillBetweenItem.py'),
         ('ImageItem - video', 'ImageItem.py'),
         ('ImageItem - draw', 'Draw.py'),
+        ('ColorBarItem','ColorBarItem.py'),
         ('Non-uniform Image', 'NonUniformImage.py'),
         ('Region-of-Interest', 'ROIExamples.py'),
         ('Bar Graph', 'BarGraphItem.py'),
