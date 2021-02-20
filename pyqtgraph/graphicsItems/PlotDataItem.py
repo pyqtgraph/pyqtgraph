@@ -626,13 +626,6 @@ class PlotDataItem(GraphicsObject):
                 if self.opts['logMode'][0]:
                     x=x[1:]
                     y=y[1:]                
-            if self.opts['logMode'][0]:
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    x = np.log10(x)
-            if self.opts['logMode'][1]:
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    y = np.log10(y)
-                    y=y[1:]
 
             if self.opts['derivativeMode']:  # plot dV/dt
                 y = np.diff(self.yData)/np.diff(self.xData)
@@ -643,7 +636,7 @@ class PlotDataItem(GraphicsObject):
                     
             with np.errstate(divide='ignore'):
                 if self.opts['logMode'][0]:
-                    x = np.log10(x)
+                    np.log10(x, out=x)
                 if self.opts['logMode'][1]:
                     if np.issubdtype(y.dtype, np.floating):
                         eps = np.finfo(y.dtype).eps
