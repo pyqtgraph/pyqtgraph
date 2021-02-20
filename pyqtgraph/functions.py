@@ -1238,7 +1238,11 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        imgData[nanMask, 3] = 0
+        # Workaround for https://github.com/cupy/cupy/issues/4693
+        if xp == cp:
+            imgData[nanMask, :, 3] = 0
+        else:
+            imgData[nanMask, 3] = 0
 
     profile('alpha channel')
     return imgData, alpha
