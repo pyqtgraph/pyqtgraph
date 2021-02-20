@@ -6,10 +6,10 @@ Distributed under MIT/X11 license. See license.txt for more infomation.
 """
 
 from .. import getConfigOption, functions as fn, getCupy
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 
 try:
-    from ..Qt import QtWidgets
+    QOpenGLWidget = QtWidgets.QOpenGLWidget
     from OpenGL.GL import *
 
     HAVE_OPENGL = True
@@ -43,8 +43,8 @@ class RawImageWidget(QtGui.QWidget):
         img must be ndarray of shape (x,y), (x,y,3), or (x,y,4).
         Extra arguments are sent to functions.makeARGB
         """
-        if getConfigOption('imageAxisOrder') == 'row-major':
-            img = img.transpose((1, 0, 2))
+        if getConfigOption('imageAxisOrder') == 'col-major':
+            img = img.swapaxes(0, 1)
         self.opts = (img, args, kargs)
         self.image = None
         self.update()
@@ -56,7 +56,7 @@ class RawImageWidget(QtGui.QWidget):
             argb, alpha = fn.makeARGB(self.opts[0], *self.opts[1], **self.opts[2])
             if self._cp and self._cp.get_array_module(argb) == self._cp:
                 argb = argb.get()  # transfer GPU data back to the CPU
-            self.image = fn.makeQImage(argb, alpha)
+            self.image = fn.makeQImage(argb, alpha, copy=False, transpose=False)
             self.opts = ()
         # if self.pixmap is None:
             # self.pixmap = QtGui.QPixmap.fromImage(self.image)
@@ -78,7 +78,7 @@ class RawImageWidget(QtGui.QWidget):
 
 
 if HAVE_OPENGL:
-    class RawImageGLWidget(QtWidgets.QOpenGLWidget):
+    class RawImageGLWidget(QOpenGLWidget):
         """
         Similar to RawImageWidget, but uses a GL widget to do all drawing.
         Performance varies between platforms; see examples/VideoSpeedTest for benchmarking.
@@ -87,7 +87,7 @@ if HAVE_OPENGL:
         """
 
         def __init__(self, parent=None, scaled=False):
-            QtWidgets.QOpenGLWidget.__init__(self, parent)
+            QOpenGLWidget.__init__(self, parent)
             self.scaled = scaled
             self.image = None
             self.uploaded = False
