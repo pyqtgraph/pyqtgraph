@@ -17,7 +17,7 @@ class ColorBarItem(PlotItem):
     ColorBarItem is a simpler, compact alternative to HistogramLUTItem, without histogram
     or the option to adjust the look-up table. 
     
-    A labeled axis is displayed directly next to the gradient to help identifying values.
+    A labeled axis is displayed directly next to the gradient to help identify values.
     Handles included in the color bar allow for interactive adjustment.
     
     A ColorBarItem can be assigned one or more ImageItems that will be displayed according
@@ -35,7 +35,7 @@ class ColorBarItem(PlotItem):
     sigLevelsChangeFinished = QtCore.Signal(object)
     
     def __init__(self, values=(0,1), width=25, cmap=None, 
-                 adjustable=True, limits=None, rounding=1, pen='w'):
+                 interactive=True, limits=None, rounding=1, pen='w'):
         """
         Create a new ColorBarItem.
         
@@ -44,7 +44,7 @@ class ColorBarItem(PlotItem):
         values          The range of values as tuple (min, max)
         width           (default=25) The width of the displayed color bar
         cmap            ColorMap object, look-up table will also be applied to assigned ImageItem(s)
-        adjustable      (default=True) Display handles to interactively adjust image data range
+        interactive     (default=True) Handles are displayed to interactively adjust level range
         limits          Limits to adjustment range as (low, high) tuple
         rounding        (default=1) Range limits are rounded to multiples of this values
         pen             color of adjustement handles
@@ -90,7 +90,7 @@ class ColorBarItem(PlotItem):
         
         if cmap is not None: self.setcmap( cmap )
             
-        if adjustable:
+        if interactive:
             self.region = LinearRegionItem(
                 [63, 191], 'horizontal', swapMode='block', 
                 # span=(0.15, 0.85),  # limited span looks better, but disables grabbing the region
@@ -113,8 +113,10 @@ class ColorBarItem(PlotItem):
         
         ==============  ==========================================================================
         **Arguments:**
-        insert_in       If a PlotItem is given, the color bar is inserted to show to the right of 
-                        the plot
+        image           ImageItem or list of [ImageItem, ImageItem, ...] that will be set to the 
+                        color map of the ColorBarItem. In interactive mode, the levels of all
+                        assigned ImageItems will be controlled simultaneously.
+        insert_in       If a PlotItem is given, the color bar is inserted to the right of the plot
         ==============  ==========================================================================
         """
         try:
@@ -137,13 +139,13 @@ class ColorBarItem(PlotItem):
         """
         Sets the displayed range of levels as specified.
 
-        ==============  ==========================================================================
+        ==============  ===========================================================================
         **Arguments:**
         values          Specify levels by tuple (low, high). Either value can be None to leave
-                        to previous value unchanged.
+                        to previous value unchanged. Takes precedence over low and high parameters.
         low             new low level to be applied to color bar and assigned images
-        high            new high level to be applied to color bar and assignes images
-        ==============  ==========================================================================
+        high            new high level to be applied to color bar and assigned images
+        ==============  ===========================================================================
         """ 
         if values is not None: # values setting takes precendence
             low, high = values
@@ -165,7 +167,7 @@ class ColorBarItem(PlotItem):
         return self.values
         
     def _update_items(self, update_cmap=False):
-        """ update color maps for bar and assigned ImageItems """
+        """ internal: update color maps for bar and assigned ImageItems """
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
         if update_cmap and self.cmap is not None:
@@ -179,7 +181,7 @@ class ColorBarItem(PlotItem):
                 img.setLookupTable( self.cmap.getLookupTable() ) ## send function pointer, not the result
 
     def _regionChanged(self):
-        """ snap adjusters back to default positions on release """
+        """ internal: snap adjusters back to default positions on release """
         self.lo_prv, self.hi_prv = self.values
         self.region_changed_enable = False # otherwise this affects the region again
         self.region.setRegion( (63, 191) )
@@ -187,7 +189,7 @@ class ColorBarItem(PlotItem):
         self.sigLevelsChangeFinished.emit(self)
 
     def _regionChanging(self):
-        """ recalculate levels based on new position of adjusters """
+        """ internal: recalculate levels based on new position of adjusters """
         if not self.region_changed_enable: return
         bot, top = self.region.getRegion()
         bot = ( (bot -  63) / 64 ) # -1 to +1 over half-bar range

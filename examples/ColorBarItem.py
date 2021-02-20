@@ -46,7 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
             p1.getAxis(key).setStyle( showValues=False )
 
         cmap = pg.colormap.get( 'bgyw', source='colorcet' )
-        bar = pg.ColorBarItem( adjustable=False, values= (0, 30_000), cmap=cmap )
+        bar = pg.ColorBarItem( interactive=False, values= (0, 30_000), cmap=cmap )
         bar.setImageItem( i1, insert_in=p1 ) # 
 
         #--- add interactive image with integrated color ---------------------
