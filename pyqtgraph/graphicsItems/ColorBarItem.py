@@ -116,7 +116,7 @@ class ColorBarItem(PlotItem):
         insert_in       If a PlotItem is given, the color bar is inserted to show to the right of 
                         the plot
         ==============  ==========================================================================
- """
+        """
         try:
             self.img_list = [ weakref.ref(item) for item in img ]
         except TypeError: # failed to iterate, make a single-item list
