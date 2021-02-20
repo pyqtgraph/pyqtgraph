@@ -559,14 +559,14 @@ class AxisItem(GraphicsWidget):
             if newRange is None:
                 newRange = view.viewRange()[1]
             if view.yInverted():
-                self.setRange(*(newRange[::-1]))
+                self.setRange(*newRange[::-1])
             else:
                 self.setRange(*newRange)
         else:
             if newRange is None:
                 newRange = view.viewRange()[0]
             if view.xInverted():
-                self.setRange(*(newRange[::-1]))
+                self.setRange(*newRange[::-1])
             else:
                 self.setRange(*newRange)
 
@@ -951,7 +951,7 @@ class AxisItem(GraphicsWidget):
             else:
                 xScale = bounds.width() / dif
                 offset = trueRange[0] * xScale
-            
+
         xRange = [x * xScale - offset for x in trueRange]
         xMin = min(xRange)
         xMax = max(xRange)

@@ -59,9 +59,9 @@ def test_GraphicsWindow():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             w = pg.GraphicsWindow()
-        p1 = w.addPlot()
-        v1 = w.addViewBox()
-        return mkrefs(w, p1, v1)
+            p1 = w.addPlot()
+            v1 = w.addViewBox()
+            return mkrefs(w, p1, v1)
     
     for i in range(5):
         assert_alldead(mkobjs())
@@ -78,9 +78,5 @@ def test_ImageView():
         assert_alldead(mkobjs())
 
 
-
-
-    
-    
 if __name__ == '__main__':
     ot = test_PlotItem()

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 from .InfiniteLine import InfiniteLine
@@ -138,7 +139,7 @@ class LinearRegionItem(GraphicsObject):
         rng = self.getRegion()
         if self.logMode:
             with np.errstate(invalid='ignore', divide='ignore'):
-                rng = np.log10(rng)
+                np.log10(rng, out=rng)
         return rng
 
     def setRegion(self, rgn):
@@ -158,10 +159,10 @@ class LinearRegionItem(GraphicsObject):
         if self.lines[0].value() == rgn[0] and self.lines[1].value() == rgn[1]:
             return
         self.blockLineSignal = True
-        self.lines[0].setVisible(np.isfinite(rgn[0]))
+        self.lines[0].setVisible(math.isfinite(rgn[0]))
         self.lines[0].setValue(rgn[0])
         self.blockLineSignal = False
-        self.lines[1].setVisible(np.isfinite(rgn[1]))
+        self.lines[1].setVisible(math.isfinite(rgn[1]))
         self.lines[1].setValue(rgn[1])
         #self.blockLineSignal = False
         self.lineMoved(0)

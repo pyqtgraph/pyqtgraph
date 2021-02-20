@@ -142,9 +142,8 @@ class PlotItem(GraphicsWidget):
         self.vb.sigXRangeChanged.connect(self.sigXRangeChanged)
         self.vb.sigYRangeChanged.connect(self.sigYRangeChanged)
         self.vb.sigLogChanged.connect(self.sigLogChanged)
-        self.vb.sigLogChanged.connect(lambda x: self.setLogMode(x.xLog(), x.yLog()))
-        
-        
+        self.vb.sigLogChanged.connect(self._logChanged)
+
         self.layout.addItem(self.vb, 2, 1)
         self.alpha = 1.0
         self.autoAlpha = True
@@ -340,6 +339,10 @@ class PlotItem(GraphicsWidget):
             
             axisVisible = k in visibleAxes
             self.showAxis(k, axisVisible)
+
+    def _logChanged(self, vb):
+        self.setLogMode(x=vb.xLog(), y=vb.yLog())
+        return None
         
     def setLogMode(self, x=None, y=None):
         """

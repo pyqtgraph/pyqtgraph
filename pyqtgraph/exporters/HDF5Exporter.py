@@ -47,7 +47,6 @@ class HDF5Exporter(Exporter):
         data = []
 
         appendAllX = self.params['columnMode'] == '(x,y) per plot'
-
         # Check if the arrays are ragged
         len_first = len(self.item.curves[0].getData()[0]) if self.item.curves[0] else None
         ragged = any(len(i.getData()[0]) != len_first for i in self.item.curves)

@@ -3,7 +3,6 @@ import operator
 import weakref
 import numpy as np
 from ..Qt import QtGui, QtCore, QT_LIB
-
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .GraphicsWidget import GraphicsWidget
@@ -11,10 +10,10 @@ from ..widgets.SpinBox import SpinBox
 from collections import OrderedDict
 from ..colormap import ColorMap
 
-if QT_LIB == 'PyQt4':
-    from .lutCtrlTemplate_pyqt import Ui_Form as LutCtrlTemplate
-elif QT_LIB == 'PySide':
-    from .lutCtrlTemplate_pyside import Ui_Form as LutCtrlTemplate
+if QT_LIB == 'PyQt6':
+    from .lutCtrlTemplate_pyqt6 import Ui_Form as LutCtrlTemplate
+elif QT_LIB == 'PySide6':
+    from .lutCtrlTemplate_pyside6 import Ui_Form as LutCtrlTemplate
 elif QT_LIB == 'PyQt5':
     from .lutCtrlTemplate_pyqt5 import Ui_Form as LutCtrlTemplate
 elif QT_LIB == 'PySide2':
