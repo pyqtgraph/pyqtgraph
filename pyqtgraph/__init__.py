@@ -229,6 +229,7 @@ from .graphicsItems.GraphicsWidgetAnchor import *
 from .graphicsItems.PlotCurveItem import * 
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.ColorBarItem import * 
 from .graphicsItems.MultiPlotItem import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
