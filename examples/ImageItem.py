@@ -14,7 +14,7 @@ import pyqtgraph.ptime as ptime
 app = pg.mkQApp("ImageItem Example")
 
 ## Create window with GraphicsView widget
-win = pg.GraphicsView()
+win = pg.GraphicsLayoutWidget()
 win.show()  ## show widget alone in its own window
 win.setWindowTitle('pyqtgraph example: ImageItem')
 view = win.addViewBox()
