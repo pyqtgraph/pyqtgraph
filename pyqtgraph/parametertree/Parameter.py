@@ -203,15 +203,15 @@ class Parameter(QtCore.QObject):
             self.opts['default'] = None
     
         ## Connect all state changed signals to the general sigStateChanged
-        self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
-        self.sigChildAdded.connect(lambda param, *data: self.emitStateChanged('childAdded', data))
-        self.sigChildRemoved.connect(lambda param, data: self.emitStateChanged('childRemoved', data))
-        self.sigParentChanged.connect(lambda param, data: self.emitStateChanged('parent', data))
-        self.sigLimitsChanged.connect(lambda param, data: self.emitStateChanged('limits', data))
-        self.sigDefaultChanged.connect(lambda param, data: self.emitStateChanged('default', data))
-        self.sigNameChanged.connect(lambda param, data: self.emitStateChanged('name', data))
-        self.sigOptionsChanged.connect(lambda param, data: self.emitStateChanged('options', data))
-        self.sigContextMenu.connect(lambda param, data: self.emitStateChanged('contextMenu', data))
+        self.sigValueChanged.connect(self.emitValueChanged)
+        self.sigChildAdded.connect(self.emitChildAddedChanged)
+        self.sigChildRemoved.connect(self.emitChildRemovedChanged)
+        self.sigParentChanged.connect(self.emitParentChanged)
+        self.sigLimitsChanged.connect(self.emitLimitsChanged)
+        self.sigDefaultChanged.connect(self.emitDefaultChanged)
+        self.sigNameChanged.connect(self.emitNameChanged)
+        self.sigOptionsChanged.connect(self.emitOptionsChanged)
+        self.sigContextMenu.connect(self.emitContextMenuChanged)
 
         
         #self.watchParam(self)  ## emit treechange signals if our own state changes
@@ -510,6 +510,33 @@ class Parameter(QtCore.QObject):
         #self.treeStateChanged(self, changeDesc, data)
         self.treeStateChanges.append((self, changeDesc, data))
         self.emitTreeChanges()
+
+    def emitValueChanged(self, param, data):
+        self.emitStateChanged("value", data)
+
+    def emitChildAddedChanged(self, param, *data):
+        self.emitStateChanged("childAdded", data)
+
+    def emitchildRemovedChanged(self, param, data):
+        self.emitStateChanged("childRemoved", data)
+
+    def emitParentChanged(self, param, data):
+        self.emitStateChanged("parent", data)
+
+    def emitLimitsChanged(self, param, data):
+        self.emitStateChanged("limits", data)
+
+    def emitDefaultChanged(self, param, data):
+        self.emitStateChanged("default", data)
+
+    def emitNameChanged(self, param, data):
+        self.emitStateChanged("name", data)
+
+    def emitOptionsChanged(self, param, data):
+        self.emitStateChanged("options", data)
+
+    def emitContextMenuChanged(self, param, data):
+        self.emitStateChanged("contextMenu", data)
 
     def makeTreeItem(self, depth):
         """

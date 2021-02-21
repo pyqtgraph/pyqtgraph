@@ -446,10 +446,10 @@ class GradientEditorItem(TickSliderItem):
         
         self.rgbAction = QtGui.QAction(translate("GradiantEditorItem", 'RGB'), self)
         self.rgbAction.setCheckable(True)
-        self.rgbAction.triggered.connect(lambda: self.setColorMode('rgb'))
+        self.rgbAction.triggered.connect(self.setColorModeToRGB)
         self.hsvAction = QtGui.QAction(translate("GradiantEditorItem", 'HSV'), self)
         self.hsvAction.setCheckable(True)
-        self.hsvAction.triggered.connect(lambda: self.setColorMode('hsv'))
+        self.hsvAction.triggered.connect(self.setColorModeToHSV)
             
         self.menu = QtGui.QMenu()
         
@@ -493,7 +493,7 @@ class GradientEditorItem(TickSliderItem):
         self.updateGradient()
         self.linkedGradients = {}
         
-        self.sigTicksChanged.connect(lambda *args, **kwargs: self.updateGradient())
+        self.sigTicksChanged.connect(self.updateGradientIgnoreArgs)
         self.sigTicksChangeFinished.connect(self.sigGradientChangeFinished.emit)
 
     def showTicks(self, show=True):
@@ -566,7 +566,13 @@ class GradientEditorItem(TickSliderItem):
         
         self.sigTicksChanged.emit(self)
         self.sigGradientChangeFinished.emit(self)
-        
+
+    def setColorModeToRGB(self):
+        self.setColorMode("rgb")
+
+    def setColorModeToHSV(self):
+        self.setColorMode("hsv")
+
     def colorMap(self):
         """Return a ColorMap object representing the current state of the editor."""
         if self.colorMode == 'hsv':
@@ -584,7 +590,10 @@ class GradientEditorItem(TickSliderItem):
         self.gradient = self.getGradient()
         self.gradRect.setBrush(QtGui.QBrush(self.gradient))
         self.sigGradientChanged.emit(self)
-        
+
+    def updateGradientIgnoreArgs(self, *args, **kwargs):
+        self.updateGradient()
+
     def setLength(self, newLen):
         #private (but maybe public)
         TickSliderItem.setLength(self, newLen)
