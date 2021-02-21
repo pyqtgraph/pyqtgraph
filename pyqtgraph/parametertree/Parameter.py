@@ -517,7 +517,7 @@ class Parameter(QtCore.QObject):
     def emitChildAddedChanged(self, param, *data):
         self.emitStateChanged("childAdded", data)
 
-    def emitchildRemovedChanged(self, param, data):
+    def emitChildRemovedChanged(self, param, data):
         self.emitStateChanged("childRemoved", data)
 
     def emitParentChanged(self, param, data):
