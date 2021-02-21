@@ -9,16 +9,9 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
-app = pg.mkQApp()
-
-## Create window with ImageView widget
-win = QtGui.QMainWindow()
-win.resize(600,600)
-
-gr_wid = pg.GraphicsLayoutWidget()
-win.setCentralWidget( gr_wid)
-win.show()
-win.setWindowTitle('pyqtgraph example: Interactive color bar')
+gr_wid = pg.GraphicsLayoutWidget(show=True)
+gr_wid.setWindowTitle('pyqtgraph example: Interactive color bar')
+gr_wid.resize(600,600)
 
 ## Create image items
 data = np.fromfunction(lambda i, j: (1+0.3*np.sin(i)) * (i)**2 + (j)**2, (100, 100))
