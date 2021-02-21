@@ -37,7 +37,7 @@ for key in ['right','top']:
     p1.showAxis(key)
     p1.getAxis(key).setStyle( showValues=False )
 
-cmap = pg.colormap.get( 'bgyw', source='colorcet' )
+cmap = pg.colormap.get('CET-L9')
 bar = pg.ColorBarItem( interactive=False, values= (0, 30_000), cmap=cmap )
 bar.setImageItem( i1, insert_in=p1 ) # 
 
@@ -49,7 +49,7 @@ p2.addItem( i2, title='' )
 p2.showAxis('right')
 p2.getAxis('left').setStyle( showValues=False )
 
-cmap = pg.colormap.get( 'fire', source='colorcet' )
+cmap = pg.colormap.get('CET-L4')
 bar = pg.ColorBarItem( 
     values = (0, 30_000),
     limits = (0, None), 
@@ -67,7 +67,7 @@ i4 = pg.ImageItem(image=noisy_transposed)
 p4 = gr_wid.addPlot(1,1, 1,1, title="shared 2")
 p4.addItem( i4 )
 
-cmap = pg.colormap.get( 'bmy', source='colorcet' )
+cmap = pg.colormap.get('CET-L8')
 bar = pg.ColorBarItem( 
     # values = (-15_000, 15_000),
     limits = (-30_000, 30_000), 
@@ -81,7 +81,6 @@ bar.setLevels( low=-15_000, high=15_000)
 bar.getAxis('bottom').setHeight(21)
 bar.getAxis('top').setHeight(31)
 gr_wid.addItem(bar, 0,2, 2,1) # large bar spanning both rows
-
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
