@@ -6,6 +6,9 @@ it is being scaled and/or converted by lookup table, and whether OpenGL
 is used by the view widget
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
+
 import argparse
 import sys
 
