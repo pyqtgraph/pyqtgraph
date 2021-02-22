@@ -12,7 +12,6 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-#QtGui.QApplication.setGraphicsSystem('raster')
 app = pg.mkQApp()
 mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: PlotWidget')

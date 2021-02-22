@@ -37,15 +37,6 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.exampleTree, 0, 0, 1, 2)
 
-        self.graphicsSystemCombo = QComboBox(self.widget)
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.setObjectName(u"graphicsSystemCombo")
-
-        self.gridLayout.addWidget(self.graphicsSystemCombo, 2, 1, 1, 1)
-
         self.qtLibCombo = QComboBox(self.widget)
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
@@ -55,11 +46,6 @@ class Ui_Form(object):
         self.qtLibCombo.setObjectName(u"qtLibCombo")
 
         self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
-
-        self.label_2 = QLabel(self.widget)
-        self.label_2.setObjectName(u"label_2")
-
-        self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
 
         self.label = QLabel(self.widget)
         self.label.setObjectName(u"label")
@@ -106,18 +92,12 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"PyQtGraph", None))
-        self.graphicsSystemCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
-        self.graphicsSystemCombo.setItemText(1, QCoreApplication.translate("Form", u"native", None))
-        self.graphicsSystemCombo.setItemText(2, QCoreApplication.translate("Form", u"raster", None))
-        self.graphicsSystemCombo.setItemText(3, QCoreApplication.translate("Form", u"opengl", None))
-
         self.qtLibCombo.setItemText(0, QCoreApplication.translate("Form", u"default", None))
         self.qtLibCombo.setItemText(1, QCoreApplication.translate("Form", u"PyQt5", None))
         self.qtLibCombo.setItemText(2, QCoreApplication.translate("Form", u"PySide2", None))
         self.qtLibCombo.setItemText(3, QCoreApplication.translate("Form", u"PySide6", None))
         self.qtLibCombo.setItemText(4, QCoreApplication.translate("Form", u"PyQt6", None))
 
-        self.label_2.setText(QCoreApplication.translate("Form", u"Graphics System:", None))
         self.label.setText(QCoreApplication.translate("Form", u"Qt Library:", None))
         self.loadBtn.setText(QCoreApplication.translate("Form", u"Run Example", None))
         self.loadedFileLabel.setText("")

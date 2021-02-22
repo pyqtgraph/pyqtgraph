@@ -33,30 +33,6 @@
          </column>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QComboBox" name="graphicsSystemCombo">
-         <item>
-          <property name="text">
-           <string>default</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>native</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>raster</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>opengl</string>
-          </property>
-         </item>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QComboBox" name="qtLibCombo">
          <item>
@@ -84,13 +60,6 @@
            <string>PyQt6</string>
           </property>
          </item>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Graphics System:</string>
-         </property>
         </widget>
        </item>
        <item row="1" column="0">
