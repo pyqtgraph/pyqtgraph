@@ -785,9 +785,9 @@ class ROI(GraphicsObject):
 
     def removeClicked(self):
         ## Send remove event only after we have exited the menu event handler
-        QtCore.QTimer.singleShot(0, self.emitRemoveRequest)
+        QtCore.QTimer.singleShot(0, self._emitRemoveRequest)
 
-    def emitRemoveRequest(self):
+    def _emitRemoveRequest(self):
         self.sigRemoveRequested.emit(self)
 
     def mouseDragEvent(self, ev):
