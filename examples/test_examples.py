@@ -199,7 +199,7 @@ conditionalExamples = {
         )
     ]
 )
-def testExamples(frontend, f, graphicsSystem=None):
+def testExamples(frontend, f):
     # runExampleFile(f[0], f[1], sys.executable, frontend)
 
     name, file = f
@@ -210,15 +210,11 @@ def testExamples(frontend, f, graphicsSystem=None):
     sys.stdout.flush()
     import1 = "import %s" % frontend if frontend != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
-    graphicsSystem = (
-        '' if graphicsSystem is None else  "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
-    )
     code = """
 try:
     %s
     import initExample
     import pyqtgraph as pg
-    %s
     import %s
     import sys
     print("test complete")
@@ -231,7 +227,7 @@ except:
     print("test failed")
     raise
 
-""" % (import1, graphicsSystem, import2)
+""" % (import1, import2)
     if sys.platform.startswith('win'):
         process = subprocess.Popen([sys.executable],
                                     stdin=subprocess.PIPE,

@@ -40,7 +40,6 @@ parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
 args = parser.parse_args(sys.argv[1:])
 
-#QtGui.QApplication.setGraphicsSystem('raster')
 app = pg.mkQApp("Video Speed Test Example")
 
 win = QtGui.QMainWindow()
