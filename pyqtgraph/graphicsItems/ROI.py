@@ -1193,24 +1193,6 @@ class ROI(GraphicsObject):
         See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
         arguments.
         """
-        # sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
-        #
-        # if img.axisOrder == "col-major":
-        #     mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
-        # else:
-        #     mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
-        #     mask = mask.T
-        #
-        # # reshape mask to ensure it is applied to the correct data axes
-        # shape = [1] * data.ndim
-        # shape[axes[0]] = sliced.shape[axes[0]]
-        # shape[axes[1]] = sliced.shape[axes[1]]
-        # mask = mask.reshape(shape)
-        #
-        # return sliced * mask
-
-        # ==================
-
         br = self.boundingRect()
         if br.width() > 1000:
             raise Exception()
