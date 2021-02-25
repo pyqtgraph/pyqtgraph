@@ -10,10 +10,14 @@ class Transform3D(QtGui.QMatrix4x4):
     Extension of QMatrix4x4 with some helpful methods added.
     """
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], (list, tuple, np.ndarray)):
-            args = [x for y in args[0] for x in y]
-            if len(args) != 16:
-                raise TypeError("Single argument to Transform3D must have 16 elements.")
+        if len(args) == 1:
+            if isinstance(args[0], (list, tuple, np.ndarray)):
+                args = [x for y in args[0] for x in y]
+                if len(args) != 16:
+                    raise TypeError("Single argument to Transform3D must have 16 elements.")
+            elif isinstance(args[0], QtGui.QMatrix4x4):
+                args = list(args[0].copyDataTo())
+        
         QtGui.QMatrix4x4.__init__(self, *args)
         
     def matrix(self, nd=3):

@@ -10,8 +10,8 @@ import initExample ## Add path to library (just for examples; you do not need th
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
-app = QtGui.QApplication([])
-win = pg.GraphicsWindow(title="Scatter Plot Symbols")
+app = pg.mkQApp("Symbols Examples")
+win = pg.GraphicsLayoutWidget(show=True, title="Scatter Plot Symbols")
 win.resize(1000,600)
 
 pg.setConfigOptions(antialias=True)
@@ -29,6 +29,10 @@ plot.plot([7, 8, 9, 10, 11], pen=(217,83,25), symbolBrush=(217,83,25), symbolPen
 plot.plot([8, 9, 10, 11, 12], pen=(237,177,32), symbolBrush=(237,177,32), symbolPen='w', symbol='star', symbolSize=14, name="symbol='star'")
 plot.plot([9, 10, 11, 12, 13], pen=(126,47,142), symbolBrush=(126,47,142), symbolPen='w', symbol='+', symbolSize=14, name="symbol='+'")
 plot.plot([10, 11, 12, 13, 14], pen=(119,172,48), symbolBrush=(119,172,48), symbolPen='w', symbol='d', symbolSize=14, name="symbol='d'")
+plot.plot([11, 12, 13, 14, 15], pen=(253, 216, 53), symbolBrush=(253, 216, 53), symbolPen='w', symbol='arrow_down', symbolSize=22, name="symbol='arrow_down'")
+plot.plot([12, 13, 14, 15, 16], pen=(189, 189, 189), symbolBrush=(189, 189, 189), symbolPen='w', symbol='arrow_left', symbolSize=22, name="symbol='arrow_left'")
+plot.plot([13, 14, 15, 16, 17], pen=(187, 26, 95), symbolBrush=(187, 26, 95), symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
+plot.plot([14, 15, 16, 17, 18], pen=(248, 187, 208), symbolBrush=(248, 187, 208), symbolPen='w', symbol='arrow_right', symbolSize=22, name="symbol='arrow_right'")
 plot.setXRange(-2, 4)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

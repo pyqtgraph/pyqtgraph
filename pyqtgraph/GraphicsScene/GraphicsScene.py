@@ -1,19 +1,22 @@
+# -*- coding: utf-8 -*-
+import time
 import weakref
-from ..Qt import QtCore, QtGui
-from ..python2_3 import sortList, cmp
+import warnings
+
+from ..Qt import QtCore, QtGui, QT_LIB, isQObjectAlive
 from ..Point import Point
 from .. import functions as fn
 from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
+from .. import getConfigOption
+
+getMillis = lambda: int(round(time.time() * 1000))
 
 
-if hasattr(QtCore, 'PYQT_VERSION'):
-    try:
-        import sip
-        HAVE_SIP = True
-    except ImportError:
-        HAVE_SIP = False
+if QT_LIB.startswith('PyQt'):
+    from ..Qt import sip
+    HAVE_SIP = True
 else:
     HAVE_SIP = False
 
@@ -36,6 +39,20 @@ class GraphicsScene(QtGui.QGraphicsScene):
        This lets us indicate unambiguously to the user which item they are about to click/drag on
     *  Eats mouseMove events that occur too soon after a mouse press.
     *  Reimplements items() and itemAt() to circumvent PyQt bug
+
+    ====================== ====================================================================
+    **Signals**
+    sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
+                           get the click position relative to the item that was clicked on,
+                           or ev.scenePos() to get the click position in scene coordinates.
+                           See :class:`pyqtgraph.GraphicsScene.MouseClickEvent`.                        
+    sigMouseMoved(pos)     Emitted when the mouse cursor moves over the scene. The position
+                           is given in scene coordinates.
+    sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
+                           of items under the cursor.
+    sigItemAdded(item)     Emitted when an item is added via addItem(). The item is given.
+    sigItemRemoved(item)   Emitted when an item is removed via removeItem(). The item is given.
+    ====================== ====================================================================
     
     Mouse interaction is as follows:
     
@@ -69,22 +86,21 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
     sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
-    
+
+    sigItemAdded = QtCore.Signal(object)  ## emits the item object just added
+    sigItemRemoved = QtCore.Signal(object)  ## emits the item object just removed
+
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
     
     @classmethod
     def registerObject(cls, obj):
-        """
-        Workaround for PyQt bug in qgraphicsscene.items()
-        All subclasses of QGraphicsObject must register themselves with this function.
-        (otherwise, mouse interaction with those objects will likely fail)
-        """
-        if HAVE_SIP and isinstance(obj, sip.wrapper):
-            cls._addressCache[sip.unwrapinstance(sip.cast(obj, QtGui.QGraphicsItem))] = obj
-            
-            
+        warnings.warn(
+            "'registerObject' is deprecated and does nothing.",
+            DeprecationWarning, stacklevel=2
+        )
+
     def __init__(self, clickRadius=2, moveDistance=5, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.setClickRadius(clickRadius)
@@ -100,10 +116,11 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.lastHoverEvent = None
         self.minDragTime = 0.5  # drags shorter than 0.5 sec are interpreted as clicks
         
-        self.contextMenu = [QtGui.QAction("Export...", self)]
+        self.contextMenu = [QtGui.QAction(QtCore.QCoreApplication.translate("GraphicsScene", "Export..."), self)]
         self.contextMenu[0].triggered.connect(self.showExportDialog)
         
         self.exportDialog = None
+        self._lastMoveEventTime = 0
         
     def render(self, *args):
         self.prepareForPaint()
@@ -135,7 +152,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self._moveDistance = d
 
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsScene.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             if self.lastHoverEvent is not None:
                 # If the mouse has moved since the last hover event, send a new one.
@@ -148,40 +165,63 @@ class GraphicsScene(QtGui.QGraphicsScene):
             ## set focus on the topmost focusable item under this click
             items = self.items(ev.scenePos())
             for i in items:
-                if i.isEnabled() and i.isVisible() and int(i.flags() & i.ItemIsFocusable) > 0:
+                if i.isEnabled() and i.isVisible() and (i.flags() & i.ItemIsFocusable):
                     i.setFocus(QtCore.Qt.MouseFocusReason)
                     break
+
+    def _moveEventIsAllowed(self):
+        # For ignoring events that are too close together
+        
+        # Max number of events per second
+        rateLimit = getConfigOption('mouseRateLimit')
+        if rateLimit <= 0:
+            return True
+        
+        # Delay between events (in milliseconds)
+        delay = 1000.0 / rateLimit
+        if getMillis() - self._lastMoveEventTime >= delay:
+            return True
+        return False
+
         
     def mouseMoveEvent(self, ev):
-        self.sigMouseMoved.emit(ev.scenePos())
-        
-        ## First allow QGraphicsScene to deliver hoverEnter/Move/ExitEvents
-        QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-        
-        ## Next deliver our own HoverEvents
-        self.sendHoverEvents(ev)
-        
-        if int(ev.buttons()) != 0:  ## button is pressed; send mouseMoveEvents and mouseDragEvents
-            QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-            if self.mouseGrabberItem() is None:
-                now = ptime.time()
-                init = False
-                ## keep track of which buttons are involved in dragging
-                for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
-                    if int(ev.buttons() & btn) == 0:
-                        continue
-                    if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
-                        cev = [e for e in self.clickEvents if int(e.button()) == int(btn)][0]
-                        dist = Point(ev.scenePos() - cev.scenePos()).length()
-                        if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
+        # ignore high frequency events
+        if self._moveEventIsAllowed():
+            self._lastMoveEventTime = getMillis()
+            self.sigMouseMoved.emit(ev.scenePos())
+
+            # First allow QGraphicsScene to eliver hoverEvent/Move/Exit Events
+            super().mouseMoveEvent(ev)
+            # Next Deliver our own Hover Events
+            self.sendHoverEvents(ev)
+            if ev.buttons():
+                # button is pressed' send mouseMoveEvents and mouseDragEvents
+                super().mouseMoveEvent(ev)
+                if self.mouseGrabberItem() is None:
+                    now = ptime.time()
+                    init = False
+                    ## keep track of which buttons are involved in dragging
+                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MiddleButton, QtCore.Qt.RightButton]:
+                        if not (ev.buttons() & btn):
                             continue
-                        init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
-                        self.dragButtons.append(int(btn))
-                        
-                ## If we have dragged buttons, deliver a drag event
-                if len(self.dragButtons) > 0:
-                    if self.sendDragEvent(ev, init=init):
-                        ev.accept()
+                        if btn not in self.dragButtons:  ## see if we've dragged far enough yet
+                            cev = [e for e in self.clickEvents if e.button() == btn]
+                            if cev:
+                                cev = cev[0]
+                                dist = Point(ev.scenePos() - cev.scenePos()).length()
+                                if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
+                                    continue
+                                init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
+                                self.dragButtons.append(btn)
+                    ## if we have dragged buttons, deliver a drag event
+                    if len(self.dragButtons) > 0:
+                        if self.sendDragEvent(ev, init=init):
+                            ev.accept()
+
+        else:
+            super().mouseMoveEvent(ev)
+            # if you do not accept event (which is ignored) then cursor will disappear
+            ev.accept()
                 
     def leaveEvent(self, ev):  ## inform items that mouse is gone
         if len(self.dragButtons) == 0:
@@ -195,23 +235,24 @@ class GraphicsScene(QtGui.QGraphicsScene):
                     ev.accept()
                 self.dragButtons.remove(ev.button())
             else:
-                cev = [e for e in self.clickEvents if int(e.button()) == int(ev.button())]
-                if self.sendClickEvent(cev[0]):
-                    #print "sent click event"
-                    ev.accept()
-                self.clickEvents.remove(cev[0])
+                cev = [e for e in self.clickEvents if e.button() == ev.button()]
+                if cev:
+                    if self.sendClickEvent(cev[0]):
+                        #print "sent click event"
+                        ev.accept()
+                    self.clickEvents.remove(cev[0])
                 
-        if int(ev.buttons()) == 0:
+        if not ev.buttons():
             self.dragItem = None
             self.dragButtons = []
             self.clickEvents = []
             self.lastDrag = None
-        QtGui.QGraphicsScene.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         
         self.sendHoverEvents(ev)  ## let items prepare for next click/drag
 
     def mouseDoubleClickEvent(self, ev):
-        QtGui.QGraphicsScene.mouseDoubleClickEvent(self, ev)
+        super().mouseDoubleClickEvent(ev)
         if self.mouseGrabberItem() is None:  ## nobody claimed press; we are free to generate drag/click events
             self.clickEvents.append(MouseClickEvent(ev, double=True))
         
@@ -223,7 +264,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             items = []
             event = HoverEvent(None, acceptable)
         else:
-            acceptable = int(ev.buttons()) == 0  ## if we are in mid-drag, do not allow items to accept the hover event.
+            acceptable = not ev.buttons()  ## if we are in mid-drag, do not allow items to accept the hover event.
             event = HoverEvent(ev, acceptable)
             items = self.itemsNearEvent(event, hoverable=True)
             self.sigMouseHover.emit(items)
@@ -251,7 +292,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in prevItems:
             event.currentItem = item
             try:
-                item.hoverEvent(event)
+                # NOTE: isQObjectAlive(item) was added for PySide6 where
+                #       verlet_chain_demo.py triggers a RuntimeError.
+                if isQObjectAlive(item) and item.scene() is self:
+                    item.hoverEvent(event)
             except:
                 debug.printExc("Error sending hover exit event:")
             finally:
@@ -262,7 +306,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         #     item to continue receiving events until the drag is over
         #   - event is not a mouse event (QEvent.Leave sometimes appears here)
         if (ev.type() == ev.GraphicsSceneMousePress or 
-            (ev.type() == ev.GraphicsSceneMouseMove and int(ev.buttons()) == 0)):
+            (ev.type() == ev.GraphicsSceneMouseMove and not ev.buttons())):
             self.lastHoverEvent = event  ## save this so we can ask about accepted events later.
 
     def sendDragEvent(self, ev, init=False, final=False):
@@ -276,7 +320,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
             else:
                 acceptedItem = None
                 
-            if acceptedItem is not None:
+            if acceptedItem is not None and acceptedItem.scene() is self:
                 #print "Drag -> pre-selected item:", acceptedItem
                 self.dragItem = acceptedItem
                 event.currentItem = self.dragItem
@@ -300,7 +344,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                         if event.isAccepted():
                             #print "   --> accepted"
                             self.dragItem = item
-                            if int(item.flags() & item.ItemIsFocusable) > 0:
+                            if item.flags() & item.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
         elif self.dragItem is not None:
@@ -345,53 +389,34 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             debug.printExc("Error sending click event:")
                             
                         if ev.isAccepted():
-                            if int(item.flags() & item.ItemIsFocusable) > 0:
+                            if item.flags() & item.ItemIsFocusable:
                                 item.setFocus(QtCore.Qt.MouseFocusReason)
                             break
         self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
+
+    def addItem(self, item):
+        # extend QGraphicsScene.addItem to emit a sigItemAdded signal
+        ret = QtGui.QGraphicsScene.addItem(self, item)
+        self.sigItemAdded.emit(item)
+        return ret
+
+    def removeItem(self, item):
+        # extend QGraphicsScene.removeItem to emit a sigItemRemoved signal
+        ret = QtGui.QGraphicsScene.removeItem(self, item)
+        self.sigItemRemoved.emit(item)
+        return ret
         
     def items(self, *args):
-        #print 'args:', args
         items = QtGui.QGraphicsScene.items(self, *args)
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        items2 = list(map(self.translateGraphicsItem, items))
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #items2 = []
-            #for i in items:
-                #addr = sip.unwrapinstance(sip.cast(i, QtGui.QGraphicsItem))
-                #i2 = GraphicsScene._addressCache.get(addr, i)
-                ##print i, "==>", i2
-                #items2.append(i2)
-        #print 'items:', items
-        return items2
+        return self.translateGraphicsItems(items)
     
     def selectedItems(self, *args):
         items = QtGui.QGraphicsScene.selectedItems(self, *args)
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #items2 = []
-            #for i in items:
-                #addr = sip.unwrapinstance(sip.cast(i, QtGui.QGraphicsItem))
-                #i2 = GraphicsScene._addressCache.get(addr, i)
-                ##print i, "==>", i2
-                #items2.append(i2)
-        items2 = list(map(self.translateGraphicsItem, items))
-
-        #print 'items:', items
-        return items2
+        return self.translateGraphicsItems(items)
 
     def itemAt(self, *args):
         item = QtGui.QGraphicsScene.itemAt(self, *args)
-        
-        ## PyQt bug: items() returns a list of QGraphicsItem instances. If the item is subclassed from QGraphicsObject,
-        ## then the object returned will be different than the actual item that was originally added to the scene
-        #if HAVE_SIP and isinstance(self, sip.wrapper):
-            #addr = sip.unwrapinstance(sip.cast(item, QtGui.QGraphicsItem))
-            #item = GraphicsScene._addressCache.get(addr, item)
-        #return item
         return self.translateGraphicsItem(item)
 
     def itemsNearEvent(self, event, selMode=QtCore.Qt.IntersectsItemShape, sortOrder=QtCore.Qt.DescendingOrder, hoverable=False):
@@ -423,6 +448,8 @@ class GraphicsScene(QtGui.QGraphicsScene):
         for item in items:
             if hoverable and not hasattr(item, 'hoverEvent'):
                 continue
+            if item.scene() is not self:
+                continue
             shape = item.shape() # Note: default shape() returns boundingRect()
             if shape is None:
                 continue
@@ -436,7 +463,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 return 0
             return item.zValue() + absZValue(item.parentItem())
         
-        sortList(items2, lambda a,b: cmp(absZValue(b), absZValue(a)))
+        items2.sort(key=absZValue, reverse=True)
         
         return items2
         
@@ -516,7 +543,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
         for m in menusToAdd:
             if isinstance(m, QtGui.QMenu):
-                menu.addMenu(m)
+                menu.addAction(m.menuAction())
             elif isinstance(m, QtGui.QAction):
                 menu.addAction(m)
             else:
@@ -536,15 +563,16 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
     @staticmethod
     def translateGraphicsItem(item):
-        ## for fixing pyqt bugs where the wrong item is returned
+        # This function is intended as a workaround for a problem with older
+        # versions of PyQt (< 4.9?), where methods returning 'QGraphicsItem *'
+        # lose the type of the QGraphicsObject subclasses and instead return
+        # generic QGraphicsItem wrappers.
         if HAVE_SIP and isinstance(item, sip.wrapper):
-            addr = sip.unwrapinstance(sip.cast(item, QtGui.QGraphicsItem))
-            item = GraphicsScene._addressCache.get(addr, item)
+            obj = item.toGraphicsObject()
+            if obj is not None:
+                item = obj
         return item
 
     @staticmethod
     def translateGraphicsItems(items):
         return list(map(GraphicsScene.translateGraphicsItem, items))
-
-
-

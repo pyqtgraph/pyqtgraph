@@ -12,12 +12,11 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-#QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
+app = pg.mkQApp("Plotting Example")
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
-win = pg.GraphicsWindow(title="Basic plotting examples")
+win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
 win.resize(1000,600)
 win.setWindowTitle('pyqtgraph example: Plotting')
 

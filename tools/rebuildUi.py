@@ -7,9 +7,10 @@ Script for compiling Qt Designer .ui files to .py
 """
 import os, sys, subprocess, tempfile
 
-pyqtuic = 'pyuic4'
-pysideuic = 'pyside-uic'
 pyqt5uic = 'pyuic5'
+pyqt6uic = 'pyuic6'
+pyside2uic = 'pyside2-uic'
+pyside6uic = 'pyside6-uic'
 
 usage = """Compile .ui files to .py for all supported pyqt/pyside versions.
 
@@ -49,7 +50,8 @@ for arg in args:
 # rebuild all requested ui files
 for ui in uifiles:
     base, _ = os.path.splitext(ui)
-    for compiler, ext in [(pyqtuic, '_pyqt.py'), (pysideuic, '_pyside.py'), (pyqt5uic, '_pyqt5.py')]:
+    for compiler, ext in [(pyqt5uic, '_pyqt5.py'), (pyside2uic, '_pyside2.py'),
+                          (pyqt6uic, '_pyqt6.py'), (pyside6uic, '_pyside6.py')]:
         py = base + ext
         if not force and os.path.exists(py) and os.stat(ui).st_mtime <= os.stat(py).st_mtime:
             print("Skipping %s; already compiled." % py)

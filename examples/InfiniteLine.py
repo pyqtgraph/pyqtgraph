@@ -9,8 +9,8 @@ import numpy as np
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
-win = pg.GraphicsWindow(title="Plotting items examples")
+app = pg.mkQApp("InfiniteLine Example")
+win = pg.GraphicsLayoutWidget(show=True, title="Plotting items examples")
 win.resize(1000,600)
 
 # Enable antialiasing for prettier plots

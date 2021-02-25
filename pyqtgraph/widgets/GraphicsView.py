@@ -2,17 +2,10 @@
 """
 GraphicsView.py -   Extension of QGraphicsView
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..Qt import QtCore, QtGui, USE_PYSIDE
-
-try:
-    from ..Qt import QtOpenGL
-    HAVE_OPENGL = True
-except ImportError:
-    HAVE_OPENGL = False
-
+from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
 import sys, os
 from .FileDialog import FileDialog
@@ -23,6 +16,7 @@ from .. import debug as debug
 from .. import getConfigOption
 
 __all__ = ['GraphicsView']
+
 
 class GraphicsView(QtGui.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
@@ -56,7 +50,7 @@ class GraphicsView(QtGui.QGraphicsView):
         useOpenGL       If True, the GraphicsView will use OpenGL to do all of its
                         rendering. This can improve performance on some systems,
                         but may also introduce bugs (the combination of 
-                        QGraphicsView and QGLWidget is still an 'experimental' 
+                        QGraphicsView and QOpenGLWidget is still an 'experimental'
                         feature of Qt)
         background      Set the background color of the GraphicsView. Accepts any
                         single argument accepted by 
@@ -115,7 +109,7 @@ class GraphicsView(QtGui.QGraphicsView):
         
         ## Workaround for PySide crash
         ## This ensures that the scene will outlive the view.
-        if USE_PYSIDE:
+        if QT_LIB == 'PySide':
             self.sceneObj._view_ref_workaround = self
         
         ## by default we set up a central widget with a grid layout.
@@ -128,7 +122,7 @@ class GraphicsView(QtGui.QGraphicsView):
         self.mouseEnabled = False
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
-        
+
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
@@ -151,11 +145,11 @@ class GraphicsView(QtGui.QGraphicsView):
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.paintEvent(self, ev)
+        return super().paintEvent(ev)
     
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
-        return QtGui.QGraphicsView.render(self, *args, **kwds)
+        return super().render(*args, **kwds)
         
     
     def close(self):
@@ -169,9 +163,11 @@ class GraphicsView(QtGui.QGraphicsView):
 
     def useOpenGL(self, b=True):
         if b:
+            HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
             if not HAVE_OPENGL:
-                raise Exception("Requested to use OpenGL with QGraphicsView, but QtOpenGL module is not available.")
-            v = QtOpenGL.QGLWidget()
+                raise Exception("Requested to use OpenGL with QGraphicsView, but QOpenGLWidget is not available.")
+
+            v = QtWidgets.QOpenGLWidget()
         else:
             v = QtGui.QWidget()
             
@@ -227,12 +223,12 @@ class GraphicsView(QtGui.QGraphicsView):
             else:
                 self.fitInView(self.range, QtCore.Qt.IgnoreAspectRatio)
             
-        self.sigDeviceRangeChanged.emit(self, self.range)
-        self.sigDeviceTransformChanged.emit(self)
-        
         if propagate:
             for v in self.lockedViewports:
                 v.setXRange(self.range, padding=0)
+
+        self.sigDeviceRangeChanged.emit(self, self.range)
+        self.sigDeviceTransformChanged.emit(self)
         
     def viewRect(self):
         """Return the boundaries of the view in scene coordinates"""
@@ -261,7 +257,6 @@ class GraphicsView(QtGui.QGraphicsView):
         w = self.range.width()  / scale[0]
         h = self.range.height() / scale[1]
         self.range = QtCore.QRectF(center.x() - (center.x()-self.range.left()) / scale[0], center.y() - (center.y()-self.range.top())  /scale[1], w, h)
-        
         
         self.updateMatrix()
         self.sigScaleChanged.emit(self)
@@ -323,11 +318,18 @@ class GraphicsView(QtGui.QGraphicsView):
         GraphicsView.setRange(self, r1, padding=[0, padding], propagate=False)
         
     def wheelEvent(self, ev):
-        QtGui.QGraphicsView.wheelEvent(self, ev)
+        super().wheelEvent(ev)
         if not self.mouseEnabled:
-            ev.ignore()
             return
-        sc = 1.001 ** ev.delta()
+        delta = 0
+        if QT_LIB in ['PyQt4', 'PySide']:
+            delta = ev.delta()
+        else:
+            delta = ev.angleDelta().x()
+            if delta == 0:
+                delta = ev.angleDelta().y()
+                
+        sc = 1.001 ** delta
         #self.scale *= sc
         #self.updateMatrix()
         self.scale(sc, sc)
@@ -339,20 +341,21 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scene().leaveEvent(ev)  ## inform scene when mouse leaves
         
     def mousePressEvent(self, ev):
-        QtGui.QGraphicsView.mousePressEvent(self, ev)
+        super().mousePressEvent(ev)
         
 
         if not self.mouseEnabled:
             return
-        self.lastMousePos = Point(ev.pos())
-        self.mousePressPos = ev.pos()
+        lpos = ev.localPos()
+        self.lastMousePos = lpos
+        self.mousePressPos = lpos
         self.clickAccepted = ev.isAccepted()
         if not self.clickAccepted:
             self.scene().clearSelection()
         return   ## Everything below disabled for now..
         
     def mouseReleaseEvent(self, ev):
-        QtGui.QGraphicsView.mouseReleaseEvent(self, ev)
+        super().mouseReleaseEvent(ev)
         if not self.mouseEnabled:
             return 
         self.sigMouseReleased.emit(ev)
@@ -360,15 +363,16 @@ class GraphicsView(QtGui.QGraphicsView):
         return   ## Everything below disabled for now..
         
     def mouseMoveEvent(self, ev):
+        lpos = ev.localPos()
         if self.lastMousePos is None:
-            self.lastMousePos = Point(ev.pos())
-        delta = Point(ev.pos() - self.lastMousePos)
-        self.lastMousePos = Point(ev.pos())
+            self.lastMousePos = lpos
+        delta = Point(lpos - self.lastMousePos)
+        self.lastMousePos = lpos
 
-        QtGui.QGraphicsView.mouseMoveEvent(self, ev)
+        super().mouseMoveEvent(ev)
         if not self.mouseEnabled:
             return
-        self.sigSceneMouseMoved.emit(self.mapToScene(ev.pos()))
+        self.sigSceneMouseMoved.emit(self.mapToScene(lpos))
             
         if self.clickAccepted:  ## Ignore event if an item in the scene has already claimed it.
             return
@@ -379,7 +383,7 @@ class GraphicsView(QtGui.QGraphicsView):
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
 
-        elif ev.buttons() in [QtCore.Qt.MidButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
+        elif ev.buttons() in [QtCore.Qt.MiddleButton, QtCore.Qt.LeftButton]:  ## Allow panning by left or mid button.
             px = self.pixelSize()
             tr = -delta * px
             
@@ -397,5 +401,3 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
-        
-

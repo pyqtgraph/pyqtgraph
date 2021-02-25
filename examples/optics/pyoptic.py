@@ -110,7 +110,11 @@ class ParamObj(object):
 
     def __getitem__(self, item):
         # bug in pyside 1.2.2 causes getitem to be called inside QGraphicsObject.parentItem:
-        return self.getParam(item)  # PySide bug: https://bugreports.qt.io/browse/PYSIDE-441
+        return self.getParam(item)  # PySide bug: https://bugreports.qt.io/browse/PYSIDE-671
+    
+    def __len__(self):
+        # Workaround for PySide bug: https://bugreports.qt.io/browse/PYSIDE-671
+        return 0
 
     def getParam(self, param):
         return self.__params[param]
@@ -143,10 +147,9 @@ class Optic(pg.GraphicsObject, ParamObj):
         self.setParams(**defaults)
         
     def updateTransform(self):
-        self.resetTransform()
         self.setPos(0, 0)
-        self.translate(Point(self['pos']))
-        self.rotate(self['angle'])
+        tr = QtGui.QTransform()
+        self.setTransform(tr.translate(Point(self['pos'])).rotate(self['angle']))
         
     def setParam(self, param, val):
         ParamObj.setParam(self, param, val)
@@ -156,7 +159,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         # Move graphics item
         self.gitem.setPos(Point(self['pos']))
         self.gitem.resetTransform()
-        self.gitem.rotate(self['angle'])
+        self.gitem.setRotation(self['angle'])
         
         # Move ROI to match
         try:
@@ -175,7 +178,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         pos = self.roi.pos()
         # rotate gitem temporarily so we can decide where it will need to move
         self.gitem.resetTransform()
-        self.gitem.rotate(self.roi.angle())
+        self.gitem.setRotation(self.roi.angle())
         br = self.gitem.boundingRect()
         o1 = self.gitem.mapToParent(br.topLeft())
         self.setParams(angle=self.roi.angle(), pos=pos + (self.gitem.pos() - o1))
@@ -235,35 +238,21 @@ class Lens(Optic):
         N must already be normalized in order to achieve the
         desired result.
         """
-
-
-
         iors = [self.ior(ray['wl']), 1.0]
         for i in [0,1]:
             surface = self.surfaces[i]
             ior = iors[i]
             p1, ai = surface.intersectRay(ray)
-            #print "surface intersection:", p1, ai*180/3.14159
-            #trans = self.sceneTransform().inverted()[0] * surface.sceneTransform()
-            #p1 = trans.map(p1)
             if p1 is None:
                 ray.setEnd(None)
                 break
             p1 = surface.mapToItem(ray, p1)
             
-            #print "adjusted position:", p1
-            #ior = self.ior(ray['wl'])
             rd = ray['dir']
             a1 = np.arctan2(rd[1], rd[0])
             ar = a1 - ai + np.arcsin((np.sin(ai) * ray['ior'] / ior))
-            #print [x for x in [a1, ai, (np.sin(ai) * ray['ior'] / ior), ar]]
-            #print ai, np.sin(ai), ray['ior'],  ior
             ray.setEnd(p1)
             dp = Point(np.cos(ar), np.sin(ar))
-            #p2 = p1+dp
-            #p1p = self.mapToScene(p1)
-            #p2p = self.mapToScene(p2)
-            #dpp = Point(p2p-p1p)
             ray = Ray(parent=ray, ior=ior, dir=dp)
         return [ray]
         
@@ -384,20 +373,12 @@ class CircleSurface(pg.GraphicsObject):
         else:
             ## half-height of surface can't be larger than radius
             h2 = min(h2, abs(r))
-            
-            #dx = abs(r) - (abs(r)**2 - abs(h2)**2)**0.5
-            #p.moveTo(-d*w/2.+ d*dx, d*h2)
             arc = QtCore.QRectF(0, -r, r*2, r*2)
-            #self.surfaces.append((arc.center(), r, h2))
             a1 = np.arcsin(h2/r) * 180. / np.pi
             a2 = -2*a1
             a1 += 180.
             self.path.arcMoveTo(arc, a1)
             self.path.arcTo(arc, a1, a2)
-            #if d == -1:
-                #p1 = QtGui.QPainterPath()
-                #p1.addRect(arc)
-                #self.paths.append(p1)
         self.h2 = h2
         
     def boundingRect(self):
@@ -405,8 +386,6 @@ class CircleSurface(pg.GraphicsObject):
         
     def paint(self, p, *args):
         return  ## usually we let the optic draw.
-        #p.setPen(pg.mkPen('r'))
-        #p.drawPath(self.path)
             
     def intersectRay(self, ray):
         ## return the point of intersection and the angle of incidence
@@ -527,7 +506,6 @@ class Ray(pg.GraphicsObject, ParamObj):
             p2 = trans.map(pos + dir)
             return Point(p1), Point(p2-p1)
             
-            
     def setEnd(self, end):
         self['end'] = end
         self.mkPath()
@@ -560,6 +538,7 @@ def trace(rays, optics):
         o = optics[0]
         r2 = o.propagateRay(r)
         trace(r2, optics[1:])
+
 
 class Tracer(QtCore.QObject):
     """

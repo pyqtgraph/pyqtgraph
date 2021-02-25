@@ -49,7 +49,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph"))
 
 from ..widgets.DataTreeWidget import DataTreeWidget
 from ..flowchart.FlowchartGraphicsView import FlowchartGraphicsView

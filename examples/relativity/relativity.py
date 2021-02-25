@@ -131,7 +131,7 @@ class RelativityGUI(QtGui.QWidget):
     def setAnimation(self, a):
         if a:
             self.lastAnimTime = pg.ptime.time()
-            self.animTimer.start(self.animDt*1000)
+            self.animTimer.start(int(self.animDt*1000))
         else:
             self.animTimer.stop()
             
@@ -159,17 +159,21 @@ class RelativityGUI(QtGui.QWidget):
         self.setAnimation(self.params['Animate'])
         
     def save(self):
-        fn = str(pg.QtGui.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)"))
-        if fn == '':
+        filename = pg.QtGui.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
+        if isinstance(filename, tuple):
+            filename = filename[0]  # Qt4/5 API difference
+        if filename == '':
             return
         state = self.params.saveState()
-        pg.configfile.writeConfigFile(state, fn) 
+        pg.configfile.writeConfigFile(state, str(filename)) 
         
     def load(self):
-        fn = str(pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)"))
-        if fn == '':
+        filename = pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
+        if isinstance(filename, tuple):
+            filename = filename[0]  # Qt4/5 API difference
+        if filename == '':
             return
-        state = pg.configfile.readConfigFile(fn) 
+        state = pg.configfile.readConfigFile(str(filename)) 
         self.loadState(state)
         
     def loadPreset(self, param, preset):
@@ -650,15 +654,6 @@ class Animation(pg.ItemGroup):
             item = ClockItem(cl)
             self.addItem(item)
             self.items[name] = item
-            
-        #self.timer = timer
-        #self.timer.timeout.connect(self.step)
-        
-    #def run(self, run):
-        #if not run:
-            #self.timer.stop()
-        #else:
-            #self.timer.start(self.dt)
         
     def restart(self):
         for cl in self.items.values():
@@ -674,7 +669,8 @@ class ClockItem(pg.ItemGroup):
         pg.ItemGroup.__init__(self)
         self.size = clock.size
         self.item = QtGui.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
-        self.item.translate(-self.size*0.5, -self.size*0.5)
+        tr = QtGui.QTransform.fromTranslate(-self.size*0.5, -self.size*0.5)
+        self.item.setTransform(tr)
         self.item.setPen(pg.mkPen(100,100,100))
         self.item.setBrush(clock.brush)
         self.hand = QtGui.QGraphicsLineItem(0, 0, 0, self.size*0.5)
@@ -718,19 +714,19 @@ class ClockItem(pg.ItemGroup):
         t = data['pt'][self.i]
         self.hand.setRotation(-0.25 * t * 360.)
         
-        self.resetTransform()
         v = data['v'][self.i]
         gam = (1.0 - v**2)**0.5
-        self.scale(gam, 1.0)
+        self.setTransform(QtGui.QTransform.fromScale(gam, 1.0))
         
         f = data['f'][self.i]
-        self.flare.resetTransform()
+        tr = QtGui.QTransform()
         if f < 0:
-            self.flare.translate(self.size*0.4, 0)
+            tr.translate(self.size*0.4, 0)
         else:
-            self.flare.translate(-self.size*0.4, 0)
+            tr.translate(-self.size*0.4, 0)
         
-        self.flare.scale(-f * (0.5+np.random.random()*0.1), 1.0)
+        tr.scale(-f * (0.5+np.random.random()*0.1), 1.0)
+        self.flare.setTransform(tr)
         
         if self._spaceline is not None:
             self._spaceline.setPos(pg.Point(data['x'][self.i], data['t'][self.i]))

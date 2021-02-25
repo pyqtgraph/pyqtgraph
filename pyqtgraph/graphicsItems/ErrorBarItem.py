@@ -2,6 +2,7 @@ from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 from .. import getConfigOption
 from .. import functions as fn
+import numpy as np
 
 __all__ = ['ErrorBarItem']
 
@@ -23,6 +24,7 @@ class ErrorBarItem(GraphicsObject):
             beam=None,
             pen=None
         )
+        self.setVisible(False)
         self.setData(**opts)
 
     def setData(self, **opts):
@@ -45,6 +47,7 @@ class ErrorBarItem(GraphicsObject):
         This method was added in version 0.9.9. For prior versions, use setOpts.
         """
         self.opts.update(opts)
+        self.setVisible(all(self.opts[ax] is not None for ax in ['x', 'y']))
         self.path = None
         self.update()
         self.prepareGeometryChange()
@@ -59,10 +62,10 @@ class ErrorBarItem(GraphicsObject):
         
         x, y = self.opts['x'], self.opts['y']
         if x is None or y is None:
+            self.path = p
             return
         
         beam = self.opts['beam']
-        
         
         height, top, bottom = self.opts['height'], self.opts['top'], self.opts['bottom']
         if height is not None or top is not None or bottom is not None:
@@ -79,23 +82,27 @@ class ErrorBarItem(GraphicsObject):
                     y2 = y
                 else:
                     y2 = y + top
-            
-            for i in range(len(x)):
-                p.moveTo(x[i], y1[i])
-                p.lineTo(x[i], y2[i])
-                
+
+            xs = fn.interweaveArrays(x, x)
+            y1_y2 = fn.interweaveArrays(y1, y2)
+            verticalLines = fn.arrayToQPath(xs, y1_y2, connect="pairs")
+            p.addPath(verticalLines)
+
             if beam is not None and beam > 0:
                 x1 = x - beam/2.
                 x2 = x + beam/2.
+
+                x1_x2 = fn.interweaveArrays(x1, x2)
                 if height is not None or top is not None:
-                    for i in range(len(x)):
-                        p.moveTo(x1[i], y2[i])
-                        p.lineTo(x2[i], y2[i])
+                    y2s = fn.interweaveArrays(y2, y2)
+                    topEnds = fn.arrayToQPath(x1_x2, y2s, connect="pairs")
+                    p.addPath(topEnds)
+
                 if height is not None or bottom is not None:
-                    for i in range(len(x)):
-                        p.moveTo(x1[i], y1[i])
-                        p.lineTo(x2[i], y1[i])
-        
+                    y1s = fn.interweaveArrays(y1, y1)
+                    bottomEnds = fn.arrayToQPath(x1_x2, y1s, connect="pairs")
+                    p.addPath(bottomEnds)
+
         width, right, left = self.opts['width'], self.opts['right'], self.opts['left']
         if width is not None or right is not None or left is not None:
             ## draw vertical error bars
@@ -112,21 +119,24 @@ class ErrorBarItem(GraphicsObject):
                 else:
                     x2 = x + right
             
-            for i in range(len(x)):
-                p.moveTo(x1[i], y[i])
-                p.lineTo(x2[i], y[i])
-                
+            ys = fn.interweaveArrays(y, y)
+            x1_x2 = fn.interweaveArrays(x1, x2)
+            ends = fn.arrayToQPath(x1_x2, ys, connect='pairs')
+            p.addPath(ends)
+
             if beam is not None and beam > 0:
                 y1 = y - beam/2.
                 y2 = y + beam/2.
+                y1_y2 = fn.interweaveArrays(y1, y2)
                 if width is not None or right is not None:
-                    for i in range(len(x)):
-                        p.moveTo(x2[i], y1[i])
-                        p.lineTo(x2[i], y2[i])
+                    x2s = fn.interweaveArrays(x2, x2)
+                    rightEnds = fn.arrayToQPath(x2s, y1_y2, connect="pairs")
+                    p.addPath(rightEnds)
+
                 if width is not None or left is not None:
-                    for i in range(len(x)):
-                        p.moveTo(x1[i], y1[i])
-                        p.lineTo(x1[i], y2[i])
+                    x1s = fn.interweaveArrays(x1, x1)
+                    leftEnds = fn.arrayToQPath(x1s, y1_y2, connect="pairs")
+                    p.addPath(leftEnds)
                     
         self.path = p
         self.prepareGeometryChange()

@@ -45,12 +45,13 @@ Examples
 --------
 
 PyQtGraph includes an extensive set of examples that can be accessed by
-running::
+running either ``python -m pyqtgraph.examples`` [#editableInstall]_ or ::
 
     import pyqtgraph.examples
     pyqtgraph.examples.run()
 
-Or by running ``python examples/`` from the source root.
+Or, if the project repository is local, you can run``python examples/`` from
+the source root.
 
 This will start a launcher with a list of available examples. Select an item
 from the list to view its source code and double-click an item to run the
@@ -73,7 +74,7 @@ How does it compare to...
   such as image interaction, volumetric rendering, parameter trees,
   flowcharts, etc.
 
-* pyqwt5: About as fast as pyqwt5, but not quite as complete for plotting
+* pyqwt5: About as fast as pyqtgraph, but not quite as complete for plotting
   functionality. Image handling in pyqtgraph is much more complete (again, no
   ROI widgets in qwt). Also, pyqtgraph is written in pure python, so it is
   more portable than pyqwt, which often lags behind pyqt in development (I
@@ -84,3 +85,8 @@ How does it compare to...
 
 (My experience with these libraries is somewhat outdated; please correct me if
 I am wrong here)
+
+
+.. rubric:: Footnotes
+
+.. [#editableInstall] This method does not work when pyqtgraph is installed in editable mode.

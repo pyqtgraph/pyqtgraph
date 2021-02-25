@@ -4,13 +4,13 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.10.0'
+__version__ = '0.11.1.dev0'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
-from .Qt import QtGui
+from .Qt import QtGui, mkQApp
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -29,9 +29,6 @@ if sys.version_info[0] < 2 or (sys.version_info[0] == 2 and sys.version_info[1] 
 ## helpers for 2/3 compatibility
 from . import python2_3
 
-## install workarounds for numpy bugs
-from . import numpy_fix
-
 ## in general openGL is poorly supported with Qt+GraphicsView.
 ## we only enable it where the performance benefit is critical.
 ## Note this only applies to 2D graphics; 3D graphics always use OpenGL.
@@ -40,9 +37,7 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
     if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
-    if QtGui.QApplication.setGraphicsSystem:
-        QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
+        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -59,15 +54,16 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
+    'mouseRateLimit': 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
     'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.
                                  # For 'col-major', image data is expected in reversed (col, row) order.
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
+    'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
 } 
 
 
 def setConfigOption(opt, value):
-    global CONFIG_OPTIONS
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
@@ -99,7 +95,8 @@ def systemInfo():
     if __version__ is None:  ## this code was probably checked out from bzr; look up the last-revision file
         lastRevFile = os.path.join(os.path.dirname(__file__), '..', '.bzr', 'branch', 'last-revision')
         if os.path.exists(lastRevFile):
-            rev = open(lastRevFile, 'r').read().strip()
+            with open(lastRevFile, 'r') as fd:
+                rev = fd.read().strip()
     
     print("pyqtgraph: %s; %s" % (__version__, rev))
     print("config:")
@@ -221,7 +218,9 @@ from .graphicsItems.BarGraphItem import *
 from .graphicsItems.ViewBox import * 
 from .graphicsItems.ArrowItem import * 
 from .graphicsItems.ImageItem import * 
+from .graphicsItems.PColorMeshItem import * 
 from .graphicsItems.AxisItem import * 
+from .graphicsItems.DateAxisItem import *
 from .graphicsItems.LabelItem import * 
 from .graphicsItems.CurvePoint import * 
 from .graphicsItems.GraphicsWidgetAnchor import * 
@@ -258,11 +257,13 @@ from .widgets.VerticalLabel import *
 from .widgets.FeedbackButton import * 
 from .widgets.ColorButton import * 
 from .widgets.DataTreeWidget import * 
+from .widgets.DiffTreeWidget import * 
 from .widgets.GraphicsView import * 
 from .widgets.LayoutWidget import * 
 from .widgets.TableWidget import * 
 from .widgets.ProgressDialog import *
 from .widgets.GroupBox import GroupBox
+from .widgets.RemoteGraphicsView import RemoteGraphicsView
 
 from .imageview import *
 from .WidgetGroup import *
@@ -277,6 +278,7 @@ from .SignalProxy import *
 from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
+from .ThreadsafeTimer import *
 
 
 ##############################################################
@@ -320,7 +322,7 @@ def cleanup():
                         'are properly called before app shutdown (%s)\n' % (o,))
                 
                 s.addItem(o)
-        except RuntimeError:  ## occurs if a python wrapper no longer has its underlying C++ object
+        except (RuntimeError, ReferenceError):  ## occurs if a python wrapper no longer has its underlying C++ object
             continue
     _cleanupCalled = True
 
@@ -368,37 +370,30 @@ def exit():
     ## close file handles
     if sys.platform == 'darwin':
         for fd in range(3, 4096):
-            if fd not in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+            if fd in [7]:  # trying to close 7 produces an illegal instruction on the Mac.
+                continue
+            try:
                 os.close(fd)
+            except OSError:
+                pass
     else:
         os.closerange(3, 4096) ## just guessing on the maximum descriptor count..
 
     os._exit(0)
     
 
-
 ## Convenience functions for command-line use
-
 plots = []
 images = []
 QAPP = None
 
 def plot(*args, **kargs):
     """
-    Create and return a :class:`PlotWindow <pyqtgraph.PlotWindow>` 
-    (this is just a window with :class:`PlotWidget <pyqtgraph.PlotWidget>` inside), plot data in it.
+    Create and return a :class:`PlotWidget <pyqtgraph.PlotWinPlotWidgetdow>` 
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to plot data. (see :func:`PlotItem.plot() <pyqtgraph.PlotItem.plot>`)
     """
     mkQApp()
-    #if 'title' in kargs:
-        #w = PlotWindow(title=kargs['title'])
-        #del kargs['title']
-    #else:
-        #w = PlotWindow()
-    #if len(args)+len(kargs) > 0:
-        #w.plot(*args, **kargs)
-        
     pwArgList = ['title', 'labels', 'name', 'left', 'right', 'top', 'bottom', 'background']
     pwArgs = {}
     dataArgs = {}
@@ -407,28 +402,32 @@ def plot(*args, **kargs):
             pwArgs[k] = kargs[k]
         else:
             dataArgs[k] = kargs[k]
-        
-    w = PlotWindow(**pwArgs)
+    windowTitle = pwArgs.pop("title", "PlotWidget")
+    w = PlotWidget(**pwArgs)
+    w.setWindowTitle(windowTitle)
     if len(args) > 0 or len(dataArgs) > 0:
         w.plot(*args, **dataArgs)
     plots.append(w)
     w.show()
     return w
-    
+
 def image(*args, **kargs):
     """
-    Create and return an :class:`ImageWindow <pyqtgraph.ImageWindow>` 
-    (this is just a window with :class:`ImageView <pyqtgraph.ImageView>` widget inside), show image data inside.
+    Create and return an :class:`ImageView <pyqtgraph.ImageView>` 
     Will show 2D or 3D image data.
     Accepts a *title* argument to set the title of the window.
     All other arguments are used to show data. (see :func:`ImageView.setImage() <pyqtgraph.ImageView.setImage>`)
     """
     mkQApp()
-    w = ImageWindow(*args, **kargs)
+    w = ImageView()
+    windowTitle = kargs.pop("title", "ImageView")
+    w.setWindowTitle(windowTitle)
+    w.setImage(*args, **kargs)
     images.append(w)
     w.show()
     return w
 show = image  ## for backward compatibility
+
 
 def dbg(*args, **kwds):
     """
@@ -447,14 +446,22 @@ def dbg(*args, **kwds):
     except NameError:
         consoles = [c]
     return c
+
+
+def stack(*args, **kwds):
+    """
+    Create a console window and show the current stack trace.
     
-    
-def mkQApp():
-    global QAPP
-    inst = QtGui.QApplication.instance()
-    if inst is None:
-        QAPP = QtGui.QApplication([])
-    else:
-        QAPP = inst
-    return QAPP
-        
+    All arguments are passed to :func:`ConsoleWidget.__init__() <pyqtgraph.console.ConsoleWidget.__init__>`.
+    """
+    mkQApp()
+    from . import console
+    c = console.ConsoleWidget(*args, **kwds)
+    c.setStack()
+    c.show()
+    global consoles
+    try:
+        consoles.append(c)
+    except NameError:
+        consoles = [c]
+    return c

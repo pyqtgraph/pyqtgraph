@@ -2,7 +2,7 @@
 """
 advancedTypes.py - Basic data structures not included with python 
 Copyright 2010  Luke Campagnola
-Distributed under MIT/X11 license. See license.txt for more infomation.
+Distributed under MIT/X11 license. See license.txt for more information.
 
 Includes:
   - OrderedDict - Dictionary which preserves the order of its elements
@@ -10,15 +10,24 @@ Includes:
   - ThreadsafeDict, ThreadsafeList - Self-mutexed data structures
 """
 
-import threading, sys, copy, collections
-#from debug import *
+import warnings
+warnings.warn(
+    "None of these are used in pyqtgraph. Will be removed in 0.13",
+    DeprecationWarning, stacklevel=2
+)
+
+import threading
+import sys
+import copy
+
+from collections import OrderedDict
 
 try:
-    from collections import OrderedDict
+    from collections.abc import Sequence
 except ImportError:
-    # fallback: try to use the ordereddict backport when using python 2.6
-    from ordereddict import OrderedDict
-        
+    # fallback for python < 3.3
+    from collections import Sequence
+
 
 class ReverseDict(dict):
     """extends dict so that reverse lookups are possible by requesting the key as a list of length 1:
@@ -239,7 +248,7 @@ class CaselessDict(OrderedDict):
         return key.lower() in self.keyMap
     
     def update(self, d):
-        for k, v in d.iteritems():
+        for k, v in d.items():
             self[k] = v
             
     def copy(self):
@@ -311,11 +320,11 @@ class ProtectedDict(dict):
         raise Exception("It is not safe to copy protected dicts! (instead try deepcopy, but be careful.)")
     
     def itervalues(self):
-        for v in self._data_.itervalues():
+        for v in self._data_.values():
             yield protect(v)
         
     def iteritems(self):
-        for k, v in self._data_.iteritems():
+        for k, v in self._data_.items():
             yield (k, protect(v))
         
     def deepcopy(self):
@@ -326,7 +335,7 @@ class ProtectedDict(dict):
 
 
             
-class ProtectedList(collections.Sequence):
+class ProtectedList(Sequence):
     """
     A class allowing read-only 'view' of a list or dict. 
     The object can be treated like a normal list, but will never modify the original list it points to.
@@ -408,7 +417,7 @@ class ProtectedList(collections.Sequence):
         raise Exception("This is a list. It does not poop.")
 
 
-class ProtectedTuple(collections.Sequence):
+class ProtectedTuple(Sequence):
     """
     A class allowing read-only 'view' of a tuple.
     The object can be treated like a normal tuple, but its contents will be returned as protected objects.

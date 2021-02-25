@@ -11,12 +11,11 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-#QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
+app = pg.mkQApp("Plot Auto Range Example")
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
-win = pg.GraphicsWindow(title="Plot auto-range examples")
+win = pg.GraphicsLayoutWidget(show=True, title="Plot auto-range examples")
 win.resize(800,600)
 win.setWindowTitle('pyqtgraph example: PlotAutoRange')
 

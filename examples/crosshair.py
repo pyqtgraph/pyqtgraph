@@ -12,8 +12,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
 
 #generate layout
-app = QtGui.QApplication([])
-win = pg.GraphicsWindow()
+app = pg.mkQApp("Crosshair Example")
+win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: crosshair')
 label = pg.LabelItem(justify='right')
 win.addItem(label)

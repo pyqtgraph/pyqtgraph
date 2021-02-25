@@ -2,12 +2,13 @@
 
 # Form implementation generated from reading ui file 'exampleLoaderTemplate.ui'
 #
-# Created: Sat Feb 28 10:28:50 2015
-#      by: PyQt5 UI code generator 5.2.1
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -28,23 +29,14 @@ class Ui_Form(object):
         self.exampleTree.headerItem().setText(0, "1")
         self.exampleTree.header().setVisible(False)
         self.gridLayout.addWidget(self.exampleTree, 0, 0, 1, 2)
-        self.graphicsSystemCombo = QtWidgets.QComboBox(self.widget)
-        self.graphicsSystemCombo.setObjectName("graphicsSystemCombo")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.graphicsSystemCombo.addItem("")
-        self.gridLayout.addWidget(self.graphicsSystemCombo, 2, 1, 1, 1)
         self.qtLibCombo = QtWidgets.QComboBox(self.widget)
         self.qtLibCombo.setObjectName("qtLibCombo")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
         self.qtLibCombo.addItem("")
+        self.qtLibCombo.addItem("")
         self.gridLayout.addWidget(self.qtLibCombo, 1, 1, 1, 1)
-        self.label_2 = QtWidgets.QLabel(self.widget)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
         self.label = QtWidgets.QLabel(self.widget)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
@@ -59,7 +51,6 @@ class Ui_Form(object):
         self.loadedFileLabel = QtWidgets.QLabel(self.widget1)
         font = QtGui.QFont()
         font.setBold(True)
-        font.setWeight(75)
         self.loadedFileLabel.setFont(font)
         self.loadedFileLabel.setText("")
         self.loadedFileLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -67,7 +58,7 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.loadedFileLabel)
         self.codeView = QtWidgets.QPlainTextEdit(self.widget1)
         font = QtGui.QFont()
-        font.setFamily("FreeMono")
+        font.setFamily("Courier New")
         self.codeView.setFont(font)
         self.codeView.setObjectName("codeView")
         self.verticalLayout.addWidget(self.codeView)
@@ -78,16 +69,11 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
-        self.graphicsSystemCombo.setItemText(0, _translate("Form", "default"))
-        self.graphicsSystemCombo.setItemText(1, _translate("Form", "native"))
-        self.graphicsSystemCombo.setItemText(2, _translate("Form", "raster"))
-        self.graphicsSystemCombo.setItemText(3, _translate("Form", "opengl"))
+        Form.setWindowTitle(_translate("Form", "PyQtGraph"))
         self.qtLibCombo.setItemText(0, _translate("Form", "default"))
-        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt4"))
-        self.qtLibCombo.setItemText(2, _translate("Form", "PySide"))
-        self.qtLibCombo.setItemText(3, _translate("Form", "PyQt5"))
-        self.label_2.setText(_translate("Form", "Graphics System:"))
+        self.qtLibCombo.setItemText(1, _translate("Form", "PyQt5"))
+        self.qtLibCombo.setItemText(2, _translate("Form", "PySide2"))
+        self.qtLibCombo.setItemText(3, _translate("Form", "PySide6"))
+        self.qtLibCombo.setItemText(4, _translate("Form", "PyQt6"))
         self.label.setText(_translate("Form", "Qt Library:"))
         self.loadBtn.setText(_translate("Form", "Run Example"))
-

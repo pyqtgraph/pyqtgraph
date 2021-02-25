@@ -44,8 +44,8 @@ def test_types():
     tree.setParameters(param)
 
     all_objs = {
-        'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float(5), 
-        'npint': np.int(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
+        'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float64(5), 
+        'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
         'complex': 5+3j, 'str': 'xxx', 'unicode': asUnicode('µ'), 
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
@@ -127,8 +127,41 @@ def check_param_types(param, types, map_func, init, objs, keys):
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
         
-        
-    
-    
-    
-    
+def test_limits_enforcement():
+    p = pt.Parameter.create(name='params', type='group', children=[
+        dict(name='float', type='float', limits=[0, 1]),
+        dict(name='int', type='int', bounds=[0, 1]),
+        dict(name='list', type='list', values=['x', 'y']),
+        dict(name='dict', type='list', values={'x': 1, 'y': 2}),
+    ])
+    t = pt.ParameterTree()
+    t.setParameters(p)
+    for k, vin, vout in [('float', -1, 0),
+                         ('float',  2, 1),
+                         ('int',   -1, 0),
+                         ('int',    2, 1),
+                         ('list',   'w', 'x'),
+                         ('dict',   'w', 1)]:
+        p[k] = vin
+        assert p[k] == vout
+
+
+def test_data_race():
+    # Ensure widgets don't override user setting of param values whether
+    # they connect the signal before or after it's added to a tree
+    p = pt.Parameter.create(name='int', type='int', value=0)
+    t = pt.ParameterTree()
+
+    def override():
+        p.setValue(1)
+
+    p.sigValueChanged.connect(override)
+    t.setParameters(p)
+    pi = next(iter(p.items))
+    assert pi.param is p
+    pi.widget.setValue(2)
+    assert p.value() == pi.widget.value() == 1
+    p.sigValueChanged.disconnect(override)
+    p.sigValueChanged.connect(override)
+    pi.widget.setValue(2)
+    assert p.value() == pi.widget.value() == 1

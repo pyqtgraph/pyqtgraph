@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
 from ..graphicsItems.GraphicsObject import GraphicsObject
 from .. import functions as fn
 from ..Point import Point
 
+translate = QtCore.QCoreApplication.translate
 
 class Terminal(object):
     def __init__(self, node, name, io, optional=False, multi=False, pos=None, renamable=False, removable=False, multiable=False, bypass=None):
@@ -267,6 +268,30 @@ class Terminal(object):
     def saveState(self):
         return {'io': self._io, 'multi': self._multi, 'optional': self._optional, 'renamable': self._renamable, 'removable': self._removable, 'multiable': self._multiable}
 
+    def __lt__(self, other):
+        """When the terminal is multi value, the data passed to the DatTreeWidget for each input or output, is {Terminal: value}.
+        To make this sortable, we provide the < operator.
+        """
+        return self._name < other._name
+
+
+class TextItem(QtWidgets.QGraphicsTextItem):
+    def __init__(self, text, parent, on_update):
+        super().__init__(text, parent)
+        self.on_update = on_update
+
+    def focusOutEvent(self, ev):
+        super().focusOutEvent(ev)
+        if self.on_update is not None:
+            self.on_update()
+
+    def keyPressEvent(self, ev):
+        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
+            if self.on_update is not None:
+                self.on_update()
+                return
+        super().keyPressEvent(ev)
+
 
 class TerminalGraphicsItem(GraphicsObject):
     
@@ -275,27 +300,16 @@ class TerminalGraphicsItem(GraphicsObject):
         GraphicsObject.__init__(self, parent)
         self.brush = fn.mkBrush(0,0,0)
         self.box = QtGui.QGraphicsRectItem(0, 0, 10, 10, self)
-        self.label = QtGui.QGraphicsTextItem(self.term.name(), self)
-        self.label.scale(0.7, 0.7)
+        on_update = self.labelChanged if self.term.isRenamable() else None
+        self.label = TextItem(self.term.name(), self, on_update)
+        self.label.setScale(0.7)
         self.newConnection = None
         self.setFiltersChildEvents(True)  ## to pick up mouse events on the rectitem
         if self.term.isRenamable():
             self.label.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
-            self.label.focusOutEvent = self.labelFocusOut
-            self.label.keyPressEvent = self.labelKeyPress
         self.setZValue(1)
         self.menu = None
 
-    def labelFocusOut(self, ev):
-        QtGui.QGraphicsTextItem.focusOutEvent(self.label, ev)
-        self.labelChanged()
-        
-    def labelKeyPress(self, ev):
-        if ev.key() == QtCore.Qt.Key_Enter or ev.key() == QtCore.Qt.Key_Return:
-            self.labelChanged()
-        else:
-            QtGui.QGraphicsTextItem.keyPressEvent(self.label, ev)
-        
     def labelChanged(self):
         newName = str(self.label.toPlainText())
         if newName != self.term.name():
@@ -360,14 +374,14 @@ class TerminalGraphicsItem(GraphicsObject):
     def getMenu(self):
         if self.menu is None:
             self.menu = QtGui.QMenu()
-            self.menu.setTitle("Terminal")
-            remAct = QtGui.QAction("Remove terminal", self.menu)
+            self.menu.setTitle(translate("Context Menu", "Terminal"))
+            remAct = QtGui.QAction(translate("Context Menu", "Remove terminal"), self.menu)
             remAct.triggered.connect(self.removeSelf)
             self.menu.addAction(remAct)
             self.menu.remAct = remAct
             if not self.term.isRemovable():
                 remAct.setEnabled(False)
-            multiAct = QtGui.QAction("Multi-value", self.menu)
+            multiAct = QtGui.QAction(translate("Context Menu", "Multi-value"), self.menu)
             multiAct.setCheckable(True)
             multiAct.setChecked(self.term.isMultiValue())
             multiAct.setEnabled(self.term.isMultiable())

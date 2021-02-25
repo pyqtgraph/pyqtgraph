@@ -2,6 +2,7 @@ files = """ArrowItem
 AxisItem
 ButtonItem
 CurvePoint
+DateAxisItem
 GradientEditorItem
 GradientLegend
 GraphicsLayout
@@ -10,6 +11,7 @@ GraphicsWidget
 GridItem
 HistogramLUTItem
 ImageItem
+PColorMeshItem
 InfiniteLine
 LabelItem
 LinearRegionItem

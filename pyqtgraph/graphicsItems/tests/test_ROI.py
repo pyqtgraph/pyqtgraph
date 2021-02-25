@@ -1,12 +1,14 @@
+# -*- coding: utf-8 -*-
+import sys
 import numpy as np
 import pytest
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtTest
+from pyqtgraph.Qt import QtCore, QtGui, QtTest
 from pyqtgraph.tests import assertImageApproved, mouseMove, mouseDrag, mouseClick, TransposedImageItem, resizeWindow
-
+import pytest
 
 app = pg.mkQApp()
-
+pg.setConfigOption("mouseRateLimit", 0)
 
 def test_getArrayRegion(transpose=False):
     pr = pg.PolyLineROI([[0, 0], [27, 0], [0, 28]], closed=True)
@@ -32,7 +34,6 @@ def test_getArrayRegion(transpose=False):
         finally:
             pg.setConfigOptions(imageAxisOrder=origMode)
     
-
 def test_getArrayRegion_axisorder():
     test_getArrayRegion(transpose=True)
 
@@ -121,9 +122,8 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
         app.processEvents()
         assertImageApproved(win, name+'/roi_getarrayregion_resize', 'Simple ROI region selection, resized.')
 
-    img1.scale(1, -1)
     img1.setPos(0, img1.height())
-    img1.rotate(20)
+    img1.setTransform(QtGui.QTransform().scale(1, -1).rotate(20), True)
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
@@ -133,12 +133,16 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
-    assertImageApproved(win, name+'/roi_getarrayregion_inverty', 'Simple ROI region selection, view inverted.')
+    # on windows, one edge of one ROI handle is shifted slightly; letting this slide with pxCount=10
+    if pg.Qt.QT_LIB in {'PyQt4', 'PySide'}:
+        pxCount = 10
+    else:
+        pxCount=-1
+    assertImageApproved(win, name+'/roi_getarrayregion_inverty', 'Simple ROI region selection, view inverted.', pxCount=pxCount)
 
     roi.setState(initState)
-    img1.resetTransform()
     img1.setPos(0, 0)
-    img1.scale(1, 0.5)
+    img1.setTransform(QtGui.QTransform.fromScale(1, 0.5))
     rgn = roi.getArrayRegion(data, img1, axes=(1, 2))
     img2.setImage(rgn[0, ..., 0])
     app.processEvents()
@@ -147,6 +151,7 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
     # allow the roi to be re-used
     roi.scene().removeItem(roi)
 
+    win.hide()
 
 def test_PolyLineROI():
     rois = [
@@ -169,7 +174,7 @@ def test_PolyLineROI():
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
 
     # seemingly arbitrary requirements; might need longer wait time for some platforms..
-    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
     
     for r, name in rois:
@@ -228,5 +233,6 @@ def test_PolyLineROI():
         r.setState(initState)
         assertImageApproved(plt, 'roi/polylineroi/'+name+'_setstate', 'Reset ROI to initial state.')
         assert len(r.getState()['points']) == 3
-        
+    
+    plt.hide()
     

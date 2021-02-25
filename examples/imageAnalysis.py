@@ -21,7 +21,7 @@ win = pg.GraphicsLayoutWidget()
 win.setWindowTitle('pyqtgraph example: Image Analysis')
 
 # A plot area (ViewBox + axes) for displaying the image
-p1 = win.addPlot()
+p1 = win.addPlot(title="")
 
 # Item for displaying image data
 img = pg.ImageItem()
@@ -71,8 +71,8 @@ hist.setLevels(data.min(), data.max())
 iso.setData(pg.gaussianFilter(data, (2, 2)))
 
 # set position and scale of image
-img.scale(0.2, 0.2)
-img.translate(-50, 0)
+tr = QtGui.QTransform()
+img.setTransform(tr.scale(0.2, 0.2).translate(-50, 0))
 
 # zoom to fit imageo
 p1.autoRange()  
@@ -92,6 +92,26 @@ def updateIsocurve():
     iso.setLevel(isoLine.value())
 
 isoLine.sigDragged.connect(updateIsocurve)
+
+def imageHoverEvent(event):
+    """Show the position, pixel, and value under the mouse cursor.
+    """
+    if event.isExit():
+        p1.setTitle("")
+        return
+    pos = event.pos()
+    i, j = pos.y(), pos.x()
+    i = int(np.clip(i, 0, data.shape[0] - 1))
+    j = int(np.clip(j, 0, data.shape[1] - 1))
+    val = data[i, j]
+    ppos = img.mapToParent(pos)
+    x, y = ppos.x(), ppos.y()
+    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %g" % (x, y, i, j, val))
+
+# Monkey-patch the image to use our custom hover function. 
+# This is generally discouraged (you should subclass ImageItem instead),
+# but it works for a very simple use like this. 
+img.hoverEvent = imageHoverEvent
 
 
 ## Start Qt event loop unless running in interactive mode or using pyside.

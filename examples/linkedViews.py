@@ -12,15 +12,14 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-#QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
+app = pg.mkQApp("Linked Views Example")
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
 
 x = np.linspace(-50, 50, 1000)
 y = np.sin(x) / x
 
-win = pg.GraphicsWindow(title="pyqtgraph example: Linked Views")
+win = pg.GraphicsLayoutWidget(show=True, title="pyqtgraph example: Linked Views")
 win.resize(800,600)
 
 win.addLabel("Linked Views", colspan=2)

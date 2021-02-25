@@ -1,7 +1,7 @@
 from ..Qt import QtGui, QtCore
 from .. import parametertree as ptree
 import numpy as np
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from .. import functions as fn
 
 __all__ = ['ColorMapWidget']
@@ -42,6 +42,11 @@ class ColorMapWidget(ptree.ParameterTree):
     def restoreState(self, state):
         self.params.restoreState(state)
         
+    def addColorMap(self, name):
+        """Add a new color mapping and return the created parameter.
+        """
+        return self.params.addNew(name)
+
 
 class ColorMapParameter(ptree.types.GroupParameter):
     sigColorMapChanged = QtCore.Signal(object)
@@ -55,16 +60,34 @@ class ColorMapParameter(ptree.types.GroupParameter):
         self.sigColorMapChanged.emit(self)
         
     def addNew(self, name):
-        mode = self.fields[name].get('mode', 'range')
+        fieldSpec = self.fields[name]
+        
+        mode = fieldSpec.get('mode', 'range')        
         if mode == 'range':
             item = RangeColorMapItem(name, self.fields[name])
         elif mode == 'enum':
             item = EnumColorMapItem(name, self.fields[name])
+
+        defaults = fieldSpec.get('defaults', {})
+        for k, v in defaults.items():
+            if k == 'colormap':
+                if mode == 'range':
+                    item.setValue(v)
+                elif mode == 'enum':
+                    children = item.param('Values').children()
+                    for i, child in enumerate(children):
+                        try:
+                            child.setValue(v[i])
+                        except IndexError('No default color set for child %s' % child.name()):
+                            continue
+            else:
+                item[k] = v
+
         self.addChild(item)
         return item
         
     def fieldNames(self):
-        return self.fields.keys()
+        return list(self.fields.keys())
     
     def setFields(self, fields):
         """
@@ -85,6 +108,11 @@ class ColorMapParameter(ptree.types.GroupParameter):
         values         List of unique values for which the user may assign a 
                        color when mode=='enum'. Optionally may specify a dict 
                        instead {value: name}.
+        defaults       Dict of default values to apply to color map items when
+                       they are created. Valid keys are 'colormap' to provide
+                       a default color map, or otherwise they a string or tuple
+                       indicating the parameter to be set, such as 'Operation' or
+                       ('Channels..', 'Red').
         ============== ============================================================
         """
         self.fields = OrderedDict(fields)
@@ -131,8 +159,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
                 c3[:,3:4] = colors[:,3:4] + (1-colors[:,3:4]) * a
                 colors = c3
             elif op == 'Set':
-                colors[mask] = colors2[mask]
-            
+                colors[mask] = colors2[mask]            
                 
         colors = np.clip(colors, 0, 1)
         if mode == 'byte':
@@ -179,7 +206,7 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
                 dict(name='Enabled', type='bool', value=True),
                 dict(name='NaN', type='color'),
             ])
-    
+
     def map(self, data):
         data = data[self.fieldName]
         

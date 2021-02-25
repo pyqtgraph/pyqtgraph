@@ -10,14 +10,15 @@ except ImportError:
         output = proc.stdout.read()
         proc.wait()
         if proc.returncode != 0:
-            ex = Exception("Process had nonzero return value %d" % proc.returncode)
+            ex = Exception("Process had nonzero return value "
+                           + "%d " % proc.returncode)
             ex.returncode = proc.returncode
             ex.output = output
             raise ex
         return output
 
 # Maximum allowed repository size difference (in kB) following merge.
-# This is used to prevent large files from being inappropriately added to 
+# This is used to prevent large files from being inappropriately added to
 # the repository history.
 MERGE_SIZE_LIMIT = 100
 
@@ -42,19 +43,19 @@ FLAKE_MANDATORY = set([
 
     'E901',  #  SyntaxError or IndentationError
     'E902',  #  IOError
-        
+
     'W191',  #  indentation contains tabs
-        
+
     'W601',  #  .has_key() is deprecated, use ‘in’
     'W602',  #  deprecated form of raising exception
     'W603',  #  ‘<>’ is deprecated, use ‘!=’
-    'W604',  #  backticks are deprecated, use ‘repr()’    
+    'W604',  #  backticks are deprecated, use ‘repr()’
     ])
 
 FLAKE_RECOMMENDED = set([
     'E124',  #  closing bracket does not match visual indentation
     'E231',  #  missing whitespace after ‘,’
-    
+
     'E211',  #  whitespace before ‘(‘
     'E261',  #  at least two spaces before inline comment
     'E271',  #  multiple spaces after keyword
@@ -65,10 +66,10 @@ FLAKE_RECOMMENDED = set([
     'F402',  #  import module from line N shadowed by loop variable
     'F403',  #  ‘from module import *’ used; unable to detect undefined names
     'F404',  #  future import(s) name after other statements
-        
+
     'E501',  #  line too long (82 > 79 characters)
     'E502',  #  the backslash is redundant between brackets
-    
+
     'E702',  #  multiple statements on one line (semicolon)
     'E703',  #  statement ends with a semicolon
     'E711',  #  comparison to None should be ‘if cond is None:’
@@ -82,7 +83,7 @@ FLAKE_RECOMMENDED = set([
     'F823',  #  local variable name ... referenced before assignment
     'F831',  #  duplicate argument name in function definition
     'F841',  #  local variable name is assigned to but never used
-    
+
     'W292',  #  no newline at end of file
 
     ])
@@ -93,7 +94,7 @@ FLAKE_OPTIONAL = set([
     'E126',  #  continuation line over-indented for hanging indent
     'E127',  #  continuation line over-indented for visual indent
     'E128',  #  continuation line under-indented for visual indent
-        
+
     'E201',  #  whitespace after ‘(‘
     'E202',  #  whitespace before ‘)’
     'E203',  #  whitespace before ‘:’
@@ -105,19 +106,19 @@ FLAKE_OPTIONAL = set([
     'E228',  #  missing whitespace around modulo operator
     'E241',  #  multiple spaces after ‘,’
     'E251',  #  unexpected spaces around keyword / parameter equals
-    'E262',  #  inline comment should start with ‘# ‘     
-        
+    'E262',  #  inline comment should start with ‘# ‘
+
     'E301',  #  expected 1 blank line, found 0
     'E302',  #  expected 2 blank lines, found 0
     'E303',  #  too many blank lines (3)
-        
+
     'E401',  #  multiple imports on one line
 
     'E701',  #  multiple statements on one line (colon)
-        
+
     'W291',  #  trailing whitespace
     'W293',  #  blank line contains whitespace
-        
+
     'W391',  #  blank line at end of file
     ])
 
@@ -128,23 +129,10 @@ FLAKE_IGNORE = set([
     ])
 
 
-#def checkStyle():
-    #try:
-        #out = check_output(['flake8', '--select=%s' % FLAKE_TESTS, '--statistics', 'pyqtgraph/'])
-        #ret = 0
-        #print("All style checks OK.")
-    #except Exception as e:
-        #out = e.output
-        #ret = e.returncode
-        #print(out.decode('utf-8'))
-    #return ret
-
-
 def checkStyle():
     """ Run flake8, checking only lines that are modified since the last
     git commit. """
-    test = [ 1,2,3 ]
-    
+
     # First check _all_ code against mandatory error codes
     print('flake8: check all code against mandatory error set...')
     errors = ','.join(FLAKE_MANDATORY)
@@ -154,39 +142,47 @@ def checkStyle():
     output = proc.stdout.read().decode('utf-8')
     ret = proc.wait()
     printFlakeOutput(output)
-    
+
     # Check for DOS newlines
     print('check line endings in all files...')
     count = 0
     allowedEndings = set([None, '\n'])
     for path, dirs, files in os.walk('.'):
+        if path.startswith("." + os.path.sep + ".tox"):
+            continue
         for f in files:
             if os.path.splitext(f)[1] not in ('.py', '.rst'):
                 continue
             filename = os.path.join(path, f)
             fh = open(filename, 'U')
-            x = fh.readlines()
-            endings = set(fh.newlines if isinstance(fh.newlines, tuple) else (fh.newlines,))
+            _ = fh.readlines()
+            endings = set(
+                fh.newlines
+                if isinstance(fh.newlines, tuple)
+                else (fh.newlines,)
+            )
             endings -= allowedEndings
             if len(endings) > 0:
-                print("\033[0;31m" + "File has invalid line endings: %s" % filename + "\033[0m")
+                print("\033[0;31m"
+                      + "File has invalid line endings: "
+                      + "%s" % filename + "\033[0m")
                 ret = ret | 2
             count += 1
     print('checked line endings in %d files' % count)
-            
-    
+
+
     # Next check new code with optional error codes
     print('flake8: check new code against recommended error set...')
     diff = subprocess.check_output(['git', 'diff'])
-    proc = subprocess.Popen(['flake8', '--diff', #'--show-source',
+    proc = subprocess.Popen(['flake8', '--diff',  # '--show-source',
                                 '--ignore=' + errors],
-                            stdin=subprocess.PIPE, 
+                            stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
     proc.stdin.write(diff)
     proc.stdin.close()
     output = proc.stdout.read().decode('utf-8')
     ret |= printFlakeOutput(output)
-    
+
     if ret == 0:
         print('style test passed.')
     else:
@@ -244,53 +240,59 @@ def unitTests():
     return ret
 
 
-def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, targetRepo=None):
+def checkMergeSize(
+    sourceBranch=None,
+    targetBranch=None,
+    sourceRepo=None,
+    targetRepo=None
+):
     """
-    Check that a git merge would not increase the repository size by MERGE_SIZE_LIMIT.
+    Check that a git merge would not increase the repository size by
+    MERGE_SIZE_LIMIT.
     """
     if sourceBranch is None:
         sourceBranch = getGitBranch()
         sourceRepo = '..'
-        
+
     if targetBranch is None:
-        if sourceBranch == 'develop':
-            targetBranch = 'develop'
+        if sourceBranch == 'master':
+            targetBranch = 'master'
             targetRepo = 'https://github.com/pyqtgraph/pyqtgraph.git'
         else:
-            targetBranch = 'develop'
+            targetBranch = 'master'
             targetRepo = '..'
-    
+
     workingDir = '__merge-test-clone'
-    env = dict(TARGET_BRANCH=targetBranch, 
-               SOURCE_BRANCH=sourceBranch, 
-               TARGET_REPO=targetRepo, 
+    env = dict(TARGET_BRANCH=targetBranch,
+               SOURCE_BRANCH=sourceBranch,
+               TARGET_REPO=targetRepo,
                SOURCE_REPO=sourceRepo,
                WORKING_DIR=workingDir,
                )
-    
+
     print("Testing merge size difference:\n"
           "  SOURCE: {SOURCE_REPO} {SOURCE_BRANCH}\n"
           "  TARGET: {TARGET_BRANCH} {TARGET_REPO}".format(**env))
-    
+
     setup = """
         mkdir {WORKING_DIR} && cd {WORKING_DIR} &&
         git init && git remote add -t {TARGET_BRANCH} target {TARGET_REPO} &&
-        git fetch target {TARGET_BRANCH} && 
-        git checkout -qf target/{TARGET_BRANCH} && 
+        git fetch target {TARGET_BRANCH} &&
+        git checkout -qf target/{TARGET_BRANCH} &&
         git gc -q --aggressive
         """.format(**env)
-        
+
     checkSize = """
-        cd {WORKING_DIR} && 
+        cd {WORKING_DIR} &&
         du -s . | sed -e "s/\t.*//"
         """.format(**env)
-    
+
     merge = """
         cd {WORKING_DIR} &&
-        git pull -q {SOURCE_REPO} {SOURCE_BRANCH} && 
+        git pull -q {SOURCE_REPO} {SOURCE_BRANCH} &&
         git gc -q --aggressive
         """.format(**env)
-    
+
     try:
         print("Check out target branch:\n" + setup)
         check_call(setup, shell=True)
@@ -300,13 +302,17 @@ def checkMergeSize(sourceBranch=None, targetBranch=None, sourceRepo=None, target
         check_call(merge, shell=True)
         mergeSize = int(check_output(checkSize, shell=True))
         print("MERGE SIZE: %d kB" % mergeSize)
-        
+
         diff = mergeSize - targetSize
         if diff <= MERGE_SIZE_LIMIT:
             print("DIFFERENCE: %d kB  [OK]" % diff)
             return 0
         else:
-            print("\033[0;31m" + "DIFFERENCE: %d kB  [exceeds %d kB]" % (diff, MERGE_SIZE_LIMIT) + "\033[0m")
+            print("\033[0;31m"
+                  + "DIFFERENCE: %d kB  [exceeds %d kB]" % (
+                      diff,
+                      MERGE_SIZE_LIMIT)
+                  + "\033[0m")
             return 2
     finally:
         if os.path.isdir(workingDir):
@@ -327,7 +333,11 @@ def mergeTests():
 def listAllPackages(pkgroot):
     path = os.getcwd()
     n = len(path.split(os.path.sep))
-    subdirs = [i[0].split(os.path.sep)[n:] for i in os.walk(os.path.join(path, pkgroot)) if '__init__.py' in i[2]]
+    subdirs = [
+        i[0].split(os.path.sep)[n:]
+        for i in os.walk(os.path.join(path, pkgroot))
+        if '__init__.py' in i[2]
+    ]
     return ['.'.join(p) for p in subdirs]
 
 
@@ -338,48 +348,61 @@ def getInitVersion(pkgroot):
     init = open(initfile).read()
     m = re.search(r'__version__ = (\S+)\n', init)
     if m is None or len(m.groups()) != 1:
-        raise Exception("Cannot determine __version__ from init file: '%s'!" % initfile)
+        raise Exception("Cannot determine __version__ from init file: "
+                        + "'%s'!" % initfile)
     version = m.group(1).strip('\'\"')
     return version
 
 def gitCommit(name):
     """Return the commit ID for the given name."""
-    commit = check_output(['git', 'show', name], universal_newlines=True).split('\n')[0]
+    commit = check_output(
+        ['git', 'show', name],
+        universal_newlines=True).split('\n')[0]
     assert commit[:7] == 'commit '
     return commit[7:]
 
 def getGitVersion(tagPrefix):
     """Return a version string with information about this git checkout.
-    If the checkout is an unmodified, tagged commit, then return the tag version.
-    If this is not a tagged commit, return the output of ``git describe --tags``.
+    If the checkout is an unmodified, tagged commit, then return the tag
+    version
+
+    If this is not a tagged commit, return the output of
+    ``git describe --tags``
+
     If this checkout has been modified, append "+" to the version.
     """
     path = os.getcwd()
     if not os.path.isdir(os.path.join(path, '.git')):
         return None
-        
-    v = check_output(['git', 'describe', '--tags', '--dirty', '--match=%s*'%tagPrefix]).strip().decode('utf-8')
-    
+
+    v = check_output(['git',
+                      'describe',
+                      '--tags',
+                      '--dirty',
+                      '--match="%s*"'%tagPrefix]).strip().decode('utf-8')
+
     # chop off prefix
     assert v.startswith(tagPrefix)
     v = v[len(tagPrefix):]
 
     # split up version parts
     parts = v.split('-')
-    
+
     # has working tree been modified?
     modified = False
     if parts[-1] == 'dirty':
         modified = True
         parts = parts[:-1]
-        
+
     # have commits been added on top of last tagged version?
     # (git describe adds -NNN-gXXXXXXX if this is the case)
     local = None
-    if len(parts) > 2 and re.match(r'\d+', parts[-2]) and re.match(r'g[0-9a-f]{7}', parts[-1]):
+    if (len(parts) > 2 and
+        re.match(r'\d+', parts[-2]) and
+        re.match(r'g[0-9a-f]{7}', parts[-1])):
         local = parts[-1]
         parts = parts[:-2]
-        
+
     gitVersion = '-'.join(parts)
     if local is not None:
         gitVersion += '+' + local
@@ -389,7 +412,10 @@ def getGitVersion(tagPrefix):
     return gitVersion
 
 def getGitBranch():
-    m = re.search(r'\* (.*)', check_output(['git', 'branch'], universal_newlines=True))
+    m = re.search(
+        r'\* (.*)',
+        check_output(['git', 'branch'],
+        universal_newlines=True))
     if m is None:
         return ''
     else:
@@ -397,32 +423,33 @@ def getGitBranch():
 
 def getVersionStrings(pkg):
     """
-    Returns 4 version strings: 
-    
+    Returns 4 version strings:
+
     * the version string to use for this build,
     * version string requested with --force-version (or None)
     * version string that describes the current git checkout (or None).
-    * version string in the pkg/__init__.py, 
-    
+    * version string in the pkg/__init__.py,
+
     The first return value is (forceVersion or gitVersion or initVersion).
     """
-    
+
     ## Determine current version string from __init__.py
     initVersion = getInitVersion(pkgroot=pkg)
 
-    ## If this is a git checkout, try to generate a more descriptive version string
+    # If this is a git checkout
+    # try to generate a more descriptive version string
     try:
         gitVersion = getGitVersion(tagPrefix=pkg+'-')
     except:
         gitVersion = None
-        sys.stderr.write("This appears to be a git checkout, but an error occurred "
-                        "while attempting to determine a version string for the "
-                        "current commit.\n")
+        sys.stderr.write("This appears to be a git checkout, but an error "
+                        "occurred while attempting to determine a version "
+                        "string for the current commit.\n")
         sys.excepthook(*sys.exc_info())
 
     # See whether a --force-version flag was given
     forcedVersion = None
-    for i,arg in enumerate(sys.argv):
+    for i, arg in enumerate(sys.argv):
         if arg.startswith('--force-version'):
             if arg == '--force-version':
                 forcedVersion = sys.argv[i+1]
@@ -431,16 +458,20 @@ def getVersionStrings(pkg):
             elif arg.startswith('--force-version='):
                 forcedVersion = sys.argv[i].replace('--force-version=', '')
                 sys.argv.pop(i)
-                
-                
+
+
     ## Finally decide on a version string to use:
     if forcedVersion is not None:
         version = forcedVersion
-    elif gitVersion is not None and getGitBranch() != 'debian': # ignore git version if this is debian branch
-        version = gitVersion
-        sys.stderr.write("Detected git commit; will use version string: '%s'\n" % version)
     else:
         version = initVersion
+        # if git says this is a modified branch, add local version information
+        if gitVersion is not None:
+            _, _, local = gitVersion.partition('+')
+            if local != '':
+                version = version + '+' + local
+                sys.stderr.write("Detected git commit; "
+                                 + "will use version string: '%s'\n" % version)
 
     return version, forcedVersion, gitVersion, initVersion
 
@@ -454,29 +485,31 @@ class DebCommand(Command):
     maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
     debTemplate = "debian"
     debDir = "deb_build"
-    
+
     user_options = []
-    
+
     def initialize_options(self):
         self.cwd = None
-        
+
     def finalize_options(self):
         self.cwd = os.getcwd()
-        
+
     def run(self):
         version = self.distribution.get_version()
         pkgName = self.distribution.get_name()
         debName = "python-" + pkgName
         debDir = self.debDir
-        
-        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
-        
+
+        assert os.getcwd() == self.cwd, 'Must be in package root: '
+        + '%s' % self.cwd
+
         if os.path.isdir(debDir):
             raise Exception('DEB build dir already exists: "%s"' % debDir)
         sdist = "dist/%s-%s.tar.gz" % (pkgName, version)
         if not os.path.isfile(sdist):
-            raise Exception("No source distribution; run `setup.py sdist` first.")
-        
+            raise Exception("No source distribution; "
+                            + "run `setup.py sdist` first.")
+
         # copy sdist to build directory and extract
         os.mkdir(debDir)
         renamedSdist = '%s_%s.orig.tar.gz' % (debName, version)
@@ -486,16 +519,20 @@ class DebCommand(Command):
         if os.system("cd %s; tar -xzf %s" % (debDir, renamedSdist)) != 0:
             raise Exception("Error extracting source distribution.")
         buildDir = '%s/%s-%s' % (debDir, pkgName, version)
-        
+
         # copy debian control structure
         print("copytree %s => %s" % (self.debTemplate, buildDir+'/debian'))
         shutil.copytree(self.debTemplate, buildDir+'/debian')
-        
+
         # Write new changelog
-        chlog = generateDebianChangelog(pkgName, 'CHANGELOG', version, self.maintainer)
+        chlog = generateDebianChangelog(
+            pkgName,
+            'CHANGELOG',
+            version,
+            self.maintainer)
         print("write changelog %s" % buildDir+'/debian/changelog')
         open(buildDir+'/debian/changelog', 'w').write(chlog)
-        
+
         # build package
         print('cd %s; debuild -us -uc' % buildDir)
         if os.system('cd %s; debuild -us -uc' % buildDir) != 0:
@@ -518,43 +555,45 @@ class DebugCommand(Command):
 
 
 class TestCommand(Command):
-    description = "Run all package tests and exit immediately with informative return code."
+    description =  "Run all package tests and exit immediately with ", \
+                   "informative return code."
     user_options = []
-    
+
     def run(self):
         sys.exit(unitTests())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
-    
+
 
 class StyleCommand(Command):
-    description = "Check all code for style, exit immediately with informative return code."
+    description = "Check all code for style, exit immediately with ", \
+                  "informative return code."
     user_options = []
-    
+
     def run(self):
         sys.exit(checkStyle())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
 
-    
+
 class MergeTestCommand(Command):
-    description = "Run all tests needed to determine whether the current code is suitable for merge."
+    description = "Run all tests needed to determine whether the current ",\
+                  "code is suitable for merge."
     user_options = []
-    
+
     def run(self):
         sys.exit(mergeTests())
-        
+
     def initialize_options(self):
         pass
-    
+
     def finalize_options(self):
         pass
-

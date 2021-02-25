@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from OpenGL.GL import *
 from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
@@ -14,12 +15,13 @@ class GLScatterPlotItem(GLGraphicsItem):
         GLGraphicsItem.__init__(self)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
-        self.pos = []
+        self.pos = None
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
         self.pxMode = True
         #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
+        self.shader = None
     
     def setData(self, **kwds):
         """
@@ -54,11 +56,13 @@ class GLScatterPlotItem(GLGraphicsItem):
         self.update()
 
     def initializeGL(self):
+        if self.shader is not None:
+            return
         
         ## Generate texture for rendering points
         w = 64
         def fn(x,y):
-            r = ((x-w/2.)**2 + (y-w/2.)**2) ** 0.5
+            r = ((x-(w-1)/2.)**2 + (y-(w-1)/2.)**2) ** 0.5
             return 255 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
         pData = np.empty((w, w, 4))
         pData[:] = 255
@@ -96,6 +100,9 @@ class GLScatterPlotItem(GLGraphicsItem):
         ##glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
         
     def paint(self):
+        if self.pos is None:
+            return
+
         self.setupGLState()
         
         glEnable(GL_POINT_SPRITE)
@@ -120,7 +127,7 @@ class GLScatterPlotItem(GLGraphicsItem):
             try:
                 pos = self.pos
                 #if pos.ndim > 2:
-                    #pos = pos.reshape((reduce(lambda a,b: a*b, pos.shape[:-1]), pos.shape[-1]))
+                    #pos = pos.reshape((-1, pos.shape[-1]))
                 glVertexPointerf(pos)
             
                 if isinstance(self.color, np.ndarray):
@@ -152,7 +159,9 @@ class GLScatterPlotItem(GLGraphicsItem):
                 glDisableClientState(GL_VERTEX_ARRAY)
                 glDisableClientState(GL_COLOR_ARRAY)
                 #posVBO.unbind()
-                
+                ##fixes #145
+                glDisable( GL_TEXTURE_2D )
+                                
         #for i in range(len(self.pos)):
             #pos = self.pos[i]
             

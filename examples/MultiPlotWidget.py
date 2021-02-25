@@ -3,8 +3,7 @@
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-
-from scipy import random
+import numpy as np
 from numpy import linspace
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -15,14 +14,14 @@ except:
     print("MultiPlot is only used with MetaArray for now (and you do not have the metaarray package)")
     exit()
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("MultiPlot Widget Example")
 mw = QtGui.QMainWindow()
 mw.resize(800,800)
 pw = MultiPlotWidget()
 mw.setCentralWidget(pw)
 mw.show()
 
-data = random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
+data = np.random.normal(size=(3, 1000)) * np.array([[0.1], [1e-5], [1]])
 ma = MetaArray(data, info=[
     {'name': 'Signal', 'cols': [
         {'name': 'Col1', 'units': 'V'}, 
@@ -31,7 +30,7 @@ ma = MetaArray(data, info=[
         ]}, 
     {'name': 'Time', 'values': linspace(0., 1., 1000), 'units': 's'}
     ])
-pw.plot(ma)
+pw.plot(ma, pen='y')
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
