@@ -1846,8 +1846,7 @@ class EllipseROI(ROI):
         
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None, axes=(0, 1),
-                       returnMappedCoords=False, **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwds):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` masked by the
         elliptical shape of the ROI. Regions outside the ellipse are set to 0.
