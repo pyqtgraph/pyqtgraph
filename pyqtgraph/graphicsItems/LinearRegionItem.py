@@ -43,8 +43,9 @@ class LinearRegionItem(GraphicsObject):
         **Arguments:**
         values          A list of the positions of the lines in the region. These are not
                         limits; limits can be set by specifying bounds.
-        orientation     Options are 'vertical' or 'horizontal', indicating the 
-                        The default is 'vertical', indicating that the 
+        orientation     Options are 'vertical' or 'horizontal'
+                        The default is 'vertical', indicating that the region is bounded
+                        by vertical lines.
         brush           Defines the brush that fills the region. Can be any arguments that
                         are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is
                         transparent blue.
