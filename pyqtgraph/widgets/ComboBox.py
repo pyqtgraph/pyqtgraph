@@ -1,7 +1,7 @@
 import sys
 from ..Qt import QtGui, QtCore
 from ..SignalProxy import SignalProxy
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 
 
@@ -24,7 +24,7 @@ class ComboBox(QtGui.QComboBox):
         
         #self.value = default
         if 'darwin' in sys.platform: ## because MacOSX can show names that are wider than the comboBox
-            self.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToMinimumContentsLength)
+            self.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
             #self.setMinimumContentsLength(10)
         self._chosenText = None
         self._items = OrderedDict()

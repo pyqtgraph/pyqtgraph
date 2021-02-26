@@ -1,8 +1,8 @@
 from ..Qt import QtGui, QtCore, QT_LIB
 import weakref
 from .GraphicsObject import GraphicsObject
-if QT_LIB in ['PyQt4', 'PyQt5']:
-    import sip
+if QT_LIB.startswith('PyQt'):
+    from ..Qt import sip
 
 __all__ = ['UIGraphicsItem']
 class UIGraphicsItem(GraphicsObject):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # based on https://github.com/art1415926535/PyQt5-syntax-highlighting
 
 from pyqtgraph.Qt import QtCore, QtGui
@@ -117,20 +118,20 @@ class PythonHighlighter(QSyntaxHighlighter):
 
     # Python operators
     operators = [
-        '=',
+        r'=',
         # Comparison
-        '==', '!=', '<', '<=', '>', '>=',
+        r'==', r'!=', r'<', r'<=', r'>', r'>=',
         # Arithmetic
-        '\+', '-', '\*', '/', '//', '\%', '\*\*',
+        r'\+', r'-', r'\*', r'/', r'//', r'\%', r'\*\*',
         # In-place
-        '\+=', '-=', '\*=', '/=', '\%=',
+        r'\+=', r'-=', r'\*=', r'/=', r'\%=',
         # Bitwise
-        '\^', '\|', '\&', '\~', '>>', '<<',
+        r'\^', r'\|', r'\&', r'\~', r'>>', r'<<',
     ]
 
     # Python braces
     braces = [
-        '\{', '\}', '\(', '\)', '\[', '\]',
+        r'\{', r'\}', r'\(', r'\)', r'\[', r'\]',
     ]
 
     def __init__(self, document):
@@ -185,7 +186,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     @property
     def styles(self):
         app = QtGui.QApplication.instance()
-        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+        return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.

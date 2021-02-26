@@ -6,7 +6,7 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene import GraphicsScene
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("GraphicsScene Example")
 win = pg.GraphicsView()
 win.show()
 

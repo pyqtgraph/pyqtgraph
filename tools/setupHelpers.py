@@ -255,11 +255,11 @@ def checkMergeSize(
         sourceRepo = '..'
 
     if targetBranch is None:
-        if sourceBranch == 'develop':
-            targetBranch = 'develop'
+        if sourceBranch == 'master':
+            targetBranch = 'master'
             targetRepo = 'https://github.com/pyqtgraph/pyqtgraph.git'
         else:
-            targetBranch = 'develop'
+            targetBranch = 'master'
             targetRepo = '..'
 
     workingDir = '__merge-test-clone'
@@ -379,7 +379,7 @@ def getGitVersion(tagPrefix):
                       'describe',
                       '--tags',
                       '--dirty',
-                      '--match=%s*'%tagPrefix]).strip().decode('utf-8')
+                      '--match="%s*"'%tagPrefix]).strip().decode('utf-8')
 
     # chop off prefix
     assert v.startswith(tagPrefix)
@@ -467,7 +467,7 @@ def getVersionStrings(pkg):
         version = initVersion
         # if git says this is a modified branch, add local version information
         if gitVersion is not None:
-            _, local = gitVersion.split('+')
+            _, _, local = gitVersion.partition('+')
             if local != '':
                 version = version + '+' + local
                 sys.stderr.write("Detected git commit; "

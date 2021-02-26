@@ -33,45 +33,11 @@
          </column>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QComboBox" name="graphicsSystemCombo">
-         <item>
-          <property name="text">
-           <string>default</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>native</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>raster</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>opengl</string>
-          </property>
-         </item>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QComboBox" name="qtLibCombo">
          <item>
           <property name="text">
            <string>default</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PyQt4</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PySide</string>
           </property>
          </item>
          <item>
@@ -84,13 +50,16 @@
            <string>PySide2</string>
           </property>
          </item>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Graphics System:</string>
-         </property>
+         <item>
+          <property name="text">
+           <string>PySide6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PyQt6</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item row="1" column="0">
@@ -115,7 +84,6 @@
         <widget class="QLabel" name="loadedFileLabel">
          <property name="font">
           <font>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -131,7 +99,7 @@
         <widget class="QPlainTextEdit" name="codeView">
          <property name="font">
           <font>
-           <family>FreeMono</family>
+           <family>Courier New</family>
           </font>
          </property>
         </widget>

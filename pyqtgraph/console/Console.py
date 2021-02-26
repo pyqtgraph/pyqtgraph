@@ -7,14 +7,9 @@ from ..python2_3 import basestring
 from .. import exceptionHandling as exceptionHandling
 from .. import getConfigOption
 from ..functions import SignalBlock
-if QT_LIB == 'PySide':
-    from . import template_pyside as template
-elif QT_LIB == 'PySide2':
-    from . import template_pyside2 as template
-elif QT_LIB == 'PyQt5':
-    from . import template_pyqt5 as template
-else:
-    from . import template_pyqt as template
+import importlib
+ui_template = importlib.import_module(
+    f'.template_{QT_LIB.lower()}', package=__package__)
 
 
 class ConsoleWidget(QtGui.QWidget):
@@ -60,7 +55,7 @@ class ConsoleWidget(QtGui.QWidget):
         self.inCmd = False
         self.frames = []  # stack frames to access when an item in the stack list is selected
         
-        self.ui = template.Ui_Form()
+        self.ui = ui_template.Ui_Form()
         self.ui.setupUi(self)
         self.output = self.ui.output
         self.input = self.ui.input
@@ -166,15 +161,20 @@ class ConsoleWidget(QtGui.QWidget):
         try:
             output = eval(cmd, self.globals(), self.locals())
             self.write(repr(output) + '\n')
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-            except:
+            pass
+        except:
+            self.displayException()
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
         except:
             self.displayException()
@@ -190,22 +190,28 @@ class ConsoleWidget(QtGui.QWidget):
             output = eval(cmd, self.globals(), self.locals())
             self.write(str(output) + '\n')
             self.multiline = None
+            return
         except SyntaxError:
-            try:
-                exec(cmd, self.globals(), self.locals())
-                self.multiline = None
-            except SyntaxError as exc:
-                if 'unexpected EOF' in exc.msg:
-                    self.multiline = cmd
-                else:
-                    self.displayException()
-                    self.multiline = None
-            except:
+            pass
+        except:
+            self.displayException()
+            self.multiline = None
+            return
+
+        # eval failed with syntax error; try exec instead
+        try:
+            exec(cmd, self.globals(), self.locals())
+            self.multiline = None
+        except SyntaxError as exc:
+            if 'unexpected EOF' in exc.msg:
+                self.multiline = cmd
+            else:
                 self.displayException()
                 self.multiline = None
         except:
             self.displayException()
             self.multiline = None
+
 
     def write(self, strn, html=False, scrollToBottom='auto'):
         """Write a string into the console.

@@ -1,11 +1,15 @@
-
-[![Build Status](https://pyqtgraph.visualstudio.com/pyqtgraph/_apis/build/status/pyqtgraph.pyqtgraph?branchName=develop)](https://pyqtgraph.visualstudio.com/pyqtgraph/_build/latest?definitionId=17&branchName=develop)
-[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
-
 PyQtGraph
 =========
 
-A pure-Python graphics library for PyQt/PySide/PyQt5/PySide2
+[![PyPi](https://img.shields.io/pypi/v/pyqtgraph.svg)](https://pypi.org/project/pyqtgraph/)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/pyqtgraph.svg)](https://anaconda.org/conda-forge/pyqtgraph)
+[![Build Status](https://github.com/pyqtgraph/pyqtgraph/workflows/main/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Amain)
+[![CodeQL Status](https://github.com/pyqtgraph/pyqtgraph/workflows/codeql/badge.svg)](https://github.com/pyqtgraph/pyqtgraph/actions/?query=workflow%3Acodeql)
+[![Documentation Status](https://readthedocs.org/projects/pyqtgraph/badge/?version=latest)](https://pyqtgraph.readthedocs.io/en/latest/?badge=latest)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pyqtgraph/pyqtgraph.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pyqtgraph/pyqtgraph/context:python)
+
+A pure-Python graphics library for PyQt5/PyQt6/PySide2/PySide6
 
 Copyright 2020 Luke Campagnola, University of North Carolina at Chapel Hill
 
@@ -19,31 +23,43 @@ heavy leverage of numpy for number crunching, Qt's GraphicsView framework for
 Requirements
 ------------
 
-* Python 2.7, or 3.x
+pyqtgraph has adopted [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
+
+This project supports:
+
+* All minor versions of Python released 42 months prior to the project, and at minimum the two latest minor versions.
+* All minor versions of numpy released in the 24 months prior to the project, and at minimum the last three minor versions.
+* All minor versions of Qt 5 and Qt 6 currently supported by upstream Qt
+
+Currently this means:
+
+* Python 3.7+
+* Qt 5.12-6.0
 * Required
-  * PyQt 4.8+, PySide, PyQt5, or PySide2
-  * `numpy`
+  * PyQt5, PyQt6, PySide2 or PySide6
+  * `numpy` 1.17+
 * Optional
   * `scipy` for image processing
   * `pyopengl` for 3D graphics
+    * `pyopengl` on macOS Big Sur only works with python 3.9.1+
   * `hdf5` for large hdf5 binary format support
+  * `colorcet` for supplemental colormaps
+  * [`cupy`](https://docs.cupy.dev/en/stable/install.html) for CUDA-enhanced image processing
+    * On Windows, CUDA toolkit must be >= 11.1
 
 Qt Bindings Test Matrix
 -----------------------
 
-The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 18.04, Windows Server 2019, and macOS 10.15 base images.
+The following table represents the python environments we test in our CI system.  Our CI system uses Ubuntu 20.04, Windows Server 2019, and macOS 10.15 base images.
 
-| Qt-Bindings    | Python 2.7         | Python 3.6         | Python 3.7         | Python 3.8         |
-| :------------- | :----------------: | :----------------: | :----------------: | :----------------: |
-| PyQt-4         | :white_check_mark: | :x:                | :x:                | :x:                |
-| PySide1        | :white_check_mark: | :x:                | :x:                | :x:                |
-| PyQt5-5.9      | :x:                | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.13   | :x:                | :x:                | :white_check_mark: | :x:                |
-| PyQt5-Latest   | :x:                | :x:                | :x:                | :white_check_mark: |
-| PySide2-Latest | :x:                | :x:                | :x:                | :white_check_mark: |
-
-* pyqtgraph has had some incompatibilities with PySide2 versions 5.6-5.11, and we recommend you avoid those versions if possible
-* on macOS with Python 2.7 and Qt4 bindings (PyQt4 or PySide) the openGL related visualizations do not work reliably
+| Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
+| :------------- | :----------------: | :----------------: | :----------------: |
+| PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
+| PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
+| PySide2-5.15   | :x:                | :white_check_mark: | :x:                |
+| PyQt5-5.15     | :x:                | :white_check_mark: | :x:                |
+| PySide6-6.0    | :x:                | :x:                | :white_check_mark: |
+| PyQt6-6.0      | :x:                | :x:                | :white_check_mark: |
 
 Support
 -------
@@ -67,6 +83,6 @@ Installation Methods
 Documentation
 -------------
 
-The official documentation lives at https://pyqtgraph.readthedocs.io
+The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  

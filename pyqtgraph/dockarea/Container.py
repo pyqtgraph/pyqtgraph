@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtCore, QtGui
+from ..Qt import QtCore, QtGui, QtWidgets
 import weakref
 
 class Container(object):
@@ -76,7 +76,11 @@ class Container(object):
             self.area.topContainer = None
         self.containerChanged(None)
         
-    def childEvent(self, ev):
+    def childEvent_(self, ev):
+        # NOTE: this method has been renamed to avoid having the same method name as
+        #       QSplitter.childEvent()
+        #       this causes problems for PyQt6 since SplitContainer inherits from
+        #       Container and QSplitter.
         ch = ev.child()
         if ev.removed() and hasattr(ch, 'sigStretchChanged'):
             #print "Child", ev.child(), "removed, updating", self
@@ -133,8 +137,8 @@ class SplitContainer(Container, QtGui.QSplitter):
             self.setStretchFactor(i, sizes[i])
 
     def childEvent(self, ev):
-        QtGui.QSplitter.childEvent(self, ev)
-        Container.childEvent(self, ev)
+        super().childEvent(ev)      # call QSplitter.childEvent()
+        Container.childEvent_(self, ev)
 
     #def restretchChildren(self):
         #sizes = self.sizes()
@@ -204,6 +208,16 @@ class VContainer(SplitContainer):
         self.setSizes([int(s*scale) for s in sizes])
 
 
+class StackedWidget(QtWidgets.QStackedWidget):
+    def __init__(self, *, container):
+        super().__init__()
+        self.container = container
+
+    def childEvent(self, ev):
+        super().childEvent(ev)
+        self.container.childEvent_(ev)
+
+
 class TContainer(Container, QtGui.QWidget):
     sigStretchChanged = QtCore.Signal()
     def __init__(self, area):
@@ -221,9 +235,8 @@ class TContainer(Container, QtGui.QWidget):
         self.hTabLayout.setContentsMargins(0,0,0,0)
         self.layout.addWidget(self.hTabBox, 0, 1)
 
-        self.stack = QtGui.QStackedWidget()
+        self.stack = StackedWidget(container=self)
         self.layout.addWidget(self.stack, 1, 1)
-        self.stack.childEvent = self.stackChildEvent
 
 
         self.setLayout(self.layout)
@@ -275,9 +288,5 @@ class TContainer(Container, QtGui.QWidget):
             x = max(x, wx)
             y = max(y, wy)
         self.setStretch(x, y)
-        
-    def stackChildEvent(self, ev):
-        QtGui.QStackedWidget.childEvent(self.stack, ev)
-        Container.childEvent(self, ev)
         
 from . import Dock

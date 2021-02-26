@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..Qt import QtGui, QtCore
+from ..Qt import QtGui, QtCore, QT_LIB
 from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
@@ -9,19 +9,21 @@ import weakref
 from .. import functions as fn
 from .. import getConfigOption
 from .GraphicsWidget import GraphicsWidget
+import warnings
 
 __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, and can automatically synchronize its displayed scale with ViewBox items.
+    Can be configured to fit on any side of a plot, 
+    Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
     """
 
     def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
-        ==============  ===============================================================
+        =============== ===============================================================
         **Arguments:**
         orientation     one of 'left', 'right', 'top', or 'bottom'
         maxTickLength   (px) maximum length of ticks to draw. Negative values draw
@@ -39,7 +41,7 @@ class AxisItem(GraphicsWidget):
                         range of data displayed.
         args            All extra keyword arguments become CSS style options for
                         the <span> tag which will surround the axis label and units.
-        ==============  ===============================================================
+        =============== ===============================================================
         """
 
         GraphicsWidget.__init__(self, parent)
@@ -49,7 +51,7 @@ class AxisItem(GraphicsWidget):
         if orientation not in ['left', 'right', 'top', 'bottom']:
             raise Exception("Orientation argument must be one of 'left', 'right', 'top', or 'bottom'.")
         if orientation in ['left', 'right']:
-            self.label.rotate(-90)
+            self.label.setRotation(-90)
 
         self.style = {
             'tickTextOffset': [5, 2],  ## (horizontal, vertical) spacing between text and axis
@@ -283,19 +285,19 @@ class AxisItem(GraphicsWidget):
             axis.setLabel('label text', units='V', **labelStyle)
 
         """
-        show_label = False
-        if text is not None:
-            self.labelText = text
-            show_label = True
-        if units is not None:
-            self.labelUnits = units
-            show_label = True
-        if show_label:
-            self.showLabel()
-        if unitPrefix is not None:
-            self.labelUnitPrefix = unitPrefix
+        # `None` input is kept for backward compatibility!
+        self.labelText = text or ""
+        self.labelUnits = units or ""
+        self.labelUnitPrefix = unitPrefix or ""
         if len(args) > 0:
             self.labelStyle = args
+        # Account empty string and `None` for units and text
+        visible = True if (text or units) else False
+        self.showLabel(visible)
+        self._updateLabel()
+
+    def _updateLabel(self):
+        """Internal method to update the label according to the text"""
         self.label.setHtml(self.labelString())
         self._adjustSize()
         self.picture = None
@@ -428,8 +430,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def textPen(self):
         if self._textPen is None:
@@ -447,8 +448,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -460,14 +460,18 @@ class AxisItem(GraphicsWidget):
         """
         # Deprecated usage, kept for backward compatibility
         if scale is None:
+            warnings.warn(
+                'AxisItem.setScale(None) is deprecated, will be removed in 0.13.0'
+                'instead use AxisItem.enableAutoSIPrefix(bool) to enable/disable'
+                'SI prefix scaling',                
+                DeprecationWarning, stacklevel=2
+            )
             scale = 1.0
             self.enableAutoSIPrefix(True)
 
         if scale != self.scale:
             self.scale = scale
-            self.setLabel()
-            self.picture = None
-            self.update()
+            self._updateLabel()
 
     def enableAutoSIPrefix(self, enable=True):
         """
@@ -498,13 +502,11 @@ class AxisItem(GraphicsWidget):
                 scale = 1.0
                 prefix = ''
             self.autoSIPrefixScale = scale
-            self.setLabel(unitPrefix=prefix)
+            self.labelUnitPrefix = prefix
         else:
             self.autoSIPrefixScale = 1.0
 
-        self.picture = None
-        self.update()
-
+        self._updateLabel()
 
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
@@ -513,9 +515,11 @@ class AxisItem(GraphicsWidget):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoSIPrefix:
+            # XXX: Will already update once!
             self.updateAutoSIPrefix()
-        self.picture = None
-        self.update()
+        else:
+            self.picture = None
+            self.update()
 
     def linkedView(self):
         """Return the ViewBox this axis is linked to"""
@@ -651,7 +655,6 @@ class AxisItem(GraphicsWidget):
         self._tickSpacing = levels
         self.picture = None
         self.update()
-
 
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
@@ -1107,18 +1110,27 @@ class AxisItem(GraphicsWidget):
                 width = textRect.width()
                 #self.textHeight = height
                 offset = max(0,self.style['tickLength']) + textOffset
+
                 if self.orientation == 'left':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop-offset-width, x-(height/2), width, height)
                 elif self.orientation == 'right':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
+                    alignFlags = QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter
                     rect = QtCore.QRectF(tickStop+offset, x-(height/2), width, height)
                 elif self.orientation == 'top':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignBottom
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignBottom
                     rect = QtCore.QRectF(x-width/2., tickStop-offset-height, width, height)
                 elif self.orientation == 'bottom':
-                    textFlags = QtCore.Qt.TextDontClip|QtCore.Qt.AlignCenter|QtCore.Qt.AlignTop
+                    alignFlags = QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop
                     rect = QtCore.QRectF(x-width/2., tickStop+offset, width, height)
+
+                if QT_LIB == 'PyQt6':
+                    # PyQt6 doesn't allow or-ing of different enum types
+                    # so we need to take its value property
+                    textFlags = alignFlags.value | QtCore.Qt.TextDontClip.value
+                else:
+                    # for PyQt5, the following expression is not commutative!
+                    textFlags = alignFlags | QtCore.Qt.TextDontClip
 
                 #p.setPen(self.pen())
                 #p.drawText(rect, textFlags, vstr)
@@ -1152,6 +1164,8 @@ class AxisItem(GraphicsWidget):
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
+        bounding = self.boundingRect().toAlignedRect()
+        p.setClipRect(bounding)
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
 
