@@ -29,7 +29,39 @@ class TargetItem(UIGraphicsItem):
     sigPositionChanged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
 
-    def __init__(self, pos=None, movable=True, pen=None, hoverPen=None, brush=None, hoverBrush=None, path=None, label=None, labelOpts=None, labelAngle=None):
+    def __init__(
+        self, pos=None, movable=True, pen=None, hoverPen=None, brush=None, 
+        hoverBrush=None, path=None, label=None, labelOpts=None, labelAngle=None
+        ):
+        """
+        =============== ==================================================================
+        **Arguments:**
+        pos             Position of the cursor. This can be a list of QPointF or a list
+                        of floats
+        radius          Size of the cursor in pixel
+        cursor          String that defines the shape of the cursor (can take the
+                        following values for the moment : 's' (square), 'c' (circle))
+        pen             Pen to use when drawing line. Can be any arguments that are valid
+                        for :func:`mkPen <pyqtgraph.mkPen>`. Default pen is transparent
+                        yellow.
+        brush           Defines the brush that fill the cursor. Can be any arguments
+                        that is valid for :func:`mkBrush<pyqtgraph.mkBrush>`. Default
+                        is transparent blue.
+        movable         If True, the cursor can be dragged to a new position by the user.
+        hoverPen        Pen to use when drawing cursor when hovering over it. Can be any
+                        arguments that are valid for :func:`mkPen <pyqtgraph.mkPen>`.
+                        Default pen is red.
+        hoverBrush      Brush to use to fill the cursor when hovering over it. Can be any
+                        arguments that is valid for :func:`mkBrush<pyqtgraph.mkBrush>`.
+                        Default is transparent blue.
+        label           Text to be displayed in a label attached to the cursor, or
+                        None to show no label (default is None). May optionally
+                        include formatting strings to display the cursor value.
+        labelOpts       A dict of keyword arguments to use when constructing the
+                        text label. See :class:`CursorLabel`.
+        name            Name of the item
+        =============== ==================================================================
+        """
         super().__init__(self)
         self._bounds = None
         self.movable = movable
@@ -65,27 +97,21 @@ class TargetItem(UIGraphicsItem):
             pos = (0, 0)
         self.setPos(pos)
 
+        self._path = None
         if path is None:
             path = makeTarget()
         self.setPath(path)
 
-        if label is not None:
-            self.setLabel(label, labelOpts)
+        self.setLabel(label, labelOpts)
         
         if labelAngle is not None:
             self.label.angle = labelAngle
             self._updateLabel()
 
-        # This is the CursorLabel method
-        # if label is not None:
-        #     labelOpts = {} if labelOpts is None else labelOpts
-        #     self.label = TargetLabel(self, text=label, **labelOpts)
-
-
     def setPos(self, pos):
         if isinstance(pos, (list, tuple)):
             newPos = tuple(pos)
-        elif isinstance(pos, QtCore.QPointF):
+        elif isinstance(pos, (QtCore.QPointF, QtCore.QPoint)):
             newPos = (pos.x(), pos.y())
         else:
             raise TypeError
@@ -131,16 +157,18 @@ class TargetItem(UIGraphicsItem):
 
     def setLabel(self, label=None, labelOpts=None):
         if label is None and self.label is not None:
+            # remove the label if it's already added
             self.label.scene().removeItem(self.label)
             self.label = None
         else:
             if self.label is None:
+                # add a label
                 labelOpts = {} if labelOpts is None else labelOpts
-                self.label = TargetLabel(self, label, **labelOpts)
+                self.label = TargetLabel(self, **labelOpts)
             else:
+                # update the label text
                 self.label.setText(label)
             self._updateLabel()
-            # self.label.update()
 
     def setLabelAngle(self, angle):
         if self.label is None:
@@ -148,29 +176,19 @@ class TargetItem(UIGraphicsItem):
         if self.label.angle != angle:
             self.label.angle = angle
             self._updateLabel()
-            # self.label.update()
 
     def boundingRect(self):
-        # return self._bounds
         return self.shape().boundingRect()
     
-    # def dataBounds(self, axis, frac=1.0, orthoRange=None):
-    #     return [0, 0]
-
     def paint(self, p, *args):
         p.setPen(self.currentPen)
         p.setBrush(self.currentBrush)
         p.drawPath(self.shape())
 
     def setPath(self, path):
-        # o = self.mapToScene(QtCore.QPointF(0, 0))
-    #     dx = (self.mapToScene(QtCore.QPointF(1, 0)) - o).x()
-    #     dy = (self.mapToScene(QtCore.QPointF(0, 1)) - o).y()
-    #     if dx == 0 or dy == 0:
-    #         self._bounds = QtCore.QRectF()
-    #         return
-        self._path = path
-    #     self._bounds = path.boundingRect()
+        if path != self._path:
+            self._path = path
+            self._shape = None
         return None
 
     def shape(self):
@@ -193,7 +211,7 @@ class TargetItem(UIGraphicsItem):
         devPos = dt.map(QtCore.QPointF(0, 0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / 3.1415926)
+        tr.rotate(va * 180. / np.pi)
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
@@ -206,7 +224,6 @@ class TargetItem(UIGraphicsItem):
 
         if not self.moving:
             return
-
         self.setPos(self.cursorOffset+self.mapToParent(ev.pos()))
 
         if ev.isFinish():
@@ -244,26 +261,12 @@ class TargetItem(UIGraphicsItem):
         self._shape = None  ## invalidate shape, recompute later if requested.
         self.update()
 
-    # def viewTransformChanged(self):
-    #     """
-    #     Called whenever the transformation matrix of the view has changed.
-    #     (eg, the view range has changed or the view was resized)
-    #     """
-    #     GraphicsObject.viewTransformChanged()
-    #     self._shape = None  # invalidate shape, recompute later if requested.
-    #     self.update()
-    #     self._updateLabel()
-    #     self.prepareGeometryChange()
-    #     if self.label is not None:
-    #         self._updateLabel()
-
     def position(self):
         return self._pos
 
     def _updateLabel(self):
         if self.label is None:
             return
-        # self.label.updatePosition()
         self.label.valueChanged()
 
 class TargetLabel(TextItem):
@@ -277,35 +280,21 @@ class TargetLabel(TextItem):
     target          The TargetItem to which this label will be attached.
     text            String to display in the label. May contain two {value, value}
                     formatting strings to display the current value of the target.
+    offset          (x, y) coordinates to offset the left-side of the text label, can
+                    be tuple(float, float), QPoint, or QPointF, by default (2, 0)
     =============== ==================================================================
     All extra keyword arguments are passed to TextItem.
     """
 
-    def __init__(self, target, text="", **kwds):
+    def __init__(self, target, text="x = {:0.3f}, y = {:0.3f}", offset=(2, 0), anchor=(0, -0.5), **kwds):
         self.target = target
         self.format = text
-        TextItem.__init__(self, **kwds)
+        TextItem.__init__(self, anchor=anchor, **kwds)
         self.setParentItem(target)
-        self.setAnchor(Point(-0.25, 1.25))
-        self.setAngle(0)
+        self.setPos(*offset)
         self.valueChanged()
         self.target.sigPositionChanged.connect(self.valueChanged)
 
     def valueChanged(self):
         x, y = self.target.position()
         self.setText(self.format.format(x, y))
-
-
-    # def updatePosition(self):
-    #     angle = self.angle * np.pi / 180.
-    #     labelBoundingRect = self.boundingRect()
-    #     center = labelBoundingRect.center()
-    #     # print(labelBoundingRect)
-    #     a = abs(sin(angle) * labelBoundingRect.height()*0.5)
-    #     b = abs(cos(angle) * labelBoundingRect.width()*0.5)
-    #     targetItemBoundingRect = self.target._path.boundingRect()
-    #     r = max(targetItemBoundingRect.width(), targetItemBoundingRect.height()) + 2 + max(a, b)
-    #     # pos = self.mapFromScene(self.mapToScene(QtCore.QPointF(0, 0)) + r * QtCore.QPointF(cos(angle), -sin(angle)) - center)
-    #     pos = r * QtCore.QPointF(cos(angle), -sin(angle)) - center
-    #     # print(f"center: ({center.x()}, {center.y()}) \t a: {a} \t b: {b} \t r: {r} \t pos: ({pos.x()}, {pos.y()})")
-    #     self.setPos(pos)
