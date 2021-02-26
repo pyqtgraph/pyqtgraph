@@ -56,6 +56,13 @@ installedFrontends = sorted([
     frontend for frontend, isPresent in frontends.items() if isPresent
 ])
 
+darwin_opengl_broken = (platform.system() == "Darwin" and
+            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
+            (sys.version_info <= (3, 8, 7) or (3, 9) <= sys.version_info < (3, 9, 1)))
+
+darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
+                        "https://github.com/python/cpython/pull/21241")
+
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
     "test_ExampleApp.py": exceptionCondition(
@@ -71,104 +78,44 @@ conditionalExamples = {
         reason="Test is being problematic on CI machines"
     ),
     'GLVolumeItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLIsosurface.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLSurfacePlot.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLScatterPlotItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLshaders.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLLinePlotItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLMeshItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLImageItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLBarGraphItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLViewWidget.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     )
 }
 
