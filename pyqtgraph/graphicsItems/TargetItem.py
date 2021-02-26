@@ -5,6 +5,7 @@ import numpy as np
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
+from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
 
 
@@ -19,7 +20,7 @@ def makeTarget(radii=(5, 10, 10)):
     path.lineTo(0, h)
     return path
 
-class TargetItem(GraphicsObject):
+class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
 
     The size of TargetItem will remain fixed on screen even as the view is zoomed.
@@ -29,7 +30,7 @@ class TargetItem(GraphicsObject):
     sigPositionChangeFinished = QtCore.Signal(object)
 
     def __init__(self, pos=None, movable=True, pen=None, hoverPen=None, brush=None, hoverBrush=None, path=None, label=None, labelOpts=None, labelAngle=None):
-        GraphicsObject.__init__(self)
+        super().__init__(self)
         self._bounds = None
         self.movable = movable
         self.moving = False
@@ -90,7 +91,7 @@ class TargetItem(GraphicsObject):
             raise TypeError
         if self._pos != newPos:
             self._pos = newPos
-            GraphicsObject.setPos(self, Point(self._pos))
+            super().setPos(Point(self._pos))
             self.sigPositionChanged.emit(self)
 
     def setBrush(self, *args, **kwargs):
@@ -150,10 +151,11 @@ class TargetItem(GraphicsObject):
             # self.label.update()
 
     def boundingRect(self):
-        return self._bounds
+        # return self._bounds
+        return self.shape().boundingRect()
     
-    def dataBounds(self, axis, frac=1.0, orthoRange=None):
-        return [0, 0]
+    # def dataBounds(self, axis, frac=1.0, orthoRange=None):
+    #     return [0, 0]
 
     def paint(self, p, *args):
         p.setPen(self.currentPen)
@@ -161,14 +163,14 @@ class TargetItem(GraphicsObject):
         p.drawPath(self.shape())
 
     def setPath(self, path):
-        o = self.mapToScene(QtCore.QPointF(0, 0))
-        dx = (self.mapToScene(QtCore.QPointF(1, 0)) - o).x()
-        dy = (self.mapToScene(QtCore.QPointF(0, 1)) - o).y()
-        if dx == 0 or dy == 0:
-            self._bounds = QtCore.QRectF()
-            return
+        # o = self.mapToScene(QtCore.QPointF(0, 0))
+    #     dx = (self.mapToScene(QtCore.QPointF(1, 0)) - o).x()
+    #     dy = (self.mapToScene(QtCore.QPointF(0, 1)) - o).y()
+    #     if dx == 0 or dy == 0:
+    #         self._bounds = QtCore.QRectF()
+    #         return
         self._path = path
-        self._bounds = path.boundingRect()
+    #     self._bounds = path.boundingRect()
         return None
 
     def shape(self):
@@ -238,17 +240,22 @@ class TargetItem(GraphicsObject):
             self.setMouseHover(False)
 
     def viewTransformChanged(self):
-        """
-        Called whenever the transformation matrix of the view has changed.
-        (eg, the view range has changed or the view was resized)
-        """
         GraphicsObject.viewTransformChanged(self)
-        self._shape = None  # invalidate shape, recompute later if requested.
+        self._shape = None  ## invalidate shape, recompute later if requested.
         self.update()
-        self._updateLabel()
-        # self.prepareGeometryChange()
-        # if self.label is not None:
-        #     self._updateLabel()
+
+    # def viewTransformChanged(self):
+    #     """
+    #     Called whenever the transformation matrix of the view has changed.
+    #     (eg, the view range has changed or the view was resized)
+    #     """
+    #     GraphicsObject.viewTransformChanged()
+    #     self._shape = None  # invalidate shape, recompute later if requested.
+    #     self.update()
+    #     self._updateLabel()
+    #     self.prepareGeometryChange()
+    #     if self.label is not None:
+    #         self._updateLabel()
 
     def position(self):
         return self._pos
@@ -256,7 +263,8 @@ class TargetItem(GraphicsObject):
     def _updateLabel(self):
         if self.label is None:
             return
-        self.label.updatePosition()
+        # self.label.updatePosition()
+        self.label.valueChanged()
 
 class TargetLabel(TextItem):
     """
@@ -278,8 +286,8 @@ class TargetLabel(TextItem):
         self.format = text
         TextItem.__init__(self, **kwds)
         self.setParentItem(target)
-        self.anchor = Point(-0.25, 1.25)
-        self.angle = 0
+        self.setAnchor(Point(-0.25, 1.25))
+        self.setAngle(0)
         self.valueChanged()
         self.target.sigPositionChanged.connect(self.valueChanged)
 
@@ -288,16 +296,16 @@ class TargetLabel(TextItem):
         self.setText(self.format.format(x, y))
 
 
-    def updatePosition(self):
-        angle = self.angle * np.pi / 180.
-        labelBoundingRect = self.boundingRect()
-        center = labelBoundingRect.center()
-        print(labelBoundingRect)
-        a = abs(sin(angle) * labelBoundingRect.height()*0.5)
-        b = abs(cos(angle) * labelBoundingRect.width()*0.5)
-        targetItemBoundingRect = self.target._path.boundingRect()
-        r = max(targetItemBoundingRect.width(), targetItemBoundingRect.height()) + 2 + max(a, b)
-        # pos = self.mapFromScene(self.mapToScene(QtCore.QPointF(0, 0)) + r * QtCore.QPointF(cos(angle), -sin(angle)) - center)
-        pos = r * QtCore.QPointF(cos(angle), -sin(angle)) - center
-        print(f"center: ({center.x()}, {center.y()}) \t a: {a} \t b: {b} \t r: {r} \t pos: ({pos.x()}, {pos.y()})")
-        self.setPos(pos)
+    # def updatePosition(self):
+    #     angle = self.angle * np.pi / 180.
+    #     labelBoundingRect = self.boundingRect()
+    #     center = labelBoundingRect.center()
+    #     # print(labelBoundingRect)
+    #     a = abs(sin(angle) * labelBoundingRect.height()*0.5)
+    #     b = abs(cos(angle) * labelBoundingRect.width()*0.5)
+    #     targetItemBoundingRect = self.target._path.boundingRect()
+    #     r = max(targetItemBoundingRect.width(), targetItemBoundingRect.height()) + 2 + max(a, b)
+    #     # pos = self.mapFromScene(self.mapToScene(QtCore.QPointF(0, 0)) + r * QtCore.QPointF(cos(angle), -sin(angle)) - center)
+    #     pos = r * QtCore.QPointF(cos(angle), -sin(angle)) - center
+    #     # print(f"center: ({center.x()}, {center.y()}) \t a: {a} \t b: {b} \t r: {r} \t pos: ({pos.x()}, {pos.y()})")
+    #     self.setPos(pos)
