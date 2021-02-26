@@ -319,7 +319,7 @@ class DockArea(Container, QtGui.QWidget, DockDrop):
         #print "apoptose area:", self.temporary, self.topContainer, self.topContainer.count()
         if self.topContainer is None or self.topContainer.count() == 0:
             self.topContainer = None
-            if self.temporary:
+            if self.temporary and self.home is not None:
                 self.home.removeTempArea(self)
                 #self.close()
                 
@@ -382,4 +382,4 @@ class TempAreaWindow(QtGui.QWidget):
                 dock.orig_area.addDock(dock, )
         # clear dock area, and close remaining docks
         self.dockarea.clear()
-        QtGui.QWidget.closeEvent(self, *args)
+        super().closeEvent(*args)

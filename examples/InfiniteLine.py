@@ -9,7 +9,7 @@ import numpy as np
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("InfiniteLine Example")
 win = pg.GraphicsLayoutWidget(show=True, title="Plotting items examples")
 win.resize(1000,600)
 

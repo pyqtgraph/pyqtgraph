@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore, QtTest
 from pyqtgraph.tests import mouseDrag, mouseMove
@@ -15,7 +16,7 @@ def test_InfiniteLine():
     plt.resize(600, 600)
 
     # seemingly arbitrary requirements; might need longer wait time for some platforms..
-    QtTest.QTest.qWaitForWindowShown(plt)
+    QtTest.QTest.qWaitForWindowExposed(plt)
     QtTest.QTest.qWait(100)
 
     vline = plt.addLine(x=1)
@@ -50,18 +51,20 @@ def test_InfiniteLine():
     
 
 def test_mouseInteraction():
+    # disable delay of mouse move events because events is called immediately in test
+    pg.setConfigOption('mouseRateLimit', -1)
+
     plt = pg.plot()
     plt.scene().minDragTime = 0  # let us simulate mouse drags very quickly.
     vline = plt.addLine(x=0, movable=True)
-    plt.addItem(vline)
     hline = plt.addLine(y=0, movable=True)
     hline2 = plt.addLine(y=-1, movable=False)
     plt.setXRange(-10, 10)
     plt.setYRange(-10, 10)
 
     # test horizontal drag
-    pos = plt.plotItem.vb.mapViewToScene(pg.Point(0,5)).toPoint()
-    pos2 = pos - QtCore.QPoint(200, 200)
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(0,5))
+    pos2 = pos - QtCore.QPointF(200, 200)
     mouseMove(plt, pos)
     assert vline.mouseHovering is True and hline.mouseHovering is False
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
@@ -69,17 +72,17 @@ def test_mouseInteraction():
     assert abs(vline.value() - plt.plotItem.vb.mapSceneToView(pos2).x()) <= px
 
     # test missed drag
-    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
-    pos = pos + QtCore.QPoint(0, 6)
-    pos2 = pos + QtCore.QPoint(-20, -20)
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0))
+    pos = pos + QtCore.QPointF(0, 6)
+    pos2 = pos + QtCore.QPointF(-20, -20)
     mouseMove(plt, pos)
     assert vline.mouseHovering is False and hline.mouseHovering is False
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
     assert hline.value() == 0
 
     # test vertical drag
-    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0)).toPoint()
-    pos2 = pos - QtCore.QPoint(50, 50)
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,0))
+    pos2 = pos - QtCore.QPointF(50, 50)
     mouseMove(plt, pos)
     assert vline.mouseHovering is False and hline.mouseHovering is True
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
@@ -87,8 +90,8 @@ def test_mouseInteraction():
     assert abs(hline.value() - plt.plotItem.vb.mapSceneToView(pos2).y()) <= px
 
     # test non-interactive line
-    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,-1)).toPoint()
-    pos2 = pos - QtCore.QPoint(50, 50)
+    pos = plt.plotItem.vb.mapViewToScene(pg.Point(5,-1))
+    pos2 = pos - QtCore.QPointF(50, 50)
     mouseMove(plt, pos)
     assert hline2.mouseHovering == False
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)

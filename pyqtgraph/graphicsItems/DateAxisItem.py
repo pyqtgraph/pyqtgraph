@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from .AxisItem import AxisItem
-from ..pgcollections import OrderedDict
+from collections import OrderedDict
 
 __all__ = ['DateAxisItem']
 
@@ -108,7 +108,7 @@ class TickSpec:
     def skipFactor(self, minSpc):
         if self.autoSkip is None or minSpc < self.spacing:
             return 1
-        factors = np.array(self.autoSkip, dtype=np.float)
+        factors = np.array(self.autoSkip, dtype=np.float64)
         while True:
             for f in factors:
                 spc = self.spacing * f
@@ -221,6 +221,7 @@ class DateAxisItem(AxisItem):
             (30,          HMS_ZOOM_LEVEL),
             (1,           MS_ZOOM_LEVEL),
             ])
+        self.autoSIPrefix = False
     
     def tickStrings(self, values, scale, spacing):
         tickSpecs = self.zoomLevel.tickSpecs
@@ -268,10 +269,10 @@ class DateAxisItem(AxisItem):
         # Size in pixels a specific tick label will take
         if self.orientation in ['bottom', 'top']:
             def sizeOf(text):
-                return self.fontMetrics.boundingRect(text).width() + padding*self.fontScaleFactor
+                return self.fontMetrics.boundingRect(text).width() + padding
         else:
             def sizeOf(text):
-                return self.fontMetrics.boundingRect(text).height() + padding*self.fontScaleFactor
+                return self.fontMetrics.boundingRect(text).height() + padding
         
         # Fallback zoom level: Years/Months
         self.zoomLevel = YEAR_MONTH_ZOOM_LEVEL
@@ -313,6 +314,5 @@ class DateAxisItem(AxisItem):
         self.fontMetrics = p.fontMetrics()
         
         # Get font scale factor by current window resolution
-        self.fontScaleFactor = p.device().logicalDpiX() / 96
         
         return super(DateAxisItem, self).generateDrawSpecs(p)

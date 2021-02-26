@@ -15,6 +15,13 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="9" column="0" colspan="2">
+     <widget class="QCheckBox" name="cudaCheck">
+      <property name="text">
+       <string>Use CUDA (GPU) if available</string>
+      </property>
+     </widget>
+    </item>
     <item row="8" column="0" colspan="2">
      <widget class="QCheckBox" name="downsampleCheck">
       <property name="text">

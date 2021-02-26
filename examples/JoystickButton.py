@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 
 
-app = QtGui.QApplication([])
+app = pg.mkQApp("Joystick Button Example")
 mw = QtGui.QMainWindow()
 mw.resize(300,50)
 mw.setWindowTitle('pyqtgraph example: JoystickButton')

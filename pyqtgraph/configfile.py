@@ -11,7 +11,7 @@ as it can be converted to/from a string using repr and eval.
 
 import re, os, sys, datetime
 import numpy
-from .pgcollections import OrderedDict
+from collections import OrderedDict
 from . import units
 from .python2_3 import asUnicode, basestring
 from .Qt import QtCore
@@ -24,7 +24,7 @@ class ParseError(Exception):
     def __init__(self, message, lineNum, line, fileName=None):
         self.lineNum = lineNum
         self.line = line
-        #self.message = message
+        self.message = message
         self.fileName = fileName
         Exception.__init__(self, message)
         

@@ -132,7 +132,7 @@ class TreeWidget(QtGui.QTreeWidget):
     
     def listAllItems(self, item=None):
         items = []
-        if item != None:
+        if item is not None:
             items.append(item)
         else:
             item = self.invisibleRootItem()
@@ -144,7 +144,7 @@ class TreeWidget(QtGui.QTreeWidget):
         return items
             
     def dropEvent(self, ev):
-        QtGui.QTreeWidget.dropEvent(self, ev)
+        super().dropEvent(ev)
         self.updateDropFlags()
 
     def updateDropFlags(self):

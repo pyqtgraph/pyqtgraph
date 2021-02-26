@@ -6,7 +6,7 @@ except ImportError:
     import pickle
 
 from .remoteproxy import RemoteEventHandler, ClosedError, NoResultError, LocalObjectProxy, ObjectProxy
-from ..Qt import QT_LIB
+from ..Qt import QT_LIB, mkQApp
 from ..util import cprint  # color printing for debugging
 
 
@@ -429,7 +429,7 @@ class QtProcess(Process):
         This allows signals to be connected from the child process to the parent.
         """
         self.timer.timeout.connect(self.processRequests)
-        self.timer.start(interval*1000)
+        self.timer.start(int(interval*1000))
         
     def stopRequestProcessing(self):
         self.timer.stop()
@@ -451,7 +451,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     app = QtGui.QApplication.instance()
     #print app
     if app is None:
-        app = QtGui.QApplication([])
+        app = mkQApp()
         app.setQuitOnLastWindowClosed(False)  ## generally we want the event loop to stay open 
                                               ## until it is explicitly closed by the parent process.
     

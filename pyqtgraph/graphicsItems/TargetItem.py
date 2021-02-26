@@ -39,8 +39,9 @@ class TargetItem(GraphicsObject):
             self._updateLabel()
 
     def setLabelAngle(self, angle):
-        self.labelAngle = angle
-        self._updateLabel()
+        if self.labelAngle != angle:
+            self.labelAngle = angle
+            self._updateLabel()
 
     def boundingRect(self):
         if self._picture is None:
@@ -81,8 +82,14 @@ class TargetItem(GraphicsObject):
         
         # Note: could do this with self.pixelLength, but this is faster.
         o = self.mapToScene(QtCore.QPointF(0, 0))
-        px = abs(1.0 / (self.mapToScene(QtCore.QPointF(1, 0)) - o).x())
-        py = abs(1.0 / (self.mapToScene(QtCore.QPointF(0, 1)) - o).y())
+        dx = (self.mapToScene(QtCore.QPointF(1, 0)) - o).x()
+        dy = (self.mapToScene(QtCore.QPointF(0, 1)) - o).y()
+        if dx == 0 or dy == 0:
+            p.end()
+            self._bounds = QtCore.QRectF()
+            return
+        px = abs(1.0 / dx)
+        py = abs(1.0 / dy)
         
         r, w, h = self._radii
         w = w * px

@@ -10,7 +10,8 @@ from ..graphicsItems import MultiPlotItem as MultiPlotItem
 
 __all__ = ['MultiPlotWidget']
 class MultiPlotWidget(GraphicsView):
-    """Widget implementing a graphicsView with a single MultiPlotItem inside."""
+    """Widget implementing a :class:`~pyqtgraph.GraphicsView` with a single
+    :class:`~pyqtgraph.MultiPlotItem` inside."""
     def __init__(self, parent=None):
         self.minPlotHeight = 50
         self.mPlotItem = MultiPlotItem.MultiPlotItem()

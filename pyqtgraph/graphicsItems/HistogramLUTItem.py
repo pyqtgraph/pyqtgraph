@@ -112,7 +112,7 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
-            plot.rotate(90)
+            plot.setRotation(90)
             self.vb.addItem(plot)
         
         self.fillHistogram(fillHistogram)
@@ -165,7 +165,7 @@ class HistogramLUTItem(GraphicsWidget):
         """
         self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
-        img.setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+        self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
         
@@ -174,13 +174,16 @@ class HistogramLUTItem(GraphicsWidget):
     
     def gradientChanged(self):
         if self.imageItem() is not None:
-            if self.gradient.isLookupTrivial():
-                self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
-            else:
-                self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+            self._setImageLookupTable()
             
         self.lut = None
         self.sigLookupTableChanged.emit(self)
+
+    def _setImageLookupTable(self):
+        if self.gradient.isLookupTrivial():
+            self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
+        else:
+            self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
 
     def getLookupTable(self, img=None, n=None, alpha=None):
         """Return a lookup table from the color gradient defined by this 
@@ -341,6 +344,7 @@ class HistogramLUTItem(GraphicsWidget):
         }
     
     def restoreState(self, state):
-        self.setLevelMode(state['mode'])
+        if 'mode' in state:
+            self.setLevelMode(state['mode'])
         self.gradient.restoreState(state['gradient'])
         self.setLevels(*state['levels'])

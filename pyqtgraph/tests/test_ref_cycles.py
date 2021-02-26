@@ -5,13 +5,10 @@ Test for unwanted reference cycles
 """
 import pyqtgraph as pg
 import numpy as np
-import gc, weakref
-import six
-import pytest
+import weakref
+import warnings
 app = pg.mkQApp()
 
-skipreason = ('This test is failing on pyside and pyside2 for an unknown reason.')
-                 
 def assert_alldead(refs):
     for ref in refs:
         assert ref() is None
@@ -38,10 +35,11 @@ def mkrefs(*objs):
     return [weakref.ref(obj) for obj in allObjs.values()]
 
 
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
 def test_PlotWidget():
     def mkobjs(*args, **kwds):
-        w = pg.PlotWidget(*args, **kwds)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            w = pg.PlotWidget(*args, **kwds)
         data = pg.np.array([1,5,2,4,3])
         c = w.plot(data, name='stuff')
         w.addLegend()
@@ -55,8 +53,19 @@ def test_PlotWidget():
     
     for i in range(5):
         assert_alldead(mkobjs())
+
+def test_GraphicsWindow():
+    def mkobjs():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            w = pg.GraphicsWindow()
+        p1 = w.addPlot()
+        v1 = w.addViewBox()
+        return mkrefs(w, p1, v1)
     
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
+    for i in range(5):
+        assert_alldead(mkobjs())
+
 def test_ImageView():
     def mkobjs():
         iv = pg.ImageView()
@@ -64,21 +73,12 @@ def test_ImageView():
         iv.setImage(data)
         
         return mkrefs(iv, iv.imageItem, iv.view, iv.ui.histogram, data)
+
     for i in range(5):
-        gc.collect()
         assert_alldead(mkobjs())
 
 
-@pytest.mark.skipif(pg.Qt.QT_LIB in {'PySide', 'PySide2'}, reason=skipreason)
-def test_GraphicsWindow():
-    def mkobjs():
-        w = pg.GraphicsWindow()
-        p1 = w.addPlot()
-        v1 = w.addViewBox()
-        return mkrefs(w, p1, v1)
-    
-    for i in range(5):
-        assert_alldead(mkobjs())
+
 
     
     

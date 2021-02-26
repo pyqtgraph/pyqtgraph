@@ -133,7 +133,7 @@ view.addItem(box1)
 box2 = MenuBox("Menu Box #2")
 box2.setParentItem(box1)
 box2.setPos(5, 5)
-box2.scale(0.2, 0.2)
+box2.setScale(0.2)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

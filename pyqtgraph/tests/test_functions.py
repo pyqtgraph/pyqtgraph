@@ -98,6 +98,19 @@ def check_interpolateArray(order):
 
     assert_array_almost_equal(r1, r2)
     
+def test_subArray():
+    a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
+    b = pg.subArray(a, offset=2, shape=(2,2,3), stride=(10,4,1))
+    c = np.array([[[111,112,113], [121,122,123]], [[211,212,213], [221,222,223]]])
+    assert np.all(b == c)
+    
+    # operate over first axis; broadcast over the rest
+    aa = np.vstack([a, a/100.]).T
+    cc = np.empty(c.shape + (2,))
+    cc[..., 0] = c
+    cc[..., 1] = c / 100.
+    bb = pg.subArray(aa, offset=2, shape=(2,2,3), stride=(10,4,1))
+    assert np.all(bb == cc)
     
 def test_subArray():
     a = np.array([0, 0, 111, 112, 113, 0, 121, 122, 123, 0, 0, 0, 211, 212, 213, 0, 221, 222, 223, 0, 0, 0, 0])
@@ -327,9 +340,7 @@ def test_makeARGB():
 def test_eq():
     eq = pg.functions.eq
     
-    zeros = [0, 0.0, np.float(0), np.int(0)]
-    if sys.version[0] < '3':
-        zeros.append(long(0))
+    zeros = [0, 0.0, np.float64(0), np.float32(0), np.int32(0), np.int64(0)]
     for i,x in enumerate(zeros):
         for y in zeros[i:]:
             assert eq(x, y)
@@ -410,6 +421,30 @@ def test_eq():
     assert eq(set(range(10)), set(range(10)))
     assert not eq(set(range(10)), set(range(9)))
 
-    
-if __name__ == '__main__':
-    test_interpolateArray()
+
+@pytest.mark.parametrize("s,suffix,expected", [
+    # usual cases
+    ("100 uV", "V", ("100", "u", "V")),
+    ("100 µV", "V", ("100", "µ", "V")),
+    ("4.2 nV", None, ("4.2", "n", "V")),
+    ("1.2 m", "m", ("1.2", "", "m")),
+    ("1.2 m", None, ("1.2", "", "m")),
+    ("5.0e9", None, ("5.0e9", "", "")),
+    ("2 units", "units", ("2", "", "units")),
+    # siPrefix with explicit empty suffix
+    ("1.2 m", "", ("1.2", "m", "")),
+    ("5.0e-9 M", "", ("5.0e-9", "M", "")),
+    # weirder cases that should return the reasonable thing
+    ("4.2 nV", "nV", ("4.2", "", "nV")),
+    ("4.2 nV", "", ("4.2", "n", "")),
+    ("1.2 j", "", ("1.2", "", "")),
+    ("1.2 j", None, ("1.2", "", "j")),
+    # expected error cases
+    ("100 uV", "v", ValueError),
+])
+def test_siParse(s, suffix, expected):
+    if isinstance(expected, tuple):
+        assert pg.siParse(s, suffix=suffix) == expected
+    else:
+        with pytest.raises(expected):
+            pg.siParse(s, suffix=suffix)

@@ -2,6 +2,7 @@
 ## we do this to make sure that, when running examples, the correct library
 ## version is imported (if there are multiple versions present).
 import sys, os
+import importlib
 
 if not hasattr(sys, 'frozen'):
     if __file__ == '<stdin>':
@@ -19,29 +20,8 @@ if not hasattr(sys, 'frozen'):
                 sys.path.remove(p)
                 sys.path.insert(0, p)
 
-## should force example to use PySide instead of PyQt
-if 'pyside' in sys.argv:  
-    from PySide import QtGui
-elif 'pyqt' in sys.argv: 
-    from PyQt4 import QtGui
-elif 'pyqt5' in sys.argv: 
-    from PyQt5 import QtGui
-elif 'pyside2' in sys.argv: 
-    from PySide2 import QtGui
-else:
-    from pyqtgraph.Qt import QtGui
-
 import pyqtgraph as pg    
-    
-## Force use of a specific graphics system
-use_gs = 'default'
-for gs in ['raster', 'native', 'opengl']:
-    if gs in sys.argv:
-        use_gs = gs
-        QtGui.QApplication.setGraphicsSystem(gs)
-        break
-
-print("Using %s (%s graphics system)" % (pg.Qt.QT_LIB, use_gs))
+print("Using", pg.Qt.QT_LIB)
 
 ## Enable fault handling to give more helpful error messages on crash. 
 ## Only available in python 3.3+

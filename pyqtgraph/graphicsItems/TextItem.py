@@ -67,26 +67,33 @@ class TextItem(GraphicsObject):
         """
         if color is not None:
             self.setColor(color)
-        self.textItem.setPlainText(text)
-        self.updateTextPos()
-        
-    def setPlainText(self, *args):
+        self.setPlainText(text)
+
+    def setPlainText(self, text):
         """
         Set the plain text to be rendered by this item. 
         
         See QtGui.QGraphicsTextItem.setPlainText().
         """
-        self.textItem.setPlainText(*args)
-        self.updateTextPos()
+        if text != self.toPlainText():
+            self.textItem.setPlainText(text)
+            self.updateTextPos()
+
+    def toPlainText(self):
+        return self.textItem.toPlainText()
         
-    def setHtml(self, *args):
+    def setHtml(self, html):
         """
         Set the HTML code to be rendered by this item. 
         
         See QtGui.QGraphicsTextItem.setHtml().
         """
-        self.textItem.setHtml(*args)
-        self.updateTextPos()
+        if self.toHtml() != html:
+            self.textItem.setHtml(html)
+            self.updateTextPos()
+        
+    def toHtml(self):
+        return self.textItem.toHtml()
         
     def setTextWidth(self, *args):
         """
@@ -140,16 +147,10 @@ class TextItem(GraphicsObject):
         br = self.textItem.mapToParent(r.bottomRight())
         offset = (br - tl) * self.anchor
         self.textItem.setPos(-offset)
-        
-        ### Needed to maintain font size when rendering to image with increased resolution
-        #self.textItem.resetTransform()
-        ##self.textItem.rotate(self.angle)
-        #if self._exportOpts is not False and 'resolutionScale' in self._exportOpts:
-            #s = self._exportOpts['resolutionScale']
-            #self.textItem.scale(s, s)
+
         
     def boundingRect(self):
-        return self.textItem.mapToParent(self.textItem.boundingRect()).boundingRect()
+        return self.textItem.mapRectToParent(self.textItem.boundingRect())
 
     def viewTransformChanged(self):
         # called whenever view transform has changed.
@@ -176,7 +177,15 @@ class TextItem(GraphicsObject):
             p.setRenderHint(p.Antialiasing, True)
             p.drawPolygon(self.textItem.mapToParent(self.textItem.boundingRect()))
         
+    def setVisible(self, v):
+        GraphicsObject.setVisible(self, v)
+        if v:
+            self.updateTransform()
+    
     def updateTransform(self, force=False):
+        if not self.isVisible():
+            return
+
         # update transform such that this item has the correct orientation
         # and scaling relative to the scene, but inherits its position from its
         # parent.
@@ -201,10 +210,7 @@ class TextItem(GraphicsObject):
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
             a = np.arctan2(d.y(), d.x()) * 180 / np.pi
             angle += a
-        t.rotate(angle)
-        
+        t.rotate(angle)  
         self.setTransform(t)
-        
         self._lastTransform = pt
-        
         self.updateTextPos()

@@ -24,6 +24,8 @@ pg.setConfigOptions(antialias=True)  ## this will be expensive for the local plo
 view.pg.setConfigOptions(antialias=True)  ## prettier plots at no cost to the main process! 
 view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
+app.aboutToQuit.connect(view.close)
+
 label = QtGui.QLabel()
 rcheck = QtGui.QCheckBox('plot remote')
 rcheck.setChecked(True)
