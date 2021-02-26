@@ -1,7 +1,6 @@
-from math import sin, cos
+from math import atan2, pi
 
 from ..Qt import QtGui, QtCore
-import numpy as np
 from ..Point import Point
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
@@ -206,12 +205,12 @@ class TargetItem(UIGraphicsItem):
             self._shape = self._path
             return None
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
-        va = np.arctan2(v.y(), v.x())
+        va = atan2(v.y(), v.x())
         dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0, 0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / np.pi)
+        tr.rotate(va * 180. / pi)
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
