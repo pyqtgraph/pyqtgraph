@@ -7,7 +7,7 @@ import initExample
 
 import sys
 import numpy as np
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtWidgets, mkQApp
 import pyqtgraph as pg
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -92,8 +92,9 @@ class MainWindow(QtWidgets.QMainWindow):
         bar.getAxis('top').setHeight(31)
         gr_wid.addItem(bar, 0,2, 2,1) # large bar spanning both rows
 
+mkQApp("ColorBarItem Example")
+main_window = MainWindow()
+
 ## Start Qt event loop
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    main_window = MainWindow()
-    sys.exit(app.exec_())
+    QtWidgets.QApplication.instance().exec_()
