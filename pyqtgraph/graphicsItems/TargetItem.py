@@ -8,7 +8,7 @@ from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
 
 
-def makeTarget(radii=(5, 10, 10)):
+def makeTarget(radii=(5, 10, 10)) -> QtGui.QPainterPath:
     path = QtGui.QPainterPath()
     r, w, h = radii
     rect = QtCore.QRectF(-r, -r, r*2, r*2)
@@ -30,36 +30,43 @@ class TargetItem(UIGraphicsItem):
 
     def __init__(
         self, pos=None, movable=True, pen=None, hoverPen=None, brush=None, 
-        hoverBrush=None, path=None, label=None, labelOpts=None, labelAngle=None
+        hoverBrush=None, path=None, label=None, labelOpts=None
         ):
         """
-        =============== ==================================================================
-        **Arguments:**
-        pos             Position of the cursor. This can be a list of QPointF or a list
-                        of floats
-        radius          Size of the cursor in pixel
-        cursor          String that defines the shape of the cursor (can take the
-                        following values for the moment : 's' (square), 'c' (circle))
-        pen             Pen to use when drawing line. Can be any arguments that are valid
-                        for :func:`mkPen <pyqtgraph.mkPen>`. Default pen is transparent
-                        yellow.
-        brush           Defines the brush that fill the cursor. Can be any arguments
-                        that is valid for :func:`mkBrush<pyqtgraph.mkBrush>`. Default
-                        is transparent blue.
-        movable         If True, the cursor can be dragged to a new position by the user.
-        hoverPen        Pen to use when drawing cursor when hovering over it. Can be any
-                        arguments that are valid for :func:`mkPen <pyqtgraph.mkPen>`.
-                        Default pen is red.
-        hoverBrush      Brush to use to fill the cursor when hovering over it. Can be any
-                        arguments that is valid for :func:`mkBrush<pyqtgraph.mkBrush>`.
-                        Default is transparent blue.
-        label           Text to be displayed in a label attached to the cursor, or
-                        None to show no label (default is None). May optionally
-                        include formatting strings to display the cursor value.
-        labelOpts       A dict of keyword arguments to use when constructing the
-                        text label. See :class:`CursorLabel`.
-        name            Name of the item
-        =============== ==================================================================
+        Parameters
+        ----------
+        pos : list, tuple, QPointF, or QPoint
+            Initial position of the cursor.
+        radius : int or float
+            Size of the cursor in pixels
+        cursor : str
+            String that defines the shape of the cursor (can take the following
+            values for the moment : 's' (square), 'c' (circle))
+        pen : QPen, tuple, list or str
+            Pen to use when drawing line. Can be any arguments that are valid
+            for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
+        brush : QBrush, tuple, list, or str
+            Defines the brush that fill the cursor. Can be any arguments that
+            is valid for :func:`~pyqtgraph.mkBrush`. Default is transparent 
+            blue.
+        movable : bool
+            If True, the cursor can be dragged to a new position by the user.
+        hoverPen : QPen, tuple, list, or str
+            Pen to use when drawing cursor when hovering over it. Can be any
+            arguments that are valid for :func:`~pyqtgraph.mkPen`. Default pen
+            is red.
+        hoverBrush : QBrush, tuple, list or str
+            Brush to use to fill the cursor when hovering over it. Can be any
+            arguments that is valid for :func:`~pyqtgraph.mkBrush`. Default is 
+            transparent blue.
+        label : str or callable, optional
+            Text to be displayed in a label attached to the cursor, or None to
+            show no label (default is None). May optionally include formatting
+            strings to display the cursor value, or a callable that accepts x 
+            and y as inputs.
+        labelOpts : dict
+            A dict of keyword arguments to use when constructing the text
+            label. See :class:`CursorLabel` and :class: `~pyqtgraph.TextItem`.
         """
         super().__init__(self)
         self._bounds = None
@@ -102,10 +109,6 @@ class TargetItem(UIGraphicsItem):
         self.setPath(path)
 
         self.setLabel(label, labelOpts)
-        
-        if labelAngle is not None:
-            self.label.angle = labelAngle
-            self._updateLabel()
 
     def setPos(self, pos):
         if isinstance(pos, (list, tuple)):
@@ -121,7 +124,7 @@ class TargetItem(UIGraphicsItem):
 
     def setBrush(self, *args, **kwargs):
         """Set the brush that fills the cursor. Allowable arguments are any that
-        are valid for :func:`mkBrush <pyqtgraph.mkBrush>`.
+        are valid for :func:`~pyqtgraph.mkBrush`.
         """
         self.brush = fn.mkBrush(*args, **kwargs)
         if not self.mouseHovering:
@@ -130,7 +133,7 @@ class TargetItem(UIGraphicsItem):
 
     def setHoverBrush(self, *args, **kwargs):
         """Set the brush that fills the cursor when hovering over it. Allowable
-        arguments are any that are valid for :func:`mkBrush <pyqtgraph.mkBrush>`.
+        arguments are any that are valid for :func:`~pyqtgraph.mkBrush`.
         """
         self.hoverBrush = fn.mkBrush(*args, **kwargs)
         if self.mouseHovering:
@@ -139,7 +142,7 @@ class TargetItem(UIGraphicsItem):
     
     def setPen(self, *args, **kwargs):
         """Set the pen for drawing the cursor. Allowable arguments are any that
-        are valid for :func:`mkPen <pyqtgraph.mkPen>`."""
+        are valid for :func:`~pyqtgraph.mkPen`."""
         self.pen = fn.mkPen(*args, **kwargs)
         if not self.mouseHovering:
             self.currentPen = self.pen
@@ -148,7 +151,7 @@ class TargetItem(UIGraphicsItem):
     def setHoverPen(self, *args, **kwargs):
         """Set the pen for drawing the cursor when hovering over it. Allowable
         arguments are any that are valid for
-        :func:`mkPen <pyqtgraph.mkPen>`."""
+        :func:`~pyqtgraph.mkPen`."""
         self.hoverPen = fn.mkPen(*args, **kwargs)
         if self.mouseHovering:
             self.currentPen = self.hoverPen
@@ -179,7 +182,7 @@ class TargetItem(UIGraphicsItem):
     def boundingRect(self):
         return self.shape().boundingRect()
     
-    def paint(self, p, *args):
+    def paint(self, p, *_):
         p.setPen(self.currentPen)
         p.setBrush(self.currentBrush)
         p.drawPath(self.shape())
@@ -196,7 +199,10 @@ class TargetItem(UIGraphicsItem):
             if s is None:
                 return self._path
             self._shape = s
-            self.prepareGeometryChange()  ## beware--this can cause the view to adjust, which would immediately invalidate the shape.
+
+            # beware--this can cause the view to adjust
+            # which would immediately invalidate the shape.
+            self.prepareGeometryChange()
         return self._shape
     
     def generateShape(self):
@@ -269,31 +275,52 @@ class TargetItem(UIGraphicsItem):
         self.label.valueChanged()
 
 class TargetLabel(TextItem):
-    """
-    A TextItem that attaches itself to a CursorItem.
+    """A TextItem that attaches itself to a CursorItem.
+    
     This class extends TextItem with the following features :
     * Automatically positions adjacent to the cursor at a fixed position.
     * Automatically reformats text when the cursor location has changed.
-    =============== ==================================================================
-    **Arguments:**
-    target          The TargetItem to which this label will be attached.
-    text            String to display in the label. May contain two {value, value}
-                    formatting strings to display the current value of the target.
-    offset          (x, y) coordinates to offset the left-side of the text label, can
-                    be tuple(float, float), QPoint, or QPointF, by default (2, 0)
-    =============== ==================================================================
-    All extra keyword arguments are passed to TextItem.
+
+    Parameters
+    ----------
+    target : TargetItem
+        The TargetItem to which this label will be attached to.
+    text : str or callable
+        Governs the text displayed, can be a fixed string or a format string 
+        that accepts the x, and y position of the target item; or be a callable
+        method that accepts that returns a string to be displayed.  
+        Default is "x = {:0.3f}, y = {:0.3f}".
+    offset : tuple or list or QPointF or QPoint
+        Position to set the anchor of the TargetLabel away from the center of
+        the target, by default it is (2, 0).
+    anchor : tuple, list, QPointF or QPoint
+        Position to rotate the TargetLabel about, and position to set the 
+        offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
+    angle : numeric
+        Angle in degrees to rotate text about the anchor point. Default is 0; 
+        text will be displayed upright.
+    kwargs : dict of arguments that are passed on to 
+        :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
 
-    def __init__(self, target, text="x = {:0.3f}, y = {:0.3f}", offset=(2, 0), anchor=(0, -0.5), **kwds):
+    def __init__(self, target, text="x = {:0.3f}, y = {:0.3f}", offset=(2, 0), anchor=(0, -0.5), angle=0, **kwargs):
+        super().__init__(anchor=anchor, angle=angle, **kwargs)
+        self.setParentItem(target)
         self.target = target
         self.format = text
-        TextItem.__init__(self, anchor=anchor, **kwds)
-        self.setParentItem(target)
-        self.setPos(*offset)
-        self.valueChanged()
+        if isinstance(offset, (tuple, list)):
+            self.setPos(*offset)
+        elif isinstance(offset, (QtCore.QPoint, QtCore.QPointF)):
+            self.setPos(offset)
+        else: 
+            raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
+        self.valueChanged()
 
     def valueChanged(self):
         x, y = self.target.position()
-        self.setText(self.format.format(x, y))
+        if isinstance(self.format, str):
+            self.setText(self.format.format(x, y))
+        elif callable(self.format):
+            self.setText(self.format(x, y))
+
