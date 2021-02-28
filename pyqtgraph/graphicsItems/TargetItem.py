@@ -11,7 +11,7 @@ from .TextItem import TextItem
 def makeTarget(radii=(5, 10, 10)) -> QtGui.QPainterPath:
     path = QtGui.QPainterPath()
     r, w, h = radii
-    rect = QtCore.QRectF(-r, -r, r*2, r*2)
+    rect = QtCore.QRectF(-r, -r, r * 2, r * 2)
     path.addEllipse(rect)
     path.moveTo(-w, 0)
     path.lineTo(w, 0)
@@ -19,25 +19,35 @@ def makeTarget(radii=(5, 10, 10)) -> QtGui.QPainterPath:
     path.lineTo(0, h)
     return path
 
+
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
 
     The size of TargetItem will remain fixed on screen even as the view is zoomed.
     Includes an optional text label.
     """
+
     sigPositionChanged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
 
     def __init__(
-        self, pos=None, movable=True, pen=None, hoverPen=None, brush=None, 
-        hoverBrush=None, path=None, label=None, labelOpts=None
-        ):
+        self,
+        pos=None,
+        movable=True,
+        pen=None,
+        hoverPen=None,
+        brush=None,
+        hoverBrush=None,
+        path=None,
+        label=None,
+        labelOpts=None,
+    ):
         """
         Parameters
         ----------
         pos : list, tuple, QPointF, or QPoint
             Initial position of the cursor.
-        radius : int or float
+        radius : int
             Size of the cursor in pixels
         cursor : str
             String that defines the shape of the cursor (can take the following
@@ -47,7 +57,7 @@ class TargetItem(UIGraphicsItem):
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
         brush : QBrush, tuple, list, or str
             Defines the brush that fill the cursor. Can be any arguments that
-            is valid for :func:`~pyqtgraph.mkBrush`. Default is transparent 
+            is valid for :func:`~pyqtgraph.mkBrush`. Default is transparent
             blue.
         movable : bool
             If True, the cursor can be dragged to a new position by the user.
@@ -57,12 +67,12 @@ class TargetItem(UIGraphicsItem):
             is red.
         hoverBrush : QBrush, tuple, list or str
             Brush to use to fill the cursor when hovering over it. Can be any
-            arguments that is valid for :func:`~pyqtgraph.mkBrush`. Default is 
+            arguments that is valid for :func:`~pyqtgraph.mkBrush`. Default is
             transparent blue.
         label : str or callable, optional
             Text to be displayed in a label attached to the cursor, or None to
             show no label (default is None). May optionally include formatting
-            strings to display the cursor value, or a callable that accepts x 
+            strings to display the cursor value, or a callable that accepts x
             and y as inputs.
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
@@ -111,7 +121,9 @@ class TargetItem(UIGraphicsItem):
         self.setLabel(label, labelOpts)
 
     def setPos(self, pos):
-        if isinstance(pos, (list, tuple)):
+        if isinstance(pos, tuple):
+            newPos = pos
+        elif isinstance(pos, list):
             newPos = tuple(pos)
         elif isinstance(pos, (QtCore.QPointF, QtCore.QPoint)):
             newPos = (pos.x(), pos.y())
@@ -139,7 +151,7 @@ class TargetItem(UIGraphicsItem):
         if self.mouseHovering:
             self.currentBrush = self.hoverBrush
             self.update()
-    
+
     def setPen(self, *args, **kwargs):
         """Set the pen for drawing the cursor. Allowable arguments are any that
         are valid for :func:`~pyqtgraph.mkPen`."""
@@ -181,7 +193,7 @@ class TargetItem(UIGraphicsItem):
 
     def boundingRect(self):
         return self.shape().boundingRect()
-    
+
     def paint(self, p, *_):
         p.setPen(self.currentPen)
         p.setBrush(self.currentBrush)
@@ -199,12 +211,11 @@ class TargetItem(UIGraphicsItem):
             if s is None:
                 return self._path
             self._shape = s
-
             # beware--this can cause the view to adjust
             # which would immediately invalidate the shape.
             self.prepareGeometryChange()
         return self._shape
-    
+
     def generateShape(self):
         dt = self.deviceTransform()
         if dt is None:
@@ -216,7 +227,7 @@ class TargetItem(UIGraphicsItem):
         devPos = dt.map(QtCore.QPointF(0, 0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / pi)
+        tr.rotate(va * 180.0 / pi)
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):
@@ -229,12 +240,12 @@ class TargetItem(UIGraphicsItem):
 
         if not self.moving:
             return
-        self.setPos(self.cursorOffset+self.mapToParent(ev.pos()))
+        self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
 
         if ev.isFinish():
             self.moving = False
             self.sigPositionChangeFinished.emit(self)
-    
+
     def mouseClickEvent(self, ev):
         if self.moving and ev.button() == QtCore.Qt.RightButton:
             ev.accept()
@@ -243,7 +254,7 @@ class TargetItem(UIGraphicsItem):
             self.sigPositionChangeFinished.emit(self)
 
     def setMouseHover(self, hover):
-        ## Inform the item that the mouse is(not) hovering over it
+        # Inform the item that the mouse is(not) hovering over it
         if self.mouseHovering is hover:
             return
         self.mouseHovering = hover
@@ -263,7 +274,7 @@ class TargetItem(UIGraphicsItem):
 
     def viewTransformChanged(self):
         GraphicsObject.viewTransformChanged(self)
-        self._shape = None  ## invalidate shape, recompute later if requested.
+        self._shape = None  # invalidate shape, recompute later if requested.
         self.update()
 
     def position(self):
@@ -274,9 +285,10 @@ class TargetItem(UIGraphicsItem):
             return
         self.label.valueChanged()
 
+
 class TargetLabel(TextItem):
     """A TextItem that attaches itself to a CursorItem.
-    
+
     This class extends TextItem with the following features :
     * Automatically positions adjacent to the cursor at a fixed position.
     * Automatically reformats text when the cursor location has changed.
@@ -286,24 +298,32 @@ class TargetLabel(TextItem):
     target : TargetItem
         The TargetItem to which this label will be attached to.
     text : str or callable
-        Governs the text displayed, can be a fixed string or a format string 
+        Governs the text displayed, can be a fixed string or a format string
         that accepts the x, and y position of the target item; or be a callable
-        method that accepts that returns a string to be displayed.  
+        method that accepts that returns a string to be displayed.
         Default is "x = {:0.3f}, y = {:0.3f}".
     offset : tuple or list or QPointF or QPoint
         Position to set the anchor of the TargetLabel away from the center of
         the target, by default it is (2, 0).
     anchor : tuple, list, QPointF or QPoint
-        Position to rotate the TargetLabel about, and position to set the 
+        Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
     angle : numeric
-        Angle in degrees to rotate text about the anchor point. Default is 0; 
+        Angle in degrees to rotate text about the anchor point. Default is 0;
         text will be displayed upright.
-    kwargs : dict of arguments that are passed on to 
+    kwargs : dict of arguments that are passed on to
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
 
-    def __init__(self, target, text="x = {:0.3f}, y = {:0.3f}", offset=(2, 0), anchor=(0, -0.5), angle=0, **kwargs):
+    def __init__(
+        self,
+        target,
+        text="x = {:0.3f}, y = {:0.3f}",
+        offset=(2, 0),
+        anchor=(0, -0.5),
+        angle=0,
+        **kwargs,
+    ):
         super().__init__(anchor=anchor, angle=angle, **kwargs)
         self.setParentItem(target)
         self.target = target
@@ -312,7 +332,7 @@ class TargetLabel(TextItem):
             self.setPos(*offset)
         elif isinstance(offset, (QtCore.QPoint, QtCore.QPointF)):
             self.setPos(offset)
-        else: 
+        else:
             raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
         self.valueChanged()
@@ -323,4 +343,3 @@ class TargetLabel(TextItem):
             self.setText(self.format.format(x, y))
         elif callable(self.format):
             self.setText(self.format(x, y))
-
