@@ -6,19 +6,7 @@ from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
-
-
-def makeTarget(radii=(5, 10, 10)) -> QtGui.QPainterPath:
-    path = QtGui.QPainterPath()
-    r, w, h = radii
-    rect = QtCore.QRectF(-r, -r, r * 2, r * 2)
-    path.addEllipse(rect)
-    path.moveTo(-w, 0)
-    path.lineTo(w, 0)
-    path.moveTo(0, -h)
-    path.lineTo(0, h)
-    return path
-
+from .ScatterPlotItem import Symbols
 
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
@@ -33,12 +21,13 @@ class TargetItem(UIGraphicsItem):
     def __init__(
         self,
         pos=None,
+        diameter=10,
         movable=True,
         pen=None,
         hoverPen=None,
         brush=None,
         hoverBrush=None,
-        path=None,
+        symbol="crosshair",
         label=None,
         labelOpts=None,
     ):
@@ -47,8 +36,8 @@ class TargetItem(UIGraphicsItem):
         ----------
         pos : list, tuple, QPointF, or QPoint
             Initial position of the cursor.
-        radius : int
-            Size of the cursor in pixels
+        diameter : int
+            Size of the cursor in pixels.  Default is 10.
         cursor : str
             String that defines the shape of the cursor (can take the following
             values for the moment : 's' (square), 'c' (circle))
@@ -69,6 +58,11 @@ class TargetItem(UIGraphicsItem):
             Brush to use to fill the cursor when hovering over it. Can be any
             arguments that is valid for :func:`~pyqtgraph.mkBrush`. Default is
             transparent blue.
+        symbol : QPainterPath or str
+            QPainterPath to use for drawing the target, should be centered at
+            (0, 0) with max(width, height) == 1.0.  Alternatively a string
+            which can be any symbol recognized in :func: 
+            `~pyqtgraph.ScatterPlotItem.setData`
         label : str or callable, optional
             Text to be displayed in a label attached to the cursor, or None to
             show no label (default is None). May optionally include formatting
@@ -113,11 +107,19 @@ class TargetItem(UIGraphicsItem):
             pos = (0, 0)
         self.setPos(pos)
 
-        self._path = None
-        if path is None:
-            path = makeTarget()
-        self.setPath(path)
+        if isinstance(symbol, str):
+            try:
+                self._path = Symbols[symbol]
+            except KeyError:
+                raise KeyError("symbol name found in available Symbols")
+        elif isinstance(symbol, QtGui.QPainterPath):
+            self._path = symbol
+        else:
+            raise TypeError("Unknown type provides as symbol")
+        
 
+        self.scale = diameter
+        self.setPath(self._path)
         self.setLabel(label, labelOpts)
 
     def setPos(self, pos):
@@ -228,6 +230,7 @@ class TargetItem(UIGraphicsItem):
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
         tr.rotate(va * 180.0 / pi)
+        tr.scale(self.scale, self.scale)
         return dti.map(tr.map(self._path))
 
     def mouseDragEvent(self, ev):

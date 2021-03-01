@@ -39,10 +39,23 @@ _USE_QRECT = QT_LIB not in ['PySide2', 'PySide6']
 
 ## Build all symbol paths
 name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
-             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left']
+             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 'crosshair']
 Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
+
+def makeCrosshair():
+    path = QtGui.QPainterPath()
+    r, w, h = (0.5, 1, 1)
+    rect = QtCore.QRectF(-r, -r, r * 2, r * 2)
+    path.addEllipse(rect)
+    path.moveTo(-w, 0)
+    path.lineTo(w, 0)
+    path.moveTo(0, -h)
+    path.lineTo(0, h)
+    return path
+Symbols['crosshair'] = makeCrosshair()
+
 coords = {
     't': [(-0.5, -0.5), (0, 0.5), (0.5, -0.5)],
     't1': [(-0.5, 0.5), (0, -0.5), (0.5, 0.5)],
