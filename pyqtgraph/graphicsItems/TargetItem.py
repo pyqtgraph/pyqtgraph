@@ -320,7 +320,7 @@ class TargetLabel(TextItem):
         target,
         text="x = {:0.3f}, y = {:0.3f}",
         offset=(2, 0),
-        anchor=(0, -0.5),
+        anchor=(0, 0.5),
         angle=0,
         **kwargs,
     ):
