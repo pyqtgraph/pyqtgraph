@@ -18,6 +18,8 @@ import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
 
+pg.setConfigOption('imageAxisOrder', 'row-major')
+
 import importlib
 ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
 
@@ -166,7 +168,7 @@ def mkData():
             else:
                 raise ValueError(f"unable to handle dtype: {cacheKey[0]}")
 
-            chan_shape = (width, height)
+            chan_shape = (height, width)
             if ui.rgbCheck.isChecked():
                 frame_shape = chan_shape + (3,)
             else:
@@ -181,9 +183,9 @@ def mkData():
                     xp.clip(subdata, 0, mx, out=subdata)
                 view[idx] = subdata
 
-            data[:, 10, 10:50] = mx
-            data[:, 9:12, 48] = mx
-            data[:, 8:13, 47] = mx
+            data[:, 10:50, 10] = mx
+            data[:, 48, 9:12] = mx
+            data[:, 47, 8:13] = mx
             cache = {cacheKey: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
 
         data = cache[cacheKey]
