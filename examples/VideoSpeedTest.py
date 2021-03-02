@@ -165,16 +165,22 @@ def mkData():
                 mx = 1.0
             else:
                 raise ValueError(f"unable to handle dtype: {cacheKey[0]}")
-            
+
+            chan_shape = (width, height)
             if ui.rgbCheck.isChecked():
-                data = xp.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6, 0))
+                frame_shape = chan_shape + (3,)
             else:
-                data = xp.random.normal(size=(frames,width,height), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6))
-            if cacheKey[0] != 'float':
-                data = xp.clip(data, 0, mx)
-            data = data.astype(dt)
+                frame_shape = chan_shape
+            data = xp.empty((frames,) + frame_shape, dtype=dt)
+            view = data.reshape((-1,) + chan_shape)
+            for idx in range(view.shape[0]):
+                subdata = xp.random.normal(loc=loc, scale=scale, size=chan_shape)
+                # note: gaussian filtering has been removed as it slows down array
+                #       creation greatly.
+                if cacheKey[0] != 'float':
+                    xp.clip(subdata, 0, mx, out=subdata)
+                view[idx] = subdata
+
             data[:, 10, 10:50] = mx
             data[:, 9:12, 48] = mx
             data[:, 8:13, 47] = mx
