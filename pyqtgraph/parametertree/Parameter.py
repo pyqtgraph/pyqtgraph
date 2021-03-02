@@ -704,6 +704,9 @@ class Parameter(QtCore.QObject):
             names = (names,)
         return self.param(*names).setValue(value)
 
+    def keys(self):
+        return self.names
+
     def child(self, *names):
         """Return a child parameter. 
         Accepts the name of the child or a tuple (path, to, child)
