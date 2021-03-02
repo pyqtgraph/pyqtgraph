@@ -157,7 +157,7 @@ def mkData():
                 dt = xp.uint16
                 loc = 4096
                 scale = 1024
-                mx = 2**16
+                mx = 2**16 - 1
             elif cacheKey[0] == 'float':
                 dt = xp.float32
                 loc = 1.0
