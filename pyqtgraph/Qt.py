@@ -196,17 +196,6 @@ elif QT_LIB == PYQT5:
     # recreate the Qt4 structure for Qt5
     from PyQt5 import QtGui, QtCore, QtWidgets, uic
     
-    # PyQt5, starting in v5.5, calls qAbort when an exception is raised inside
-    # a slot. To maintain backward compatibility (and sanity for interactive
-    # users), we install a global exception hook to override this behavior.
-    ver = QtCore.PYQT_VERSION_STR.split('.')
-    if int(ver[1]) >= 5:
-        if sys.excepthook == sys.__excepthook__:
-            sys_excepthook = sys.excepthook
-            def pyqt5_qabort_override(*args, **kwds):
-                return sys_excepthook(*args, **kwds)
-            sys.excepthook = pyqt5_qabort_override
-    
     try:
         from PyQt5 import QtSvg
     except ImportError as err:
@@ -377,9 +366,18 @@ if QT_LIB in [PYSIDE, PYSIDE2, PYSIDE6]:
             QtTest.QTest.qWait = qWait
 
 
-# Common to PyQt4, PyQt5 and PyQt6
-if QT_LIB in [PYQT4, PYQT5, PYQT6]:
+# Common to PyQt5 and PyQt6
+if QT_LIB in [PYQT5, PYQT6]:
     QtVersion = QtCore.QT_VERSION_STR
+
+    # PyQt, starting in v5.5, calls qAbort when an exception is raised inside
+    # a slot. To maintain backward compatibility (and sanity for interactive
+    # users), we install a global exception hook to override this behavior.
+    if sys.excepthook == sys.__excepthook__:
+        sys_excepthook = sys.excepthook
+        def pyqt_qabort_override(*args, **kwds):
+            return sys_excepthook(*args, **kwds)
+        sys.excepthook = pyqt_qabort_override
     
     try:
         sip = importlib.import_module(QT_LIB + '.sip')
