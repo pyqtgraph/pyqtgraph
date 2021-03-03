@@ -90,14 +90,18 @@ def _loadUiType(uiFile):
         http://stackoverflow.com/a/8717832
     """
 
-    if QT_LIB == "PYSIDE":
-        import pysideuic
-    else:
+    pyside2uic = None
+    if QT_LIB == PYSIDE2:
         try:
-            import pyside2uic as pysideuic
+            import pyside2uic
         except ImportError:
-            # later vserions of pyside2 have dropped pysideuic; use the uic binary instead.
-            pysideuic = None
+            # later versions of pyside2 have dropped pyside2uic; use the uic binary instead.
+            pyside2uic = None
+
+        if pyside2uic is None:
+            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
+            if (5, 14) <= pyside2version < (5, 14, 2, 2):
+                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
 
     # get class names from ui file
     import xml.etree.ElementTree as xml
@@ -106,20 +110,16 @@ def _loadUiType(uiFile):
     form_class = parsed.find('class').text
 
     # convert ui file to python code
-    if pysideuic is None:
-        if QT_LIB == PYSIDE2:
-            pyside2version = tuple(map(int, PySide2.__version__.split(".")))
-            if pyside2version >= (5, 14) and pyside2version < (5, 14, 2, 2):
-                warnings.warn('For UI compilation, it is recommended to upgrade to PySide >= 5.15')
+    if pyside2uic is None:
         uic_executable = QT_LIB.lower() + '-uic'
         uipy = subprocess.check_output([uic_executable, uiFile])
     else:
         o = _StringIO()
         with open(uiFile, 'r') as f:
-            pysideuic.compileUi(f, o, indent=0)
+            pyside2uic.compileUi(f, o, indent=0)
         uipy = o.getvalue()
 
-    # exceute python code
+    # execute python code
     pyc = compile(uipy, '<string>', 'exec')
     frame = {}
     exec(pyc, frame)
