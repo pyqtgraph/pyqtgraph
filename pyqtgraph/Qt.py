@@ -11,7 +11,6 @@ This module exists to smooth out some of the differences between PySide and PyQt
 """
 
 import os, sys, re, time, subprocess, warnings
-import importlib
 import enum
 
 from .python2_3 import asUnicode
@@ -28,9 +27,10 @@ QT_LIB = os.getenv('PYQTGRAPH_QT_LIB')
 ## Automatically determine which Qt package to use (unless specified by
 ## environment variable).
 ## This is done by first checking to see whether one of the libraries
-## is already imported. If not, then attempt to import PyQt4, then PySide.
+## is already imported. If not, then attempt to import in the order
+## specified in libOrder.
 if QT_LIB is None:
-    libOrder = [PYQT4, PYSIDE, PYQT5, PYSIDE2, PYSIDE6, PYQT6]
+    libOrder = [PYQT5, PYSIDE2, PYSIDE6, PYQT6]
 
     for lib in libOrder:
         if lib in sys.modules:
@@ -47,7 +47,7 @@ if QT_LIB is None:
             pass
 
 if QT_LIB is None:
-    raise Exception("PyQtGraph requires one of PyQt4, PyQt5, PyQt6, PySide, PySide2 or PySide6; none of these packages could be imported.")
+    raise Exception("PyQtGraph requires one of PyQt5, PyQt6, PySide2 or PySide6; none of these packages could be imported.")
 
 
 class FailedImport(object):
@@ -58,22 +58,6 @@ class FailedImport(object):
         
     def __getattr__(self, attr):
         raise self.err
-
-
-def _isQObjectAlive(obj):
-    """An approximation of PyQt's isQObjectAlive().
-    """
-    try:
-        if hasattr(obj, 'parent'):
-            obj.parent()
-        elif hasattr(obj, 'parentItem'):
-            obj.parentItem()
-        else:
-            raise Exception("Cannot determine whether Qt object %s is still alive." % obj)
-    except RuntimeError:
-        return False
-    else:
-        return True
 
 
 # Make a loadUiType function like PyQt has
@@ -147,54 +131,10 @@ def _loadUiType(uiFile):
     return form_class, base_class
 
 
-if QT_LIB == PYSIDE:
-    from PySide import QtGui, QtCore
-
-    try:
-        from PySide import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
-    try:
-        from PySide import QtSvg
-    except ImportError as err:
-        QtSvg = FailedImport(err)
-
-    try:
-        from PySide import QtTest
-    except ImportError as err:
-        QtTest = FailedImport(err)
-    
-    try:
-        from PySide import shiboken
-        isQObjectAlive = shiboken.isValid
-    except ImportError:
-        # use approximate version
-        isQObjectAlive = _isQObjectAlive
-    
-    import PySide
-    VERSION_INFO = 'PySide ' + PySide.__version__ + ' Qt ' + QtCore.__version__
-    
-elif QT_LIB == PYQT4:
-    from PyQt4 import QtGui, QtCore, uic
-    try:
-        from PyQt4 import QtSvg
-    except ImportError as err:
-        QtSvg = FailedImport(err)
-    try:
-        from PyQt4 import QtOpenGL
-    except ImportError as err:
-        QtOpenGL = FailedImport(err)
-    try:
-        from PyQt4 import QtTest
-    except ImportError as err:
-        QtTest = FailedImport(err)
-
-    VERSION_INFO = 'PyQt4 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
-
-elif QT_LIB == PYQT5:
+if QT_LIB == PYQT5:
     # We're using PyQt5 which has a different structure so we're going to use a shim to
     # recreate the Qt4 structure for Qt5
-    from PyQt5 import QtGui, QtCore, QtWidgets, uic
+    from PyQt5 import QtGui, QtCore, QtWidgets, sip, uic
     
     try:
         from PyQt5 import QtSvg
@@ -208,7 +148,7 @@ elif QT_LIB == PYQT5:
     VERSION_INFO = 'PyQt5 ' + QtCore.PYQT_VERSION_STR + ' Qt ' + QtCore.QT_VERSION_STR
 
 elif QT_LIB == PYQT6:
-    from PyQt6 import QtGui, QtCore, QtWidgets, uic
+    from PyQt6 import QtGui, QtCore, QtWidgets, sip, uic
 
     try:
         from PyQt6 import QtSvg
@@ -237,12 +177,8 @@ elif QT_LIB == PYSIDE2:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    try:
-        import shiboken2
-        isQObjectAlive = shiboken2.isValid
-    except ImportError:
-        # use approximate version
-        isQObjectAlive = _isQObjectAlive    
+    import shiboken2
+    isQObjectAlive = shiboken2.isValid
     import PySide2
     VERSION_INFO = 'PySide2 ' + PySide2.__version__ + ' Qt ' + QtCore.__version__
 
@@ -262,12 +198,8 @@ elif QT_LIB == PYSIDE6:
     except ImportError as err:
         QtTest = FailedImport(err)
 
-    try:
-        import shiboken6
-        isQObjectAlive = shiboken6.isValid
-    except ImportError:
-        # use approximate version
-        isQObjectAlive = _isQObjectAlive
+    import shiboken6
+    isQObjectAlive = shiboken6.isValid
     import PySide6
     VERSION_INFO = 'PySide6 ' + PySide6.__version__ + ' Qt ' + QtCore.__version__
 
@@ -349,11 +281,11 @@ if QT_LIB in [PYQT6, PYSIDE6]:
         QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
 
 
-# Common to PySide, PySide2 and PySide6
-if QT_LIB in [PYSIDE, PYSIDE2, PYSIDE6]:
+# Common to PySide2 and PySide6
+if QT_LIB in [PYSIDE2, PYSIDE6]:
     QtVersion = QtCore.__version__
     loadUiType = _loadUiType
-        
+
     # PySide does not implement qWait
     if not isinstance(QtTest, FailedImport):
         if not hasattr(QtTest.QTest, 'qWait'):
@@ -379,10 +311,6 @@ if QT_LIB in [PYQT5, PYQT6]:
             return sys_excepthook(*args, **kwds)
         sys.excepthook = pyqt_qabort_override
     
-    try:
-        sip = importlib.import_module(QT_LIB + '.sip')
-    except ModuleNotFoundError:
-        import sip
     def isQObjectAlive(obj):
         return not sip.isdeleted(obj)
     
