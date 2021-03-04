@@ -591,7 +591,6 @@ class PlotDataItem(GraphicsObject):
         curveArgs = {}
         scatterArgs = {}
         if update_style: # repeat style arguments only when changed
-            print('  PDI: style update in updateItems')
             for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
                 if k in self.opts:
                     curveArgs[v] = self.opts[k]
