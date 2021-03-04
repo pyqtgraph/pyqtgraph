@@ -168,7 +168,6 @@ class PlotDataItem(GraphicsObject):
 
         self._viewRangeWasChanged = False
         self._styleWasChanged = True # force initial update
-
         self._dataRect = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
@@ -182,7 +181,8 @@ class PlotDataItem(GraphicsObject):
             'alphaHint': 1.0,
             'alphaMode': False,
 
-            'pen': (200,200,200),
+            # 'pen': (200,200,200),
+            'pen': 'p0', # default plot color
             'shadowPen': None,
             'fillLevel': None,
             'fillOutline': False,
@@ -191,7 +191,7 @@ class PlotDataItem(GraphicsObject):
 
             'symbol': None,
             'symbolSize': 10,
-            'symbolPen': (200,200,200),
+            'symbolPen': 'p0', # (200,200,200),
             'symbolBrush': (50, 50, 150),
             'pxMode': True,
 
@@ -263,7 +263,6 @@ class PlotDataItem(GraphicsObject):
         self.updateItems()
         self.informViewBoundsChanged()
 
-
     def setDerivativeMode(self, mode):
         if self.opts['derivativeMode'] == mode:
             return
@@ -291,12 +290,8 @@ class PlotDataItem(GraphicsObject):
         | Sets the pen used to draw lines between points.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
         """
-        pen = fn.mkPen(*args, **kargs)
-        self.opts['pen'] = pen
-        #self.curve.setPen(pen)
-        #for c in self.curves:
-            #c.setPen(pen)
-        #self.update()
+        if self.opts['pen'] == (args, kargs): return
+        self.opts['pen'] = (args, kargs)
         self.updateItems()
 
     def setShadowPen(self, *args, **kargs):
@@ -307,58 +302,41 @@ class PlotDataItem(GraphicsObject):
           and should generally be assigned greater width than the primary pen.
         | *pen* can be a QPen or any argument accepted by :func:`pyqtgraph.mkPen() <pyqtgraph.mkPen>`
         """
-        pen = fn.mkPen(*args, **kargs)
-        self.opts['shadowPen'] = pen
-        #for c in self.curves:
-            #c.setPen(pen)
-        #self.update()
+        if self.opts['shadowPen'] == (args, kargs): return
+        self.opts['shadowPen'] = (args, kargs)
         self.updateItems()
 
     def setFillBrush(self, *args, **kargs):
-        brush = fn.mkBrush(*args, **kargs)
-        if self.opts['fillBrush'] == brush:
-            return
-        self.opts['fillBrush'] = brush
+        if self.opts['fillBrush'] == (args, kargs): return
+        self.opts['fillBrush'] = (args, kargs)
         self.updateItems()
 
     def setBrush(self, *args, **kargs):
-        return self.setFillBrush(*args, **kargs)
+        self.setFillBrush(*args, **kargs)
 
     def setFillLevel(self, level):
-        if self.opts['fillLevel'] == level:
-            return
+        if self.opts['fillLevel'] == level: return
         self.opts['fillLevel'] = level
         self.updateItems()
 
     def setSymbol(self, symbol):
-        if self.opts['symbol'] == symbol:
-            return
+        if self.opts['symbol'] == symbol: return
         self.opts['symbol'] = symbol
-        #self.scatter.setSymbol(symbol)
         self.updateItems()
 
     def setSymbolPen(self, *args, **kargs):
-        pen = fn.mkPen(*args, **kargs)
-        if self.opts['symbolPen'] == pen:
-            return
-        self.opts['symbolPen'] = pen
-        #self.scatter.setSymbolPen(pen)
+        if self.opts['symbolPen'] == (args, kargs): return
+        self.opts['symbolPen'] = (args, kargs)
         self.updateItems()
 
     def setSymbolBrush(self, *args, **kargs):
-        brush = fn.mkBrush(*args, **kargs)
-        if self.opts['symbolBrush'] == brush:
-            return
+        if self.opts['symbolBrush'] == (args, kargs): return
         self.opts['symbolBrush'] = brush
-        #self.scatter.setSymbolBrush(brush)
         self.updateItems()
 
-
     def setSymbolSize(self, size):
-        if self.opts['symbolSize'] == size:
-            return
+        if self.opts['symbolSize'] == size: return
         self.opts['symbolSize'] = size
-        #self.scatter.setSymbolSize(symbolSize)
         self.updateItems()
 
     def setDownsampling(self, ds=None, auto=None, method=None):
@@ -525,15 +503,15 @@ class PlotDataItem(GraphicsObject):
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
             self._styleWasChanged = True
-
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
             self._styleWasChanged = True
 
-        ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
+        ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
+
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
-            if self.opts['symbol'] is None: 
-                kargs['symbol'] = 'o'
+            # default to 'o' symbol if not previously set.
+            if self.opts['symbol'] is None: kargs['symbol'] = 'o'
 
         if 'brush' in kargs:
             kargs['fillBrush'] = kargs['brush']
@@ -541,6 +519,7 @@ class PlotDataItem(GraphicsObject):
         for k in list(self.opts.keys()):
             if k in kargs:
                 self.opts[k] = kargs[k]
+                print('  PDI style update:',k)
                 self._styleWasChanged = True
 
         #curveArgs = {}
@@ -593,8 +572,7 @@ class PlotDataItem(GraphicsObject):
         if update_style: # repeat style arguments only when changed
             print('  PDI: style update in updateItems')
             for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
-                if k in self.opts:
-                    curveArgs[v] = self.opts[k]
+                curveArgs[v] = self.opts[k]
 
             for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
                 if k in self.opts:
@@ -603,21 +581,20 @@ class PlotDataItem(GraphicsObject):
         x,y = self.getData()
         #scatterArgs['mask'] = self.dataMask
 
-        if self.opts['pen'] is not None or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None): # draw if visible...
+        if self.opts['pen'] is not None or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None):
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
-        else: # ...hide if not.
+        else:
             self.curve.hide()
 
-        if self.opts['symbol'] is not None: # draw if visible...
+        if self.opts['symbol'] is not None:
             ## check against `True` too for backwards compatibility
             if self.opts.get('stepMode', False) in ("center", True):
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
-        else: # ...hide if not.
+        else:
             self.scatter.hide()
-
 
     def getData(self):
         if self.xData is None:
