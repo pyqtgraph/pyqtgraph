@@ -86,3 +86,19 @@ Documentation
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
+
+Used By
+-------
+
+PyQtGraph is used by some amazing projects.  A listing of them includes, but is not limited to:
+
+* [ACQ4](https://github.com/acq4/acq4)
+* [Orange3](https://orangedatamining.com/)
+* [neurotic](neurotic)
+* [Joulescope](https://www.joulescope.com/)
+* [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
+* [argos](https://github.com/titusjan/argos)
+* [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
+
+Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
