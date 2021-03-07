@@ -145,6 +145,8 @@ def _mkBrush(*args, **kwargs):
     sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
     uses the QBrush object id in its key.
     """
+    # Comment: This should really become standard behaviour in mkBrush.
+    # It is necessary to work with NamedColor in any case.
     if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
         return args[0]
     else:

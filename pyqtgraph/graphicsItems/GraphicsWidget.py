@@ -1,8 +1,14 @@
 from ..Qt import QtGui, QtCore  
 from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
+from .. import functions as fn
 
 __all__ = ['GraphicsWidget']
+
+try: # prepare common definition for slot decorator across PyQt / Pyside:
+    QT_CORE_SLOT = QtCore.pyqtSlot
+except AttributeError:
+    QT_CORE_SLOT = QtCore.Slot
 
 class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     
@@ -16,7 +22,9 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
-        
+        # fn.NAMED_COLOR_MANAGER.paletteChangeSignal.connect(self.styleChange)
+        fn.NAMED_COLOR_MANAGER.paletteHasChangedSignal.connect(self.styleHasChanged)
+
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
 
@@ -56,4 +64,16 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         #print "shape:", p.boundingRect()
         return p
 
-
+    # @QT_CORE_SLOT(dict)
+    # # @QtCore.Slot()
+    # def styleChange(self, color_dict):
+    #     """ stub function called after Palette.apply(), specific ractions to palette redefinitions execute here """
+    #     print('style change request:', self, type(color_dict))
+        
+    @QT_CORE_SLOT()
+    # @QtCore.Slot(dict)
+    def styleHasChanged(self):
+        """ called to trigger redraw after all named colors have been updated """
+        # self._boundingRect = None
+        self.update()
+        print('redraw after style change:', self)

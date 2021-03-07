@@ -139,7 +139,8 @@ class GraphicsView(QtGui.QGraphicsView):
         """
         self._background = background
         if background == 'default':
-            background = getConfigOption('background')
+            # background = getConfigOption('background')
+            background = 'gr_bg' # default graphics background color
         brush = fn.mkBrush(background)
         self.setBackgroundBrush(brush)
     

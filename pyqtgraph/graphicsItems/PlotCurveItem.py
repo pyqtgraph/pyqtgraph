@@ -527,11 +527,10 @@ class PlotCurveItem(GraphicsObject):
                 p.setPen(sp)
                 p.drawPath(path)
 
-        if isinstance(self.opts.get('pen'), QtGui.QPen):
+        if isinstance(self.opts.get('pen'), QtGui.QPen): # subclass NamedPen also triggers this
             cp = self.opts['pen']
         else:
             cp = fn.mkPen(self.opts['pen'])
-
         p.setPen(cp)
         if self.opts['fillOutline'] and self.fillPath is not None:
             p.drawPath(self.fillPath)

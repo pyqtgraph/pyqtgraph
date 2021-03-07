@@ -99,12 +99,12 @@ class AxisItem(GraphicsWidget):
         self.setRange(0, 1)
 
         if pen is None:
-            self.setPen()
+            self.setPen('gr_fg') # default foreground color
         else:
             self.setPen(pen)
 
         if textPen is None:
-            self.setTextPen()
+            self.setTextPen('gr_fg') # default foreground color
         else:
             self.setTextPen(pen)
 
@@ -416,7 +416,8 @@ class AxisItem(GraphicsWidget):
     def pen(self):
         if self._pen is None:
             return fn.mkPen(getConfigOption('foreground'))
-        return fn.mkPen(self._pen)
+        return self._pen
+        # return fn.mkPen(self._pen)
 
     def setPen(self, *args, **kwargs):
         """
@@ -446,7 +447,8 @@ class AxisItem(GraphicsWidget):
         if args or kwargs:
             self._textPen = fn.mkPen(*args, **kwargs)
         else:
-            self._textPen = fn.mkPen(getConfigOption('foreground'))
+            # self._textPen = fn.mkPen(getConfigOption('foreground'))
+            self._textPen = fn.mkPen('gr_fg')
         self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
         self._updateLabel()
 
@@ -958,6 +960,8 @@ class AxisItem(GraphicsWidget):
         ## compute coordinates to draw ticks
         ## draw three different intervals, long ticks first
         tickSpecs = []
+        tickPen = self.pen() # generate alpha-adjusted pen for gridlines
+        orig_color = tickPen.color()
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
@@ -979,7 +983,10 @@ class AxisItem(GraphicsWidget):
                     raise ValueError("lineAlpha should be [0..255]")
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
-
+            
+            color = tickPen.color() # this copy is independent from orig_color
+            color.setAlpha(int(lineAlpha))
+            tickPen.setColor(color)
             for v in ticks:
                 ## determine actual position to draw this tick
                 x = (v * xScale) - offset
@@ -994,11 +1001,8 @@ class AxisItem(GraphicsWidget):
                 p2[axis] = tickStop
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
-                tickPen = self.pen()
-                color = tickPen.color()
-                color.setAlpha(int(lineAlpha))
-                tickPen.setColor(color)
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
+        tickPen.setColor(orig_color) # restore
         profiler('compute ticks')
 
 
@@ -1209,3 +1213,8 @@ class AxisItem(GraphicsWidget):
         if lv is None:
             return
         return lv.mouseClickEvent(event)
+        
+    def styleHasChanged(self):
+        """ self.picture needs to be invalidated to initiate full redraw """
+        self.picture = None
+        super().styleHasChanged()
