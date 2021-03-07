@@ -27,13 +27,15 @@ def test_basics_graphics_view():
     assert view.scaleCenter is False
     assert view.clickAccepted is False
     assert view.centralWidget is not None
-    assert view._background == "default"
+    # assert view._background == "default"
+    assert view._background == "gr_bg"
 
     # Set background color
     # --------------------------------------
     view.setBackground("w")
     assert view._background == "w"
-    assert view.backgroundBrush().color() == QtCore.Qt.white
+    # assert view.backgroundBrush().color() == QtCore.Qt.white
+    assert view.backgroundBrush().color().name() == '#ffffff' #QtCore.Qt.white
 
     # Set anti aliasing
     # --------------------------------------

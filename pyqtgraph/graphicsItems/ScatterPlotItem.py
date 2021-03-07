@@ -20,6 +20,7 @@ from ..python2_3 import basestring
 
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
+DEBUG = False
 
 
 # When pxMode=True for ScatterPlotItem, QPainter.drawPixmap is used for drawing, which
@@ -253,6 +254,7 @@ class SymbolAtlas(object):
         images = []
         data = []
         for key, style in styles.items():
+            if DEBUG: print('\nrender:', style[2].color().name(), style[3].color().name(), style)
             img = renderSymbol(*style)
             arr = fn.imageToArray(img, copy=False, transpose=False)
             images.append(img)  # keep these to delay garbage collection
@@ -411,8 +413,8 @@ class ScatterPlotItem(GraphicsObject):
             'name': None,
             'symbol': 'o',
             'size': 7,
-            'pen': fn.mkPen(getConfigOption('foreground')),
-            'brush': fn.mkBrush(100, 100, 150),
+            'pen': fn.mkPen('gr_fg'), # getConfigOption('foreground')),
+            'brush': fn.mkBrush(('gr_fg',128)), # (100, 100, 150),
             'hoverable': False,
             'tip': 'x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format,
         }
@@ -489,7 +491,6 @@ class ScatterPlotItem(GraphicsObject):
         Add new points to the scatter plot.
         Arguments are the same as setData()
         """
-
         ## deal with non-keyword arguments
         if len(args) == 1:
             kargs['spots'] = args[0]
@@ -1235,6 +1236,19 @@ class ScatterPlotItem(GraphicsObject):
     def _hasHoverStyle(self):
         return any(self.opts['hover' + opt.title()] != _DEFAULT_STYLE[opt]
                    for opt in ['symbol', 'size', 'pen', 'brush'])
+                   
+    def styleHasChanged(self):
+        """ overridden to trigger symbol atlas refresh """
+        if DEBUG:
+            print('  ScatterPlotItem: style update!')
+            print('  pens:',self.data['pen'] )
+            print('  default pen  :', self.opts[ 'pen' ].color().name(), self.opts[ 'pen' ] )
+            print('  default brush:', self.opts['brush'].color().name(), self.opts['brush'] )
+        self.fragmentAtlas.clear()
+        self.data['sourceRect'] = (0, 0, 0, 0)
+        self.updateSpots(self.data)
+        super().styleHasChanged()
+
 
 
 class SpotItem(object):

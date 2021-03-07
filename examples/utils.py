@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from argparse import Namespace
 
-
 examples = OrderedDict([
     ('Command-line usage', 'CLIexample.py'),
     ('Basic Plotting', Namespace(filename='Plotting.py', recommended=True)),
@@ -21,6 +20,7 @@ examples = OrderedDict([
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
+    ('Palette adjustment','PaletteApplicationExample.py'),
     ('HDF5 big data', 'hdf5.py'),
     ('Demos', OrderedDict([
         ('Optics', 'optics_demos.py'),

@@ -62,12 +62,17 @@ CONFIG_OPTIONS = {
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
 } 
 
-
 def setConfigOption(opt, value):
     if opt not in CONFIG_OPTIONS:
         raise KeyError('Unknown configuration option "%s"' % opt)
     if opt == 'imageAxisOrder' and value not in ('row-major', 'col-major'):
         raise ValueError('imageAxisOrder must be either "row-major" or "col-major"')
+    # setConfigOption should be relocated to have access to functions.py
+    # Then background / foreground updates can be intercepted and applied to the palette
+    # if opt == 'background':
+    #     functions.Colors['gr_bg'] = functions.Colors[value]
+    # if opt == 'foreground':
+    #     functions.Colors['gr_fg'] = functions.Colors[value]
     CONFIG_OPTIONS[opt] = value
 
 def setConfigOptions(**opts):
@@ -280,6 +285,7 @@ from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
 from .namedPen import *
+from .namedBrush import *
 from .palette import *
 
 

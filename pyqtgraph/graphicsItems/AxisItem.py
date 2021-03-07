@@ -104,7 +104,7 @@ class AxisItem(GraphicsWidget):
             self.setPen(pen)
 
         if textPen is None:
-            self.setTextPen('gr_fg') # default foreground color
+            self.setTextPen('gr_txt') # default text color
         else:
             self.setTextPen(pen)
 
@@ -1217,4 +1217,6 @@ class AxisItem(GraphicsWidget):
     def styleHasChanged(self):
         """ self.picture needs to be invalidated to initiate full redraw """
         self.picture = None
+        self.labelStyle['color'] = self._textPen.color().name()
+        self._updateLabel()
         super().styleHasChanged()

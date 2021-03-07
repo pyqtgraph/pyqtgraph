@@ -15,16 +15,19 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     Note: To display text inside a scaled view (ViewBox, PlotWidget, etc) use TextItem
     """
     
-    
     def __init__(self, text=' ', parent=None, angle=0, **args):
         GraphicsWidget.__init__(self, parent)
         GraphicsWidgetAnchor.__init__(self)
         self.item = QtGui.QGraphicsTextItem(self)
         self.opts = {
-            'color': None,
+            'color': 'gr_txt', # default text color. Was: None,
             'justify': 'center'
         }
         self.opts.update(args)
+        self._brush = fn.mkBrush(self.opts['color']) # make a NamedBrush by default
+        self._hex_color_override = None
+        self._optlist = []
+
         self._sizeHint = {}
         self.setText(text)
         self.setAngle(angle)
@@ -32,6 +35,9 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     def setAttr(self, attr, value):
         """Set default text properties. See setText() for accepted parameters."""
         self.opts[attr] = value
+        if attr == 'color':
+            self._brush = fn.mkBrush(value) # make a new NamedBrush/QBrush
+            self._hex_color_override = None # to use for all normal output
         
     def setText(self, text, **args):
         """Set the text and text properties in the label. Accepts optional arguments for auto-generating
@@ -46,25 +52,28 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         ==================== ==============================
         """
         self.text = text
+        if 'color' in args:            
+            # temporary override for color:
+            col = fn.mkColor(opts['color'])
+            self._hex_color_override = col.name()
+            color_opt = self._hex_color_override
+        else:
+            self._hex_color_override = None # return to defined color
+            color_opt = self._brush.color().name()
+
         opts = self.opts
         for k in args:
             opts[k] = args[k]
-        
-        optlist = []
-        
-        color = self.opts['color']
-        if color is None:
-            color = getConfigOption('foreground')
-        color = fn.mkColor(color)
-        optlist.append('color: #' + fn.colorStr(color)[:6])
+
+        self.optlist = []
+        # self.optlist.append('color: ' + col.name()
         if 'size' in opts:
-            optlist.append('font-size: ' + opts['size'])
+            self.optlist.append('font-size: ' + opts['size'])
         if 'bold' in opts and opts['bold'] in [True, False]:
-            optlist.append('font-weight: ' + {True:'bold', False:'normal'}[opts['bold']])
+            self.optlist.append('font-weight: ' + {True:'bold', False:'normal'}[opts['bold']])
         if 'italic' in opts and opts['italic'] in [True, False]:
-            optlist.append('font-style: ' + {True:'italic', False:'normal'}[opts['italic']])
-        full = "<span style='%s'>%s</span>" % ('; '.join(optlist), text)
-        #print full
+            self.optlist.append('font-style: ' + {True:'italic', False:'normal'}[opts['italic']])
+        full = "<span style='color: {:s}; {:s}'>{:s}</span>".format(color_opt, '; '.join(self.optlist), self.text)
         self.item.setHtml(full)
         self.updateMin()
         self.resizeEvent(None)
@@ -133,10 +142,18 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         
     def itemRect(self):
         return self.item.mapRectToParent(self.item.boundingRect())
-        
+
+    def styleHasChanged(self):
+        """ overridden to update color without changing the text """
+        if self._hex_color_override is not None:
+            return # nothing to do, overridden text color will not change.
+        color_opt = self._brush.color().name() # get updated color
+        full = "<span style='color: {:s}; {:s}'>{:s}</span>".format(color_opt, '; '.join(self.optlist), self.text)
+        self.item.setHtml(full)
+        super().styleHasChanged()
+
     #def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))
         #p.drawRect(self.rect())
         #p.setPen(fn.mkPen('g'))
         #p.drawRect(self.itemRect())
-        

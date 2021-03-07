@@ -22,6 +22,7 @@ from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import Qt
 from .namedColorManager import NamedColorManager
 from .namedPen import NamedPen
+from .namedBrush import NamedBrush
 
 from .metaarray import MetaArray
 from collections import OrderedDict
@@ -219,25 +220,66 @@ class Color(QtGui.QColor):
         return (self.red, self.green, self.blue, self.alpha)[ind]()
         
     
+def parseNamedColorSpecification(*args):
+    """ 
+    check if args specify a NamedColor, looking for
+    'name' or ('name', alpha) information.
+    Returns:
+    None if invalid
+    ('name', alpha) if a valid name and alpha value is given
+    ('name', None)  if no alpha value is available
+    ('', None)      if an empty name is given, indicating a blank color
+    None            if the specification does not match a NamedColor
+    """
+    while len(args) <= 1:
+        if len(args) == 0:
+            return None
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, str):
+                if len(arg) == 0:
+                    return ('', None) # valid, but blank
+                if arg[0] == '#':
+                    return None # hexadecimal string not handled as NamedColor
+                if arg in Colors:
+                    return (arg, None) # valid name, no alpha given
+            if isinstance(arg, tuple) or isinstance(arg, list):
+                args = arg # promote to top level
+            else:
+                return None #numerical values not handled as NamedColor
+    if len(args) == 2:
+        if isinstance(arg[0], str):
+            return (arg[0], arg[1]) # return ('name', alpha) tuple
+    return None # all other cases not handled as NamedColor
+            
+
 def mkColor(*args):
     """
     Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
     
     ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w                      
+     'name'          any color name specifed in palette
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "RGB"           hexadecimal strings; may begin with '#'
-     "RGBA"          
-     "RRGGBB"       
-     "RRGGBBAA"     
+     "#RGB"           hexadecimal strings; should begin with '#'
+     "#RGBA"          
+     "#RRGGBB"       
+     "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
+    result = parseNamedColorSpecification(args) # check if this is a named palette color
+    if result is not None: # make a return palette color
+        name, alpha = result
+        if name == '':
+            return QtGui.QColor(0,0,0,0) # empty string means "no color"
+        qcol = Colors[name]
+        if alpha is not None: qcol.setAlpha( alpha )
+        return qcol
     if len(args) == 1:
         if isinstance(args[0], basestring):
             c = args[0]
@@ -301,116 +343,115 @@ def mkColor(*args):
     return QtGui.QColor(*args)
 
 
-def mkBrush(*args, **kwds):
+def mkBrush(*args, **kargs):
     """
     | Convenience function for constructing Brush.
     | This function always constructs a solid brush and accepts the same arguments as :func:`mkColor() <pyqtgraph.mkColor>`
     | Calling mkBrush(None) returns an invisible brush.
     """
-    print('mkBrush called with',args,kwds)
-    if 'color' in kwds:
-        color = kwds['color']
-    elif len(args) == 1:
-        arg = args[0]
-        if arg is None:
-            return QtGui.QBrush(QtCore.Qt.NoBrush)
-        elif isinstance(arg, QtGui.QBrush):
-            return QtGui.QBrush(arg)
+    while ( # unravel single element sublists
+        ( isinstance(args, tuple) or isinstance(args,list) )
+        and len(args) == 1 
+    ): 
+        args = args[0]
+    # now args is either a non-list entity, or a multi-element tuple
+    # short-circuits:
+    if isinstance(args, NamedBrush):
+        return args # pass through predefined NamedPen directly
+    elif isinstance(args, QtGui.QBrush):
+        return QtGui.QBrush(args)  ## return a copy of this brush
+    elif isinstance(args, dict): 
+        return mkBrush(**args) # retry with kwargs assigned from dictionary
+    elif args is None:
+        return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
+    # no short-circuit, continue parsing to construct QPen or NamedPen
+    if 'hsv' in kargs: # hsv argument takes precedence
+        qcol = hsvColor( *kargs['hsv'] )
+        qbrush = QtGui.QBrush(qcol)
+    else:
+        if 'color' in kargs:
+            args = kargs['color'] # 'color' KW-argument overrides unnamed arguments
+        if args is None:
+            return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
+        if args == () or args == []:
+            print('  functions: returning default color NamedBrush')
+            qpen = NamedBrush( 'gr_fg' ) # default foreground color
         else:
-            color = arg
-    elif len(args) > 1:
-        color = args
-    return QtGui.QBrush(mkColor(color))
-
-def mkNamedPen(name, **kargs):
-    """ 
-    Try to create a named pen.
-    Currently, this quietly returns None if 'name' does not specify a color. 
-    This causes mkPen to keep trying to parse color information.
-    
-    In addition to arguments 'style', 'width', 'dash' and 'cosmetic',
-    'alpha' = 0-255 sets the opacity of the named pen
-    """
-    alpha = kargs.get('alpha', None)
-    try:
-        pen = NamedPen( name, alpha=alpha )
-    except ValueError:
-        print('  failed to make NamedPen',name,kargs)
-        return None
-    if kargs == {}:
-        print('  prepared NamedPen',name,'(no kargs)')
-        return pen # default pen of width zero is cosmetic by default
-    style = kargs.get('style', None) # in many cases, a predefined pen is just passed through
-    width = kargs.get('width', 1) # collect remaining kargs to define properties
-    dash  = kargs.get('dash', None)
-    cosmetic = kargs.get('cosmetic', True)
-
-    pen.setCosmetic(cosmetic)
-    if style is not None: pen.setStyle(style)
-    if dash  is not None: pen.setDashPattern(dash)
-    print('  prepared NamedPen',name,kargs)
-    return pen
-
+            result = parseNamedColorSpecification(args)
+            if result is not None: # make a NamedBrush
+                name, alpha = result
+                if name == '':
+                    return QtGui.QBrush( QtCore.Qt.NoBrush ) # empty string means "no brush"
+                qbrush = NamedBrush(name, alpha=alpha)
+            else: # make a QBrush
+                qcol = mkColor(args)
+                qbrush = QtGui.QBrush(qcol)
+    # here we would apply additional style based on KW-arguments
+    return qbrush
 
 def mkPen(*args, **kargs):
     """
     Convenience function for constructing QPen. 
     
     Examples::
-    
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
         mkPen({'color': "FF0", width: 2})
         mkPen(None)   # (no pen)
+        mkPen()       # default color
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
-    
     # print('mkPen called:',args,kargs)
-    color = kargs.get('color', None) # collect only immediately required properties
-    style = kargs.get('style', None) # in many cases, a predefined pen is just passed through
-    
-    pen = None
-    if len(args) == 1:
-        arg = args[0]
-        if isinstance(arg, str):
-            if len(arg) == 0: # empty string sets "no pen"
-                style = QtCore.Qt.NoPen
-            elif arg[0] != '#':
-                pen = mkNamedPen(arg)
-        elif isinstance(arg, NamedPen):
-            return arg # pass through predefined NamedPen directly
-        elif isinstance(arg, QtGui.QPen):
-            return QtGui.QPen(arg)  ## return a copy of this pen
-        elif isinstance(arg, dict):
-            return mkPen(**arg)
-        elif arg is None:
-            style = QtCore.Qt.NoPen
+    while ( # unravel single element sublists
+        ( isinstance(args, tuple) or isinstance(args,list) )
+        and len(args) == 1 
+    ): 
+        args = args[0]
+    # now args is either a non-list entity, or a multi-element tuple
+    # short-circuits:
+    if isinstance(args, NamedPen):
+        return args # pass through predefined NamedPen directly
+    elif isinstance(args, QtGui.QPen):
+        return QtGui.QPen(args)  ## return a copy of this pen
+    elif isinstance(args, dict): 
+        return mkPen(**args) # retry with kwargs assigned from dictionary
+    elif args is None:
+        return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
+    # no short-circuit, continue parsing to construct QPen or NamedPen
+    width = kargs.get('width', 1) # width 1 unless specified otherwise
+    if 'hsv' in kargs: # hsv argument takes precedence
+        qcol = hsvColor( *kargs['hsv'] )
+        qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
+    else:
+        if 'color' in kargs:
+            args = kargs['color'] # 'color' KW-argument overrides unnamed arguments
+        if args is None:
+            return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
+        if args == () or args == []:
+            qpen = NamedPen( 'gr_fg', width=width ) # default foreground color
         else:
-            color = arg
-    elif len(args) > 1:
-        color = args
-
+            result = parseNamedColorSpecification(args)
+            if result is not None: # make a NamedPen
+                name, alpha = result
+                if name == '':
+                    return QtGui.QPen( QtCore.Qt.NoPen ) # empty string means "no pen"
+                qpen = NamedPen( name, alpha=alpha, width=width )
+            else: # make a QPen
+                qcol = mkColor(args)
+                qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
+    # now apply styles according to kw arguments:
+    style = kargs.get('style', None) 
     width = kargs.get('width', 1) # collect remaining kargs to define properties
     dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
-    hsv = kargs.get('hsv', None)
-        
-    if color is None:
-        color = mkColor('l')
-    if hsv is not None:
-        color = hsvColor(*hsv)
-    else:
-        color = mkColor(color)
-    
-    if pen is None:    
-        pen = QtGui.QPen(QtGui.QBrush(color), width)
-    pen.setCosmetic(cosmetic)
+    assert qpen is not None        
+    qpen.setCosmetic(cosmetic)
     if style is not None:
-        pen.setStyle(style)
+        qpen.setStyle(style)
     if dash is not None:
-        pen.setDashPattern(dash)
-    return pen
+        qpen.setDashPattern(dash)
+    return qpen
 
 
 def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):

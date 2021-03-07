@@ -15,7 +15,14 @@ from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
+try: # prepare common definition for slot decorator across PyQt / Pyside:
+    QT_CORE_SLOT = QtCore.pyqtSlot
+except AttributeError:
+    QT_CORE_SLOT = QtCore.Slot
+
 __all__ = ['GraphicsView']
+
+DEBUG = False
 
 
 class GraphicsView(QtGui.QGraphicsView):
@@ -93,7 +100,6 @@ class GraphicsView(QtGui.QGraphicsView):
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
         
-        
         self.lockedViewports = []
         self.lastMousePos = None
         self.setMouseTracking(True)
@@ -123,6 +129,10 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
 
+        # connect to style update signals from NamedColorManager:
+        fn.NAMED_COLOR_MANAGER.paletteHasChangedSignal.connect(self.styleHasChanged)
+
+
     def setAntialiasing(self, aa):
         """Enable or disable default antialiasing.
         Note that this will only affect items that do not specify their own antialiasing options."""
@@ -137,12 +147,17 @@ class GraphicsView(QtGui.QGraphicsView):
         To use the defaults specified py pyqtgraph.setConfigOption, use background='default'.
         To make the background transparent, use background=None.
         """
-        self._background = background
         if background == 'default':
             # background = getConfigOption('background')
             background = 'gr_bg' # default graphics background color
-        brush = fn.mkBrush(background)
-        self.setBackgroundBrush(brush)
+        self._background = background # maintained for compatibility
+        if DEBUG: print('  GraphicsView: Generating BG brush for', self._background)
+        self._bgBrush = fn.mkBrush(self._background)
+        if DEBUG: print('  GraphicsView: Background color: ',self._bgBrush.color().name(), self._bgBrush.color().alpha())
+        self.setBackgroundBrush( self._bgBrush )
+        # testBrush = QtGui.QBrush( QtGui.QColor('#000000') )
+        # print('  test brush style:',testBrush.style() )
+        # self.setBackgroundBrush( testBrush )
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
@@ -402,3 +417,10 @@ class GraphicsView(QtGui.QGraphicsView):
         
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
+
+    @QT_CORE_SLOT()
+    def styleHasChanged(self):
+        """ called to trigger redraw after all named colors have been updated """
+        self.setBackgroundBrush( self._bgBrush )
+        # self.update()
+        if DEBUG: print('  Background update and redraw after style change:', self)

@@ -3,22 +3,19 @@ from .Qt import QtGui, QtCore
 
 from . import functions as fn
 
-__all__ = ['NamedPen']
+__all__ = ['NamedBrush']
 DEBUG = False
 
-class NamedPen(QtGui.QPen):
+class NamedBrush(QtGui.QBrush):
     """ Extends QPen to retain a functional color description """
-    def __init__(self, name, width=1, alpha=None ):
+    def __init__(self, name, alpha=None ):
         """
-        Creates a new NamedPen object.
-        'name' should be included in 'functions.Colors'
-        'width' specifies linewidth and defaults to 1
+        Creates a new NamedBrush object.
+        'name' should be in 'functions.Colors'
         'alpha' controls opacity which persists over palette changes
         """
         if DEBUG: print('  NamedBrush created as',name,alpha)
-        super().__init__(QtCore.Qt.SolidLine) # Initialize QPen superclass
-        super().setWidth(width)
-        super().setCosmetic(True)
+        super().__init__(QtCore.Qt.SolidPattern) # Initialize QBrush superclass
         self._identifier = (name, alpha)
         self._updateQColor(self._identifier)
         fn.NAMED_COLOR_MANAGER.register( self ) # manually register for callbacks
@@ -32,7 +29,7 @@ class NamedPen(QtGui.QPen):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
+        
     def __hash__(self):
         return id(self)
 
@@ -41,15 +38,14 @@ class NamedPen(QtGui.QPen):
         if name is None:
             name = self._identifier[0]
         elif isinstance(name, QtGui.QColor):
-            # this is a workaround for the alpha adjustements in AxisItem:
-            # While the color will not change, the alpha value can be adjusted as needed.
+            # Replicates alpha adjustment workaround in NamedPen, allowing only alpha to be adjusted retroactively
             if alpha is None:
                 alpha = name.alpha() # extract from given QColor
             name = self._identifier[0]
-            if DEBUG: print('  NamedPen: setColor(QColor) call: set alpha to', alpha)
+            if DEBUG: print('  NamedBrush: setColor(QColor) call: set alpha to', alpha)
         self._identifier = (name, alpha)
         self._updateQColor(self._identifier)
-        
+
     def setAlpha(self, alpha):
         """ update opacity value """
         self._identifier = (self._identifier[0], alpha)
@@ -66,22 +62,19 @@ class NamedPen(QtGui.QPen):
             raise ValueError("Color '{:s}' is not in list of defined colors".format(str(name)) ) from exc
         if alpha is not None:
             qcol.setAlpha( alpha )
-        if DEBUG: print('  NamedPen updated to QColor ('+str(qcol.name())+')')
+        if DEBUG: print('  NamedBrush '+name+' updated to QColor ('+str(qcol.name())+', alpha='+str(alpha)+')')
         super().setColor( qcol )
-
-
-
+        
+    def identifier(self):
+        """ return current color identifier """
+        return self._identifier
+        
     def paletteChange(self, color_dict):
         """ refresh QColor according to lookup of identifier in functions.Colors """
-        if DEBUG: print('  NamedPen: style change request:', self, type(color_dict))
-        name, alpha = self._identifier
-        if color_dict is None: # manually retrieve color manager palette
-            color_dict = fn.NAMED_COLOR_MANAGER.colors()
-        try:
-            qcol = color_dict[name]
-            if DEBUG: print('  NamedPen: retrieved new QColor (', qcol.getRgb(), ') for name', name)
-        except ValueError as exc:
-            raise ValueError("Color {:s} is not in list of defined colors".format(str(name)) ) from exc
-        if alpha is not None:
-            qcol.setAlpha( alpha )
-        super().setColor(qcol)
+        if DEBUG: print('  NamedBrush: style change request:', self, type(color_dict))
+        self._updateQColor(self._identifier, color_dict=color_dict)
+        if DEBUG:
+            qcol = super().color()
+            name, alpha = self._identifier
+            print('  NamedBrush: retrieved new QColor ('+str(qcol.name())+') '
+                + 'for name '+str(name)+' ('+str(alpha)+')' )

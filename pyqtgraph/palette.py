@@ -30,12 +30,12 @@ LEGACY_PLOT = [ # plot / accent colors:
 ]
 
 MONOGREEN_RAW = {
-    'col_g0':'#000000', 'col_g1':'#014801', 'col_g2':'#077110', 'col_g3':'#159326',
+    'col_g0':'#001000', 'col_g1':'#014801', 'col_g2':'#077110', 'col_g3':'#159326',
     'col_g4':'#2DB143', 'col_g5':'#50CD65', 'col_g6':'#7FE7A0', 'col_g7':'#BFFFD4'
 }
 MONOGREEN_FUNC = {
     'gr_fg'  : 'col_g5',
-    'gr_bg'  : 'col_g1', # for distinction in testing, should be col_g0
+    'gr_bg'  : 'col_g0', # for distinction in testing, should be col_g0
     'gr_txt' : 'col_g5',
     'gr_acc' : 'col_g5',
     'gr_hov' : 'col_g7',
@@ -64,11 +64,11 @@ RELAXED_RAW = { # "fresh" raw colors:
     'col_grass' :'#7AA621', 'col_l_grass' :'#BCD982', 'col_d_grass' :'#50730B',
     'col_yellow':'#BFB226', 'col_l_yellow':'#F2E985', 'col_d_yellow':'#80760D',
     'col_gold'  :'#A67A21', 'col_l_gold'  :'#D9B46C', 'col_d_gold'  :'#73500B',
-    'col_black' :'#000000', 'col_gr1'     :'#242429', 'col_gr2'     :'#44444D',
-    'col_gr3'   :'#575763', 'col_gr4'     :'#7B7B8C', 'col_gr5'     :'#B4B4CC',
+    # 'col_black' :'#000000', 'col_gr1'     :'#242429', 'col_gr2'     :'#44444D',
+    'col_black' :'#000000', 'col_gr1'     :'#161619', 'col_gr2'     :'#43434D',
+    'col_gr3'   :'#70707F', 'col_gr4'     :'#9D9DB2', 'col_gr5'     :'#C9C9E5',
     'col_white' :'#FFFFFF'
 }
-# 'col_gray'  :'#666666', 'col_l_gray'  :'#B6B6B6', 'col_d_gray'  :'#3D3D3D',
 RELAXED_DARK_FUNC= { # functional colors:
     'gr_fg'  : 'col_gr5', 
     'gr_bg'  : 'col_gr1',
@@ -96,6 +96,36 @@ RELAXED_DARK_PLOT = [ # plot / accent colors:
     'col_l_yellow', 
     'col_l_green' 
 ]
+
+RELAXED_LIGHT_FUNC= { # functional colors:
+    'gr_fg'  : 'col_gr1', 
+    'gr_bg'  : 'col_gr5',
+    'gr_txt' : 'col_black', 
+    'gr_acc' : 'col_orange',
+    'gr_hov' : 'col_black',
+    'gr_reg' : ('col_blue', 30),
+    # legacy colors:
+    'b': 'col_blue'  , 'c': 'col_cyan', 'g': 'col_green', 
+    'y': 'col_yellow', 'r': 'col_red' , 'm': 'col_violet',
+    'k': 'col_black'   , 'w': 'col_white',
+    'd': 'col_gr2'     , 'l': 'col_gr4'   , 's': 'col_sky'
+}
+RELAXED_LIGHT_PLOT = [ # plot / accent colors:
+    'col_sky'   , 
+    'col_indigo', 
+    'col_purple', 
+    'col_red'   ,
+    'col_gold'  , 
+    'col_grass' ,
+    'col_cyan'  , 
+    'col_blue'  ,
+    'col_violet',
+    'col_orange', 
+    'col_yellow', 
+    'col_green' 
+]
+
+
 
 def block_to_QColor( block, dic=None ):
     """ convert color information to a QColor """
@@ -152,8 +182,8 @@ DEFAULT_PALETTE = assemble_palette( LEGACY_RAW, LEGACY_FUNC, LEGACY_PLOT )
 def get(name):
     if name == 'relaxed_dark':
         pal = assemble_palette( RELAXED_RAW, RELAXED_DARK_FUNC, RELAXED_DARK_PLOT )
-    # elif name == 'relaxed_light':
-    #     pal = assemble_palette( RELAXED_RAW, RELAXED_LIGHT_FUNC, RELAXED_LIGHT_PLOT )
+    elif name == 'relaxed_light':
+        pal = assemble_palette( RELAXED_RAW, RELAXED_LIGHT_FUNC, RELAXED_LIGHT_PLOT )
     elif name == 'monogreen':
         pal = assemble_palette( MONOGREEN_RAW, MONOGREEN_FUNC, MONOGREEN_PLOT )
     else:

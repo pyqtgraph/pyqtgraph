@@ -34,7 +34,7 @@ for idx, col in enumerate( ( # twelve predefined plot colors
 ) ): 
     key = 'p{:X}'.format(idx)
     DEFAULT_COLORS[key] = DEFAULT_COLORS[col]
-
+    
 # define and instantiate a SignalSource object to pass signals to all pyqtgraph elements
 class NamedColorManager(QtCore.QObject): # this needs to emit QEvents
     """
@@ -64,6 +64,7 @@ class NamedColorManager(QtCore.QObject): # this needs to emit QEvents
     def register(self, obj):
         """ register a function for paletteChange callback """
         self.registered_objects.add( obj )
+        # if DEBUG: print('  NamedColorManager: New list', self.registered_objects )
 
     def redefinePalette(self, color_dic):
         """ update list of named colors, emitsignals to color objects and widgets """

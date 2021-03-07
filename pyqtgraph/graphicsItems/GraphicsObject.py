@@ -5,6 +5,7 @@ from .GraphicsItem import GraphicsItem
 from .. import functions as fn
 
 __all__ = ['GraphicsObject']
+DEBUG = False
 
 try: # prepare common definition for slot decorator across PyQt / Pyside:
     QT_CORE_SLOT = QtCore.pyqtSlot
@@ -58,4 +59,4 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         """ called to trigger redraw after all named colors have been updated """
         # self._boundingRect = None
         self.update()
-        print('redraw after style change:', self)
+        if DEBUG: print('  GrpahicsObject: redraw after style change:', self)
