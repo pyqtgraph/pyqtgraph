@@ -90,7 +90,7 @@ The easiest way to learn pyqtgraph is to browse through the examples; run `pytho
 Used By
 -------
 
-PyQtGraph is used by some amazing projects.  A listing of them includes, but is not limited to:
+Here is a partial listing of some of the applications that make use of PyQtGraph!
 
 * [ACQ4](https://github.com/acq4/acq4)
 * [Orange3](https://orangedatamining.com/)
