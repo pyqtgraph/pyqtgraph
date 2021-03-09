@@ -63,11 +63,12 @@ class TargetItem(UIGraphicsItem):
             (0, 0) with max(width, height) == 1.0.  Alternatively a string
             which can be any symbol recognized in :func: 
             `~pyqtgraph.ScatterPlotItem.setData`
-        label : str or callable, optional
+        label : bool, str or callable, optional
             Text to be displayed in a label attached to the cursor, or None to
             show no label (default is None). May optionally include formatting
             strings to display the cursor value, or a callable that accepts x
-            and y as inputs.
+            and y as inputs.  If True, the label is "x = {:0.3f}, y = {:0.3f}"
+            False or None will result in no text being displayed
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
             label. See :class:`CursorLabel` and :class: `~pyqtgraph.TextItem`.
@@ -171,19 +172,22 @@ class TargetItem(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.update()
 
-    def setLabel(self, label=None, labelOpts=None):
-        if label is None and self.label is not None:
+    def setLabel(self, text=None, labelOpts=None):
+        if text is None and self.label is not None:
             # remove the label if it's already added
             self.label.scene().removeItem(self.label)
             self.label = None
         else:
+            if isinstance(text, bool):
+                # convert to default value or empty string
+                text = "x = {:0.3f}, y = {:0.3f}" if text else ""
             if self.label is None:
                 # add a label
                 labelOpts = {} if labelOpts is None else labelOpts
-                self.label = TargetLabel(self, **labelOpts)
+                self.label = TargetLabel(self, text=text, **labelOpts)
             else:
                 # update the label text
-                self.label.setText(label)
+                self.label.setText(text)
             self._updateLabel()
 
     def setLabelAngle(self, angle):
@@ -300,11 +304,11 @@ class TargetLabel(TextItem):
     ----------
     target : TargetItem
         The TargetItem to which this label will be attached to.
-    text : str or callable
+    text : str or callable, Optional
         Governs the text displayed, can be a fixed string or a format string
         that accepts the x, and y position of the target item; or be a callable
-        method that accepts that returns a string to be displayed.
-        Default is "x = {:0.3f}, y = {:0.3f}".
+        method that accepts that returns a string to be displayed.  If None,
+        an empty string is used.  Default is None
     offset : tuple or list or QPointF or QPoint
         Position to set the anchor of the TargetLabel away from the center of
         the target, by default it is (2, 0).
@@ -321,7 +325,7 @@ class TargetLabel(TextItem):
     def __init__(
         self,
         target,
-        text="x = {:0.3f}, y = {:0.3f}",
+        text=None,
         offset=(2, 0),
         anchor=(0, 0.5),
         angle=0,
@@ -330,7 +334,7 @@ class TargetLabel(TextItem):
         super().__init__(anchor=anchor, angle=angle, **kwargs)
         self.setParentItem(target)
         self.target = target
-        self.format = text
+        self.format = "" if text is None else text
         if isinstance(offset, (tuple, list)):
             self.setPos(*offset)
         elif isinstance(offset, (QtCore.QPoint, QtCore.QPointF)):
