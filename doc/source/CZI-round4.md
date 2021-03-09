@@ -11,11 +11,12 @@ community in PyQtGraph, and to attend to the experimental neuroscience issues as
 
 
 Originally built to support experimental neuroscience, in the last decade, PyQtGraph has grown to be the 2nd most
-popular visualization library in the scientific Python ecosystem, supporting numerous real-time applications in
-bio-medical research and beyond. While its many contributors have been motivated to add features and fix critical bugs,
-recent efforts by dedicated maintainers have begun the process of shaping PyQtGraph into a stable, reliable cornerstone
-of the scientific community. Open pull requests are down nearly 90%. Continuous integration is catching regressions and
-bugs before they're merged. Predictable versioning and support have given our users a future they can rely on.
+popular visualization library in the scientific Python ecosystem, supporting numerous real-time applications for
+thousands of users in bio-medical research and beyond. While its many contributors have been motivated to add features
+and fix critical bugs, recent efforts by dedicated maintainers have begun the process of shaping PyQtGraph into a
+stable, reliable cornerstone of the scientific community. Open pull requests are down nearly 90%. Continuous integration
+is catching regressions and bugs before they're merged. Predictable versioning and support have given our users a future
+they can rely on.
 
 We seek to continue these efforts and expand on them, meeting the ever-increasing demands to visualize data quickly and
 beautifully, as well as make development on these applications intuitive, pythonic and stable. Much of this will involve
@@ -74,4 +75,4 @@ the scope of what is possible by advancing that progress.
 
 ACQ4 is used by labs the world over, backed by key manufacturers in the industry, and integrated into many institutions.
 Making the project more welcoming to newcomers and keeping this application and its ecosystem healthy allows for growth
-and advancement in all of neuroscience. 
+and advancement in all of neuroscience.
