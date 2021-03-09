@@ -27,7 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(600,600)
         
         # pg.functions.SIGNAL_SOURCE.paletteChangedSignal.connect(self.testSignal)  # test link
-        # pg.palette.get('monogreen').apply()
+        pg.palette.get('monogreen').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
         gr_wid = pg.GraphicsLayoutWidget(show=True)
