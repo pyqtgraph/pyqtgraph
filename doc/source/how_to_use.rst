@@ -63,7 +63,7 @@ For Qt6 bindings, this functionally "just works" without having to set any attri
 
 On Versions of Qt >= 5.14 and < 6; you can get ideal behavior with the following lines::
 
-    os.environ["QT_ENABLE_HIDPI_SCALING"] = "1" 
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1" 
     QApplication.setHighDpiScaleFactorRoundingPolicy(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
 If you are on Qt >= 5.6 and < 5.14; you can get near ideal behavior with the following lines::

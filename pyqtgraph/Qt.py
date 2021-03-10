@@ -390,16 +390,8 @@ if m is not None and list(map(int, m.groups())) < versionReq:
     print(list(map(int, m.groups())))
     raise Exception('pyqtgraph requires Qt version >= %d.%d  (your version is %s)' % (versionReq[0], versionReq[1], QtVersion))
 
-class App(QtGui.QApplication):
-
-    def __init__(self, *args, **kwargs):
-        super(App, self).__init__(*args, **kwargs)
-        self.paletteChanged.connect(self.onPaletteChange)
-        self.onPaletteChange(self.palette())
-
-    def onPaletteChange(self, palette):
-        color = palette.base().color().name()
-        self.setProperty('darkMode', color.lower() != "#ffffff")
+App = QtWidgets.QApplication
+# subclassing QApplication causes segfaults on PySide{2, 6} / Python 3.8.7+
 
 QAPP = None
 def mkQApp(name=None):
@@ -413,6 +405,11 @@ def mkQApp(name=None):
     """
     global QAPP
     
+    def onPaletteChange(palette):
+        color = palette.base().color().name()
+        app = QtWidgets.QApplication.instance()
+        app.setProperty('darkMode', color.lower() != "#ffffff")
+
     QAPP = QtGui.QApplication.instance()
     if QAPP is None:
         # hidpi handling
@@ -426,7 +423,9 @@ def mkQApp(name=None):
         else:  # qt 5.12 and 5.13
             QtGui.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
             QtGui.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-        QAPP = App(sys.argv or ["pyqtgraph"])
+        QAPP = QtGui.QApplication(sys.argv or ["pyqtgraph"])
+        QAPP.paletteChanged.connect(onPaletteChange)
+        QAPP.paletteChanged.emit(QAPP.palette())
 
     if name is not None:
         QAPP.setApplicationName(name)
