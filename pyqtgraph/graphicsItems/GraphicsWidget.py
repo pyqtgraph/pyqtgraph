@@ -5,11 +5,6 @@ from .. import functions as fn
 __all__ = ['GraphicsWidget']
 DEBUG = False
 
-try: # prepare common definition for slot decorator across PyQt / Pyside:
-    QT_CORE_SLOT = QtCore.pyqtSlot
-except AttributeError:
-    QT_CORE_SLOT = QtCore.Slot
-
 class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     
     _qtBaseClass = QtGui.QGraphicsWidget

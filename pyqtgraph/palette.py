@@ -1,4 +1,4 @@
-from .Qt import QtGui, QtCore
+from .Qt import QtGui
 
 from . import functions as fn # namedColorManager
 
@@ -144,6 +144,7 @@ def block_to_QColor( block, dic=None ):
             return dic[name] 
     if not hasattr(block, '__len__'):
         raise ValueError('Invalid color definition '+str(block))
+    qcol = None
     if len(block) == 2:
         name, alpha = block
         if dic is None or name not in dic:
@@ -155,9 +156,9 @@ def block_to_QColor( block, dic=None ):
     elif len(block) in (3,4):
         qcol = QtGui.QColor( *block )
     
-    if alpha is not None:
+    if alpha is not None and qcol is not None:
         qcol.setAlpha( alpha )
-    return qcol            
+    return qcol
 
 
 def assemble_palette( raw_col, func_col, plot_col ):

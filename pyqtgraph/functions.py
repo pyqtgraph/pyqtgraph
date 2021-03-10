@@ -47,9 +47,7 @@ Colors = {
     'l': QtGui.QColor(200,200,200,255),
     's': QtGui.QColor(100,100,150,255)
 }
-print('  functions loaded, colors initiated.')
 NAMED_COLOR_MANAGER = NamedColorManager( Colors )
-print('  namedColorManager loaded, colors updated.')
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'

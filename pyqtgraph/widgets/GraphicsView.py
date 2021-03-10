@@ -15,11 +15,6 @@ from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
 
-try: # prepare common definition for slot decorator across PyQt / Pyside:
-    QT_CORE_SLOT = QtCore.pyqtSlot
-except AttributeError:
-    QT_CORE_SLOT = QtCore.Slot
-
 __all__ = ['GraphicsView']
 
 DEBUG = False
