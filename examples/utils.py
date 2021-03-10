@@ -20,6 +20,7 @@ examples = OrderedDict([
     ('Auto-range', 'PlotAutoRange.py'),
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
+    ('Color Maps', 'colorMaps.py'),
     ('Palette adjustment','PaletteApplicationExample.py'),
     ('HDF5 big data', 'hdf5.py'),
     ('Demos', OrderedDict([
@@ -102,7 +103,6 @@ others = dict([
     ('DiffTreeWidget', 'DiffTreeWidget.py'),
     ('MultiPlotWidget', 'MultiPlotWidget.py'),
     ('RemoteGraphicsView', 'RemoteGraphicsView.py'),
-    ('colorMaps', 'colorMaps.py'),
     ('contextMenu', 'contextMenu.py'),
     ('designerExample', 'designerExample.py'),
     ('DateAxisItem_QtDesigner', 'DateAxisItem_QtDesigner.py'),

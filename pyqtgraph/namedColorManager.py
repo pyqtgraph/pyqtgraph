@@ -39,15 +39,11 @@ for idx, col in enumerate( ( # twelve predefined plot colors
 # functions.py initializes and maintains NAMED_COLOR_MANAGER for this purpose.
 class NamedColorManager(QtCore.QObject):
     """
-    Singleton QObject that provides palette change signals
+    Provides palette change signals and maintains color name dictionary
+    Typically instantiated by functions.py as NAMED_COLOR_MANAGER
     Instantiated by 'functions.py' and retrievable as functions.NAMED_COLOR_MANAGER
     """
-    try: # generic name used by pyside:
-        paletteChangeSignal = QtCore.Signal(dict)
-        paletteHasChangedSignal = QtCore.Signal()
-    except AttributeError: # fall back to the PyQt naming scheme
-        paletteChangeSignal = QtCore.pyqtSignal(dict)
-        paletteHasChangedSignal = QtCore.pyqtSignal()
+    paletteHasChangedSignal = QtCore.Signal() # equated to pyqtSignal in qt.py for PyQt
 
     def __init__(self, color_dic):
         """ initialization """
@@ -67,17 +63,19 @@ class NamedColorManager(QtCore.QObject):
         self.registered_objects.add( obj )
         # if DEBUG: print('  NamedColorManager: New list', self.registered_objects )
 
-    def redefinePalette(self, color_dic):
-        """ update list of named colors, emitsignals to color objects and widgets """
-        if color_dic is not None:
+    def redefinePalette(self, colors=None):
+        """ 
+        Update list of named colors if 'colors' dictionary is given
+        Emits paletteHasChanged signals to color objects and widgets, even if color_dict is None """
+        if colors is not None: 
             # self.color_dic.clear()
             # self.color_dic.update( DEFAULT_COLORS)
             for key in DEFAULT_COLORS:
-                if key not in color_dic:
+                if key not in colors:
                     raise ValueError("Palette definition is missing '"+str(key)+"'")
-        if DEBUG: print('  NCM: confirmed all color definitions are present, setting palette')
-        self.color_dic.clear()
-        self.color_dic.update(color_dic)
+            if DEBUG: print('  NCM: confirmed all color definitions are present, setting palette')
+            self.color_dic.clear()
+            self.color_dic.update(colors)
 
         # notifies named color objects of new assignments:
         for obj in self.registered_objects:

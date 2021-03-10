@@ -1,5 +1,4 @@
 from ..Qt import QtGui, QtCore  
-from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 from .. import functions as fn
 

@@ -59,4 +59,4 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         """ called to trigger redraw after all named colors have been updated """
         # self._boundingRect = None
         self.update()
-        if DEBUG: print('  GrpahicsObject: redraw after style change:', self)
+        if DEBUG: print('  GraphicsObject: redraw after style change:', self)

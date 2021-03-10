@@ -379,7 +379,7 @@ def mkBrush(*args, **kargs):
             return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
         if args == () or args == []:
             print('  functions: returning default color NamedBrush')
-            qpen = NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
+            qbrush = NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
         else:
             result = parseNamedColorSpecification(args)
             if result is not None: # make a NamedBrush
@@ -446,7 +446,6 @@ def mkPen(*args, **kargs):
                 qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
     # now apply styles according to kw arguments:
     style = kargs.get('style', None) 
-    width = kargs.get('width', 1) # collect remaining kargs to define properties
     dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
     if qpen is None:

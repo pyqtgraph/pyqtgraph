@@ -5,6 +5,8 @@ from .functions import mkColor, eq
 from os import path, listdir
 import collections
 
+__all__ = ['ColorMap']
+
 _mapCache = {}
 
 def listMaps(source=None):

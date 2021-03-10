@@ -54,7 +54,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.text = text
         if 'color' in args:            
             # temporary override for color:
-            col = fn.mkColor(opts['color'])
+            col = fn.mkColor(args['color'])
             self._hex_color_override = col.name()
             color_opt = self._hex_color_override
         else:

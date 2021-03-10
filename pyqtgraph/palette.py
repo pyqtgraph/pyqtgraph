@@ -188,14 +188,14 @@ def get(name):
         pal = assemble_palette( MONOGREEN_RAW, MONOGREEN_FUNC, MONOGREEN_PLOT )
     else:
         pal = DEFAULT_PALETTE
-    return Palette( pal )
+    return Palette( colors=pal )
 
 
 class Palette(object):
     # minimum colors to be defined:
-    def __init__(self, color_dic=None):
+    def __init__(self, colors=None):
         super().__init__()
-        self.palette = color_dic
+        self.palette = colors
     
     # needs: addColors
     # needs to be aware of number of plot colors
@@ -207,4 +207,4 @@ class Palette(object):
         """
         provides palette to NamedColorManager, which triggers a global refresh of named colors
         """
-        fn.NAMED_COLOR_MANAGER.redefinePalette( self.palette )
+        fn.NAMED_COLOR_MANAGER.redefinePalette( colors=self.palette )

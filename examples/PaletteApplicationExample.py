@@ -7,13 +7,11 @@ Update a simple plot as rapidly as possible to measure speed.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-
 import numpy as np
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import mkQApp, QtGui, QtCore, QtWidgets
+from pyqtgraph.Qt import mkQApp, QtCore, QtWidgets
 from pyqtgraph.ptime import time
-from pyqtgraph import functions as fn
+import pyqtgraph as pg
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -26,7 +24,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('pyqtgraph example: Palette application test')
         self.resize(600,600)
         
-        # pg.functions.SIGNAL_SOURCE.paletteChangedSignal.connect(self.testSignal)  # test link
         pg.palette.get('monogreen').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
@@ -57,8 +54,13 @@ class MainWindow(QtWidgets.QMainWindow):
         btn.clicked.connect(self.handle_button_pal4)
         main_layout.addWidget(btn, 2,3, 1,1 )
 
-        # self.manager = pg.fn.NAMED_COLOR_MANAGER
-        # self.pen1 = pg.NamedPen('p1') #,width=0.5)
+        btn = QtWidgets.QPushButton('legacy fg/bg override 1')
+        btn.clicked.connect(self.handle_button_leg1)
+        main_layout.addWidget(btn, 3,2, 1,1 )
+
+        btn = QtWidgets.QPushButton('legacy fg/bg override 2')
+        btn.clicked.connect(self.handle_button_leg2)
+        main_layout.addWidget(btn, 3,3, 1,1 )
 
         self.plt = gr_wid.addPlot()
         self.plt.enableAutoRange(False)
@@ -122,6 +124,16 @@ class MainWindow(QtWidgets.QMainWindow):
         """ apply palette 1 on request """
         print('--> relax(light)')
         self.pal_4.apply()
+        
+    def handle_button_leg1(self):
+        """ test legacy background / foreground overrides """
+        pg.setConfigOption('background', '#ff0000')
+        pg.setConfigOption('foreground', '#0000ff')
+
+    def handle_button_leg2(self):
+        """ test legacy background / foreground overrides """
+        pg.setConfigOption('background', '#0000ff')
+        pg.setConfigOption('foreground', '#ff0000')
 
     def timed_update(self):
         """ update loop, called by timer """
