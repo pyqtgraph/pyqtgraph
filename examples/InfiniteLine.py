@@ -32,8 +32,10 @@ p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)
 
-targetItem = pg.TargetItem(label="x", symbol="crosshair", labelOpts={"angle": 0, "offset": QtCore.QPointF(2., 2.)})
-p1.addItem(targetItem)
+targetItem1 = pg.TargetItem(label=True, symbol="crosshair", labelOpts={"angle": 0, "offset": QtCore.QPointF(2., 2.)})
+targetItem2 = pg.TargetItem(pos=(30, 5), diameter=20, label="Second Item", symbol="star", labelOpts={"angle": 45, "offset": QtCore.QPointF(2., 0)})
+p1.addItem(targetItem1)
+p1.addItem(targetItem2)
 
 # Add a linear region with a label
 lr = pg.LinearRegionItem(values=[70, 80])

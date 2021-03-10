@@ -116,7 +116,7 @@ class TargetItem(UIGraphicsItem):
         elif isinstance(symbol, QtGui.QPainterPath):
             self._path = symbol
         else:
-            raise TypeError("Unknown type provides as symbol")
+            raise TypeError("Unknown type provided as symbol")
         
 
         self.scale = diameter
