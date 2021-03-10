@@ -1,6 +1,6 @@
 from .Qt import QtGui, QtCore
 
-from . import functions as fn
+from . import functions as fn # namedColorManager
 
 __all__ = ['Palette']
 

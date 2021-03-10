@@ -54,7 +54,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
     #     """ stub function called after Palette.apply(), specific reactions to palette redefinitions execute here """
     #     print('style change request:', self, type(color_dict))
         
-    @QT_CORE_SLOT()
+    @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
     def styleHasChanged(self):
         """ called to trigger redraw after all named colors have been updated """
         # self._boundingRect = None

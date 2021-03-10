@@ -317,7 +317,7 @@ if QT_LIB in [PYQT5, PYQT6]:
     loadUiType = uic.loadUiType
 
     QtCore.Signal = QtCore.pyqtSignal
-    
+    QtCore.Slot   = QtCore.pyqtSlot
 
 if QT_LIB == PYSIDE6:
     # PySide6 6.0 has a missing binding

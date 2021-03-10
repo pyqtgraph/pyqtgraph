@@ -418,7 +418,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
 
-    @QT_CORE_SLOT()
+    @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
     def styleHasChanged(self):
         """ called to trigger redraw after all named colors have been updated """
         self.setBackgroundBrush( self._bgBrush )

@@ -287,6 +287,7 @@ from .ThreadsafeTimer import *
 from .namedPen import *
 from .namedBrush import *
 from .palette import *
+from . import namedColorManager
 
 
 ##############################################################

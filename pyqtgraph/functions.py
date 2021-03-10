@@ -28,6 +28,12 @@ from .metaarray import MetaArray
 from collections import OrderedDict
 from .python2_3 import asUnicode, basestring
 
+# legacy color definitions:
+# NamedColorManager now maintains the primary list of palette colors,
+# accessible through functions.NAMED_COLOR_MANAGER.colors().
+# For backwards compatibility, this dictionary is updated to contain the same information.
+#
+# For the user, colors and color palettes are most conveniently accessed through a Palette object.
 Colors = {
     'b': QtGui.QColor(0,0,255,255),
     'g': QtGui.QColor(0,255,0,255),
@@ -41,11 +47,9 @@ Colors = {
     'l': QtGui.QColor(200,200,200,255),
     's': QtGui.QColor(100,100,150,255)
 }
-# instantiate singleton NamedColorManager with a reference to Colors
+print('  functions loaded, colors initiated.')
 NAMED_COLOR_MANAGER = NamedColorManager( Colors )
-# populates the Colors dictionary with default functional colors.
-# print('updated(?) colors:', Colors)
-
+print('  namedColorManager loaded, colors updated.')
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -243,7 +247,7 @@ def parseNamedColorSpecification(*args):
                     return None # hexadecimal string not handled as NamedColor
                 if arg in Colors:
                     return (arg, None) # valid name, no alpha given
-            if isinstance(arg, tuple) or isinstance(arg, list):
+            if isinstance(arg, (tuple, list)):
                 args = arg # promote to top level
             else:
                 return None #numerical values not handled as NamedColor
@@ -350,7 +354,7 @@ def mkBrush(*args, **kargs):
     | Calling mkBrush(None) returns an invisible brush.
     """
     while ( # unravel single element sublists
-        ( isinstance(args, tuple) or isinstance(args,list) )
+        isinstance(args, (tuple, list) )
         and len(args) == 1 
     ): 
         args = args[0]
@@ -375,14 +379,14 @@ def mkBrush(*args, **kargs):
             return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
         if args == () or args == []:
             print('  functions: returning default color NamedBrush')
-            qpen = NamedBrush( 'gr_fg' ) # default foreground color
+            qpen = NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
         else:
             result = parseNamedColorSpecification(args)
             if result is not None: # make a NamedBrush
                 name, alpha = result
                 if name == '':
                     return QtGui.QBrush( QtCore.Qt.NoBrush ) # empty string means "no brush"
-                qbrush = NamedBrush(name, alpha=alpha)
+                qbrush = NamedBrush(name, manager=NAMED_COLOR_MANAGER, alpha=alpha)
             else: # make a QBrush
                 qcol = mkColor(args)
                 qbrush = QtGui.QBrush(qcol)
@@ -404,7 +408,7 @@ def mkPen(*args, **kargs):
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
     # print('mkPen called:',args,kargs)
     while ( # unravel single element sublists
-        ( isinstance(args, tuple) or isinstance(args,list) )
+        isinstance(args, (tuple, list) )
         and len(args) == 1 
     ): 
         args = args[0]
@@ -429,14 +433,14 @@ def mkPen(*args, **kargs):
         if args is None:
             return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
         if args == () or args == []:
-            qpen = NamedPen( 'gr_fg', width=width ) # default foreground color
+            qpen = NamedPen( 'gr_fg', manager=NAMED_COLOR_MANAGER, width=width ) # default foreground color
         else:
             result = parseNamedColorSpecification(args)
             if result is not None: # make a NamedPen
                 name, alpha = result
                 if name == '':
                     return QtGui.QPen( QtCore.Qt.NoPen ) # empty string means "no pen"
-                qpen = NamedPen( name, alpha=alpha, width=width )
+                qpen = NamedPen( name, manager=NAMED_COLOR_MANAGER, alpha=alpha, width=width )
             else: # make a QPen
                 qcol = mkColor(args)
                 qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
@@ -445,7 +449,8 @@ def mkPen(*args, **kargs):
     width = kargs.get('width', 1) # collect remaining kargs to define properties
     dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
-    assert qpen is not None        
+    if qpen is None:
+        raise ValueError('Failed to construct QPen from arguments '+str(args)+','+str(kargs) )
     qpen.setCosmetic(cosmetic)
     if style is not None:
         qpen.setStyle(style)

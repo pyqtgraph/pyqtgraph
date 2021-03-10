@@ -4,7 +4,7 @@ from .Qt import QtCore, QtGui
 import weakref
 
 __all__ = ['NamedColorManager']
-DEBUG = True
+DEBUG = False
 
 DEFAULT_COLORS = {
     'b': QtGui.QColor(  0,  0,255,255),
@@ -18,7 +18,7 @@ DEFAULT_COLORS = {
     'd': QtGui.QColor(150,150,150,255),
     'l': QtGui.QColor(200,200,200,255),
     's': QtGui.QColor(100,100,150,255),
-    'gr_acc':QtGui.QColor(200,200,100,255), # graphical accent color: pastel yellow 
+    'gr_acc':QtGui.QColor(200,200,100,255), # graphical accent color: pastel yellow
     'gr_reg':QtGui.QColor(  0,  0,255, 50)  # graphical region marker: translucent blue
 }
 for key, col in [ # add functional colors
@@ -35,8 +35,9 @@ for idx, col in enumerate( ( # twelve predefined plot colors
     key = 'p{:X}'.format(idx)
     DEFAULT_COLORS[key] = DEFAULT_COLORS[col]
     
-# define and instantiate a SignalSource object to pass signals to all pyqtgraph elements
-class NamedColorManager(QtCore.QObject): # this needs to emit QEvents
+# An instantiated QObject is required to emit QSignals. 
+# functions.py initializes and maintains NAMED_COLOR_MANAGER for this purpose.
+class NamedColorManager(QtCore.QObject):
     """
     Singleton QObject that provides palette change signals
     Instantiated by 'functions.py' and retrievable as functions.NAMED_COLOR_MANAGER
