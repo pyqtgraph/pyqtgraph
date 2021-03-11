@@ -21,13 +21,13 @@ class TargetItem(UIGraphicsItem):
     def __init__(
         self,
         pos=None,
-        diameter=10,
-        movable=True,
+        size=10,
+        symbol="crosshair",
         pen=None,
         hoverPen=None,
         brush=None,
         hoverBrush=None,
-        symbol="crosshair",
+        movable=True,
         label=None,
         labelOpts=None,
     ):
@@ -35,27 +35,27 @@ class TargetItem(UIGraphicsItem):
         Parameters
         ----------
         pos : list, tuple, QPointF, or QPoint
-            Initial position of the cursor.
-        diameter : int
-            Size of the cursor in pixels.  Default is 10.
-        cursor : str
-            String that defines the shape of the cursor (can take the following
+            Initial position of the symbol.
+        size : int
+            Size of the symbol in pixels.  Default is 10.
+        symbol : str
+            String that defines the shape of the symbol (can take the following
             values for the moment : 's' (square), 'c' (circle))
         pen : QPen, tuple, list or str
             Pen to use when drawing line. Can be any arguments that are valid
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
         brush : QBrush, tuple, list, or str
-            Defines the brush that fill the cursor. Can be any arguments that
+            Defines the brush that fill the symbol. Can be any arguments that
             is valid for :func:`~pyqtgraph.mkBrush`. Default is transparent
             blue.
         movable : bool
-            If True, the cursor can be dragged to a new position by the user.
+            If True, the symbol can be dragged to a new position by the user.
         hoverPen : QPen, tuple, list, or str
-            Pen to use when drawing cursor when hovering over it. Can be any
+            Pen to use when drawing symbol when hovering over it. Can be any
             arguments that are valid for :func:`~pyqtgraph.mkPen`. Default pen
             is red.
         hoverBrush : QBrush, tuple, list or str
-            Brush to use to fill the cursor when hovering over it. Can be any
+            Brush to use to fill the symbol when hovering over it. Can be any
             arguments that is valid for :func:`~pyqtgraph.mkBrush`. Default is
             transparent blue.
         symbol : QPainterPath or str
@@ -64,14 +64,14 @@ class TargetItem(UIGraphicsItem):
             which can be any symbol recognized in :func: 
             `~pyqtgraph.ScatterPlotItem.setData`
         label : bool, str or callable, optional
-            Text to be displayed in a label attached to the cursor, or None to
+            Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting
-            strings to display the cursor value, or a callable that accepts x
+            strings to display the symbol value, or a callable that accepts x
             and y as inputs.  If True, the label is "x = {:0.3f}, y = {:0.3f}"
             False or None will result in no text being displayed
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
-            label. See :class:`CursorLabel` and :class: `~pyqtgraph.TextItem`.
+            label. See :class:`TargetLabel` and :class: `~pyqtgraph.TextItem`.
         """
         super().__init__(self)
         self._bounds = None
@@ -119,7 +119,7 @@ class TargetItem(UIGraphicsItem):
             raise TypeError("Unknown type provided as symbol")
         
 
-        self.scale = diameter
+        self.scale = size
         self.setPath(self._path)
         self.setLabel(label, labelOpts)
 
@@ -138,7 +138,7 @@ class TargetItem(UIGraphicsItem):
             self.sigPositionChanged.emit(self)
 
     def setBrush(self, *args, **kwargs):
-        """Set the brush that fills the cursor. Allowable arguments are any that
+        """Set the brush that fills the symbol. Allowable arguments are any that
         are valid for :func:`~pyqtgraph.mkBrush`.
         """
         self.brush = fn.mkBrush(*args, **kwargs)
@@ -147,7 +147,7 @@ class TargetItem(UIGraphicsItem):
             self.update()
 
     def setHoverBrush(self, *args, **kwargs):
-        """Set the brush that fills the cursor when hovering over it. Allowable
+        """Set the brush that fills the symbol when hovering over it. Allowable
         arguments are any that are valid for :func:`~pyqtgraph.mkBrush`.
         """
         self.hoverBrush = fn.mkBrush(*args, **kwargs)
@@ -156,7 +156,7 @@ class TargetItem(UIGraphicsItem):
             self.update()
 
     def setPen(self, *args, **kwargs):
-        """Set the pen for drawing the cursor. Allowable arguments are any that
+        """Set the pen for drawing the symbol. Allowable arguments are any that
         are valid for :func:`~pyqtgraph.mkPen`."""
         self.pen = fn.mkPen(*args, **kwargs)
         if not self.mouseHovering:
@@ -164,7 +164,7 @@ class TargetItem(UIGraphicsItem):
             self.update()
 
     def setHoverPen(self, *args, **kwargs):
-        """Set the pen for drawing the cursor when hovering over it. Allowable
+        """Set the pen for drawing the symbol when hovering over it. Allowable
         arguments are any that are valid for
         :func:`~pyqtgraph.mkPen`."""
         self.hoverPen = fn.mkPen(*args, **kwargs)
@@ -242,12 +242,12 @@ class TargetItem(UIGraphicsItem):
             return
         ev.accept()
         if ev.isStart():
-            self.cursorOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
+            self.symbolOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
             self.moving = True
 
         if not self.moving:
             return
-        self.setPos(self.cursorOffset + self.mapToParent(ev.pos()))
+        self.setPos(self.symbolOffset + self.mapToParent(ev.pos()))
 
         if ev.isFinish():
             self.moving = False
@@ -294,11 +294,11 @@ class TargetItem(UIGraphicsItem):
 
 
 class TargetLabel(TextItem):
-    """A TextItem that attaches itself to a CursorItem.
+    """A TextItem that attaches itself to a TargetItem.
 
     This class extends TextItem with the following features :
-    * Automatically positions adjacent to the cursor at a fixed position.
-    * Automatically reformats text when the cursor location has changed.
+    * Automatically positions adjacent to the symbol at a fixed position.
+    * Automatically reformats text when the symbol location has changed.
 
     Parameters
     ----------
@@ -307,8 +307,8 @@ class TargetLabel(TextItem):
     text : str or callable, Optional
         Governs the text displayed, can be a fixed string or a format string
         that accepts the x, and y position of the target item; or be a callable
-        method that accepts that returns a string to be displayed.  If None,
-        an empty string is used.  Default is None
+        method that accepts a tuple (x, y) and returns a string to be displayed.
+        If None, an empty string is used.  Default is None
     offset : tuple or list or QPointF or QPoint
         Position to set the anchor of the TargetLabel away from the center of
         the target, by default it is (2, 0).
