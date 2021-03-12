@@ -24,11 +24,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('pyqtgraph example: Palette application test')
         self.resize(600,600)
         
-        pg.palette.get('monogreen').apply()
+        pg.palette.get('relaxed-dark').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
         gr_wid = pg.GraphicsLayoutWidget(show=True)
-        main_layout.addWidget( gr_wid, 0,0, 1,4 )
+        main_layout.addWidget( gr_wid, 0,0, 1,5 )
 
         btn = QtWidgets.QPushButton('continuous')
         btn.clicked.connect(self.handle_button_timer_on)
@@ -38,29 +38,20 @@ class MainWindow(QtWidgets.QMainWindow):
         btn.clicked.connect(self.handle_button_timer_off)
         main_layout.addWidget(btn, 2,0, 1,1 )
         
-        btn = QtWidgets.QPushButton('apply <legacy>')
-        btn.clicked.connect(self.handle_button_pal1)
-        main_layout.addWidget(btn, 1,2, 1,1 )
-
-        btn = QtWidgets.QPushButton('apply <mono green>')
-        btn.clicked.connect(self.handle_button_pal2)
-        main_layout.addWidget(btn, 1,3, 1,1 )
-
-        btn = QtWidgets.QPushButton('apply <relaxed - dark>')
-        btn.clicked.connect(self.handle_button_pal3)
-        main_layout.addWidget(btn, 2,2, 1,1 )
-
-        btn = QtWidgets.QPushButton('apply <relaxed - light>')
-        btn.clicked.connect(self.handle_button_pal4)
-        main_layout.addWidget(btn, 2,3, 1,1 )
-
-        btn = QtWidgets.QPushButton('legacy fg/bg override 1')
-        btn.clicked.connect(self.handle_button_leg1)
-        main_layout.addWidget(btn, 3,2, 1,1 )
-
-        btn = QtWidgets.QPushButton('legacy fg/bg override 2')
-        btn.clicked.connect(self.handle_button_leg2)
-        main_layout.addWidget(btn, 3,3, 1,1 )
+        palette_buttons = (
+            ('apply <legacy>', 1,2, self.handle_button_pal1 ),
+            ('legacy fg/bg 1', 1,3, self.handle_button_leg1 ),
+            ('legacy fg/bg 2', 1,4, self.handle_button_leg2 ),
+            ('apply <mono green>', 2,2, self.handle_button_mono1 ),
+            ('apply <mono amber>', 2,3, self.handle_button_mono2 ),
+            ('apply <mono blue>' , 2,4, self.handle_button_mono3 ),
+            ('apply <relaxed-dark>' , 3,2, self.handle_button_pal2 ),
+            ('apply <relaxed-light>', 3,3, self.handle_button_pal3 )
+        )
+        for text, row, col, func in palette_buttons:
+            btn = QtWidgets.QPushButton(text)
+            btn.clicked.connect(func)
+            main_layout.addWidget(btn, row,col, 1,1 )
 
         self.plt = gr_wid.addPlot()
         self.plt.enableAutoRange(False)
@@ -75,15 +66,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.curve1 = pg.PlotDataItem(pen='r', symbol='o', symbolSize=10, symbolPen='gr_fg', symbolBrush=('y',127))
         self.plt.addItem(self.curve1)
         
-        self.curve2 = pg.PlotCurveItem(pen='p3', brush='p4')
+        self.curve2 = pg.PlotCurveItem(pen='w', brush='d')
         self.curve2.setFillLevel(0)
         self.plt.addItem(self.curve2)
         self.show()
         
         self.pal_1 = pg.palette.get('legacy')
-        self.pal_2 = pg.palette.get('monogreen')
-        self.pal_3 = pg.palette.get('relaxed_dark')
-        self.pal_4 = pg.palette.get('relaxed_light')
+        self.pal_2 = pg.palette.get('relaxed_dark')
+        self.pal_3 = pg.palette.get('relaxed_light')
+        self.mpal_1 = pg.palette.make_monochrome('green')
+        self.mpal_2 = pg.palette.make_monochrome('amber')
+        self.mpal_3 = pg.palette.make_monochrome('blue')
 
         self.lastTime = time()
         self.fps = None
@@ -107,24 +100,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def handle_button_pal1(self):
         """ apply palette 1 on request """
-        print('--> legacy')
         self.pal_1.apply()
 
     def handle_button_pal2(self):
         """ apply palette 2 on request """
-        print('--> mono green')
         self.pal_2.apply()
 
     def handle_button_pal3(self):
         """ apply palette 1 on request """
-        print('--> relax(light)')
         self.pal_3.apply()
 
-    def handle_button_pal4(self):
-        """ apply palette 1 on request """
-        print('--> relax(light)')
-        self.pal_4.apply()
-        
+    def handle_button_mono1(self):
+        """ apply monochrome palette 1 on request """
+        self.mpal_1.apply()
+
+    def handle_button_mono2(self):
+        """ apply monochrome palette 2 on request """
+        self.mpal_2.apply()
+
+    def handle_button_mono3(self):
+        """ apply monochrome palette 3 on request """
+        self.mpal_3.apply()
+
     def handle_button_leg1(self):
         """ test legacy background / foreground overrides """
         pg.setConfigOption('background', '#ff0000')

@@ -178,7 +178,40 @@ def _get_from_colorcet(name):
         color=color_list) #, names=color_names)
     _mapCache[name] = cm
     return cm
-
+    
+def make_monochrome(color='green'):
+    """
+    Returns a ColorMap object imitating a monochrome computer screen
+    ===============  =================================================================
+    **Arguments:**
+    color            Primary color description. Can be one of predefined identifiers
+                    'green' or 'amber'
+                    or a tuple of relative R,G,B contributions in range 0.0 to 1.0
+    ===============  =================================================================
+    """
+    stops   = np.array([0.000, 0.167, 0.247, 0.320, 0.411, 0.539, 0.747, 1.000])
+    active  = np.array([   16,    72,   113,   147,   177,   205,   231,   255])
+    leakage = np.array([    0,     1,     7,    21,    45,    80,   127,   191])
+    delta_arr = active - leakage
+    predefined = {
+        'green': (0.00, 1.00, 0.33), 'amber'   : (1.00, 0.50, 0.00),
+        'blue' : (0.00, 0.50, 1.00), 'red'     :  (1.00, 0.10, 0.00),
+        'pink' : (1.00, 0.10, 0.50), 'lavender': (0.67, 0.33, 1.00)
+    }
+    if color in predefined: color = predefined[color]
+    if not isinstance(color, tuple):
+        definitions = ["'"+key+"'" for key in predefined]
+        raise ValueError("'color' needs to be an (R,G,B) tuple of floats or one of "+definitions.join(', ') )
+    r, g, b = color
+    color_list = []
+    for leak, delta in zip(leakage, delta_arr):
+        color_tuple = (
+            r * delta + leak,
+            g * delta + leak,
+            b * delta + leak )
+        color_list.append(color_tuple)
+    cm = ColorMap(pos=stops, color=color_list )
+    return cm
 
 class ColorMap(object):
     """

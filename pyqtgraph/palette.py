@@ -1,6 +1,7 @@
 from .Qt import QtGui
 
 from . import functions as fn # namedColorManager
+from . import colormap
 
 __all__ = ['Palette']
 
@@ -26,29 +27,7 @@ LEGACY_FUNC = { # functional colors:
     'gr_reg' : (  0,  0,255, 50)
 }
 LEGACY_PLOT = [ # plot / accent colors:
-    'l','y','r','m','b','c','g','d','d','d','d','d'
-]
-
-MONOGREEN_RAW = {
-    'col_g0':'#001000', 'col_g1':'#014801', 'col_g2':'#077110', 'col_g3':'#159326',
-    'col_g4':'#2DB143', 'col_g5':'#50CD65', 'col_g6':'#7FE7A0', 'col_g7':'#BFFFD4'
-}
-MONOGREEN_FUNC = {
-    'gr_fg'  : 'col_g5',
-    'gr_bg'  : 'col_g0', # for distinction in testing, should be col_g0
-    'gr_txt' : 'col_g5',
-    'gr_acc' : 'col_g5',
-    'gr_hov' : 'col_g7',
-    'gr_reg' : ('col_g6', 30),
-    # legacy colors:
-    'b': 'col_g7', 'c': 'col_g6', 'g': 'col_g5', 
-    'y': 'col_g4', 'r': 'col_g3', 'm': 'col_g2',
-    'k': 'col_g1', 'w': 'col_g7',
-    'd': 'col_g1', 'l': 'col_g4', 's': 'col_g7'
-}
-MONOGREEN_PLOT = [ # plot / accent colors:
-    'col_g6', 'col_g4', 'col_g2', 'col_g7', 'col_g5', 'col_g3', 
-    'col_g1', 'col_g3', 'col_g3', 'col_g3', 'col_g3', 'col_g3'
+    'l','y','r','m','b','c','g','d'
 ]
 
 RELAXED_RAW = { # "fresh" raw colors:
@@ -133,6 +112,8 @@ def block_to_QColor( block, dic=None ):
     # 'name'
     # ('name', alpha)
     # (R,G,B)   /   (R,G,B,alpha)
+    if isinstance(block, QtGui.QColor):
+        return block # this is already a QColor
     alpha = None
     if isinstance(block, str): # return known QColor
         name = block
@@ -157,11 +138,12 @@ def block_to_QColor( block, dic=None ):
         qcol = QtGui.QColor( *block )
     
     if alpha is not None and qcol is not None:
+        qcol = QtGui.QColor(qcol) # make a copy before changing alpha
         qcol.setAlpha( alpha )
     return qcol
 
 
-def assemble_palette( raw_col, func_col, plot_col ):
+def assemble_palette( raw_col, func_col, plot_col=None ):
     """
     assemble palette color dictionary from parts:
     raw_col should contain color information in (R,G,B,(A)) or hex format
@@ -173,9 +155,10 @@ def assemble_palette( raw_col, func_col, plot_col ):
         for key in part:
             col = part[key]
             pal[key] = block_to_QColor( col, pal )
-    for idx, col in enumerate( plot_col ):
-        key = 'p{:X}'.format(idx) # plot color 'pX' does not overlap hexadecimal codes.
-        pal[key] = block_to_QColor( col, pal )
+    if plot_col is not None:
+        for idx, col in enumerate( plot_col ):
+            key = 'p{:X}'.format(idx) # plot color 'pX' does not overlap hexadecimal codes.
+            pal[key] = block_to_QColor( col, pal )
     return pal
     
 DEFAULT_PALETTE = assemble_palette( LEGACY_RAW, LEGACY_FUNC, LEGACY_PLOT )
@@ -185,19 +168,79 @@ def get(name):
         pal = assemble_palette( RELAXED_RAW, RELAXED_DARK_FUNC, RELAXED_DARK_PLOT )
     elif name == 'relaxed_light':
         pal = assemble_palette( RELAXED_RAW, RELAXED_LIGHT_FUNC, RELAXED_LIGHT_PLOT )
-    elif name == 'monogreen':
-        pal = assemble_palette( MONOGREEN_RAW, MONOGREEN_FUNC, MONOGREEN_PLOT )
     else:
         pal = DEFAULT_PALETTE
     return Palette( colors=pal )
 
 
+def make_monochrome(color='green', n_colors=8):
+    """
+    Returns a Palette object imitating a monochrome computer screen
+    ===============  =================================================================
+    **Arguments:**
+    color            Primary color description. Can be one of predefined identifiers
+                    'green' or 'amber'
+                    or a tuple of relative R,G,B contributions in range 0.0 to 1.0
+    ===============  =================================================================
+    """    
+    cm = colormap.make_monochrome(color)
+    if cm is None: return None
+    raw = {}
+    for idx in range(8):
+        key = 'col_m{:d}'.format(idx)
+        raw[key] = cm[ idx/9 ]
+        # print('added color',key,'as',raw[key].name(),raw[key].getRgb())
+    func = {
+        'gr_bg' : 'col_m0',
+        'gr_fg' : 'col_m4',
+        'gr_txt': 'col_m6',
+        'gr_acc': 'col_m5',
+        'gr_hov': 'col_m7',
+        'gr_reg': ('col_m1', 30),
+        'k': 'col_m0', 'd': 'col_m1', 's': 'col_m3', 'l': 'col_m6', 'w': 'col_m7'
+    }
+    avail = raw.copy() # generate a disctionary of available colors
+    del avail['col_m0'] # already taken by black
+    del avail['col_m7'] # already taken by white
+    needed = { 
+        'b': (  0,  0,255), 'c': (  0,255,255), 'g': (  0,255,  0),
+        'y': (255,255,  0), 'r': (255,  0,  0), 'm': (255,  0,255)
+    }
+    for nd_key in needed:
+        nd_tup = needed[nd_key] # this is the int RGB tuple we are looking to represent
+        best_dist = 1e10
+        best_key = None
+        for av_key in avail:
+            av_tup = avail[av_key].getRgb() # returns (R,G,B,A) tuple
+            dist = (nd_tup[0]-av_tup[0])**2 + (nd_tup[1]-av_tup[1])**2 + (nd_tup[2]-av_tup[2])**2
+            if dist < best_dist:
+                best_dist = dist
+                best_key  = av_key
+        # print('assigning',nd_key,'as',best_key,':',avail[best_key].getRgb() )
+        func[nd_key] = avail[best_key]
+        del avail[best_key] # remove from available list
+    pal = assemble_palette( raw, func )
+    return Palette( colors=pal, cmap=cm, n_colors=8 )
+
 class Palette(object):
     # minimum colors to be defined:
-    def __init__(self, colors=None):
+    def __init__(self, colors=None, cmap=None, n_colors=8):
         super().__init__()
-        self.palette = colors
-    
+        self.palette  = colors
+        self.cmap     = cmap
+        self.n_colors = int(n_colors)
+        if self.n_colors < 8: self.n_colors = 8 # enforce minimum number of plot colors
+        if self.cmap is not None:
+            sep = 1/n_colors
+            for idx in range(self.n_colors):
+                key = 'p{:x}'.format( idx )
+                if key in self.palette:
+                    continue # do not overwrite user-provided plot colors
+                val = sep * (0.5 + idx)
+                col = self.cmap[val]
+                self.palette[key] = col
+                # print('assigning',key,'as',col,':',col.name())
+
     # needs: addColors
     # needs to be aware of number of plot colors
     # needs to be indexable by key and numerical plot color

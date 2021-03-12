@@ -30,7 +30,7 @@ for key, col in [ # add functional colors
     DEFAULT_COLORS[key] = DEFAULT_COLORS[col]
 
 for idx, col in enumerate( ( # twelve predefined plot colors
-    'l','y','r','m','b','c','g','d','d','d','d','d'
+    'l','y','r','m','b','c','g','d'
 ) ): 
     key = 'p{:X}'.format(idx)
     DEFAULT_COLORS[key] = DEFAULT_COLORS[col]
