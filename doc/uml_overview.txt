@@ -143,8 +143,8 @@ PlotDataItem::curve o-- PlotCurveItem                       #b8b8b8
 PlotDataItem::scatter o-- ScatterPlotItem                   #b8b8b8
 PlotItem::vb o-- ViewBox                                    #b8b8b8
 PlotItem::layout o-- QGraphicsGridLayout                    #b8b8b8
-GraphicsLayout::layout o-- QGraphicsGridLayout                    #b8b8b8
-ImageView::graphicsView o-- QGraphicsView                   #b8b8b8
+GraphicsLayout::layout o-- QGraphicsGridLayout              #b8b8b8
+ImageView::graphicsView o-- GraphicsView                    #b8b8b8
 ImageView::imageItem o-- ImageItem                          #b8b8b8
 ImageView::scene o-- QGraphicsScene                         #b8b8b8
 ImageView::view o-- ViewBox                                 #b8b8b8
