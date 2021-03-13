@@ -11,8 +11,8 @@ skinparam class {
     ArrowColor Black
     
     ' Using stereotypes to define the background colors
-    BackgroundColor<<qt>> #d6ebc3|white
-    BackgroundColor<<pg>> #d4d4ee|white
+    BackgroundColor<<qt>> #e5f2da
+    BackgroundColor<<pg>> #e5e5f4
 }
 skinparam shadowing false
 
