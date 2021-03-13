@@ -52,7 +52,9 @@ class QWidget <<qt>>
 
 class GraphicsItem <<pg>>
 
-class GraphicsLayout <<pg>>
+class GraphicsLayout <<pg>> {
+    layout
+}
 
 class GraphicsLayoutWidget <<pg>> {
     graphicsLayout
@@ -62,9 +64,7 @@ class GraphicsObject <<pg>>
 
 class GraphicsView <<pg>>
 
-class GraphicsWidget <<pg>> {
-    layout
-}
+class GraphicsWidget <<pg>> 
 
 class ImageItem <<pg>>
 
@@ -83,6 +83,7 @@ class PlotDataItem <<pg>> {
 }
 
 class PlotItem <<pg>> {
+    layout
     vb
 }
 
@@ -138,10 +139,11 @@ QGraphicsView::scene o- QGraphicsScene                      #b8b8b8
 ' Longer (regular) arrows
 PlotWidget::plotItem o-- PlotItem                           #b8b8b8
 GraphicsLayoutWidget::graphicsLayout o-- GraphicsLayout     #b8b8b8
-GraphicsWidget::layout o-- QGraphicsGridLayout              #b8b8b8
 PlotDataItem::curve o-- PlotCurveItem                       #b8b8b8
 PlotDataItem::scatter o-- ScatterPlotItem                   #b8b8b8
-PlotItem::vb o-- ViewBox                                  #b8b8b8
+PlotItem::vb o-- ViewBox                                    #b8b8b8
+PlotItem::layout o-- QGraphicsGridLayout                    #b8b8b8
+GraphicsLayout::layout o-- QGraphicsGridLayout                    #b8b8b8
 ImageView::graphicsView o-- QGraphicsView                   #b8b8b8
 ImageView::imageItem o-- ImageItem                          #b8b8b8
 ImageView::scene o-- QGraphicsScene                         #b8b8b8
