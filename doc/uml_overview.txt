@@ -1,4 +1,5 @@
 ' Made in PlantUml. You can try it out here: http://plantuml.com/plantuml
+' Based on commit eb7a60fcf83cd4e7a41ae5955e57935e39928fbd
 
 @startuml
 hide empty members
@@ -18,59 +19,80 @@ skinparam shadowing false
 
 '----------- Qt package ----------`
 
-package Qt {
+
 class QGraphicsGridLayout <<qt>>
+
 class QGraphicsItem <<qt>>
+
 class QGraphicsLayout <<qt>>
+
 class QGraphicsLayoutItem <<qt>>
+
 class QGraphicsObject <<qt>>
+
 class QGraphicsScene <<qt>> { 
     items 
 }
+
 class QGraphicsWidget <<qt>>
+
 class QGraphicsView <<qt>> {
     scene
 }
+
 class QObject <<qt>>
+
 class QPaintDevice <<qt>>
+
 class QWidget <<qt>>
-}
 
 
 '----------- PyQtGraph package ----------`
 
-package PyQtGraph {
+
 class GraphicsItem <<pg>>
+
 class GraphicsLayout <<pg>>
+
 class GraphicsLayoutWidget <<pg>> {
     graphicsLayout
 }
+
 class GraphicsObject <<pg>>
+
 class GraphicsView <<pg>>
+
 class GraphicsWidget <<pg>> {
     layout
 }
+
 class ImageItem <<pg>>
+
 class ImageView <<pg>> {
     graphicsView
     imageItem
     scene
     view
 }
+
 class PlotCurveItem <<pg>>
+
 class PlotDataItem <<pg>> {
     curve
     scatter
 }
+
 class PlotItem <<pg>> {
     vb
 }
+
 class PlotWidget <<pg>> {
     plotItem
 }
+
 class ScatterPlotItem <<pg>>
+
 class ViewBox <<pg>>
-}
 
 
 '---------- Inheritance within Qt ----------'
