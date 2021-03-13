@@ -1,0 +1,129 @@
+' Made in PlantUml. You can try it out here: http://plantuml.com/plantuml
+
+@startuml
+hide empty members
+hide circles
+hide stereotypes
+
+skinparam class {
+    BorderColor Black
+    ArrowColor Black
+    
+    ' Using stereotypes to define the background colors
+    BackgroundColor<<qt>> #d6ebc3|white
+    BackgroundColor<<pg>> #d4d4ee|white
+}
+skinparam shadowing false
+
+
+'----------- Qt package ----------`
+
+package Qt {
+class QGraphicsGridLayout <<qt>>
+class QGraphicsItem <<qt>>
+class QGraphicsLayout <<qt>>
+class QGraphicsLayoutItem <<qt>>
+class QGraphicsObject <<qt>>
+class QGraphicsScene <<qt>> { 
+    items 
+}
+class QGraphicsWidget <<qt>>
+class QGraphicsView <<qt>> {
+    scene
+}
+class QObject <<qt>>
+class QPaintDevice <<qt>>
+class QWidget <<qt>>
+}
+
+
+'----------- PyQtGraph package ----------`
+
+package PyQtGraph {
+class GraphicsItem <<pg>>
+class GraphicsLayout <<pg>>
+class GraphicsLayoutWidget <<pg>> {
+    graphicsLayout
+}
+class GraphicsObject <<pg>>
+class GraphicsView <<pg>>
+class GraphicsWidget <<pg>> {
+    layout
+}
+class ImageItem <<pg>>
+class ImageView <<pg>> {
+    graphicsView
+    imageItem
+    scene
+    view
+}
+class PlotCurveItem <<pg>>
+class PlotDataItem <<pg>> {
+    curve
+    scatter
+}
+class PlotItem <<pg>> {
+    vb
+}
+class PlotWidget <<pg>> {
+    plotItem
+}
+class ScatterPlotItem <<pg>>
+class ViewBox <<pg>>
+}
+
+
+'---------- Inheritance within Qt ----------'
+QObject <|-- QGraphicsObject
+QGraphicsItem <|-- QGraphicsObject
+QGraphicsObject <|-- QGraphicsWidget
+QGraphicsLayoutItem <|-- QGraphicsWidget
+QGraphicsLayoutItem <|-- QGraphicsLayout
+QGraphicsLayout <|-- QGraphicsGridLayout
+QPaintDevice <|-- QWidget
+QObject <|-- QWidget
+QObject <|-- QGraphicsScene
+QWidget <|-- QGraphicsView
+
+ 
+'---------- Inheritance from Qt to PyQtGraph ----------'
+QGraphicsWidget <|-- GraphicsWidget
+QGraphicsObject <|-- GraphicsObject
+QGraphicsView <|-- GraphicsView
+QWidget <|-- ImageView
+
+
+'---------- Inheritance  within PyQtGraph ----------'
+GraphicsItem <|-- GraphicsObject
+GraphicsItem <|-- GraphicsWidget
+GraphicsWidget <|-- GraphicsLayout
+GraphicsWidget <|-- PlotItem
+GraphicsWidget <|-- ViewBox
+GraphicsObject <|-- ScatterPlotItem
+GraphicsObject <|-- PlotCurveItem
+GraphicsObject <|-- ImageItem
+GraphicsObject <|-- PlotDataItem
+GraphicsView <|-- PlotWidget
+GraphicsView <|-- GraphicsLayoutWidget
+
+
+'---------- Aggregation ----------'
+
+' Shorter arrow so at same height in the diagram
+QGraphicsScene::items o- QGraphicsItem                      #b8b8b8
+QGraphicsView::scene o- QGraphicsScene                      #b8b8b8
+
+' Longer (regular) arrows
+PlotWidget::plotItem o-- PlotItem                           #b8b8b8
+GraphicsLayoutWidget::graphicsLayout o-- GraphicsLayout     #b8b8b8
+GraphicsWidget::layout o-- QGraphicsGridLayout              #b8b8b8
+PlotDataItem::curve o-- PlotCurveItem                       #b8b8b8
+PlotDataItem::scatter o-- ScatterPlotItem                   #b8b8b8
+PlotItem::vb o-- ViewBox                                  #b8b8b8
+ImageView::graphicsView o-- QGraphicsView                   #b8b8b8
+ImageView::imageItem o-- ImageItem                          #b8b8b8
+ImageView::scene o-- QGraphicsScene                         #b8b8b8
+ImageView::view o-- ViewBox                                 #b8b8b8
+
+
+@enduml

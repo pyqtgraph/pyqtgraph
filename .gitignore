@@ -81,6 +81,7 @@ docs/_build/
 *.am
 *.tiff
 *.tif
+*.png
 *.dat
 *.DAT
 
