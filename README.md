@@ -63,7 +63,7 @@ The following table represents the python environments we test in our CI system.
 
 Support
 -------
-  
+
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
 * Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
 
@@ -94,7 +94,8 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 
 * [ACQ4](https://github.com/acq4/acq4)
 * [Orange3](https://orangedatamining.com/)
-* [neurotic](neurotic)
+* [neurotic](https://neurotic.readthedocs.io)
+* [ephyviewer](https://ephyviewer.readthedocs.io)
 * [Joulescope](https://www.joulescope.com/)
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [argos](https://github.com/titusjan/argos)
