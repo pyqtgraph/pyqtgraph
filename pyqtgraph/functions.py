@@ -13,6 +13,7 @@ import re
 import struct
 import sys
 import warnings
+import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
@@ -1068,6 +1069,69 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     return data
 
 
+def rescaleData_blocked(data_in, scale, offset, dtype=None, clip=None):
+    if dtype is None:
+        dtype = data_in.dtype
+    else:
+        dtype = np.dtype(dtype)
+
+    data_out = np.empty_like(data_in, dtype=dtype)
+
+    if np.can_cast(data_in, np.float32):
+        work_dtype = np.float32
+    else:
+        work_dtype = np.float64
+    work_dtype = np.dtype(work_dtype)
+
+    if dtype.kind in 'ui':
+        lim = np.iinfo(dtype)
+        if clip is None:
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
+
+        # make clip limits integer-valued (no need to cast to int)
+        # this improves performance, especially on Windows
+        clip = [math.trunc(x) for x in clip]
+
+    # integer clip operations are faster than float clip operations
+    # so test to see if we can perform integer clipping
+    fits_int32 = False
+    if data_in.dtype.kind in 'ui' and dtype.kind in 'ui':
+        # estimate whether data range after rescale will fit within an int32.
+        # this means that the input dtype should be an 8-bit or 16-bit integer type.
+        # casting to an int32 will lose the fractional part, therefore the
+        # output dtype must be an integer kind.
+        lim_in = np.iinfo(data_in.dtype)
+        dst_bounds = scale * (lim_in.min - offset), scale * (lim_in.max - offset)
+        if dst_bounds[1] < dst_bounds[0]:
+            dst_bounds = dst_bounds[1], dst_bounds[0]
+        lim32 = np.iinfo(np.int32)
+        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
+
+    it = np.nditer([data_in, data_out],
+            flags=['external_loop', 'buffered'],
+            op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
+            op_dtypes=[None, work_dtype],
+            casting='unsafe',
+            buffersize=32768)
+
+    with it:
+        for x, y in it:
+            y[...] = x
+            y -= offset
+            y *= scale
+
+            # Clip before converting dtype to avoid overflow
+            if clip is not None:
+                if fits_int32:
+                    # converts to int32, clips back to float32
+                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                else:
+                    clip_array(y, clip[0], clip[1], out=y)
+
+    return data_out
+
+
 def applyLookupTable(data, lut):
     """
     Uses values in *data* as indexes to select values from *lut*.
@@ -1209,7 +1273,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                     maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
-                newData[...,i] = rescaleData(data[...,i], scale / rng, minVal, dtype=dtype)
+                newData[...,i] = rescaleData_blocked(data[...,i], scale / rng, minVal, dtype=dtype)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
@@ -1219,7 +1283,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                     maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
-                data = rescaleData(data, scale/rng, minVal, dtype=dtype)
+                data = rescaleData_blocked(data, scale/rng, minVal, dtype=dtype)
 
     profile('apply levels')
 
