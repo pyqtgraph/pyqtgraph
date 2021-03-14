@@ -1009,7 +1009,18 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         dtype = data.dtype
     else:
         dtype = np.dtype(dtype)
-    
+
+    vmin, vmax = None, None
+    if dtype.kind in 'ui':
+        lim = np.iinfo(dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            vmin, vmax = lim.min, lim.max
+        else:
+            vmin, vmax = max(clip[0], lim.min), min(clip[1], lim.max)
+    elif clip is not None:
+        vmin, vmax = clip
+
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
@@ -1019,16 +1030,12 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
-        if clip is None:
-            # don't let rescale cause integer overflow
-            np.clip(d2, lim.min, lim.max, out=d2)
-        else:
-            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
-    else:
-        if clip is not None:
-            np.clip(d2, *clip, out=d2)
+    # regression in np.clip performance since numpy 1.17
+    if vmin is not None:
+        np.core.umath.maximum(d2, vmin, out=d2)
+    if vmax is not None:
+        np.core.umath.minimum(d2, vmax, out=d2)
+
     # don't copy if no change in dtype
     data = d2.astype(dtype, copy=False)
     return data
