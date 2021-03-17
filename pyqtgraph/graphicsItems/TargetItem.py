@@ -7,6 +7,8 @@ from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
 from .ScatterPlotItem import Symbols
+from .ViewBox import ViewBox
+
 
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
@@ -61,7 +63,7 @@ class TargetItem(UIGraphicsItem):
         symbol : QPainterPath or str
             QPainterPath to use for drawing the target, should be centered at
             (0, 0) with max(width, height) == 1.0.  Alternatively a string
-            which can be any symbol recognized in :func: 
+            which can be any symbol recognized in :func:
             `~pyqtgraph.ScatterPlotItem.setData`
         label : bool, str or callable, optional
             Text to be displayed in a label attached to the symbol, or None to
@@ -117,7 +119,6 @@ class TargetItem(UIGraphicsItem):
             self._path = symbol
         else:
             raise TypeError("Unknown type provided as symbol")
-        
 
         self.scale = size
         self.setPath(self._path)
@@ -220,6 +221,7 @@ class TargetItem(UIGraphicsItem):
             if s is None:
                 return self._path
             self._shape = s
+
             # beware--this can cause the view to adjust
             # which would immediately invalidate the shape.
             self.prepareGeometryChange()
@@ -314,7 +316,7 @@ class TargetLabel(TextItem):
         If None, an empty string is used.  Default is None
     offset : tuple or list or QPointF or QPoint
         Position to set the anchor of the TargetLabel away from the center of
-        the target, by default it is (2, 0).
+        the target in pixels, by default it is (20, 0).
     anchor : tuple, list, QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
@@ -329,7 +331,7 @@ class TargetLabel(TextItem):
         self,
         target,
         text=None,
-        offset=(2, 0),
+        offset=(20, 0),
         anchor=(0, 0.5),
         angle=0,
         **kwargs,
@@ -338,10 +340,11 @@ class TargetLabel(TextItem):
         self.setParentItem(target)
         self.target = target
         self.format = "" if text is None else text
+
         if isinstance(offset, (tuple, list)):
-            self.setPos(*offset)
+            self.offset = Point(*offset)
         elif isinstance(offset, (QtCore.QPoint, QtCore.QPointF)):
-            self.setPos(offset)
+            self.offset = offset
         else:
             raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
@@ -353,3 +356,13 @@ class TargetLabel(TextItem):
             self.setText(self.format.format(x, y))
         elif callable(self.format):
             self.setText(self.format(x, y))
+
+    def viewTransformChanged(self):
+        viewbox = self.getViewBox()
+        if isinstance(viewbox, ViewBox):
+            viewPixelSize = viewbox.viewPixelSize()
+            scaledOffset = QtCore.QPointF(
+                self.offset.x() * viewPixelSize[0], self.offset.y() * viewPixelSize[1]
+            )
+            self.setPos(scaledOffset)
+        return super().viewTransformChanged()
