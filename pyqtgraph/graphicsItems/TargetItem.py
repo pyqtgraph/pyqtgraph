@@ -34,7 +34,7 @@ class TargetItem(UIGraphicsItem):
         label=None,
         labelOpts=None,
     ):
-        """
+        r"""
         Parameters
         ----------
         pos : list, tuple, QPointF, or QPoint
@@ -70,7 +70,7 @@ class TargetItem(UIGraphicsItem):
             Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting
             strings to display the symbol value, or a callable that accepts x
-            and y as inputs.  If True, the label is "x = {:0.3f}, y = {:0.3f}"
+            and y as inputs.  If True, the label is "x = {:>.3n}\ny = {:>.3n}"
             False or None will result in no text being displayed
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
@@ -183,7 +183,7 @@ class TargetItem(UIGraphicsItem):
         else:
             if isinstance(text, bool):
                 # convert to default value or empty string
-                text = "x = {:0.3f}, y = {:0.3f}" if text else ""
+                text = "x = {:>.3n}\ny = {:>.3n}" if text else ""
             if self.label is None:
                 # add a label
                 labelOpts = {} if labelOpts is None else labelOpts
@@ -368,7 +368,7 @@ class TargetLabel(TextItem):
     def valueChanged(self):
         x, y = self.target.position()
         if isinstance(self.format, str) and self.property("formattableText"):
-            self.setText(self.format.format(x, y))
+            self.setText(self.format.format(float(x), float(y)))
         elif callable(self.format):
             self.setText(self.format(x, y))
 
