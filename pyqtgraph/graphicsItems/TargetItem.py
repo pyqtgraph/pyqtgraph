@@ -8,6 +8,7 @@ from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
 from .ScatterPlotItem import Symbols
 from .ViewBox import ViewBox
+import string
 
 
 class TargetItem(UIGraphicsItem):
@@ -350,9 +351,23 @@ class TargetLabel(TextItem):
         self.target.sigPositionChanged.connect(self.valueChanged)
         self.valueChanged()
 
+    @property
+    def format(self):
+        return self._format
+
+    @format.setter
+    def format(self, text):
+        parsed = list(string.Formatter().parse(text))
+        if parsed[0][1] is not None:
+            self.setProperty("formattableText", True)
+        else:
+            self.setText(text)
+            self.setProperty("formattableText", False)
+        self._format = text
+
     def valueChanged(self):
         x, y = self.target.position()
-        if isinstance(self.format, str):
+        if isinstance(self.format, str) and self.property("formattableText"):
             self.setText(self.format.format(x, y))
         elif callable(self.format):
             self.setText(self.format(x, y))
