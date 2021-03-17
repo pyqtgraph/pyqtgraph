@@ -175,7 +175,8 @@ class TargetItem(UIGraphicsItem):
     def setLabel(self, text=None, labelOpts=None):
         if text is None and self.label is not None:
             # remove the label if it's already added
-            self.label.scene().removeItem(self.label)
+            if self.label.scene() is not None:
+                self.label.scene().removeItem(self.label)
             self.label = None
         else:
             if isinstance(text, bool):
@@ -187,7 +188,9 @@ class TargetItem(UIGraphicsItem):
                 self.label = TargetLabel(self, text=text, **labelOpts)
             else:
                 # update the label text
-                self.label.setText(text)
+                print("setting text")
+                self.label.format = text
+                self.label.valueChanged()
             self._updateLabel()
 
     def setLabelAngle(self, angle):
