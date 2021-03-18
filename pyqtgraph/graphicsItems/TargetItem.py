@@ -70,7 +70,7 @@ class TargetItem(UIGraphicsItem):
             Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting
             strings to display the symbol value, or a callable that accepts x
-            and y as inputs.  If True, the label is "x = {:>.3n}\ny = {:>.3n}"
+            and y as inputs.  If True, the label is "x = {: >.3n}\ny = {: >.3n}"
             False or None will result in no text being displayed
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
@@ -183,14 +183,13 @@ class TargetItem(UIGraphicsItem):
         else:
             if isinstance(text, bool):
                 # convert to default value or empty string
-                text = "x = {:>.3n}\ny = {:>.3n}" if text else ""
+                text = "x = {: .3n}\ny = {: .3n}" if text else ""
             if self.label is None:
                 # add a label
                 labelOpts = {} if labelOpts is None else labelOpts
                 self.label = TargetLabel(self, text=text, **labelOpts)
             else:
                 # update the label text
-                print("setting text")
                 self.label.format = text
                 self.label.valueChanged()
             self._updateLabel()
@@ -234,11 +233,11 @@ class TargetItem(UIGraphicsItem):
             self._shape = self._path
             return None
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
-        va = atan2(v.y(), v.x())
         dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0, 0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
+        va = atan2(v.y(), v.x())
         tr.rotate(va * 180.0 / pi)
         tr.scale(self.scale, self.scale)
         return dti.map(tr.map(self._path))
