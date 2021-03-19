@@ -242,6 +242,9 @@ class ImageItem(GraphicsObject):
         levels             (min, max) The minimum and maximum values to use when rescaling the image
                            data. By default, this will be set to the minimum and maximum values
                            in the image. If the image array has dtype uint8, no rescaling is necessary.
+        levelSamples       (default: 65536) When determining minimum and maximum values, ImageItem
+                           only inspects a subset of pixels no larger than this number.
+                           Setting this larger than the total number of pixels considers all values.
         opacity            (float 0.0-1.0)
         compositionMode    See :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
         border             Sets the pen used when drawing the image border. Default is None.
@@ -299,8 +302,11 @@ class ImageItem(GraphicsObject):
                 autoLevels = True
         if autoLevels:
             img = self.image
-            while img.size > 2**16:
+            level_samples = kargs.pop('levelSamples', 2**16) # use specified value or default of 2**16, remove from kargs
+            if level_samples < 2: level_samples = 2 # avoid endless loop, and keep at least two values for min, max
+            while img.size > level_samples:
                 img = img[::2, ::2]
+            print( img.size )
             mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
             # mn and mx can still be NaN if the data is all-NaN
             if mn == mx or self._xp.isnan(mn) or self._xp.isnan(mx):
