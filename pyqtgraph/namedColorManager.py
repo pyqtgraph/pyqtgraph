@@ -25,7 +25,7 @@ for key, col in [ # add functional colors
     ('gr_fg','d'),  # graphical foreground
     ('gr_bg','k'),  # graphical background
     ('gr_txt','d'), # graphical text color
-    ('gr_hov','r')  # graphical hover color
+    ('gr_hlt','r')  # graphical hover color
 ]:
     DEFAULT_COLORS[key] = DEFAULT_COLORS[col]
 

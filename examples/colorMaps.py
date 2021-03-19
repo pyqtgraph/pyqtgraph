@@ -54,7 +54,7 @@ monochrome_colors = ('blue', 'green', 'amber', 'red', 'pink', 'lavender', (0.5, 
 for mono_val in monochrome_colors:
     num_bars += 1
     lw.addLabel(str(mono_val))
-    cmap = pg.colormap.make_monochrome(mono_val)
+    cmap = pg.colormap.makeMonochrome(mono_val)
     imi = pg.ImageItem()
     imi.setImage(img)
     imi.setLookupTable( cmap.getLookupTable(alpha=True) )

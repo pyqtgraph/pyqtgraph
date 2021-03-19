@@ -24,6 +24,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('pyqtgraph example: Palette application test')
         self.resize(600,600)
         
+        test_palette = pg.palette.get('system')
+        
         pg.palette.get('relaxed-dark').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
@@ -63,10 +65,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data1 = +3 + np.random.normal(size=(15)) #500))
         self.data2 = -3 + np.random.normal(size=(15)) #500))
 
-        self.curve1 = pg.PlotDataItem(pen='r', symbol='o', symbolSize=10, symbolPen='gr_fg', symbolBrush=('y',127))
+        # self.curve1 = pg.PlotDataItem(
+        #     pen='r', 
+        #     symbol='o', symbolSize=10, symbolPen='gr_fg', symbolBrush=('y',127), 
+        #     hoverable=True, hoverPen='w', hoverBrush='w')
+        self.curve1 = pg.ScatterPlotItem(
+            symbol='o', symbolSize=12, symbolPen='gr_fg', symbolBrush=('y',127), 
+            hoverable=True, hoverPen='gr_acc', hoverBrush='gr_reg')
+        # self.curve1.setHoverable(True)
         self.plt.addItem(self.curve1)
         
-        self.curve2 = pg.PlotCurveItem(pen='w', brush='d')
+        self.curve2 = pg.PlotCurveItem(pen='l', brush='d')
         self.curve2.setFillLevel(0)
         self.plt.addItem(self.curve2)
         self.show()

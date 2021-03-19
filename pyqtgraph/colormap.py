@@ -86,7 +86,6 @@ def _get_from_file(name):
         else:
             csv_mode = False
         for line in fh:
-            name = None
             line = line.strip()
             if len(line) == 0: continue # empty line
             if line[0] == ';': continue # comment
@@ -110,11 +109,11 @@ def _get_from_file(name):
             idx += 1
         # end of line reading loop
     # end of open
-    cm = ColorMap(
+    cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
-    return cm
+    _mapCache[name] = cmap
+    return cmap
 
 def _get_from_matplotlib(name):
     """ import colormap from matplotlib definition """
@@ -124,7 +123,7 @@ def _get_from_matplotlib(name):
         import matplotlib.pyplot as mpl_plt
     except ModuleNotFoundError:
         return None
-    cm = None
+    cmap = None
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
@@ -142,20 +141,21 @@ def _get_from_matplotlib(name):
                     positions[idx2] = tup[0]
                     comp_vals[idx2] = tup[1] # these are sorted in the raw data
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
         elif ('red' in data) and isinstance(data['red'], collections.Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
                 col_data[:,idx] = np.clip( data[key](col_data[:,-1]), 0, 1)
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)  
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)  
     elif hasattr(col_map, 'colors'): # handle ListedColormap
         col_data = np.array(col_map.colors)
-        cm = ColorMap(pos=np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
-    if cm is not None:
-        _mapCache[name] = cm
-    return cm
+        cmap = ColorMap( name=name,
+            pos = np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
+    if cmap is not None:
+        _mapCache[name] = cmap
+    return cmap
 
 def _get_from_colorcet(name):
     """ import colormap from colorcet definition """
@@ -173,22 +173,23 @@ def _get_from_colorcet(name):
         color_list.append( color_tuple )
     if len(color_list) == 0: 
         return None
-    cm = ColorMap(
+    cmap = ColorMap( name=name,
         pos=np.linspace(0.0, 1.0, len(color_list)), 
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
-    return cm
+    _mapCache[name] = cmap
+    return cmap
     
-def make_monochrome(color='green'):
+def makeMonochrome(color='green'):
     """
     Returns a ColorMap object imitating a monochrome computer screen
     ===============  =================================================================
     **Arguments:**
     color            Primary color description. Can be one of predefined identifiers
-                    'green' or 'amber'
+                    'green', 'amber', 'blue', 'red', 'lavender', 'pink'
                     or a tuple of relative R,G,B contributions in range 0.0 to 1.0
     ===============  =================================================================
     """
+    name = 'monochrome-'+str(color)
     stops   = np.array([0.000, 0.167, 0.247, 0.320, 0.411, 0.539, 0.747, 1.000])
     active  = np.array([   16,    72,   113,   147,   177,   205,   231,   255])
     leakage = np.array([    0,     1,     7,    21,    45,    80,   127,   191])
@@ -210,8 +211,8 @@ def make_monochrome(color='green'):
             g * delta + leak,
             b * delta + leak )
         color_list.append(color_tuple)
-    cm = ColorMap(pos=stops, color=color_list )
-    return cm
+    cmap = ColorMap(name=name, pos=stops, color=color_list )
+    return cmap
 
 class ColorMap(object):
     """
@@ -260,7 +261,7 @@ class ColorMap(object):
         'qcolor': QCOLOR,
     }
 
-    def __init__(self, pos, color, mode=None, mapping=None): #, names=None):
+    def __init__(self, pos, color, name=None, mode=None, mapping=None): #, names=None):
         """
         ===============     =================================================================
         **Arguments:**
@@ -280,6 +281,7 @@ class ColorMap(object):
                             DIVERGING maps colors to [-1.0;+1.0]
         ===============     =================================================================
         """
+        self.name = name # storing a name helps identify ColorMaps sampled by Palette
         self.pos = np.array(pos)
         order = np.argsort(self.pos)
         self.pos = self.pos[order]
@@ -304,6 +306,12 @@ class ColorMap(object):
             self.mapping_mode = self.CLIP
         
         self.stopsCache = {}
+    
+    def __str__(self):
+        """ provide human-readable identifier """
+        if self.name is None:
+            return 'unnamed ColorMap({:d})'.format(len(self.pos))
+        return "ColorMap({:d}):'{:s}'".format(len(self.pos),self.name)
 
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
