@@ -127,7 +127,7 @@ def test_subArray():
     assert np.all(bb == cc)
     
     
-def test_rescaleData():
+def helper_rescaleData(rescale_func):
     dtypes = map(np.dtype, ('ubyte', 'uint16', 'byte', 'int16', 'int', 'float'))
     for dtype1 in dtypes:
         for dtype2 in dtypes:
@@ -139,12 +139,20 @@ def test_rescaleData():
                 else:
                     lim = (-np.inf, np.inf)
                 s1 = np.clip(float(scale) * (data-float(offset)), *lim).astype(dtype2)
-                s2 = pg.rescaleData(data, scale, offset, dtype2)
+                s2 = rescale_func(data, scale, offset, dtype2)
                 assert s1.dtype == s2.dtype
                 if dtype2.kind in 'iu':
                     assert np.all(s1 == s2)
                 else:
                     assert np.allclose(s1, s2)
+
+
+def test_rescaleData():
+    helper_rescaleData(pg.rescaleData)
+
+
+def test_rescaleData_blocked():
+    helper_rescaleData(pg.rescaleData_blocked)
 
 
 def makeARGB(*args, **kwds):
