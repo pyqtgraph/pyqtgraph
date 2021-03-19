@@ -306,7 +306,6 @@ class ImageItem(GraphicsObject):
             if level_samples < 2: level_samples = 2 # avoid endless loop, and keep at least two values for min, max
             while img.size > level_samples:
                 img = img[::2, ::2]
-            print( img.size )
             mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
             # mn and mx can still be NaN if the data is all-NaN
             if mn == mx or self._xp.isnan(mn) or self._xp.isnan(mx):
