@@ -101,11 +101,11 @@ Embedding PyQtGraph as a sub-package of a larger project
 
 When writing applications or python packages that make use of pyqtgraph, it is most common to install pyqtgraph system-wide (or within a virtualenv) and simply call `import pyqtgraph` from within your application. The main benefit to this is that pyqtgraph is configured independently of your application and thus you (or your users) are free to install newer versions of pyqtgraph without changing anything in your application. This is standard practice when developing with python.
 
-Occasionally, software written for needs to be kept working order for an extended amount of time after development has been completed. This is often the case for single-purpose scientific applications. If we want to ensure that the software will still work ten years later, then it is preferrable to tie the application to a very specific version of pyqtgraph and *avoid* importing the system-installed version, which may be much newer and potentially incompatible. This is especially the case when the application requires site-specific modifications to the pyqtgraph package. 
+Occasionally, a specific program needs to be kept in working order for an extended amount of time after development has been completed. This is often the case for single-purpose scientific applications. If we want to ensure that the software will still work ten years later, then it is preferrable to tie it to a very specific version of pyqtgraph and *avoid* importing the system-installed version, which may be much newer and potentially incompatible. This is especially true when the application requires site-specific modifications to the pyqtgraph package. 
 
 To support such a separate local installation, all internal import statements in pyqtgraph are relative. That means that pyqtgraph never refers to itself internally as 'pyqtgraph'. This allows the package to be renamed or used as a sub-package without any naming conflicts with other versions of pyqtgraph on the system.
 
-The basic approach is to clone the repository into the appropriate location in your package. When you import pyqtgraph from within your package, be sure to use the full name to avoid importing any system-installed pyqtgraph packages. For example, imagine a simple project has the following structure::
+The basic approach is to clone the repository into the appropriate location in your project. When you import pyqtgraph, be sure to use the full name to avoid importing any system-installed pyqtgraph packages. For example, imagine a simple project has the following structure::
 
     my_project/
         __init__.py
@@ -128,11 +128,11 @@ Then adjust the import statements accordingly::
             """Plotting functions used by this package"""
             import local_pyqtgraph.pyqtgraph as pg  # be sure to use the local subpackage
                                                     # rather than any globally-installed
-                                                    # versions.
+                                                    # version.
             def my_plot_function(*data):
                 pg.plot(*data)
 
-Use ``git checkout pyqtgraph-x.x.x`` to select a specific version of the repository, or use ``git pull`` to pull pyqtgraph updates from upstream (see the git documentation for more information). If we do not plan to make use of git's versioning features, adding the option ``--depth 1`` to the ``git clone`` command retrieves only the latest version.
+Use ``git checkout pyqtgraph-x.x.x`` to select a specific library version from the repository, or use ``git pull`` to pull pyqtgraph updates from upstream (see the git documentation for more information). If you do not plan to make use of git's versioning features, adding the option ``--depth 1`` to the ``git clone`` command retrieves only the latest version.
 
 For projects that already use git for code control, it is also possible to include pyqtgraph as a git subtree within your own repository. The major advantage to this approach is that, in addition to being able to pull pyqtgraph updates from the upstream repository, it is also possible to commit your local pyqtgraph changes into the project repository and push those changes upstream::
     
