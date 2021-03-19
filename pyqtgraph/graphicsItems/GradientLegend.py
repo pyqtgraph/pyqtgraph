@@ -94,17 +94,6 @@ class GradientLegend(UIGraphicsItem):
         )
         p.drawRect(rect)
 
-        ## draw labels
-        p.setPen(QtGui.QPen(QtGui.QColor(0,0,0)))
-        tx = x2 + 2 * textPadding # margin between bar and text
-        lh = labelHeight
-        lw = labelWidth
-        for k in self.labels:
-            print(k, self.labels[k])
-            y = y1 + self.labels[k] * (y2-y1)
-            print('text x/y:',tx,'/',y)
-            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
-
         ## Draw color bar
         self.gradient.setStart(0, y1)
         self.gradient.setFinalStop(0, y2)
@@ -114,3 +103,12 @@ class GradientLegend(UIGraphicsItem):
             QtCore.QPointF(x2, y2)
         )
         p.drawRect(rect)
+
+        ## draw labels
+        p.setPen(QtGui.QPen(QtGui.QColor(0,0,0)))
+        tx = x2 + 2 * textPadding # margin between bar and text
+        lh = labelHeight
+        lw = labelWidth
+        for k in self.labels:
+            y = y1 + self.labels[k] * (y2-y1)
+            p.drawText(QtCore.QRectF(tx, y - lh/2, lw, lh), QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, str(k))
