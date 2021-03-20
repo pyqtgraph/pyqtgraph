@@ -241,7 +241,9 @@ class ImageItem(GraphicsObject):
                            See :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`.
         levels             (min, max) The minimum and maximum values to use when rescaling the image
                            data. By default, this will be set to the minimum and maximum values
-                           in the image. If the image array has dtype uint8, no rescaling is necessary.
+                           found by inspecting a regularly spaced subset of pixels according to the
+                           levelSamples parameter. 
+                           If the image array has dtype uint8, no rescaling is necessary.
         levelSamples       (default: 65536) When determining minimum and maximum values, ImageItem
                            only inspects a subset of pixels no larger than this number.
                            Setting this larger than the total number of pixels considers all values.
