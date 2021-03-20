@@ -671,8 +671,8 @@ class PlotDataItem(GraphicsObject):
                         # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+
                         # x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
                         # x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
-                        x0 = np.core.umath.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
-                        x1 = np.core.umath.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        x0 = fn.clip_array(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        x1 = fn.clip_array(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
 
                         # if data has been clipped too strongly (in case of non-uniform
                         # spacing of x-values), refine the clipping region as required
@@ -680,10 +680,12 @@ class PlotDataItem(GraphicsObject):
                         # best case performance: O(1)
                         if x[x0] > range.left():
                             x0 = np.searchsorted(x, range.left()) - 1*ds
-                            x0 = np.core.umath.clip(x0, 0, len(x)) # workaround
+                            x0 = fn.clip_array(x0, 0, len(x)) # workaround
+                            # x0 = np.clip(x0, 0, len(x))
                         if x[x1] < range.right():
                             x1 = np.searchsorted(x, range.right()) + 2*ds
-                            x1 = np.core.umath.clip(x1, 0, len(x)) # workaround
+                            x1 = fn.clip_array(x1, 0, len(x))
+                            # x1 = np.clip(x1, 0, len(x))
                         x = x[x0:x1]
                         y = y[x0:x1]
 
@@ -740,7 +742,7 @@ class PlotDataItem(GraphicsObject):
                                         # print('in-place:', end='')
                                         # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
                                         # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
-                                        np.core.umath.clip(self.yDisp, min_val, max_val, out=self.yDisp)
+                                        fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
                                         x = self.xDisp
                                         y = self.yDisp
                                     else:
@@ -748,7 +750,7 @@ class PlotDataItem(GraphicsObject):
                                         # print('alloc:', end='')
                                         # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
                                         # y = np.clip(y, a_min=min_val, a_max=max_val)
-                                        y = np.core.umath.clip(y, min_val, max_val)
+                                        y = fn.clip_array(y, min_val, max_val)
                                     # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
                                     self._drlLastClip = (min_val, max_val)
 
