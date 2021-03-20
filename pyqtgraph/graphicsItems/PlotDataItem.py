@@ -167,6 +167,8 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigHovered.connect(self.scatterHovered)
 
         self._viewRangeWasChanged = False
+        self._styleWasChanged = True # force initial update
+
         self._dataRect = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
@@ -522,13 +524,16 @@ class PlotDataItem(GraphicsObject):
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
+            self._styleWasChanged = True
+
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
+            self._styleWasChanged = True
 
-        ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
-
+        ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
-            kargs['symbol'] = 'o'
+            if self.opts['symbol'] is None: 
+                kargs['symbol'] = 'o'
 
         if 'brush' in kargs:
             kargs['fillBrush'] = kargs['brush']
@@ -536,6 +541,7 @@ class PlotDataItem(GraphicsObject):
         for k in list(self.opts.keys()):
             if k in kargs:
                 self.opts[k] = kargs[k]
+                self._styleWasChanged = True
 
         #curveArgs = {}
         #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
@@ -569,7 +575,8 @@ class PlotDataItem(GraphicsObject):
         self.yDisp = None
         profiler('set data')
 
-        self.updateItems()
+        self.updateItems( update_style = self._styleWasChanged )
+        self._styleWasChanged = False # items have been updated
         profiler('update items')
 
         self.informViewBoundsChanged()
@@ -580,33 +587,34 @@ class PlotDataItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
-    def updateItems(self):
+    def updateItems(self, update_style=False):
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
-            curveArgs[v] = self.opts[k]
-
         scatterArgs = {}
-        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
-            if k in self.opts:
-                scatterArgs[v] = self.opts[k]
+        if update_style: # repeat style arguments only when changed
+            for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+                if k in self.opts:
+                    curveArgs[v] = self.opts[k]
+
+            for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
+                if k in self.opts:
+                    scatterArgs[v] = self.opts[k]
 
         x,y = self.getData()
         #scatterArgs['mask'] = self.dataMask
 
-        if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
+        if self.opts['pen'] is not None or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None): # draw if visible...
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
-        else:
+        else: # ...hide if not.
             self.curve.hide()
 
-        if scatterArgs['symbol'] is not None:
-
+        if self.opts['symbol'] is not None: # draw if visible...
             ## check against `True` too for backwards compatibility
             if self.opts.get('stepMode', False) in ("center", True):
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
-        else:
+        else: # ...hide if not.
             self.scatter.hide()
 
 
