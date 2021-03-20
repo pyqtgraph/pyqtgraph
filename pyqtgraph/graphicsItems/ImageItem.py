@@ -303,8 +303,8 @@ class ImageItem(GraphicsObject):
         if autoLevels:
             img = self.image
             level_samples = kargs.pop('levelSamples', 2**16) 
-            if level_samples < 8: # considering number of channels here adds overhead for no real benefit.
-                level_samples = 8 # This provides min/max values even for an RGBA image.
+            if level_samples < 2: 
+                level_samples = 2 
             while img.shape[0] * img.shape[1] > level_samples:
                 img = img[::2, ::2]
             mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
