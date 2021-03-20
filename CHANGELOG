@@ -1,9 +1,71 @@
+pyqtgraph-0.12.0
+
+  Deprecations:
+    - Qt < 5.12, Python < 3.6, and numpy < 1.17 not supported
+
+  New Features:
+    - Qt6 Compatibility (thank you so much @pijyoi !)
+    - #1497 Allow toggling visibility via mouse click on LegendItem
+    - #1520/#1518 i18n Localization support for dialogs
+    - #1527 Expand parameter tree documentation
+    - #1563 Fixes to FlowChart documentation
+    - #1534 Extend pixmaps for GraphIcons
+    - #1566 Redid ScatterPlotSpeedTest.py with toggle-able options
+    - #1572 Arbitrary scale center ROI
+    - #1581 Equilateral Triangle ROI
+
+  Performance enhancement:
+    - #1493 significant speedup to invertQTransform()
+    - #1501 various ImageItem performance improvements
+    - #1509 mkQApp will now have settings for better HiDPI settings 
+    - #1518 Small Optimizations for functions.rescaleData()
+    - #1556 Reduce reallocation in dynamic range limiter
+    - #1560 Cache scatter-plot items by hashable properties
+    - #1564 Correct id-based keyring of scatter plot pixmap cache
+    - #1569 Fix ScatterPlotItem performance regression
+    - #1619 Stop PlotDataItem from always sending full style information to PlotCurveItem/ScatterPlotItem
+    - #1630 Combine levels and lut only if both are present
+    - #1632 workaround for np.clip regression since numpy 1.17
+
+  API/Behavior Change:
+    - #1476 Use log modulus transform for y-axis log scaling
+    - #1522 InfiniteLine emits clicked signal event
+    - #1525 Use QOpenGLWidget instead of QGLWidget
+    - #1540 Support siPrefix with no suffix in SpinBox
+    - #1541 Use qWaitForWindowExposed instead of qWaitForWindowShown
+    - #1554 Disable paint in GLScatterPlotItem if it has no data
+    - #1573/1576 Add deprecation warnings to portions of library
+    - #1587 qApp.property('darkMode') is now a dynamic property
+    - #1613 Added keys() method to Parameter class
+    - #1641 Introduce functions.clip_array as for np.clip performance regression
+
+  Bug Fixes:
+    - #1487 Fix InfiniteLabel object has not attribute 'updateText'
+    - #1491 LinearRegionItem would break with setSpan
+    - #1496 enableMenu setting now preserved when passing ViewBox to PlotItem
+    - #1498 PlotDataItem now signals on setPos()
+    - #1500 AlignCenter should have been AlignHCenter
+    - #1506 Fix "camerPosition" typo in GLViewWidget
+    - #1510 Fix RemoteGraphicsView mouse interactions on Qt 5.12
+    - #1517 Fix RemoteSpeedTest Shutdown Errors
+    - #1528 Support suffix for int parameters
+    - #1546 ImageView guards against key events when there is no time axis
+    - #1558 Fix Small Heights in ErrorBarItem
+    - #1567 Handle 0-d arrays in InfiniteLine.setPos()
+    - #1583 RawImageWidget fix port to QOpenGLWidget
+    - #1594 PlotItem removeItem regression fixed
+    - #1595 Workaround for CuPy Indexing Bug
+    - #1597 Fix RawImageWidget transpose did not handle luminance only images
+    - #1598 Remove references to self from lambdas for Signals
+    - #1618 Install sys.excepthook for PyQt6
+    - #1639 Fix transformations in GradientLegend
+
 pyqtgraph-0.11.1
 
   New Features:
     - #800 Legend for bar graphs
     - #1244 Arrow scatter symbols
-    - #161 Allow hiding individulal points in scatter plot
+    - #161 Allow hiding individual points in scatter plot
     - #395 LegendItem display options
     - #1310 Added `Pa` to Units
     - #1310 `debug.ThreadTrace` add support for thread names
@@ -35,14 +97,14 @@ pyqtgraph-0.11.1
     - #496 Always antialias lines between gradient and region in HistogramLUTItem
     - #385 Add headWidth parameter to arrows
     - #551 fps variable on ImageView
-    - #1251 Allow explict utcOffset timezone in DateAxisItem
+    - #1251 Allow explicit utcOffset timezone in DateAxisItem
     - #1310 Add `SignalProxy.block` for temporary disabling of signal forwarding
     - #1310 `InfiniteLine.setPos` add support for array argument
     - #1310 Rate-limit Qt event processing in ProgressDialog if it is modal
     - #1289 Disable autoSIPrefix for DateAxisItem by default
     - #1274 Add tickAlpha to AxisItem Style Options
     - #402 Added `clear()` method to `GLViewWidget`
-    - #1264 Added exception to checkOpenGLVersion to highlight OpenGL ES incompatability
+    - #1264 Added exception to checkOpenGLVersion to highlight OpenGL ES incompatibility
     - #1257 Make painter tick font dependent for AxisItem
     - #1256 Added `setState`, `setState` and `saveState` to `ROI`
     - #1324 Pass through kwargs from MultiPlotItem.plot to PlotItem.plot
