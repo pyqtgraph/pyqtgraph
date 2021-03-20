@@ -303,8 +303,8 @@ class ImageItem(GraphicsObject):
         if autoLevels:
             img = self.image
             level_samples = kargs.pop('levelSamples', 2**16) 
-            if level_samples < 2: 
-                level_samples = 2 
+            if level_samples < 4: # keep at least two pixels:
+                level_samples = 4 # avoid downsampling a 2x2 image to 1x1
             while img.shape[0] * img.shape[1] > level_samples:
                 img = img[::2, ::2]
             mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
