@@ -997,7 +997,28 @@ def solveBilinearTransform(points1, points2):
         matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
-    
+
+
+def clip_array(arr, vmin, vmax, out=None):
+    # replacement for np.clip due to regression in
+    # performance since numpy 1.17
+    # https://github.com/numpy/numpy/issues/14281
+
+    if out is None:
+        out = np.empty_like(arr)
+
+    if vmin is not None:
+        arr = np.core.umath.maximum(arr, vmin, out=out)
+    if vmax is not None:
+        arr = np.core.umath.minimum(arr, vmax, out=out)
+
+    # np.core.umath.clip performs slightly better than
+    # the above on platforms compiled with GCC (e.g. Linux),
+    # but worse for CLANG (e.g. macOS) and MSVC (Windows)
+
+    return out
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1010,16 +1031,12 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     else:
         dtype = np.dtype(dtype)
 
-    vmin, vmax = None, None
     if dtype.kind in 'ui':
         lim = np.iinfo(dtype)
         if clip is None:
             # don't let rescale cause integer overflow
-            vmin, vmax = lim.min, lim.max
-        else:
-            vmin, vmax = max(clip[0], lim.min), min(clip[1], lim.max)
-    elif clip is not None:
-        vmin, vmax = clip
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
 
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
@@ -1030,11 +1047,8 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
-    # regression in np.clip performance since numpy 1.17
-    if vmin is not None:
-        np.core.umath.maximum(d2, vmin, out=d2)
-    if vmax is not None:
-        np.core.umath.minimum(d2, vmax, out=d2)
+    if clip is not None:
+        clip_array(d2, clip[0], clip[1], out=d2)
 
     # don't copy if no change in dtype
     data = d2.astype(dtype, copy=False)
