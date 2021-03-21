@@ -55,7 +55,9 @@ class GraphItem(GraphicsObject):
         """
         if 'adj' in kwds:
             self.adjacency = kwds.pop('adj')
-            if self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
+            if hasattr(self.adjacency, '__len__') and len(self.adjacency) == 0:
+                self.adjacency = None
+            elif self.adjacency is not None and self.adjacency.dtype.kind not in 'iu':
                 raise Exception("adjacency must be None or an array of either int or unsigned type.")
             self._update()
         if 'pos' in kwds:
@@ -140,8 +142,3 @@ class GraphItem(GraphicsObject):
     
     def pixelPadding(self):
         return self.scatter.pixelPadding()
-        
-        
-        
-        
-
