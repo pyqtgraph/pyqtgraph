@@ -213,7 +213,8 @@ class Color(QtGui.QColor):
     
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
+    Convenience function for constructing QColor from a variety of argument 
+    types. Accepted arguments are:
     
     ================ ================================================
      'c'             one of: r, g, b, c, m, y, k, w                      
@@ -222,8 +223,8 @@ def mkColor(*args):
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "RGB"           hexadecimal strings; may begin with '#'
-     "RGBA"          
+     "RGB"           hexadecimal strings; deprecated if they don't start
+     "RGBA"          with "#"
      "RRGGBB"       
      "RRGGBBAA"     
      QColor          QColor instance; makes a copy.
@@ -233,13 +234,19 @@ def mkColor(*args):
     if len(args) == 1:
         if isinstance(args[0], basestring):
             c = args[0]
-            if c[0] == '#':
-                c = c[1:]
             if len(c) == 1:
                 try:
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            if c[0] == '#':
+                c = c[1:]
+            else:
+                warnings.warn(
+                    "Parsing of hex strings that do not start with '#' is"
+                    "deprecated support will be removed in 0.13",
+                    DeprecationWarning, stacklevel=2
+                )
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
