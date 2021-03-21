@@ -1014,6 +1014,8 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.maximum(arr, vmin, out=out)
     elif sys.platform == 'win32':
         # Windows umath.clip is slower than umath.maximum(umath.minimum)
+        if out is None:
+            out = np.empty_like(arr)
         out = np.core.umath.minimum(arr, vmax, out=out)
         return np.core.umath.maximum(out, vmin, out=out)
     else:
