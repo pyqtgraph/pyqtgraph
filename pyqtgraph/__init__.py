@@ -36,8 +36,6 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
-    if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
