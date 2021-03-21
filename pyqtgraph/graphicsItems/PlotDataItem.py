@@ -676,8 +676,11 @@ class PlotDataItem(GraphicsObject):
                         # clip to visible region extended by downsampling value, assuming
                         # uniform spacing of x-values, has O(1) performance
                         dx = float(x[-1]-x[0]) / (len(x)-1)
-                        x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
-                        x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+
+                        # x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        # x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        x0 = fn.clip_array(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        x1 = fn.clip_array(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
 
                         # if data has been clipped too strongly (in case of non-uniform
                         # spacing of x-values), refine the clipping region as required
@@ -685,10 +688,12 @@ class PlotDataItem(GraphicsObject):
                         # best case performance: O(1)
                         if x[x0] > range.left():
                             x0 = np.searchsorted(x, range.left()) - 1*ds
-                            x0 = np.clip(x0, a_min=0, a_max=len(x))
+                            x0 = fn.clip_array(x0, 0, len(x)) # workaround
+                            # x0 = np.clip(x0, 0, len(x))
                         if x[x1] < range.right():
                             x1 = np.searchsorted(x, range.right()) + 2*ds
-                            x1 = np.clip(x1, a_min=0, a_max=len(x))
+                            x1 = fn.clip_array(x1, 0, len(x))
+                            # x1 = np.clip(x1, 0, len(x))
                         x = x[x0:x1]
                         y = y[x0:x1]
 
@@ -720,11 +725,15 @@ class PlotDataItem(GraphicsObject):
                         limit = self.opts['dynamicRangeLimit']
                         hyst  = self.opts['dynamicRangeHyst']
                         # never clip data if it fits into +/- (extended) limit * view height
-                        if data_range.height() > 2 * hyst * limit * view_height:
+                        if ( # note that "bottom" is the larger number, and "top" is the smaller one.
+                            not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
+                            and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
+                            and data_range.height() > 2 * hyst * limit * view_height
+                        ):
                             # check if cached display data can be reused:
                             if self.yDisp is not None: # top is minimum value, bottom is maximum value
                                 # how many multiples of the current view height does the clipped plot extend to the top and bottom?
-                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height 
+                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height
                                 bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
                                 # print(top_exc, bot_exc, hyst)
                                 if (    top_exc >= limit / hyst and top_exc <= limit * hyst
@@ -734,18 +743,22 @@ class PlotDataItem(GraphicsObject):
                                     y = self.yDisp
                                 else:
                                     min_val = view_range.bottom() - limit * view_height
-                                    max_val = view_range.top()    + limit * view_height                                    
+                                    max_val = view_range.top()    + limit * view_height
                                     if(     min_val >= self._drlLastClip[0]
                                         and max_val <= self._drlLastClip[1] ):
                                         # if we need to clip further, we can work in-place on the output buffer
                                         # print('in-place:', end='')
-                                        np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                        # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                        fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
                                         x = self.xDisp
                                         y = self.yDisp
                                     else:
                                         # otherwise we need to recopy from the full data
                                         # print('alloc:', end='')
-                                        y = np.clip(y, a_min=min_val, a_max=max_val)
+                                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                        # y = np.clip(y, a_min=min_val, a_max=max_val)
+                                        y = fn.clip_array(y, min_val, max_val)
                                     # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
                                     self._drlLastClip = (min_val, max_val)
 
