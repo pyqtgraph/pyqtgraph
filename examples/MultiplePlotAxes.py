@@ -60,8 +60,5 @@ p1.plot([1,2,4,8,16,32])
 p2.addItem(pg.PlotCurveItem([10,20,40,80,40,20], pen='b'))
 p3.addItem(pg.PlotCurveItem([3200,1600,800,400,200,100], pen='r'))
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.Qt.QtWidgets.QApplication.exec_()

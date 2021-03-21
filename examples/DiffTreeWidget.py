@@ -45,8 +45,5 @@ tree.setWindowTitle('pyqtgraph example: DiffTreeWidget')
 tree.resize(1000, 800)
 
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.Qt.QtWidgets.QApplication.exec_()
