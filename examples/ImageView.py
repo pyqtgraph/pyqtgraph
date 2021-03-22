@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates the use of ImageView, which is a high-level widget for 
-displaying and analyzing 2D and 3D data. ImageView provides:
+This example demonstrates the use of ImageView with 3-color image stacks.
+ImageView is a high-level widget for displaying and analyzing 2D and 3D data.
+ImageView provides:
 
   1. A zoomable region (ViewBox) for displaying the image
   2. A combination histogram and gradient editor (HistogramLUTItem) for
@@ -30,22 +31,17 @@ win.setCentralWidget(imv)
 win.show()
 win.setWindowTitle('pyqtgraph example: ImageView')
 
-## Create random 3D data set with noisy signals
-img = pg.gaussianFilter(np.random.normal(size=(200, 200)), (5, 5)) * 20 + 100
-img = img[np.newaxis,:,:]
-decay = np.exp(-np.linspace(0,0.3,100))[:,np.newaxis,np.newaxis]
-data = np.random.normal(size=(100, 200, 200))
-data += img * decay
-data += 2
+## Create random 3D data set with time varying signals
+dataRed = np.ones((100, 200, 200)) * np.linspace(90, 150, 100)[:, np.newaxis, np.newaxis]
+dataRed += pg.gaussianFilter(np.random.normal(size=(200, 200)), (5, 5)) * 100
+dataGrn = np.ones((100, 200, 200)) * np.linspace(90, 180, 100)[:, np.newaxis, np.newaxis]
+dataGrn += pg.gaussianFilter(np.random.normal(size=(200, 200)), (5, 5)) * 100
+dataBlu = np.ones((100, 200, 200)) * np.linspace(180, 90, 100)[:, np.newaxis, np.newaxis]
+dataBlu += pg.gaussianFilter(np.random.normal(size=(200, 200)), (5, 5)) * 100
 
-## Add time-varying signal
-sig = np.zeros(data.shape[0])
-sig[30:] += np.exp(-np.linspace(1,10, 70))
-sig[40:] += np.exp(-np.linspace(1,10, 60))
-sig[70:] += np.exp(-np.linspace(1,10, 30))
-
-sig = sig[:,np.newaxis,np.newaxis] * 3
-data[:,50:60,30:40] += sig
+data = np.concatenate(
+    (dataRed[:, :, :, np.newaxis], dataGrn[:, :, :, np.newaxis], dataBlu[:, :, :, np.newaxis]), axis=3
+)
 
 
 ## Display the data and assign each frame a time value from 1.0 to 3.0
@@ -62,6 +58,10 @@ colors = [
 ]
 cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
 imv.setColorMap(cmap)
+
+# Start up with an ROI
+imv.ui.roiBtn.setChecked(True)
+imv.roiClicked()
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':

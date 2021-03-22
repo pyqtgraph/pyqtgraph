@@ -997,7 +997,31 @@ def solveBilinearTransform(points1, points2):
         matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
-    
+
+
+def clip_array(arr, vmin, vmax, out=None):
+    # replacement for np.clip due to regression in
+    # performance since numpy 1.17
+    # https://github.com/numpy/numpy/issues/14281
+
+    if vmin is None and vmax is None:
+        # let np.clip handle the error
+        return np.clip(arr, vmin, vmax, out=out)
+
+    if vmin is None:
+        return np.core.umath.minimum(arr, vmax, out=out)
+    elif vmax is None:
+        return np.core.umath.maximum(arr, vmin, out=out)
+    elif sys.platform == 'win32':
+        # Windows umath.clip is slower than umath.maximum(umath.minimum)
+        if out is None:
+            out = np.empty_like(arr)
+        out = np.core.umath.minimum(arr, vmax, out=out)
+        return np.core.umath.maximum(out, vmin, out=out)
+    else:
+        return np.core.umath.clip(arr, vmin, vmax, out=out)
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1009,7 +1033,14 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         dtype = data.dtype
     else:
         dtype = np.dtype(dtype)
-    
+
+    if dtype.kind in 'ui':
+        lim = np.iinfo(dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
+
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
@@ -1019,16 +1050,9 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     d2 *= scale
 
     # Clip before converting dtype to avoid overflow
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
-        if clip is None:
-            # don't let rescale cause integer overflow
-            np.clip(d2, lim.min, lim.max, out=d2)
-        else:
-            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
-    else:
-        if clip is not None:
-            np.clip(d2, *clip, out=d2)
+    if clip is not None:
+        clip_array(d2, clip[0], clip[1], out=d2)
+
     # don't copy if no change in dtype
     data = d2.astype(dtype, copy=False)
     return data
@@ -1238,7 +1262,11 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
-        imgData[nanMask, 3] = 0
+        # Workaround for https://github.com/cupy/cupy/issues/4693
+        if xp == cp:
+            imgData[nanMask, :, 3] = 0
+        else:
+            imgData[nanMask, 3] = 0
 
     profile('alpha channel')
     return imgData, alpha

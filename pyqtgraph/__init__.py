@@ -37,9 +37,7 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
     if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems (to avoid bugs, call QApplication.setGraphicsSystem("raster") before the QApplication is created).')
-    if QtGui.QApplication.setGraphicsSystem:
-        QtGui.QApplication.setGraphicsSystem('raster')  ## work around a variety of bugs in the native graphics system 
+        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 

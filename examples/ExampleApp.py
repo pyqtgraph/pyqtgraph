@@ -190,7 +190,7 @@ class PythonHighlighter(QSyntaxHighlighter):
     @property
     def styles(self):
         app = QtGui.QApplication.instance()
-        return DARK_STYLES if app.dark_mode else LIGHT_STYLES
+        return DARK_STYLES if app.property('darkMode') else LIGHT_STYLES
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
@@ -311,7 +311,7 @@ class ExampleLoader(QtGui.QMainWindow):
         self.ui.codeView.setCurrentCharFormat(f)
         # finally, override application automatic detection
         app = QtGui.QApplication.instance()
-        app.dark_mode = True
+        app.setProperty('darkMode', True)
 
     def updateTheme(self):
         self.hl = PythonHighlighter(self.ui.codeView.document())
@@ -345,18 +345,15 @@ class ExampleLoader(QtGui.QMainWindow):
 
     def loadFile(self, edited=False):
 
-        extra = []
         qtLib = str(self.ui.qtLibCombo.currentText())
-        gfxSys = str(self.ui.graphicsSystemCombo.currentText())
 
+        env = None
         if qtLib != 'default':
-            extra.append(qtLib.lower())
-        elif gfxSys != 'default':
-            extra.append(gfxSys)
+            env = dict(os.environ, PYQTGRAPH_QT_LIB=qtLib)
 
         if edited:
             path = os.path.abspath(os.path.dirname(__file__))
-            proc = subprocess.Popen([sys.executable, '-'] + extra, stdin=subprocess.PIPE, cwd=path)
+            proc = subprocess.Popen([sys.executable, '-'], stdin=subprocess.PIPE, cwd=path, env=env)
             code = str(self.ui.codeView.toPlainText()).encode('UTF-8')
             proc.stdin.write(code)
             proc.stdin.close()
@@ -365,9 +362,14 @@ class ExampleLoader(QtGui.QMainWindow):
             if fn is None:
                 return
             if sys.platform.startswith('win'):
-                os.spawnl(os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"', *extra)
+                args = [os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"']
             else:
-                os.spawnl(os.P_NOWAIT, sys.executable, sys.executable, fn, *extra)
+                args = [os.P_NOWAIT, sys.executable, sys.executable, fn]
+            if env is None:
+                os.spawnl(*args)
+            else:
+                args.append(env)
+                os.spawnle(*args)
 
     def showFile(self):
         fn = self.currentFile()

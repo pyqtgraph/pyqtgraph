@@ -1,37 +1,32 @@
 # -*- coding: utf-8 -*-
-import sys
+import importlib
+import os
 import warnings
 import weakref
+
 import numpy as np
-import os
-from ...Qt import QtGui, QtCore, QT_LIB
-from ... import icons
+
+from ..AxisItem import AxisItem
+from ..ButtonItem import ButtonItem
+from ..GraphicsWidget import GraphicsWidget
+from ..InfiniteLine import InfiniteLine
+from ..LabelItem import LabelItem
+from ..LegendItem import LegendItem
+from ..PlotDataItem import PlotDataItem
+from ..ViewBox import ViewBox
 from ... import functions as fn
-from ...widgets.FileDialog import FileDialog
-from .. PlotDataItem import PlotDataItem
-from .. ViewBox import ViewBox
-from .. AxisItem import AxisItem
-from .. LabelItem import LabelItem
-from .. LegendItem import LegendItem
-from .. GraphicsWidget import GraphicsWidget
-from .. ButtonItem import ButtonItem
-from .. InfiniteLine import InfiniteLine
+from ... import icons, PlotCurveItem, ScatterPlotItem
+from ...Qt import QtGui, QtCore, QT_LIB
 from ...WidgetGroup import WidgetGroup
 from ...python2_3 import basestring
+from ...widgets.FileDialog import FileDialog
 
 translate = QtCore.QCoreApplication.translate
 
-import importlib
 ui_template = importlib.import_module(
     f'.plotConfigTemplate_{QT_LIB.lower()}', package=__package__)
 
 __all__ = ['PlotItem']
-
-try:
-    from metaarray import *
-    HAVE_METAARRAY = True
-except:
-    HAVE_METAARRAY = False
 
 
 class PlotItem(GraphicsWidget):
@@ -1019,7 +1014,7 @@ class PlotItem(GraphicsWidget):
             if numCurves != -1:
                 if self.ctrl.forgetTracesCheck.isChecked():
                     curve.clear()
-                    self.removeItem(curves[i])
+                    self.removeItem(curve)
                 else:
                     curve.hide()        
       

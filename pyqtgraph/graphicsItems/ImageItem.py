@@ -419,21 +419,18 @@ class ImageItem(GraphicsObject):
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
         levels = self.levels
-        if levels is not None and levels.ndim == 1 and image.dtype in (self._xp.ubyte, self._xp.uint16):
+        if levels is not None and lut is not None and levels.ndim == 1 and \
+                image.dtype in (self._xp.ubyte, self._xp.uint16):
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
                 minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                if lut is None:
-                    efflut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=self._xp.ubyte)
-                else:
-                    lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
-                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
-                    efflut = lut[efflut]
+                lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
+                efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
+                                        offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
+                efflut = lut[efflut]
 
                 self._effectiveLut = efflut
             lut = self._effectiveLut

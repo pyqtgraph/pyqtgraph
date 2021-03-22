@@ -6,6 +6,9 @@ it is being scaled and/or converted by lookup table, and whether OpenGL
 is used by the view widget
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
+
 import argparse
 import sys
 
@@ -26,6 +29,11 @@ except ImportError:
     cp = None
     _has_cupy = False
 
+try:
+    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
+except ImportError:
+    RawImageGLWidget = None
+
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
 parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")
 parser.add_argument('--dtype', default='uint8', choices=['uint8', 'uint16', 'float'], help="Image dtype (uint8, uint16, or float)")
@@ -37,7 +45,12 @@ parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
 args = parser.parse_args(sys.argv[1:])
 
-#QtGui.QApplication.setGraphicsSystem('raster')
+if RawImageGLWidget is not None:
+    # don't limit frame rate to vsync
+    sfmt = QtGui.QSurfaceFormat()
+    sfmt.setSwapInterval(0)
+    QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
+
 app = pg.mkQApp("Video Speed Test Example")
 
 win = QtGui.QMainWindow()
@@ -46,10 +59,7 @@ ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 
-try:
-    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
-except ImportError:
-    RawImageGLWidget = None
+if RawImageGLWidget is None:
     ui.rawGLRadio.setEnabled(False)
     ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
 else:

@@ -12,7 +12,6 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 
-#QtGui.QApplication.setGraphicsSystem('raster')
 app = pg.mkQApp("Plotting Example")
 #mw = QtGui.QMainWindow()
 #mw.resize(800,800)
