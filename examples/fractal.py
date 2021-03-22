@@ -108,4 +108,3 @@ update()
 
 if __name__ == '__main__':
     pg.mkQApp().exec_()
-    

@@ -38,7 +38,5 @@ class MainWindow(TemplateBaseClass):
         
 win = MainWindow()
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     pg.mkQApp().exec_()
