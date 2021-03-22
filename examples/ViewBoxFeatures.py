@@ -82,4 +82,4 @@ l6 = pg.PlotDataItem(y)
 v6.addItem(l6)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

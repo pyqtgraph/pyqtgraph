@@ -51,4 +51,4 @@ anim = a.makeAnimation(loop=-1)
 anim.start()
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

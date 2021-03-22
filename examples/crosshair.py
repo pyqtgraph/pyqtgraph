@@ -81,4 +81,4 @@ proxy = pg.SignalProxy(p1.scene().sigMouseMoved, rateLimit=60, slot=mouseMoved)
 
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

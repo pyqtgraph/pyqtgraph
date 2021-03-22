@@ -35,4 +35,4 @@ bg = BarGraph(x=x, y=y1*0.3+2, height=0.4+y1*0.2, width=0.8)
 win.addItem(bg)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

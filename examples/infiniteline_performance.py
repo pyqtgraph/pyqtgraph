@@ -45,4 +45,4 @@ timer.timeout.connect(update)
 timer.start(0)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

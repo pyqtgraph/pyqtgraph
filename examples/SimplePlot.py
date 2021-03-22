@@ -7,4 +7,4 @@ plt = pg.plot(np.random.normal(size=100), title="Simplest possible plotting exam
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -130,4 +130,4 @@ g.setData(pos=pos, adj=adj, pen=lines, size=1, symbol=symbols, pxMode=False, tex
 
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -87,4 +87,4 @@ pw3.addItem(line)
 line.setBounds([0,200])
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -76,4 +76,4 @@ fc.connectTerminals(fNode['Out'], pw2Node['In'])
 fc.connectTerminals(fNode['Out'], fc['dataOut'])
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

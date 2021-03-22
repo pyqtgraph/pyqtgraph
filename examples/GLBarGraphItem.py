@@ -40,4 +40,4 @@ bg = gl.GLBarGraphItem(pos, size)
 w.addItem(bg)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -27,4 +27,4 @@ v.setCentralItem(plt)
 plt.plot([1,4,2,3,6,2,3,4,2,3], pen='g')
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -136,4 +136,4 @@ box2.setPos(5, 5)
 box2.setScale(0.2)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

@@ -33,5 +33,5 @@ ma = MetaArray(data, info=[
 pw.plot(ma, pen='y')
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()
 

@@ -79,4 +79,4 @@ p4.plot([1,3,2,4,3,5])
 p5.plot([1,3,2,4,3,5])
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

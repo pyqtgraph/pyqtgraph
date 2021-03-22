@@ -102,4 +102,4 @@ w.addItem(m6)
 #m2.translate(-25, -25, -50)
     
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

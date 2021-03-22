@@ -25,4 +25,4 @@ scale.setParentItem(vb)
 scale.anchor((1, 1), (1, 1), offset=(-20, -20))
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

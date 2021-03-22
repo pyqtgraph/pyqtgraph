@@ -36,4 +36,4 @@ plot.plot([14, 15, 16, 17, 18], pen=(248, 187, 208), symbolBrush=(248, 187, 208)
 plot.setXRange(-2, 4)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

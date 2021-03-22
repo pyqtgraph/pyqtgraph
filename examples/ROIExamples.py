@@ -158,4 +158,4 @@ def remove():
 r4.sigRemoveRequested.connect(remove)
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()

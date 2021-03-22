@@ -46,4 +46,4 @@ tree.resize(1000, 800)
 
 
 if __name__ == '__main__':
-    pg.Qt.QtWidgets.QApplication.exec_()
+    pg.mkQApp().exec_()
