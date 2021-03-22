@@ -223,10 +223,10 @@ def mkColor(*args):
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "RGB"           hexadecimal strings; deprecated if they don't start
-     "RGBA"          with "#"
-     "RRGGBB"       
-     "RRGGBBAA"     
+     "#RGB"          hexadecimal strings prefixed with '#'
+     "#RGBA"         previously allowed use without prefix is deprecated and 
+     "#RRGGBB"       will be removed in 0.13
+     "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
@@ -244,7 +244,7 @@ def mkColor(*args):
             else:
                 warnings.warn(
                     "Parsing of hex strings that do not start with '#' is"
-                    "deprecated support will be removed in 0.13",
+                    "deprecated and support will be removed in 0.13",
                     DeprecationWarning, stacklevel=2
                 )
             if len(c) == 3:
