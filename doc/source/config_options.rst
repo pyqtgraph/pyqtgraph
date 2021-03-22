@@ -26,10 +26,7 @@ imageAxisOrder     str                 'col-major'        For 'row-major', image
                                                           change in the future.
 editorCommand      str or None         None               Command used to invoke code editor from ConsoleWidget.
 exitCleanup        bool                True               Attempt to work around some exit crash bugs in PyQt and PySide.
-useWeave           bool                False              Use weave to speed up some operations, if it is available.
-weaveDebug         bool                False              Print full error message if weave compile fails.
-useOpenGL          bool                False              Enable OpenGL in GraphicsView. This can have unpredictable effects on stability
-                                                          and performance.
+useOpenGL          bool                False              Enable OpenGL in GraphicsView.
 useCupy            bool                False              Use cupy to perform calculations on the GPU. Only currently applies to
                                                           ImageItem and its associated functions.
 enableExperimental bool                False              Enable experimental features (the curious can search for this key in the code).
