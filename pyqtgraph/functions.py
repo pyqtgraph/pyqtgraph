@@ -998,6 +998,9 @@ def solveBilinearTransform(points1, points2):
     
     return matrix
 
+def clip_scalar(val, vmin, vmax):
+    """ convenience function to avoid using np.clip for scalar values """
+    return vmin if val < vmin else vmax if val > vmax else val
 
 def clip_array(arr, vmin, vmax, out=None):
     # replacement for np.clip due to regression in
