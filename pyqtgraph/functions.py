@@ -1004,19 +1004,22 @@ def clip_array(arr, vmin, vmax, out=None):
     # performance since numpy 1.17
     # https://github.com/numpy/numpy/issues/14281
 
-    if out is None:
-        out = np.empty_like(arr)
+    if vmin is None and vmax is None:
+        # let np.clip handle the error
+        return np.clip(arr, vmin, vmax, out=out)
 
-    if vmin is not None:
-        arr = np.core.umath.maximum(arr, vmin, out=out)
-    if vmax is not None:
-        arr = np.core.umath.minimum(arr, vmax, out=out)
-
-    # np.core.umath.clip performs slightly better than
-    # the above on platforms compiled with GCC (e.g. Linux),
-    # but worse for CLANG (e.g. macOS) and MSVC (Windows)
-
-    return out
+    if vmin is None:
+        return np.core.umath.minimum(arr, vmax, out=out)
+    elif vmax is None:
+        return np.core.umath.maximum(arr, vmin, out=out)
+    elif sys.platform == 'win32':
+        # Windows umath.clip is slower than umath.maximum(umath.minimum)
+        if out is None:
+            out = np.empty_like(arr)
+        out = np.core.umath.minimum(arr, vmax, out=out)
+        return np.core.umath.maximum(out, vmin, out=out)
+    else:
+        return np.core.umath.clip(arr, vmin, vmax, out=out)
 
 
 def rescaleData(data, scale, offset, dtype=None, clip=None):
