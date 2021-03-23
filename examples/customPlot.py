@@ -42,7 +42,7 @@ class CustomTickSliderItem(pg.TickSliderItem):
             self.removeTick(tick)
         
         for pos in ticks:
-            tickItem = self.addTick(pos, movable=False, color="333333")
+            tickItem = self.addTick(pos, movable=False, color="#333333")
             self.all_ticks[pos] = tickItem
         
         self.updateRange(None, self._range)

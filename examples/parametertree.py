@@ -69,7 +69,7 @@ params = [
         {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
-        {'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "This is a color button"},
+        {'name': 'Color', 'type': 'color', 'value': "#FF0", 'tip': "This is a color button"},
         {'name': 'Gradient', 'type': 'colormap'},
         {'name': 'Subgroup', 'type': 'group', 'children': [
             {'name': 'Sub-param 1', 'type': 'int', 'value': 10},
