@@ -73,21 +73,21 @@ def test_opts():
     float_value = 1.0 + 20*np.random.random()
     pen2.setWidth( int(float_value) )
     pdi.setPen(pen)
-    pdi.setShadowPen(pen2)
-    pdi.setFillLevel( float_value )
-    pdi.setFillBrush(brush2)
-
-    pdi.setSymbolPen(pen)
-    pdi.setSymbolBrush(brush)
-    pdi.setSymbol('t')
-    pdi.setSymbolSize( float_value )
     assert pdi.curve.opts['pen'] == pen
+    pdi.setShadowPen(pen2)
     assert pdi.curve.opts['shadowPen'] == pen2
+    pdi.setFillLevel( float_value )
     assert pdi.curve.opts['fillLevel'] == float_value
+    pdi.setFillBrush(brush2)
     assert pdi.curve.opts['brush'] == brush2
-    assert pdi.scatter.opts['pen'] == pen
-    assert pdi.scatter.opts['brush'] == brush
+
+    pdi.setSymbol('t')
     assert pdi.scatter.opts['symbol'] == 't'
+    pdi.setSymbolPen(pen)
+    assert pdi.scatter.opts['pen'] == pen
+    pdi.setSymbolBrush(brush)
+    assert pdi.scatter.opts['brush'] == brush
+    pdi.setSymbolSize( float_value )
     assert pdi.scatter.opts['size'] == float_value
 
 def test_clear():
