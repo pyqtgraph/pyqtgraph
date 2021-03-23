@@ -42,8 +42,5 @@ window = ExampleApp()
 window.setWindowTitle('pyqtgraph example: DateAxisItem_QtDesigner')
 window.show()
 
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        app.exec_()
+    app.exec_()
