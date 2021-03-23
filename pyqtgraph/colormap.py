@@ -61,14 +61,14 @@ def get(name, source=None, skipCache=False):
     if not skipCache and name in _mapCache:
         return _mapCache[name]
     if source is None:
-        return _get_from_file(name)
+        return _getFromFile(name)
     elif source == 'matplotlib':
-        return _get_from_matplotlib(name)
+        return getFromMatplotlib(name)
     elif source == 'colorcet':
-        return _get_from_colorcet(name)
+        return getFromColorcet(name)
     return None
 
-def _get_from_file(name):
+def _getFromFile(name):
     filename = name
     if filename[0] !='.': # load from built-in directory
         dirname = path.dirname(__file__)
@@ -114,7 +114,7 @@ def _get_from_file(name):
     _mapCache[name] = cm
     return cm
 
-def _get_from_matplotlib(name):
+def getFromMatplotlib(name):
     """ import colormap from matplotlib definition """
     # inspired and informed by "mpl_cmaps_in_ImageItem.py", published by Sebastian Hoefer at 
     # https://github.com/honkomonk/pyqtgraph_sandbox/blob/master/mpl_cmaps_in_ImageItem.py
@@ -155,7 +155,7 @@ def _get_from_matplotlib(name):
         _mapCache[name] = cm
     return cm
 
-def _get_from_colorcet(name):
+def getFromColorcet(name):
     """ import colormap from colorcet definition """
     try:
         import colorcet
