@@ -11,15 +11,12 @@ from ..widgets.PlotWidget import PlotWidget
 
 
 class MultiAxisPlotWidget(PlotWidget):
-    # TODO: propagate mouse events of master viewbox, to children
-    # TODO: axis specific menu options for axis, propagate to linked children
-
     def __init__(self, **kargs):
         """PlotWidget but with support for multi axis"""
         PlotWidget.__init__(self, **kargs)
         # plotitem shortcut
         self.pi = super().getPlotItem()
-        # default vb from plotItem
+        # default vb from plotItem shortcut
         self.vb = self.pi.getViewBox()
         # layout shortcut
         self.layout = self.pi.layout
@@ -29,26 +26,18 @@ class MultiAxisPlotWidget(PlotWidget):
         # CHARTS
         self.axis = {}
         self.charts = {}
-        self.axis_connections = {}
 
-    def addAxis(self, name, position, label=None, units=None, **kwargs):
-        axis = AxisItem(position, **kwargs)
+    def addAxis(self, name, *args, **kwargs):
+        axis = AxisItem(name=name, *args, **kwargs)
         axis.autorange = True
-        axis.setLabel(label, units)
+        axis.charts_connections = []
         self.axis[name] = axis
-        self.axis_connections[name] = []
+        return axis
 
-    def addChart(self, name, x_axis=None, y_axis=None, **kwargs):
+    def addChart(self, name, x_axis=None, y_axis=None, chart=None, *args, **kwargs):
         # CHART
-        chart = PlotDataItem(
-            name=name,
-            connect="all",
-            # symbol="+",
-            symbol=None,
-            downsampleMethod="peak",
-            autoDownsample=True,
-            clipToView=True
-        )
+        if chart is None:
+            chart = PlotDataItem(name=name)
         if x_axis is None and y_axis is None:
             # use default plotitem if none provided
             plotitem = self.pi
@@ -71,7 +60,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 self.addAxis(y_axis, "left", parent=self.pi)
                 y = self.axis[y_axis]
             # VIEW
-            plotitem = PlotItem(parent=self.pi, name=name, **kwargs)
+            plotitem = PlotItem(parent=self.pi, name=name, *args, **kwargs)
             # hide all plotitem axis (they vould interfere with viewbox)
             for a in ["left", "bottom", "right", "top"]:
                 plotitem.hideAxis(a)
@@ -98,8 +87,9 @@ class MultiAxisPlotWidget(PlotWidget):
         # keep chart
         self.charts[name] = chart
         # create a mapping for this chart and his axis
-        self.axis_connections[x_axis].append(name)
-        self.axis_connections[y_axis].append(name)
+        self.axis[x_axis].charts_connections.append(name)
+        self.axis[y_axis].charts_connections.append(name)
+        return chart, plotitem
 
     def clearLayout(self):
         while self.layout.count() > 0:
@@ -174,7 +164,7 @@ class MultiAxisPlotWidget(PlotWidget):
                 self.layout.addItem(a, y, vx)
         # SELECT CHARTS
         if charts is None:
-            charts = list(self.charts)
+            charts = self.charts
         for k, c in self.charts.items():
             if k in charts:
                 c.show()
@@ -214,7 +204,7 @@ class MultiAxisPlotWidget(PlotWidget):
         else:
             self.disableAxisAutoRange(axis_name)
             axis = self.axis[axis_name]
-            charts = [self.charts[connection] for connection in self.axis_connections[axis_name]]
+            charts = [self.charts[connection] for connection in axis.charts_connections]
             if axis.orientation in ["top", "bottom"]:  # IS X AXIS
                 for chart in charts:
                     vb = chart.plotItem.getViewBox()
@@ -225,10 +215,9 @@ class MultiAxisPlotWidget(PlotWidget):
                     vb.setYRange(*range, **kwargs)
 
     def update(self):
-        for axis_name, connections in self.axis_connections.items():
-            axis = self.axis[axis_name]
+        for axis_name, axis in self.axis.items():
             if axis.autorange:
-                charts = [self.charts[connection] for connection in connections]
+                charts = [self.charts[connection] for connection in axis.charts_connections]
                 bounds = []
                 if axis.orientation in ["top", "bottom"]:  # IS X AXIS
                     for chart in charts:

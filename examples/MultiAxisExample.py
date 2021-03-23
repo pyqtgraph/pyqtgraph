@@ -4,7 +4,7 @@
 import initExample
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 app = pg.mkQApp()
 mw = QtGui.QMainWindow()
@@ -22,23 +22,23 @@ mpw.addLegend(offset=(0, 0))
 # TITLE
 mpw.setTitle("MultiAxisPlotWidget Example")
 # AXYS
-mpw.addAxis("samples1", "bottom", "Samples1", "samples1")
-mpw.addAxis("samples2", "bottom", "Samples2", "samples2")
-mpw.addAxis("sin1", "left", "Data1", "sin1")
-mpw.addAxis("sin2", "left", "Data2", "sin2")
+a1 = mpw.addAxis("samples1", "bottom", text="Samples1", units="samples1")
+a2 = mpw.addAxis("samples2", "bottom", text="Samples2", units="samples2")
+as1 = mpw.addAxis("sin1", "left", text="Data1", units="sin1")
+as2 = mpw.addAxis("sin2", "left", text="Data2", units="sin2")
 # CHARTS
-mpw.addChart("Dataset 1", "sin1", "samples1")
-mpw.addChart("Dataset 2", "sin1", "samples2")
-mpw.addChart("Dataset 3", "sin2", "samples2")
+c1, pi1 = mpw.addChart("Dataset 1", "sin1", "samples1")
+c2, pi2 = mpw.addChart("Dataset 2", "sin1", "samples2")
+c3, pi3 = mpw.addChart("Dataset 3", "sin2", "samples2")
 # make and display chart
 mpw.makeLayout()
 
 data1 = np.array(np.sin(np.linspace(0, 2 * np.pi, num=1000)))
-mpw.charts["Dataset 1"].setData(data1)
+c1.setData(data1)
 data2 = data1 * 2
-mpw.charts["Dataset 2"].setData(data2)
+c2.setData(data2)
 data3 = np.array(np.sin(np.linspace(0, 4 * np.pi, num=500))) * 3
-mpw.charts["Dataset 3"].setData(data3)
+c3.setData(data3)
 
 mpw.update()
 
