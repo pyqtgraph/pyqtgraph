@@ -3,7 +3,7 @@ from .Qt import QtGui, QtCore
 from .python2_3 import basestring
 from .functions import mkColor, eq
 from os import path, listdir
-import collections
+from collections.abc import Callable, Sequence
 
 _mapCache = {}
 
@@ -126,7 +126,7 @@ def _get_from_matplotlib(name):
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
-        if ('red' in data) and isinstance(data['red'], collections.Sequence):
+        if ('red' in data) and isinstance(data['red'], Sequence):
             positions = set() # super-set of handle positions in individual channels
             for key in ['red','green','blue']:
                 for tup in data[key]:
@@ -142,7 +142,7 @@ def _get_from_matplotlib(name):
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
             cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
-        elif ('red' in data) and isinstance(data['red'], collections.Callable):
+        elif ('red' in data) and isinstance(data['red'], Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
