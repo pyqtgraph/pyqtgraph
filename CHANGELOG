@@ -1,7 +1,7 @@
 pyqtgraph-0.12.0
 
   Deprecations:
-    - Qt < 5.12, Python < 3.6, and numpy < 1.17 not supported
+    - Qt < 5.12, Python < 3.7, and NumPy < 1.17 are no longer supported
 
   New Features:
     - Qt6 Compatibility (thank you so much @pijyoi !)
@@ -10,7 +10,7 @@ pyqtgraph-0.12.0
     - #1527 Expand parameter tree documentation
     - #1563 Fixes to FlowChart documentation
     - #1534 Extend pixmaps for GraphIcons
-    - #1566 Redid ScatterPlotSpeedTest.py with toggle-able options
+    - #1566 Toggle-able options for ScatterPlotSpeedTest.py
     - #1572 Arbitrary scale center ROI
     - #1581 Equilateral Triangle ROI
 
@@ -19,13 +19,14 @@ pyqtgraph-0.12.0
     - #1501 various ImageItem performance improvements
     - #1509 mkQApp will now have settings for better HiDPI settings 
     - #1518 Small Optimizations for functions.rescaleData()
-    - #1556 Reduce reallocation in dynamic range limiter
+    - #1556 Reduce reallocation in PlotDataItem dynamic range limiter
     - #1560 Cache scatter-plot items by hashable properties
     - #1564 Correct id-based keyring of scatter plot pixmap cache
     - #1569 Fix ScatterPlotItem performance regression
     - #1619 Stop PlotDataItem from always sending full style information to PlotCurveItem/ScatterPlotItem
     - #1630 Combine levels and lut only if both are present
     - #1632 workaround for np.clip regression since numpy 1.17
+    - #1641 Introduce functions.clip_array as faster replacement for currently slow np.clip
 
   API/Behavior Change:
     - #1476 Use log modulus transform for y-axis log scaling
@@ -37,10 +38,9 @@ pyqtgraph-0.12.0
     - #1573/1576 Add deprecation warnings to portions of library
     - #1587 qApp.property('darkMode') is now a dynamic property
     - #1613 Added keys() method to Parameter class
-    - #1641 Introduce functions.clip_array as for np.clip performance regression
 
   Bug Fixes:
-    - #1487 Fix InfiniteLabel object has not attribute 'updateText'
+    - #1487 Fix InfiniteLabel object has no attribute 'updateText'
     - #1491 LinearRegionItem would break with setSpan
     - #1496 enableMenu setting now preserved when passing ViewBox to PlotItem
     - #1498 PlotDataItem now signals on setPos()
@@ -48,7 +48,7 @@ pyqtgraph-0.12.0
     - #1506 Fix "camerPosition" typo in GLViewWidget
     - #1510 Fix RemoteGraphicsView mouse interactions on Qt 5.12
     - #1517 Fix RemoteSpeedTest Shutdown Errors
-    - #1528 Support suffix for int parameters
+    - #1528 Support suffix for int parameters in SpinBox
     - #1546 ImageView guards against key events when there is no time axis
     - #1558 Fix Small Heights in ErrorBarItem
     - #1567 Handle 0-d arrays in InfiniteLine.setPos()
