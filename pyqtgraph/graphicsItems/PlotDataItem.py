@@ -242,7 +242,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
         self.informViewBoundsChanged()
 
     def setLogMode(self, xMode, yMode):
@@ -260,7 +260,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
         self.informViewBoundsChanged()
 
 
@@ -269,7 +269,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['derivativeMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
         self.informViewBoundsChanged()
 
     def setPhasemapMode(self, mode):
@@ -277,7 +277,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['phasemapMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
         self.informViewBoundsChanged()
 
     def setPointMode(self, mode):
@@ -297,7 +297,7 @@ class PlotDataItem(GraphicsObject):
         #for c in self.curves:
             #c.setPen(pen)
         #self.update()
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setShadowPen(self, *args, **kargs):
         """
@@ -312,14 +312,14 @@ class PlotDataItem(GraphicsObject):
         #for c in self.curves:
             #c.setPen(pen)
         #self.update()
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setFillBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
         if self.opts['fillBrush'] == brush:
             return
         self.opts['fillBrush'] = brush
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setBrush(self, *args, **kargs):
         return self.setFillBrush(*args, **kargs)
@@ -328,14 +328,14 @@ class PlotDataItem(GraphicsObject):
         if self.opts['fillLevel'] == level:
             return
         self.opts['fillLevel'] = level
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setSymbol(self, symbol):
         if self.opts['symbol'] == symbol:
             return
         self.opts['symbol'] = symbol
         #self.scatter.setSymbol(symbol)
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setSymbolPen(self, *args, **kargs):
         pen = fn.mkPen(*args, **kargs)
@@ -343,7 +343,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolPen'] = pen
         #self.scatter.setSymbolPen(pen)
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setSymbolBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
@@ -351,7 +351,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolBrush'] = brush
         #self.scatter.setSymbolBrush(brush)
-        self.updateItems()
+        self.updateItems(update_style=True)
 
 
     def setSymbolSize(self, size):
@@ -359,7 +359,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolSize'] = size
         #self.scatter.setSymbolSize(symbolSize)
-        self.updateItems()
+        self.updateItems(update_style=True)
 
     def setDownsampling(self, ds=None, auto=None, method=None):
         """
@@ -396,14 +396,14 @@ class PlotDataItem(GraphicsObject):
 
         if changed:
             self.xDisp = self.yDisp = None
-            self.updateItems()
+            self.updateItems(update_style=False)
 
     def setClipToView(self, clip):
         if self.opts['clipToView'] == clip:
             return
         self.opts['clipToView'] = clip
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
 
     def setDynamicRangeLimit(self, limit=1e06, hysteresis=3.):
         """
@@ -431,7 +431,7 @@ class PlotDataItem(GraphicsObject):
             return # avoid update if there is no change
         self.opts['dynamicRangeLimit'] = limit # can be None
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(update_style=False)
 
     def setData(self, *args, **kargs):
         """
@@ -587,7 +587,7 @@ class PlotDataItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
-    def updateItems(self, update_style=False):
+    def updateItems(self, update_style=True):
         curveArgs = {}
         scatterArgs = {}
         if update_style: # repeat style arguments only when changed
@@ -872,10 +872,10 @@ class PlotDataItem(GraphicsObject):
             or self.opts['autoDownsample']
         ):
             self.xDisp = self.yDisp = None
-            self.updateItems()
+            self.updateItems(update_style=False)
         elif self.opts['dynamicRangeLimit'] is not None:
-            # do not discard cached display data
-            self.updateItems()
+            # update, but do not discard cached display data
+            self.updateItems(update_style=False)
 
     def _fourierTransform(self, x, y):
         ## Perform fourier transform. If x values are not sampled uniformly,
