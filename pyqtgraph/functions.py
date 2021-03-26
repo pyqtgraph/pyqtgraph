@@ -1247,7 +1247,11 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
         
     # copy data into image array
-    if data.ndim == 2:
+    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
+
+    if fastpath:
+        pass
+    elif data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
@@ -1263,11 +1267,12 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     profile('reorder channels')
     
     # add opaque alpha channel if needed
-    if data.ndim == 2 or data.shape[2] == 3:
-        alpha = False
-        imgData[..., 3] = 255
-    else:
+    if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
+    else:
+        alpha = False
+        if not fastpath:    # fastpath has already filled it in
+            imgData[..., 3] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
@@ -1280,6 +1285,50 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     profile('alpha channel')
     return imgData, alpha
+
+
+def try_fastpath_argb(xp, ain, aout, useRGBA):
+    # we only optimize for certain cases
+    # return False if we did not handle it
+    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
+    if not can_handle:
+        return False
+
+    nrows, ncols = ain.shape[:2]
+    nchans = 1 if ain.ndim == 2 else ain.shape[2]
+
+    Format = QtGui.QImage.Format
+
+    if nchans == 1:
+        in_fmt = Format.Format_Grayscale8
+    elif nchans == 3:
+        in_fmt = Format.Format_RGB888
+    else:
+        in_fmt = Format.Format_RGBA8888
+
+    if useRGBA:
+        out_fmt = Format.Format_RGBA8888
+    else:
+        out_fmt = Format.Format_ARGB32
+
+    if in_fmt == out_fmt:
+        aout[:] = ain
+        return True
+
+    npixels_chunk = 512*1024
+    batch = int(npixels_chunk / ncols / nchans)
+    batch = max(1, batch)
+    row_beg = 0
+    while row_beg < nrows:
+        row_end = min(row_beg + batch, nrows)
+        ain_view = ain[row_beg:row_end, ...]
+        aout_view = aout[row_beg:row_end, ...]
+        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
+        qimg = qimg.convertToFormat(out_fmt)
+        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
+        row_beg = row_end
+
+    return True
 
 
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):
