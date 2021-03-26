@@ -140,6 +140,7 @@ setup(
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
                   "pyqtgraph.icons": ["*.svg", "*.png"],
+                  "pyqtgraph": ["colors/maps/*.csv", "colors/maps/*.txt"],
                   },
     install_requires = [
         'numpy>=1.17.0',
