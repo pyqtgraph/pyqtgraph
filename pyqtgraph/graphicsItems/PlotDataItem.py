@@ -542,7 +542,6 @@ class PlotDataItem(GraphicsObject):
             if k in kargs:
                 self.opts[k] = kargs[k]
                 self._styleWasChanged = True
-
         #curveArgs = {}
         #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
             #if k in kargs:
@@ -588,8 +587,14 @@ class PlotDataItem(GraphicsObject):
         profiler('emit')
 
     def updateItems(self, styleUpdate=True):
+        # override styleUpdate request and always enforce update until we have a better solution for
+        # - ScatterPlotItem losing per-point style information
+        # - PlotDataItem performing multiple unnecessary setData call on initialization
+        styleUpdate=True
+        
         curveArgs = {}
         scatterArgs = {}
+
         if styleUpdate: # repeat style arguments only when changed
             for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
                 if k in self.opts:
