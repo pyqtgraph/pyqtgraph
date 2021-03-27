@@ -418,23 +418,48 @@ class ImageItem(GraphicsObject):
 
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
+        scale = None
         levels = self.levels
-        if levels is not None and lut is not None and levels.ndim == 1 and \
-                image.dtype in (self._xp.ubyte, self._xp.uint16):
+
+        while True:
+            if image.dtype not in (self._xp.ubyte, self._xp.uint16):
+                break
+            if levels is not None and levels.ndim != 1:
+                # can't handle multi-channel levels
+                break
+            if levels is None and lut is None:
+                # nothing to combine
+                break
+
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
-                minlev, maxlev = levels
+                if levels is None:
+                    info = numpy.iinfo(image.dtype)
+                    minlev, maxlev = info.min, info.max
+                else:
+                    minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
-                                        offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
-                efflut = lut[efflut]
+                if lut is None:
+                    efflut = fn.rescaleData(ind, scale=255./levdiff,
+                                            offset=minlev, dtype=self._xp.ubyte)
+                else:
+                    effscale = lut.shape[0] / levdiff
+                    lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
+                    efflut = fn.rescaleData(ind, scale=effscale,
+                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
+                    efflut = lut[efflut]
 
                 self._effectiveLut = efflut
             lut = self._effectiveLut
             levels = None
+
+            # when calling makeARGB() with lut and no levels, we need to
+            # explicitly set scale. This ensures that makeARGB() will skip
+            # applying levels.
+            scale = lut.shape[0] - 1
+            break
 
         # Convert single-channel image to 2D array
         if image.ndim == 3 and image.shape[-1] == 1:
@@ -448,7 +473,7 @@ class ImageItem(GraphicsObject):
         if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
             self._buildQImageBuffer(image.shape)
 
-        fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
+        fn.makeARGB(image, lut=lut, levels=levels, scale=scale, output=self._processingBuffer)
         if self._xp == self._cupy:
             self._processingBuffer.get(out=self._displayBuffer)
         self._renderRequired = False
