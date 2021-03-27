@@ -418,9 +418,25 @@ class ImageItem(GraphicsObject):
 
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
+        scale = None
         levels = self.levels
-        if levels is not None and lut is not None and levels.ndim == 1 and \
-                image.dtype in (self._xp.ubyte, self._xp.uint16):
+
+        while True:
+            if image.dtype not in (self._xp.ubyte, self._xp.uint16):
+                break
+            if lut is None:
+                # no lut to combine
+                break
+            if levels is None:
+                # remove degenerate case
+                info = numpy.iinfo(image.dtype)
+                levels = info.min, info.max
+                levels = self._xp.asarray(levels)
+            # here, both levels and lut are present
+            if levels.ndim != 1:
+                # can't handle this case
+                break
+
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
@@ -436,6 +452,12 @@ class ImageItem(GraphicsObject):
             lut = self._effectiveLut
             levels = None
 
+            # when calling makeARGB() with lut and no levels, we need to
+            # explicitly set scale. This ensures that makeARGB() will skip
+            # applying levels.
+            scale = lut.shape[0] - 1
+            break
+
         # Convert single-channel image to 2D array
         if image.ndim == 3 and image.shape[-1] == 1:
             image = image[..., 0]
@@ -448,7 +470,7 @@ class ImageItem(GraphicsObject):
         if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
             self._buildQImageBuffer(image.shape)
 
-        fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
+        fn.makeARGB(image, lut=lut, levels=levels, scale=scale, output=self._processingBuffer)
         if self._xp == self._cupy:
             self._processingBuffer.get(out=self._displayBuffer)
         self._renderRequired = False
