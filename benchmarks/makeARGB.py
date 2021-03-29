@@ -10,8 +10,9 @@ except ImportError:
     cp = None
 
 
-class TimeSuite(object):
+class _TimeSuite(object):
     def __init__(self):
+        super(_TimeSuite, self).__init__()
         self.float_data = None
         self.uint8_data = None
         self.uint8_lut = None
@@ -24,7 +25,7 @@ class TimeSuite(object):
         self.cupy_uint16_lut = None
 
     def setup(self):
-        size = (3072, 3072)
+        size = (self.size, self.size)
         self.float_data, self.uint16_data, self.uint16_lut, self.uint8_data, self.uint8_lut = self._create_data(
             size, np
         )
@@ -84,8 +85,45 @@ for cupy in [True, False]:
                 continue
             for ln in [None, "uint8", "uint16"]:
                 name = f'time_makeARGB_{"cupy" if cupy else ""}{dt}_{"" if levels else "no"}levels_{ln or "no"}lut'
-                setattr(TimeSuite, name, make_test(dt, cupy, levels, ln, name))
+                setattr(_TimeSuite, name, make_test(dt, cupy, levels, ln, name))
+
+
+class Time256Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time256Suite, self).__init__()
+
+
+class Time512Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time512Suite, self).__init__()
+
+
+class Time1024Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time1024Suite, self).__init__()
+
+
+class Time2048Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time2048Suite, self).__init__()
+
+
+class Time3072Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time3072Suite, self).__init__()
+
+
+class Time4096Suite(_TimeSuite):
+    def __init__(self):
+        self.size = 1024
+        super(Time4096Suite, self).__init__()
+
 
 if __name__ == "__main__":
-    ts = TimeSuite()
+    ts = Time3072Suite()
     ts.setup()
