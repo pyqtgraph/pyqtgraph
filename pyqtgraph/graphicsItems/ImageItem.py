@@ -424,31 +424,18 @@ class ImageItem(GraphicsObject):
         while True:
             if image.dtype not in (self._xp.ubyte, self._xp.uint16):
                 break
-            if levels is not None and levels.ndim != 1:
+            if lut is None:
+                # no lut to combine
+                break
+            if levels is None:
+                # remove degenerate case
+                info = numpy.iinfo(image.dtype)
+                levels = info.min, info.max
+                levels = self._xp.asarray(levels)
+            # here, both levels and lut are present
+            if levels.ndim != 1:
                 # can't handle this case
                 break
-
-            info = numpy.iinfo(image.dtype)
-            if image.dtype == self._xp.ubyte:
-                if levels is not None and levels[0] == info.min and levels[1] == info.max:
-                    # degenerate case, equivalent to not specifying levels
-                    levels = None
-            else:   # uint16
-                if levels is None:
-                    # degenerate case, always specify levels to force conversion to lut
-                    levels = info.min, info.max
-
-            if levels is None:
-                if lut is None:
-                    # fast path for uint8
-                    break
-                else:
-                    # ensure that makeARGB() bypasses apply levels
-                    scale = lut.shape[0] - 1
-                    break
-
-            # here, levels is present
-            # convert to lut only
 
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
@@ -456,14 +443,10 @@ class ImageItem(GraphicsObject):
                 minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                if lut is None:
-                    efflut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=self._xp.ubyte)
-                else:
-                    lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
-                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
-                    efflut = lut[efflut]
+                lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
+                efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
+                                        offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
+                efflut = lut[efflut]
 
                 self._effectiveLut = efflut
             lut = self._effectiveLut
