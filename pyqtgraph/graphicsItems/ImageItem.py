@@ -424,27 +424,26 @@ class ImageItem(GraphicsObject):
         while True:
             if image.dtype not in (self._xp.ubyte, self._xp.uint16):
                 break
+            if levels is not None and levels.ndim != 1:
+                # can't handle multi-channel levels
+                break
             if lut is None:
                 # no lut to combine
-                break
-            if levels is None:
-                # remove degenerate case
-                info = numpy.iinfo(image.dtype)
-                levels = info.min, info.max
-                levels = self._xp.asarray(levels)
-            # here, both levels and lut are present
-            if levels.ndim != 1:
-                # can't handle this case
                 break
 
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
-                minlev, maxlev = levels
+                if levels is None:
+                    info = numpy.iinfo(image.dtype)
+                    minlev, maxlev = info.min, info.max
+                else:
+                    minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
+                effscale = lut.shape[0] / levdiff
                 lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
+                efflut = fn.rescaleData(ind, scale=effscale,
                                         offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
                 efflut = lut[efflut]
 
