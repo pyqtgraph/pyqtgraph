@@ -13,7 +13,7 @@ class TimeSuite(object):
         self.uint16_lut = None
 
     def setup(self):
-        size = (500, 500)
+        size = (3072, 3072)
 
         self.float_data = {
             'data': np.random.normal(size=size),
@@ -50,10 +50,12 @@ class TimeSuite(object):
 def make_test(dtype, use_levels, lut_name, func_name):
     def time_test(self):
         data = getattr(self, dtype + '_data')
+        levels = data['levels'] if use_levels else None
+        lut = getattr(self, lut_name + '_lut', None) if lut_name is not None else None
         makeARGB(
             data['data'],
-            lut=getattr(self, lut_name + '_lut', None),
-            levels=use_levels and data['levels'],
+            lut=lut,
+            levels=levels,
         )
 
     time_test.__name__ = func_name
@@ -62,6 +64,8 @@ def make_test(dtype, use_levels, lut_name, func_name):
 
 for dt in ['float', 'uint16', 'uint8']:
     for levels in [True, False]:
+        if dt == 'float' and not levels:
+            continue
         for ln in [None, 'uint8', 'uint16']:
             name = f'time_makeARGB_{dt}_{"" if levels else "no"}levels_{ln or "no"}lut'
             setattr(TimeSuite, name, make_test(dt, levels, ln, name))

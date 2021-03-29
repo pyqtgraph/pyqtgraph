@@ -30,7 +30,7 @@
     // determined by looking for tools on the PATH environment
     // variable.
     "environment_type": "conda",
-
+    "conda_channels": ["conda-forge"],
     // timeout in seconds for installing any dependencies in environment
     // defaults to 10 min
     //"install_timeout": 600,
@@ -40,7 +40,7 @@
 
     // The Pythons you'd like to test against.  If not provided, defaults
     // to the current version of Python used to run `asv`.
-    "pythons": ["2.7", "3.8"],
+    "pythons": ["3.7", "3.8", "3.9"],
 
     // The matrix of dependencies to test.  Each key is the name of a
     // package (in PyPI) and the values are version numbers.  An empty
@@ -53,9 +53,10 @@
     // followed by the pip installed packages).
     //
     "matrix": {
+//        "numpy": ["1.17", "1.18", "1.19", ""],
         "numpy": [],
-        "numba": [],
-        "pyqt": ["4", "5"],
+        "pyqt": ["5", null],
+        "pyside2": ["", null]
     },
 
     // Combinations of libraries/python versions can be excluded/included
@@ -80,7 +81,8 @@
     //     cases: 'linux2', 'win32', 'cygwin', 'darwin'.
     //
     "exclude": [
-        {"python": "3.8", "pyqt": "4"},
+        {"pyqt": "5", "pyside2": ""},
+        {"pyqt": null, "pyside2": null}
     ],
     //
     // "include": [
