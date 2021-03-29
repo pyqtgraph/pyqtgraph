@@ -56,7 +56,8 @@
 //        "numpy": ["1.17", "1.18", "1.19", ""],
         "numpy": [],
         "pyqt": ["5", null],
-        "pyside2": ["", null]
+        "pyside2": ["", null],
+        "pip+cupy-cuda102": ""
     },
 
     // Combinations of libraries/python versions can be excluded/included
