@@ -1243,8 +1243,10 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     # decide channel order
     if useRGBA:
         order = [0,1,2,3] # array comes out RGBA
+    elif sys.byteorder == 'little':
+        order = [2,1,0,3] # ARGB32 little endian
     else:
-        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
+        order = [3,0,1,2] # ARGB32 big endian
         
     # copy data into image array
     fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
