@@ -87,7 +87,7 @@ for cupy in [True, False]:
                 continue
             for lutname in [None, "uint8", "uint16"]:
                 name = (
-                    f'time_makeARGB_{"cupy" if cupy else ""}{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
+                    f'time_10x_makeARGB_{"cupy" if cupy else ""}{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
                 )
                 setattr(_TimeSuite, name, make_test(dtype, cupy, levels, lutname, name))
 
