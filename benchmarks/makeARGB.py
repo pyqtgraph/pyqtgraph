@@ -1,4 +1,5 @@
 import numpy as np
+
 import pyqtgraph as pg
 from pyqtgraph.functions import makeARGB
 
@@ -18,26 +19,19 @@ class _TimeSuite(object):
         self.uint8_lut = None
         self.uint16_data = None
         self.uint16_lut = None
-        self.cupy_float_data = None
-        self.cupy_uint8_data = None
-        self.cupy_uint8_lut = None
-        self.cupy_uint16_data = None
-        self.cupy_uint16_lut = None
+        self.output = None
+        self.cupy_output = None
 
     def setup(self):
         size = (self.size, self.size)
         self.float_data, self.uint16_data, self.uint16_lut, self.uint8_data, self.uint8_lut = self._create_data(
             size, np
         )
-
-        if cp is not None:
-            (
-                self.cupy_float_data,
-                self.cupy_uint16_data,
-                self.cupy_uint16_lut,
-                self.cupy_uint8_data,
-                self.cupy_uint8_lut,
-            ) = self._create_data(size, cp)
+        self.output = np.zeros(size + (4,), dtype=np.ubyte)
+        makeARGB(self.uint16_data["data"])  # prime the cpu
+        if cp:
+            self.cupy_output = cp.zeros(size + (4,), dtype=cp.ubyte)
+            makeARGB(cp.asarray(self.uint16_data["data"]))  # prime the gpu
 
     @staticmethod
     def _create_data(size, xp):
@@ -67,25 +61,35 @@ class _TimeSuite(object):
 
 def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
     def time_test(self):
-        data = getattr(self, ("cupy_" if use_cupy else "") + dtype + "_data")
+        data = getattr(self, dtype + "_data")
         levels = data["levels"] if use_levels else None
         lut = getattr(self, lut_name + "_lut", None) if lut_name is not None else None
-        makeARGB(
-            data["data"], lut=lut, levels=levels,
-        )
+        for _ in range(10):
+            img_data = data["data"]
+            output = self.output
+            if use_cupy:
+                img_data = cp.asarray(img_data)
+                output = self.cupy_output
+            makeARGB(
+                img_data, lut=lut, levels=levels, output=output,
+            )
+            if use_cupy:
+                output.get(out=self.output)
 
     time_test.__name__ = func_name
     return time_test
 
 
 for cupy in [True, False]:
-    for dt in ["float", "uint16", "uint8"]:
+    for dtype in ["float", "uint16", "uint8"]:
         for levels in [True, False]:
-            if dt == "float" and not levels:
+            if dtype == "float" and not levels:
                 continue
-            for ln in [None, "uint8", "uint16"]:
-                name = f'time_makeARGB_{"cupy" if cupy else ""}{dt}_{"" if levels else "no"}levels_{ln or "no"}lut'
-                setattr(_TimeSuite, name, make_test(dt, cupy, levels, ln, name))
+            for lutname in [None, "uint8", "uint16"]:
+                name = (
+                    f'time_makeARGB_{"cupy" if cupy else ""}{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
+                )
+                setattr(_TimeSuite, name, make_test(dtype, cupy, levels, lutname, name))
 
 
 class Time256Suite(_TimeSuite):
@@ -122,8 +126,3 @@ class Time4096Suite(_TimeSuite):
     def __init__(self):
         self.size = 1024
         super(Time4096Suite, self).__init__()
-
-
-if __name__ == "__main__":
-    ts = Time3072Suite()
-    ts.setup()
