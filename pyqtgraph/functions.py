@@ -1242,9 +1242,11 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # decide channel order
     if useRGBA:
-        order = [0,1,2,3] # array comes out RGBA
+        dst_order = [0, 1, 2, 3]    # R,G,B,A
+    elif sys.byteorder == 'little':
+        dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
-        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
+        dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
         
     # copy data into image array
     fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
@@ -1256,13 +1258,13 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., i] = data
+            imgData[..., dst_order[i]] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            imgData[..., i] = data[..., 0]
+            imgData[..., dst_order[i]] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., i] = data[..., order[i]] 
+            imgData[..., dst_order[i]] = data[..., i]
         
     profile('reorder channels')
     
@@ -1272,16 +1274,16 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
     else:
         alpha = False
         if not fastpath:    # fastpath has already filled it in
-            imgData[..., 3] = 255
+            imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
         # Workaround for https://github.com/cupy/cupy/issues/4693
         if xp == cp:
-            imgData[nanMask, :, 3] = 0
+            imgData[nanMask, :, dst_order[3]] = 0
         else:
-            imgData[nanMask, 3] = 0
+            imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
