@@ -92,16 +92,16 @@ for cupy in [True, False]:
                 setattr(_TimeSuite, name, make_test(dtype, cupy, levels, lutname, name))
 
 
-class Time256Suite(_TimeSuite):
+class Time0256Suite(_TimeSuite):
     def __init__(self):
-        self.size = 1024
-        super(Time256Suite, self).__init__()
+        self.size = 256
+        super(Time0256Suite, self).__init__()
 
 
-class Time512Suite(_TimeSuite):
+class Time0512Suite(_TimeSuite):
     def __init__(self):
-        self.size = 1024
-        super(Time512Suite, self).__init__()
+        self.size = 512
+        super(Time0512Suite, self).__init__()
 
 
 class Time1024Suite(_TimeSuite):
@@ -112,17 +112,17 @@ class Time1024Suite(_TimeSuite):
 
 class Time2048Suite(_TimeSuite):
     def __init__(self):
-        self.size = 1024
+        self.size = 2048
         super(Time2048Suite, self).__init__()
 
 
 class Time3072Suite(_TimeSuite):
     def __init__(self):
-        self.size = 1024
+        self.size = 3072
         super(Time3072Suite, self).__init__()
 
 
 class Time4096Suite(_TimeSuite):
     def __init__(self):
-        self.size = 1024
+        self.size = 4096
         super(Time4096Suite, self).__init__()
