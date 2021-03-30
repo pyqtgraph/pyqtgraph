@@ -145,8 +145,13 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         
         image = fn.imageToArray(qimg, copy=False, transpose=False)
 
-        # transpose BGRA to RGBA
-        image = image[..., [2, 1, 0, 3]]
+        # the standard images seem to have their Red and Blue swapped
+        if sys.byteorder == 'little':
+            # transpose B,G,R,A to R,G,B,A
+            image = image[..., [2, 1, 0, 3]]
+        else:
+            # transpose A,R,G,B to A,B,G,R
+            image = image[..., [0, 3, 2, 1]]
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
