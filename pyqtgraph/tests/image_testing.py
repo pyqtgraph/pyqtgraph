@@ -137,13 +137,21 @@ def assertImageApproved(image, standardFile, message=None, **kwargs):
         QtGui.QApplication.processEvents()
 
         graphstate = scenegraphState(w, standardFile)
-        qimg = QtGui.QImage(w.size(), QtGui.QImage.Format.Format_RGBA8888)
+        qimg = QtGui.QImage(w.size(), QtGui.QImage.Format.Format_ARGB32)
         qimg.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(qimg)
         w.render(painter)
         painter.end()
         
         image = fn.imageToArray(qimg, copy=False, transpose=False)
+
+        # the standard images seem to have their Red and Blue swapped
+        if sys.byteorder == 'little':
+            # transpose B,G,R,A to R,G,B,A
+            image = image[..., [2, 1, 0, 3]]
+        else:
+            # transpose A,R,G,B to A,B,G,R
+            image = image[..., [0, 3, 2, 1]]
 
     if message is None:
         code = inspect.currentframe().f_back.f_code
