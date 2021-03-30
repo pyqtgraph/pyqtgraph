@@ -1242,11 +1242,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # decide channel order
     if useRGBA:
-        dst_order = [0, 1, 2, 3]    # R,G,B,A
-    elif sys.byteorder == 'little':
-        dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
+        order = [0,1,2,3] # array comes out RGBA
     else:
-        dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
+        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
         
     # copy data into image array
     if data.ndim == 2:
@@ -1254,20 +1252,20 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., dst_order[i]] = data
+            imgData[..., i] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            imgData[..., dst_order[i]] = data[..., 0]
+            imgData[..., i] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., dst_order[i]] = data[..., i]
+            imgData[..., i] = data[..., order[i]] 
         
     profile('reorder channels')
     
     # add opaque alpha channel if needed
     if data.ndim == 2 or data.shape[2] == 3:
         alpha = False
-        imgData[..., dst_order[3]] = 255
+        imgData[..., 3] = 255
     else:
         alpha = True
 
@@ -1276,9 +1274,9 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
         alpha = True
         # Workaround for https://github.com/cupy/cupy/issues/4693
         if xp == cp:
-            imgData[nanMask, :, dst_order[3]] = 0
+            imgData[nanMask, :, 3] = 0
         else:
-            imgData[nanMask, dst_order[3]] = 0
+            imgData[nanMask, 3] = 0
 
     profile('alpha channel')
     return imgData, alpha
