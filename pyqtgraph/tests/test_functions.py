@@ -148,12 +148,14 @@ def test_rescaleData():
 
 
 def makeARGB(*args, **kwds):
-    argb32, alpha = pg.makeARGB(*args, **kwds)
-    if sys.byteorder == 'little':
-        bgra = argb32
-    else:
-        bgra = argb32[..., [3, 2, 1, 0]]
-    return bgra, alpha
+    img, alpha = pg.makeARGB(*args, **kwds)
+    if kwds.get('useRGBA'):         # endian independent
+        out = img
+    elif sys.byteorder == 'little': # little-endian ARGB32 to B,G,R,A
+        out = img
+    else:                           # big-endian ARGB32 to B,G,R,A
+        out = img[..., [3, 2, 1, 0]]
+    return out, alpha
 
 
 def test_makeARGB():
