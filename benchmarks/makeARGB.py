@@ -24,7 +24,7 @@ class _TimeSuite(object):
 
     def setup(self):
         size = (self.size, self.size)
-        self.float_data, self.uint16_data, self.uint16_lut, self.uint8_data, self.uint8_lut = self._create_data(
+        self.float_data, self.uint16_data, self.uint8_data, self.uint16_lut, self.uint8_lut = self._create_data(
             size, np
         )
         self.output = np.zeros(size + (4,), dtype=np.ubyte)
@@ -56,7 +56,7 @@ class _TimeSuite(object):
         for i in range(3):
             uint16_lut[:, i] = xp.clip(xp.linspace(c_map[i][0], c_map[i][1], 2 ** 16), 0, 255)
         uint16_lut[:, 3] = 255
-        return float_data, uint16_data, uint16_lut, uint8_data, uint8_lut
+        return float_data, uint16_data, uint8_data, uint16_lut, uint8_lut
 
 
 def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
@@ -68,6 +68,8 @@ def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
             img_data = data["data"]
             output = self.output
             if use_cupy:
+                if not cp:
+                    raise ValueError("Cannot test cupy without it being installed")
                 img_data = cp.asarray(img_data)
                 output = self.cupy_output
             makeARGB(
