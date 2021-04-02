@@ -1069,7 +1069,19 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
     return data
 
 
-def rescaleData_blocked(data_in, scale, offset, dtype=None, clip=None):
+def rescaleData_nditer(data_in, scale, offset, dtype=None, clip=None):
+    """Return data rescaled and optionally cast to a new dtype.
+
+    The scaling operation is::
+
+        data => (data-offset) * scale
+
+    Although intended to be drop-in replaceable for rescaleData(),
+    due to usage of np.nditer, this version is incompatible with Cupy
+    See https://github.com/cupy/cupy/issues/5021
+    For cases where performance of rescaling is not a bottleneck,
+    rescaleData() should continue to be used.
+    """
     if dtype is None:
         dtype = data_in.dtype
     else:
@@ -1130,6 +1142,13 @@ def rescaleData_blocked(data_in, scale, offset, dtype=None, clip=None):
                     clip_array(y, clip[0], clip[1], out=y)
 
     return data_out
+
+
+def rescaleData_dispatch(xp, data_in, scale, offset, dtype, have_nans):
+    if xp is np:
+        return rescaleData_nditer(data_in, scale, offset, dtype)
+    else:
+        return rescaleData(data_in, scale, offset, dtype)
 
 
 def applyLookupTable(data, lut):
@@ -1273,7 +1292,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                     maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
-                newData[...,i] = rescaleData_blocked(data[...,i], scale / rng, minVal, dtype=dtype)
+                newData[...,i] = rescaleData_dispatch(xp, data[...,i], scale / rng, minVal, dtype, nanMask is not None)
             data = newData
         else:
             # Apply level scaling unless it would have no effect on the data
@@ -1283,7 +1302,7 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
                     maxVal = xp.nextafter(maxVal, 2*maxVal)
                 rng = maxVal-minVal
                 rng = 1 if rng == 0 else rng
-                data = rescaleData_blocked(data, scale/rng, minVal, dtype=dtype)
+                data = rescaleData_dispatch(xp, data, scale/rng, minVal, dtype, nanMask is not None)
 
     profile('apply levels')
 

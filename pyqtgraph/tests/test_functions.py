@@ -151,8 +151,8 @@ def test_rescaleData():
     helper_rescaleData(pg.rescaleData)
 
 
-def test_rescaleData_blocked():
-    helper_rescaleData(pg.rescaleData_blocked)
+def test_rescaleData_nditer():
+    helper_rescaleData(pg.rescaleData_nditer)
 
 
 def makeARGB(*args, **kwds):
