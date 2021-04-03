@@ -201,6 +201,7 @@ class Parameter(QtCore.QObject):
 
         if 'default' not in self.opts:
             self.opts['default'] = None
+            self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(self._emitValueChanged)
