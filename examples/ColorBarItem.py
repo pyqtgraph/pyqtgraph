@@ -5,7 +5,6 @@ This example demonstrates the use of ColorBarItem, which displays a simple inter
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-import sys
 import numpy as np
 from pyqtgraph.Qt import QtWidgets, mkQApp
 import pyqtgraph as pg
@@ -37,7 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
             p1.showAxis(key)
             axis = p1.getAxis(key)
             axis.setZValue(1)
-            if key in ['top', 'right']: p1.getAxis(key).setStyle( showValues=False )
+            if key in ['top', 'right']: 
+                p1.getAxis(key).setStyle( showValues=False )
 
         cmap = pg.colormap.get('CET-L9')
         bar = pg.ColorBarItem(
@@ -97,4 +97,4 @@ main_window = MainWindow()
 
 ## Start Qt event loop
 if __name__ == '__main__':
-    QtWidgets.QApplication.instance().exec_()
+    mkQApp().exec_()

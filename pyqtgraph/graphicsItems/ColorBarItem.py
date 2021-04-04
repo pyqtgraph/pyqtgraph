@@ -5,7 +5,8 @@ from .PlotItem import PlotItem
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
 
-import weakref, math
+import weakref
+import math
 import numpy as np
 
 __all__ = ['ColorBarItem']
@@ -62,7 +63,7 @@ class ColorBarItem(PlotItem):
         self.rounding  = rounding
         self.horizontal = bool(orientation == 'horizontal')
 
-        self.lo_prv, self.hi_prv = self.values # remember previous values while adusting range
+        self.lo_prv, self.hi_prv = self.values # remember previous values while adjusting range
         if limits is None:
             self.lo_lim = None
             self.hi_lim = None
@@ -105,7 +106,7 @@ class ColorBarItem(PlotItem):
             self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
             if label is not None: self.getAxis('left').setLabel(label)
         self.addItem(self.bar)
-        if cmap is not None: self.setcmap(cmap)
+        if cmap is not None: self.setCmap(cmap)
 
         if interactive:
             if self.horizontal:
@@ -154,7 +155,7 @@ class ColorBarItem(PlotItem):
                 insert_in.layout.setColumnFixedWidth(4, 5) # enforce some space to axis on the left
         self._update_items( update_cmap = True )
 
-    def setcmap(self, cmap):
+    def setCmap(self, cmap):
         """
         sets a ColorMap object to determine the ColorBarItem's look-up table. The same
         look-up table is applied to any assigned ImageItem.
@@ -198,15 +199,14 @@ class ColorBarItem(PlotItem):
         # update color bar:
         self.axis.setRange( self.values[0], self.values[1] )
         if update_cmap and self.cmap is not None:
-            # send function pointer, not the result:
-            self.bar.setLookupTable( self.cmap.getLookupTable() )
+            self.bar.setLookupTable( self.cmap.getLookupTable(nPts=256) )
         # update assigned ImageItems, too:
         for img_weakref in self.img_list:
             img = img_weakref()
             if img is None: continue # dereference weakref
             img.setLevels( self.values ) # (min,max) tuple
             if update_cmap and self.cmap is not None:
-                img.setLookupTable( self.cmap.getLookupTable() ) # function pointer
+                img.setLookupTable( self.cmap.getLookupTable(nPts=256) )
 
     def _regionChanged(self):
         """ internal: snap adjusters back to default positions on release """
