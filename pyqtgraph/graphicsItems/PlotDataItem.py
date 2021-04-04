@@ -735,6 +735,7 @@ class PlotDataItem(GraphicsObject):
                             and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
                             and data_range.height() > 2 * hyst * limit * view_height
                         ):
+                            cache_is_good = False
                             # check if cached display data can be reused:
                             if self.yDisp is not None: # top is minimum value, bottom is maximum value
                                 # how many multiples of the current view height does the clipped plot extend to the top and bottom?
@@ -746,26 +747,30 @@ class PlotDataItem(GraphicsObject):
                                     # restore cached values
                                     x = self.xDisp
                                     y = self.yDisp
-                                else:
-                                    min_val = view_range.bottom() - limit * view_height
-                                    max_val = view_range.top()    + limit * view_height
-                                    if(     min_val >= self._drlLastClip[0]
-                                        and max_val <= self._drlLastClip[1] ):
-                                        # if we need to clip further, we can work in-place on the output buffer
-                                        # print('in-place:', end='')
-                                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                        # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
-                                        fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
-                                        x = self.xDisp
-                                        y = self.yDisp
-                                    else:
-                                        # otherwise we need to recopy from the full data
-                                        # print('alloc:', end='')
-                                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                        # y = np.clip(y, a_min=min_val, a_max=max_val)
-                                        y = fn.clip_array(y, min_val, max_val)
-                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    cache_is_good = True
+                            if not cache_is_good:
+                                min_val = view_range.bottom() - limit * view_height
+                                max_val = view_range.top()    + limit * view_height
+                                if( self.yDisp is not None              # Do we have an existing cache? 
+                                    and min_val >= self._drlLastClip[0] # Are we reducing it further?
+                                    and max_val <= self._drlLastClip[1] ):
+                                    # if we need to clip further, we can work in-place on the output buffer
+                                    # print('in-place:', end='')
+                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                    # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                    fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
                                     self._drlLastClip = (min_val, max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    x = self.xDisp
+                                    y = self.yDisp
+                                else:
+                                    # if none of the shortcuts worked, we need to recopy from the full data
+                                    # print('alloc:', end='')
+                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                    # y = np.clip(y, a_min=min_val, a_max=max_val)
+                                    y = fn.clip_array(y, min_val, max_val)
+                                    self._drlLastClip = (min_val, max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
 
             self.xDisp = x
             self.yDisp = y
