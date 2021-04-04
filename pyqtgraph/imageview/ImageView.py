@@ -563,7 +563,7 @@ class ImageView(QtGui.QWidget):
             self.roi.show()
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
-            self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
+            self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
             self.roiCurve.show()
             self.roiChanged()

@@ -111,8 +111,8 @@ class LinearRegionItem(GraphicsObject):
         for l in self.lines:
             l.setParentItem(self)
             l.sigPositionChangeFinished.connect(self.lineMoveFinished)
-        self.lines[0].sigPositionChanged.connect(lambda: self.lineMoved(0))
-        self.lines[1].sigPositionChanged.connect(lambda: self.lineMoved(1))
+        self.lines[0].sigPositionChanged.connect(self._line0Moved)
+        self.lines[1].sigPositionChanged.connect(self._line1Moved)
             
         if brush is None:
             brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
@@ -242,7 +242,13 @@ class LinearRegionItem(GraphicsObject):
         
         self.prepareGeometryChange()
         self.sigRegionChanged.emit(self)
-            
+
+    def _line0Moved(self):
+        self.lineMoved(0)
+
+    def _line1Moved(self):
+        self.lineMoved(1)
+
     def lineMoveFinished(self):
         self.sigRegionChangeFinished.emit(self)
 

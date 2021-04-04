@@ -6,6 +6,9 @@ it is being scaled and/or converted by lookup table, and whether OpenGL
 is used by the view widget
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
+
 import argparse
 import sys
 
@@ -14,6 +17,8 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.ptime as ptime
 from pyqtgraph.Qt import QtGui, QtCore, QT_LIB
+
+pg.setConfigOption('imageAxisOrder', 'row-major')
 
 import importlib
 ui_template = importlib.import_module(f'VideoTemplate_{QT_LIB.lower()}')
@@ -26,6 +31,11 @@ except ImportError:
     cp = None
     _has_cupy = False
 
+try:
+    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
+except ImportError:
+    RawImageGLWidget = None
+
 parser = argparse.ArgumentParser(description="Benchmark for testing video performance")
 parser.add_argument('--cuda', default=False, action='store_true', help="Use CUDA to process on the GPU", dest="cuda")
 parser.add_argument('--dtype', default='uint8', choices=['uint8', 'uint16', 'float'], help="Image dtype (uint8, uint16, or float)")
@@ -37,7 +47,12 @@ parser.add_argument('--lut-alpha', default=False, action='store_true', help="Use
 parser.add_argument('--size', default='512x512', type=lambda s: tuple([int(x) for x in s.split('x')]), help="WxH image dimensions default='512x512'")
 args = parser.parse_args(sys.argv[1:])
 
-#QtGui.QApplication.setGraphicsSystem('raster')
+if RawImageGLWidget is not None:
+    # don't limit frame rate to vsync
+    sfmt = QtGui.QSurfaceFormat()
+    sfmt.setSwapInterval(0)
+    QtGui.QSurfaceFormat.setDefaultFormat(sfmt)
+
 app = pg.mkQApp("Video Speed Test Example")
 
 win = QtGui.QMainWindow()
@@ -46,10 +61,7 @@ ui = ui_template.Ui_MainWindow()
 ui.setupUi(win)
 win.show()
 
-try:
-    from pyqtgraph.widgets.RawImageWidget import RawImageGLWidget
-except ImportError:
-    RawImageGLWidget = None
+if RawImageGLWidget is None:
     ui.rawGLRadio.setEnabled(False)
     ui.rawGLRadio.setText(ui.rawGLRadio.text() + " (OpenGL not available)")
 else:
@@ -147,7 +159,7 @@ def mkData():
                 dt = xp.uint16
                 loc = 4096
                 scale = 1024
-                mx = 2**16
+                mx = 2**16 - 1
             elif cacheKey[0] == 'float':
                 dt = xp.float32
                 loc = 1.0
@@ -155,19 +167,25 @@ def mkData():
                 mx = 1.0
             else:
                 raise ValueError(f"unable to handle dtype: {cacheKey[0]}")
-            
+
+            chan_shape = (height, width)
             if ui.rgbCheck.isChecked():
-                data = xp.random.normal(size=(frames,width,height,3), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6, 0))
+                frame_shape = chan_shape + (3,)
             else:
-                data = xp.random.normal(size=(frames,width,height), loc=loc, scale=scale)
-                data = pg.gaussianFilter(data, (0, 6, 6))
-            if cacheKey[0] != 'float':
-                data = xp.clip(data, 0, mx)
-            data = data.astype(dt)
-            data[:, 10, 10:50] = mx
-            data[:, 9:12, 48] = mx
-            data[:, 8:13, 47] = mx
+                frame_shape = chan_shape
+            data = xp.empty((frames,) + frame_shape, dtype=dt)
+            view = data.reshape((-1,) + chan_shape)
+            for idx in range(view.shape[0]):
+                subdata = xp.random.normal(loc=loc, scale=scale, size=chan_shape)
+                # note: gaussian filtering has been removed as it slows down array
+                #       creation greatly.
+                if cacheKey[0] != 'float':
+                    xp.clip(subdata, 0, mx, out=subdata)
+                view[idx] = subdata
+
+            data[:, 10:50, 10] = mx
+            data[:, 48, 9:12] = mx
+            data[:, 47, 8:13] = mx
             cache = {cacheKey: data} # clear to save memory (but keep one to prevent unnecessary regeneration)
 
         data = cache[cacheKey]
@@ -262,10 +280,5 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
-
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

@@ -364,7 +364,7 @@ class ItemSample(GraphicsWidget):
             if (opts.get('fillLevel', None) is not None and
                     opts.get('fillBrush', None) is not None):
                 p.setBrush(fn.mkBrush(opts['fillBrush']))
-                p.setPen(fn.mkPen(opts['fillBrush']))
+                p.setPen(fn.mkPen(opts['pen']))
                 p.drawPolygon(QtGui.QPolygonF(
                     [QtCore.QPointF(2, 18), QtCore.QPointF(18, 2),
                      QtCore.QPointF(18, 18)]))

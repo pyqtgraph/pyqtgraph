@@ -56,12 +56,15 @@ installedFrontends = sorted([
     frontend for frontend, isPresent in frontends.items() if isPresent
 ])
 
+darwin_opengl_broken = (platform.system() == "Darwin" and
+            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
+            (sys.version_info <= (3, 8, 7) or (3, 9) <= sys.version_info < (3, 9, 1)))
+
+darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
+                        "https://github.com/python/cpython/pull/21241")
+
 exceptionCondition = namedtuple("exceptionCondition", ["condition", "reason"])
 conditionalExamples = {
-    "test_ExampleApp.py": exceptionCondition(
-        not(platform.system() == "Linux" and frontends[Qt.PYSIDE2]),
-        reason="Unexplained, intermittent segfault and subsequent timeout on CI"
-    ),
     "hdf5.py": exceptionCondition(
         False,
         reason="Example requires user interaction"
@@ -71,104 +74,44 @@ conditionalExamples = {
         reason="Test is being problematic on CI machines"
     ),
     'GLVolumeItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLIsosurface.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLSurfacePlot.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLScatterPlotItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLshaders.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLLinePlotItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLMeshItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLImageItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and 
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLBarGraphItem.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     ),
     'GLViewWidget.py': exceptionCondition(
-        not(platform.system() == "Darwin" and
-            tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info <= (3, 8, 7) or
-            (sys.version_info >= (3, 9) and sys.version_info < (3, 9, 1)))),
-        reason=(
-            "pyopenGL cannot find openGL libray on big sur: "
-            "https://github.com/python/cpython/pull/21241"
-        )
+        not darwin_opengl_broken,
+        reason=darwin_opengl_reason
     )
 }
 
@@ -199,7 +142,7 @@ conditionalExamples = {
         )
     ]
 )
-def testExamples(frontend, f, graphicsSystem=None):
+def testExamples(frontend, f):
     # runExampleFile(f[0], f[1], sys.executable, frontend)
 
     name, file = f
@@ -210,28 +153,25 @@ def testExamples(frontend, f, graphicsSystem=None):
     sys.stdout.flush()
     import1 = "import %s" % frontend if frontend != '' else ''
     import2 = os.path.splitext(os.path.split(fn)[1])[0]
-    graphicsSystem = (
-        '' if graphicsSystem is None else  "pg.QtGui.QApplication.setGraphicsSystem('%s')" % graphicsSystem
-    )
     code = """
 try:
-    %s
+    {0}
     import initExample
     import pyqtgraph as pg
-    %s
-    import %s
+    import {1}
     import sys
     print("test complete")
     sys.stdout.flush()
-    import time
-    while True:  ## run a little event loop
-        pg.QtGui.QApplication.processEvents()
-        time.sleep(0.01)
+    pg.Qt.QtCore.QTimer.singleShot(1000, pg.Qt.QtWidgets.QApplication.quit)
+    pg.Qt.QtWidgets.QApplication.instance().exec_()
+    names = [x for x in dir({1}) if not x.startswith('_')]
+    for name in names:
+        delattr({1}, name)
 except:
     print("test failed")
     raise
 
-""" % (import1, graphicsSystem, import2)
+""".format(import1, import2)
     if sys.platform.startswith('win'):
         process = subprocess.Popen([sys.executable],
                                     stdin=subprocess.PIPE,
@@ -263,8 +203,13 @@ except:
         if output.endswith('test failed'):
             fail = True
             break
-    time.sleep(1)
-    process.kill()
+    start = time.time()
+    killed = False
+    while process.poll() is None:
+        time.sleep(0.1)
+        if time.time() - start > 2.0 and not killed:
+            process.kill()
+            killed = True
     #res = process.communicate()
     res = (process.stdout.read(), process.stderr.read())
     if (fail or

@@ -39,7 +39,7 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
 
         ==================== ==============================
         **Style Arguments:**
-        color                (str) example: 'CCFF00'
+        color                (str) example: '#CCFF00'
         size                 (str) example: '8pt'
         bold                 (bool)
         italic               (bool)

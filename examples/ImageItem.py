@@ -36,6 +36,10 @@ i = 0
 updateTime = ptime.time()
 fps = 0
 
+timer = QtCore.QTimer()
+timer.setSingleShot(True)
+# not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
+
 def updateData():
     global img, data, i, updateTime, fps
 
@@ -43,7 +47,7 @@ def updateData():
     img.setImage(data[i])
     i = (i+1) % data.shape[0]
 
-    QtCore.QTimer.singleShot(1, updateData)
+    timer.start(1)
     now = ptime.time()
     fps2 = 1.0 / (now-updateTime)
     updateTime = now
@@ -51,11 +55,8 @@ def updateData():
     
     #print "%0.1f fps" % fps
     
-
+timer.timeout.connect(updateData)
 updateData()
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

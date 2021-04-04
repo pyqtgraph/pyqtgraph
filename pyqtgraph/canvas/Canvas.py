@@ -113,7 +113,7 @@ class Canvas(QtGui.QWidget):
         
         if not self.sizeApplied:
             self.sizeApplied = True
-            s = min(self.width(), max(100, min(200, self.width()*0.25)))
+            s = int( min(self.width(), max(100, min(200, self.width()//4))) )
             s2 = self.width()-s
             self.ui.splitter.setSizes([s2, s])
     
