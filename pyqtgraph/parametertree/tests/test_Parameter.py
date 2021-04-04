@@ -8,7 +8,7 @@ def test_parameter_hasdefault():
 
     # default unspecified
     p = Parameter(**opts)
-    assert not p.hasDefault()
+    assert p.hasDefault()
 
     p.setDefault(1)
     assert p.hasDefault()
@@ -29,8 +29,9 @@ def test_parameter_hasdefault_none(passdefault):
         opts['default'] = None
 
     p = Parameter(**opts)
-    assert not p.hasDefault()
-    assert p.defaultValue() is None
+    assert p.hasDefault() != passdefault
+    defaultCmp = None if passdefault else p.value()
+    assert p.defaultValue() == defaultCmp
 
     p.setDefault(None)
     assert not p.hasDefault()
