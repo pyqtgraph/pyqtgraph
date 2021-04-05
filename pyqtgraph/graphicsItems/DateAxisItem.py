@@ -222,7 +222,9 @@ class DateAxisItem(AxisItem):
 
         super(DateAxisItem, self).__init__(orientation, **kwargs)
         # Set the zoom level to use depending on the time density on the axis
-        self.utcOffset = utcOffset or get_utc_offset()
+        if utcOffset is None:
+            utcOffset = get_utc_offset()
+        self.utcOffset = utcOffset
         
         self.zoomLevels = OrderedDict([
             (np.inf,      YEAR_MONTH_ZOOM_LEVEL),
