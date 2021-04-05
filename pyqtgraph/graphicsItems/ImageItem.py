@@ -470,12 +470,54 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim])
 
-        if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
-            self._buildQImageBuffer(image.shape)
+        ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
+        is_passthru = ubyte_nolvl and lut is None
+        is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
+            lut is not None and lut.shape[0] == 256
 
-        fn.makeARGB(image, lut=lut, levels=levels, scale=scale, output=self._processingBuffer)
-        if self._xp == self._cupy:
-            self._processingBuffer.get(out=self._displayBuffer)
+        # Question: does the user supplied image buffer belong to us?
+
+        if is_passthru or is_indexed8:
+            # bypass makeARGB for supported combinations
+            self._processingBuffer = None
+            self._displayBuffer = None
+
+            # worthwhile supporting non-contiguous arrays
+            image = numpy.ascontiguousarray(image)
+
+            fmt = None
+            ctbl = None
+            if is_passthru:
+                # both levels and lut are None
+                # these images are suitable for display directly
+                if image.ndim == 2:
+                    fmt = QtGui.QImage.Format.Format_Grayscale8
+                elif image.shape[2] == 3:
+                    fmt = QtGui.QImage.Format.Format_RGB888
+                elif image.shape[2] == 4:
+                    fmt = QtGui.QImage.Format.Format_RGBA8888
+            elif is_indexed8:
+                # levels and/or lut --> lut-only
+                fmt = QtGui.QImage.Format.Format_Indexed8
+                if lut.ndim == 1 or lut.shape[1] == 1:
+                    ctbl = [QtGui.qRgb(x,x,x) for x in lut.tolist()]
+                elif lut.shape[1] == 3:
+                    ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
+                elif lut.shape[1] == 4:
+                    ctbl = [QtGui.qRgba(*rgba) for rgba in lut.tolist()]
+            if fmt is None:
+                raise ValueError("unsupported image type")
+            self.qimage = fn._ndarray_to_qimage(image, fmt)
+            if ctbl is not None:
+                self.qimage.setColorTable(ctbl)
+        else:
+            if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
+                self._buildQImageBuffer(image.shape)
+
+            fn.makeARGB(image, lut=lut, levels=levels, scale=scale, output=self._processingBuffer)
+            if self._xp == self._cupy:
+                self._processingBuffer.get(out=self._displayBuffer)
+
         self._renderRequired = False
         self._unrenderable = False
 
