@@ -80,9 +80,7 @@ class TargetItem(UIGraphicsItem):
         self._bounds = None
         self.movable = movable
         self.moving = False
-        self.label = None
-        self.labelAngle = 0
-
+        self._label = None
         self.mouseHovering = False
 
         if pen is None:
@@ -173,13 +171,6 @@ class TargetItem(UIGraphicsItem):
         if self.mouseHovering:
             self.currentPen = self.hoverPen
             self.update()
-
-    def setLabelAngle(self, angle):
-        if self.label is None:
-            return
-        if self.label.angle != angle:
-            self.label.angle = angle
-            self._updateLabel()
 
     def boundingRect(self):
         return self.shape().boundingRect()
@@ -272,30 +263,34 @@ class TargetItem(UIGraphicsItem):
     def position(self):
         return self._pos
 
-    def _updateLabel(self):
-        if self.label is None:
-            return
-        self.label.valueChanged()
+    def label(self):
+        return self._label
 
     def setLabel(self, text=None, labelOpts=None):
-        if text is None and self.label is not None:
+        if text is None and self._label is not None:
             # remove the label if it's already added
-            if self.label.scene() is not None:
-                self.label.scene().removeItem(self.label)
-            self.label = None
+            if self._label.scene() is not None:
+                self._label.scene().removeItem(self._label)
+            self._label = None
         else:
+            # convert None entry for text to False
+            text = False if text is None else text
+
+            # provide default text if text is True
             if isinstance(text, bool):
                 # convert to default value or empty string
                 text = "x = {: .3n}\ny = {: .3n}" if text else ""
-            if self.label is None:
-                # add a label
+
+            # if there is no label, add a label
+            if self._label is None:
                 labelOpts = {} if labelOpts is None else labelOpts
-                self.label = TargetLabel(self, text=text, **labelOpts)
+                self._label = TargetLabel(self, text=text, **labelOpts)
+
+            # if there is already a label, update the text formatting
             else:
                 # update the label text
-                self.label.setFormat(text)
-                self.label.valueChanged()
-            self._updateLabel()
+                self._label.setFormat(text)
+                self._label.valueChanged()
 
 
 class TargetLabel(TextItem):
@@ -371,7 +366,7 @@ class TargetLabel(TextItem):
 
     def valueChanged(self):
         x, y = self.target.position()
-        if isinstance(self._format, str) and self.property("formattableText"):
+        if self.property("formattableText"):
             self.setText(self._format.format(float(x), float(y)))
         elif callable(self._format):
             self.setText(self._format(x, y))
