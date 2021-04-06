@@ -174,26 +174,6 @@ class TargetItem(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.update()
 
-    def setLabel(self, text=None, labelOpts=None):
-        if text is None and self.label is not None:
-            # remove the label if it's already added
-            if self.label.scene() is not None:
-                self.label.scene().removeItem(self.label)
-            self.label = None
-        else:
-            if isinstance(text, bool):
-                # convert to default value or empty string
-                text = "x = {: .3n}\ny = {: .3n}" if text else ""
-            if self.label is None:
-                # add a label
-                labelOpts = {} if labelOpts is None else labelOpts
-                self.label = TargetLabel(self, text=text, **labelOpts)
-            else:
-                # update the label text
-                self.label.format = text
-                self.label.valueChanged()
-            self._updateLabel()
-
     def setLabelAngle(self, angle):
         if self.label is None:
             return
@@ -297,6 +277,26 @@ class TargetItem(UIGraphicsItem):
             return
         self.label.valueChanged()
 
+    def setLabel(self, text=None, labelOpts=None):
+        if text is None and self.label is not None:
+            # remove the label if it's already added
+            if self.label.scene() is not None:
+                self.label.scene().removeItem(self.label)
+            self.label = None
+        else:
+            if isinstance(text, bool):
+                # convert to default value or empty string
+                text = "x = {: .3n}\ny = {: .3n}" if text else ""
+            if self.label is None:
+                # add a label
+                labelOpts = {} if labelOpts is None else labelOpts
+                self.label = TargetLabel(self, text=text, **labelOpts)
+            else:
+                # update the label text
+                self.label.setFormat(text)
+                self.label.valueChanged()
+            self._updateLabel()
+
 
 class TargetLabel(TextItem):
     """A TextItem that attaches itself to a TargetItem.
@@ -339,7 +339,9 @@ class TargetLabel(TextItem):
         super().__init__(anchor=anchor, angle=angle, **kwargs)
         self.setParentItem(target)
         self.target = target
-        self.format = "" if text is None else text
+
+        text = "" if text is None else text
+        self.setFormat(text)
 
         if isinstance(offset, (tuple, list)):
             self.offset = Point(*offset)
@@ -348,28 +350,31 @@ class TargetLabel(TextItem):
         else:
             raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
+        # self.setFormat("x = {: .3n}\ny = {: .3n}")
         self.valueChanged()
 
-    @property
     def format(self):
         return self._format
 
-    @format.setter
-    def format(self, text):
-        parsed = list(string.Formatter().parse(text))
-        if parsed[0][1] is not None:
-            self.setProperty("formattableText", True)
+    def setFormat(self, text):
+        if not callable(text):
+            parsed = list(string.Formatter().parse(text))
+            if parsed[0][1] is not None:
+                self.setProperty("formattableText", True)
+            else:
+                self.setText(text)
+                self.setProperty("formattableText", False)
         else:
-            self.setText(text)
             self.setProperty("formattableText", False)
         self._format = text
+        self.valueChanged()
 
     def valueChanged(self):
         x, y = self.target.position()
-        if isinstance(self.format, str) and self.property("formattableText"):
-            self.setText(self.format.format(float(x), float(y)))
-        elif callable(self.format):
-            self.setText(self.format(x, y))
+        if isinstance(self._format, str) and self.property("formattableText"):
+            self.setText(self._format.format(float(x), float(y)))
+        elif callable(self._format):
+            self.setText(self._format(x, y))
 
     def viewTransformChanged(self):
         viewbox = self.getViewBox()
