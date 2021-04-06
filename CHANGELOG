@@ -1,3 +1,25 @@
+pyqtgraph-0.12.1
+
+  New Features
+    - #1596 - Add ColorBarItem for simplified image level adjustment
+
+  Performance enhancement:
+    - #1650 Don't use clip_array on scalers in DynamicPlotRange
+    - #1617 Optimize makeARGB for ubyte images
+    - #1648 Implement blocked variant of rescaleData
+  
+  API/Behavior Change:
+    - #1690 Parameter Item default created from value if not present
+
+  Bug Fixes:
+    - #1665 Don't pass brush to mkPen in LegendItem.paint()
+    - #1660 Include colormaps in the python wheel
+    - #1653 Fix accidental disabling of style updates in PlotDataItem
+    - #1647 Handle empty adjacency array for GraphItem
+    - #1680 Fix test suite for big-endian architectures
+    - #1694 DateAxisItem now accounts for Daylight Savings Time
+    - #1691 Make sure dynamic range limiter runs on PlotDataItem
+
 pyqtgraph-0.12.0
 
   Deprecations:
