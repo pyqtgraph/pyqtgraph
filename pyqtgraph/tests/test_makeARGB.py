@@ -4266,11 +4266,11 @@ def test_makeARGB():
             except Exception as e:
                 assert expectation == type(e)
             else:
-                assert False, f"{key!r} was supposed to raise {expectation} but didn't raise anything."
+                assert False, f"makeARGB({key!r}) was supposed to raise {expectation} but didn't raise anything."
         else:
             output, alpha = makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
             assert (
                 output == expectation
-            ).all(), f"Incorrect makeARGB output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
+            ).all(), f"Incorrect makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
 
     _do_something_for_every_combo(assert_correct)
