@@ -4265,7 +4265,6 @@ def test_makeARGB():
                 makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
             except Exception as e:
                 assert expectation == type(e)
-                print("Exception pass!")
             else:
                 assert False, f"{key!r} was supposed to raise {expectation} but didn't raise anything."
         else:
@@ -4273,6 +4272,5 @@ def test_makeARGB():
             assert (
                 output == expectation
             ).all(), f"Incorrect makeARGB output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
-            print("Output pass!")
 
     _do_something_for_every_combo(assert_correct)
