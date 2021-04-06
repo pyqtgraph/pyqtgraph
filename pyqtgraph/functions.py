@@ -13,6 +13,7 @@ import re
 import struct
 import sys
 import warnings
+import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
@@ -1032,6 +1033,49 @@ def clip_array(arr, vmin, vmax, out=None):
         return np.core.umath.clip(arr, vmin, vmax, out=out)
 
 
+def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
+    """Refer to documentation for rescaleData()"""
+    data_out = np.empty_like(data_in, dtype=out_dtype)
+
+    # integer clip operations are faster than float clip operations
+    # so test to see if we can perform integer clipping
+    fits_int32 = False
+    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
+        # estimate whether data range after rescale will fit within an int32.
+        # this means that the input dtype should be an 8-bit or 16-bit integer type.
+        # casting to an int32 will lose the fractional part, therefore the
+        # output dtype must be an integer kind.
+        lim_in = np.iinfo(data_in.dtype)
+        dst_bounds = scale * (lim_in.min - offset), scale * (lim_in.max - offset)
+        if dst_bounds[1] < dst_bounds[0]:
+            dst_bounds = dst_bounds[1], dst_bounds[0]
+        lim32 = np.iinfo(np.int32)
+        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
+
+    it = np.nditer([data_in, data_out],
+            flags=['external_loop', 'buffered'],
+            op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
+            op_dtypes=[None, work_dtype],
+            casting='unsafe',
+            buffersize=32768)
+
+    with it:
+        for x, y in it:
+            y[...] = x
+            y -= offset
+            y *= scale
+
+            # Clip before converting dtype to avoid overflow
+            if clip is not None:
+                if fits_int32:
+                    # converts to int32, clips back to float32
+                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                else:
+                    clip_array(y, clip[0], clip[1], out=y)
+
+    return data_out
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1040,32 +1084,43 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         data => (data-offset) * scale
     """
     if dtype is None:
-        dtype = data.dtype
+        out_dtype = data.dtype
     else:
-        dtype = np.dtype(dtype)
+        out_dtype = np.dtype(dtype)
 
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
+    if out_dtype.kind in 'ui':
+        lim = np.iinfo(out_dtype)
         if clip is None:
             # don't let rescale cause integer overflow
             clip = lim.min, lim.max
         clip = max(clip[0], lim.min), min(clip[1], lim.max)
 
+        # make clip limits integer-valued (no need to cast to int)
+        # this improves performance, especially on Windows
+        clip = [math.trunc(x) for x in clip]
+
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
         work_dtype = np.float64
-    d2 = data.astype(work_dtype, copy=True)
-    d2 -= offset
-    d2 *= scale
 
-    # Clip before converting dtype to avoid overflow
-    if clip is not None:
-        clip_array(d2, clip[0], clip[1], out=d2)
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # Cupy does not support nditer
+        # https://github.com/cupy/cupy/issues/5021
 
-    # don't copy if no change in dtype
-    data = d2.astype(dtype, copy=False)
-    return data
+        data_out = data.astype(work_dtype, copy=True)
+        data_out -= offset
+        data_out *= scale
+
+        # Clip before converting dtype to avoid overflow
+        if clip is not None:
+            clip_array(data_out, clip[0], clip[1], out=data_out)
+
+        # don't copy if no change in dtype
+        return data_out.astype(out_dtype, copy=False)
+    else:
+        return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):
