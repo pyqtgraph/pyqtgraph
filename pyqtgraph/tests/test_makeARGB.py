@@ -2,6 +2,7 @@ from typing import Dict, Any, Union, Type
 
 import numpy as np
 
+from pyqtgraph import getCupy, setConfigOption
 from pyqtgraph.functions import makeARGB
 
 IN_2D_INT8 = np.array([[173, 48, 122, 41], [210, 192, 0, 5], [104, 56, 102, 115], [78, 19, 255, 6]], dtype=np.uint8)
@@ -4274,3 +4275,29 @@ def test_makeARGB():
             ).all(), f"Incorrect makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
 
     _do_something_for_every_combo(assert_correct)
+
+
+def test_cupy_makeARGB():
+    setConfigOption("useCupy", True)
+    cp = getCupy()
+    assert cp is not None
+    def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
+        data = cp.asarray(data)
+        if lut is not None:
+            lut = cp.asarray(lut)
+        expectation = EXPECTED_OUTPUTS[key]
+        if isinstance(expectation, type) and issubclass(expectation, Exception):
+            try:
+                makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
+            except Exception as e:
+                assert expectation == type(e)
+            else:
+                assert False, f"makeARGB({key!r}) was supposed to raise {expectation} but didn't raise anything."
+        else:
+            expectation = cp.asarray(expectation)
+            output, alpha = makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
+            assert (
+                output == expectation
+            ).all(), f"Incorrect makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
+
+    _do_something_for_every_combo(assert_cupy_correct)
