@@ -1,6 +1,7 @@
 from typing import Dict, Any, Union, Type
 
 import numpy as np
+import pytest
 
 from pyqtgraph import getCupy, setConfigOption
 from pyqtgraph.functions import makeARGB
@@ -4280,7 +4281,8 @@ def test_makeARGB():
 def test_cupy_makeARGB():
     setConfigOption("useCupy", True)
     cp = getCupy()
-    assert cp is not None
+    if cp is None:
+        pytest.skip("CuPy unavailable to test")
     def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
         data = cp.asarray(data)
         if lut is not None:
