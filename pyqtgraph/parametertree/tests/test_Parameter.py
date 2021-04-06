@@ -9,32 +9,22 @@ def test_parameter_hasdefault():
     # default unspecified
     p = Parameter(**opts)
     assert p.hasDefault()
+    assert p.defaultValue() == opts["value"]
 
-    p.setDefault(1)
+    p.setDefault(2)
     assert p.hasDefault()
-    assert p.defaultValue() == 1
+    assert p.defaultValue() == 2
 
     # default specified
     p = Parameter(default=0, **opts)
     assert p.hasDefault()
     assert p.defaultValue() == 0
 
-
-@pytest.mark.parametrize('passdefault', [True, False])
-def test_parameter_hasdefault_none(passdefault):
-    # test that Parameter essentially ignores defualt=None, same as not passing
-    # a default at all
-    opts = {'name': 'param', 'type': int, 'value': 0}
-    if passdefault:
-        opts['default'] = None
-
-    p = Parameter(**opts)
-    assert p.hasDefault() != passdefault
-    defaultCmp = None if passdefault else p.value()
-    assert p.defaultValue() == defaultCmp
-
-    p.setDefault(None)
+    # default specified as None
+    p = Parameter(default=None, **opts)
     assert not p.hasDefault()
+
+
 
 def test_unpack_parameter():
     # test that **unpacking correctly returns child name/value maps
