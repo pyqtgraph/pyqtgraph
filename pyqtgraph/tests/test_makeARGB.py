@@ -4239,12 +4239,16 @@ def _do_something_for_every_combo(func):
 
 
 def save_reference():
+    """
+    This saves the output (or exception type) of running makeARGB for every combo of arguments. The
+    output isn't fit for immediate inclusion in this file as EXPECTED_OUTPUTS, and needs some replace-all
+    work.
+    """
     with open("_unformatted_expected_outputs_", "w") as tmp_file:
+
         def write_expectation_to_file(data, key, levels, lut, scale, use_rgba):
             try:
-                output, alpha = makeARGB(
-                    data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba
-                )
+                output, alpha = makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
             except Exception as e:
                 tmp_file.write(f"{key!r}: {type(e)}\n")
             else:
