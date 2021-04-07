@@ -1124,7 +1124,8 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         return data_out.astype(out_dtype, copy=False)
 
     numba_fn = getNumbaFunctions()
-    if numba_fn and out_dtype in (np.uint8, np.uint16):
+    if numba_fn and clip is not None:
+        # if we got here by makeARGB(), clip will not be None at this point
         return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
 
     return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
