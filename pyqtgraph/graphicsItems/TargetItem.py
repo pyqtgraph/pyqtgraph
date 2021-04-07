@@ -61,7 +61,7 @@ class TargetItem(UIGraphicsItem):
         symbol : QPainterPath or str
             QPainterPath to use for drawing the target, should be centered at
             ``(0, 0)`` with ``max(width, height) == 1.0``.  Alternatively a string
-            which can be any symbol accepted by 
+            which can be any symbol accepted by
             :func:`~pyqtgraph.ScatterPlotItem.setData`
         label : bool, str or callable, optional
             Text to be displayed in a label attached to the symbol, or None to
@@ -260,7 +260,7 @@ class TargetItem(UIGraphicsItem):
         return self._pos
 
     def label(self):
-        """Provides the TargetLabel if it exists 
+        """Provides the TargetLabel if it exists
 
         Returns
         -------
@@ -279,7 +279,7 @@ class TargetItem(UIGraphicsItem):
             Details how to format the text, by default None
             If None, do not show any text next to the TargetItem
             If Callable, then the label will display the result of ``text(x, y)``
-            If a fromatted string, then the output of ``text.format(x, y)`` will be 
+            If a fromatted string, then the output of ``text.format(x, y)`` will be
             displayed
             If a non-formatted string, then the text label will display ``text``, by default None
         labelOpts : dictionary, optional
@@ -366,7 +366,7 @@ class TargetLabel(TextItem):
         return self._format
 
     def setFormat(self, text):
-        """Method to set how the TargetLabel should display the text.  This 
+        """Method to set how the TargetLabel should display the text.  This
         method should be called from TargetItem.setLabel directly.
 
         Parameters
@@ -374,7 +374,7 @@ class TargetLabel(TextItem):
         text : Callable or str
             Details how to format the text.
             If Callable, then the label will display the result of ``text(x, y)``
-            If a fromatted string, then the output of ``text.format(x, y)`` will be 
+            If a fromatted string, then the output of ``text.format(x, y)`` will be
             displayed
             If a non-formatted string, then the text label will display ``text``
         """
