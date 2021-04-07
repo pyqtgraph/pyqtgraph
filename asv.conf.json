@@ -29,8 +29,8 @@
     // If missing or the empty string, the tool will be automatically
     // determined by looking for tools on the PATH environment
     // variable.
-    "environment_type": "conda",
-    "conda_channels": ["conda-forge"],
+    "environment_type": "virtualenv",
+
     // timeout in seconds for installing any dependencies in environment
     // defaults to 10 min
     //"install_timeout": 600,
@@ -55,9 +55,9 @@
     "matrix": {
 //        "numpy": ["1.17", "1.18", "1.19", ""],
         "numpy": [],
-        "pyqt": ["5", null],
+        "pyqt5": ["", null],
         "pyside2": ["", null],
-        "pip+cupy-cuda102": ""
+        "cupy-cuda110": ""
     },
 
     // Combinations of libraries/python versions can be excluded/included
@@ -82,8 +82,8 @@
     //     cases: 'linux2', 'win32', 'cygwin', 'darwin'.
     //
     "exclude": [
-        {"pyqt": "5", "pyside2": ""},
-        {"pyqt": null, "pyside2": null}
+        {"pyqt5": "", "pyside2": ""},
+        {"pyqt5": null, "pyside2": null}
     ],
     //
     // "include": [
