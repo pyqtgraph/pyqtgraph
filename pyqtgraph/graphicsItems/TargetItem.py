@@ -77,7 +77,6 @@ class TargetItem(UIGraphicsItem):
             label. See :class:`TargetLabel` and :class: `~pyqtgraph.TextItem`.
         """
         super().__init__(self)
-        self._bounds = None
         self.movable = movable
         self.moving = False
         self._label = None
@@ -264,9 +263,31 @@ class TargetItem(UIGraphicsItem):
         return self._pos
 
     def label(self):
+        """Provides the TargetLabel if it exists 
+
+        Returns
+        -------
+        TargetLabel or None
+            If a TargetLabel exists for this TargetItem, return that, otherwise
+            return None
+        """
         return self._label
 
     def setLabel(self, text=None, labelOpts=None):
+        """Method to call to enable or disable the TargetLabel for displaying text
+
+        Parameters
+        ----------
+        text : Callable or str, optional
+            Details how to format the text, by default None
+            If None, do not show any text next to the TargetItem
+            If Callable, then the label will display the result of``text(x, y)``
+            If a fromatted string, then the output of ``text.format(x, y)`` will be 
+            displayed
+            If a non-formatted string, then the text label will display ``text``, by default None
+        labelOpts : dictionary, optional
+            These arguments are passed on to :class:`~pyqtgraph.TextItem`
+        """
         if text is None and self._label is not None:
             # remove the label if it's already added
             if self._label.scene() is not None:
@@ -315,9 +336,6 @@ class TargetLabel(TextItem):
     anchor : tuple, list, QPointF or QPoint
         Position to rotate the TargetLabel about, and position to set the
         offset value to see :class:`~pyqtgraph.TextItem` for more inforation.
-    angle : numeric
-        Angle in degrees to rotate text about the anchor point. Default is 0;
-        text will be displayed upright.
     kwargs : dict of arguments that are passed on to
         :class:`~pyqtgraph.TextItem` constructor, excluding text parameter
     """
@@ -328,10 +346,9 @@ class TargetLabel(TextItem):
         text=None,
         offset=(20, 0),
         anchor=(0, 0.5),
-        angle=0,
         **kwargs,
     ):
-        super().__init__(anchor=anchor, angle=angle, **kwargs)
+        super().__init__(anchor=anchor, **kwargs)
         self.setParentItem(target)
         self.target = target
 
@@ -352,6 +369,18 @@ class TargetLabel(TextItem):
         return self._format
 
     def setFormat(self, text):
+        """Method to set how the TargetLabel should display the text.  This 
+        method should be called from TargetItem.setLabel directly.
+
+        Parameters
+        ----------
+        text : Callable or str
+            Details how to format the text.
+            If Callable, then the label will display the result of``text(x, y)``
+            If a fromatted string, then the output of ``text.format(x, y)`` will be 
+            displayed
+            If a non-formatted string, then the text label will display ``text``
+        """
         if not callable(text):
             parsed = list(string.Formatter().parse(text))
             if parsed[0][1] is not None:
