@@ -41,9 +41,6 @@ class TargetItem(UIGraphicsItem):
             Initial position of the symbol.
         size : int
             Size of the symbol in pixels.  Default is 10.
-        symbol : str
-            String that defines the shape of the symbol (can take the following
-            values for the moment : 's' (square), 'c' (circle))
         pen : QPen, tuple, list or str
             Pen to use when drawing line. Can be any arguments that are valid
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
@@ -63,18 +60,18 @@ class TargetItem(UIGraphicsItem):
             transparent blue.
         symbol : QPainterPath or str
             QPainterPath to use for drawing the target, should be centered at
-            (0, 0) with max(width, height) == 1.0.  Alternatively a string
-            which can be any symbol recognized in :func:
-            `~pyqtgraph.ScatterPlotItem.setData`
+            ``(0, 0)`` with ``max(width, height) == 1.0``.  Alternatively a string
+            which can be any symbol accepted by 
+            :func:`~pyqtgraph.ScatterPlotItem.setData`
         label : bool, str or callable, optional
             Text to be displayed in a label attached to the symbol, or None to
             show no label (default is None). May optionally include formatting
             strings to display the symbol value, or a callable that accepts x
-            and y as inputs.  If True, the label is "x = {: >.3n}\ny = {: >.3n}"
+            and y as inputs.  If True, the label is ``x = {: >.3n}\ny = {: >.3n}``
             False or None will result in no text being displayed
         labelOpts : dict
             A dict of keyword arguments to use when constructing the text
-            label. See :class:`TargetLabel` and :class: `~pyqtgraph.TextItem`.
+            label. See :class:`TargetLabel` and :class:`~pyqtgraph.TextItem`
         """
         super().__init__(self)
         self.movable = movable
@@ -281,7 +278,7 @@ class TargetItem(UIGraphicsItem):
         text : Callable or str, optional
             Details how to format the text, by default None
             If None, do not show any text next to the TargetItem
-            If Callable, then the label will display the result of``text(x, y)``
+            If Callable, then the label will display the result of ``text(x, y)``
             If a fromatted string, then the output of ``text.format(x, y)`` will be 
             displayed
             If a non-formatted string, then the text label will display ``text``, by default None
@@ -376,7 +373,7 @@ class TargetLabel(TextItem):
         ----------
         text : Callable or str
             Details how to format the text.
-            If Callable, then the label will display the result of``text(x, y)``
+            If Callable, then the label will display the result of ``text(x, y)``
             If a fromatted string, then the output of ``text.format(x, y)`` will be 
             displayed
             If a non-formatted string, then the text label will display ``text``
