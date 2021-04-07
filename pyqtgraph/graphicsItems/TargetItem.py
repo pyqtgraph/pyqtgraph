@@ -359,7 +359,6 @@ class TargetLabel(TextItem):
         else:
             raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
-        # self.setFormat("x = {: .3n}\ny = {: .3n}")
         self.valueChanged()
 
     def format(self):
