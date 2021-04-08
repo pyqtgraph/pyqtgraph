@@ -100,9 +100,9 @@ class TargetItem(UIGraphicsItem):
 
         self._shape = None
 
-        self._pos = (0, 0)
+        self._pos = Point(0, 0)
         if pos is None:
-            pos = (0, 0)
+            pos = Point(0, 0)
         self.setPos(pos)
 
         if isinstance(symbol, str):
@@ -134,17 +134,17 @@ class TargetItem(UIGraphicsItem):
             If the type of ``pos`` does not match the known types to extract
             coordinate info from, a TypeError is raised
         """
-        if isinstance(pos, tuple):
+        if isinstance(pos, Point):
             newPos = pos
-        elif isinstance(pos, list):
-            newPos = tuple(pos)
+        elif isinstance(pos, (tuple, list)):
+            newPos = Point(pos)
         elif isinstance(pos, (QtCore.QPointF, QtCore.QPoint)):
-            newPos = (pos.x(), pos.y())
+            newPos = Point(pos.x(), pos.y())
         else:
             raise TypeError
         if self._pos != newPos:
             self._pos = newPos
-            super().setPos(Point(self._pos))
+            super().setPos(self._pos)
             self.sigPositionChanged.emit(self)
 
     def setBrush(self, *args, **kwargs):
@@ -275,8 +275,8 @@ class TargetItem(UIGraphicsItem):
 
         Returns
         -------
-        tuple
-            ``(x, y)`` position of the TargetItem
+        Point
+            pg.Point of the current position of the TargetItem
         """
         return self._pos
 
