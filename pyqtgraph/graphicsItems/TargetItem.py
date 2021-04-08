@@ -330,7 +330,6 @@ class TargetItem(UIGraphicsItem):
             else:
                 # update the label text
                 self._label.setFormat(text)
-                self._label.valueChanged()
 
 
 class TargetLabel(TextItem):
