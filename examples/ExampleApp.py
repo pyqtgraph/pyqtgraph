@@ -393,7 +393,6 @@ def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
     app.exec_()
-# or condition so pytest runs ExampleApp as part of test suite
+
 if __name__ == '__main__':
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        main()
+    main()

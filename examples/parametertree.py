@@ -69,7 +69,7 @@ params = [
         {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
-        {'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "This is a color button"},
+        {'name': 'Color', 'type': 'color', 'value': "#FF0", 'tip': "This is a color button"},
         {'name': 'Gradient', 'type': 'colormap'},
         {'name': 'Subgroup', 'type': 'group', 'children': [
             {'name': 'Sub-param 1', 'type': 'int', 'value': 10},
@@ -178,9 +178,5 @@ win.show()
 s = p.saveState()
 p.restoreState(s)
 
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

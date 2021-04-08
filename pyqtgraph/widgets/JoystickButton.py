@@ -84,7 +84,7 @@ class JoystickButton(QtGui.QPushButton):
         
         
 if __name__ == '__main__':
-    app = QtGui.QApplication([])
+    app = pg.mkQApp()
     w = QtGui.QMainWindow()
     b = JoystickButton()
     w.setCentralWidget(b)
@@ -96,8 +96,5 @@ if __name__ == '__main__':
         
     b.sigStateChanged.connect(fn)
         
-    ## Start Qt event loop unless running in interactive mode.
-    import sys
-    if sys.flags.interactive != 1:
-        app.exec_()
+    app.exec_()
         

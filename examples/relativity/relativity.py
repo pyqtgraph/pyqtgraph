@@ -750,7 +750,7 @@ class ClockItem(pg.ItemGroup):
         #pass
 
 if __name__ == '__main__':
-    pg.mkQApp()
+    app = pg.mkQApp()
     #import pyqtgraph.console
     #cw = pyqtgraph.console.ConsoleWidget()
     #cw.show()
@@ -759,10 +759,5 @@ if __name__ == '__main__':
     win.setWindowTitle("Relativity!")
     win.show()
     win.resize(1100,700)
-    
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
-    
-    
-    #win.params.param('Objects').restoreState(state, removeChildren=False)
 
+    app.exec_()

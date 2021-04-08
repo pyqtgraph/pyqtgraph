@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates the use of ImageView, which is a high-level widget for 
-displaying and analyzing 2D and 3D data. ImageView provides:
-
-  1. A zoomable region (ViewBox) for displaying the image
-  2. A combination histogram and gradient editor (HistogramLUTItem) for
-     controlling the visual appearance of the image
-  3. A timeline for selecting the currently displayed frame (for 3D data only).
-  4. Tools for very basic analysis of image data (see ROI and Norm buttons)
-
+This example demonstrates generating ColorMap objects from external data.
+It displays the full list of color maps available as local files or by import 
+from Matplotlib or ColorCET.
 """
 ## Add path to library (just for examples; you do not need this)
 import initExample
@@ -96,8 +90,5 @@ for map_name in list_of_maps:
     
 lw.setFixedHeight(num_bars * (height+5) )
 
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

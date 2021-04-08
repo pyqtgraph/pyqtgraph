@@ -63,7 +63,7 @@ The following table represents the python environments we test in our CI system.
 
 Support
 -------
-  
+
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
 * Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
 
@@ -86,3 +86,20 @@ Documentation
 The official documentation lives at [pyqtgraph.readthedocs.io](https://pyqtgraph.readthedocs.io)
 
 The easiest way to learn pyqtgraph is to browse through the examples; run `python -m pyqtgraph.examples` to launch the examples application.  
+
+Used By
+-------
+
+Here is a partial listing of some of the applications that make use of PyQtGraph!
+
+* [ACQ4](https://github.com/acq4/acq4)
+* [Orange3](https://orangedatamining.com/)
+* [neurotic](https://neurotic.readthedocs.io)
+* [ephyviewer](https://ephyviewer.readthedocs.io)
+* [Joulescope](https://www.joulescope.com/)
+* [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
+* [argos](https://github.com/titusjan/argos)
+* [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
+
+Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
