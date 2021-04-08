@@ -1185,22 +1185,25 @@ class ROI(GraphicsObject):
             mapped = fn.transformCoordinates(img.transform(), coords)
             return result, mapped
 
-    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), **kwds):
+    def _getArrayRegionForArbitraryShape(self, data, img, axes=(0,1), returnMappedCoords=False, **kwds):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion`, masked by
         the shape of the ROI. Values outside the ROI shape are set to 0.
 
         See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
         arguments.
-
-        Note: ``returnMappedCoords`` is not yet supported for this ROI type.
         """
         br = self.boundingRect()
         if br.width() > 1000:
             raise Exception()
-        sliced = ROI.getArrayRegion(self, data, img, axes=axes, fromBoundingRect=True, **kwds)
+        if returnMappedCoords:
+            sliced, mappedCoords = ROI.getArrayRegion(
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
+        else:
+            sliced = ROI.getArrayRegion(
+                self, data, img, axes, returnMappedCoords, fromBoundingRect=True, **kwds)
 
-        if img.axisOrder == "col-major":
+        if img.axisOrder == 'col-major':
             mask = self.renderShapeMask(sliced.shape[axes[0]], sliced.shape[axes[1]])
         else:
             mask = self.renderShapeMask(sliced.shape[axes[1]], sliced.shape[axes[0]])
@@ -1212,7 +1215,10 @@ class ROI(GraphicsObject):
         shape[axes[1]] = sliced.shape[axes[1]]
         mask = mask.reshape(shape)
 
-        return sliced * mask
+        if returnMappedCoords:
+            return sliced * mask, mappedCoords
+        else:
+            return sliced * mask
 
     def getAffineSliceParams(self, data, img, axes=(0,1), fromBoundingRect=False):
         """
@@ -1840,7 +1846,7 @@ class EllipseROI(ROI):
         
         p.drawEllipse(r)
         
-    def getArrayRegion(self, arr, img=None, axes=(0, 1), **kwds):
+    def getArrayRegion(self, arr, img=None, axes=(0, 1), returnMappedCoords=False, **kwds):
         """
         Return the result of :meth:`~pyqtgraph.ROI.getArrayRegion` masked by the
         elliptical shape of the ROI. Regions outside the ellipse are set to 0.
@@ -1852,9 +1858,17 @@ class EllipseROI(ROI):
         """
         # Note: we could use the same method as used by PolyLineROI, but this
         # implementation produces a nicer mask.
-        arr = ROI.getArrayRegion(self, arr, img, axes, **kwds)
+        if returnMappedCoords:
+           arr, mappedCoords = ROI.getArrayRegion(self, arr, img, axes,
+                                                  returnMappedCoords, **kwds)
+        else:
+           arr = ROI.getArrayRegion(self, arr, img, axes,
+                                    returnMappedCoords, **kwds)
         if arr is None or arr.shape[axes[0]] == 0 or arr.shape[axes[1]] == 0:
-            return arr
+            if returnMappedCoords:
+                return arr, mappedCoords
+            else:
+                return arr
         w = arr.shape[axes[0]]
         h = arr.shape[axes[1]]
 
@@ -1867,7 +1881,10 @@ class EllipseROI(ROI):
         shape = [(n if i in axes else 1) for i,n in enumerate(arr.shape)]
         mask = mask.reshape(shape)
         
-        return arr * mask
+        if returnMappedCoords:
+            return arr * mask, mappedCoords
+        else:
+            return arr * mask
     
     def shape(self):
         if self.path is None:
