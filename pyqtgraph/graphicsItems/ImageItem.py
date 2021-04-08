@@ -471,13 +471,14 @@ class ImageItem(GraphicsObject):
             image = image.transpose((1, 0, 2)[:image.ndim])
 
         ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
-        is_passthru = ubyte_nolvl and lut is None
+        is_passthru8 = ubyte_nolvl and lut is None
         is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
             lut is not None and lut.shape[0] == 256
+        can_grayscale16 = image.dtype == numpy.uint16 and image.ndim == 2 and \
+            levels is None and lut is None and \
+            hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
 
-        # Question: does the user supplied image buffer belong to us?
-
-        if is_passthru or is_indexed8:
+        if is_passthru8 or is_indexed8 or can_grayscale16:
             # bypass makeARGB for supported combinations
             self._processingBuffer = None
             self._displayBuffer = None
@@ -487,7 +488,7 @@ class ImageItem(GraphicsObject):
 
             fmt = None
             ctbl = None
-            if is_passthru:
+            if is_passthru8:
                 # both levels and lut are None
                 # these images are suitable for display directly
                 if image.ndim == 2:
@@ -505,6 +506,10 @@ class ImageItem(GraphicsObject):
                     ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
                 elif lut.shape[1] == 4:
                     ctbl = [QtGui.qRgba(*rgba) for rgba in lut.tolist()]
+            elif can_grayscale16:
+                # single channel uint16
+                # both levels and lut are None
+                fmt = QtGui.QImage.Format.Format_Grayscale16
             if fmt is None:
                 raise ValueError("unsupported image type")
             self.qimage = fn._ndarray_to_qimage(image, fmt)
