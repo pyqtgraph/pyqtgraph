@@ -37,8 +37,8 @@ class TargetItem(UIGraphicsItem):
         r"""
         Parameters
         ----------
-        pos : list, tuple, QPointF, or QPoint
-            Initial position of the symbol.
+        pos : list, tuple, QPointF, QPoint, Optional
+            Initial position of the symbol.  Default is (0, 0)
         size : int
             Size of the symbol in pixels.  Default is 10.
         pen : QPen, tuple, list or str
@@ -120,6 +120,20 @@ class TargetItem(UIGraphicsItem):
         self.setLabel(label, labelOpts)
 
     def setPos(self, pos):
+        """Method to set the position to ``(x, y)`` within the plot view
+
+        Parameters
+        ----------
+        pos : tuple, list, QPointF, QPoint, or pg.Point
+            Container that consists of ``(x, y)`` representation of where the
+            TargetItem should be placed
+
+        Raises
+        ------
+        TypeError
+            If the type of ``pos`` does not match the known types to extract
+            coordinate info from, a TypeError is raised
+        """
         if isinstance(pos, tuple):
             newPos = pos
         elif isinstance(pos, list):
@@ -256,7 +270,14 @@ class TargetItem(UIGraphicsItem):
         self._shape = None  # invalidate shape, recompute later if requested.
         self.update()
 
-    def position(self):
+    def pos(self):
+        """Provides the current position of the TargetItem
+
+        Returns
+        -------
+        tuple
+            ``(x, y)`` position of the TargetItem
+        """
         return self._pos
 
     def label(self):
@@ -281,7 +302,8 @@ class TargetItem(UIGraphicsItem):
             If Callable, then the label will display the result of ``text(x, y)``
             If a fromatted string, then the output of ``text.format(x, y)`` will be
             displayed
-            If a non-formatted string, then the text label will display ``text``, by default None
+            If a non-formatted string, then the text label will display ``text``, by
+            default None
         labelOpts : dictionary, optional
             These arguments are passed on to :class:`~pyqtgraph.TextItem`
         """
