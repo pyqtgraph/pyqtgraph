@@ -412,7 +412,7 @@ class TargetLabel(TextItem):
         self.valueChanged()
 
     def valueChanged(self):
-        x, y = self.target.position()
+        x, y = self.target.pos()
         if self.property("formattableText"):
             self.setText(self._format.format(float(x), float(y)))
         elif callable(self._format):
