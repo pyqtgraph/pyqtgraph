@@ -228,12 +228,12 @@ class TargetItem(UIGraphicsItem):
             return
         ev.accept()
         if ev.isStart():
-            self.symbolOffset = self.pos() - self.mapToParent(ev.buttonDownPos())
+            self.symbolOffset = self.pos() - self.mapToView(ev.buttonDownPos())
             self.moving = True
 
         if not self.moving:
             return
-        self.setPos(self.symbolOffset + self.mapToParent(ev.pos()))
+        self.setPos(self.symbolOffset + self.mapToView(ev.pos()))
 
         if ev.isFinish():
             self.moving = False
@@ -418,3 +418,23 @@ class TargetLabel(TextItem):
             )
             self.setPos(scaledOffset)
         return super().viewTransformChanged()
+
+    def mouseClickEvent(self, ev):
+        return self.parentItem().mouseClickEvent(ev)
+
+    def mouseDragEvent(self, ev):
+        targetItem = self.parentItem()
+        if not targetItem.movable or int(ev.button() & QtCore.Qt.LeftButton) == 0:
+            return
+        ev.accept()
+        if ev.isStart():
+            targetItem.symbolOffset = targetItem.pos() - self.mapToView(ev.buttonDownPos())
+            targetItem.moving = True
+
+        if not targetItem.moving:
+            return
+        targetItem.setPos(targetItem.symbolOffset + self.mapToView(ev.pos()))
+
+        if ev.isFinish():
+            targetItem.moving = False
+            targetItem.sigPositionChangeFinished.emit(self)
