@@ -455,10 +455,22 @@ class ImageItem(GraphicsObject):
             lut = self._effectiveLut
             levels = None
 
+            if image.dtype == self._xp.uint16 or (image.ndim == 3 and image.shape[2] == 3):
+                # apply the effective lut early for the following types:
+                #   1) uint16 mono
+                #   2) {uint8, uint16} rgb
+                # this converts the input image to an uint8 image of shape
+                # (h, w) or (h, w, 3) or (h, w, 4), depending on the lut's shape.
+                # we don't do it for uint8 mono so that it will use Format_Indexed8
+                image = fn.applyLookupTable(image, lut)
+                lut = None
+                # now both levels and lut are None
+
             # when calling makeARGB() with lut and no levels, we need to
             # explicitly set scale. This ensures that makeARGB() will skip
             # applying levels.
-            scale = lut.shape[0] - 1
+            if lut is not None:
+                scale = lut.shape[0] - 1
             break
 
         # Convert single-channel image to 2D array
