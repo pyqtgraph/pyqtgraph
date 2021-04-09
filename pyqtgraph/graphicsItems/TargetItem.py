@@ -307,29 +307,21 @@ class TargetItem(UIGraphicsItem):
         labelOpts : dictionary, optional
             These arguments are passed on to :class:`~pyqtgraph.TextItem`
         """
-        if text is None and self._label is not None:
-            # remove the label if it's already added
-            if self._label.scene() is not None:
+        if not text:
+            if self._label is not None and self._label.scene() is not None:
+                # remove the label if it's already added
                 self._label.scene().removeItem(self._label)
             self._label = None
         else:
-            # convert None entry for text to False
-            text = False if text is None else text
-
             # provide default text if text is True
-            if isinstance(text, bool):
+            if text is True:
                 # convert to default value or empty string
-                text = "x = {: .3n}\ny = {: .3n}" if text else ""
+                text = "x = {: .3n}\ny = {: .3n}"
 
-            # if there is no label, add a label
-            if self._label is None:
-                labelOpts = {} if labelOpts is None else labelOpts
-                self._label = TargetLabel(self, text=text, **labelOpts)
-
-            # if there is already a label, update the text formatting
-            else:
-                # update the label text
-                self._label.setFormat(text)
+            labelOpts = {} if labelOpts is None else labelOpts
+            if self._label is not None:
+                self._label.scene().removeItem(self._label)
+            self._label = TargetLabel(self, text=text, **labelOpts)
 
 
 class TargetLabel(TextItem):
@@ -361,7 +353,7 @@ class TargetLabel(TextItem):
     def __init__(
         self,
         target,
-        text=None,
+        text="",
         offset=(20, 0),
         anchor=(0, 0.5),
         **kwargs,
@@ -369,14 +361,14 @@ class TargetLabel(TextItem):
         super().__init__(anchor=anchor, **kwargs)
         self.setParentItem(target)
         self.target = target
-
-        text = "" if text is None else text
         self.setFormat(text)
 
-        if isinstance(offset, (tuple, list)):
+        if isinstance(offset, Point):
+            self.offset = offset
+        elif isinstance(offset, (tuple, list)):
             self.offset = Point(*offset)
         elif isinstance(offset, (QtCore.QPoint, QtCore.QPointF)):
-            self.offset = offset
+            self.offset = Point(offset.x(), offset.y())
         else:
             raise TypeError("Offset parameter is the wrong data type")
         self.target.sigPositionChanged.connect(self.valueChanged)
@@ -400,7 +392,7 @@ class TargetLabel(TextItem):
         """
         if not callable(text):
             parsed = list(string.Formatter().parse(text))
-            if parsed[0][1] is not None:
+            if parsed and parsed[0][1] is not None:
                 self.setProperty("formattableText", True)
             else:
                 self.setText(text)
