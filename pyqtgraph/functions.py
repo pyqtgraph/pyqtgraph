@@ -1046,7 +1046,9 @@ def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
         # casting to an int32 will lose the fractional part, therefore the
         # output dtype must be an integer kind.
         lim_in = np.iinfo(data_in.dtype)
-        dst_bounds = scale * (lim_in.min - offset), scale * (lim_in.max - offset)
+        # convert numpy scalar to python scalar to avoid overflow warnings
+        lo = offset.item(0) if isinstance(offset, np.number) else offset
+        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
         if dst_bounds[1] < dst_bounds[0]:
             dst_bounds = dst_bounds[1], dst_bounds[0]
         lim32 = np.iinfo(np.int32)
