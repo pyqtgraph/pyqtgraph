@@ -427,6 +427,11 @@ class ImageItem(GraphicsObject):
             if levels is not None and levels.ndim != 1:
                 # can't handle multi-channel levels
                 break
+            if image.dtype == self._xp.uint16 and levels is None and \
+                    image.ndim == 3 and image.shape[2] in (3, 4):
+                # uint16 rgb(a) can't be directly displayed, so make them
+                # pass through effective lut processing
+                levels = [0, 65535]
             if levels is None and lut is None:
                 # nothing to combine
                 break
