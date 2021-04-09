@@ -14,7 +14,7 @@ def rescaleData(data, scale, offset, dtype, clip):
     func = rescale_functions.get(key)
     if func is None:
         func = numba.guvectorize(
-            f'{key[0]}[:],f8,f8,f8,f8,{key[1]}[:]',
+            [f'{key[0]}[:],f8,f8,f8,f8,{key[1]}[:]'],
             '(n),(),(),(),()->(n)',
             nopython=True)(rescale_clip_source)
         rescale_functions[key] = func
