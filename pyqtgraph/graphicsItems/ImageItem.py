@@ -455,14 +455,24 @@ class ImageItem(GraphicsObject):
             lut = self._effectiveLut
             levels = None
 
-            if image.dtype == self._xp.uint16 or (image.ndim == 3 and image.shape[2] == 3):
-                # apply the effective lut early for the following types:
-                #   1) uint16 mono
-                #   2) {uint8, uint16} rgb
-                # this converts the input image to an uint8 image of shape
-                # (h, w) or (h, w, 3) or (h, w, 4), depending on the lut's shape.
-                # we don't do it for uint8 mono so that it will use Format_Indexed8
-                image = fn.applyLookupTable(image, lut)
+            # apply the effective lut early for the following types:
+            if image.dtype == self._xp.uint16 and (image.ndim == 2 or image.shape[2] == 1):
+                # 1) uint16 mono
+                if lut.ndim == 2:
+                    if lut.shape[1] == 3:   # rgb
+                        # convert rgb lut to rgba so that it is 32-bits
+                        lut = numpy.column_stack([lut, numpy.full(lut.shape[0], 255, dtype=numpy.uint8)])
+                    if lut.shape[1] == 4:   # rgba
+                        lut = lut.view(numpy.uint32)
+                image = lut.ravel()[image]
+                lut = None
+                # now both levels and lut are None
+                if image.dtype == numpy.uint32:
+                    image = image.view(numpy.uint8).reshape(image.shape + (4,))
+            elif image.ndim == 3 and image.shape[2] == 3:
+                # 2) {uint8, uint16} rgb
+                # for rgb images, the lut will be 1d
+                image = lut.ravel()[image]
                 lut = None
                 # now both levels and lut are None
 
