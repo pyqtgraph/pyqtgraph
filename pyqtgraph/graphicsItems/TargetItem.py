@@ -11,6 +11,7 @@ from .ViewBox import ViewBox
 import string
 import warnings
 
+
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
 
@@ -33,7 +34,7 @@ class TargetItem(UIGraphicsItem):
         hoverBrush=None,
         movable=True,
         label=None,
-        labelOpts=None
+        labelOpts=None,
     ):
         r"""
         Parameters
@@ -85,7 +86,9 @@ class TargetItem(UIGraphicsItem):
         if radii is not None:
             warnings.warn(
                 "'radii' is now deprecated, and will be removed in 0.13.0. Use 'size' "
-                "parameter instead", DeprecationWarning, stacklevel=2
+                "parameter instead",
+                DeprecationWarning,
+                stacklevel=2,
             )
             symbol = makeCrosshair(*radii)
             size = 1
@@ -129,6 +132,16 @@ class TargetItem(UIGraphicsItem):
         self.scale = size
         self.setPath(self._path)
         self.setLabel(label, labelOpts)
+
+    @property
+    def sigDragged(self):
+        warnings.warn(
+            "'sigDragged' has been deprecated and will be removed in 0.13.0.  Use "
+            "`sigPositionChanged` instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.sigPositionChangeFinished
 
     def setPos(self, pos):
         """Method to set the position to ``(x, y)`` within the plot view
@@ -339,7 +352,7 @@ class TargetItem(UIGraphicsItem):
             "TargetItem.setLabelAngle is deprecated and will be removed in 0.13.0."
             "Use TargetItem.label().setAngle() instead",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         if self.label() is not None:
             if angle != self.label().angle():
@@ -451,7 +464,9 @@ class TargetLabel(TextItem):
             return
         ev.accept()
         if ev.isStart():
-            targetItem.symbolOffset = targetItem.pos() - self.mapToView(ev.buttonDownPos())
+            targetItem.symbolOffset = targetItem.pos() - self.mapToView(
+                ev.buttonDownPos()
+            )
             targetItem.moving = True
 
         if not targetItem.moving:
