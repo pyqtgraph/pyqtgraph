@@ -44,9 +44,8 @@ Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
 
-def makeCrosshair():
+def makeCrosshair(r=0.5, w=1, h=1):
     path = QtGui.QPainterPath()
-    r, w, h = (0.5, 1, 1)
     rect = QtCore.QRectF(-r, -r, r * 2, r * 2)
     path.addEllipse(rect)
     path.moveTo(-w, 0)

@@ -6,10 +6,10 @@ from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
 from .TextItem import TextItem
-from .ScatterPlotItem import Symbols
+from .ScatterPlotItem import Symbols, makeCrosshair
 from .ViewBox import ViewBox
 import string
-
+import warnings
 
 class TargetItem(UIGraphicsItem):
     """Draws a draggable target symbol (circle plus crosshair).
@@ -25,6 +25,7 @@ class TargetItem(UIGraphicsItem):
         self,
         pos=None,
         size=10,
+        radii=None,
         symbol="crosshair",
         pen=None,
         hoverPen=None,
@@ -32,7 +33,7 @@ class TargetItem(UIGraphicsItem):
         hoverBrush=None,
         movable=True,
         label=None,
-        labelOpts=None,
+        labelOpts=None
     ):
         r"""
         Parameters
@@ -41,6 +42,8 @@ class TargetItem(UIGraphicsItem):
             Initial position of the symbol.  Default is (0, 0)
         size : int
             Size of the symbol in pixels.  Default is 10.
+        radii : tuple of int
+            Deprecated.  Gives size of crosshair in screen pixels.
         pen : QPen, tuple, list or str
             Pen to use when drawing line. Can be any arguments that are valid
             for :func:`~pyqtgraph.mkPen`. Default pen is transparent yellow.
@@ -78,6 +81,14 @@ class TargetItem(UIGraphicsItem):
         self.moving = False
         self._label = None
         self.mouseHovering = False
+
+        if radii is not None:
+            warnings.warn(
+                "'radii' is now deprecated, and will be removed in 0.13.0. Use 'size' "
+                "parameter instead", DeprecationWarning, stacklevel=2
+            )
+            symbol = makeCrosshair(*radii)
+            size = 1
 
         if pen is None:
             pen = (255, 255, 0)
@@ -322,6 +333,18 @@ class TargetItem(UIGraphicsItem):
             if self._label is not None:
                 self._label.scene().removeItem(self._label)
             self._label = TargetLabel(self, text=text, **labelOpts)
+
+    def setLabelAngle(self, angle):
+        warnings.warn(
+            "TargetItem.setLabelAngle is deprecated and will be removed in 0.13.0."
+            "Use TargetItem.label().setAngle() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        if self.label() is not None:
+            if angle != self.label().angle():
+                self.label().setAngle(angle)
+        return None
 
 
 class TargetLabel(TextItem):
