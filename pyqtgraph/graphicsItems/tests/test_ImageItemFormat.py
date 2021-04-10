@@ -5,9 +5,8 @@ from pyqtgraph.Qt import QtGui
 
 def check_format(shape, dtype, levels, lut, expected_format):
     data = np.zeros(shape, dtype=dtype)
-    item = pg.ImageItem(data, autoLevels=False)
-    item.setLevels(levels)
-    item.setLookupTable(lut)
+    item = pg.ImageItem(axisOrder='row-major')
+    item.setImage(data, autoLevels=False, lut=lut, levels=levels)
     item.render()
     assert item.qimage.format() == expected_format
 
