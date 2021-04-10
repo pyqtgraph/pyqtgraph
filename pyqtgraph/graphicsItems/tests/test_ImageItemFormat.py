@@ -24,25 +24,25 @@ def test_uint8():
     lut_rgba = np.random.randint(256, size=(256, 4), dtype=np.uint8)
 
     levels = None
-    check_format((w, h), dtype, levels, lut_none, Format.Format_Grayscale8)
-    check_format((w, h, 3), dtype, levels, lut_none, Format.Format_RGB888)
-    check_format((w, h, 4), dtype, levels, lut_none, Format.Format_RGBA8888)
+    check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale8)
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
+    check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA8888)
 
     levels = [lo, hi]
-    check_format((w, h), dtype, levels, lut_none, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_none, Format.Format_Indexed8)
     levels = None
-    check_format((w, h), dtype, levels, lut_mono1, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_mono2, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_rgb, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_rgba, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_mono1, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_mono2, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_rgb, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_rgba, Format.Format_Indexed8)
     levels = [lo, hi]
-    check_format((w, h), dtype, levels, lut_mono1, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_mono2, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_rgb, Format.Format_Indexed8)
-    check_format((w, h), dtype, levels, lut_rgba, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_mono1, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_mono2, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_rgb, Format.Format_Indexed8)
+    check_format((h, w), dtype, levels, lut_rgba, Format.Format_Indexed8)
 
     levels = [lo, hi]
-    check_format((w, h, 3), dtype, levels, lut_none, Format.Format_RGB888)
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
 
 
 def test_uint16():
@@ -61,17 +61,17 @@ def test_uint16():
         fmt_gray16 = Format.Format_Grayscale16
     except AttributeError:
         fmt_gray16 = Format.Format_ARGB32
-    check_format((w, h), dtype, levels, lut_none, fmt_gray16)
-    check_format((w, h, 3), dtype, levels, lut_none, Format.Format_RGB888)
-    check_format((w, h, 4), dtype, levels, lut_none, Format.Format_RGBA64)
+    check_format((h, w), dtype, levels, lut_none, fmt_gray16)
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
+    check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA64)
 
     levels = [lo, hi]
-    check_format((w, h), dtype, levels, lut_none, Format.Format_Grayscale8)
+    check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale8)
     levels = None
-    check_format((w, h), dtype, levels, lut_mono1, Format.Format_Grayscale8)
-    check_format((w, h), dtype, levels, lut_mono2, Format.Format_Grayscale8)
-    check_format((w, h), dtype, levels, lut_rgb, Format.Format_RGBX8888)
-    check_format((w, h), dtype, levels, lut_rgba, Format.Format_RGBA8888)
+    check_format((h, w), dtype, levels, lut_mono1, Format.Format_Grayscale8)
+    check_format((h, w), dtype, levels, lut_mono2, Format.Format_Grayscale8)
+    check_format((h, w), dtype, levels, lut_rgb, Format.Format_RGBX8888)
+    check_format((h, w), dtype, levels, lut_rgba, Format.Format_RGBA8888)
 
     levels = [lo, hi]
-    check_format((w, h, 3), dtype, levels, lut_none, Format.Format_RGB888)
+    check_format((h, w, 3), dtype, levels, lut_none, Format.Format_RGB888)
