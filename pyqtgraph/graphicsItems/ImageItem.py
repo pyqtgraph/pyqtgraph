@@ -428,8 +428,8 @@ class ImageItem(GraphicsObject):
                 # can't handle multi-channel levels
                 break
             if image.dtype == self._xp.uint16 and levels is None and \
-                    image.ndim == 3 and image.shape[2] in (3, 4):
-                # uint16 rgb(a) can't be directly displayed, so make them
+                    image.ndim == 3 and image.shape[2] == 3:
+                # uint16 rgb can't be directly displayed, so make it
                 # pass through effective lut processing
                 levels = [0, 65535]
             if levels is None and lut is None:
@@ -501,11 +501,12 @@ class ImageItem(GraphicsObject):
         is_passthru8 = ubyte_nolvl and lut is None
         is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
             lut is not None and lut.shape[0] == 256
-        can_grayscale16 = image.dtype == numpy.uint16 and image.ndim == 2 and \
-            levels is None and lut is None and \
+        is_passthru16 = image.dtype == numpy.uint16 and levels is None and lut is None
+        can_grayscale16 = is_passthru16 and image.ndim == 2 and \
             hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
+        is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
 
-        if is_passthru8 or is_indexed8 or can_grayscale16:
+        if is_passthru8 or is_indexed8 or can_grayscale16 or is_rgba64:
             # bypass makeARGB for supported combinations
             self._processingBuffer = None
             self._displayBuffer = None
@@ -537,6 +538,10 @@ class ImageItem(GraphicsObject):
                 # single channel uint16
                 # both levels and lut are None
                 fmt = QtGui.QImage.Format.Format_Grayscale16
+            elif is_rgba64:
+                # uint16 rgba
+                # both levels and lut are None
+                fmt = QtGui.QImage.Format.Format_RGBA64 # endian-independent
             if fmt is None:
                 raise ValueError("unsupported image type")
             self.qimage = fn._ndarray_to_qimage(image, fmt)
