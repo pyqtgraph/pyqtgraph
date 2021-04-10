@@ -529,7 +529,7 @@ class ImageItem(GraphicsObject):
                 # levels and/or lut --> lut-only
                 fmt = QtGui.QImage.Format.Format_Indexed8
                 if lut.ndim == 1 or lut.shape[1] == 1:
-                    ctbl = [QtGui.qRgb(x,x,x) for x in lut.tolist()]
+                    ctbl = [QtGui.qRgb(x,x,x) for x in lut.ravel().tolist()]
                 elif lut.shape[1] == 3:
                     ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
                 elif lut.shape[1] == 4:
