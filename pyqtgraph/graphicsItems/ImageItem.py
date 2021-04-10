@@ -420,6 +420,7 @@ class ImageItem(GraphicsObject):
         # into a single lut for better performance
         scale = None
         levels = self.levels
+        augmented_alpha = False
 
         while True:
             if image.dtype not in (self._xp.ubyte, self._xp.uint16):
@@ -467,6 +468,7 @@ class ImageItem(GraphicsObject):
                     if lut.shape[1] == 3:   # rgb
                         # convert rgb lut to rgba so that it is 32-bits
                         lut = numpy.column_stack([lut, numpy.full(lut.shape[0], 255, dtype=numpy.uint8)])
+                        augmented_alpha = True
                     if lut.shape[1] == 4:   # rgba
                         lut = lut.view(numpy.uint32)
                 image = lut.ravel()[image]
@@ -524,7 +526,10 @@ class ImageItem(GraphicsObject):
                 elif image.shape[2] == 3:
                     fmt = QtGui.QImage.Format.Format_RGB888
                 elif image.shape[2] == 4:
-                    fmt = QtGui.QImage.Format.Format_RGBA8888
+                    if augmented_alpha:
+                        fmt = QtGui.QImage.Format.Format_RGBX8888
+                    else:
+                        fmt = QtGui.QImage.Format.Format_RGBA8888
             elif is_indexed8:
                 # levels and/or lut --> lut-only
                 fmt = QtGui.QImage.Format.Format_Indexed8

@@ -12,7 +12,6 @@ def check_format(shape, dtype, levels, lut, expected_format):
     assert item.qimage.format() == expected_format
 
 
-
 def test_uint8():
     Format = QtGui.QImage.Format
     dtype = np.uint8
@@ -71,7 +70,7 @@ def test_uint16():
     levels = None
     check_format((w, h), dtype, levels, lut_mono1, Format.Format_Grayscale8)
     check_format((w, h), dtype, levels, lut_mono2, Format.Format_Grayscale8)
-    check_format((w, h), dtype, levels, lut_rgb, Format.Format_RGBA8888)
+    check_format((w, h), dtype, levels, lut_rgb, Format.Format_RGBX8888)
     check_format((w, h), dtype, levels, lut_rgba, Format.Format_RGBA8888)
 
     levels = [lo, hi]
