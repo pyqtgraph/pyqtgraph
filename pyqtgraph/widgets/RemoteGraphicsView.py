@@ -259,9 +259,10 @@ class Renderer(GraphicsView):
 
     def deserialize_wheel_event(self, wheel_event):
         pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted = wheel_event
-        btns = QtCore.Qt.MouseButtons(btns)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
-        phase = QtCore.Qt.ScrollPhase(phase)
+        if QT_LIB != 'PyQt6':
+            btns = QtCore.Qt.MouseButtons(btns)
+            mods = QtCore.Qt.KeyboardModifiers(mods)
+            phase = QtCore.Qt.ScrollPhase(phase)
         return QtGui.QWheelEvent(pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted)
 
     def mousePressEvent(self, mouse_event):

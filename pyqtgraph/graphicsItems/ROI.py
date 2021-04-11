@@ -826,10 +826,17 @@ class ROI(GraphicsObject):
         """
         return True
 
-    def movePoint(self, handle, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True, coords='parent'):
+    def movePoint(self, handle, pos, modifiers=None, finish=True, coords='parent'):
         ## called by Handles when they are moved. 
         ## pos is the new position of the handle in scene coords, as requested by the handle.
-        
+        if modifiers is None:
+            try:
+                # this works for PyQt6 6.1 and other bindings
+                modifiers = QtCore.Qt.KeyboardModifier.NoModifier
+            except AttributeError:
+                # this works for PyQt6 6.0 and other bindings
+                modifiers = QtCore.Qt.KeyboardModifiers(0)
+
         newState = self.stateCopy()
         index = self.indexOfHandle(handle)
         h = self.handles[index]
@@ -1454,7 +1461,14 @@ class Handle(UIGraphicsItem):
             self.currentPen = self.hoverPen
             self.movePoint(pos, ev.modifiers(), finish=False)
 
-    def movePoint(self, pos, modifiers=QtCore.Qt.KeyboardModifiers(0), finish=True):
+    def movePoint(self, pos, modifiers=None, finish=True):
+        if modifiers is None:
+            try:
+                # this works for PyQt6 6.1 and other bindings
+                modifiers = QtCore.Qt.KeyboardModifier.NoModifier
+            except AttributeError:
+                # this works for PyQt6 6.0 and other bindings
+                modifiers = QtCore.Qt.KeyboardModifiers(0)
         for r in self.rois:
             if not r.checkPointMove(self, pos, modifiers):
                 return
