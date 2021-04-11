@@ -376,6 +376,15 @@ if QT_LIB == PYQT6:
         QtCore.QEvent.type = new_method
         del new_method
 
+    # PyQt6 6.1 renames some enums and flags to be in line with the other bindings.
+    # "Alignment" and "Orientations" are PyQt6 6.0 and are used in the generated
+    # ui files. Pending a regeneration of the template files, which would mean a
+    # drop in support for PyQt6 6.0, provide the old names for PyQt6 6.1.
+    # This is strictly a temporary private shim. Do not depend on it in your code.
+    if hasattr(QtCore.Qt, 'AlignmentFlag') and not hasattr(QtCore.Qt, 'Alignment'):
+        QtCore.Qt.Alignment = QtCore.Qt.AlignmentFlag
+    if hasattr(QtCore.Qt, 'Orientation') and not hasattr(QtCore.Qt, 'Orientations'):
+        QtCore.Qt.Orientations = QtCore.Qt.Orientation
 
 # USE_XXX variables are deprecated
 USE_PYSIDE = QT_LIB == PYSIDE
