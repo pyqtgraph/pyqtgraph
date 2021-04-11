@@ -32,6 +32,53 @@ p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)
 
+targetItem1 = pg.TargetItem(
+    label=True,
+    symbol="crosshair",
+    labelOpts={
+        "angle": 0
+    }
+)
+
+targetItem2 = pg.TargetItem(
+    pos=(30, 5),
+    size=20,
+    label="vert={1:0.2f}",
+    symbol="star",
+    pen="#F4511E",
+    labelOpts={
+        "angle": 45,
+        "offset": QtCore.QPoint(15, 15)
+    }
+)
+
+targetItem3 = pg.TargetItem(
+    pos=(10, 10),
+    size=10,
+    label="Third Label",
+    symbol="x", 
+    pen="#00ACC1",
+    labelOpts={
+        "anchor": QtCore.QPointF(0.5, 0.5),
+        "offset": QtCore.QPointF(30, 0),
+        "color": "#558B2F",
+        "rotateAxis": (0, 1)
+    }
+)
+
+def callableFunction(x, y):
+    return f"Square Values: ({x**2:.4f}, {y**2:.4f})"
+
+targetItem4 = pg.TargetItem(
+    pos=(10, -10),
+    label=callableFunction
+)
+
+p1.addItem(targetItem1)
+p1.addItem(targetItem2)
+p1.addItem(targetItem3)
+p1.addItem(targetItem4)
+
 # Add a linear region with a label
 lr = pg.LinearRegionItem(values=[70, 80])
 p1.addItem(lr)

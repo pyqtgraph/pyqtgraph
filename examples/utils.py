@@ -32,6 +32,7 @@ examples = OrderedDict([
     ('GraphicsItems', OrderedDict([
         ('Scatter Plot', 'ScatterPlot.py'),
         #('PlotItem', 'PlotItem.py'),
+        ('InfiniteLine', 'InfiniteLine.py'),
         ('IsocurveItem', 'isocurve.py'),
         ('GraphItem', 'GraphItem.py'),
         ('ErrorBarItem', 'ErrorBarItem.py'),
