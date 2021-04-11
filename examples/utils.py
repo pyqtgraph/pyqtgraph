@@ -97,7 +97,6 @@ others = dict([
     ('MultiplePlotAxes', 'MultiplePlotAxes.py'),
     ('ROItypes', 'ROItypes.py'),
     ('ScaleBar', 'ScaleBar.py'),
-    ('InfiniteLine', 'InfiniteLine.py'),
     ('ViewBox', 'ViewBox.py'),
     ('GradientEditor', 'GradientEditor.py'),
     ('GLBarGraphItem', 'GLBarGraphItem.py'),
