@@ -106,7 +106,7 @@ jobs:
     - name: Run Tests
       run: |
         mkdir $SCREENSHOT_DIR
-        pytest . -v \
+        pytest pyqtgraph examples -v \
           -n auto \
           --junitxml pytest.xml \
           --cov pyqtgraph --cov-report=xml --cov-report=html
