@@ -331,7 +331,7 @@ def mkPen(*args, **kargs):
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
-        mkPen({'color': "FF0", width: 2})
+        mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
