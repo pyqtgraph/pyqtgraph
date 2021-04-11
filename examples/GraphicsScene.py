@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 ## Add path to library (just for examples; you do not need this)
+from PySide2.QtGui import QPen, QColor
+
 import initExample
 
 from pyqtgraph.Qt import QtCore, QtGui
@@ -15,27 +17,27 @@ class Obj(QtGui.QGraphicsObject):
     def __init__(self):
         QtGui.QGraphicsObject.__init__(self)
         GraphicsScene.registerObject(self)
-        
+
     def paint(self, p, *args):
         p.setPen(pg.mkPen(200,200,200))
         p.drawRect(self.boundingRect())
-        
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 20, 20)
-        
+
     def mouseClickEvent(self, ev):
         if ev.double():
             print("double click")
         else:
             print("click")
         ev.accept()
-        
+
     #def mouseDragEvent(self, ev):
         #print "drag"
         #ev.accept()
         #self.setPos(self.pos() + ev.pos()-ev.lastPos())
-        
-        
+
+
 
 vb = pg.ViewBox()
 win.setCentralItem(vb)
@@ -56,6 +58,9 @@ prox.setPos(100,0)
 vb.addItem(prox)
 
 g = pg.GridItem()
+p = QPen(QColor(0, 255, 255))
+p.setWidthF(1)
+g.opts["pen"] = p
 vb.addItem(g)
 
 if __name__ == '__main__':

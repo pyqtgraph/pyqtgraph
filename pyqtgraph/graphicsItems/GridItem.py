@@ -9,7 +9,7 @@ __all__ = ['GridItem']
 class GridItem(UIGraphicsItem):
     """
     **Bases:** :class:`UIGraphicsItem <pyqtgraph.UIGraphicsItem>`
-    
+
     Displays a rectangular grid of lines indicating major divisions within a coordinate system.
     Automatically determines what divisions to use.
     """
@@ -87,7 +87,7 @@ class GridItem(UIGraphicsItem):
         self.picture = None
         #UIGraphicsItem.viewRangeChanged(self)
         #self.update()
-        
+
     def paint(self, p, opt, widget):
         #p.setPen(QtGui.QPen(QtGui.QColor(100, 100, 100)))
         #p.drawRect(self.boundingRect())
@@ -101,22 +101,22 @@ class GridItem(UIGraphicsItem):
         #p.drawLine(0, -100, 0, 100)
         #p.drawLine(-100, 0, 100, 0)
         #print "drawing Grid."
-        
-        
+
+
     def generatePicture(self):
         self.picture = QtGui.QPicture()
         p = QtGui.QPainter()
         p.begin(self.picture)
-        
+
         vr = self.getViewWidget().rect()
         unit = self.pixelWidth(), self.pixelHeight()
         dim = [vr.width(), vr.height()]
         lvr = self.boundingRect()
         ul = np.array([lvr.left(), lvr.top()])
         br = np.array([lvr.right(), lvr.bottom()])
-        
+
         texts = []
-        
+
         if ul[1] > br[1]:
             x = ul[1]
             ul[1] = br[1]
@@ -157,6 +157,7 @@ class GridItem(UIGraphicsItem):
 
                 linePen = self.opts['pen']
                 lineColor = self.opts['pen'].color()
+                lineWidth = self.opts['pen'].width()
                 lineColor.setAlpha(c)
                 linePen.setColor(lineColor)
 
@@ -170,9 +171,9 @@ class GridItem(UIGraphicsItem):
                 for x in range(0, int(nl[ax])):
                     linePen.setCosmetic(False)
                     if ax == 0:
-                        linePen.setWidthF(self.pixelWidth())
+                        linePen.setWidthF(lineWidth * self.pixelWidth())
                     else:
-                        linePen.setWidthF(self.pixelHeight())
+                        linePen.setWidthF(lineWidth * self.pixelHeight())
                     p.setPen(linePen)
                     p1 = np.array([0.,0.])
                     p2 = np.array([0.,0.])
