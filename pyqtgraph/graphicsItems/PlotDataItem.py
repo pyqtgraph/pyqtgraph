@@ -174,7 +174,7 @@ class PlotDataItem(GraphicsObject):
             
             'data': None,
         }
-        self.setClickable(kargs.get('clickable', False))
+        self.setCurvesClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
     
     def implements(self, interface=None):
@@ -186,17 +186,12 @@ class PlotDataItem(GraphicsObject):
     def name(self):
         return self.opts.get('name', None)
 
-    def setClickable(self, s, width=None):
+    def setCurvesClickable(self, s, width=None):
         self.curve.setClickable(s, width)
 
-    @property
-    def clickable(self):
+    def curvesClickable(self):
         return self.curve.clickable
 
-    @clickable.setter
-    def clickable(self, s):
-        self.setClickable(s)
-    
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
 
