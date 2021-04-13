@@ -174,7 +174,7 @@ class PlotDataItem(GraphicsObject):
             
             'data': None,
         }
-        self.setCurvesClickable(kargs.get('clickable', False))
+        self.setCurveClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
     
     def implements(self, interface=None):
@@ -186,10 +186,10 @@ class PlotDataItem(GraphicsObject):
     def name(self):
         return self.opts.get('name', None)
 
-    def setCurvesClickable(self, s, width=None):
+    def setCurveClickable(self, s, width=None):
         self.curve.setClickable(s, width)
 
-    def curvesClickable(self):
+    def curveClickable(self):
         return self.curve.clickable
 
     def boundingRect(self):
