@@ -32,13 +32,7 @@ p1.addItem(inf1)
 p1.addItem(inf2)
 p1.addItem(inf3)
 
-targetItem1 = pg.TargetItem(
-    label=True,
-    symbol="crosshair",
-    labelOpts={
-        "angle": 0
-    }
-)
+targetItem1 = pg.TargetItem()
 
 targetItem2 = pg.TargetItem(
     pos=(30, 5),
@@ -47,10 +41,10 @@ targetItem2 = pg.TargetItem(
     symbol="star",
     pen="#F4511E",
     labelOpts={
-        "angle": 45,
         "offset": QtCore.QPoint(15, 15)
     }
 )
+targetItem2.label().setAngle(45)
 
 targetItem3 = pg.TargetItem(
     pos=(10, 10),
