@@ -393,11 +393,6 @@ class TargetLabel(TextItem):
         anchor=(0, 0.5),
         **kwargs,
     ):
-        super().__init__(anchor=anchor, **kwargs)
-        self.setParentItem(target)
-        self.target = target
-        self.setFormat(text)
-
         if isinstance(offset, Point):
             self.offset = offset
         elif isinstance(offset, (tuple, list)):
@@ -406,6 +401,12 @@ class TargetLabel(TextItem):
             self.offset = Point(offset.x(), offset.y())
         else:
             raise TypeError("Offset parameter is the wrong data type")
+
+        super().__init__(anchor=anchor, **kwargs)
+        self.setParentItem(target)
+        self.target = target
+        self.setFormat(text)
+
         self.target.sigPositionChanged.connect(self.valueChanged)
         self.valueChanged()
 
