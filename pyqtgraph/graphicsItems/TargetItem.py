@@ -354,7 +354,7 @@ class TargetItem(UIGraphicsItem):
             DeprecationWarning,
             stacklevel=2,
         )
-        if self.label() is not None and angle != self.label().angle():
+        if self.label() is not None and angle != self.label().angle:
             self.label().setAngle(angle)
         return None
 
