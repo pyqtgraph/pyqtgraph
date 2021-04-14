@@ -37,9 +37,9 @@ targetItem1 = pg.TargetItem()
 targetItem2 = pg.TargetItem(
     pos=(30, 5),
     size=20,
-    label="vert={1:0.2f}",
     symbol="star",
     pen="#F4511E",
+    label="vert={1:0.2f}",
     labelOpts={
         "offset": QtCore.QPoint(15, 15)
     }
@@ -49,16 +49,19 @@ targetItem2.label().setAngle(45)
 targetItem3 = pg.TargetItem(
     pos=(10, 10),
     size=10,
-    label="Third Label",
-    symbol="x", 
+    symbol="x",
     pen="#00ACC1",
-    labelOpts={
+)
+targetItem3.setLabel(
+    "Third Label",
+    {
         "anchor": QtCore.QPointF(0.5, 0.5),
         "offset": QtCore.QPointF(30, 0),
         "color": "#558B2F",
         "rotateAxis": (0, 1)
     }
 )
+
 
 def callableFunction(x, y):
     return f"Square Values: ({x**2:.4f}, {y**2:.4f})"
