@@ -437,6 +437,11 @@ class ImageItem(GraphicsObject):
                 # nothing to combine
                 break
 
+            # distinguish between lut for levels and colors
+            levels_lut = None
+            colors_lut = lut
+            lut = None
+
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
@@ -447,22 +452,49 @@ class ImageItem(GraphicsObject):
                     minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                if lut is None:
-                    efflut = fn.rescaleData(ind, scale=255./levdiff,
+                if colors_lut is None:
+                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
                                             offset=minlev, dtype=self._xp.ubyte)
+                    efflut = None
                 else:
-                    effscale = lut.shape[0] / levdiff
-                    lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                    efflut = fn.rescaleData(ind, scale=effscale,
-                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
-                    efflut = lut[efflut]
+                    num_colors = colors_lut.shape[0]
+                    effscale = num_colors / levdiff
+                    lutdtype = self._xp.min_scalar_type(num_colors - 1)
+                    levels_lut = fn.rescaleData(ind, scale=effscale,
+                                            offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
 
-                self._effectiveLut = efflut
-            lut = self._effectiveLut
+                    if lutdtype == self._xp.ubyte:
+                        # don't combine, we will use QImage ColorTable
+                        efflut = None
+                    else:
+                        # colors_lut has more entries than will fit within 8-bits
+                        # combine
+                        efflut = colors_lut[levels_lut]
+                        levels_lut = None
+                        colors_lut = None
+
+                self._effectiveLut = efflut, levels_lut, colors_lut
+
+            # possible combinations:
+            # 1)  ~None, None, None
+            # 2)  None, ~None, ~None
+            # 3)  None, ~None, None
+            lut, levels_lut, colors_lut = self._effectiveLut
             levels = None
 
+            if levels_lut is not None:  # either combi 2 or 3
+                assert levels_lut.dtype == self._xp.ubyte
+                assert colors_lut is None or colors_lut.shape[0] <= 256
+                image = levels_lut[image]
+                levels_lut = None
+
+                lut = colors_lut
+                colors_lut = None
+                # image is now uint8
+                # lut can be None or not None
+
             # apply the effective lut early for the following types:
-            if image.dtype == self._xp.uint16 and (image.ndim == 2 or image.shape[2] == 1):
+            elif image.dtype == self._xp.uint16 and (image.ndim == 2 or image.shape[2] == 1):
                 # 1) uint16 mono
                 if lut.ndim == 2:
                     if lut.shape[1] == 3:   # rgb
@@ -502,7 +534,7 @@ class ImageItem(GraphicsObject):
         ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
         is_passthru8 = ubyte_nolvl and lut is None
         is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
-            lut is not None and lut.shape[0] == 256
+            lut is not None and lut.shape[0] <= 256
         is_passthru16 = image.dtype == numpy.uint16 and levels is None and lut is None
         can_grayscale16 = is_passthru16 and image.ndim == 2 and \
             hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
