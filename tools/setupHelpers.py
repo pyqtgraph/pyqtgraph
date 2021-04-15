@@ -493,8 +493,10 @@ DEFAULT_ASV: Dict[str, Any] = {
     "branches": ["master"],
     "environment_type": "virtualenv",
     "show_commit_url": "http://github.com/pyqtgraph/pyqtgraph/commit/",
+    # "pythons": ["3.7", "3.8", "3.9"],
     "matrix": {
-        "numpy": [],
+        # "numpy": ["1.17", "1.18", "1.19", ""],
+        "numpy": "",
         "pyqt5": ["", None],
         "pyside2": ["", None],
     },
