@@ -4488,18 +4488,18 @@ def test_makeARGB_with_human_readable_code():
             return True
 
     with AssertExc(TypeError):  # invalid image shape
-        pg.makeARGB(np.zeros((2,), dtype='float'))
+        _makeARGB(np.zeros((2,), dtype='float'))
     with AssertExc(TypeError):  # invalid image shape
-        pg.makeARGB(np.zeros((2, 2, 7), dtype='float'))
+        _makeARGB(np.zeros((2, 2, 7), dtype='float'))
     with AssertExc():  # float images require levels arg
-        pg.makeARGB(np.zeros((2, 2), dtype='float'))
+        _makeARGB(np.zeros((2, 2), dtype='float'))
     with AssertExc():  # bad levels arg
-        pg.makeARGB(np.zeros((2, 2), dtype='float'), levels=[1])
+        _makeARGB(np.zeros((2, 2), dtype='float'), levels=[1])
     with AssertExc():  # bad levels arg
-        pg.makeARGB(np.zeros((2, 2), dtype='float'), levels=[1, 2, 3])
+        _makeARGB(np.zeros((2, 2), dtype='float'), levels=[1, 2, 3])
     with AssertExc():  # can't mix 3-channel levels and LUT
-        pg.makeARGB(np.zeros((2, 2)), lut=np.zeros((10, 3), dtype='ubyte'), levels=[(0, 1)] * 3)
+        _makeARGB(np.zeros((2, 2)), lut=np.zeros((10, 3), dtype='ubyte'), levels=[(0, 1)] * 3)
     with AssertExc():  # multichannel levels must have same number of channels as image
-        pg.makeARGB(np.zeros((2, 2, 3), dtype='float'), levels=[(1, 2)] * 4)
+        _makeARGB(np.zeros((2, 2, 3), dtype='float'), levels=[(1, 2)] * 4)
     with AssertExc():  # 3d levels not allowed
-        pg.makeARGB(np.zeros((2, 2, 3), dtype='float'), levels=np.zeros([3, 2, 2]))
+        _makeARGB(np.zeros((2, 2, 3), dtype='float'), levels=np.zeros([3, 2, 2]))
