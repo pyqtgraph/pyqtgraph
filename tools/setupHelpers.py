@@ -1,25 +1,16 @@
 # -*- coding: utf-8 -*-
-import json
+from subprocess import CalledProcessError
 
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from distutils.core import Command
 from typing import Dict, Any
 
-import os, sys, re
-try:
-    from subprocess import check_output, check_call
-except ImportError:
-    import subprocess as sp
-    def check_output(*args, **kwds):
-        kwds['stdout'] = sp.PIPE
-        proc = sp.Popen(*args, **kwds)
-        output = proc.stdout.read()
-        proc.wait()
-        if proc.returncode != 0:
-            ex = Exception("Process had nonzero return value "
-                           + "%d " % proc.returncode)
-            ex.returncode = proc.returncode
-            ex.output = output
-            raise ex
-        return output
+from generateChangelog import generateDebianChangelog
 
 # Maximum allowed repository size difference (in kB) following merge.
 # This is used to prevent large files from being inappropriately added to
@@ -233,9 +224,9 @@ def unitTests():
     """
     try:
         if sys.version[0] == '3':
-            out = check_output('PYTHONPATH=. py.test-3', shell=True)
+            out = subprocess.check_output('PYTHONPATH=. py.test-3', shell=True)
         else:
-            out = check_output('PYTHONPATH=. py.test', shell=True)
+            out = subprocess.check_output('PYTHONPATH=. py.test', shell=True)
         ret = 0
     except Exception as e:
         out = e.output
@@ -299,12 +290,12 @@ def checkMergeSize(
 
     try:
         print("Check out target branch:\n" + setup)
-        check_call(setup, shell=True)
-        targetSize = int(check_output(checkSize, shell=True))
+        subprocess.check_call(setup, shell=True)
+        targetSize = int(subprocess.check_output(checkSize, shell=True))
         print("TARGET SIZE: %d kB" % targetSize)
         print("Merge source branch:\n" + merge)
-        check_call(merge, shell=True)
-        mergeSize = int(check_output(checkSize, shell=True))
+        subprocess.check_call(merge, shell=True)
+        mergeSize = int(subprocess.check_output(checkSize, shell=True))
         print("MERGE SIZE: %d kB" % mergeSize)
 
         diff = mergeSize - targetSize
@@ -359,7 +350,7 @@ def getInitVersion(pkgroot):
 
 def gitCommit(name):
     """Return the commit ID for the given name."""
-    commit = check_output(
+    commit = subprocess.check_output(
         ['git', 'show', name],
         universal_newlines=True).split('\n')[0]
     assert commit[:7] == 'commit '
@@ -418,7 +409,7 @@ def getGitVersion(tagPrefix):
 def getGitBranch():
     m = re.search(
         r'\* (.*)',
-        check_output(['git', 'branch'],
+        subprocess.check_output(['git', 'branch'],
         universal_newlines=True))
     if m is None:
         return ''
@@ -480,11 +471,6 @@ def getVersionStrings(pkg):
     return version, forcedVersion, gitVersion, initVersion
 
 
-from distutils.core import Command
-import shutil, subprocess
-from generateChangelog import generateDebianChangelog
-
-
 DEFAULT_ASV: Dict[str, Any] = {
     "version": 1,
     "project": "pyqtgraph",
@@ -530,7 +516,7 @@ class ASVConfigCommand(Command):
             ver = match.groups()[0]  # e.g. 11.0
             ver_str = ver[0] + ver[1] + ver[3]  # e.g. 110
             config["matrix"][f"cupy-cuda{ver_str}"] = ""
-        except FileNotFoundError:
+        except (FileNotFoundError, CalledProcessError):
             pass
 
         with open("asv.conf.json", "w") as conf_file:
@@ -557,8 +543,7 @@ class DebCommand(Command):
         debName = "python-" + pkgName
         debDir = self.debDir
 
-        assert os.getcwd() == self.cwd, 'Must be in package root: '
-        + '%s' % self.cwd
+        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
 
         if os.path.isdir(debDir):
             raise Exception('DEB build dir already exists: "%s"' % debDir)
