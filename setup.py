@@ -134,6 +134,7 @@ setup(
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
               'mergetest': helpers.MergeTestCommand,
+              'asv_config': helpers.ASVConfigCommand,
               'style': helpers.StyleCommand},
     packages=allPackages,
     python_requires=">=3.7",

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
+
+from typing import Dict, Any
+
 import os, sys, re
 try:
     from subprocess import check_output, check_call
@@ -479,6 +483,57 @@ def getVersionStrings(pkg):
 from distutils.core import Command
 import shutil, subprocess
 from generateChangelog import generateDebianChangelog
+
+
+DEFAULT_ASV: Dict[str, Any] = {
+    "version": 1,
+    "project": "pyqtgraph",
+    "project_url": "http://pyqtgraph.org/",
+    "repo": ".",
+    "branches": ["master"],
+    "environment_type": "virtualenv",
+    "show_commit_url": "http://github.com/pyqtgraph/pyqtgraph/commit/",
+    "matrix": {
+        "numpy": [],
+        "pyqt5": ["", None],
+        "pyside2": ["", None],
+    },
+    "exclude": [
+        {"pyqt5": "", "pyside2": ""},
+        {"pyqt5": None, "pyside2": None}
+    ],
+    "benchmark_dir": "benchmarks",
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html",
+    "build_cache_size": 5
+}
+
+
+class ASVConfigCommand(Command):
+    description = "Setup the ASV benchmarking config for this system"
+    user_options = []
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        config = DEFAULT_ASV
+        try:
+            cuda_check = subprocess.check_output(["nvcc", "--version"])
+            match = re.search(r"release (\d\d.\d)", str(cuda_check))
+            ver = match.groups()[0]  # e.g. 11.0
+            ver_str = ver[0] + ver[1] + ver[3]  # e.g. 110
+            config["matrix"][f"cupy-cuda{ver_str}"] = ""
+        except FileNotFoundError:
+            pass
+
+        with open("asv.conf.json", "w") as conf_file:
+            conf_file.write(json.dumps(config, indent=2))
+
 
 class DebCommand(Command):
     description = "build .deb package using `debuild -us -uc`"
