@@ -370,11 +370,16 @@ def getGitVersion(tagPrefix):
     if not os.path.isdir(os.path.join(path, '.git')):
         return None
 
-    v = check_output(['git',
-                      'describe',
-                      '--tags',
-                      '--dirty',
-                      '--match="%s*"'%tagPrefix]).strip().decode('utf-8')
+    try:
+        v = (
+            subprocess.check_output(
+                ["git", "describe", "--tags", "--dirty", '--match="%s*"' % tagPrefix],
+                stderr=subprocess.DEVNULL)
+            .strip()
+            .decode("utf-8")
+        )
+    except (FileNotFoundError, CalledProcessError):
+        return None
 
     # chop off prefix
     assert v.startswith(tagPrefix)
@@ -512,7 +517,7 @@ class ASVConfigCommand(Command):
         config = DEFAULT_ASV
         try:
             cuda_check = subprocess.check_output(["nvcc", "--version"])
-            match = re.search(r"release (\d\d.\d)", str(cuda_check))
+            match = re.search(r"release (\d\d.\d)", cuda_check.decode("utf-8"))
             ver = match.groups()[0]  # e.g. 11.0
             ver_str = ver[0] + ver[1] + ver[3]  # e.g. 110
             config["matrix"][f"cupy-cuda{ver_str}"] = ""
