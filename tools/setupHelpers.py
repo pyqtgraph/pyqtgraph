@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from subprocess import CalledProcessError
+from contextlib import suppress
 
 import json
 import os
@@ -378,7 +378,7 @@ def getGitVersion(tagPrefix):
             .strip()
             .decode("utf-8")
         )
-    except (FileNotFoundError, CalledProcessError):
+    except (FileNotFoundError, subprocess.CalledProcessError):
         return None
 
     # chop off prefix
@@ -515,14 +515,12 @@ class ASVConfigCommand(Command):
 
     def run(self) -> None:
         config = DEFAULT_ASV
-        try:
+        with suppress(FileNotFoundError, subprocess.CalledProcessError):
             cuda_check = subprocess.check_output(["nvcc", "--version"])
-            match = re.search(r"release (\d\d.\d)", cuda_check.decode("utf-8"))
+            match = re.search(r"release (\d{1,2}\.\d)", cuda_check.decode("utf-8"))
             ver = match.groups()[0]  # e.g. 11.0
-            ver_str = ver[0] + ver[1] + ver[3]  # e.g. 110
+            ver_str = ver.replace(".", "")  # e.g. 110
             config["matrix"][f"cupy-cuda{ver_str}"] = ""
-        except (FileNotFoundError, CalledProcessError):
-            pass
 
         with open("asv.conf.json", "w") as conf_file:
             conf_file.write(json.dumps(config, indent=2))
