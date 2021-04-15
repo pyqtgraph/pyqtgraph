@@ -83,6 +83,8 @@ def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
 
 
 for cupy in [True, False]:
+    if cupy and cp is None:
+        continue
     for dtype in ["float", "uint16", "uint8"]:
         for levels in [True, False]:
             if dtype == "float" and not levels:
