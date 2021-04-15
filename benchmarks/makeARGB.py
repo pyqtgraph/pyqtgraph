@@ -68,8 +68,6 @@ def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
             img_data = data["data"]
             output = self.output
             if use_cupy:
-                if not cp:
-                    raise ValueError("Cannot test cupy without it being installed")
                 img_data = cp.asarray(img_data)
                 output = self.cupy_output
             makeARGB(

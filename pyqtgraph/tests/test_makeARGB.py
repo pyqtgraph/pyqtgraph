@@ -1,10 +1,9 @@
-from typing import Dict, Any, Union, Type
-
 import numpy as np
 import pytest
+from typing import Dict, Any, Union, Type
 
 from pyqtgraph import getCupy, setConfigOption
-from pyqtgraph.functions import makeARGB
+from pyqtgraph.tests.test_functions import makeARGB
 
 IN_2D_INT8 = np.array([[173, 48, 122, 41], [210, 192, 0, 5], [104, 56, 102, 115], [78, 19, 255, 6]], dtype=np.uint8)
 IN_RGB_INT8 = np.array(
@@ -4283,6 +4282,7 @@ def test_cupy_makeARGB():
     cp = getCupy()
     if cp is None:
         pytest.skip("CuPy unavailable to test")
+
     def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
         data = cp.asarray(data)
         if lut is not None:
