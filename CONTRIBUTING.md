@@ -70,3 +70,14 @@ As PyQtGraph supports a wide array of Qt-bindings, and python versions, we make 
 ### Continous Integration
 
 For our Continuous Integration, we utilize Azure Pipelines.  Tested configurations are visible on [README](README.md).  More information on coverage and test failures can be found on the respective tabs of the [build results page](https://dev.azure.com/pyqtgraph/pyqtgraph/_build?definitionId=1)
+
+### Benchmarks
+
+( *Still under development* ) To ensure this library is performant, we use [Air Speed Velocity (asv)](https://asv.readthedocs.io/en/stable/) to run benchmarks. For developing on core functions and classes, be aware of any impact your changes have on their speed. To configure and run asv:
+```
+pip install asv
+python setup.py asv_config
+asv run
+```
+
+( TODO publish results )
