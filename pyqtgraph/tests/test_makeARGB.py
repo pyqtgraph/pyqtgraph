@@ -4319,12 +4319,13 @@ def test_cupy_makeARGB_against_generated_references():
 
 
 def test_numba_makeARGB_against_generated_references():
-    try:
-        import numba
-    except ImportError:
-        pytest.skip("Numba unavailable to test")
-
     oldcfg = getConfigOption("useNumba")
+    if not oldcfg:
+        try:
+            import numba
+        except ImportError:
+            pytest.skip("Numba unavailable to test")
+
     setConfigOption("useNumba", not oldcfg)
     test_makeARGB_against_generated_references()
     setConfigOption("useNumba", oldcfg)
