@@ -4321,6 +4321,7 @@ def test_cupy_makeARGB_against_generated_references():
     setConfigOption("useCupy", oldcfg)
 
 
+@pytest.mark.filterwarnings("ignore:invalid value encountered")
 def test_numba_makeARGB_against_generated_references():
     oldcfg = getConfigOption("useNumba")
     if not oldcfg:
