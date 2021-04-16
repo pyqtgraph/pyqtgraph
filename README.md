@@ -55,11 +55,14 @@ The following table represents the python environments we test in our CI system.
 | Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
 | :------------- | :----------------: | :----------------: | :----------------: |
 | PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.15   | :x:                | :white_check_mark: | :x:                |
-| PyQt5-5.15     | :x:                | :white_check_mark: | :x:                |
-| PySide6-6.0    | :x:                | :x:                | :white_check_mark: |
-| PyQt6-6.0      | :x:                | :x:                | :white_check_mark: |
+| PyQt5-5.12     | :white_check_mark: |                    | :x:                |
+| PySide2-5.15   |                    | :white_check_mark: |                    |
+| PyQt5-5.15     |                    | :white_check_mark: |                    |
+| PySide6-6.0    |                    |                    | :white_check_mark: |
+| PyQt6-6.0      |                    |                    | :white_check_mark: |
+
+* :x: - Not compatible
+* :white_check_mark: - Tested
 
 Support
 -------
