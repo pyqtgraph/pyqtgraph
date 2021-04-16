@@ -4291,9 +4291,11 @@ def test_makeARGB_against_generated_references():
 
 
 def test_cupy_makeARGB_against_generated_references():
+    oldcfg = getConfigOption("useCupy")
     setConfigOption("useCupy", True)
     cp = getCupy()
     if cp is None:
+        setConfigOption("useCupy", oldcfg)
         pytest.skip("CuPy unavailable to test")
 
     def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
@@ -4316,6 +4318,7 @@ def test_cupy_makeARGB_against_generated_references():
             ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
 
     _do_something_for_every_combo(assert_cupy_correct)
+    setConfigOption("useCupy", oldcfg)
 
 
 def test_numba_makeARGB_against_generated_references():
