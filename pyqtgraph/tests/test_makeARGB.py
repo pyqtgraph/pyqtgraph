@@ -4290,12 +4290,10 @@ def test_makeARGB_against_generated_references():
     _do_something_for_every_combo(assert_correct)
 
 
+@pytest.mark.skipif(getCupy() is None, reason="CuPy unavailable to test")
 def test_cupy_makeARGB_against_generated_references():
     setConfigOption("useCupy", True)
     cp = getCupy()
-    if cp is None:
-        pytest.skip("CuPy unavailable to test")
-
     def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
         data = cp.asarray(data)
         if lut is not None:
