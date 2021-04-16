@@ -800,7 +800,7 @@ class ROI(GraphicsObject):
         if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
             self.raiseContextMenu(ev)
             ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
+        elif ev.button() in self.acceptedMouseButtons():
             ev.accept()
             self.sigClicked.emit(self, ev)
         else:
