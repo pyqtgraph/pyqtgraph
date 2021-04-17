@@ -98,7 +98,7 @@ class ColorBarItem(PlotItem):
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 
-        self.bar = ImageItem()
+        self.bar = ImageItem(axisOrder='col-major')
         if self.horizontal:
             self.bar.setImage( np.linspace(0, 1, 256).reshape( (-1,1) ) )
             if label is not None: self.getAxis('bottom').setLabel(label)
