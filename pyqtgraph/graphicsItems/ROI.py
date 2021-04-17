@@ -800,7 +800,7 @@ class ROI(GraphicsObject):
         if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
             self.raiseContextMenu(ev)
             ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
+        elif ev.button() in self.acceptedMouseButtons():
             ev.accept()
             self.sigClicked.emit(self, ev)
         else:
@@ -2266,7 +2266,7 @@ class LineSegmentROI(ROI):
         Since this pulls 1D data from a 2D coordinate system, the return value 
         will have ndim = data.ndim-1
         
-        See :meth:`~pytqgraph.ROI.getArrayRegion` for a description of the
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
         arguments.
         """
         imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
@@ -2384,7 +2384,7 @@ class RulerROI(LineSegmentROI):
 
 
 class TriangleROI(ROI):
-    """
+    r"""
     Equilateral triangle ROI subclass with one scale handle and one rotation handle.
     Arguments
     pos            (length-2 sequence) The position of the ROI's origin.
