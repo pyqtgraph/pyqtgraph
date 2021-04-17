@@ -120,29 +120,9 @@ jobs:
     env:
       SCREENSHOT_DIR: ./screenshots
 
-  build-docs:
-    name: build docs
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: Install Dependencies
-        run: |
-          cd doc
-          python -m pip install -r requirements.txt
-      - name: Build Documentation
-        run: |
-          cd doc
-          make html SPHINXOPTS='-W --keep-going -v'
-
   build-wheel:
     name: build wheel
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python 3.9
