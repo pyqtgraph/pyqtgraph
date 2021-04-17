@@ -1,6 +1,5 @@
 import numpy as np
 from .Qt import QtGui, QtCore
-from .python2_3 import basestring
 from .functions import mkColor, eq
 from os import path, listdir
 from collections.abc import Callable, Sequence
@@ -350,7 +349,7 @@ class ColorMap(object):
     def getColors(self, mode=None):
         """Return list of all color stops converted to the specified mode.
         If mode is None, then no conversion is done."""
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
         
         color = self.color
@@ -390,7 +389,7 @@ class ColorMap(object):
                           See :func:`map() <pyqtgraph.ColorMap.map>`.
         ===============   =============================================================================
         """
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
 
         if alpha is None:
