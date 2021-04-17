@@ -4291,11 +4291,9 @@ def test_makeARGB_against_generated_references():
 
 
 def test_cupy_makeARGB_against_generated_references():
-    oldcfg = getConfigOption("useCupy")
     setConfigOption("useCupy", True)
     cp = getCupy()
     if cp is None:
-        setConfigOption("useCupy", oldcfg)
         pytest.skip("CuPy unavailable to test")
 
     def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
@@ -4318,21 +4316,25 @@ def test_cupy_makeARGB_against_generated_references():
             ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
 
     _do_something_for_every_combo(assert_cupy_correct)
-    setConfigOption("useCupy", oldcfg)
 
 
 @pytest.mark.filterwarnings("ignore:invalid value encountered")
 def test_numba_makeARGB_against_generated_references():
-    oldcfg = getConfigOption("useNumba")
-    if not oldcfg:
+    oldcfg_numba = getConfigOption("useNumba")
+    if not oldcfg_numba:
         try:
             import numba
         except ImportError:
             pytest.skip("Numba unavailable to test")
 
-    setConfigOption("useNumba", not oldcfg)
+    # useCupy needs to be set to False because it takes
+    # precedence over useNumba in rescaleData
+    oldcfg_cupy = getConfigOption("useCupy")
+    setConfigOption("useCupy", False)
+    setConfigOption("useNumba", not oldcfg_numba)
     test_makeARGB_against_generated_references()
-    setConfigOption("useNumba", oldcfg)
+    setConfigOption("useNumba", oldcfg_numba)
+    setConfigOption("useCupy", oldcfg_cupy)
 
 
 def test_makeARGB_with_human_readable_code():
