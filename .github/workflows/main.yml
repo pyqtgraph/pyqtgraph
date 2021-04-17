@@ -24,19 +24,19 @@ jobs:
           - python-version: "3.8"
             qt-lib: "pyqt"
             qt-version: "PyQt5~=5.15.0"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.8"
             qt-lib: "pyside"
             qt-version: "PySide2~=5.15.0"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.9"
             qt-lib: "pyqt"
             qt-version: "PyQt6"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
           - python-version: "3.9"
             qt-lib: "pyside"
             qt-version: "PySide6"
-            numpy-version: "~=1.19.0"
+            numpy-version: "~=1.20.0"
     steps:
     - name: Checkout
       uses: actions/checkout@v2
