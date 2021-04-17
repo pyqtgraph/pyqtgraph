@@ -222,19 +222,20 @@ class ColorMap(object):
 
     def __init__(self, pos, color, mapping=CLIP, mode=None): #, names=None):
         """
-        ===============     =================================================================
+        ===============     =======================================================================
         **Arguments:**
         pos                 Array of positions where each color is defined
         color               Array of colors.
                             Values are interpreted via 
                             :func:`mkColor() <pyqtgraph.mkColor>`.
-        mapping             Mapping mode (ColorMap.CLIP or ColorMap.REPEAT)
-                            controlling mapping of relative index to color. 
-                            CLIP maps colors to [0.0;1.0]
+        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
+                            controlling mapping of relative index to color. String representations
+                            'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
+                            CLIP maps colors to [0.0;1.0] and is the default.
                             REPEAT maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
                             MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
                             DIVERGING maps colors to [-1.0;+1.0]
-        ===============     =================================================================
+        ===============     =======================================================================
         """
         if mode is not None:
             warnings.warn(
