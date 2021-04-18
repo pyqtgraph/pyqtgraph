@@ -54,7 +54,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
     :func:`autoRange <pyqtgraph.ViewBox.autoRange>`,
-    :func:'setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`,
+    :func:`setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`,
     :func:`setXLink <pyqtgraph.ViewBox.setXLink>`,
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
