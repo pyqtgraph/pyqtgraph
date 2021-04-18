@@ -123,7 +123,7 @@ class ViewBox(GraphicsWidget):
                            in the "Link axis" dropdown inside other ViewBox
                            context menus. This allows the user to manually link
                            the axes of any other view to this one.
-        *defaultPadding*  (float) fraction of the data range that will be added
+        *defaultPadding*   (float) fraction of the data range that will be added
                            as padding by default
         =================  =============================================================
         """
