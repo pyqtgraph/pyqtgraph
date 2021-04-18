@@ -113,6 +113,7 @@ class AxisItem(GraphicsWidget):
             self.linkToView(linkView)
 
         self.grid = False
+        
         #self.setCacheMode(self.DeviceCoordinateCache)
 
     def setStyle(self, **kwds):

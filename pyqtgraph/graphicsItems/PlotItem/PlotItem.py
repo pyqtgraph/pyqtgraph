@@ -3,6 +3,7 @@ import importlib
 import os
 import warnings
 import weakref
+import collections.abc
 
 import numpy as np
 
@@ -53,6 +54,7 @@ class PlotItem(GraphicsWidget):
     :func:`setYRange <pyqtgraph.ViewBox.setYRange>`,
     :func:`setRange <pyqtgraph.ViewBox.setRange>`,
     :func:`autoRange <pyqtgraph.ViewBox.autoRange>`,
+    :func:'setDefaultPadding <pyqtgraph.ViewBox.setDefaultPadding>`,
     :func:`setXLink <pyqtgraph.ViewBox.setXLink>`,
     :func:`setYLink <pyqtgraph.ViewBox.setYLink>`,
     :func:`setAutoPan <pyqtgraph.ViewBox.setAutoPan>`,
@@ -268,7 +270,7 @@ class PlotItem(GraphicsWidget):
     #Important: don't use a settattr(m, getattr(self.vb, m)) as we'd be leaving the viebox alive
     #because we had a reference to an instance method (creating wrapper methods at runtime instead).
     for m in ['setXRange', 'setYRange', 'setXLink', 'setYLink', 'setAutoPan',         # NOTE: 
-              'setAutoVisible', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
+              'setAutoVisible', 'setDefaultPadding', 'setRange', 'autoRange', 'viewRect', 'viewRange',     # If you update this list, please 
               'setMouseEnabled', 'setLimits', 'enableAutoRange', 'disableAutoRange',  # update the class docstring 
               'setAspectLocked', 'invertY', 'invertX', 'register', 'unregister']:                # as well.
                 
@@ -331,7 +333,8 @@ class PlotItem(GraphicsWidget):
             axis.linkToView(self.vb)
             self.axes[k] = {'item': axis, 'pos': pos}
             self.layout.addItem(axis, *pos)
-            axis.setZValue(-1000)
+            # axis.setZValue(-1000)
+            axis.setZValue(0.1) # place on top of default image and plot elements
             axis.setFlag(axis.ItemNegativeZStacksBehindParent)
             
             axisVisible = k in visibleAxes
@@ -1169,6 +1172,58 @@ class PlotItem(GraphicsWidget):
     def hideAxis(self, axis):
         """Hide one of the PlotItem's axes. ('left', 'bottom', 'right', or 'top')"""
         self.showAxis(axis, False)
+        
+    def showAxes(self, selection, showValues=True, size=None):
+        """ 
+        Convenience method for quickly configuring axis settings.
+        
+        Parameters
+        ----------
+        selection: boolean or tuple of booleans (left, top, right, bottom)
+            Determines which AxisItems will be displayed.
+            A single boolean value will set all axes, 
+            so that ``showAxes(True)`` configures the axes to draw a frame.
+        showValues: optional, boolean or tuple of booleans (left, top, right, bottom)
+            Determines if values will be displayed for the ticks of each axis.
+            True value shows values for left and bottom axis (default).
+            False shows no values.
+            None leaves settings unchanged.
+            If not specified, left and bottom axes will be drawn with values.
+        size: optional, float or tuple of floats (width, height)
+            Reserves as fixed amount of space (width for vertical axis, height for horizontal axis)
+            for each axis where tick values are enabled. If only a single float value is given, it
+            will be applied for both width and height.
+        """
+        if selection is True:
+            selection = (True, True, True, True)
+        elif selection is False:
+            selection = (False, False, False, False)
+        if showValues is True:
+            showValues = (True, False, False, True)
+        elif showValues is False:
+            showValues = (False, False, False, False)
+        elif showValues is None:
+            showValues = (None, None, None, None)
+        if size is None:
+            size = (None, None)
+        elif not isinstance(size, collections.abc.Sized):
+            size = (size, size)
+        for idx, key in enumerate(('left','top','right','bottom')):
+            if selection[idx] is True : self.showAxis(key)
+            if selection[idx] is False: self.hideAxis(key)
+            ax = self.getAxis(key)
+            if showValues[idx] is True: 
+                ax.setStyle(showValues=True )
+                if key in ('left','right') and size[0] is not None:
+                    ax.setWidth( size[0] )
+                elif key in ('top', 'bottom') and size[1] is not None:
+                    ax.setHeight( size[1] )
+            elif showValues[idx] is False:
+                ax.setStyle(showValues=False )
+                if key in ('left','right') and size[0] is not None:
+                    ax.setWidth( None ) # revert to auto-width
+                elif key in ('top', 'bottom') and size[1] is not None:
+                    ax.setHeight( None ) # revert to auto-height
             
     def showScale(self, *args, **kargs):
         warnings.warn(
