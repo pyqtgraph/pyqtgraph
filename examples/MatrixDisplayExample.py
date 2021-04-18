@@ -35,7 +35,7 @@ for side in ('left','top','right','bottom'):
     plotItem.getAxis(side).setTicks( (ticks, []) ) # add list of major ticks and no minor ticks
 plotItem.getAxis('bottom').setHeight(10) # include some additional space at bottom of figure
 
-colorMap = pg.colormap.get("cet-d1")     # choose a perceptually uniform, diverging color map
+colorMap = pg.colormap.get("CET-D1")     # choose a perceptually uniform, diverging color map
 bar = pg.ColorBarItem( values=(-1,1), cmap=colorMap) # generate an adjustabled color bar, initially spanning -1 to 1
 bar.setImageItem(correlogram, insert_in=plotItem)    # link color bar and color map to correlogram, and show it in plotItem
 
