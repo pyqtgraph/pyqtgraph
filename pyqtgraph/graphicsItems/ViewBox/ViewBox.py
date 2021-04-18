@@ -87,7 +87,7 @@ class ViewBox(GraphicsWidget):
     sigYRangeChanged = QtCore.Signal(object, object)
     sigXRangeChanged = QtCore.Signal(object, object)
     sigRangeChangedManually = QtCore.Signal(object)
-    sigRangeChanged = QtCore.Signal(object, object)
+    sigRangeChanged = QtCore.Signal(object, object, object)
     sigStateChanged = QtCore.Signal(object)
     sigTransformChanged = QtCore.Signal(object)
     sigResized = QtCore.Signal(object)
@@ -1543,11 +1543,12 @@ class ViewBox(GraphicsWidget):
                     link.linkedViewChanged(self, ax)
 
             # emit range change signals
+            # print('announcing view range changes:',self.state['viewRange'] )
             if changed[0]:
                 self.sigXRangeChanged.emit(self, tuple(self.state['viewRange'][0]))
             if changed[1]:
                 self.sigYRangeChanged.emit(self, tuple(self.state['viewRange'][1]))
-            self.sigRangeChanged.emit(self, self.state['viewRange'])
+            self.sigRangeChanged.emit(self, self.state['viewRange'], changed)
 
     def updateMatrix(self, changed=None):
         if not self._matrixNeedsUpdate:

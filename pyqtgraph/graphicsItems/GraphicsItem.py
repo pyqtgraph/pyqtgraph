@@ -555,6 +555,8 @@ class GraphicsItem(object):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
         """
+        # when this is called, _cachedView is not invalidated.
+        # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
         pass
     
     def viewTransformChanged(self):
