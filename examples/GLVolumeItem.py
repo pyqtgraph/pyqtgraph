@@ -11,6 +11,7 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
+from pyqtgraph.functions import clip_array
 
 app = pg.mkQApp("GLVolumeItem Example")
 w = gl.GLViewWidget()
@@ -39,8 +40,8 @@ def psi(i, j, k, offset=(50,50,100)):
 
 
 data = np.fromfunction(psi, (100,100,200))
-positive = np.log(np.clip(data, 0, data.max())**2)
-negative = np.log(np.clip(-data, 0, -data.min())**2)
+positive = np.log(clip_array(data, 0, data.max())**2)
+negative = np.log(clip_array(-data, 0, -data.min())**2)
 
 d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
 d2[..., 0] = positive * (255./positive.max())
