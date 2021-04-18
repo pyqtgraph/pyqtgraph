@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import atan2, asin, sin, cos, sqrt, pi
+from math import atan2, asin, sin, cos, sqrt, pi, hypot
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
@@ -417,7 +417,7 @@ class CircleSurface(pg.GraphicsObject):
             ## find intersection of circle and line (quadratic formula)
             dx = dir[0]
             dy = dir[1]
-            dr = (dx**2 + dy**2) ** 0.5
+            dr = hypot(dx, dy)  # length
             D = p[0] * (p[1]+dy) - (p[0]+dx) * p[1]
             idr2 = 1.0 / dr**2
             disc = r**2 * dr**2 - D**2
@@ -428,8 +428,7 @@ class CircleSurface(pg.GraphicsObject):
                 sgn = -1
             else:
                 sgn = 1
-            
-        
+
             br = self.path.boundingRect()
             x1 = (D*dy + sgn*dx*disc2) * idr2
             y1 = (-D*dx + abs(dy)*disc2) * idr2

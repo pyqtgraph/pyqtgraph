@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from .Qt import QtCore
-from math import sin, acos, atan2, inf, pi
+from math import sin, acos, atan2, inf, pi, hypot
 
 def clip(x, mn, mx):
     if x > mx:
@@ -93,25 +93,13 @@ class Point(QtCore.QPointF):
         return self._math_('__pow__', a)
     
     def _math_(self, op, x):
-        #print "point math:", op
-        #try:
-            #fn  = getattr(QtCore.QPointF, op)
-            #pt = fn(self, x)
-            #print fn, pt, self, x
-            #return Point(pt)
-        #except AttributeError:
         x = Point(x)
         return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
     
     def length(self):
         """Returns the vector length of this Point."""
-        try:
-            return (self[0]**2 + self[1]**2) ** 0.5
-        except OverflowError:
-            try:
-                return self[1] / sin(atan2(self[1], self[0]))
-            except OverflowError:
-                return inf
+        return hypot(self[0], self[1])  # length
+
     
     def norm(self):
         """Returns a vector in the same direction with unit length."""

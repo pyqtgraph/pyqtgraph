@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, pi, sqrt
+from math import atan2, cos, sin, pi, sqrt, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -1247,8 +1247,8 @@ class ROI(GraphicsObject):
         vx = img.mapToData(self.mapToItem(img, QtCore.QPointF(1, 0))) - origin
         vy = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 1))) - origin
         
-        lvx = sqrt(vx.x()**2 + vx.y()**2)
-        lvy = sqrt(vy.x()**2 + vy.y()**2)
+        lvx = hypot(vx.x(), vx.y())  # length
+        lvy = hypot(vy.x(), vy.y())  # length
         ##img.width is number of pixels, not width of item.
         ##need pxWidth and pxHeight instead of pxLen ?
         sx = 1.0 / lvx
@@ -1887,7 +1887,7 @@ class EllipseROI(ROI):
         h = arr.shape[axes[1]]
 
         ## generate an ellipsoidal mask
-        mask = np.fromfunction(lambda x,y: (((x+0.5)/(w/2.)-1)**2+ ((y+0.5)/(h/2.)-1)**2)**0.5 < 1, (w, h))
+        mask = np.fromfunction(lambda x,y: np.hypot(((x+0.5)/(w/2.)-1), ((y+0.5)/(h/2.)-1)) < 1, (w, h))
         
         # reshape to match array axes
         if axes[0] > axes[1]:

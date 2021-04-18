@@ -3,7 +3,8 @@ from OpenGL.GL import *
 from OpenGL.arrays import vbo
 from .. GLGraphicsItem import GLGraphicsItem
 from .. import shaders
-from ... import QtGui
+from ...functions import clip_array
+from ...Qt import QtGui
 import numpy as np
 
 __all__ = ['GLScatterPlotItem']
@@ -62,12 +63,11 @@ class GLScatterPlotItem(GLGraphicsItem):
         ## Generate texture for rendering points
         w = 64
         def fn(x,y):
-            r = ((x-(w-1)/2.)**2 + (y-(w-1)/2.)**2) ** 0.5
-            return 255 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
+            r = np.hypot((x-(w-1)/2.), (y-(w-1)/2.))
+            return 255 * (w/2. - clip_array(r, w/2.-1.0, w/2.))
         pData = np.empty((w, w, 4))
         pData[:] = 255
         pData[:,:,3] = np.fromfunction(fn, pData.shape[:2])
-        #print pData.shape, pData.min(), pData.max()
         pData = pData.astype(np.ubyte)
         
         if getattr(self, "pointTexture", None) is None:
