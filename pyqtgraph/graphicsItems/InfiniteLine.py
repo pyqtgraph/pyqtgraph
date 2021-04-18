@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from math import atan2, pi
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .GraphicsObject import GraphicsObject
@@ -359,7 +360,7 @@ class InfiniteLine(GraphicsObject):
         up = tr.map(Point(left, 1))
         dif = end - start
         length = Point(dif).length()
-        angle = np.arctan2(dif.y(), dif.x()) * 180 / np.pi
+        angle = atan2(dif.y(), dif.x()) * 180 / pi
         
         p.translate(start)
         p.rotate(angle)

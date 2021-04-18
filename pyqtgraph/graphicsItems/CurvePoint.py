@@ -1,5 +1,7 @@
+from math import atan2, pi
 from ..Qt import QtGui, QtCore
 from . import ArrowItem
+from ..functions import clip_scalar
 import numpy as np
 from ..Point import Point
 import weakref
@@ -65,22 +67,22 @@ class CurvePoint(GraphicsObject):
             
         if index != int(index):  ## interpolate floating-point values
             i1 = int(index)
-            i2 = np.clip(i1+1, 0, len(x)-1)
+            i2 = clip_scalar(i1+1, 0, len(x)-1)
             s2 = index-i1
             s1 = 1.0-s2
             newPos = (x[i1]*s1+x[i2]*s2, y[i1]*s1+y[i2]*s2)
         else:
             index = int(index)
-            i1 = np.clip(index-1, 0, len(x)-1)
-            i2 = np.clip(index+1, 0, len(x)-1)
+            i1 = clip_scalar(index-1, 0, len(x)-1)
+            i2 = clip_scalar(index+1, 0, len(x)-1)
             newPos = (x[index], y[index])
             
         p1 = self.parentItem().mapToScene(QtCore.QPointF(x[i1], y[i1]))
         p2 = self.parentItem().mapToScene(QtCore.QPointF(x[i2], y[i2]))
-        ang = np.arctan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
+        ang = atan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
         self.resetTransform()
         if self._rotate:
-            self.setRotation(180 + np.rad2deg(ang)) ## takes degrees
+            self.setRotation(180 + ang * (180. / pi))
         QtGui.QGraphicsItem.setPos(self, *newPos)
         return True
         

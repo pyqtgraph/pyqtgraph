@@ -7,6 +7,7 @@ Demonstrates GLVolumeItem for displaying volumetric data.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
+import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
@@ -23,7 +24,6 @@ g = gl.GLGridItem()
 g.scale(10, 10, 1)
 w.addItem(g)
 
-import numpy as np
 ## Hydrogen electron probability density
 def psi(i, j, k, offset=(50,50,100)):
     x = i-offset[0]

@@ -6,7 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from .Qt import QtCore
-import numpy as np
+from math import sin, acos, atan2, inf, pi
 
 def clip(x, mn, mx):
     if x > mx:
@@ -109,9 +109,9 @@ class Point(QtCore.QPointF):
             return (self[0]**2 + self[1]**2) ** 0.5
         except OverflowError:
             try:
-                return self[1] / np.sin(np.arctan2(self[1], self[0]))
+                return self[1] / sin(atan2(self[1], self[0]))
             except OverflowError:
-                return np.inf
+                return inf
     
     def norm(self):
         """Returns a vector in the same direction with unit length."""
@@ -124,11 +124,11 @@ class Point(QtCore.QPointF):
         if n1 == 0. or n2 == 0.:
             return None
         ## Probably this should be done with arctan2 instead..
-        ang = np.arccos(clip(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
+        ang = acos(clip(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
         c = self.cross(a)
         if c > 0:
             ang *= -1.
-        return ang * 180. / np.pi
+        return ang * 180. / pi
     
     def dot(self, a):
         """Returns the dot product of a and this Point."""

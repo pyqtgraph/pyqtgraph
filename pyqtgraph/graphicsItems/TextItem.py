@@ -1,4 +1,4 @@
-import numpy as np
+from math import pi, atan2
 from ..Qt import QtCore, QtGui
 from ..Point import Point
 from .. import functions as fn
@@ -208,7 +208,7 @@ class TextItem(GraphicsObject):
         angle = -self.angle
         if self.rotateAxis is not None:
             d = pt.map(self.rotateAxis) - pt.map(Point(0, 0))
-            a = np.arctan2(d.y(), d.x()) * 180 / np.pi
+            a = atan2(d.y(), d.x()) * 180 / pi
             angle += a
         t.rotate(angle)  
         self.setTransform(t)

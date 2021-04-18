@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
-from math import cos, sin
+from math import atan2, cos, sin, pi, sqrt
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -1247,8 +1247,8 @@ class ROI(GraphicsObject):
         vx = img.mapToData(self.mapToItem(img, QtCore.QPointF(1, 0))) - origin
         vy = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 1))) - origin
         
-        lvx = np.sqrt(vx.x()**2 + vx.y()**2)
-        lvy = np.sqrt(vy.x()**2 + vy.y()**2)
+        lvx = sqrt(vx.x()**2 + vx.y()**2)
+        lvy = sqrt(vy.x()**2 + vy.y()**2)
         ##img.width is number of pixels, not width of item.
         ##need pxWidth and pxHeight instead of pxLen ?
         sx = 1.0 / lvx
@@ -1332,8 +1332,8 @@ class Handle(UIGraphicsItem):
     properties of the ROI they are attached to.
     """
     types = {   ## defines number of sides, start angle for each handle type
-        't': (4, np.pi/4),
-        'f': (4, np.pi/4), 
+        't': (4, pi/4),
+        'f': (4, pi/4), 
         's': (4, 0),
         'r': (12, 0),
         'sr': (12, 0),
@@ -1481,7 +1481,7 @@ class Handle(UIGraphicsItem):
         size = self.radius
         self.path = QtGui.QPainterPath()
         ang = self.startAng
-        dt = 2*np.pi / self.sides
+        dt = 2 * pi / self.sides
         for i in range(0, self.sides+1):
             x = size * cos(ang)
             y = size * sin(ang)
@@ -1518,13 +1518,13 @@ class Handle(UIGraphicsItem):
             return None
         
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
-        va = np.arctan2(v.y(), v.x())
+        va = atan2(v.y(), v.x())
         
         dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / 3.1415926)
+        tr.rotate(va * 180. / pi)
         
         return dti.map(tr.map(self.path))
         
@@ -1663,7 +1663,7 @@ class LineROI(ROI):
         d = pos2-pos1
         l = d.length()
         ang = Point(1, 0).angle(d)
-        ra = ang * np.pi / 180.
+        ra = ang * pi / 180.
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
@@ -1914,7 +1914,7 @@ class EllipseROI(ROI):
             center = br.center()
             r1 = br.width() / 2.
             r2 = br.height() / 2.
-            theta = np.linspace(0, 2*np.pi, 24)
+            theta = np.linspace(0, 2 * pi, 24)
             x = center.x() + r1 * np.cos(theta)
             y = center.y() + r2 * np.sin(theta)
             path.moveTo(x[0], y[0])
@@ -2396,7 +2396,7 @@ class TriangleROI(ROI):
     def __init__(self, pos, size, **args):
         ROI.__init__(self, pos, [size, size], **args)
         self.aspectLocked = True
-        angles = np.linspace(0, np.pi * 4 / 3, 3)
+        angles = np.linspace(0, pi * 4 / 3, 3)
         verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
         for pt in verticies:
