@@ -4,6 +4,7 @@ from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
 from .. import debug as debug
+from math import ceil, floor, log, log10
 import sys
 import weakref
 from .. import functions as fn
@@ -680,13 +681,13 @@ class AxisItem(GraphicsWidget):
             return []
 
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        optimalTickCount = max(2., np.log(size))
+        optimalTickCount = max(2., log(size))
 
         ## optimal minor tick spacing
         optimalSpacing = dif / optimalTickCount
 
         ## the largest power-of-10 spacing which is smaller than optimal
-        p10unit = 10 ** np.floor(np.log10(optimalSpacing))
+        p10unit = 10 ** floor(log10(optimalSpacing))
 
         ## Determine major/minor tick spacings which flank the optimal spacing.
         intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
@@ -758,7 +759,7 @@ class AxisItem(GraphicsWidget):
             spacing, offset = tickLevels[i]
 
             ## determine starting tick
-            start = (np.ceil((minVal-offset) / spacing) * spacing) + offset
+            start = (ceil((minVal-offset) / spacing) * spacing) + offset
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
@@ -795,8 +796,8 @@ class AxisItem(GraphicsWidget):
                 ticks.append((spacing, t))
 
         if len(ticks) < 3:
-            v1 = int(np.floor(minVal))
-            v2 = int(np.ceil(maxVal))
+            v1 = int(floor(minVal))
+            v2 = int(ceil(maxVal))
             #major = list(range(v1+1, v2))
 
             minor = []
@@ -822,7 +823,7 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickStrings(values, scale, spacing)
 
-        places = max(0, np.ceil(-np.log10(spacing*scale)))
+        places = max(0, ceil(-log10(spacing*scale)))
         strings = []
         for v in values:
             vs = v * scale
@@ -969,7 +970,7 @@ class AxisItem(GraphicsWidget):
             if lineAlpha is None:
                 lineAlpha = 255 / (i+1)
                 if self.grid is not False:
-                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                    lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             elif isinstance(lineAlpha, float):
                 lineAlpha *= 255
                 lineAlpha = max(0, int(round(lineAlpha)))

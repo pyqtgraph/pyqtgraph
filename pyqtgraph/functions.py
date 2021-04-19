@@ -71,7 +71,7 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
         m = 0
         x = 0
     else:
-        m = int(np.clip(np.floor(np.log(abs(x))/np.log(1000)), -9.0, 9.0))
+        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
     
     if m == 0:
         pref = ''

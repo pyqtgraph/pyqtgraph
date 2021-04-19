@@ -13,6 +13,7 @@ Widget used for displaying 2D or 3D data. Features:
   - Image normalization through a variety of methods
 """
 import os, sys
+from math import log10
 import numpy as np
 
 from ..Qt import QtCore, QtGui, QT_LIB
@@ -807,7 +808,7 @@ class ImageView(QtGui.QWidget):
         img = self.getProcessedImage()
         if self.hasTimeAxis():
             base, ext = os.path.splitext(fileName)
-            fmt = "%%s%%0%dd%%s" % int(np.log10(img.shape[0])+1)
+            fmt = "%%s%%0%dd%%s" % int(log10(img.shape[0])+1)
             for i in range(img.shape[0]):
                 self.imageItem.setImage(img[i], autoLevels=False)
                 self.imageItem.save(fmt % (base, i, ext))

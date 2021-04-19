@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 import copy
+from math import log2
 
 
 class SystemSolver(object):
@@ -409,7 +410,7 @@ if __name__ == '__main__':
             fl = self.flash
             
             bal = (4.0 / ap) * (sh / (1./60.)) * (iso / 100.) * (2 ** light)
-            return np.log2(bal)
+            return log2(bal)
     
     camera = Camera()
     
