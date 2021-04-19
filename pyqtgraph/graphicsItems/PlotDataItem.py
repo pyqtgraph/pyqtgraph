@@ -708,7 +708,7 @@ class PlotDataItem(GraphicsObject):
                     # x0 = np.clip(x0, 0, len(x))
 
                     x1 = np.searchsorted(x, v_rng.right()) + ds
-                    x1 = fn.clip_scalar(x1, 0, len(x))
+                    x1 = fn.clip_scalar(x1, x0, len(x))
                     # x1 = np.clip(x1, 0, len(x))
                     x = x[x0:x1]
                     y = y[x0:x1]
