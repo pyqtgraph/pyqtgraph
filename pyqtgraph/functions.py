@@ -432,16 +432,16 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     If *tailLen* is None, no tail will be drawn.
     """
     if headWidth is None:
-        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+        headWidth = headLen * math.tan(tipAngle * 0.5 * math.pi / 180.)
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
     if tailLen is None:
-        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - headWidth * math.tan(baseAngle * math.pi / 180.)
         path.lineTo(innerY, 0)
     else:
         tailWidth *= 0.5
-        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - (headWidth-tailWidth) * math.tan(baseAngle* math.pi / 180.)
         path.lineTo(innerY, -tailWidth)
         path.lineTo(headLen + tailLen, -tailWidth)
         path.lineTo(headLen + tailLen, tailWidth)

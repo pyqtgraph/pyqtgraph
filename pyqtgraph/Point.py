@@ -6,8 +6,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from .Qt import QtCore
-from . import functions as fn
-from math import sin, acos, atan2, inf, pi, hypot
+from math import atan2, hypot, degrees
 
 
 class Point(QtCore.QPointF):
@@ -95,23 +94,14 @@ class Point(QtCore.QPointF):
         """Returns the vector length of this Point."""
         return hypot(self[0], self[1])  # length
 
-    
     def norm(self):
         """Returns a vector in the same direction with unit length."""
         return self / self.length()
     
     def angle(self, a):
         """Returns the angle in degrees between this vector and the vector a."""
-        n1 = self.length()
-        n2 = a.length()
-        if n1 == 0. or n2 == 0.:
-            return None
-        ## Probably this should be done with arctan2 instead..
-        ang = acos(fn.clip_scalar(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
-        c = self.cross(a)
-        if c > 0:
-            ang *= -1.
-        return ang * 180. / pi
+        rads = atan2(self.y(), self.x()) - atan2(a.y(), a.x())
+        return degrees(rads)
     
     def dot(self, a):
         """Returns the dot product of a and this Point."""
@@ -129,8 +119,7 @@ class Point(QtCore.QPointF):
     
     def __repr__(self):
         return "Point(%f, %f)" % (self[0], self[1])
-    
-    
+
     def min(self):
         return min(self[0], self[1])
     
