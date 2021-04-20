@@ -46,7 +46,8 @@ class HistogramLUTItem(GraphicsWidget):
                      black/white level lines is drawn, and the levels apply to
                      all channels in the image. If 'rgba', then one set of
                      levels is drawn for each channel.
-    gradientPosition 'left' OR 'right' / set to left to have a matplotlib-like layout
+    gradientPosition 'right' (default) OR 'left'. Which side of the histogram to
+                     put the LUT gradient.
     ================ ===========================================================
     """
     
@@ -54,12 +55,13 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
     
-    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono', gradientPosition='left'):
+    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono', gradientPosition='right'):
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
         self.levelMode = levelMode
         self.rgbHistogram = rgbHistogram
+        self.gradientPosition = gradientPosition
         
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
@@ -70,8 +72,7 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.setMinimumWidth(45)
         self.vb.setMouseEnabled(x=False, y=True)
         self.gradient = GradientEditorItem()
-        o = 'left' if gradientPosition == 'right' else 'right'
-        self.gradient.setOrientation(o)
+        self.gradient.setOrientation(gradientPosition)
         self.gradient.loadPreset('grey')
         self.regions = [
             LinearRegionItem([0, 1], 'horizontal', swapMode='block'),
@@ -96,10 +97,9 @@ class HistogramLUTItem(GraphicsWidget):
         self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
         self.layout.addItem(self.axis, 0, 0)
         self.layout.addItem(self.vb, 0, 1)
-        pos = (0,2) if gradientPosition == 'right' else (2,0)
+        pos = (0, 2) if gradientPosition == 'right' else (2, 0)
         self.layout.addItem(self.axis, 0, pos[0])
         self.layout.addItem(self.gradient, 0, pos[1])
-        self.linkedHistograms = {}
         self.range = None
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
@@ -150,23 +150,15 @@ class HistogramLUTItem(GraphicsWidget):
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         for pen in [fn.mkPen((0, 0, 0, 100), width=3), pen]:
             p.setPen(pen)
-            p.drawLine(p1 + Point(0, 5), gradRect.bottomLeft())
-            p.drawLine(p2 - Point(0, 5), gradRect.topLeft())
+            if self.gradientPosition == 'right':
+                p.drawLine(p1 + Point(0, 5), gradRect.bottomLeft())
+                p.drawLine(p2 - Point(0, 5), gradRect.topLeft())
+            else:
+                p.drawLine(p1 + Point(0, 5), gradRect.bottomRight())
+                p.drawLine(p2 - Point(0, 5), gradRect.topRight())
             p.drawLine(gradRect.topLeft(), gradRect.topRight())
             p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
 
-    def linkHistogram(self, slaveHistogram, connect=True):
-        if connect:
-            fn = lambda h, slave=slaveHistogram:slave.setLevels(*h.getLevels())
-            self.linkedHistograms[id(slaveHistogram)] = fn
-            self.sigLevelsChanged.connect(fn)
-            self.sigLevelsChanged.emit(self)
-            #self.vb.setYLink(slaveHistogram.vb)
-        else:
-            fn = self.linkedHistograms.get(id(slaveHistogram), None)
-            if fn:
-                self.sigLevelsChanged.disconnect(fn)
-   
     def setHistogramRange(self, mn, mx, padding=0.1):
         """Set the Y range on the histogram plot. This disables auto-scaling."""
         self.vb.enableAutoRange(self.vb.YAxis, False)
