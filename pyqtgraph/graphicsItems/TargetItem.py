@@ -1,4 +1,4 @@
-from math import atan2, pi
+from math import atan2, pi, degrees
 
 from ..Qt import QtGui, QtCore
 from ..Point import Point
@@ -243,7 +243,7 @@ class TargetItem(UIGraphicsItem):
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
         va = atan2(v.y(), v.x())
-        tr.rotate(va * 180.0 / pi)
+        tr.rotate(degrees(va))
         tr.scale(self.scale, self.scale)
         return dti.map(tr.map(self._path))
 

@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, pi, sqrt, hypot
+from math import atan2, cos, sin, pi, sqrt, hypot, radians, degrees
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -1524,7 +1524,7 @@ class Handle(UIGraphicsItem):
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / pi)
+        tr.rotate(degrees(va))
         
         return dti.map(tr.map(self.path))
         
@@ -1663,7 +1663,7 @@ class LineROI(ROI):
         d = pos2-pos1
         l = d.length()
         ang = Point(1, 0).angle(d)
-        ra = ang * pi / 180.
+        ra = radians(ang if ang is not None else 0.)
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
@@ -1671,9 +1671,6 @@ class LineROI(ROI):
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
-        
-
-        
 
 
 class MultiRectROI(QtGui.QGraphicsObject):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import atan2, pi
+from math import atan2, degrees
 from .Qt import QtCore, QtGui
 from .Point import Point
 import numpy as np
@@ -77,7 +77,7 @@ class SRTTransform(QtGui.QTransform):
         self._state = {
             'pos': Point(p1),
             'scale': Point(dp2.length(), dp3.length() * sy),
-            'angle': (atan2(dp2[1], dp2[0]) * 180. / pi) + da
+            'angle': degrees(atan2(dp2[1], dp2[0])) + da
         }
         self.update()
         

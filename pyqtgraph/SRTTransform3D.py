@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import atan2, pi
+from math import atan2, degrees
 from .Qt import QtCore, QtGui
 from .Vector import Vector
 from .Transform3D import Transform3D
@@ -165,7 +165,7 @@ class SRTTransform3D(Transform3D):
         sin = (r-r.T)[rInd] / (2. * sign * axis[axisInd])
         
         ## finally, we get the complete angle from arctan(sin/cos)
-        self._state['angle'] = atan2(sin, cos) * 180 / pi
+        self._state['angle'] = degrees(atan2(sin, cos))
         if self._state['angle'] == 0:
             self._state['axis'] = (0,0,1)
         

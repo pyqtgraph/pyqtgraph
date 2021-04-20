@@ -1,4 +1,4 @@
-from math import atan2, pi
+from math import atan2, degrees
 from ..Qt import QtGui, QtCore
 from . import ArrowItem
 from ..functions import clip_scalar
@@ -79,10 +79,10 @@ class CurvePoint(GraphicsObject):
             
         p1 = self.parentItem().mapToScene(QtCore.QPointF(x[i1], y[i1]))
         p2 = self.parentItem().mapToScene(QtCore.QPointF(x[i2], y[i2]))
-        ang = atan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
+        rads = atan2(p2.y()-p1.y(), p2.x()-p1.x()) ## returns radians
         self.resetTransform()
         if self._rotate:
-            self.setRotation(180 + ang * (180. / pi))
+            self.setRotation(180 + degrees(rads))
         QtGui.QGraphicsItem.setPos(self, *newPos)
         return True
         
