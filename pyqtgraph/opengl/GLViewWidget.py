@@ -344,7 +344,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             self.opts['rotation'] = q
         else: # default euler rotation method
             self.opts['azimuth'] += azim
-            self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+            self.opts['elevation'] = fn.clip_scalar(self.opts['elevation'] + elev, -90., 90.)
         self.update()
         
     def pan(self, dx, dy, dz, relative='global'):

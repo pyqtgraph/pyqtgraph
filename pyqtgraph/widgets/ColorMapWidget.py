@@ -161,7 +161,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
             elif op == 'Set':
                 colors[mask] = colors2[mask]            
                 
-        colors = np.clip(colors, 0, 1)
+        colors = fn.clip_array(colors, 0., 1.)
         if mode == 'byte':
             colors = (colors * 255).astype(np.ubyte)
         
@@ -210,7 +210,7 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
     def map(self, data):
         data = data[self.fieldName]
         
-        scaled = np.clip((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
+        scaled = fn.clip_array((data-self['Min']) / (self['Max']-self['Min']), 0, 1)
         cmap = self.value()
         colors = cmap.map(scaled, mode='float')
         

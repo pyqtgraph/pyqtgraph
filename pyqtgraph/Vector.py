@@ -4,8 +4,9 @@ Vector.py -  Extension of QVector3D which adds a few missing methods.
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
-
+from math import acos
 from .Qt import QtGui, QtCore, QT_LIB
+from . import functions as fn
 import numpy as np
 
 class Vector(QtGui.QVector3D):
@@ -88,7 +89,7 @@ class Vector(QtGui.QVector3D):
         if n1 == 0. or n2 == 0.:
             return None
         ## Probably this should be done with arctan2 instead..
-        ang = np.arccos(np.clip(QtGui.QVector3D.dotProduct(self, a) / (n1 * n2), -1.0, 1.0)) ### in radians
+        ang = acos(fn.clip_scalar(QtGui.QVector3D.dotProduct(self, a) / (n1 * n2), -1.0, 1.0)) ### in radians
 #        c = self.crossProduct(a)
 #        if c > 0:
 #            ang *= -1.

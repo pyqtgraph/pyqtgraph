@@ -6,14 +6,9 @@ Distributed under MIT/X11 license. See license.txt for more information.
 """
 
 from .Qt import QtCore
+from . import functions as fn
 from math import sin, acos, atan2, inf, pi, hypot
 
-def clip(x, mn, mx):
-    if x > mx:
-        return mx
-    if x < mn:
-        return mn
-    return x
 
 class Point(QtCore.QPointF):
     """Extension of QPointF which adds a few missing methods."""
@@ -112,7 +107,7 @@ class Point(QtCore.QPointF):
         if n1 == 0. or n2 == 0.:
             return None
         ## Probably this should be done with arctan2 instead..
-        ang = acos(clip(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
+        ang = acos(fn.clip_scalar(self.dot(a) / (n1 * n2), -1.0, 1.0)) ### in radians
         c = self.cross(a)
         if c > 0:
             ang *= -1.

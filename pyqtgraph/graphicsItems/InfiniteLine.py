@@ -593,7 +593,7 @@ class InfLineLabel(TextItem):
                 return
 
             rel = self._posToRel(ev.pos())
-            self.orthoPos = np.clip(self._startPosition + rel - self._cursorOffset, 0, 1)
+            self.orthoPos = fn.clip_scalar(self._startPosition + rel - self._cursorOffset, 0., 1.)
             self.updatePosition()
             if ev.isFinish():
                 self._moving = False

@@ -17,10 +17,11 @@ from math import log10
 import numpy as np
 
 from ..Qt import QtCore, QtGui, QT_LIB
+from .. import functions as fn
 import importlib
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
-    
+
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *
 from ..graphicsItems.LinearRegionItem import *
@@ -513,7 +514,7 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        index = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
+        index = fn.clip_scalar(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
         self.ignorePlaying = True
         # Implicitly call timeLineChanged
         self.timeLine.setValue(self.tVals[index])

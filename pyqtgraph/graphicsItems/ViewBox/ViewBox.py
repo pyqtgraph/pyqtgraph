@@ -666,7 +666,7 @@ class ViewBox(GraphicsWidget):
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
         if l > 0:
-            padding = np.clip(1./(l**0.5), 0.02, 0.1)
+            padding = fn.clip_scalar(1./(l**0.5), 0.02, 0.1)
         else:
             padding = 0.02
         return padding

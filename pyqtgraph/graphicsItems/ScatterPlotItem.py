@@ -1073,7 +1073,7 @@ class ScatterPlotItem(GraphicsObject):
             # Map points using painter's world transform so they are drawn with pixel-valued sizes
             pts = np.vstack([self.data['x'], self.data['y']])
             pts = fn.transformCoordinates(p.transform(), pts)
-            pts = np.clip(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
+            pts = fn.clip_array(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
             p.resetTransform()
 
             if self.opts['useCache'] and self._exportOpts is False:

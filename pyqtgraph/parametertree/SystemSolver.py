@@ -2,6 +2,7 @@ from collections import OrderedDict
 import numpy as np
 import copy
 from math import log2
+from .. import functions as fn
 
 
 class SystemSolver(object):
@@ -391,7 +392,7 @@ if __name__ == '__main__':
                 sh = self.shutter   # this raises RuntimeError if shutter has not
                                    # been specified
                 ap = 4.0 * (sh / (1./60.)) * (iso / 100.) * (2 ** exp) * (2 ** light)
-                ap = np.clip(ap, 2.0, 16.0)
+                ap = fn.clip_scalar(ap, 2.0, 16.0)
             except RuntimeError:
                 # program mode; we can select a suitable shutter
                 # value at the same time.

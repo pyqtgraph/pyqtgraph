@@ -63,7 +63,7 @@ class CurvePoint(GraphicsObject):
             pos = self.property('position')
             if 'QVariant' in repr(pos):   ## need to support 2 APIs  :(
                 pos = pos.toDouble()[0]
-            index = (len(x)-1) * np.clip(pos, 0.0, 1.0)
+            index = (len(x)-1) * clip_scalar(pos, 0.0, 1.0)
             
         if index != int(index):  ## interpolate floating-point values
             i1 = int(index)
