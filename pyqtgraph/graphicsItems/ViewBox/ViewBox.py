@@ -550,7 +550,6 @@ class ViewBox(GraphicsWidget):
                     dy = 1
                 mn -= dy*0.5
                 mx += dy*0.5
-                xpad = 0.0
 
             # Make sure no nan/inf get through
             if not math.isfinite(mn) or not math.isfinite(mx):

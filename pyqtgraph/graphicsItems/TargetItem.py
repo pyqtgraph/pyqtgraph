@@ -1,5 +1,4 @@
-from math import atan2, pi, degrees
-
+from math import atan2
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .. import functions as fn

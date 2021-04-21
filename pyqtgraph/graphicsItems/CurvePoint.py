@@ -2,7 +2,6 @@ from math import atan2, degrees
 from ..Qt import QtGui, QtCore
 from . import ArrowItem
 from ..functions import clip_scalar
-import numpy as np
 from ..Point import Point
 import weakref
 from .GraphicsObject import GraphicsObject

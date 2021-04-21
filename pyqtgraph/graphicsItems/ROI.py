@@ -15,9 +15,9 @@ of how to build an ROI at the bottom of the file.
 from ..Qt import QtCore, QtGui
 import numpy as np
 #from numpy.linalg import norm
-from ..Point import *
+from ..Point import Point
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, hypot, radians, degrees
+from math import atan2, cos, sin, hypot, radians
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -141,12 +141,13 @@ class ROI(GraphicsObject):
                  maxBounds=None, snapSize=1.0, scaleSnap=False,
                  translateSnap=False, rotateSnap=False, parent=None, pen=None,
                  hoverPen=None, handlePen=None, handleHoverPen=None,
-                 movable=True, rotatable=True, resizable=True, removable=False):
+                 movable=True, rotatable=True, resizable=True, removable=False,
+                 aspectLocked=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
         size = Point(size)
-        self.aspectLocked = False
+        self.aspectLocked = aspectLocked
         self.translatable = movable
         self.rotatable = rotatable
         self.resizable = resizable
@@ -678,7 +679,7 @@ class ROI(GraphicsObject):
         
         The format returned is a list of (name, pos) tuples.
         """
-        if index == None:
+        if index is None:
             positions = []
             for h in self.handles:
                 positions.append((h['name'], h['pos']))
@@ -691,7 +692,7 @@ class ROI(GraphicsObject):
         
         The format returned is a list of (name, pos) tuples.
         """
-        if index == None:
+        if index is None:
             positions = []
             for h in self.handles:
                 positions.append((h['name'], h['item'].scenePos()))
@@ -1298,7 +1299,7 @@ class ROI(GraphicsObject):
         """Return global transformation (rotation angle+translation) required to move 
         from relative state to current state. If relative state isn't specified,
         then we use the state of the ROI when mouse is pressed."""
-        if relativeTo == None:
+        if relativeTo is None:
             relativeTo = self.preMoveState
         st = self.getState()
         
@@ -1941,8 +1942,7 @@ class CircleROI(EllipseROI):
             if radius is None:
                 raise TypeError("Must provide either size or radius.")
             size = (radius*2, radius*2)
-        EllipseROI.__init__(self, pos, size, **args)
-        self.aspectLocked = True
+        EllipseROI.__init__(self, pos, size, aspectLocked=True, **args)
         
     def _addHandles(self):
         self.addScaleHandle([0.5*2.**-0.5 + 0.5, 0.5*2.**-0.5 + 0.5], [0.5, 0.5])
@@ -2307,16 +2307,15 @@ class CrosshairROI(ROI):
     """A crosshair ROI whose position is at the center of the crosshairs. By default, it is scalable, rotatable and translatable."""
     
     def __init__(self, pos=None, size=None, **kargs):
-        if size == None:
+        if size is None:
             size=[1,1]
-        if pos == None:
+        if pos is None:
             pos = [0,0]
         self._shape = None
-        ROI.__init__(self, pos, size, **kargs)
+        ROI.__init__(self, pos, size, aspectLocked=True, **kargs)
         
         self.sigRegionChanged.connect(self.invalidate)
         self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
-        self.aspectLocked = True
 
     def invalidate(self):
         self._shape = None
@@ -2391,9 +2390,6 @@ class TriangleROI(ROI):
     """
 
     def __init__(self, pos, size, **args):
-        ROI.__init__(self, pos, [size, size], **args)
-        self.aspectLocked = True
-        angles = np.linspace(0, pi * 4 / 3, 3)
         ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
         verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0

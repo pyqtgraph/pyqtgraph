@@ -9,7 +9,6 @@ import initExample
 
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 from pyqtgraph import functions as fn
 
@@ -31,10 +30,8 @@ def psi(i, j, k, offset=(50,50,100)):
     y = j-offset[1]
     z = k-offset[2]
     th = np.arctan2(z, np.hypot(x, y))
-    phi = np.arctan2(y, x)
     r = np.sqrt(x**2 + y**2 + z **2)
     a0 = 2
-    #ps = (1./81.) * (2./np.pi)**0.5 * (1./a0)**(3/2) * (6 - r/a0) * (r/a0) * np.exp(-r/(3*a0)) * np.cos(th)
     ps = (1./81.) * 1./(6.*np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * np.exp(-r/(3*a0)) * (3 * np.cos(th)**2 - 1)
     return ps
 

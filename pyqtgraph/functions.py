@@ -67,10 +67,8 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
         raise
     if abs(x) < minVal:
         m = 0
-        x = 0
     else:
         m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
-    
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -82,7 +80,6 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     m1 = -3*m
     p = 10.**m1
-    
     return (p, pref)
 
 

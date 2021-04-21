@@ -8,6 +8,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from .Qt import QtCore
 from math import atan2, hypot, degrees
 
+
 class Point(QtCore.QPointF):
     """Extension of QPointF which adds a few missing methods."""
     

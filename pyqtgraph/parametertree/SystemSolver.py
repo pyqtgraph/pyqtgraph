@@ -398,9 +398,6 @@ if __name__ == '__main__':
                 # value at the same time.
                 sh = (1./60.)
                 raise
-            
-            
-            
             return ap
 
         def _balance(self):
@@ -408,8 +405,6 @@ if __name__ == '__main__':
             light = self.lightMeter
             sh = self.shutter
             ap = self.aperture
-            fl = self.flash
-            
             bal = (4.0 / ap) * (sh / (1./60.)) * (iso / 100.) * (2 ** light)
             return log2(bal)
     

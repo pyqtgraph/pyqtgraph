@@ -7,7 +7,6 @@ Distributed under MIT/X11 license. See license.txt for more information.
 from math import acos, degrees
 from .Qt import QtGui, QtCore, QT_LIB
 from . import functions as fn
-import numpy as np
 
 class Vector(QtGui.QVector3D):
     """Extension of QVector3D which adds a few helpful methods."""

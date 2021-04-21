@@ -12,7 +12,7 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import os, sys
+import os
 from math import log10
 import numpy as np
 

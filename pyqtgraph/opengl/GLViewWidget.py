@@ -5,7 +5,7 @@ import numpy as np
 from .. import Vector
 from .. import functions as fn
 import warnings
-from math import cos, sin, tan, degrees, radians
+from math import cos, sin, tan, radians
 ##Vector = QtGui.QVector3D
 
 ShareWidget = None
