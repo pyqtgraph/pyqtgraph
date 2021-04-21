@@ -360,15 +360,7 @@ class ExampleLoader(QtGui.QMainWindow):
             fn = self.currentFile()
             if fn is None:
                 return
-            if sys.platform.startswith('win'):
-                args = [os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"']
-            else:
-                args = [os.P_NOWAIT, sys.executable, sys.executable, fn]
-            if env is None:
-                os.spawnl(*args)
-            else:
-                args.append(env)
-                os.spawnle(*args)
+            subprocess.Popen([sys.executable, fn], env=env)
 
     def showFile(self):
         fn = self.currentFile()
