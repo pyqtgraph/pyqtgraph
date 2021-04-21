@@ -60,12 +60,10 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-        
     try:
-        if np.isnan(x) or np.isinf(x):
+        if not math.isfinite(x):
             return(1, '')
     except:
-        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
@@ -295,9 +293,7 @@ def mkColor(*args):
     else:
         raise TypeError(err)
     
-    args = [r,g,b,a]
-    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
-    args = list(map(int, args))
+    args = [int(a) if math.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
@@ -458,7 +454,7 @@ def eq(a, b):
     
     1. Returns True if a IS b, even if a==b still evaluates to False.
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
-       float('nan') instances using np.isnan.
+       float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
@@ -472,7 +468,7 @@ def eq(a, b):
 
     # The above catches np.nan, but not float('nan')
     if isinstance(a, float) and isinstance(b, float):
-        if np.isnan(a) and np.isnan(b):
+        if math.isnan(a) and math.isnan(b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.

@@ -1,4 +1,5 @@
 from ..Qt import QtGui, QtCore
+import math
 import numpy as np
 from ..colormap import ColorMap
 from .GraphicsObject import GraphicsObject
@@ -94,7 +95,7 @@ class NonUniformImage(GraphicsObject):
                     value = 0.0
                 elif np.isposinf(value):
                     value = 1.0
-                elif np.isnan(value):
+                elif math.isnan(value):
                     continue  # ignore NaN
                 else:
                     value = (value - mn) / (mx - mn)  # normalize

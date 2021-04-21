@@ -214,7 +214,7 @@ class RangeColorMapItem(ptree.types.SimpleParameter):
         cmap = self.value()
         colors = cmap.map(scaled, mode='float')
         
-        mask = np.isnan(data) | np.isinf(data)
+        mask = np.invert(np.isfinite(data))
         nanColor = self['NaN']
         nanColor = (nanColor.red()/255., nanColor.green()/255., nanColor.blue()/255., nanColor.alpha()/255.)
         colors[mask] = nanColor

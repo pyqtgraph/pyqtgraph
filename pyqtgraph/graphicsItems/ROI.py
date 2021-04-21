@@ -1425,7 +1425,7 @@ class Handle(UIGraphicsItem):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         
         ## Make sure it is still ok to remove this handle
-        removeAllowed = all([r.checkRemoveHandle(self) for r in self.rois])
+        removeAllowed = all(r.checkRemoveHandle(self) for r in self.rois)
         self.removeAction.setEnabled(removeAllowed)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
