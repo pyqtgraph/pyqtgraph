@@ -266,6 +266,8 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+            else:
+                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -273,10 +275,10 @@ def mkColor(*args):
             a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
-                (r, g, b) = args[0]
+                r, g, b = args[0]
                 a = 255
             elif len(args[0]) == 4:
-                (r, g, b, a) = args[0]
+                r, g, b, a = args[0]
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
@@ -286,14 +288,13 @@ def mkColor(*args):
         else:
             raise TypeError(err)
     elif len(args) == 3:
-        (r, g, b) = args
+        r, g, b = args
         a = 255
     elif len(args) == 4:
-        (r, g, b, a) = args
+        r, g, b, a = args
     else:
         raise TypeError(err)
-    
-    args = [int(a) if math.isfinite(a) else 0 for a in (r, g, b, a)]
+    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
