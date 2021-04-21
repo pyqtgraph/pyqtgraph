@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore
 from .. import functions as fn
+from .. import getConfigOption
 from .PlotItem import PlotItem
 from .ImageItem import ImageItem
 from .LinearRegionItem import LinearRegionItem
@@ -98,13 +99,17 @@ class ColorBarItem(PlotItem):
         self.axis.unlinkFromView()
         self.axis.setRange( self.values[0], self.values[1] )
 
-        self.bar = ImageItem(axisOrder='col-major')
+        order = getConfigOption('imageAxisOrder')
+        self.bar = ImageItem(axisOrder=order)
+        bar_map = np.linspace(0, 1, 256)
         if self.horizontal:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (-1,1) ) )
+            map_is_column = order == 'col-major'
             if label is not None: self.getAxis('bottom').setLabel(label)
         else:
-            self.bar.setImage( np.linspace(0, 1, 256).reshape( (1,-1) ) )
+            map_is_column = order == 'row-major'
             if label is not None: self.getAxis('left').setLabel(label)
+        shape = (-1, 1) if map_is_column else (1, -1)
+        self.bar.setImage(bar_map.reshape(shape))
         self.addItem(self.bar)
         if cmap is not None: self.setCmap(cmap)
 
