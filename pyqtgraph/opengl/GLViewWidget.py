@@ -59,10 +59,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self.makeCurrent()
 
 
-    @property
-    def _dpiRatio(self):
-        return self.devicePixelRatioF() or 1
-
     def _updateScreen(self, screen):
         self._updatePixelRatio()
         if screen is not None:
@@ -79,16 +75,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         self._updateScreen(window.screen())
         
     def width(self):
-        if self._dpiRatio.is_integer():
-            return super().width()
-        else:
-            return int(super().width() * self._dpiRatio)
+        dpr = self.devicePixelRatio()
+        return int(super().width() * dpr)
     
     def height(self):
-        if self._dpiRatio.is_integer():
-            return super().height()
-        else:
-            return int(super().height() * self._dpiRatio)
+        dpr = self.devicePixelRatio()
+        return int(super().height() * dpr)
 
 
     def reset(self):
@@ -147,10 +139,10 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         
     def getViewport(self):
         vp = self.opts['viewport']
-        dpr = self.devicePixelRatio()
         if vp is None:
-            return (0, 0, int(self.width() * dpr), int(self.height() * dpr))
+            return (0, 0, self.width(), self.height())
         else:
+            dpr = self.devicePixelRatio()
             return tuple([int(x * dpr) for x in vp])
         
     def devicePixelRatio(self):
@@ -158,7 +150,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         if dpr is not None:
             return dpr
         
-        return QtWidgets.QOpenGLWidget.devicePixelRatio(self)
+        return self.devicePixelRatioF()
         
     def resizeGL(self, w, h):
         pass
@@ -174,8 +166,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
 
     def projectionMatrix(self, region=None):
         if region is None:
-            dpr = self.devicePixelRatio()
-            region = (0, 0, self.width() * dpr, self.height() * dpr)
+            region = (0, 0, self.width(), self.height())
         
         x0, y0, w, h = self.getViewport()
         dist = self.opts['distance']
