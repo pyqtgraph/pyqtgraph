@@ -1524,7 +1524,7 @@ class Handle(UIGraphicsItem):
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(degrees(va))
+        tr.rotateRadians(va)
         
         return dti.map(tr.map(self.path))
         

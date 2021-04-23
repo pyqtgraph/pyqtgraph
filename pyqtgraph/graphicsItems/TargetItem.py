@@ -243,7 +243,7 @@ class TargetItem(UIGraphicsItem):
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
         va = atan2(v.y(), v.x())
-        tr.rotate(degrees(va))
+        tr.rotateRadians(va)
         tr.scale(self.scale, self.scale)
         return dti.map(tr.map(self._path))
 
