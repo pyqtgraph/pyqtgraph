@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import *
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, pi, sqrt, hypot, radians, degrees
+from math import atan2, cos, sin, hypot, radians, degrees
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -1332,8 +1332,8 @@ class Handle(UIGraphicsItem):
     properties of the ROI they are attached to.
     """
     types = {   ## defines number of sides, start angle for each handle type
-        't': (4, pi/4),
-        'f': (4, pi/4), 
+        't': (4, np.pi/4),
+        'f': (4, np.pi/4), 
         's': (4, 0),
         'r': (12, 0),
         'sr': (12, 0),
@@ -1481,7 +1481,7 @@ class Handle(UIGraphicsItem):
         size = self.radius
         self.path = QtGui.QPainterPath()
         ang = self.startAng
-        dt = 2 * pi / self.sides
+        dt = 2 * np.pi / self.sides
         for i in range(0, self.sides+1):
             x = size * cos(ang)
             y = size * sin(ang)
@@ -1911,7 +1911,7 @@ class EllipseROI(ROI):
             center = br.center()
             r1 = br.width() / 2.
             r2 = br.height() / 2.
-            theta = np.linspace(0, 2 * pi, 24)
+            theta = np.linspace(0, 2 * np.pi, 24)
             x = center.x() + r1 * np.cos(theta)
             y = center.y() + r2 * np.sin(theta)
             path.moveTo(x[0], y[0])
@@ -2394,6 +2394,8 @@ class TriangleROI(ROI):
         ROI.__init__(self, pos, [size, size], **args)
         self.aspectLocked = True
         angles = np.linspace(0, pi * 4 / 3, 3)
+        ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
+        angles = np.linspace(0, np.pi * 4 / 3, 3)
         verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()
         for pt in verticies:

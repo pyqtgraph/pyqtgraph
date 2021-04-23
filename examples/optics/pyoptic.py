@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from math import atan2, asin, sin, cos, sqrt, pi, hypot
+from math import atan2, asin, sin, cos, degrees, sqrt, hypot
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
@@ -285,7 +285,7 @@ class Mirror(Optic):
             p1 = surface.mapToItem(ray, p1)
             rd = ray['dir']
             a1 = atan2(rd[1], rd[0])
-            ar = a1  + pi - 2*ai
+            ar = a1 + np.pi - 2 * ai
             ray.setEnd(p1)
             dp = Point(cos(ar), sin(ar))
             ray = Ray(parent=ray, dir=dp)
@@ -379,7 +379,7 @@ class CircleSurface(pg.GraphicsObject):
             ## half-height of surface can't be larger than radius
             h2 = min(h2, abs(r))
             arc = QtCore.QRectF(0, -r, r*2, r*2)
-            a1 = asin(h2/r) * 180. / pi
+            a1 = degrees(asin(h2/r))
             a2 = -2*a1
             a1 += 180.
             self.path.arcMoveTo(arc, a1)
@@ -443,7 +443,7 @@ class CircleSurface(pg.GraphicsObject):
                 
             norm = atan2(pt[1], pt[0])
             if r < 0:
-                norm += pi
+                norm += np.pi
             dp = p - pt
             ang = atan2(dp[1], dp[0]) 
             return pt + Point(r, 0), ang-norm
