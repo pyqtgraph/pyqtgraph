@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import weakref
 import sys
+import math
 from copy import deepcopy
 import numpy as np
 from ...Qt import QtGui, QtCore
@@ -549,10 +550,9 @@ class ViewBox(GraphicsWidget):
                     dy = 1
                 mn -= dy*0.5
                 mx += dy*0.5
-                xpad = 0.0
 
             # Make sure no nan/inf get through
-            if not all(np.isfinite([mn, mx])):
+            if not math.isfinite(mn) or not math.isfinite(mx):
                 raise Exception("Cannot set range [%s, %s]" % (str(mn), str(mx)))
 
             # Apply padding
@@ -666,7 +666,7 @@ class ViewBox(GraphicsWidget):
     def suggestPadding(self, axis):
         l = self.width() if axis==0 else self.height()
         if l > 0:
-            padding = np.clip(1./(l**0.5), 0.02, 0.1)
+            padding = fn.clip_scalar(1./(l**0.5), 0.02, 0.1)
         else:
             padding = 0.02
         return padding
@@ -903,11 +903,11 @@ class ViewBox(GraphicsWidget):
                     targetRect[ax] = childRange[ax]
                     args['xRange' if ax == 0 else 'yRange'] = targetRect[ax]
 
-             # check for and ignore bad ranges
+            # check for and ignore bad ranges
             for k in ['xRange', 'yRange']:
                 if k in args:
-                    if not np.all(np.isfinite(args[k])):
-                        r = args.pop(k)
+                    if not math.isfinite(args[k][0]) or not math.isfinite(args[k][1]):
+                        _ = args.pop(k)
                         #print("Warning: %s is invalid: %s" % (k, str(r))
 
             if len(args) == 0:
@@ -1369,10 +1369,20 @@ class ViewBox(GraphicsWidget):
                 xr = item.dataBounds(0, frac=frac[0], orthoRange=orthoRange[0])
                 yr = item.dataBounds(1, frac=frac[1], orthoRange=orthoRange[1])
                 pxPad = 0 if not hasattr(item, 'pixelPadding') else item.pixelPadding()
-                if xr is None or (xr[0] is None and xr[1] is None) or np.isnan(xr).any() or np.isinf(xr).any():
+                if (
+                    xr is None or
+                    (xr[0] is None and xr[1] is None) or
+                    not math.isfinite(xr[0]) or
+                    not math.isfinite(xr[1])
+                ):
                     useX = False
                     xr = (0,0)
-                if yr is None or (yr[0] is None and yr[1] is None) or np.isnan(yr).any() or np.isinf(yr).any():
+                if (
+                    yr is None or
+                    (yr[0] is None and yr[1] is None) or
+                    not math.isfinite(yr[0]) or
+                    not math.isfinite(yr[1])
+                ):
                     useY = False
                     yr = (0,0)
 

@@ -202,7 +202,7 @@ def findRefPath(startObj, endObj, maxLen=8, restart=True, seen={}, path=None, ig
             #print prefix+"  FRAME"
             continue
         try:
-            if any([r is x for x in  path]):
+            if any(r is x for x in  path):
                 #print prefix+"  LOOP", objChainString([r]+path)
                 continue
         except:
@@ -282,7 +282,7 @@ def refPathString(chain):
         o2 = chain[i]
         cont = False
         if isinstance(o1, list) or isinstance(o1, tuple):
-            if any([o2 is x for x in o1]):
+            if any(o2 is x for x in o1):
                 s += "[%d]" % o1.index(o2)
                 continue
         #print "  not list"

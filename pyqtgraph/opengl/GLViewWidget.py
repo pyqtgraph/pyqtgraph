@@ -5,6 +5,7 @@ import numpy as np
 from .. import Vector
 from .. import functions as fn
 import warnings
+from math import cos, sin, tan, radians
 ##Vector = QtGui.QVector3D
 
 ShareWidget = None
@@ -174,7 +175,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         nearClip = dist * 0.001
         farClip = dist * 1000.
 
-        r = nearClip * np.tan(fov * 0.5 * np.pi / 180.)
+        r = nearClip * tan(0.5 * radians(fov))
         t = r * h / w
 
         ## Note that X0 and width in these equations must be the values used in viewport
@@ -316,12 +317,12 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             pos = center - self.opts['rotation'].rotatedVector( Vector(0,0,dist) )
         else:
             # using 'euler' rotation method
-            elev = self.opts['elevation'] * np.pi / 180
-            azim = self.opts['azimuth'] * np.pi / 180
+            elev = radians(self.opts['elevation'])
+            azim = radians(self.opts['azimuth'])
             pos = Vector(
-                center.x() + dist * np.cos(elev) * np.cos(azim),
-                center.y() + dist * np.cos(elev) * np.sin(azim),
-                center.z() + dist * np.sin(elev)
+                center.x() + dist * cos(elev) * cos(azim),
+                center.y() + dist * cos(elev) * sin(azim),
+                center.z() + dist * sin(elev)
             )
         return pos
 
@@ -335,7 +336,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             self.opts['rotation'] = q
         else: # default euler rotation method
             self.opts['azimuth'] += azim
-            self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+            self.opts['elevation'] = fn.clip_scalar(self.opts['elevation'] + elev, -90., 90.)
         self.update()
         
     def pan(self, dx, dy, dz, relative='global'):
@@ -378,7 +379,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             cPos = self.cameraPosition()
             cVec = self.opts['center'] - cPos
             dist = cVec.length()  ## distance from camera to center
-            xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)  ## approx. width of view at distance of center point
+            xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))  ## approx. width of view at distance of center point
             xScale = xDist / self.width()
             zVec = QtGui.QVector3D(0,0,1)
             xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
@@ -399,15 +400,15 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
                 # apply translation
                 self.opts['center'] += scale_factor * (xv*-dx + yv*dy + zv*dz)
             else: # use default euler rotation method
-                elev = np.radians(self.opts['elevation'])
-                azim = np.radians(self.opts['azimuth'])
-                fov = np.radians(self.opts['fov'])
+                elev = radians(self.opts['elevation'])
+                azim = radians(self.opts['azimuth'])
+                fov = radians(self.opts['fov'])
                 dist = (self.opts['center'] - self.cameraPosition()).length()
-                fov_factor = np.tan(fov / 2) * 2
+                fov_factor = tan(fov / 2) * 2
                 scale_factor = dist * fov_factor / self.width()
-                z = scale_factor * np.cos(elev) * dy
-                x = scale_factor * (np.sin(azim) * dx - np.sin(elev) * np.cos(azim) * dy)
-                y = scale_factor * (np.cos(azim) * dx + np.sin(elev) * np.sin(azim) * dy)
+                z = scale_factor * cos(elev) * dy
+                x = scale_factor * (sin(azim) * dx - sin(elev) * cos(azim) * dy)
+                y = scale_factor * (cos(azim) * dx + sin(elev) * sin(azim) * dy)
                 self.opts['center'] += QtGui.QVector3D(x, -y, z)
         else:
             raise ValueError("relative argument must be global, view, or view-upright")
@@ -425,7 +426,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
             dist = ((pos-cam)**2).sum(axis=-1)**0.5
         else:
             dist = (pos-cam).length()
-        xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)
+        xDist = dist * 2. * tan(0.5 * radians(self.opts['fov']))
         return xDist / self.width()
         
     def mousePressEvent(self, ev):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+import math
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -660,7 +661,7 @@ class PlotDataItem(GraphicsObject):
                         eps = np.finfo(y.dtype).eps
                     else:
                         eps = 1
-                    y = np.sign(y) * np.log10(np.abs(y)+eps)
+                    y = np.copysign(np.log10(np.abs(y)+eps), y)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -799,10 +800,10 @@ class PlotDataItem(GraphicsObject):
             # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
             warnings.simplefilter("ignore")
             ymin = np.nanmin(self.yData)
-            if np.isnan( ymin ):
+            if math.isnan( ymin ):
                 return None # most likely case for all-NaN data
             xmin = np.nanmin(self.xData)
-            if np.isnan( xmin ):
+            if math.isnan( xmin ):
                 return None # less likely case for all-NaN data
             ymax = np.nanmax(self.yData)
             xmax = np.nanmax(self.xData)
