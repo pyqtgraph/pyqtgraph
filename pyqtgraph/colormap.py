@@ -194,8 +194,12 @@ class ColorMap(object):
 
     The colors for intermediate values are determined by interpolating between 
     the two nearest colors in RGB color space.
+    
+    A ColorMap object provides access to the interpolated colors by indexing with a float value:
+    color_map[0.5] returns a QColor corresponding to the center of a standard color map.
 
     To provide user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
+    Colormaps can also conveniently be applied to images and interactively adjusted by using :class:`ColorBarItem <pyqtgraph.ColorBarItem>`
     """
 
     ## mapping modes
@@ -231,7 +235,7 @@ class ColorMap(object):
                             controlling mapping of relative index to color. String representations
                             'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
                             CLIP maps colors to [0.0;1.0] and is the default.
-                            REPEAT maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
+                            REPEAT maps colors to repeating intervals [0.0;1.0], [1.0;2.0], ...
                             MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
                             DIVERGING maps colors to [-1.0;+1.0]
         ===============     =======================================================================
@@ -241,9 +245,6 @@ class ColorMap(object):
                 "'mode' argument is deprecated and does nothing.",
                 DeprecationWarning, stacklevel=2
         )
-        if isinstance(mapping, str):
-            mapping = self.enumMap[mapping.lower()]
-
         self.pos = np.array(pos)
         order = np.argsort(self.pos)
         self.pos = self.pos[order]
@@ -252,11 +253,29 @@ class ColorMap(object):
             axis   = -1,
             arr    = color,
             )[order]
+        
+        self.mapping_mode = self.CLIP # default to CLIP mode   
+        if mapping is not None:
+            self.setMappingMode( mapping )
+        self.stopsCache = {}
 
-        self.mapping_mode = self.CLIP # default to CLIP mode
+    def setMappingMode(self, mapping):
+        """ 
+        Set mapping mode.
+        
+        The *mapping* argument determines how values are mapped to colors:
+        ------------------------------------------------------------------
+        'clip' or ColorMap.CLIP            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
+        'repeat' or ColorMap.REPEAT        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
+        'mirror' or ColorMap.MIRROR        The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
+        'diverging' or ColorMap.DIVERGING  Colors are mapped to [-1.0;1.0], so that the central value appears at 0.0.
+        """
+        if isinstance(mapping, str):
+            mapping = self.enumMap[mapping.lower()]
         if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
             self.mapping_mode = mapping # only allow defined values
-        self.stopsCache = {}
+        else:
+            raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
 
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
@@ -268,6 +287,12 @@ class ColorMap(object):
             return self.mapToQColor(float_idx)
         except ValueError: pass
         return None
+        
+    def reverse(self):
+        """ Reverse the color map """
+        self.pos = 1.0 - np.flip( self.pos )
+        self.color = np.flip( self.color, axis=0 )
+        self.stopsCache = {}
 
     def map(self, data, mode=BYTE):
         """
@@ -275,12 +300,10 @@ class ColorMap(object):
         Data must be either a scalar position or an array (any shape) of positions.
         
         The *mode* argument determines the type of data returned:
-
-        =========== ===============================================================
-        byte        (default) Values are returned as 0-255 unsigned bytes.
-        float       Values are returned as 0.0-1.0 floats. 
-        qcolor      Values are returned as an array of QColor objects.
-        =========== ===============================================================
+        ---------------------------------------------------------
+        'byte' or ColorMap.BYTE :      (default) Values are returned as 0-255 unsigned bytes.
+        'float' or ColorMap.FLOAT :   Values are returned as 0.0-1.0 floats. 
+        'qcolor' or ColorMap.QCOLOR :  Values are returned as an array of QColor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
@@ -339,12 +362,64 @@ class ColorMap(object):
             p1 = QtCore.QPointF(0,0)
         if p2 == None:
             p2 = QtCore.QPointF(self.pos.max()-self.pos.min(),0)
-        g = QtGui.QLinearGradient(p1, p2)
+        grad = QtGui.QLinearGradient(p1, p2)
         
         pos, color = self.getStops(mode=self.BYTE)
         color = [QtGui.QColor(*x) for x in color]
-        g.setStops(list(zip(pos, color)))
-        return g
+        if self.mapping_mode == self.MIRROR:
+            pos_n = (1. - np.flip(pos)) / 2
+            col_n = np.flip( color, axis=0 )
+            pos_p = (1. + pos) / 2
+            col_p = color
+            pos   = np.concatenate( (pos_n, pos_p) )
+            color = np.concatenate( (col_n, col_p) )
+        grad.setStops(list(zip(pos, color)))
+        if self.mapping_mode == self.REPEAT:
+            grad.setSpread( QtGui.QGradient.RepeatSpread )
+        return grad
+        
+    def getBrush(self, span=(0.,1.), orientation='vertical'):
+        """
+        Return a QBrush painting with the colormap applied over a range of plot values
+        
+        Parameters
+        ----------
+        span : tuple (min, max). Color map value 0.0 will be appear at min, 
+            color map value 1.0 will appear at max. Default is (0., 1.)
+        orientation : string. 
+            'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
+            'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
+            Default is 'vertical'
+        """
+        if orientation == 'vertical':
+            grad = self.getGradient( p1=QtCore.QPoint(0.,span[0]), p2=QtCore.QPoint(0.,span[1]) )
+        elif orientation == 'horizontal':
+            grad = self.getGradient( p1=QtCore.QPoint(span[0],0.), p2=QtCore.QPoint(span[1],0.) )
+        else:
+            raise ValueError("Orientation must be 'vertical' or 'horizontal'")
+        return QtGui.QBrush(grad)
+        
+    def getPen(self, span=(0.,1.), orientation='vertical', width=1.0):
+        """
+        Return a QPen drawing accordinging to the color map based on vertical or horizontal position
+        
+        Parameters
+        ----------
+        span : tuple (min, max)
+            Color map value 0.0 will appear at min.
+            Color map value 1.0 will appear at max. 
+            Default is (0., 1.)
+        orientation : string
+            'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
+            'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
+            Default is 'vertical'
+        width : int or float 
+            Width of the returned pen in pixels on screen.
+        """
+        brush = self.getBrush( span=span, orientation=orientation )
+        pen = QtGui.QPen(brush, width)
+        pen.setCosmetic(True)
+        return pen
 
     def getColors(self, mode=None):
         """Return list of all color stops converted to the specified mode.
