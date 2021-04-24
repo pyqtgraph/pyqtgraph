@@ -17,7 +17,7 @@ class Point(QtCore.QPointF):
             if isinstance(args[0], QtCore.QSizeF):
                 QtCore.QPointF.__init__(self, float(args[0].width()), float(args[0].height()))
                 return
-            elif isinstance(args[0], float) or isinstance(args[0], int):
+            elif isinstance(args[0], (int, float)):
                 QtCore.QPointF.__init__(self, float(args[0]), float(args[0]))
                 return
             elif hasattr(args[0], '__getitem__'):
@@ -87,47 +87,67 @@ class Point(QtCore.QPointF):
         return self._math_('__pow__', a)
     
     def _math_(self, op, x):
-        x = Point(x)
-        return Point(getattr(self[0], op)(x[0]), getattr(self[1], op)(x[1]))
+        if not isinstance(x, QtCore.QPointF):
+            x = Point(x)
+        return Point(getattr(self.x(), op)(x.x()), getattr(self.y(), op)(x.y()))
     
     def length(self):
         """Returns the vector length of this Point."""
-        return hypot(self[0], self[1])  # length
+        return hypot(self.x(), self.y())  # length
 
     def norm(self):
         """Returns a vector in the same direction with unit length."""
         return self / self.length()
     
-    def angle(self, a):
-        """Returns the angle in degrees between this vector and the vector a."""
-        rads = atan2(self.y(), self.x()) - atan2(a.y(), a.x())
+    def angle(self, a, units="degrees"):
+        """
+        Returns the angle in degrees between this vector and the vector a.
+        
+        Parameters
+        ----------
+        a : Point, QPointF or QPoint
+            The Point to return the angle with
+        units : str, optional
+            The units with which to compute the angle with, "degrees" or "radians",
+            default "degrees"
+        
+        Returns
+        -------
+        float
+            The angle between the two points
+        """
+        rads = atan2(a.y(), a.x()) - atan2(self.y(), self.x())
+        if units == "radians":
+            return rads
         return degrees(rads)
     
     def dot(self, a):
         """Returns the dot product of a and this Point."""
-        a = Point(a)
-        return self[0]*a[0] + self[1]*a[1]
+        if not isinstance(a, QtCore.QPointF):
+            a = Point(a)
+        return Point.dotProduct(self, a)
     
     def cross(self, a):
-        a = Point(a)
-        return self[0]*a[1] - self[1]*a[0]
+        if not isinstance(a, QtCore.QPointF):
+            a = Point(a)
+        return self.x() * a.y() - self.y() * a.x()
         
     def proj(self, b):
         """Return the projection of this vector onto the vector b"""
         b1 = b / b.length()
-        return self.dot(b1) * b1
+        return self.dot(b) * b1
     
     def __repr__(self):
-        return "Point(%f, %f)" % (self[0], self[1])
+        return "Point(%f, %f)" % (self.x(), self.y())
 
     def min(self):
-        return min(self[0], self[1])
+        return min(self.x(), self.y())
     
     def max(self):
-        return max(self[0], self[1])
+        return max(self.x(), self.y())
         
     def copy(self):
         return Point(self)
         
     def toQPoint(self):
-        return QtCore.QPoint(int(self[0]), int(self[1]))
+        return self.toPoint()
