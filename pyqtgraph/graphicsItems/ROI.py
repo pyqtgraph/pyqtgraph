@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import Point
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, hypot, radians
+from math import atan2, cos, degrees, sin, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -1663,12 +1663,11 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ang = Point(1, 0).angle(d)
-        ra = radians(ang if ang is not None else 0.)
+        ra = Point(1, 0).angle(d, units="radians")
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
-        ROI.__init__(self, pos1, size=Point(l, width), angle=ang, **args)
+        ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
