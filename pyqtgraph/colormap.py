@@ -264,11 +264,12 @@ class ColorMap(object):
         Set mapping mode.
         
         The ``mapping`` argument determines how values are mapped to colors:
-        ------------------------------------------------------------------
+        =================================  ===================================================================================
         'clip' or ColorMap.CLIP            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
         'repeat' or ColorMap.REPEAT        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
         'mirror' or ColorMap.MIRROR        The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
         'diverging' or ColorMap.DIVERGING  Colors are mapped to [-1.0;1.0], so that the central value appears at 0.0.
+        =================================  ===================================================================================
         """
         if isinstance(mapping, str):
             mapping = self.enumMap[mapping.lower()]
@@ -300,10 +301,11 @@ class ColorMap(object):
         Data must be either a scalar position or an array (any shape) of positions.
         
         The ``mode`` argument determines the type of data returned:
-        ---------------------------------------------------------
-        'byte' or ColorMap.BYTE :      (default) Values are returned as 0-255 unsigned bytes.
-        'float' or ColorMap.FLOAT :   Values are returned as 0.0-1.0 floats. 
-        'qcolor' or ColorMap.QCOLOR :  Values are returned as an array of QColor objects.
+        =========================== ======================================================
+        'byte' or ColorMap.BYTE     (default) Values are returned as 0-255 unsigned bytes.
+        'float' or ColorMap.FLOAT   Values are returned as 0.0-1.0 floats. 
+        'qcolor' or ColorMap.QCOLOR Values are returned as an array of QColor objects.
+        =========================== ======================================================
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
