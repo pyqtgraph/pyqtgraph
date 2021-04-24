@@ -12,21 +12,23 @@ from math import atan2, hypot, degrees
 class Point(QtCore.QPointF):
     """Extension of QPointF which adds a few missing methods."""
     
+    __slots__ = ()
+
     def __init__(self, *args):
         if len(args) == 1:
-            if isinstance(args[0], QtCore.QSizeF):
-                QtCore.QPointF.__init__(self, float(args[0].width()), float(args[0].height()))
+            if isinstance(args[0], (QtCore.QSize, QtCore.QSizeF)):
+                super().__init__(float(args[0].width()), float(args[0].height()))
                 return
             elif isinstance(args[0], (int, float)):
-                QtCore.QPointF.__init__(self, float(args[0]), float(args[0]))
+                super().__init__(float(args[0]), float(args[0]))
                 return
             elif hasattr(args[0], '__getitem__'):
-                QtCore.QPointF.__init__(self, float(args[0][0]), float(args[0][1]))
-                return
+                super().__init__(float(args[0][0]), float(args[0][1]))
+                return                
         elif len(args) == 2:
-            QtCore.QPointF.__init__(self, args[0], args[1])
+            super().__init__(args[0], args[1])
             return
-        QtCore.QPointF.__init__(self, *args)
+        super().__init__(*args)
         
     def __len__(self):
         return 2
@@ -41,6 +43,10 @@ class Point(QtCore.QPointF):
             return self.y()
         else:
             raise IndexError("Point has no index %s" % str(i))
+
+    def __iter__(self):
+        yield(self.x())
+        yield(self.y())
         
     def __setitem__(self, i, x):
         if i == 0:
