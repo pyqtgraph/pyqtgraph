@@ -231,9 +231,10 @@ class ColorMap(object):
         color: Array of colors.
             Values are interpreted via 
             :func:`mkColor() <pyqtgraph.mkColor>`.
-        mapping: Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
-            controlling mapping of relative index to color. String representations
-            'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
+        mapping: str or int
+            Controls mapping of relative index to color.
+            Can be ColorMap.CLIP, REPEAT, MIRROR or DIVERGING, and also  
+            accepts string representations 'clip', 'repeat', 'mirror' or 'diverging'.
                  
             CLIP maps colors to [0.0;1.0] and is the default.
 
@@ -271,6 +272,7 @@ class ColorMap(object):
         Parameters
         ----------
         mapping: str or int
+            Controls mapping of relative index to color.
 
             'clip' or ColorMap.CLIP: Colors are mapped to [0.0;1.0]. Values are clipped to this range. (default)
 
@@ -317,6 +319,7 @@ class ColorMap(object):
               scalar value(s) to be mapped to colors
 
         mode: str or int
+            Determines return format.
         
             'byte' or ColorMap.BYTE: Values are returned as 0-255 unsigned bytes. (default)
 
@@ -406,12 +409,11 @@ class ColorMap(object):
         span : tuple (min, max). Color map value 0.0 will be appear at min, 
             color map value 1.0 will appear at max. Default is (0., 1.)
         orientation : string
+            Default is 'vertical'
         
             'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
         
             'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
-
-            Default is 'vertical'
         """
         if orientation == 'vertical':
             grad = self.getGradient( p1=QtCore.QPointF(0.,span[0]), p2=QtCore.QPointF(0.,span[1]) )
@@ -428,19 +430,19 @@ class ColorMap(object):
         Parameters
         ----------
         span : tuple (min, max)
+            Span of data values the the gradient is mapped to. Default is (0., 1.)
 
             Color map value 0.0 will appear at min.
 
             Color map value 1.0 will appear at max. 
 
-            Default is (0., 1.)
         orientation : string
+            Default is 'vertical'
 
             'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
 
             'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
 
-            Default is 'vertical'
         width : int or float 
             Width of the returned pen in pixels on screen.
         """
