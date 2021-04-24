@@ -227,17 +227,21 @@ class ColorMap(object):
         """
         Parameters
         ----------
-        pos:     Array of positions where each color is defined
-        color:   Array of colors.
-                 Values are interpreted via 
-                 :func:`mkColor() <pyqtgraph.mkColor>`.
+        pos: Array of positions where each color is defined
+        color: Array of colors.
+            Values are interpreted via 
+            :func:`mkColor() <pyqtgraph.mkColor>`.
         mapping: Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
-                 controlling mapping of relative index to color. String representations
-                 'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
-                 CLIP maps colors to [0.0;1.0] and is the default.
-                 REPEAT maps colors to repeating intervals [0.0;1.0], [1.0;2.0], ...
-                 MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
-                 DIVERGING maps colors to [-1.0;+1.0]
+            controlling mapping of relative index to color. String representations
+            'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
+                 
+            CLIP maps colors to [0.0;1.0] and is the default.
+
+            REPEAT maps colors to repeating intervals [0.0;1.0], [1.0;2.0], ...
+
+            MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
+
+            DIVERGING maps colors to [-1.0;+1.0]
         """
         if mode is not None:
             warnings.warn(
@@ -267,9 +271,13 @@ class ColorMap(object):
         Parameters
         ----------
         mapping: str or int
+
             'clip' or ColorMap.CLIP: Colors are mapped to [0.0;1.0]. Values are clipped to this range. (default)
+
             'repeat' or ColorMap.REPEAT: Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
+
             'mirror' or ColorMap.MIRROR: The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
+
             'diverging' or ColorMap.DIVERGING: Colors are mapped to [-1.0;1.0], so that the central value appears at 0.0.
         """
         if isinstance(mapping, str):
@@ -307,10 +315,14 @@ class ColorMap(object):
         ----------
         data: float or numpy array
               scalar value(s) to be mapped to colors
+
         mode: str or int
-              'byte' or ColorMap.BYTE: Values are returned as 0-255 unsigned bytes. (default)
-              'float' or ColorMap.FLOAT: Values are returned as 0.0-1.0 floats. 
-              'qcolor' or ColorMap.QCOLOR: Values are returned as an array of QColor objects.
+        
+            'byte' or ColorMap.BYTE: Values are returned as 0-255 unsigned bytes. (default)
+
+            'float' or ColorMap.FLOAT: Values are returned as 0.0-1.0 floats. 
+
+            'qcolor' or ColorMap.QCOLOR: Values are returned as an array of QColor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
@@ -393,9 +405,12 @@ class ColorMap(object):
         ----------
         span : tuple (min, max). Color map value 0.0 will be appear at min, 
             color map value 1.0 will appear at max. Default is (0., 1.)
-        orientation : string. 
+        orientation : string
+        
             'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
+        
             'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
+
             Default is 'vertical'
         """
         if orientation == 'vertical':
@@ -413,12 +428,18 @@ class ColorMap(object):
         Parameters
         ----------
         span : tuple (min, max)
+
             Color map value 0.0 will appear at min.
+
             Color map value 1.0 will appear at max. 
+
             Default is (0., 1.)
         orientation : string
+
             'vertical' creates a vertical gradient, where range corresponds to the y coordinate.
+
             'horizontal' creates a horizontal gradient, where range correspnds to the xcoordinates.
+
             Default is 'vertical'
         width : int or float 
             Width of the returned pen in pixels on screen.
