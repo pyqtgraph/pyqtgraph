@@ -225,7 +225,7 @@ class ColorMap(object):
 
     def __init__(self, pos, color, mapping=CLIP, mode=None): #, names=None):
         """
-        Parameters:
+        Parameters
         ----------
         pos:     Array of positions where each color is defined
         color:   Array of colors.
@@ -264,8 +264,8 @@ class ColorMap(object):
         
         The mapping argument determines how values are mapped to colors.
         
-        mapping options:
-        ----------------
+        mapping options
+        ---------------
         'clip' or ColorMap.CLIP:            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
         'repeat' or ColorMap.REPEAT:        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
         'mirror' or ColorMap.MIRROR:        The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
@@ -302,8 +302,8 @@ class ColorMap(object):
         
         The mode argument determines the type of data returned:
 
-        mode options:
-        -------------
+        mode options
+        ------------
         'byte' or ColorMap.BYTE:     (default) Values are returned as 0-255 unsigned bytes.
         'float' or ColorMap.FLOAT:   Values are returned as 0.0-1.0 floats. 
         'qcolor' or ColorMap.QCOLOR: Values are returned as an array of QColor objects.
