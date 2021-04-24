@@ -225,20 +225,19 @@ class ColorMap(object):
 
     def __init__(self, pos, color, mapping=CLIP, mode=None): #, names=None):
         """
-        ===============     =======================================================================
-        **Arguments:**
-        pos                 Array of positions where each color is defined
-        color               Array of colors.
-                            Values are interpreted via 
-                            :func:`mkColor() <pyqtgraph.mkColor>`.
-        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
-                            controlling mapping of relative index to color. String representations
-                            'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
-                            CLIP maps colors to [0.0;1.0] and is the default.
-                            REPEAT maps colors to repeating intervals [0.0;1.0], [1.0;2.0], ...
-                            MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
-                            DIVERGING maps colors to [-1.0;+1.0]
-        ===============     =======================================================================
+        Parameters:
+        ----------
+        pos:     Array of positions where each color is defined
+        color:   Array of colors.
+                 Values are interpreted via 
+                 :func:`mkColor() <pyqtgraph.mkColor>`.
+        mapping: Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
+                 controlling mapping of relative index to color. String representations
+                 'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
+                 CLIP maps colors to [0.0;1.0] and is the default.
+                 REPEAT maps colors to repeating intervals [0.0;1.0], [1.0;2.0], ...
+                 MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
+                 DIVERGING maps colors to [-1.0;+1.0]
         """
         if mode is not None:
             warnings.warn(
@@ -263,13 +262,14 @@ class ColorMap(object):
         """ 
         Set mapping mode.
         
-        The ``mapping`` argument determines how values are mapped to colors:
-        =================================  ===================================================================================
-        'clip' or ColorMap.CLIP            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
-        'repeat' or ColorMap.REPEAT        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
-        'mirror' or ColorMap.MIRROR        The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
-        'diverging' or ColorMap.DIVERGING  Colors are mapped to [-1.0;1.0], so that the central value appears at 0.0.
-        =================================  ===================================================================================
+        The mapping argument determines how values are mapped to colors.
+        
+        mapping options:
+        ----------------
+        'clip' or ColorMap.CLIP:            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
+        'repeat' or ColorMap.REPEAT:        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
+        'mirror' or ColorMap.MIRROR:        The range [-1.0;0.0] uses same colors (in reverse order) as [0.0;1.0].
+        'diverging' or ColorMap.DIVERGING:  Colors are mapped to [-1.0;1.0], so that the central value appears at 0.0.
         """
         if isinstance(mapping, str):
             mapping = self.enumMap[mapping.lower()]
@@ -300,12 +300,13 @@ class ColorMap(object):
         Return an array of colors corresponding to the values in *data*. 
         Data must be either a scalar position or an array (any shape) of positions.
         
-        The ``mode`` argument determines the type of data returned:
-        =========================== ======================================================
-        'byte' or ColorMap.BYTE     (default) Values are returned as 0-255 unsigned bytes.
-        'float' or ColorMap.FLOAT   Values are returned as 0.0-1.0 floats. 
-        'qcolor' or ColorMap.QCOLOR Values are returned as an array of QColor objects.
-        =========================== ======================================================
+        The mode argument determines the type of data returned:
+
+        mode options:
+        -------------
+        'byte' or ColorMap.BYTE:     (default) Values are returned as 0-255 unsigned bytes.
+        'float' or ColorMap.FLOAT:   Values are returned as 0.0-1.0 floats. 
+        'qcolor' or ColorMap.QCOLOR: Values are returned as an array of QColor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
@@ -394,9 +395,9 @@ class ColorMap(object):
             Default is 'vertical'
         """
         if orientation == 'vertical':
-            grad = self.getGradient( p1=QtCore.QPoint(0.,span[0]), p2=QtCore.QPoint(0.,span[1]) )
+            grad = self.getGradient( p1=QtCore.QPointF(0.,span[0]), p2=QtCore.QPointF(0.,span[1]) )
         elif orientation == 'horizontal':
-            grad = self.getGradient( p1=QtCore.QPoint(span[0],0.), p2=QtCore.QPoint(span[1],0.) )
+            grad = self.getGradient( p1=QtCore.QPointF(span[0],0.), p2=QtCore.QPointF(span[1],0.) )
         else:
             raise ValueError("Orientation must be 'vertical' or 'horizontal'")
         return QtGui.QBrush(grad)
@@ -455,16 +456,20 @@ class ColorMap(object):
         """
         Return an RGB(A) lookup table (ndarray). 
         
-        ===============   =============================================================================
-        **Arguments:**
-        start             The starting value in the lookup table (default=0.0)
-        stop              The final value in the lookup table (default=1.0)
-        nPts              The number of points in the returned lookup table.
-        alpha             True, False, or None - Specifies whether or not alpha values are included
-                          in the table. If alpha is None, it will be automatically determined.
-        mode              Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
-                          See :func:`map() <pyqtgraph.ColorMap.map>`.
-        ===============   =============================================================================
+        Parameters
+        ----------
+        start:  float, default=0.0
+                The starting value in the lookup table
+        stop:   float, default=1.0
+                The final value in the lookup table
+        nPts:   int
+                The number of points in the returned lookup table.
+        alpha:  True, False, or None
+                Specifies whether or not alpha values are included
+                in the table. If alpha is None, it will be automatically determined.
+        mode:   'byte', 'float', 'qcolor' or ColorMap.BYTE, FLOAT or QCOLOR
+                Determines return type: 'byte' (0-255), 'float' (0.0-1.0), or 'qcolor'.
+                See :func:`map() <pyqtgraph.ColorMap.map>`.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
