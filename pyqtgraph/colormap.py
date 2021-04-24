@@ -263,7 +263,7 @@ class ColorMap(object):
         """ 
         Set mapping mode.
         
-        The *mapping* argument determines how values are mapped to colors:
+        The ``mapping`` argument determines how values are mapped to colors:
         ------------------------------------------------------------------
         'clip' or ColorMap.CLIP            (default) Colors are mapped to [0.0;1.0]. Values are clipped to this range.
         'repeat' or ColorMap.REPEAT        Colors repeat cyclically, i.e. [1.0;2.0] repeats the colors applied for [0.0;1.0].
@@ -299,7 +299,7 @@ class ColorMap(object):
         Return an array of colors corresponding to the values in *data*. 
         Data must be either a scalar position or an array (any shape) of positions.
         
-        The *mode* argument determines the type of data returned:
+        The ``mode`` argument determines the type of data returned:
         ---------------------------------------------------------
         'byte' or ColorMap.BYTE :      (default) Values are returned as 0-255 unsigned bytes.
         'float' or ColorMap.FLOAT :   Values are returned as 0.0-1.0 floats. 

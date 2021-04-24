@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This example demonstrates multiple plots with timed rolling updates
+This example demonstrates plotting with color gradients.
+It also shows multiple plots with timed rolling updates
 """
 # Add path to library (just for examples; you do not need this)
 import initExample
@@ -130,7 +131,7 @@ class MainWindow(pg.GraphicsLayoutWidget):
             dic['ptr'] = idx_b
             dic['crv'].setData( dic['buf'] )
 
-mkQApp("Data monitor example")
+mkQApp("Gradient plotting example")
 main_window = MainWindow()
 
 ## Start Qt event loop
