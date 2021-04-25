@@ -242,7 +242,7 @@ class ImageItem(GraphicsObject):
         levels             (min, max) The minimum and maximum values to use when rescaling the image
                            data. By default, this will be set to the minimum and maximum values
                            found by inspecting a regularly spaced subset of pixels according to the
-                           levelSamples parameter. 
+                           levelSamples parameter.
                            If the image array has dtype uint8, no rescaling is necessary.
         levelSamples       (default: 65536) When determining minimum and maximum values, ImageItem
                            only inspects a subset of pixels no larger than this number.
@@ -303,18 +303,8 @@ class ImageItem(GraphicsObject):
             else:
                 autoLevels = True
         if autoLevels:
-            img = self.image
             level_samples = kargs.pop('levelSamples', 2**16) 
-            if level_samples < 2: # keep at least two pixels
-                level_samples = 2
-            while True:
-                h, w = img.shape[:2]
-                if h * w <= level_samples: break
-                if h > w:
-                    img = img[::2, ::]
-                else:
-                    img = img[::, ::2]
-            mn, mx = self._xp.nanmin(img), self._xp.nanmax(img)
+            mn, mx = self.quickMinMax( targetSize=level_samples )
             # mn and mx can still be NaN if the data is all-NaN
             if mn == mx or self._xp.isnan(mn) or self._xp.isnan(mx):
                 mn = 0
@@ -380,11 +370,15 @@ class ImageItem(GraphicsObject):
         Estimate the min/max values of the image data by subsampling.
         """
         data = self.image
-        while data.size > targetSize:
-            ax = self._xp.argmax(data.shape)
-            sl = [slice(None)] * data.ndim
-            sl[ax] = slice(None, None, 2)
-            data = data[sl]
+        if targetSize < 2: # keep at least two pixels
+            targetSize = 2
+        while True:
+            h, w = data.shape[:2]
+            if h * w <= targetSize: break
+            if h > w:
+                data = data[::2, ::] # downsample first axis
+            else:
+                data = data[::, ::2] # downsample second axis
         return self._xp.nanmin(data), self._xp.nanmax(data)
 
     def updateImage(self, *args, **kargs):
