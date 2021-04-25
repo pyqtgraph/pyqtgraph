@@ -134,12 +134,14 @@ setup(
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
               'mergetest': helpers.MergeTestCommand,
+              'asv_config': helpers.ASVConfigCommand,
               'style': helpers.StyleCommand},
     packages=allPackages,
     python_requires=">=3.7",
     package_dir={'pyqtgraph.examples': 'examples'},  ## install examples along with the rest of the source
     package_data={'pyqtgraph.examples': ['optics/*.gz', 'relativity/presets/*.cfg'],
                   "pyqtgraph.icons": ["*.svg", "*.png"],
+                  "pyqtgraph": ["colors/maps/*.csv", "colors/maps/*.txt"],
                   },
     install_requires = [
         'numpy>=1.17.0',

@@ -1,5 +1,6 @@
 import numpy as np
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
 pg.mkQApp()
 
@@ -59,6 +60,35 @@ def test_setData():
     pdi.setData([],[])
     assert pdi.xData is None
     assert pdi.yData is None
+
+def test_opts():
+    # test that curve and scatter plot properties get updated from PlotDataItem methods
+    y = list(np.random.normal(size=100))
+    x = np.linspace(5, 10, 100)
+    pdi = pg.PlotDataItem(x, y)
+    pen = QtGui.QPen( QtGui.QColor('#FF0000') )
+    pen2 = QtGui.QPen( QtGui.QColor('#FFFF00') )
+    brush = QtGui.QBrush( QtGui.QColor('#00FF00'))
+    brush2 = QtGui.QBrush( QtGui.QColor('#00FFFF'))
+    float_value = 1.0 + 20*np.random.random()
+    pen2.setWidth( int(float_value) )
+    pdi.setPen(pen)
+    assert pdi.curve.opts['pen'] == pen
+    pdi.setShadowPen(pen2)
+    assert pdi.curve.opts['shadowPen'] == pen2
+    pdi.setFillLevel( float_value )
+    assert pdi.curve.opts['fillLevel'] == float_value
+    pdi.setFillBrush(brush2)
+    assert pdi.curve.opts['brush'] == brush2
+
+    pdi.setSymbol('t')
+    assert pdi.scatter.opts['symbol'] == 't'
+    pdi.setSymbolPen(pen)
+    assert pdi.scatter.opts['pen'] == pen
+    pdi.setSymbolBrush(brush)
+    assert pdi.scatter.opts['brush'] == brush
+    pdi.setSymbolSize( float_value )
+    assert pdi.scatter.opts['size'] == float_value
 
 def test_clear():
     y = list(np.random.normal(size=100))

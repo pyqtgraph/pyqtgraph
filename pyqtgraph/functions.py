@@ -13,6 +13,7 @@ import re
 import struct
 import sys
 import warnings
+import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
@@ -59,19 +60,15 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-        
     try:
-        if np.isnan(x) or np.isinf(x):
+        if not math.isfinite(x):
             return(1, '')
     except:
-        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
-        x = 0
     else:
-        m = int(np.clip(np.floor(np.log(abs(x))/np.log(1000)), -9.0, 9.0))
-    
+        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -83,7 +80,6 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     m1 = -3*m
     p = 10.**m1
-    
     return (p, pref)
 
 
@@ -213,7 +209,8 @@ class Color(QtGui.QColor):
     
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
+    Convenience function for constructing QColor from a variety of argument 
+    types. Accepted arguments are:
     
     ================ ================================================
      'c'             one of: r, g, b, c, m, y, k, w                      
@@ -222,10 +219,10 @@ def mkColor(*args):
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "RGB"           hexadecimal strings; may begin with '#'
-     "RGBA"          
-     "RRGGBB"       
-     "RRGGBBAA"     
+     "#RGB"          hexadecimal strings prefixed with '#'
+     "#RGBA"         previously allowed use without prefix is deprecated and 
+     "#RRGGBB"       will be removed in 0.13
+     "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
     ================ ================================================
     """
@@ -233,13 +230,19 @@ def mkColor(*args):
     if len(args) == 1:
         if isinstance(args[0], basestring):
             c = args[0]
-            if c[0] == '#':
-                c = c[1:]
             if len(c) == 1:
                 try:
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            if c[0] == '#':
+                c = c[1:]
+            else:
+                warnings.warn(
+                    "Parsing of hex strings that do not start with '#' is"
+                    "deprecated and support will be removed in 0.13",
+                    DeprecationWarning, stacklevel=2
+                )
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -260,6 +263,8 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+            else:
+                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -267,10 +272,10 @@ def mkColor(*args):
             a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
-                (r, g, b) = args[0]
+                r, g, b = args[0]
                 a = 255
             elif len(args[0]) == 4:
-                (r, g, b, a) = args[0]
+                r, g, b, a = args[0]
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
@@ -280,16 +285,13 @@ def mkColor(*args):
         else:
             raise TypeError(err)
     elif len(args) == 3:
-        (r, g, b) = args
+        r, g, b = args
         a = 255
     elif len(args) == 4:
-        (r, g, b, a) = args
+        r, g, b, a = args
     else:
         raise TypeError(err)
-    
-    args = [r,g,b,a]
-    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
-    args = list(map(int, args))
+    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
@@ -323,7 +325,7 @@ def mkPen(*args, **kargs):
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
-        mkPen({'color': "FF0", width: 2})
+        mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
     
     In these examples, *color* may be replaced with any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`    """
@@ -424,16 +426,16 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     If *tailLen* is None, no tail will be drawn.
     """
     if headWidth is None:
-        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+        headWidth = headLen * math.tan(math.radians(tipAngle * 0.5))
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
     if tailLen is None:
-        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - headWidth * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, 0)
     else:
         tailWidth *= 0.5
-        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - (headWidth-tailWidth) * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, -tailWidth)
         path.lineTo(headLen + tailLen, -tailWidth)
         path.lineTo(headLen + tailLen, tailWidth)
@@ -450,7 +452,7 @@ def eq(a, b):
     
     1. Returns True if a IS b, even if a==b still evaluates to False.
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
-       float('nan') instances using np.isnan.
+       float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
@@ -464,7 +466,7 @@ def eq(a, b):
 
     # The above catches np.nan, but not float('nan')
     if isinstance(a, float) and isinstance(b, float):
-        if np.isnan(a) and np.isnan(b):
+        if math.isnan(a) and math.isnan(b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
@@ -997,7 +999,79 @@ def solveBilinearTransform(points1, points2):
         matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
-    
+
+def clip_scalar(val, vmin, vmax):
+    """ convenience function to avoid using np.clip for scalar values """
+    return vmin if val < vmin else vmax if val > vmax else val
+
+def clip_array(arr, vmin, vmax, out=None):
+    # replacement for np.clip due to regression in
+    # performance since numpy 1.17
+    # https://github.com/numpy/numpy/issues/14281
+
+    if vmin is None and vmax is None:
+        # let np.clip handle the error
+        return np.clip(arr, vmin, vmax, out=out)
+
+    if vmin is None:
+        return np.core.umath.minimum(arr, vmax, out=out)
+    elif vmax is None:
+        return np.core.umath.maximum(arr, vmin, out=out)
+    elif sys.platform == 'win32':
+        # Windows umath.clip is slower than umath.maximum(umath.minimum)
+        if out is None:
+            out = np.empty_like(arr)
+        out = np.core.umath.minimum(arr, vmax, out=out)
+        return np.core.umath.maximum(out, vmin, out=out)
+    else:
+        return np.core.umath.clip(arr, vmin, vmax, out=out)
+
+
+def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
+    """Refer to documentation for rescaleData()"""
+    data_out = np.empty_like(data_in, dtype=out_dtype)
+
+    # integer clip operations are faster than float clip operations
+    # so test to see if we can perform integer clipping
+    fits_int32 = False
+    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
+        # estimate whether data range after rescale will fit within an int32.
+        # this means that the input dtype should be an 8-bit or 16-bit integer type.
+        # casting to an int32 will lose the fractional part, therefore the
+        # output dtype must be an integer kind.
+        lim_in = np.iinfo(data_in.dtype)
+        # convert numpy scalar to python scalar to avoid overflow warnings
+        lo = offset.item(0) if isinstance(offset, np.number) else offset
+        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
+        if dst_bounds[1] < dst_bounds[0]:
+            dst_bounds = dst_bounds[1], dst_bounds[0]
+        lim32 = np.iinfo(np.int32)
+        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
+
+    it = np.nditer([data_in, data_out],
+            flags=['external_loop', 'buffered'],
+            op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
+            op_dtypes=[None, work_dtype],
+            casting='unsafe',
+            buffersize=32768)
+
+    with it:
+        for x, y in it:
+            y[...] = x
+            y -= offset
+            y *= scale
+
+            # Clip before converting dtype to avoid overflow
+            if clip is not None:
+                if fits_int32:
+                    # converts to int32, clips back to float32
+                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                else:
+                    clip_array(y, clip[0], clip[1], out=y)
+
+    return data_out
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1006,39 +1080,43 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         data => (data-offset) * scale
     """
     if dtype is None:
-        dtype = data.dtype
+        out_dtype = data.dtype
     else:
-        dtype = np.dtype(dtype)
+        out_dtype = np.dtype(dtype)
 
-    vmin, vmax = None, None
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
+    if out_dtype.kind in 'ui':
+        lim = np.iinfo(out_dtype)
         if clip is None:
             # don't let rescale cause integer overflow
-            vmin, vmax = lim.min, lim.max
-        else:
-            vmin, vmax = max(clip[0], lim.min), min(clip[1], lim.max)
-    elif clip is not None:
-        vmin, vmax = clip
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
+
+        # make clip limits integer-valued (no need to cast to int)
+        # this improves performance, especially on Windows
+        clip = [math.trunc(x) for x in clip]
 
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
         work_dtype = np.float64
-    d2 = data.astype(work_dtype, copy=True)
-    d2 -= offset
-    d2 *= scale
 
-    # Clip before converting dtype to avoid overflow
-    # regression in np.clip performance since numpy 1.17
-    if vmin is not None:
-        np.core.umath.maximum(d2, vmin, out=d2)
-    if vmax is not None:
-        np.core.umath.minimum(d2, vmax, out=d2)
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # Cupy does not support nditer
+        # https://github.com/cupy/cupy/issues/5021
 
-    # don't copy if no change in dtype
-    data = d2.astype(dtype, copy=False)
-    return data
+        data_out = data.astype(work_dtype, copy=True)
+        data_out -= offset
+        data_out *= scale
+
+        # Clip before converting dtype to avoid overflow
+        if clip is not None:
+            clip_array(data_out, clip[0], clip[1], out=data_out)
+
+        # don't copy if no change in dtype
+        return data_out.astype(out_dtype, copy=False)
+    else:
+        return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):
@@ -1215,44 +1293,95 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # decide channel order
     if useRGBA:
-        order = [0,1,2,3] # array comes out RGBA
+        dst_order = [0, 1, 2, 3]    # R,G,B,A
+    elif sys.byteorder == 'little':
+        dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
-        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
+        dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
         
     # copy data into image array
-    if data.ndim == 2:
+    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
+
+    if fastpath:
+        pass
+    elif data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., i] = data
+            imgData[..., dst_order[i]] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            imgData[..., i] = data[..., 0]
+            imgData[..., dst_order[i]] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., i] = data[..., order[i]] 
+            imgData[..., dst_order[i]] = data[..., i]
         
     profile('reorder channels')
     
     # add opaque alpha channel if needed
-    if data.ndim == 2 or data.shape[2] == 3:
-        alpha = False
-        imgData[..., 3] = 255
-    else:
+    if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
+    else:
+        alpha = False
+        if not fastpath:    # fastpath has already filled it in
+            imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
         # Workaround for https://github.com/cupy/cupy/issues/4693
         if xp == cp:
-            imgData[nanMask, :, 3] = 0
+            imgData[nanMask, :, dst_order[3]] = 0
         else:
-            imgData[nanMask, 3] = 0
+            imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
+
+
+def try_fastpath_argb(xp, ain, aout, useRGBA):
+    # we only optimize for certain cases
+    # return False if we did not handle it
+    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
+    if not can_handle:
+        return False
+
+    nrows, ncols = ain.shape[:2]
+    nchans = 1 if ain.ndim == 2 else ain.shape[2]
+
+    Format = QtGui.QImage.Format
+
+    if nchans == 1:
+        in_fmt = Format.Format_Grayscale8
+    elif nchans == 3:
+        in_fmt = Format.Format_RGB888
+    else:
+        in_fmt = Format.Format_RGBA8888
+
+    if useRGBA:
+        out_fmt = Format.Format_RGBA8888
+    else:
+        out_fmt = Format.Format_ARGB32
+
+    if in_fmt == out_fmt:
+        aout[:] = ain
+        return True
+
+    npixels_chunk = 512*1024
+    batch = int(npixels_chunk / ncols / nchans)
+    batch = max(1, batch)
+    row_beg = 0
+    while row_beg < nrows:
+        row_end = min(row_beg + batch, nrows)
+        ain_view = ain[row_beg:row_end, ...]
+        aout_view = aout[row_beg:row_end, ...]
+        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
+        qimg = qimg.convertToFormat(out_fmt)
+        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
+        row_beg = row_end
+
+    return True
 
 
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):

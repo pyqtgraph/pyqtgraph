@@ -12,14 +12,16 @@ Widget used for displaying 2D or 3D data. Features:
   - ROI plotting
   - Image normalization through a variety of methods
 """
-import os, sys
+import os
+from math import log10
 import numpy as np
 
 from ..Qt import QtCore, QtGui, QT_LIB
+from .. import functions as fn
 import importlib
 ui_template = importlib.import_module(
     f'.ImageViewTemplate_{QT_LIB.lower()}', package=__package__)
-    
+
 from ..graphicsItems.ImageItem import *
 from ..graphicsItems.ROI import *
 from ..graphicsItems.LinearRegionItem import *
@@ -272,7 +274,7 @@ class ImageView(QtGui.QWidget):
         
         if not isinstance(img, np.ndarray):
             required = ['dtype', 'max', 'min', 'ndim', 'shape', 'size']
-            if not all([hasattr(img, attr) for attr in required]):
+            if not all(hasattr(img, attr) for attr in required):
                 raise TypeError("Image must be NumPy array or any object "
                                 "that provides compatible attributes/methods:\n"
                                 "  %s" % str(required))
@@ -512,7 +514,7 @@ class ImageView(QtGui.QWidget):
         
     def setCurrentIndex(self, ind):
         """Set the currently displayed frame index."""
-        index = np.clip(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
+        index = fn.clip_scalar(ind, 0, self.getProcessedImage().shape[self.axes['t']]-1)
         self.ignorePlaying = True
         # Implicitly call timeLineChanged
         self.timeLine.setValue(self.tVals[index])
@@ -563,7 +565,7 @@ class ImageView(QtGui.QWidget):
             self.roi.show()
             #self.ui.roiPlot.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
-            self.ui.splitter.setSizes([self.height()*0.6, self.height()*0.4])
+            self.ui.splitter.setSizes([int(self.height()*0.6), int(self.height()*0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
             self.roiCurve.show()
             self.roiChanged()
@@ -807,7 +809,7 @@ class ImageView(QtGui.QWidget):
         img = self.getProcessedImage()
         if self.hasTimeAxis():
             base, ext = os.path.splitext(fileName)
-            fmt = "%%s%%0%dd%%s" % int(np.log10(img.shape[0])+1)
+            fmt = "%%s%%0%dd%%s" % int(log10(img.shape[0])+1)
             for i in range(img.shape[0]):
                 self.imageItem.setImage(img[i], autoLevels=False)
                 self.imageItem.save(fmt % (base, i, ext))

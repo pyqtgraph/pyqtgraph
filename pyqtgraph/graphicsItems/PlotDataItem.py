@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+import math
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -167,6 +168,8 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigHovered.connect(self.scatterHovered)
 
         self._viewRangeWasChanged = False
+        self._styleWasChanged = True # force initial update
+
         self._dataRect = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
         #self.clear()
@@ -206,6 +209,7 @@ class PlotDataItem(GraphicsObject):
 
             'data': None,
         }
+        self.setCurveClickable(kargs.get('clickable', False))
         self.setData(*args, **kargs)
 
     def implements(self, interface=None):
@@ -216,6 +220,12 @@ class PlotDataItem(GraphicsObject):
 
     def name(self):
         return self.opts.get('name', None)
+
+    def setCurveClickable(self, s, width=None):
+        self.curve.setClickable(s, width)
+
+    def curveClickable(self):
+        return self.curve.clickable
 
     def boundingRect(self):
         return QtCore.QRectF()  ## let child items handle this
@@ -240,7 +250,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['fftMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
     def setLogMode(self, xMode, yMode):
@@ -258,7 +268,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['logMode'] = [xMode, yMode]
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
 
@@ -267,7 +277,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['derivativeMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
     def setPhasemapMode(self, mode):
@@ -275,7 +285,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['phasemapMode'] = mode
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
     def setPointMode(self, mode):
@@ -295,7 +305,7 @@ class PlotDataItem(GraphicsObject):
         #for c in self.curves:
             #c.setPen(pen)
         #self.update()
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setShadowPen(self, *args, **kargs):
         """
@@ -310,14 +320,14 @@ class PlotDataItem(GraphicsObject):
         #for c in self.curves:
             #c.setPen(pen)
         #self.update()
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setFillBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
         if self.opts['fillBrush'] == brush:
             return
         self.opts['fillBrush'] = brush
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setBrush(self, *args, **kargs):
         return self.setFillBrush(*args, **kargs)
@@ -326,14 +336,14 @@ class PlotDataItem(GraphicsObject):
         if self.opts['fillLevel'] == level:
             return
         self.opts['fillLevel'] = level
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setSymbol(self, symbol):
         if self.opts['symbol'] == symbol:
             return
         self.opts['symbol'] = symbol
         #self.scatter.setSymbol(symbol)
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setSymbolPen(self, *args, **kargs):
         pen = fn.mkPen(*args, **kargs)
@@ -341,7 +351,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolPen'] = pen
         #self.scatter.setSymbolPen(pen)
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setSymbolBrush(self, *args, **kargs):
         brush = fn.mkBrush(*args, **kargs)
@@ -349,7 +359,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolBrush'] = brush
         #self.scatter.setSymbolBrush(brush)
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
 
     def setSymbolSize(self, size):
@@ -357,7 +367,7 @@ class PlotDataItem(GraphicsObject):
             return
         self.opts['symbolSize'] = size
         #self.scatter.setSymbolSize(symbolSize)
-        self.updateItems()
+        self.updateItems(styleUpdate=True)
 
     def setDownsampling(self, ds=None, auto=None, method=None):
         """
@@ -394,14 +404,14 @@ class PlotDataItem(GraphicsObject):
 
         if changed:
             self.xDisp = self.yDisp = None
-            self.updateItems()
+            self.updateItems(styleUpdate=False)
 
     def setClipToView(self, clip):
         if self.opts['clipToView'] == clip:
             return
         self.opts['clipToView'] = clip
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
 
     def setDynamicRangeLimit(self, limit=1e06, hysteresis=3.):
         """
@@ -429,7 +439,7 @@ class PlotDataItem(GraphicsObject):
             return # avoid update if there is no change
         self.opts['dynamicRangeLimit'] = limit # can be None
         self.xDisp = self.yDisp = None
-        self.updateItems()
+        self.updateItems(styleUpdate=False)
 
     def setData(self, *args, **kargs):
         """
@@ -522,13 +532,16 @@ class PlotDataItem(GraphicsObject):
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
+            self._styleWasChanged = True
+
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
+            self._styleWasChanged = True
 
-        ## if symbol pen/brush are given with no symbol, then assume symbol is 'o'
-
+        ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
-            kargs['symbol'] = 'o'
+            if self.opts['symbol'] is None: 
+                kargs['symbol'] = 'o'
 
         if 'brush' in kargs:
             kargs['fillBrush'] = kargs['brush']
@@ -536,7 +549,7 @@ class PlotDataItem(GraphicsObject):
         for k in list(self.opts.keys()):
             if k in kargs:
                 self.opts[k] = kargs[k]
-
+                self._styleWasChanged = True
         #curveArgs = {}
         #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
             #if k in kargs:
@@ -569,7 +582,8 @@ class PlotDataItem(GraphicsObject):
         self.yDisp = None
         profiler('set data')
 
-        self.updateItems()
+        self.updateItems( styleUpdate = self._styleWasChanged )
+        self._styleWasChanged = False # items have been updated
         profiler('update items')
 
         self.informViewBoundsChanged()
@@ -580,33 +594,40 @@ class PlotDataItem(GraphicsObject):
         self.sigPlotChanged.emit(self)
         profiler('emit')
 
-    def updateItems(self):
+    def updateItems(self, styleUpdate=True):
+        # override styleUpdate request and always enforce update until we have a better solution for
+        # - ScatterPlotItem losing per-point style information
+        # - PlotDataItem performing multiple unnecessary setData call on initialization
+        styleUpdate=True
+        
         curveArgs = {}
-        for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
-            curveArgs[v] = self.opts[k]
-
         scatterArgs = {}
-        for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
-            if k in self.opts:
-                scatterArgs[v] = self.opts[k]
+
+        if styleUpdate: # repeat style arguments only when changed
+            for k,v in [('pen','pen'), ('shadowPen','shadowPen'), ('fillLevel','fillLevel'), ('fillOutline', 'fillOutline'), ('fillBrush', 'brush'), ('antialias', 'antialias'), ('connect', 'connect'), ('stepMode', 'stepMode')]:
+                if k in self.opts:
+                    curveArgs[v] = self.opts[k]
+
+            for k,v in [('symbolPen','pen'), ('symbolBrush','brush'), ('symbol','symbol'), ('symbolSize', 'size'), ('data', 'data'), ('pxMode', 'pxMode'), ('antialias', 'antialias')]:
+                if k in self.opts:
+                    scatterArgs[v] = self.opts[k]
 
         x,y = self.getData()
         #scatterArgs['mask'] = self.dataMask
 
-        if curveArgs['pen'] is not None or (curveArgs['brush'] is not None and curveArgs['fillLevel'] is not None):
+        if self.opts['pen'] is not None or (self.opts['fillBrush'] is not None and self.opts['fillLevel'] is not None): # draw if visible...
             self.curve.setData(x=x, y=y, **curveArgs)
             self.curve.show()
-        else:
+        else: # ...hide if not.
             self.curve.hide()
 
-        if scatterArgs['symbol'] is not None:
-
+        if self.opts['symbol'] is not None: # draw if visible...
             ## check against `True` too for backwards compatibility
             if self.opts.get('stepMode', False) in ("center", True):
                 x = 0.5 * (x[:-1] + x[1:])                
             self.scatter.setData(x=x, y=y, **scatterArgs)
             self.scatter.show()
-        else:
+        else: # ...hide if not.
             self.scatter.hide()
 
 
@@ -640,7 +661,7 @@ class PlotDataItem(GraphicsObject):
                         eps = np.finfo(y.dtype).eps
                     else:
                         eps = 1
-                    y = np.sign(y) * np.log10(np.abs(y)+eps)
+                    y = np.copysign(np.log10(np.abs(y)+eps), y)
 
             ds = self.opts['downsample']
             if not isinstance(ds, int):
@@ -668,8 +689,11 @@ class PlotDataItem(GraphicsObject):
                         # clip to visible region extended by downsampling value, assuming
                         # uniform spacing of x-values, has O(1) performance
                         dx = float(x[-1]-x[0]) / (len(x)-1)
-                        x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
-                        x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+
+                        # x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        # x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                        x0 = fn.clip_scalar(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
+                        x1 = fn.clip_scalar(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
 
                         # if data has been clipped too strongly (in case of non-uniform
                         # spacing of x-values), refine the clipping region as required
@@ -677,10 +701,12 @@ class PlotDataItem(GraphicsObject):
                         # best case performance: O(1)
                         if x[x0] > range.left():
                             x0 = np.searchsorted(x, range.left()) - 1*ds
-                            x0 = np.clip(x0, a_min=0, a_max=len(x))
+                            x0 = fn.clip_scalar(x0, 0, len(x)) # workaround
+                            # x0 = np.clip(x0, 0, len(x))
                         if x[x1] < range.right():
                             x1 = np.searchsorted(x, range.right()) + 2*ds
-                            x1 = np.clip(x1, a_min=0, a_max=len(x))
+                            x1 = fn.clip_scalar(x1, 0, len(x))
+                            # x1 = np.clip(x1, 0, len(x))
                         x = x[x0:x1]
                         y = y[x0:x1]
 
@@ -712,11 +738,16 @@ class PlotDataItem(GraphicsObject):
                         limit = self.opts['dynamicRangeLimit']
                         hyst  = self.opts['dynamicRangeHyst']
                         # never clip data if it fits into +/- (extended) limit * view height
-                        if data_range.height() > 2 * hyst * limit * view_height:
+                        if ( # note that "bottom" is the larger number, and "top" is the smaller one.
+                            not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
+                            and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
+                            and data_range.height() > 2 * hyst * limit * view_height
+                        ):
+                            cache_is_good = False
                             # check if cached display data can be reused:
                             if self.yDisp is not None: # top is minimum value, bottom is maximum value
                                 # how many multiples of the current view height does the clipped plot extend to the top and bottom?
-                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height 
+                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height
                                 bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
                                 # print(top_exc, bot_exc, hyst)
                                 if (    top_exc >= limit / hyst and top_exc <= limit * hyst
@@ -724,22 +755,30 @@ class PlotDataItem(GraphicsObject):
                                     # restore cached values
                                     x = self.xDisp
                                     y = self.yDisp
-                                else:
-                                    min_val = view_range.bottom() - limit * view_height
-                                    max_val = view_range.top()    + limit * view_height                                    
-                                    if(     min_val >= self._drlLastClip[0]
-                                        and max_val <= self._drlLastClip[1] ):
-                                        # if we need to clip further, we can work in-place on the output buffer
-                                        # print('in-place:', end='')
-                                        np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
-                                        x = self.xDisp
-                                        y = self.yDisp
-                                    else:
-                                        # otherwise we need to recopy from the full data
-                                        # print('alloc:', end='')
-                                        y = np.clip(y, a_min=min_val, a_max=max_val)
-                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    cache_is_good = True
+                            if not cache_is_good:
+                                min_val = view_range.bottom() - limit * view_height
+                                max_val = view_range.top()    + limit * view_height
+                                if( self.yDisp is not None              # Do we have an existing cache? 
+                                    and min_val >= self._drlLastClip[0] # Are we reducing it further?
+                                    and max_val <= self._drlLastClip[1] ):
+                                    # if we need to clip further, we can work in-place on the output buffer
+                                    # print('in-place:', end='')
+                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                    # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                    fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
                                     self._drlLastClip = (min_val, max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                    x = self.xDisp
+                                    y = self.yDisp
+                                else:
+                                    # if none of the shortcuts worked, we need to recopy from the full data
+                                    # print('alloc:', end='')
+                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                    # y = np.clip(y, a_min=min_val, a_max=max_val)
+                                    y = fn.clip_array(y, min_val, max_val)
+                                    self._drlLastClip = (min_val, max_val)
+                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
 
             self.xDisp = x
             self.yDisp = y
@@ -761,10 +800,10 @@ class PlotDataItem(GraphicsObject):
             # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
             warnings.simplefilter("ignore")
             ymin = np.nanmin(self.yData)
-            if np.isnan( ymin ):
+            if math.isnan( ymin ):
                 return None # most likely case for all-NaN data
             xmin = np.nanmin(self.xData)
-            if np.isnan( xmin ):
+            if math.isnan( xmin ):
                 return None # less likely case for all-NaN data
             ymax = np.nanmax(self.yData)
             xmax = np.nanmax(self.xData)
@@ -851,10 +890,10 @@ class PlotDataItem(GraphicsObject):
             or self.opts['autoDownsample']
         ):
             self.xDisp = self.yDisp = None
-            self.updateItems()
+            self.updateItems(styleUpdate=False)
         elif self.opts['dynamicRangeLimit'] is not None:
-            # do not discard cached display data
-            self.updateItems()
+            # update, but do not discard cached display data
+            self.updateItems(styleUpdate=False)
 
     def _fourierTransform(self, x, y):
         ## Perform fourier transform. If x values are not sampled uniformly,

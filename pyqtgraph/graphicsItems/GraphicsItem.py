@@ -1,4 +1,5 @@
 import warnings
+from math import hypot
 from collections import OrderedDict
 from functools import reduce
 from ..Qt import QtGui, QtCore, isQObjectAlive
@@ -308,7 +309,7 @@ class GraphicsItem(object):
         v = self.pixelVectors()
         if v == (None, None):
             return None, None
-        return (v[0].x()**2+v[0].y()**2)**0.5, (v[1].x()**2+v[1].y()**2)**0.5
+        return (hypot(v[0].x(), v[0].y()), hypot(v[1].x(), v[1].y()))  # lengths
 
     def pixelWidth(self):
         ## deprecated

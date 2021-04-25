@@ -1,4 +1,5 @@
-from ..Qt import QtGui, QtCore
+from math import hypot
+from ..Qt import QtGui, QtCore, mkQApp
 
 
 __all__ = ['JoystickButton']
@@ -41,7 +42,7 @@ class JoystickButton(QtGui.QPushButton):
         
     def setState(self, *xy):
         xy = list(xy)
-        d = (xy[0]**2 + xy[1]**2)**0.5
+        d = hypot(xy[0], xy[1])  # length
         nxy = [0, 0]
         for i in [0,1]:
             if xy[i] == 0:
@@ -84,7 +85,7 @@ class JoystickButton(QtGui.QPushButton):
         
         
 if __name__ == '__main__':
-    app = QtGui.QApplication([])
+    app = mkQApp()
     w = QtGui.QMainWindow()
     b = JoystickButton()
     w.setCentralWidget(b)
@@ -96,8 +97,5 @@ if __name__ == '__main__':
         
     b.sigStateChanged.connect(fn)
         
-    ## Start Qt event loop unless running in interactive mode.
-    import sys
-    if sys.flags.interactive != 1:
-        app.exec_()
+    app.exec_()
         

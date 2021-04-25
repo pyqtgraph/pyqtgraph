@@ -211,7 +211,10 @@ class Renderer(GraphicsView):
             ## make sure shm is large enough and get its address
             if self.width() == 0 or self.height() == 0:
                 return
-            size = self.width() * self.height() * 4
+            dpr = self.devicePixelRatioF()
+            iwidth = int(self.width() * dpr)
+            iheight = int(self.height() * dpr)
+            size = iwidth * iheight * 4
             if size > self.shm.size():
                 if sys.platform.startswith('win'):
                     ## windows says "WindowsError: [Error 87] the parameter is incorrect" if we try to resize the mmap
@@ -240,13 +243,14 @@ class Renderer(GraphicsView):
                 # PySide2, PySide6
                 img_ptr = self.shm
 
-            self.img = QtGui.QImage(img_ptr, self.width(), self.height(), QtGui.QImage.Format_ARGB32)
+            self.img = QtGui.QImage(img_ptr, iwidth, iheight, QtGui.QImage.Format_ARGB32)
+            self.img.setDevicePixelRatio(dpr)
 
             self.img.fill(0xffffffff)
             p = QtGui.QPainter(self.img)
             self.render(p, self.viewRect(), self.rect())
             p.end()
-            self.sceneRendered.emit((self.width(), self.height(), self.shm.size(), self.shmFileName()))
+            self.sceneRendered.emit((iwidth, iheight, self.shm.size(), self.shmFileName()))
 
     def deserialize_mouse_event(self, mouse_event):
         typ, pos, gpos, btn, btns, mods = mouse_event
@@ -259,9 +263,10 @@ class Renderer(GraphicsView):
 
     def deserialize_wheel_event(self, wheel_event):
         pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted = wheel_event
-        btns = QtCore.Qt.MouseButtons(btns)
-        mods = QtCore.Qt.KeyboardModifiers(mods)
-        phase = QtCore.Qt.ScrollPhase(phase)
+        if QT_LIB != 'PyQt6':
+            btns = QtCore.Qt.MouseButtons(btns)
+            mods = QtCore.Qt.KeyboardModifiers(mods)
+            phase = QtCore.Qt.ScrollPhase(phase)
         return QtGui.QWheelEvent(pos, gpos, pixelDelta, angleDelta, btns, mods, phase, inverted)
 
     def mousePressEvent(self, mouse_event):

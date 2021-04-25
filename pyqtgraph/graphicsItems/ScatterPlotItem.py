@@ -6,6 +6,7 @@ try:
 except ImportError:
     imap = map
 import itertools
+import math
 import numpy as np
 import weakref
 from ..Qt import QtGui, QtCore, QT_LIB
@@ -39,10 +40,22 @@ _USE_QRECT = QT_LIB not in ['PySide2', 'PySide6']
 
 ## Build all symbol paths
 name_list = ['o', 's', 't', 't1', 't2', 't3', 'd', '+', 'x', 'p', 'h', 'star',
-             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left']
+             'arrow_up', 'arrow_right', 'arrow_down', 'arrow_left', 'crosshair']
 Symbols = OrderedDict([(name, QtGui.QPainterPath()) for name in name_list])
 Symbols['o'].addEllipse(QtCore.QRectF(-0.5, -0.5, 1, 1))
 Symbols['s'].addRect(QtCore.QRectF(-0.5, -0.5, 1, 1))
+
+def makeCrosshair(r=0.5, w=1, h=1):
+    path = QtGui.QPainterPath()
+    rect = QtCore.QRectF(-r, -r, r * 2, r * 2)
+    path.addEllipse(rect)
+    path.moveTo(-w, 0)
+    path.lineTo(w, 0)
+    path.moveTo(0, -h)
+    path.lineTo(0, h)
+    return path
+Symbols['crosshair'] = makeCrosshair()
+
 coords = {
     't': [(-0.5, -0.5), (0, 0.5), (0.5, -0.5)],
     't1': [(-0.5, 0.5), (0, -0.5), (0.5, 0.5)],
@@ -104,7 +117,7 @@ def renderSymbol(symbol, size, pen, brush, device=None):
     for more information).
     """
     ## Render a spot with the given parameters to a pixmap
-    penPxWidth = max(np.ceil(pen.widthF()), 1)
+    penPxWidth = max(math.ceil(pen.widthF()), 1)
     if device is None:
         device = QtGui.QImage(int(size+penPxWidth), int(size+penPxWidth), QtGui.QImage.Format_ARGB32)
         device.fill(0)
@@ -938,6 +951,8 @@ class ScatterPlotItem(GraphicsObject):
         elif ax == 1:
             d = self.data['y']
             d2 = self.data['x']
+        else:
+            raise ValueError("Invalid axis value")
 
         if orthoRange is not None:
             mask = (d2 >= orthoRange[0]) * (d2 <= orthoRange[1])
@@ -1061,7 +1076,7 @@ class ScatterPlotItem(GraphicsObject):
             # Map points using painter's world transform so they are drawn with pixel-valued sizes
             pts = np.vstack([self.data['x'], self.data['y']])
             pts = fn.transformCoordinates(p.transform(), pts)
-            pts = np.clip(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
+            pts = fn.clip_array(pts, -2 ** 30, 2 ** 30)  # prevent Qt segmentation fault.
             p.resetTransform()
 
             if self.opts['useCache'] and self._exportOpts is False:
