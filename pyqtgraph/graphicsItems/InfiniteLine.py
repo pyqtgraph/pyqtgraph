@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from math import atan2, degrees
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .GraphicsObject import GraphicsObject
@@ -359,7 +360,7 @@ class InfiniteLine(GraphicsObject):
         up = tr.map(Point(left, 1))
         dif = end - start
         length = Point(dif).length()
-        angle = np.arctan2(dif.y(), dif.x()) * 180 / np.pi
+        angle = degrees(atan2(dif.y(), dif.x()))
         
         p.translate(start)
         p.rotate(angle)
@@ -592,7 +593,7 @@ class InfLineLabel(TextItem):
                 return
 
             rel = self._posToRel(ev.pos())
-            self.orthoPos = np.clip(self._startPosition + rel - self._cursorOffset, 0, 1)
+            self.orthoPos = fn.clip_scalar(self._startPosition + rel - self._cursorOffset, 0., 1.)
             self.updatePosition()
             if ev.isFinish():
                 self._moving = False

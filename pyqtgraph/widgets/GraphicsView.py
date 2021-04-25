@@ -7,10 +7,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
-import sys, os
-from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
-import numpy as np
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
@@ -378,7 +375,7 @@ class GraphicsView(QtGui.QGraphicsView):
             return
         
         if ev.buttons() == QtCore.Qt.RightButton:
-            delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
+            delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)

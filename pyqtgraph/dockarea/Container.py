@@ -126,7 +126,7 @@ class SplitContainer(Container, QtGui.QSplitter):
         
     def saveState(self):
         sizes = self.sizes()
-        if all([x == 0 for x in sizes]):
+        if all(x == 0 for x in sizes):
             sizes = [10] * len(sizes)
         return {'sizes': sizes}
         

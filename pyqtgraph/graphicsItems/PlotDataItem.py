@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+import math
 import numpy as np
 from .. import metaarray as metaarray
 from ..Qt import QtCore
@@ -154,9 +155,6 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
-        #self.dataMask = None
-        #self.curves = []
-        #self.scatters = []
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -166,9 +164,15 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.scatterHovered)
 
-        self._xViewRangeWasChanged = False
-        self._yViewRangeWasChanged = False
-        self._styleWasChanged = True # force initial update
+        # self._xViewRangeWasChanged = False
+        # self._yViewRangeWasChanged = False
+        # self._styleWasChanged = True # force initial update
+        
+        # update-required notifications are handled through properties to allow future management through
+        # the QDynamicPropertyChangeEvent sent on any change.
+        self.setProperty('xViewRangeWasChanged', False)
+        self.setProperty('yViewRangeWasChanged', False)
+        self.setProperty('styleWasChanged', True) # force initial update
 
         self._dataRect = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
@@ -532,11 +536,11 @@ class PlotDataItem(GraphicsObject):
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
-            self._styleWasChanged = True
+            self.setProperty('styleWasChanged', True)
 
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
-            self._styleWasChanged = True
+            self.setProperty('styleWasChanged', True)
 
         ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
@@ -549,7 +553,7 @@ class PlotDataItem(GraphicsObject):
         for k in list(self.opts.keys()):
             if k in kargs:
                 self.opts[k] = kargs[k]
-                self._styleWasChanged = True
+                self.setProperty('styleWasChanged', True)
         #curveArgs = {}
         #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
             #if k in kargs:
@@ -582,14 +586,11 @@ class PlotDataItem(GraphicsObject):
         self.yDisp = None
         profiler('set data')
 
-        self.updateItems( styleUpdate = self._styleWasChanged )
-        self._styleWasChanged = False # items have been updated
+        self.updateItems( styleUpdate = self.property('styleWasChanged') )
+        self.setProperty('styleWasChanged', False) # items have been updated
         profiler('update items')
 
         self.informViewBoundsChanged()
-        #view = self.getViewBox()
-        #if view is not None:
-            #view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
 
         self.sigPlotChanged.emit(self)
         profiler('emit')
@@ -635,10 +636,10 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
 
-        if( self.xDisp is not None
-            and not (self._xViewRangeWasChanged and self.opts['clipToView'])
-            and not (self._xViewRangeWasChanged and self.opts['autoDownsample'])
-            and not (self._yViewRangeWasChanged and self.opts['dynamicRangeLimit'] is not None)
+        if( self.xDisp is not None and
+            not (self.property('xViewRangeWasChanged') and self.opts['clipToView']) and
+            not (self.property('xViewRangeWasChanged') and self.opts['autoDownsample']) and
+            not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
         ):
             return self.xDisp, self.yDisp
 
@@ -646,12 +647,11 @@ class PlotDataItem(GraphicsObject):
         y = self.yData
         view = self.getViewBox()
         if view is None:
-            v_rng = None
+            view_range = None
         else:
-            v_rng = self.getViewBox().viewRect() # this is always up-to-date
-        if v_rng is None:
-            v_rng = self.viewRect()
-            # assert v_rng is None # halt if this actually did anything!
+            view_range = self.getViewBox().viewRect() # this is always up-to-date
+        if view_range is None:
+            view_range = self.viewRect()
 
         if self.opts['fftMode']:
             x,y = self._fourierTransform(x, y)
@@ -683,11 +683,11 @@ class PlotDataItem(GraphicsObject):
 
         if self.opts['autoDownsample']:
             # this option presumes that x-values have uniform spacing
-            if v_rng is not None and len(x) > 1:
+            if view_range is not None and len(x) > 1:
                 dx = float(x[-1]-x[0]) / (len(x)-1)
                 if dx != 0.0:
-                    x0 = (v_rng.left()-x[0]) / dx
-                    x1 = (v_rng.right()-x[0]) / dx
+                    x0 = (view_range.left()-x[0]) / dx
+                    x1 = (view_range.right()-x[0]) / dx
                     width = self.getViewBox().width()
                     if width != 0.0:
                         ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
@@ -698,16 +698,16 @@ class PlotDataItem(GraphicsObject):
                 pass # no ViewBox to clip to, or view will autoscale to data range.
             else:
                 # clip-to-view always presumes that x-values are in increasing order
-                if v_rng is not None and len(x) > 1:
-                    # print('search:', v_rng.left(),'-',v_rng.right() )
+                if view_range is not None and len(x) > 1:
+                    # print('search:', view_range.left(),'-',view_range.right() )
                     # find first in-view value (left edge) and first out-of-view value (right edge)
                     # since we want the curve to go to the edge of the screen, we need to preserve
                     # one down-sampled point on the left and one of the right, so we extend the interval
-                    x0 = np.searchsorted(x, v_rng.left()) - ds
+                    x0 = np.searchsorted(x, view_range.left()) - ds
                     x0 = fn.clip_scalar(x0, 0, len(x)) # workaround
                     # x0 = np.clip(x0, 0, len(x))
 
-                    x1 = np.searchsorted(x, v_rng.right()) + ds
+                    x1 = np.searchsorted(x, view_range.right()) + ds
                     x1 = fn.clip_scalar(x1, x0, len(x))
                     # x1 = np.clip(x1, 0, len(x))
                     x = x[x0:x1]
@@ -736,24 +736,24 @@ class PlotDataItem(GraphicsObject):
                 y = y1.reshape(n*2)
 
         if self.opts['dynamicRangeLimit'] is not None:
-            if v_rng is not None:
+            if view_range is not None:
                 data_range = self.dataRect()
                 if data_range is not None:
-                    view_height = v_rng.height()
+                    view_height = view_range.height()
                     limit = self.opts['dynamicRangeLimit']
                     hyst  = self.opts['dynamicRangeHyst']
                     # never clip data if it fits into +/- (extended) limit * view height
                     if ( # note that "bottom" is the larger number, and "top" is the smaller one.
-                        not data_range.bottom() < v_rng.top()     # never clip if all data is too small to see
-                        and not data_range.top() > v_rng.bottom() # never clip if all data is too large to see
+                        not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
+                        and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
                         and data_range.height() > 2 * hyst * limit * view_height
                     ):
                         cache_is_good = False
                         # check if cached display data can be reused:
                         if self.yDisp is not None: # top is minimum value, bottom is maximum value
                             # how many multiples of the current view height does the clipped plot extend to the top and bottom?
-                            top_exc =-(self._drlLastClip[0]-v_rng.bottom()) / view_height
-                            bot_exc = (self._drlLastClip[1]-v_rng.top()   ) / view_height
+                            top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height
+                            bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
                             # print(top_exc, bot_exc, hyst)
                             if (    top_exc >= limit / hyst and top_exc <= limit * hyst
                                 and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
@@ -762,8 +762,8 @@ class PlotDataItem(GraphicsObject):
                                 y = self.yDisp
                                 cache_is_good = True
                         if not cache_is_good:
-                            min_val = v_rng.bottom() - limit * view_height
-                            max_val = v_rng.top()    + limit * view_height
+                            min_val = view_range.bottom() - limit * view_height
+                            max_val = view_range.top()    + limit * view_height
                             if( self.yDisp is not None              # Do we have an existing cache? 
                                 and min_val >= self._drlLastClip[0] # Are we reducing it further?
                                 and max_val <= self._drlLastClip[1] ):
@@ -786,8 +786,8 @@ class PlotDataItem(GraphicsObject):
                                 # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
         self.xDisp = x
         self.yDisp = y
-        self._xViewRangeWasChanged = False
-        self._yViewRAngeWasChanged = False
+        self.setProperty('xViewRangeWasChanged', False)
+        self.setProperty('yViewRangeWasChanged', False)
         return self.xDisp, self.yDisp
 
     def dataRect(self):
@@ -805,10 +805,10 @@ class PlotDataItem(GraphicsObject):
             # All-NaN data is handled by returning None; Explicit numpy warning is not needed.
             warnings.simplefilter("ignore")
             ymin = np.nanmin(self.yData)
-            if np.isnan( ymin ):
+            if math.isnan( ymin ):
                 return None # most likely case for all-NaN data
             xmin = np.nanmin(self.xData)
-            if np.isnan( xmin ):
+            if math.isnan( xmin ):
                 return None # less likely case for all-NaN data
             ymax = np.nanmax(self.yData)
             xmax = np.nanmax(self.xData)
@@ -862,11 +862,6 @@ class PlotDataItem(GraphicsObject):
 
 
     def clear(self):
-        #for i in self.curves+self.scatters:
-            #if i.scene() is not None:
-                #i.scene().removeItem(i)
-        #self.curves = []
-        #self.scatters = []
         self.xData = None
         self.yData = None
         self.xDisp = None
@@ -901,7 +896,7 @@ class PlotDataItem(GraphicsObject):
         if changed is None or changed[0]: 
             # if ranges is not None:
             #     print('hor:', ranges[0])
-            self._xViewRangeWasChanged = True
+            self.setProperty('xViewRangeWasChanged', True)
             if( self.opts['clipToView']
                 or self.opts['autoDownsample']
             ):
@@ -910,7 +905,7 @@ class PlotDataItem(GraphicsObject):
         if changed is None or changed[1]:
             # if ranges is not None:
             #     print('ver:', ranges[1])
-            self._yViewRangeWasChanged = True
+            self.setProperty('yViewRangeWasChanged', True)
             if self.opts['dynamicRangeLimit'] is not None:
                 # update, but do not discard cached display data
                 update_needed = True
@@ -918,7 +913,7 @@ class PlotDataItem(GraphicsObject):
             self.updateItems(styleUpdate=False)
 
     def _fourierTransform(self, x, y):
-        ## Perform fourier transform. If x values are not sampled uniformly,
+        ## Perform Fourier transform. If x values are not sampled uniformly,
         ## then use np.interp to resample before taking fft.
         dx = np.diff(x)
         uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))
