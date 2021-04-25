@@ -140,8 +140,8 @@ class Point(QtCore.QPointF):
         
     def proj(self, b):
         """Return the projection of this vector onto the vector b"""
-        b1 = b / b.length()
-        return self.dot(b) * b1
+        b1 = b.norm()
+        return self.dot(b1) * b1
     
     def __repr__(self):
         return "Point(%f, %f)" % (self.x(), self.y())
