@@ -202,10 +202,44 @@ class ImageItem(GraphicsObject):
             self.update()
 
     def setRect(self, rect):
-        """Scale and translate the image to fit within rect (must be a QRect or QRectF)."""
+        """
+        Scale and translate the image such that it is displayed within rect in plot coordinates.
+        Rectangle rect must be a QRect or QRectF.
+        """
         tr = QtGui.QTransform()
         tr.translate(rect.left(), rect.top())
         tr.scale(rect.width() / self.width(), rect.height() / self.height())
+        self.setTransform(tr)
+        
+    def setOrigin(self, point, scale=None):
+        """
+        Translate the image such that the origin of the coordinate system is given by point in terms of image pixels.
+        By default, PyQtGraph places the image such that the origin is at the bottom left of the image. 
+        When plotting matrix elements or adressing image pixels (rather than positions), it may be convenient to place 
+        the origin at (0.5, 0.5), the center of the first pixel.
+        
+        Parameters
+        ----------
+        point: QtCore.Pointf or tuple (x,y) of float
+            Location of axis origin in terms of image pixels
+        scale: float or tuple (scale_x, scale_y) of float
+            Pixel size in plot coordinates, non-square sizes can be given as a tuple.
+        """
+        if isinstance(point, QtCore.QPointF):
+            x = point.x()
+            y = point.y()
+        else:
+            x, y = point # extract from tuple
+        tr = QtGui.QTransform()
+        tr.translate(-x, -y)
+        if scale is not None:
+            if hasattr(scale,'__len__') and len(scale) == 2:
+                scale_x = scale[0]
+                scale_y = scale[1]
+            else:
+                scale_x = float(scale)
+                scale_y = scale_x
+            tr.scale(scale_x, scale_y)
         self.setTransform(tr)
 
     def clear(self):

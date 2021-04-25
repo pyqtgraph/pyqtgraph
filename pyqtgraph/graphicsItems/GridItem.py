@@ -126,8 +126,7 @@ class GridItem(UIGraphicsItem):
         for i in range(self.grid_depth - 1, -1, -1):
             dist = br-ul
             nlTarget = 10.**i
-
-            d = 10. ** np.floor(np.log10(abs(dist/nlTarget))+0.5)
+            d = 10. ** np.floor(np.log10(np.abs(dist/nlTarget))+0.5)
             for ax in range(0,2):
                 ts = self.opts['tickSpacing'][ax]
                 try:
@@ -141,11 +140,6 @@ class GridItem(UIGraphicsItem):
             br1 = np.ceil(br / d) * d
             dist = br1-ul1
             nl = (dist / d) + 0.5
-            #print "level", i
-            #print "  dim", dim
-            #print "  dist", dist
-            #print "  d", d
-            #print "  nl", nl
             for ax in range(0,2):  ## Draw grid for both axes
                 if i >= len(self.opts['tickSpacing'][ax]):
                     continue
@@ -153,7 +147,7 @@ class GridItem(UIGraphicsItem):
                     continue
 
                 ppl = dim[ax] / nl[ax]
-                c = np.clip(5 * (ppl-3), 0., 50.).astype(int)
+                c = int(fn.clip_scalar(5 * (ppl-3), 0, 50))
 
                 linePen = self.opts['pen']
                 lineColor = self.opts['pen'].color()

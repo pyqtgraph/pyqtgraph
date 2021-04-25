@@ -93,7 +93,7 @@ def test_NonUniformImage_colormap():
 
     image = NonUniformImage(x, y, Z, border=fn.mkPen('g'))
 
-    cmap = ColorMap(pos=[0.0, 1.0], color=[(0.0, 0.0, 0.0, 1.0), (1.0, 1.0, 1.0, 1.0)], mode='rgb')
+    cmap = ColorMap(pos=[0.0, 1.0], color=[(0.0, 0.0, 0.0, 1.0), (1.0, 1.0, 1.0, 1.0)])
     image.setColorMap(cmap)
 
     viewbox.addItem(image)
