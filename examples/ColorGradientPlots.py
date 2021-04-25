@@ -55,37 +55,45 @@ class MainWindow(pg.GraphicsLayoutWidget):
         cm = pg.colormap.get('CET-L17')
         cm.reverse()
         pen0 = cm.getPen( span=(0.0,1.0), width=5 )
-        curve0 = pg.PlotDataItem(pen=pen0 ) # vertical linear color map
+        curve0 = pg.PlotDataItem(pen=pen0 )
+        comment0 = 'Clipped color map applied to vertical axis'
 
         cm = pg.colormap.get('CET-D1')
         cm.setMappingMode('diverging')
         brush = cm.getBrush( span=(-1., 1.), orientation='vertical' ) 
-        curve1 = pg.PlotDataItem(pen='w', brush=brush, fillLevel=0.0 ) # horizonal mirrored color map
+        curve1 = pg.PlotDataItem(pen='w', brush=brush, fillLevel=0.0 )
+        comment1 = 'Diverging vertical color map used as brush'
         
         cm = pg.colormap.get('CET-L17')
         cm.setMappingMode('mirror')
         pen2 = cm.getPen( span=(400.0,600.0), width=5, orientation='horizontal' )
-        curve2 = pg.PlotDataItem(pen=pen2 ) # horizonal repeating color map
+        curve2 = pg.PlotDataItem(pen=pen2 )
+        comment2 = 'Mirrored color map applied to horizontal axis'
 
         cm = pg.colormap.get('CET-C2')
         cm.setMappingMode('repeat')
         pen3 = cm.getPen( span=(100, 200), width=5, orientation='horizontal' )
         curve3 = pg.PlotDataItem(pen=pen3 ) # vertical diverging fill
+        comment3 = 'Repeated color map applied to horizontal axis'
 
         curves = (curve0, curve1, curve2, curve3)
+        comments = (comment0, comment1, comment2, comment3)
 
         length = int( 3.0 * 200. ) # length of display in samples
         self.top_plot = None
-        for idx, curve in enumerate( curves ):
+        for idx, (curve, comment) in enumerate( zip(curves,comments) ):
             plot = layout.addPlot(row=idx+1, col=0)
+            text = pg.TextItem( comment, anchor=(0,1) )
+            text.setPos(0.,1.)
             if self.top_plot is None:
                 self.top_plot = plot
             else:
                 plot.setXLink( self.top_plot )
             plot.addItem( curve )
+            plot.addItem( text )
             plot.setXRange( 0, length )
-            if idx != 1: plot.setYRange(  0. , 1. )
-            else       : plot.setYRange( -1. , 1. ) # last plot include positive/negative data
+            if idx != 1: plot.setYRange(  0. , 1.1 )
+            else       : plot.setYRange( -1. , 1.2 ) # last plot include positive/negative data
 
         self.traces = (
             {'crv': curve0, 'buf': np.zeros( length ), 'ptr':0, 'ds': DataSource( signal_period=0.55 ) },
@@ -95,16 +103,16 @@ class MainWindow(pg.GraphicsLayoutWidget):
         )
         self.timer = QtCore.QTimer(timerType=QtCore.Qt.PreciseTimer)
         self.timer.timeout.connect(self.update)
-        timestamp = time.time()
+        timestamp = time.perf_counter()
         for dic in self.traces:
             dic['ds'].start( timestamp )
-        self.last_update = time.time()
+        self.last_update = time.perf_counter()
         self.mean_dt = None
         self.timer.start(33)
         
     def update(self):
         """ called by timer at 30 Hz """
-        timestamp = time.time()
+        timestamp = time.perf_counter()
         # measure actual update rate:
         dt = timestamp - self.last_update
         if self.mean_dt is None:
