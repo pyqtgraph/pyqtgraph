@@ -65,7 +65,7 @@ def get(name, source=None, skipCache=False):
     name: str
         Name of color map. In addition to the included maps, this can also
         be a path to a file in the local folder. See the files in the
-        `pyqtgraph/colors/maps/` folder for examples of the format.
+        ``pyqtgraph/colors/maps/`` folder for examples of the format.
     source: str, optional
         If omitted, a locally stored map is returned. Otherwise
         
@@ -214,9 +214,6 @@ class ColorMap(object):
     
     A ColorMap object provides access to the interpolated colors by indexing with a float value:
     ``cm[0.5]`` returns a QColor corresponding to the center of ColorMap `cm`.
-
-    To provide interactively user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
-    Colormaps can also conveniently be applied to images and interactively adjusted by using :class:`ColorBarItem <pyqtgraph.ColorBarItem>`.
     """
 
     ## mapping modes
@@ -353,7 +350,7 @@ class ColorMap(object):
 
             RGB values for each `data` value, arranged in the same shape as `data`.
         list of QColor objects
-            for `ColorMap.QCOLOR`: 
+            for `ColorMap.QCOLOR`:
 
             Colors for each `data` value as Qcolor objects.
         """
