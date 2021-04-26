@@ -12,7 +12,8 @@ class MainWindow(pg.GraphicsLayoutWidget):
         super().__init__()
         self.resize(420,400)
         self.show()
-        
+
+        # Prepare demonstration data
         raw = np.linspace(0.0, 2.0, 400)
         y_data1 = ( (raw+0.1)%1 ) ** 4
         y_data2 = ( (raw+0.1)%1 ) ** 4 - ( (raw+0.6)%1 ) ** 4
@@ -20,15 +21,17 @@ class MainWindow(pg.GraphicsLayoutWidget):
         # Example 1: Gradient pen
         cm = pg.colormap.get('CET-L17') # prepare a linear color map
         cm.reverse()                    # reverse it to put light colors at the top 
-        pen = cm.getPen( span=(0.0,1.0), width=5 )     # gradient from dark blue at y=0 to white at y=1
-        curve1 = pg.PlotDataItem( y=y_data1, pen=pen ) # draw sample data with gradient pen
+        pen = cm.getPen( span=(0.0,1.0), width=5 ) # gradient from blue (y=0) to white (y=1)
+        # plot a curve drawn with a pen colored according to y value:
+        curve1 = pg.PlotDataItem( y=y_data1, pen=pen )
 
         # Example 2: Gradient brush
         cm = pg.colormap.get('CET-D1') # prepare a diverging color map
         cm.setMappingMode('diverging') # set mapping mode
         brush = cm.getBrush( span=(-1., 1.) ) # gradient from blue at -1 to red at +1
-        curve2 = pg.PlotDataItem( y=y_data2, pen='w', brush=brush, fillLevel=0.0 ) # fill to zero using gradient brush
-        
+        # plot a curve that is filled to zero with the gradient brush:
+        curve2 = pg.PlotDataItem( y=y_data2, pen='w', brush=brush, fillLevel=0.0 )
+
         for idx, curve in enumerate( (curve1, curve2) ):
             plot = self.addPlot(row=idx, col=0)
             plot.getAxis('left').setWidth(25)

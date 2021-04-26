@@ -63,13 +63,16 @@ def get(name, source=None, skipCache=False):
     Parameters
     ----------
     name: str
-        Name of color map. In addition to the included maps, this can also 
+        Name of color map. In addition to the included maps, this can also
         be a path to a file in the local folder. See the files in the
         `pyqtgraph/colors/maps/` folder for examples of the format.
     source: str, optional
         If omitted, a locally stored map is returned. Otherwise
+        
         - 'matplotlib' imports a map defined by Matplotlib.
+
         - 'colorcet' imports a map defined by ColorCET.
+
     skipCache: bool, optional
         If `skipCache=True`, the internal cache is skipped and a new
         ColorMap object is generated. This can load an unaltered copy
@@ -132,7 +135,7 @@ def _getFromFile(name):
     return cm
 
 def getFromMatplotlib(name):
-    """ Generates a ColorMap object from a Matplotlib definition. Same as `colormap.get(name, source='matplotlib')`. """
+    """ Generates a ColorMap object from a Matplotlib definition. Same as ``colormap.get(name, source='matplotlib')``. """
     # inspired and informed by "mpl_cmaps_in_ImageItem.py", published by Sebastian Hoefer at 
     # https://github.com/honkomonk/pyqtgraph_sandbox/blob/master/mpl_cmaps_in_ImageItem.py
     try:
@@ -173,7 +176,7 @@ def getFromMatplotlib(name):
     return cm
 
 def getFromColorcet(name):
-    """ Generates a ColorMap object from a colorcet definition. Same as `colormap.get(name, source='colorcet')`. """
+    """ Generates a ColorMap object from a colorcet definition. Same as ``colormap.get(name, source='colorcet')``. """
     try:
         import colorcet
     except ModuleNotFoundError:
@@ -201,16 +204,16 @@ class ColorMap(object):
     
     ColorMap stores a mapping of specific data values to colors, for example:
 
-        | 0.0  -> black
-        | 0.2  -> red
-        | 0.6  -> yellow
-        | 1.0  -> white
+        | 0.0 → black
+        | 0.2 → red
+        | 0.6 → yellow
+        | 1.0 → white
 
     The colors for intermediate values are determined by interpolating between
     the two nearest colors in RGB color space.
     
     A ColorMap object provides access to the interpolated colors by indexing with a float value:
-    `cm[0.5]` returns a QColor corresponding to the center of ColorMap `cm`.
+    ``cm[0.5]`` returns a QColor corresponding to the center of ColorMap `cm`.
 
     To provide interactively user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
     Colormaps can also conveniently be applied to images and interactively adjusted by using :class:`ColorBarItem <pyqtgraph.ColorBarItem>`.
@@ -282,7 +285,7 @@ class ColorMap(object):
         Parameters
         ----------
         mapping: int or str
-            Sets mapping more to
+            Sets mapping mode to
 
             - `ColorMap.CLIP` or 'clip': Values are clipped to the range 0 to 1. ColorMap defaults to this.
 
@@ -321,7 +324,7 @@ class ColorMap(object):
 
     def map(self, data, mode=BYTE):
         """
-        map(data, mode=`ColorMap.BYTE`)
+        map(data, mode=ColorMap.BYTE)
         
         Returns an array of colors corresponding to a single value or an array of values. 
         Data must be either a scalar position or an array (any shape) of positions.
@@ -346,9 +349,13 @@ class ColorMap(object):
         Returns
         -------
         array of color.dtype
-            for `ColorMap.BYTE` or `ColorMap.FLOAT`: RGB values for each `data` value, arranged in the same shape as `data`.
+            for `ColorMap.BYTE` or `ColorMap.FLOAT`:
+
+            RGB values for each `data` value, arranged in the same shape as `data`.
         list of QColor objects
-            for `ColorMap.QCOLOR`: Colors for each `data` value as Qcolor objects.
+            for `ColorMap.QCOLOR`: 
+
+            Colors for each `data` value as Qcolor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
@@ -398,12 +405,12 @@ class ColorMap(object):
         return self.map(data, mode=self.FLOAT)
 
     def getByIndex(self, idx):
-        """Retrieve QColor by the index of the stop it is assigned to."""
+        """Retrieve a QColor by the index of the stop it is assigned to."""
         return QtGui.QColor( *self.color[idx] )
 
     def getGradient(self, p1=None, p2=None):
         """
-        Returns a `QtGui.QLinearGradient` object corresponding to the ColorMap.
+        Returns a QtGui.QLinearGradient corresponding to this ColorMap.
         The span and orientiation is given by two points in plot coordinates.
         
         When no parameters are given for `p1` and `p2`, the gradient is mapped to the 
@@ -411,10 +418,10 @@ class ColorMap(object):
         
         Parameters
         ----------
-        p1: QtCore.QpointF, default (0,0)
+        p1: QtCore.QPointF, default (0,0)
             Starting point (value 0) of the gradient.
-        p2: QtCore.QpointF, default (dy,0)
-            End point (value 1) of the gradient. `dy` is the span of `max(pos) - min(pos)` 
+        p2: QtCore.QPointF, default (dy,0)
+            End point (value 1) of the gradient. `dy` is the span of ``max(pos) - min(pos)`` 
             over which the color map is defined, typically `dy=1`.
         """
         if p1 == None:
@@ -528,7 +535,7 @@ class ColorMap(object):
         """
         getLookupTable(start=0.0, stop=1.0, nPts=512, alpha=None, mode=ColorMap.BYTE)
         
-        Returns an equally spaced lookup table of RGB(A) values created
+        Returns an equally-spaced lookup table of RGB(A) values created
         by interpolating the specified color stops.
         
         Parameters
@@ -549,10 +556,14 @@ class ColorMap(object):
         Returns
         -------
         array of color.dtype
-            for `ColorMap.BYTE` or `ColorMap.FLOAT`: RGB values for each `data` value, arranged in the same shape as `data`.
-            If alpha values are included, the array has shape (`nPts`, 4), otherwise (`nPts`, 3).
+            for `ColorMap.BYTE` or `ColorMap.FLOAT`: 
+                
+            RGB values for each `data` value, arranged in the same shape as `data`.
+            If alpha values are included the array has shape (`nPts`, 4), otherwise (`nPts`, 3).
         list of QColor objects
-            for `ColorMap.QCOLOR`: Colors for each `data` value as Qcolor objects.
+            for `ColorMap.QCOLOR`: 
+                
+            Colors for each `data` value as Qcolor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]

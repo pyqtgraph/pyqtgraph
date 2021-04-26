@@ -24,7 +24,8 @@ class MainWindow(pg.GraphicsLayoutWidget):
         plot.addItem( img )            # add to PlotItem 'plot'
         cm = pg.colormap.get('CET-L9') # prepare a linear color map
         bar = pg.ColorBarItem( values= (0, 20_000), cmap=cm ) # prepare interactive color bar
-        bar.setImageItem( img, insert_in=plot ) # Have ColorBarItem control colors of img and appear in 'plot'
+        # Have ColorBarItem control colors of img and appear in 'plot':
+        bar.setImageItem( img, insert_in=plot ) 
 
         self.timer = pg.QtCore.QTimer( singleShot=True )
         self.timer.timeout.connect(self.export)
