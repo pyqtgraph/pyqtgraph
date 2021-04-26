@@ -1,4 +1,4 @@
-import tempfile, os, sys, shutil, time
+import os, sys, shutil, time
 import pyqtgraph as pg
 import pyqtgraph.reload
 import pytest
@@ -35,11 +35,10 @@ def remove_cache(mod):
     or (sys.version_info >= (3, 10)),
     reason="Unknown Issue"
 )
-def test_reload():
-    py3 = sys.version_info >= (3,)
-
+@pytest.mark.usefixtures("tmp_module")
+def test_reload(tmp_module):
     # write a module
-    mod = os.path.join(path, 'reload_test_mod.py')
+    mod = os.path.join(tmp_module, 'reload_test_mod.py')
     print("\nRELOAD FILE:", mod)
     with open(mod, "w") as file_:
         file_.write(code.format(path_repr=pgpath_repr, msg="C.fn() Version1"))
@@ -57,7 +56,7 @@ def test_reload():
         file_.write(code.format(path_repr=pgpath_repr, msg="C.fn() Version 2"))
     time.sleep(1.1)
     #remove_cache(mod)
-    result1 = pg.reload.reloadAll(path, debug=True)
+    _ = pg.reload.reloadAll(tmp_module, debug=True)
     v2 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
 
     oldcfn = pg.reload.getPreviousVersion(c.fn)
@@ -73,8 +72,8 @@ def test_reload():
         file_.write(code.format(path_repr=pgpath_repr, msg="C.fn() Version2"))
     time.sleep(1.1)
 #    remove_cache(mod)
-    result2 = pg.reload.reloadAll(path, debug=True)
-    v3 = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
+    _ = pg.reload.reloadAll(tmp_module, debug=True)
+    _ = (reload_test_mod.C, reload_test_mod.C.sig, reload_test_mod.C.fn, c.sig, c.fn, c.fn.__func__)
 
     cfn1 = pg.reload.getPreviousVersion(c.fn)
     cfn2 = pg.reload.getPreviousVersion(cfn1)
