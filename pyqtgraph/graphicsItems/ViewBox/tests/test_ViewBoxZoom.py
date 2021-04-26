@@ -193,8 +193,3 @@ def test_zoom_ratio_with_limits_out_of_range():
     assert viewRange[1][0] >= -5
     assert viewRange[1][1] <= 5
     assert viewWidth == 2 * viewHeight
-
-
-if __name__ == "__main__":
-    setup_module(None)
-    test_zoom_ratio()

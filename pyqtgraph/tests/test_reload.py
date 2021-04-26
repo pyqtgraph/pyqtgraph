@@ -7,21 +7,6 @@ import pytest
 pgpath = os.path.join(os.path.dirname(pg.__file__), '..')
 pgpath_repr = repr(pgpath)
 
-# make temporary directory to write module code
-path = None
-
-def setup_module():
-    # make temporary directory to write module code
-    global path
-    path = tempfile.mkdtemp()
-    sys.path.insert(0, path)
-
-def teardown_module():
-    global path
-    shutil.rmtree(path)
-    sys.path.remove(path)
-
-
 code = """
 import sys
 sys.path.append({path_repr})

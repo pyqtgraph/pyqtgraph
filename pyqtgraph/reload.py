@@ -45,7 +45,7 @@ def reloadAll(prefix=None, debug=False):
     failed = []
     changed = []
     ret = {}
-    for modName, mod in list(sys.modules.items()):  ## don't use iteritems; size may change during reload
+    for modName, mod in list(sys.modules.items()):
         if not inspect.ismodule(mod):
             ret[modName] = (False, 'not a module')
             continue
@@ -331,10 +331,6 @@ if __name__ == '__main__':
         btn = Btn()
     except:
         raise
-        print("Error; skipping Qt tests")
-        doQtTest = False
-
-
 
     import os
     if not os.path.isdir('test1'):

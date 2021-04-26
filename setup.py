@@ -81,7 +81,7 @@ class Build(build.build):
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
     
-        ret = build.build.run(self)
+        build.build.run(self)
         
 
 class Install(install.install):
