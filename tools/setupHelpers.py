@@ -149,20 +149,20 @@ def checkStyle():
             if os.path.splitext(f)[1] not in ('.py', '.rst'):
                 continue
             filename = os.path.join(path, f)
-            fh = open(filename, 'U')
-            _ = fh.readlines()
-            endings = set(
-                fh.newlines
-                if isinstance(fh.newlines, tuple)
-                else (fh.newlines,)
-            )
-            endings -= allowedEndings
-            if len(endings) > 0:
-                print("\033[0;31m"
-                      + "File has invalid line endings: "
-                      + "%s" % filename + "\033[0m")
-                ret = ret | 2
-            count += 1
+            with open(filename, 'U') as fh:
+                _ = fh.readlines()
+                endings = set(
+                    fh.newlines
+                    if isinstance(fh.newlines, tuple)
+                    else (fh.newlines,)
+                )
+                endings -= allowedEndings
+                if len(endings) > 0:
+                    print("\033[0;31m"
+                          + "File has invalid line endings: "
+                          + "%s" % filename + "\033[0m")
+                    ret = ret | 2
+                count += 1
     print('checked line endings in %d files' % count)
 
 
