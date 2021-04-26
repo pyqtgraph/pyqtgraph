@@ -111,7 +111,7 @@ class AxisItem(GraphicsWidget):
 
         self._linkedView = None
         if linkView is not None:
-            self.linkToView(linkView)
+            self._linkToView_internal(linkView)
 
         self.grid = False
         
@@ -530,8 +530,9 @@ class AxisItem(GraphicsWidget):
         else:
             return self._linkedView()
 
-    def linkToView(self, view):
-        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+    def _linkToView_internal(self, view):
+        # We need this code to be available without override,
+        # even though DateAxisItem overrides the user-side linkToView method
         self.unlinkFromView()
 
         self._linkedView = weakref.ref(view)
@@ -539,8 +540,11 @@ class AxisItem(GraphicsWidget):
             view.sigYRangeChanged.connect(self.linkedViewChanged)
         else:
             view.sigXRangeChanged.connect(self.linkedViewChanged)
-        
         view.sigResized.connect(self.linkedViewChanged)
+
+    def linkToView(self, view):
+        """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
+        self._linkToView_internal(view)
         
     def unlinkFromView(self):
         """Unlink this axis from a ViewBox."""

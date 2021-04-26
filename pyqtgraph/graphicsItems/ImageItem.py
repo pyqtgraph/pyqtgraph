@@ -225,7 +225,7 @@ class ImageItem(GraphicsObject):
         scale: float or tuple (scale_x, scale_y) of float
             Pixel size in plot coordinates, non-square sizes can be given as a tuple.
         """
-        if isinstance(point, QtCore.QPointF):
+        if isinstance(point, (QtCore.QPointF, QtCore.QPoint)):
             x = point.x()
             y = point.y()
         else:
