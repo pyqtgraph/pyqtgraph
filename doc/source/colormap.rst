@@ -5,9 +5,16 @@ A color map defines a relationship between scalar data values and a range of col
 commonly used to generate false color images, color scatter-plot points, and illustrate the height
 of surface plots.
 
-PyQtGraph's :class:`~pyqtgraph.ColorMap` class can also be used a convenient source of colors from 
-a consistent palette or to generate QPen and QBrush objects used to draw lines and fills that are
-colored according to their values along the horizontal or vertical axis.
+PyQtGraph's :class:`~pyqtgraph.ColorMap` can conveniently be applied to images and interactively 
+adjusted by using :class:`~pyqtgraph.ColorBarItem`.
+To provide interactively user-defined color mappings, see 
+:class:`~pyqtgraph.GradientEditorItem` and :class:`~pyqtgraph.GradientWidget`, which wraps it.
+:class:`~pyqtgraph.GradientEditorItem` combines the editing with a histogram and controls for
+interactively adjusting image levels.
+
+ColorMap can also be used a convenient source of colors from a consistent palette or to generate 
+QPen and QBrush objects used to draw lines and fills that are colored according to their values 
+along the horizontal or vertical axis.
 
 
 Sources for color maps
@@ -53,12 +60,6 @@ Using QtGui.QPen and QtGui.QBrush to color plots according to the plotted value:
 
 The use of color maps is also demonstrated in the `ImageView`, `Color Gradient Plots` and `ColorBarItem` 
 :ref:`examples`.
-
-
-See Also
---------
-:class:`GradientEditorItem <pyqtgraph.GradientEditorItem>` and
-:class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>`: Interactive color map adjustment and assignment
 
 
 API Reference
