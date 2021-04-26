@@ -7,7 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
-from distutils.core import Command
+from distutils import core
 from typing import Dict, Any
 
 from generateChangelog import generateDebianChangelog
@@ -503,7 +503,7 @@ DEFAULT_ASV: Dict[str, Any] = {
 }
 
 
-class ASVConfigCommand(Command):
+class ASVConfigCommand(core.Command):
     description = "Setup the ASV benchmarking config for this system"
     user_options = []
 
@@ -526,7 +526,7 @@ class ASVConfigCommand(Command):
             conf_file.write(json.dumps(config, indent=2))
 
 
-class DebCommand(Command):
+class DebCommand(core.Command):
     description = "build .deb package using `debuild -us -uc`"
     maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
     debTemplate = "debian"
@@ -584,7 +584,7 @@ class DebCommand(Command):
             raise Exception("Error during debuild.")
 
 
-class DebugCommand(Command):
+class DebugCommand(core.Command):
     """Just for learning about distutils."""
     description = ""
     user_options = []
@@ -599,7 +599,7 @@ class DebugCommand(Command):
         print(self.distribution.version)
 
 
-class TestCommand(Command):
+class TestCommand(core.Command):
     description =  "Run all package tests and exit immediately with ", \
                    "informative return code."
     user_options = []
@@ -614,7 +614,7 @@ class TestCommand(Command):
         pass
 
 
-class StyleCommand(Command):
+class StyleCommand(core.Command):
     description = "Check all code for style, exit immediately with ", \
                   "informative return code."
     user_options = []
@@ -629,7 +629,7 @@ class StyleCommand(Command):
         pass
 
 
-class MergeTestCommand(Command):
+class MergeTestCommand(core.Command):
     description = "Run all tests needed to determine whether the current ",\
                   "code is suitable for merge."
     user_options = []
