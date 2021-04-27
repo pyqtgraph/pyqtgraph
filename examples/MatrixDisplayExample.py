@@ -27,8 +27,9 @@ class MainWindow(QtWidgets.QMainWindow):
         columns = ["A", "B", "C"]
 
         # create correlation matrix image with correct orientation:
-        correlogram = pg.ImageItem(image=corrMatrix, axisOrder='row-major')
-        correlogram.setOrigin( (0.5, 0.5) ) # place axis origin at the center of the corner element
+        correlogram = pg.ImageItem(axisOrder='row-major')
+        correlogram.setPos( -0.5, -0.5 ) # place image so that axis origin is at the center of the corner element
+        correlogram.setImage(corrMatrix)
 
         plotItem = gr_wid.addPlot()         # add PlotItem to the main GraphicsLayoutWidget
         plotItem.getViewBox().invertY(True) # orient y axis to run top-to-bottom

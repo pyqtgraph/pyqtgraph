@@ -26,17 +26,24 @@ class ImageItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
 
-    GraphicsObject displaying an image. Optimized for rapid update (ie video display).
-    This item displays either a 2D numpy array (height, width) or
-    a 3D array (height, width, RGBa). This array is optionally scaled (see
-    :func:`setLevels <pyqtgraph.ImageItem.setLevels>`) and/or colored
-    with a lookup table (see :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`)
-    before being displayed.
+    GraphicsObject displaying an image. Optimized for rapid update, such as video display. This
+    item displays either a 2D numpy array (height, width) or a 3D array (height, width, RGBa). 
+    This array is optionally scaled (see :func:`~pyqtgraph.ImageItem.setLevels`) and/or colored
+    with a lookup table (see :func:`~pyqtgraph.ImageItem.setLookupTable` before display.
 
-    ImageItem is frequently used in conjunction with
-    :class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>` or
-    :class:`HistogramLUTWidget <pyqtgraph.HistogramLUTWidget>` to provide a GUI
-    for controlling the levels and lookup table used to display the image.
+    ImageItem implements :func:`~pyqtgraph.ImageItem.setPos` and
+    :func:`~pyqtgraph.ImageItem.setScale` methods like its :class:`QGraphicsItem` base class, which
+    set a position (in plot coordinates) and scaling that persist over repeated assignment of
+    image data, independent of size.
+    
+    An image can be placed into a plot area of a given extent directly through the
+    :func:`~pyqtgraph.ImageItem.setRect` method or the ``rect`` keyword during initialization
+    or call to :func:`~pyqtgraph.ImageItem.setImage`.
+
+    ImageItem is frequently used in conjunction with :class:`~pyqtgraph.ColorBarItem` to provide
+    a color map display and interactive level adjustments, or with
+    :class:`~pyqtgraph.HistogramLUTItem` or :class:`~pyqtgraph.HistogramLUTWidget` for a full a GUI
+    to control the levels and lookup table used to display the image.
     """
 
     sigImageChanged = QtCore.Signal()
@@ -198,49 +205,100 @@ class ImageItem(GraphicsObject):
             self.menu = None
         if 'autoDownsample' in kargs:
             self.setAutoDownsample(kargs['autoDownsample'])
+        if 'rect' in kargs:
+            self.setRect(kargs['rect'])
         if update:
             self.update()
 
-    def setRect(self, rect):
+    def setRect(self, *args):
         """
-        Scale and translate the image such that it is displayed within rect in plot coordinates.
-        Rectangle rect must be a QRect or QRectF.
+        setRect(rect) or setRect(x,y,w,h)
+        Scale and translate the image such that it is displayed within `rect` in plot coordinates.
+        Rectangle `rect` can be a QRect or QRectF, or `x`, `y`, `w` and `h` parameters of the target
+        rectangle can be given individually or as a tuple or list.
         """
+        rect = None
+        if len(args) == 4:
+            rect = QtCore.QRectF( *args ) # QRectF(x,y,w,h)
+        elif len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, (QtCore.QRectF, QtCore.QRect)):
+                rect = arg # use QRectF directly
+            elif hasattr(arg,'__len__') and len(arg) == 4:
+                rect = QtCore.QRectF( *arg ) # unpack (x,y,w,h) for QRectF
+        if rect is None:
+            raise ValueError("setRect argument must be a QRectF, QRect, or x,y,w,h")
+
+        self.setPos(rect.left(), rect.top()) # if translation is included in transform, then it adds to the offset set by setPos 
         tr = QtGui.QTransform()
-        tr.translate(rect.left(), rect.top())
+        # tr.translate(rect.left(), rect.top())
         tr.scale(rect.width() / self.width(), rect.height() / self.height())
         self.setTransform(tr)
-        
-    def setOrigin(self, point, scale=None):
+
+    # manually inherit setPos to add it to the documentation in the proper place
+    # we might also want to allow positions given as tuples for consistency with other methods
+    def setPos(self, *args):
         """
-        Translate the image such that the origin of the coordinate system is given by point in terms of image pixels.
-        By default, PyQtGraph places the image such that the origin is at the bottom left of the image. 
-        When plotting matrix elements or adressing image pixels (rather than positions), it may be convenient to place 
-        the origin at (0.5, 0.5), the center of the first pixel.
+        setPos(pos) or setPos(x,y)
+        Sets the position of the image corner to pos, given in plot coordinates.
+
+        Parameters
+        ----------
+        pos: QPointF
+            Image position
+        x,y : floats
+            Image position
+        """
+        super().setPos(*args)
+
+    
+    def setScale(self, scale):
+        """
+        Sets a persistent scaling of the displayed image
         
         Parameters
         ----------
-        point: QtCore.Pointf or tuple (x,y) of float
-            Location of axis origin in terms of image pixels
-        scale: float or tuple (scale_x, scale_y) of float
-            Pixel size in plot coordinates, non-square sizes can be given as a tuple.
+        scale: float or array_like (scale_x, scale_y)
+            single scaling factor or separate factors for `x` and `y` directions
         """
-        if isinstance(point, (QtCore.QPointF, QtCore.QPoint)):
-            x = point.x()
-            y = point.y()
-        else:
-            x, y = point # extract from tuple
-        tr = QtGui.QTransform()
-        tr.translate(-x, -y)
-        if scale is not None:
-            if hasattr(scale,'__len__') and len(scale) == 2:
-                scale_x = scale[0]
-                scale_y = scale[1]
-            else:
-                scale_x = float(scale)
-                scale_y = scale_x
-            tr.scale(scale_x, scale_y)
-        self.setTransform(tr)
+        # separate x and y scaling is not directly provided by inherited setScale
+        if hasattr(scale,'__len__') and len(scale) == 2:
+            tr = QtGui.QTransform()
+            tr.scale(scale[0], scale[1])
+            self.setTransform(tr)
+            return
+        super().setScale(scale)
+        
+    # def setOrigin(self, point, scale=None):
+    #     """
+    #     Translate the image such that the origin of the coordinate system is given by point in terms of image pixels.
+    #     By default, PyQtGraph places the image such that the origin is at the bottom left of the image. 
+    #     When plotting matrix elements or adressing image pixels (rather than positions), it may be convenient to place 
+    #     the origin at (0.5, 0.5), the center of the first pixel.
+        
+    #     Parameters
+    #     ----------
+    #     point: QtCore.Pointf or tuple (x,y) of float
+    #         Location of axis origin in terms of image pixels
+    #     scale: float or tuple (scale_x, scale_y) of float
+    #         Pixel size in plot coordinates, non-square sizes can be given as a tuple.
+    #     """
+    #     if isinstance(point, (QtCore.QPointF, QtCore.QPoint)):
+    #         x = point.x()
+    #         y = point.y()
+    #     else:
+    #         x, y = point # extract from tuple
+    #     tr = QtGui.QTransform()
+    #     tr.translate(-x, -y)
+    #     if scale is not None:
+    #         if hasattr(scale,'__len__') and len(scale) == 2:
+    #             scale_x = scale[0]
+    #             scale_y = scale[1]
+    #         else:
+    #             scale_x = float(scale)
+    #             scale_y = scale_x
+    #         tr.scale(scale_x, scale_y)
+    #     self.setTransform(tr)
 
     def clear(self):
         self.image = None
@@ -267,6 +325,9 @@ class ImageItem(GraphicsObject):
                            3D (width, height, RGBa). The array dtype must be integer or floating
                            point of any bit depth. For 3D arrays, the third dimension must
                            be of length 3 (RGB) or 4 (RGBA). See *notes* below.
+        rect               (QRectF, QRect or array_like of floats (x,y,w,h))
+                           Sets position and scaling to display the image within a rectangle of
+                           width `w` and height `h`, starting at position `x`, `y`.
         autoLevels         (bool) If True, this forces the image to automatically select
                            levels based on the maximum and minimum values in the data.
                            By default, this argument is true unless the levels argument is
