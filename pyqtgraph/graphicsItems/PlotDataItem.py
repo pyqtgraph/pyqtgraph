@@ -675,7 +675,7 @@ class PlotDataItem(GraphicsObject):
                     eps = np.finfo(y.dtype).eps
                 else:
                     eps = 1
-                y = np.sign(y) * np.log10(np.abs(y)+eps)
+                y = np.copysign(np.log10(np.abs(y)+eps), y)
 
         ds = self.opts['downsample']
         if not isinstance(ds, int):
