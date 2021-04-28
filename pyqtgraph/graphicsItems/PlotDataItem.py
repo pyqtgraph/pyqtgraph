@@ -638,6 +638,11 @@ class PlotDataItem(GraphicsObject):
             x = self.xData
             y = self.yData
 
+            if y.dtype == np.bool:
+                y = y.astype(int)
+            if x.dtype == np.bool:
+                x = x.astype(int)
+
             if self.opts['fftMode']:
                 x,y = self._fourierTransform(x, y)
                 # Ignore the first bin for fft data if we have a logx scale
