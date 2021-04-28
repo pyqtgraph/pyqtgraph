@@ -460,6 +460,18 @@ class ScatterPlotItem(GraphicsObject):
                                * 't'  triangle
                                * 'd'  diamond
                                * '+'  plus
+                               * 't1' triangle pointing upwards
+                               * 't2'  triangle pointing right side
+                               * 't3'  triangle pointing left side
+                               * 'p'  pentagon
+                               * 'h'  hexagon
+                               * 'star'  star
+                               * 'x'  cross
+                               * 'arrow_up'
+                               * 'arrow_right'
+                               * 'arrow_down'
+                               * 'arrow_left'
+                               * 'crosshair'
                                * any QPainterPath to specify custom symbol shapes. To properly obey the position and size,
                                custom symbols should be centered at (0,0) and width and height of 1.0. Note that it is also
                                possible to 'install' custom shapes by setting ScatterPlotItem.Symbols[key] = shape.
