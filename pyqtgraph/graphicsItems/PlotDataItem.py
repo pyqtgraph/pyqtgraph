@@ -639,9 +639,9 @@ class PlotDataItem(GraphicsObject):
             y = self.yData
 
             if y.dtype == np.bool:
-                y = y.astype(int)
+                y = y.astype(np.uint8)
             if x.dtype == np.bool:
-                x = x.astype(int)
+                x = x.astype(np.uint8)
 
             if self.opts['fftMode']:
                 x,y = self._fourierTransform(x, y)
