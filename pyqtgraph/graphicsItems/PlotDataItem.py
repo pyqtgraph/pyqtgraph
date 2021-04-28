@@ -638,9 +638,9 @@ class PlotDataItem(GraphicsObject):
             x = self.xData
             y = self.yData
 
-            if y.dtype == np.bool:
+            if y.dtype == bool:
                 y = y.astype(np.uint8)
-            if x.dtype == np.bool:
+            if x.dtype == bool:
                 x = x.astype(np.uint8)
 
             if self.opts['fftMode']:
