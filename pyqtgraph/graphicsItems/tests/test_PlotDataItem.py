@@ -7,13 +7,13 @@ pg.mkQApp()
 
 
 def test_bool():
-    truths = np.random.randint(0, 2, size=(100,)).astype(np.bool)
+    truths = np.random.randint(0, 2, size=(100,)).astype(bool)
     pdi = pg.PlotDataItem(truths)
     bounds = pdi.dataBounds(1)
-    assert isinstance(bounds[0], np.integer)
-    assert isinstance(bounds[1], np.integer)
+    assert isinstance(bounds[0], np.uint8)
+    assert isinstance(bounds[1], np.uint8)
     xdata, ydata = pdi.getData()
-    assert ydata.dtype == np.integer
+    assert ydata.dtype == np.uint8
 
 
 def test_fft():
