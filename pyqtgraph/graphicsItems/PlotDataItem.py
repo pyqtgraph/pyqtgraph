@@ -644,6 +644,10 @@ class PlotDataItem(GraphicsObject):
             return self.xDisp, self.yDisp
         x = self.xData
         y = self.yData
+        if y.dtype == bool:
+            y = y.astype(np.uint8)
+        if x.dtype == bool:
+            x = x.astype(np.uint8)
         view = self.getViewBox()
         if view is None:
             view_range = None
