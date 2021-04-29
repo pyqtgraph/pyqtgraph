@@ -642,7 +642,6 @@ class PlotDataItem(GraphicsObject):
             not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
         ):
             return self.xDisp, self.yDisp
-
         x = self.xData
         y = self.yData
         view = self.getViewBox()

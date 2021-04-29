@@ -15,7 +15,13 @@ def test_Vector_init():
 
     # separate values with 3 args
     v = pg.Vector(0, 1, 2)
+    assert v.x() == 0
+    assert v.y() == 1
+    assert v.z() == 2
     v = pg.Vector(0.0, 1.0, 2.0)
+    assert v.x() == 0
+    assert v.y() == 1
+    assert v.z() == 2
 
     # all in a list
     v = pg.Vector([0, 1])
