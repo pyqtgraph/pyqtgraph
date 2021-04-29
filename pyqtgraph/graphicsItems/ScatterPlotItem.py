@@ -454,29 +454,11 @@ class ScatterPlotItem(GraphicsObject):
                                Otherwise, size is in scene coordinates and the spots scale with the view. To ensure
                                effective caching, QPen and QBrush objects should be reused as much as possible.
                                Default is True
-        *symbol*               can be one (or a list) of:
-                               * 'o'  circle (default)
-                               * 's'  square
-                               * 't'  triangle
-                               * 'd'  diamond
-                               * '+'  plus
-                               * 't1' triangle pointing upwards
-                               * 't2'  triangle pointing right side
-                               * 't3'  triangle pointing left side
-                               * 'p'  pentagon
-                               * 'h'  hexagon
-                               * 'star'  star
-                               * 'x'  cross
-                               * 'arrow_up'
-                               * 'arrow_right'
-                               * 'arrow_down'
-                               * 'arrow_left'
-                               * 'crosshair'
-                               * any QPainterPath to specify custom symbol shapes.
-
-                               To properly obey the position and size,
-                               custom symbols should be centered at (0,0) and width and height of 1.0. Note that it is also
-                               possible to 'install' custom shapes by setting ScatterPlotItem.Symbols[key] = shape.
+        *symbol*               can be one (or a list) of symbols. For a list of supported symbols, see 
+                               :func:`~ScatterPlotItem.setSymbol`. QPainterPath is also supported to specify custom symbol
+                               shapes. To properly obey the position and size, custom symbols should be centered at (0,0) and
+                               width and height of 1.0. Note that it is also possible to 'install' custom shapes by setting 
+                               ScatterPlotItem.Symbols[key] = shape.
         *pen*                  The pen (or list of pens) to use for drawing spot outlines.
         *brush*                The brush (or list of brushes) to use for filling spots.
         *size*                 The size (or list of sizes) of spots. If *pxMode* is True, this value is in pixels. Otherwise,
@@ -705,7 +687,30 @@ class ScatterPlotItem(GraphicsObject):
         """Set the symbol(s) used to draw each spot.
         If a list or array is provided, then the symbol for each spot will be set separately.
         Otherwise, the argument will be used as the default symbol for
-        all spots which do not have a symbol explicitly set."""
+        all spots which do not have a symbol explicitly set.
+
+        **Supported symbols:**
+
+        * 'o'  circle (default)
+        * 's'  square
+        * 't'  triangle
+        * 'd'  diamond
+        * '+'  plus
+        * 't1' triangle pointing upwards
+        * 't2'  triangle pointing right side
+        * 't3'  triangle pointing left side
+        * 'p'  pentagon
+        * 'h'  hexagon
+        * 'star'
+        * 'x'  cross
+        * 'arrow_up'
+        * 'arrow_right'
+        * 'arrow_down'
+        * 'arrow_left'
+        * 'crosshair'
+        * any QPainterPath to specify custom symbol shapes.
+
+        """
         if dataSet is None:
             dataSet = self.data
 
