@@ -70,7 +70,7 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install --upgrade pip
-        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib
+        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
         pip install .
         pip install pytest pytest-cov pytest-xdist coverage
     - name: "Install Linux VirtualDisplay"

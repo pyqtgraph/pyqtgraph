@@ -4,7 +4,7 @@ import pytest
 import sys
 from typing import Dict, Any, Union, Type
 
-from pyqtgraph import getCupy, setConfigOption
+from pyqtgraph import getCupy, getConfigOption, setConfigOption
 from pyqtgraph.functions import makeARGB as real_makeARGB
 
 IN_2D_INT8 = np.array([[173, 48, 122, 41], [210, 192, 0, 5], [104, 56, 102, 115], [78, 19, 255, 6]], dtype=np.uint8)
@@ -4314,6 +4314,25 @@ def test_cupy_makeARGB_against_generated_references():
             ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
 
     _do_something_for_every_combo(assert_cupy_correct)
+
+
+@pytest.mark.filterwarnings("ignore:invalid value encountered")
+def test_numba_makeARGB_against_generated_references():
+    oldcfg_numba = getConfigOption("useNumba")
+    if not oldcfg_numba:
+        try:
+            import numba
+        except ImportError:
+            pytest.skip("Numba unavailable to test")
+
+    # useCupy needs to be set to False because it takes
+    # precedence over useNumba in rescaleData
+    oldcfg_cupy = getConfigOption("useCupy")
+    setConfigOption("useCupy", False)
+    setConfigOption("useNumba", not oldcfg_numba)
+    test_makeARGB_against_generated_references()
+    setConfigOption("useNumba", oldcfg_numba)
+    setConfigOption("useCupy", oldcfg_cupy)
 
 
 def test_makeARGB_with_human_readable_code():
