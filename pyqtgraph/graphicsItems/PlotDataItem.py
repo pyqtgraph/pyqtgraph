@@ -155,9 +155,6 @@ class PlotDataItem(GraphicsObject):
         self.yData = None
         self.xDisp = None
         self.yDisp = None
-        #self.dataMask = None
-        #self.curves = []
-        #self.scatters = []
         self.curve = PlotCurveItem()
         self.scatter = ScatterPlotItem()
         self.curve.setParentItem(self)
@@ -167,8 +164,15 @@ class PlotDataItem(GraphicsObject):
         self.scatter.sigClicked.connect(self.scatterClicked)
         self.scatter.sigHovered.connect(self.scatterHovered)
 
-        self._viewRangeWasChanged = False
-        self._styleWasChanged = True # force initial update
+        # self._xViewRangeWasChanged = False
+        # self._yViewRangeWasChanged = False
+        # self._styleWasChanged = True # force initial update
+        
+        # update-required notifications are handled through properties to allow future management through
+        # the QDynamicPropertyChangeEvent sent on any change.
+        self.setProperty('xViewRangeWasChanged', False)
+        self.setProperty('yViewRangeWasChanged', False)
+        self.setProperty('styleWasChanged', True) # force initial update
 
         self._dataRect = None
         self._drlLastClip = (0.0, 0.0) # holds last clipping points of dynamic range limiter
@@ -532,11 +536,11 @@ class PlotDataItem(GraphicsObject):
 
         if 'name' in kargs:
             self.opts['name'] = kargs['name']
-            self._styleWasChanged = True
+            self.setProperty('styleWasChanged', True)
 
         if 'connect' in kargs:
             self.opts['connect'] = kargs['connect']
-            self._styleWasChanged = True
+            self.setProperty('styleWasChanged', True)
 
         ## if symbol pen/brush are given with no previously set symbol, then assume symbol is 'o'
         if 'symbol' not in kargs and ('symbolPen' in kargs or 'symbolBrush' in kargs or 'symbolSize' in kargs):
@@ -549,7 +553,7 @@ class PlotDataItem(GraphicsObject):
         for k in list(self.opts.keys()):
             if k in kargs:
                 self.opts[k] = kargs[k]
-                self._styleWasChanged = True
+                self.setProperty('styleWasChanged', True)
         #curveArgs = {}
         #for k in ['pen', 'shadowPen', 'fillLevel', 'brush']:
             #if k in kargs:
@@ -582,14 +586,11 @@ class PlotDataItem(GraphicsObject):
         self.yDisp = None
         profiler('set data')
 
-        self.updateItems( styleUpdate = self._styleWasChanged )
-        self._styleWasChanged = False # items have been updated
+        self.updateItems( styleUpdate = self.property('styleWasChanged') )
+        self.setProperty('styleWasChanged', False) # items have been updated
         profiler('update items')
 
         self.informViewBoundsChanged()
-        #view = self.getViewBox()
-        #if view is not None:
-            #view.itemBoundsChanged(self)  ## inform view so it can update its range if it wants
 
         self.sigPlotChanged.emit(self)
         profiler('emit')
@@ -635,159 +636,161 @@ class PlotDataItem(GraphicsObject):
         if self.xData is None:
             return (None, None)
 
-        if self.xDisp is None or self._viewRangeWasChanged:
-            x = self.xData
-            y = self.yData
+        if( self.xDisp is not None and
+            not (self.property('xViewRangeWasChanged') and self.opts['clipToView']) and
+            not (self.property('xViewRangeWasChanged') and self.opts['autoDownsample']) and
+            not (self.property('yViewRangeWasChanged') and self.opts['dynamicRangeLimit'] is not None)
+        ):
+            return self.xDisp, self.yDisp
+        x = self.xData
+        y = self.yData
+        if y.dtype == bool:
+            y = y.astype(np.uint8)
+        if x.dtype == bool:
+            x = x.astype(np.uint8)
+        view = self.getViewBox()
+        if view is None:
+            view_range = None
+        else:
+            view_range = self.getViewBox().viewRect() # this is always up-to-date
+        if view_range is None:
+            view_range = self.viewRect()
 
-            if y.dtype == bool:
-                y = y.astype(np.uint8)
-            if x.dtype == bool:
-                x = x.astype(np.uint8)
+        if self.opts['fftMode']:
+            x,y = self._fourierTransform(x, y)
+            # Ignore the first bin for fft data if we have a logx scale
+            if self.opts['logMode'][0]:
+                x=x[1:]
+                y=y[1:]
 
-            if self.opts['fftMode']:
-                x,y = self._fourierTransform(x, y)
-                # Ignore the first bin for fft data if we have a logx scale
-                if self.opts['logMode'][0]:
-                    x=x[1:]
-                    y=y[1:]
+        if self.opts['derivativeMode']:  # plot dV/dt
+            y = np.diff(self.yData)/np.diff(self.xData)
+            x = x[:-1]
+        if self.opts['phasemapMode']:  # plot dV/dt vs V
+            x = self.yData[:-1]
+            y = np.diff(self.yData)/np.diff(self.xData)
+                
+        with np.errstate(divide='ignore'):
+            if self.opts['logMode'][0]:
+                x = np.log10(x)
+            if self.opts['logMode'][1]:
+                if np.issubdtype(y.dtype, np.floating):
+                    eps = np.finfo(y.dtype).eps
+                else:
+                    eps = 1
+                y = np.copysign(np.log10(np.abs(y)+eps), y)
 
-            if self.opts['derivativeMode']:  # plot dV/dt
-                y = np.diff(self.yData)/np.diff(self.xData)
-                x = x[:-1]
-            if self.opts['phasemapMode']:  # plot dV/dt vs V
-                x = self.yData[:-1]
-                y = np.diff(self.yData)/np.diff(self.xData)
-                    
-            with np.errstate(divide='ignore'):
-                if self.opts['logMode'][0]:
-                    x = np.log10(x)
-                if self.opts['logMode'][1]:
-                    if np.issubdtype(y.dtype, np.floating):
-                        eps = np.finfo(y.dtype).eps
-                    else:
-                        eps = 1
-                    y = np.copysign(np.log10(np.abs(y)+eps), y)
+        ds = self.opts['downsample']
+        if not isinstance(ds, int):
+            ds = 1
 
-            ds = self.opts['downsample']
-            if not isinstance(ds, int):
-                ds = 1
+        if self.opts['autoDownsample']:
+            # this option presumes that x-values have uniform spacing
+            if view_range is not None and len(x) > 1:
+                dx = float(x[-1]-x[0]) / (len(x)-1)
+                if dx != 0.0:
+                    x0 = (view_range.left()-x[0]) / dx
+                    x1 = (view_range.right()-x[0]) / dx
+                    width = self.getViewBox().width()
+                    if width != 0.0:
+                        ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
+                    ## downsampling is expensive; delay until after clipping.
 
-            if self.opts['autoDownsample']:
-                # this option presumes that x-values have uniform spacing
-                range = self.viewRect()
-                if range is not None and len(x) > 1:
-                    dx = float(x[-1]-x[0]) / (len(x)-1)
-                    if dx != 0.0:
-                        x0 = (range.left()-x[0]) / dx
-                        x1 = (range.right()-x[0]) / dx
-                        width = self.getViewBox().width()
-                        if width != 0.0:
-                            ds = int(max(1, int((x1-x0) / (width*self.opts['autoDownsampleFactor']))))
-                        ## downsampling is expensive; delay until after clipping.
+        if self.opts['clipToView']:
+            if view is None or view.autoRangeEnabled()[0]:
+                pass # no ViewBox to clip to, or view will autoscale to data range.
+            else:
+                # clip-to-view always presumes that x-values are in increasing order
+                if view_range is not None and len(x) > 1:
+                    # print('search:', view_range.left(),'-',view_range.right() )
+                    # find first in-view value (left edge) and first out-of-view value (right edge)
+                    # since we want the curve to go to the edge of the screen, we need to preserve
+                    # one down-sampled point on the left and one of the right, so we extend the interval
+                    x0 = np.searchsorted(x, view_range.left()) - ds
+                    x0 = fn.clip_scalar(x0, 0, len(x)) # workaround
+                    # x0 = np.clip(x0, 0, len(x))
 
-            if self.opts['clipToView']:
-                view = self.getViewBox()
-                if view is None or not view.autoRangeEnabled()[0]:
-                    # this option presumes that x-values are in increasing order
-                    range = self.viewRect()
-                    if range is not None and len(x) > 1:
-                        # clip to visible region extended by downsampling value, assuming
-                        # uniform spacing of x-values, has O(1) performance
-                        dx = float(x[-1]-x[0]) / (len(x)-1)
-                        # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+
-                        # x0 = np.clip(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
-                        # x1 = np.clip(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
-                        x0 = fn.clip_scalar(int((range.left()-x[0])/dx) - 1*ds, 0, len(x)-1)
-                        x1 = fn.clip_scalar(int((range.right()-x[0])/dx) + 2*ds, 0, len(x)-1)
+                    x1 = np.searchsorted(x, view_range.right()) + ds
+                    x1 = fn.clip_scalar(x1, x0, len(x))
+                    # x1 = np.clip(x1, 0, len(x))
+                    x = x[x0:x1]
+                    y = y[x0:x1]
 
-                        # if data has been clipped too strongly (in case of non-uniform
-                        # spacing of x-values), refine the clipping region as required
-                        # worst case performance: O(log(n))
-                        # best case performance: O(1)
-                        if x[x0] > range.left():
-                            x0 = np.searchsorted(x, range.left()) - 1*ds
-                            x0 = fn.clip_scalar(x0, 0, len(x)) # workaround
-                            # x0 = np.clip(x0, 0, len(x))
-                        if x[x1] < range.right():
-                            x1 = np.searchsorted(x, range.right()) + 2*ds
-                            x1 = fn.clip_scalar(x1, 0, len(x))
-                            # x1 = np.clip(x1, 0, len(x))
-                        x = x[x0:x1]
-                        y = y[x0:x1]
+        if ds > 1:
+            if self.opts['downsampleMethod'] == 'subsample':
+                x = x[::ds]
+                y = y[::ds]
+            elif self.opts['downsampleMethod'] == 'mean':
+                n = len(x) // ds
+                # x = x[:n*ds:ds]
+                stx = ds//2 # start of x-values; try to select a somewhat centered point
+                x = x[stx:stx+n*ds:ds] 
+                y = y[:n*ds].reshape(n,ds).mean(axis=1)
+            elif self.opts['downsampleMethod'] == 'peak':
+                n = len(x) // ds
+                x1 = np.empty((n,2))
+                stx = ds//2 # start of x-values; try to select a somewhat centered point
+                x1[:] = x[stx:stx+n*ds:ds,np.newaxis]
+                x = x1.reshape(n*2)
+                y1 = np.empty((n,2))
+                y2 = y[:n*ds].reshape((n, ds))
+                y1[:,0] = y2.max(axis=1)
+                y1[:,1] = y2.min(axis=1)
+                y = y1.reshape(n*2)
 
-            if ds > 1:
-                if self.opts['downsampleMethod'] == 'subsample':
-                    x = x[::ds]
-                    y = y[::ds]
-                elif self.opts['downsampleMethod'] == 'mean':
-                    n = len(x) // ds
-                    x = x[:n*ds:ds]
-                    y = y[:n*ds].reshape(n,ds).mean(axis=1)
-                elif self.opts['downsampleMethod'] == 'peak':
-                    n = len(x) // ds
-                    x1 = np.empty((n,2))
-                    x1[:] = x[:n*ds:ds,np.newaxis]
-                    x = x1.reshape(n*2)
-                    y1 = np.empty((n,2))
-                    y2 = y[:n*ds].reshape((n, ds))
-                    y1[:,0] = y2.max(axis=1)
-                    y1[:,1] = y2.min(axis=1)
-                    y = y1.reshape(n*2)
-
-            if self.opts['dynamicRangeLimit'] is not None:
-                view_range = self.viewRect()
-                if view_range is not None:
-                    data_range = self.dataRect()
-                    if data_range is not None:
-                        view_height = view_range.height()
-                        limit = self.opts['dynamicRangeLimit']
-                        hyst  = self.opts['dynamicRangeHyst']
-                        # never clip data if it fits into +/- (extended) limit * view height
-                        if ( # note that "bottom" is the larger number, and "top" is the smaller one.
-                            not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
-                            and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
-                            and data_range.height() > 2 * hyst * limit * view_height
-                        ):
-                            cache_is_good = False
-                            # check if cached display data can be reused:
-                            if self.yDisp is not None: # top is minimum value, bottom is maximum value
-                                # how many multiples of the current view height does the clipped plot extend to the top and bottom?
-                                top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height
-                                bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
-                                # print(top_exc, bot_exc, hyst)
-                                if (    top_exc >= limit / hyst and top_exc <= limit * hyst
-                                    and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
-                                    # restore cached values
-                                    x = self.xDisp
-                                    y = self.yDisp
-                                    cache_is_good = True
-                            if not cache_is_good:
-                                min_val = view_range.bottom() - limit * view_height
-                                max_val = view_range.top()    + limit * view_height
-                                if( self.yDisp is not None              # Do we have an existing cache? 
-                                    and min_val >= self._drlLastClip[0] # Are we reducing it further?
-                                    and max_val <= self._drlLastClip[1] ):
-                                    # if we need to clip further, we can work in-place on the output buffer
-                                    # print('in-place:', end='')
-                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                    # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
-                                    fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
-                                    self._drlLastClip = (min_val, max_val)
-                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
-                                    x = self.xDisp
-                                    y = self.yDisp
-                                else:
-                                    # if none of the shortcuts worked, we need to recopy from the full data
-                                    # print('alloc:', end='')
-                                    # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
-                                    # y = np.clip(y, a_min=min_val, a_max=max_val)
-                                    y = fn.clip_array(y, min_val, max_val)
-                                    self._drlLastClip = (min_val, max_val)
-                                    # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
-
-            self.xDisp = x
-            self.yDisp = y
-            self._viewRangeWasChanged = False
+        if self.opts['dynamicRangeLimit'] is not None:
+            if view_range is not None:
+                data_range = self.dataRect()
+                if data_range is not None:
+                    view_height = view_range.height()
+                    limit = self.opts['dynamicRangeLimit']
+                    hyst  = self.opts['dynamicRangeHyst']
+                    # never clip data if it fits into +/- (extended) limit * view height
+                    if ( # note that "bottom" is the larger number, and "top" is the smaller one.
+                        not data_range.bottom() < view_range.top()     # never clip if all data is too small to see
+                        and not data_range.top() > view_range.bottom() # never clip if all data is too large to see
+                        and data_range.height() > 2 * hyst * limit * view_height
+                    ):
+                        cache_is_good = False
+                        # check if cached display data can be reused:
+                        if self.yDisp is not None: # top is minimum value, bottom is maximum value
+                            # how many multiples of the current view height does the clipped plot extend to the top and bottom?
+                            top_exc =-(self._drlLastClip[0]-view_range.bottom()) / view_height
+                            bot_exc = (self._drlLastClip[1]-view_range.top()   ) / view_height
+                            # print(top_exc, bot_exc, hyst)
+                            if (    top_exc >= limit / hyst and top_exc <= limit * hyst
+                                and bot_exc >= limit / hyst and bot_exc <= limit * hyst ):
+                                # restore cached values
+                                x = self.xDisp
+                                y = self.yDisp
+                                cache_is_good = True
+                        if not cache_is_good:
+                            min_val = view_range.bottom() - limit * view_height
+                            max_val = view_range.top()    + limit * view_height
+                            if( self.yDisp is not None              # Do we have an existing cache? 
+                                and min_val >= self._drlLastClip[0] # Are we reducing it further?
+                                and max_val <= self._drlLastClip[1] ):
+                                # if we need to clip further, we can work in-place on the output buffer
+                                # print('in-place:', end='')
+                                # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                # np.clip(self.yDisp, out=self.yDisp, a_min=min_val, a_max=max_val)
+                                fn.clip_array(self.yDisp, min_val, max_val, out=self.yDisp)
+                                self._drlLastClip = (min_val, max_val)
+                                # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+                                x = self.xDisp
+                                y = self.yDisp
+                            else:
+                                # if none of the shortcuts worked, we need to recopy from the full data
+                                # print('alloc:', end='')
+                                # workaround for slowdown from numpy deprecation issues in 1.17 to 1.20+ :
+                                # y = np.clip(y, a_min=min_val, a_max=max_val)
+                                y = fn.clip_array(y, min_val, max_val)
+                                self._drlLastClip = (min_val, max_val)
+                                # print('{:.1e}<->{:.1e}'.format( min_val, max_val ))
+        self.xDisp = x
+        self.yDisp = y
+        self.setProperty('xViewRangeWasChanged', False)
+        self.setProperty('yViewRangeWasChanged', False)
         return self.xDisp, self.yDisp
 
     def dataRect(self):
@@ -862,11 +865,6 @@ class PlotDataItem(GraphicsObject):
 
 
     def clear(self):
-        #for i in self.curves+self.scatters:
-            #if i.scene() is not None:
-                #i.scene().removeItem(i)
-        #self.curves = []
-        #self.scatters = []
         self.xData = None
         self.yData = None
         self.xDisp = None
@@ -888,20 +886,37 @@ class PlotDataItem(GraphicsObject):
     def scatterHovered(self, plt, points, ev):
         self.sigPointsHovered.emit(self, points, ev)
 
-    def viewRangeChanged(self):
-        # view range has changed; re-plot if needed
-        self._viewRangeWasChanged = True
-        if( self.opts['clipToView']
-            or self.opts['autoDownsample']
-        ):
-            self.xDisp = self.yDisp = None
-            self.updateItems(styleUpdate=False)
-        elif self.opts['dynamicRangeLimit'] is not None:
-            # update, but do not discard cached display data
+    # def viewTransformChanged(self):
+    #   """ view transform (and thus range) has changed, replot if needed """
+    # viewTransformChanged is only called when the cached viewRect of GraphicsItem
+    # has already been invalidated. However, responding here will make PlotDataItem
+    # update curve and scatter later than intended.
+    #   super().viewTransformChanged() # this invalidates the viewRect() cache!
+        
+    def viewRangeChanged(self, vb=None, ranges=None, changed=None):
+        """ view range has changed; re-plot if needed """
+        update_needed = False
+        if changed is None or changed[0]: 
+            # if ranges is not None:
+            #     print('hor:', ranges[0])
+            self.setProperty('xViewRangeWasChanged', True)
+            if( self.opts['clipToView']
+                or self.opts['autoDownsample']
+            ):
+                self.xDisp = self.yDisp = None
+                update_needed = True
+        if changed is None or changed[1]:
+            # if ranges is not None:
+            #     print('ver:', ranges[1])
+            self.setProperty('yViewRangeWasChanged', True)
+            if self.opts['dynamicRangeLimit'] is not None:
+                # update, but do not discard cached display data
+                update_needed = True
+        if update_needed:
             self.updateItems(styleUpdate=False)
 
     def _fourierTransform(self, x, y):
-        ## Perform fourier transform. If x values are not sampled uniformly,
+        ## Perform Fourier transform. If x values are not sampled uniformly,
         ## then use np.interp to resample before taking fft.
         dx = np.diff(x)
         uniform = not np.any(np.abs(dx-dx[0]) > (abs(dx[0]) / 1000.))

@@ -125,14 +125,36 @@ def test_clipping():
     w.addItem(c)
 
     c.setClipToView(True)
-    w.setXRange(200, 600)
-    for x_min in range(100, 2**10 - 100, 100):
-        w.setXRange(x_min, x_min + 100)
-
+    for x_min in range(-200, 2**10 - 100, 100):
+        x_max = x_min + 100
+        w.setXRange(x_min, x_max, padding=0)
         xDisp, _ = c.getData()
-        vr = c.viewRect()
+        # vr = c.viewRect()
+        if len(xDisp) > 3: # check that all points except the first and last are on screen
+            assert( xDisp[ 1] >= x_min and xDisp[ 1] <= x_max )
+            assert( xDisp[-2] >= x_min and xDisp[-2] <= x_max )
 
-        assert xDisp[0] <= vr.left()
-        assert xDisp[-1] >= vr.right()
+    c.setDownsampling(ds=1) # disable downsampling
+    for x_min in range(-200, 2**10 - 100, 100):
+        x_max = x_min + 100
+        w.setXRange(x_min, x_max, padding=0)
+        xDisp, _ = c.getData()
+        # vr = c.viewRect() # this tends to be out of data, so we check against the range that we set
+        if len(xDisp) > 3: # check that all points except the first and last are on screen
+            assert( xDisp[ 0] == x[ 0] or xDisp[ 0] < x_min ) # first point should be unchanged, or off-screen
+            assert( xDisp[ 1] >= x_min and xDisp[ 1] <= x_max )
+            assert( xDisp[-2] >= x_min and xDisp[-2] <= x_max )
+            assert( xDisp[-1] == x[-1] or xDisp[-1] > x_max ) # last point should be unchanged, or off-screen
+
+    c.setData(x=np.zeros_like(y), y=y) # test zero width data set:
+    # test center and expected number of remaining data points
+    for center, num in ((-100.,1), (100.,1), (0.,len(y)) ):
+        # when all elements are off-screen, only one will be kept
+        # when all elelemts are on-screen, all should be kept
+        # and the code should not crash for zero separation
+        w.setXRange( center-50, center+50, padding=0 )
+        xDisp, yDisp = c.getData()
+        assert len(xDisp) == num
+        assert len(yDisp) == num
 
     w.close()
