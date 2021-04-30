@@ -6,28 +6,31 @@ from pyqtgraph.Qt import QtCore, QtGui, QtTest
 import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.tests import assertImageApproved, TransposedImageItem
-
+try:
+    import cupy
+except ImportError:
+    cupy = None
 app = pg.mkQApp()
 
 
-pg.setConfigOption("useCupy", True)
-
-
-@pytest.mark.skipif(pg.getCupy() is None, reason="CuPy unavailable to test")
+@pytest.mark.skipif(cupy is None, reason="CuPy unavailable to test")
 def test_useCupy_can_be_set_after_init():
-    import cupy
-    pg.setConfigOption("useCupy", False)
-    w = pg.GraphicsLayoutWidget()
-    w.show()
-    view = pg.ViewBox()
-    w.setCentralWidget(view)
-    w.resize(200, 200)
-    img = cupy.random.randint(0, 255, size=(32, 32)).astype(cupy.uint8)
-    ii = pg.ImageItem()
-    view.addItem(ii)
-    pg.setConfigOption("useCupy", True)
-    ii.setImage(img)
-    w.hide()
+    prev_setting = pg.getConfigOption("useCupy")
+    try:
+        pg.setConfigOption("useCupy", False)
+        w = pg.GraphicsLayoutWidget()
+        w.show()
+        view = pg.ViewBox()
+        w.setCentralWidget(view)
+        w.resize(200, 200)
+        img = cupy.random.randint(0, 255, size=(32, 32)).astype(cupy.uint8)
+        ii = pg.ImageItem()
+        view.addItem(ii)
+        pg.setConfigOption("useCupy", True)
+        ii.setImage(img)
+        w.hide()
+    finally:
+        pg.setConfigOption("useCupy", prev_setting)
 
 
 def test_ImageItem(transpose=False):
