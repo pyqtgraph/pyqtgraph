@@ -6,6 +6,10 @@ from typing import Dict, Any, Union, Type
 
 from pyqtgraph import getCupy, getConfigOption, setConfigOption
 from pyqtgraph.functions import makeARGB as real_makeARGB
+try:
+    import cupy
+except ImportError:
+    cupy = None
 
 IN_2D_INT8 = np.array([[173, 48, 122, 41], [210, 192, 0, 5], [104, 56, 102, 115], [78, 19, 255, 6]], dtype=np.uint8)
 IN_RGB_INT8 = np.array(
@@ -4290,30 +4294,36 @@ def test_makeARGB_against_generated_references():
     _do_something_for_every_combo(assert_correct)
 
 
-@pytest.mark.skipif(getCupy() is None, reason="CuPy unavailable to test")
+@pytest.mark.skipif(cupy is None, reason="CuPy unavailable to test")
 def test_cupy_makeARGB_against_generated_references():
-    setConfigOption("useCupy", True)
-    cp = getCupy()
-    def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
-        data = cp.asarray(data)
-        if lut is not None:
-            lut = cp.asarray(lut)
-        expectation = EXPECTED_OUTPUTS[key]
-        if isinstance(expectation, type) and issubclass(expectation, Exception):
-            try:
-                _makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
-            except Exception as e:
-                assert expectation == type(e)
-            else:
-                assert False, f"makeARGB({key!r}) was supposed to raise {expectation} but didn't raise anything."
-        else:
-            expectation = cp.asarray(expectation)
-            output, alpha = _makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
-            assert (
-                output == expectation
-            ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
+    prev_setting = getConfigOption("useCupy")
+    try:
+        setConfigOption("useCupy", True)
 
-    _do_something_for_every_combo(assert_cupy_correct)
+        cupy = getCupy()
+
+        def assert_cupy_correct(data, key, levels, lut, scale, use_rgba):
+            data = cupy.asarray(data)
+            if lut is not None:
+                lut = cupy.asarray(lut)
+            expectation = EXPECTED_OUTPUTS[key]
+            if isinstance(expectation, type) and issubclass(expectation, Exception):
+                try:
+                    _makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
+                except Exception as e:
+                    assert expectation == type(e)
+                else:
+                    assert False, f"makeARGB({key!r}) was supposed to raise {expectation} but didn't raise anything."
+            else:
+                expectation = cupy.asarray(expectation)
+                output, alpha = _makeARGB(data, lut=lut, levels=levels, scale=scale, useRGBA=use_rgba)
+                assert (
+                    output == expectation
+                ).all(), f"Incorrect _makeARGB({key!r}) output! Expected:\n{expectation!r}\n  Got:\n{output!r}"
+
+        _do_something_for_every_combo(assert_cupy_correct)
+    finally:
+        setConfigOption("useCupy", prev_setting)
 
 
 @pytest.mark.filterwarnings("ignore:invalid value encountered")
