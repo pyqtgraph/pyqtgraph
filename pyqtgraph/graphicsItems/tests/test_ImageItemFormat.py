@@ -40,7 +40,7 @@ def test_uint8():
     check_format((h, w, 4), dtype, levels, lut_none, Format.Format_RGBA8888)
 
     levels = [lo, hi]
-    check_format((h, w), dtype, levels, lut_none, Format.Format_Grayscale8)
+    check_format((h, w), dtype, levels, lut_none, Format.Format_Indexed8)
     levels = None
     check_format((h, w), dtype, levels, lut_mono1, Format.Format_Indexed8)
     check_format((h, w), dtype, levels, lut_mono2, Format.Format_Indexed8)

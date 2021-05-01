@@ -452,26 +452,46 @@ class ImageItem(GraphicsObject):
                     minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                if colors_lut is None:
-                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=self._xp.ubyte)
-                    efflut = None
-                else:
-                    num_colors = colors_lut.shape[0]
-                    effscale = num_colors / levdiff
-                    lutdtype = self._xp.min_scalar_type(num_colors - 1)
-                    levels_lut = fn.rescaleData(ind, scale=effscale,
-                                            offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
 
-                    if lutdtype == self._xp.ubyte:
-                        # don't combine, we will use QImage ColorTable
-                        efflut = None
+                if image.dtype == self._xp.ubyte:
+                    # for uint8 images, we will always do combine to efflut
+                    if colors_lut is None:
+                        levels_lut = fn.rescaleData(ind, scale=255./levdiff,
+                                                offset=minlev, dtype=self._xp.ubyte)
+
+                        efflut = levels_lut
+                        levels_lut = None
                     else:
-                        # colors_lut has more entries than will fit within 8-bits
-                        # combine
+                        num_colors = colors_lut.shape[0]
+                        effscale = num_colors / levdiff
+                        lutdtype = self._xp.min_scalar_type(num_colors - 1)
+                        levels_lut = fn.rescaleData(ind, scale=effscale,
+                                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+
                         efflut = colors_lut[levels_lut]
                         levels_lut = None
                         colors_lut = None
+                else:  # uint16
+                    if colors_lut is None:
+                        levels_lut = fn.rescaleData(ind, scale=255./levdiff,
+                                                offset=minlev, dtype=self._xp.ubyte)
+                        efflut = None
+                    else:
+                        num_colors = colors_lut.shape[0]
+                        effscale = num_colors / levdiff
+                        lutdtype = self._xp.min_scalar_type(num_colors - 1)
+                        levels_lut = fn.rescaleData(ind, scale=effscale,
+                                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+
+                        if lutdtype == self._xp.ubyte:
+                            # don't combine, we will use QImage ColorTable
+                            efflut = None
+                        else:
+                            # colors_lut has more entries than will fit within 8-bits
+                            # combine
+                            efflut = colors_lut[levels_lut]
+                            levels_lut = None
+                            colors_lut = None
 
                 self._effectiveLut = efflut, levels_lut, colors_lut
 
