@@ -124,7 +124,7 @@ class MetaArray(object):
     nameTypes = [basestring, tuple]
     @staticmethod
     def isNameType(var):
-        return any([isinstance(var, t) for t in MetaArray.nameTypes])
+        return any(isinstance(var, t) for t in MetaArray.nameTypes)
         
         
     ## methods to wrap from embedded ndarray / HDF5 

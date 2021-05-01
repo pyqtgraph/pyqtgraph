@@ -1,5 +1,4 @@
-from math import atan2, pi
-
+from math import atan2
 from ..Qt import QtGui, QtCore
 from ..Point import Point
 from .. import functions as fn
@@ -243,7 +242,7 @@ class TargetItem(UIGraphicsItem):
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
         va = atan2(v.y(), v.x())
-        tr.rotate(va * 180.0 / pi)
+        tr.rotateRadians(va)
         tr.scale(self.scale, self.scale)
         return dti.map(tr.map(self._path))
 
@@ -354,7 +353,7 @@ class TargetItem(UIGraphicsItem):
             DeprecationWarning,
             stacklevel=2,
         )
-        if self.label() is not None and angle != self.label().angle():
+        if self.label() is not None and angle != self.label().angle:
             self.label().setAngle(angle)
         return None
 
@@ -393,11 +392,6 @@ class TargetLabel(TextItem):
         anchor=(0, 0.5),
         **kwargs,
     ):
-        super().__init__(anchor=anchor, **kwargs)
-        self.setParentItem(target)
-        self.target = target
-        self.setFormat(text)
-
         if isinstance(offset, Point):
             self.offset = offset
         elif isinstance(offset, (tuple, list)):
@@ -406,6 +400,12 @@ class TargetLabel(TextItem):
             self.offset = Point(offset.x(), offset.y())
         else:
             raise TypeError("Offset parameter is the wrong data type")
+
+        super().__init__(anchor=anchor, **kwargs)
+        self.setParentItem(target)
+        self.target = target
+        self.setFormat(text)
+
         self.target.sigPositionChanged.connect(self.valueChanged)
         self.valueChanged()
 

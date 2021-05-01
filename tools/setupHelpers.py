@@ -1,21 +1,16 @@
 # -*- coding: utf-8 -*-
-import os, sys, re
-try:
-    from subprocess import check_output, check_call
-except ImportError:
-    import subprocess as sp
-    def check_output(*args, **kwds):
-        kwds['stdout'] = sp.PIPE
-        proc = sp.Popen(*args, **kwds)
-        output = proc.stdout.read()
-        proc.wait()
-        if proc.returncode != 0:
-            ex = Exception("Process had nonzero return value "
-                           + "%d " % proc.returncode)
-            ex.returncode = proc.returncode
-            ex.output = output
-            raise ex
-        return output
+from contextlib import suppress
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from distutils import core
+from typing import Dict, Any
+
+from generateChangelog import generateDebianChangelog
 
 # Maximum allowed repository size difference (in kB) following merge.
 # This is used to prevent large files from being inappropriately added to
@@ -154,20 +149,20 @@ def checkStyle():
             if os.path.splitext(f)[1] not in ('.py', '.rst'):
                 continue
             filename = os.path.join(path, f)
-            fh = open(filename, 'U')
-            _ = fh.readlines()
-            endings = set(
-                fh.newlines
-                if isinstance(fh.newlines, tuple)
-                else (fh.newlines,)
-            )
-            endings -= allowedEndings
-            if len(endings) > 0:
-                print("\033[0;31m"
-                      + "File has invalid line endings: "
-                      + "%s" % filename + "\033[0m")
-                ret = ret | 2
-            count += 1
+            with open(filename, 'U') as fh:
+                _ = fh.readlines()
+                endings = set(
+                    fh.newlines
+                    if isinstance(fh.newlines, tuple)
+                    else (fh.newlines,)
+                )
+                endings -= allowedEndings
+                if len(endings) > 0:
+                    print("\033[0;31m"
+                          + "File has invalid line endings: "
+                          + "%s" % filename + "\033[0m")
+                    ret = ret | 2
+                count += 1
     print('checked line endings in %d files' % count)
 
 
@@ -229,9 +224,9 @@ def unitTests():
     """
     try:
         if sys.version[0] == '3':
-            out = check_output('PYTHONPATH=. py.test-3', shell=True)
+            out = subprocess.check_output('PYTHONPATH=. py.test-3', shell=True)
         else:
-            out = check_output('PYTHONPATH=. py.test', shell=True)
+            out = subprocess.check_output('PYTHONPATH=. py.test', shell=True)
         ret = 0
     except Exception as e:
         out = e.output
@@ -295,12 +290,12 @@ def checkMergeSize(
 
     try:
         print("Check out target branch:\n" + setup)
-        check_call(setup, shell=True)
-        targetSize = int(check_output(checkSize, shell=True))
+        subprocess.check_call(setup, shell=True)
+        targetSize = int(subprocess.check_output(checkSize, shell=True))
         print("TARGET SIZE: %d kB" % targetSize)
         print("Merge source branch:\n" + merge)
-        check_call(merge, shell=True)
-        mergeSize = int(check_output(checkSize, shell=True))
+        subprocess.check_call(merge, shell=True)
+        mergeSize = int(subprocess.check_output(checkSize, shell=True))
         print("MERGE SIZE: %d kB" % mergeSize)
 
         diff = mergeSize - targetSize
@@ -355,7 +350,7 @@ def getInitVersion(pkgroot):
 
 def gitCommit(name):
     """Return the commit ID for the given name."""
-    commit = check_output(
+    commit = subprocess.check_output(
         ['git', 'show', name],
         universal_newlines=True).split('\n')[0]
     assert commit[:7] == 'commit '
@@ -375,11 +370,16 @@ def getGitVersion(tagPrefix):
     if not os.path.isdir(os.path.join(path, '.git')):
         return None
 
-    v = check_output(['git',
-                      'describe',
-                      '--tags',
-                      '--dirty',
-                      '--match="%s*"'%tagPrefix]).strip().decode('utf-8')
+    try:
+        v = (
+            subprocess.check_output(
+                ["git", "describe", "--tags", "--dirty", '--match="%s*"' % tagPrefix],
+                stderr=subprocess.DEVNULL)
+            .strip()
+            .decode("utf-8")
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
 
     # chop off prefix
     assert v.startswith(tagPrefix)
@@ -414,7 +414,7 @@ def getGitVersion(tagPrefix):
 def getGitBranch():
     m = re.search(
         r'\* (.*)',
-        check_output(['git', 'branch'],
+        subprocess.check_output(['git', 'branch'],
         universal_newlines=True))
     if m is None:
         return ''
@@ -476,11 +476,57 @@ def getVersionStrings(pkg):
     return version, forcedVersion, gitVersion, initVersion
 
 
-from distutils.core import Command
-import shutil, subprocess
-from generateChangelog import generateDebianChangelog
+DEFAULT_ASV: Dict[str, Any] = {
+    "version": 1,
+    "project": "pyqtgraph",
+    "project_url": "http://pyqtgraph.org/",
+    "repo": ".",
+    "branches": ["master"],
+    "environment_type": "virtualenv",
+    "show_commit_url": "http://github.com/pyqtgraph/pyqtgraph/commit/",
+    # "pythons": ["3.7", "3.8", "3.9"],
+    "matrix": {
+        # "numpy": ["1.17", "1.18", "1.19", ""],
+        "numpy": "",
+        "pyqt5": ["", None],
+        "pyside2": ["", None],
+    },
+    "exclude": [
+        {"pyqt5": "", "pyside2": ""},
+        {"pyqt5": None, "pyside2": None}
+    ],
+    "benchmark_dir": "benchmarks",
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html",
+    "build_cache_size": 5
+}
 
-class DebCommand(Command):
+
+class ASVConfigCommand(core.Command):
+    description = "Setup the ASV benchmarking config for this system"
+    user_options = []
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        config = DEFAULT_ASV
+        with suppress(FileNotFoundError, subprocess.CalledProcessError):
+            cuda_check = subprocess.check_output(["nvcc", "--version"])
+            match = re.search(r"release (\d{1,2}\.\d)", cuda_check.decode("utf-8"))
+            ver = match.groups()[0]  # e.g. 11.0
+            ver_str = ver.replace(".", "")  # e.g. 110
+            config["matrix"][f"cupy-cuda{ver_str}"] = ""
+
+        with open("asv.conf.json", "w") as conf_file:
+            conf_file.write(json.dumps(config, indent=2))
+
+
+class DebCommand(core.Command):
     description = "build .deb package using `debuild -us -uc`"
     maintainer = "Luke Campagnola <luke.campagnola@gmail.com>"
     debTemplate = "debian"
@@ -500,8 +546,7 @@ class DebCommand(Command):
         debName = "python-" + pkgName
         debDir = self.debDir
 
-        assert os.getcwd() == self.cwd, 'Must be in package root: '
-        + '%s' % self.cwd
+        assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
 
         if os.path.isdir(debDir):
             raise Exception('DEB build dir already exists: "%s"' % debDir)
@@ -539,7 +584,7 @@ class DebCommand(Command):
             raise Exception("Error during debuild.")
 
 
-class DebugCommand(Command):
+class DebugCommand(core.Command):
     """Just for learning about distutils."""
     description = ""
     user_options = []
@@ -554,7 +599,7 @@ class DebugCommand(Command):
         print(self.distribution.version)
 
 
-class TestCommand(Command):
+class TestCommand(core.Command):
     description =  "Run all package tests and exit immediately with ", \
                    "informative return code."
     user_options = []
@@ -569,7 +614,7 @@ class TestCommand(Command):
         pass
 
 
-class StyleCommand(Command):
+class StyleCommand(core.Command):
     description = "Check all code for style, exit immediately with ", \
                   "informative return code."
     user_options = []
@@ -584,7 +629,7 @@ class StyleCommand(Command):
         pass
 
 
-class MergeTestCommand(Command):
+class MergeTestCommand(core.Command):
     description = "Run all tests needed to determine whether the current ",\
                   "code is suitable for merge."
     user_options = []

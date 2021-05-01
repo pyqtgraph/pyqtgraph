@@ -15,9 +15,9 @@ of how to build an ROI at the bottom of the file.
 from ..Qt import QtCore, QtGui
 import numpy as np
 #from numpy.linalg import norm
-from ..Point import *
+from ..Point import Point
 from ..SRTTransform import SRTTransform
-from math import cos, sin
+from math import atan2, cos, degrees, sin, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -141,12 +141,13 @@ class ROI(GraphicsObject):
                  maxBounds=None, snapSize=1.0, scaleSnap=False,
                  translateSnap=False, rotateSnap=False, parent=None, pen=None,
                  hoverPen=None, handlePen=None, handleHoverPen=None,
-                 movable=True, rotatable=True, resizable=True, removable=False):
+                 movable=True, rotatable=True, resizable=True, removable=False,
+                 aspectLocked=False):
         GraphicsObject.__init__(self, parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         pos = Point(pos)
         size = Point(size)
-        self.aspectLocked = False
+        self.aspectLocked = aspectLocked
         self.translatable = movable
         self.rotatable = rotatable
         self.resizable = resizable
@@ -678,7 +679,7 @@ class ROI(GraphicsObject):
         
         The format returned is a list of (name, pos) tuples.
         """
-        if index == None:
+        if index is None:
             positions = []
             for h in self.handles:
                 positions.append((h['name'], h['pos']))
@@ -691,7 +692,7 @@ class ROI(GraphicsObject):
         
         The format returned is a list of (name, pos) tuples.
         """
-        if index == None:
+        if index is None:
             positions = []
             for h in self.handles:
                 positions.append((h['name'], h['item'].scenePos()))
@@ -800,7 +801,7 @@ class ROI(GraphicsObject):
         if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
             self.raiseContextMenu(ev)
             ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
+        elif ev.button() in self.acceptedMouseButtons():
             ev.accept()
             self.sigClicked.emit(self, ev)
         else:
@@ -935,7 +936,7 @@ class ROI(GraphicsObject):
                 return
             
             ## determine new rotation angle, constrained if necessary
-            ang = newState['angle'] - lp0.angle(lp1)
+            ang = newState['angle'] - lp1.angle(lp0)
             if ang is None:  ## this should never happen..
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
@@ -971,7 +972,7 @@ class ROI(GraphicsObject):
             except OverflowError:
                 return
             
-            ang = newState['angle'] - lp0.angle(lp1)
+            ang = newState['angle'] - lp1.angle(lp0)
             if ang is None:
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
@@ -1247,8 +1248,8 @@ class ROI(GraphicsObject):
         vx = img.mapToData(self.mapToItem(img, QtCore.QPointF(1, 0))) - origin
         vy = img.mapToData(self.mapToItem(img, QtCore.QPointF(0, 1))) - origin
         
-        lvx = np.sqrt(vx.x()**2 + vx.y()**2)
-        lvy = np.sqrt(vy.x()**2 + vy.y()**2)
+        lvx = hypot(vx.x(), vx.y())  # length
+        lvy = hypot(vy.x(), vy.y())  # length
         ##img.width is number of pixels, not width of item.
         ##need pxWidth and pxHeight instead of pxLen ?
         sx = 1.0 / lvx
@@ -1298,7 +1299,7 @@ class ROI(GraphicsObject):
         """Return global transformation (rotation angle+translation) required to move 
         from relative state to current state. If relative state isn't specified,
         then we use the state of the ROI when mouse is pressed."""
-        if relativeTo == None:
+        if relativeTo is None:
             relativeTo = self.preMoveState
         st = self.getState()
         
@@ -1425,7 +1426,7 @@ class Handle(UIGraphicsItem):
         menu = self.scene().addParentContextMenus(self, self.getMenu(), ev)
         
         ## Make sure it is still ok to remove this handle
-        removeAllowed = all([r.checkRemoveHandle(self) for r in self.rois])
+        removeAllowed = all(r.checkRemoveHandle(self) for r in self.rois)
         self.removeAction.setEnabled(removeAllowed)
         pos = ev.screenPos()
         menu.popup(QtCore.QPoint(pos.x(), pos.y()))    
@@ -1481,7 +1482,7 @@ class Handle(UIGraphicsItem):
         size = self.radius
         self.path = QtGui.QPainterPath()
         ang = self.startAng
-        dt = 2*np.pi / self.sides
+        dt = 2 * np.pi / self.sides
         for i in range(0, self.sides+1):
             x = size * cos(ang)
             y = size * sin(ang)
@@ -1518,13 +1519,13 @@ class Handle(UIGraphicsItem):
             return None
         
         v = dt.map(QtCore.QPointF(1, 0)) - dt.map(QtCore.QPointF(0, 0))
-        va = np.arctan2(v.y(), v.x())
+        va = atan2(v.y(), v.x())
         
         dti = fn.invertQTransform(dt)
         devPos = dt.map(QtCore.QPointF(0,0))
         tr = QtGui.QTransform()
         tr.translate(devPos.x(), devPos.y())
-        tr.rotate(va * 180. / 3.1415926)
+        tr.rotateRadians(va)
         
         return dti.map(tr.map(self.path))
         
@@ -1662,18 +1663,14 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ang = Point(1, 0).angle(d)
-        ra = ang * np.pi / 180.
+        ra = d.angle(Point(1, 0), units="radians")
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
-        ROI.__init__(self, pos1, size=Point(l, width), angle=ang, **args)
+        ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
-        
-
-        
 
 
 class MultiRectROI(QtGui.QGraphicsObject):
@@ -1887,7 +1884,7 @@ class EllipseROI(ROI):
         h = arr.shape[axes[1]]
 
         ## generate an ellipsoidal mask
-        mask = np.fromfunction(lambda x,y: (((x+0.5)/(w/2.)-1)**2+ ((y+0.5)/(h/2.)-1)**2)**0.5 < 1, (w, h))
+        mask = np.fromfunction(lambda x,y: np.hypot(((x+0.5)/(w/2.)-1), ((y+0.5)/(h/2.)-1)) < 1, (w, h))
         
         # reshape to match array axes
         if axes[0] > axes[1]:
@@ -1914,7 +1911,7 @@ class EllipseROI(ROI):
             center = br.center()
             r1 = br.width() / 2.
             r2 = br.height() / 2.
-            theta = np.linspace(0, 2*np.pi, 24)
+            theta = np.linspace(0, 2 * np.pi, 24)
             x = center.x() + r1 * np.cos(theta)
             y = center.y() + r2 * np.sin(theta)
             path.moveTo(x[0], y[0])
@@ -1944,8 +1941,7 @@ class CircleROI(EllipseROI):
             if radius is None:
                 raise TypeError("Must provide either size or radius.")
             size = (radius*2, radius*2)
-        EllipseROI.__init__(self, pos, size, **args)
-        self.aspectLocked = True
+        EllipseROI.__init__(self, pos, size, aspectLocked=True, **args)
         
     def _addHandles(self):
         self.addScaleHandle([0.5*2.**-0.5 + 0.5, 0.5*2.**-0.5 + 0.5], [0.5, 0.5])
@@ -2266,7 +2262,7 @@ class LineSegmentROI(ROI):
         Since this pulls 1D data from a 2D coordinate system, the return value 
         will have ndim = data.ndim-1
         
-        See :meth:`~pytqgraph.ROI.getArrayRegion` for a description of the
+        See :meth:`~pyqtgraph.ROI.getArrayRegion` for a description of the
         arguments.
         """
         imgPts = [self.mapToItem(img, h.pos()) for h in self.endpoints]
@@ -2310,16 +2306,15 @@ class CrosshairROI(ROI):
     """A crosshair ROI whose position is at the center of the crosshairs. By default, it is scalable, rotatable and translatable."""
     
     def __init__(self, pos=None, size=None, **kargs):
-        if size == None:
+        if size is None:
             size=[1,1]
-        if pos == None:
+        if pos is None:
             pos = [0,0]
         self._shape = None
-        ROI.__init__(self, pos, size, **kargs)
+        ROI.__init__(self, pos, size, aspectLocked=True, **kargs)
         
         self.sigRegionChanged.connect(self.invalidate)
         self.addScaleRotateHandle(Point(1, 0), Point(0, 0))
-        self.aspectLocked = True
 
     def invalidate(self):
         self._shape = None
@@ -2363,7 +2358,7 @@ class RulerROI(LineSegmentROI):
 
         vec = Point(h2) - Point(h1)
         length = vec.length()
-        angle = vec.angle(Point(1, 0))
+        angle = Point(1, 0).angle(vec)
 
         pvec = p2 - p1
         pvecT = Point(pvec.y(), -pvec.x())
@@ -2384,7 +2379,7 @@ class RulerROI(LineSegmentROI):
 
 
 class TriangleROI(ROI):
-    """
+    r"""
     Equilateral triangle ROI subclass with one scale handle and one rotation handle.
     Arguments
     pos            (length-2 sequence) The position of the ROI's origin.
@@ -2394,8 +2389,7 @@ class TriangleROI(ROI):
     """
 
     def __init__(self, pos, size, **args):
-        ROI.__init__(self, pos, [size, size], **args)
-        self.aspectLocked = True
+        ROI.__init__(self, pos, [size, size], aspectLocked=True, **args)
         angles = np.linspace(0, np.pi * 4 / 3, 3)
         verticies = (np.array((np.sin(angles), np.cos(angles))).T + 1.0) / 2.0
         self.poly = QtGui.QPolygonF()

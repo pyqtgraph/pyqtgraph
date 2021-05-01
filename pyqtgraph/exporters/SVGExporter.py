@@ -172,7 +172,6 @@ def _generateItemSvg(item, nodes=None, root=None, options={}):
     
 
     ## Generate SVG text for just this item (exclude its children; we'll handle them later)
-    tr = QtGui.QTransform()
     if isinstance(item, QtGui.QGraphicsScene):
         xmlStr = "<g>\n</g>\n"
         doc = xml.parseString(xmlStr)

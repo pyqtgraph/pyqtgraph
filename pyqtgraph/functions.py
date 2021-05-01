@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
+from .util.numba_helper import getNumbaFunctions
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
@@ -60,19 +61,15 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-        
     try:
-        if np.isnan(x) or np.isinf(x):
+        if not math.isfinite(x):
             return(1, '')
     except:
-        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
-        x = 0
     else:
-        m = int(np.clip(np.floor(np.log(abs(x))/np.log(1000)), -9.0, 9.0))
-    
+        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -84,7 +81,6 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     m1 = -3*m
     p = 10.**m1
-    
     return (p, pref)
 
 
@@ -268,6 +264,8 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+            else:
+                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -275,10 +273,10 @@ def mkColor(*args):
             a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
-                (r, g, b) = args[0]
+                r, g, b = args[0]
                 a = 255
             elif len(args[0]) == 4:
-                (r, g, b, a) = args[0]
+                r, g, b, a = args[0]
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
@@ -288,16 +286,13 @@ def mkColor(*args):
         else:
             raise TypeError(err)
     elif len(args) == 3:
-        (r, g, b) = args
+        r, g, b = args
         a = 255
     elif len(args) == 4:
-        (r, g, b, a) = args
+        r, g, b, a = args
     else:
         raise TypeError(err)
-    
-    args = [r,g,b,a]
-    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
-    args = list(map(int, args))
+    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
@@ -432,16 +427,16 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     If *tailLen* is None, no tail will be drawn.
     """
     if headWidth is None:
-        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+        headWidth = headLen * math.tan(math.radians(tipAngle * 0.5))
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
     if tailLen is None:
-        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - headWidth * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, 0)
     else:
         tailWidth *= 0.5
-        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - (headWidth-tailWidth) * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, -tailWidth)
         path.lineTo(headLen + tailLen, -tailWidth)
         path.lineTo(headLen + tailLen, tailWidth)
@@ -458,7 +453,7 @@ def eq(a, b):
     
     1. Returns True if a IS b, even if a==b still evaluates to False.
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
-       float('nan') instances using np.isnan.
+       float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
@@ -472,7 +467,7 @@ def eq(a, b):
 
     # The above catches np.nan, but not float('nan')
     if isinstance(a, float) and isinstance(b, float):
-        if np.isnan(a) and np.isnan(b):
+        if math.isnan(a) and math.isnan(b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
@@ -1121,8 +1116,13 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
 
         # don't copy if no change in dtype
         return data_out.astype(out_dtype, copy=False)
-    else:
-        return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
+
+    numba_fn = getNumbaFunctions()
+    if numba_fn and clip is not None:
+        # if we got here by makeARGB(), clip will not be None at this point
+        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
+
+    return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):

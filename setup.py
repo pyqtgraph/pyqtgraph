@@ -81,7 +81,7 @@ class Build(build.build):
         if os.path.isdir(buildPath):
             distutils.dir_util.remove_tree(buildPath)
     
-        ret = build.build.run(self)
+        build.build.run(self)
         
 
 class Install(install.install):
@@ -110,8 +110,10 @@ class Install(install.install):
         
         try:
             initfile = os.path.join(path, '__init__.py')
-            data = open(initfile, 'r').read()
-            open(initfile, 'w').write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
+            with open(initfile, "r") as file_:
+                data = file_.read()
+            with open(initfile, "w") as file_:
+                file_.write(re.sub(r"__version__ = .*", "__version__ = '%s'" % version, data))
             installVersion = version
         except:
             sys.stderr.write("Warning: Error occurred while setting version string in build path. "
@@ -134,6 +136,7 @@ setup(
               'test': helpers.TestCommand,
               'debug': helpers.DebugCommand,
               'mergetest': helpers.MergeTestCommand,
+              'asv_config': helpers.ASVConfigCommand,
               'style': helpers.StyleCommand},
     packages=allPackages,
     python_requires=">=3.7",
