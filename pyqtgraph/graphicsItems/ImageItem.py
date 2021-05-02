@@ -453,56 +453,46 @@ class ImageItem(GraphicsObject):
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
 
-                if image.dtype == self._xp.ubyte:
-                    # for uint8 images, we will always do combine to efflut
-                    if colors_lut is None:
-                        levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                                offset=minlev, dtype=self._xp.ubyte)
+                if colors_lut is None:
+                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
+                                            offset=minlev, dtype=self._xp.ubyte)
 
+                    if image.dtype == self._xp.ubyte:
+                        # uint8 image (always use efflut)
                         efflut = levels_lut
                         levels_lut = None
                     else:
-                        num_colors = colors_lut.shape[0]
-                        effscale = num_colors / levdiff
-                        lutdtype = self._xp.min_scalar_type(num_colors - 1)
-                        levels_lut = fn.rescaleData(ind, scale=effscale,
-                                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+                        efflut = None
+                else:
+                    num_colors = colors_lut.shape[0]
+                    effscale = num_colors / levdiff
+                    lutdtype = self._xp.min_scalar_type(num_colors - 1)
+                    levels_lut = fn.rescaleData(ind, scale=effscale,
+                                            offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
 
+                    if image.dtype == self._xp.ubyte or lutdtype != self._xp.ubyte:
+                        # combine if either:
+                        #   1) uint8 image (always use efflut)
+                        #   2) colors_lut has more entries than will fit within 8-bits
                         efflut = colors_lut[levels_lut]
                         levels_lut = None
                         colors_lut = None
-                else:  # uint16
-                    if colors_lut is None:
-                        levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                                offset=minlev, dtype=self._xp.ubyte)
-                        efflut = None
                     else:
-                        num_colors = colors_lut.shape[0]
-                        effscale = num_colors / levdiff
-                        lutdtype = self._xp.min_scalar_type(num_colors - 1)
-                        levels_lut = fn.rescaleData(ind, scale=effscale,
-                                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
-
-                        if lutdtype == self._xp.ubyte:
-                            # don't combine, we will use QImage ColorTable
-                            efflut = None
-                        else:
-                            # colors_lut has more entries than will fit within 8-bits
-                            # combine
-                            efflut = colors_lut[levels_lut]
-                            levels_lut = None
-                            colors_lut = None
+                        # uint16 image with colors_lut <= 256 entries
+                        # don't combine, we will use QImage ColorTable
+                        efflut = None
 
                 self._effectiveLut = efflut, levels_lut, colors_lut
 
             # possible combinations:
             # 1)  ~None, None, None
-            # 2)  None, ~None, ~None
-            # 3)  None, ~None, None
+            # 2)  None, ~None, ~None    (uint16 images only)
+            # 3)  None, ~None, None     (uint16 images only)
             lut, levels_lut, colors_lut = self._effectiveLut
             levels = None
 
             if levels_lut is not None:  # either combi 2 or 3
+                assert image.dtype == self._xp.uint16
                 assert levels_lut.dtype == self._xp.ubyte
                 assert colors_lut is None or colors_lut.shape[0] <= 256
                 image = levels_lut[image]
