@@ -27,7 +27,7 @@ __all__ = ['HistogramLUTItem']
 class HistogramLUTItem(GraphicsWidget):
     """
     :class:`~pyqtgraph.GraphicsWidget` with controls for adjusting the display of an
-    image.
+    :class:`~pyqtgraph.ImageItem`.
 
     Includes:
 
@@ -68,10 +68,8 @@ class HistogramLUTItem(GraphicsWidget):
     --------
     :class:`~pyqtgraph.ImageItem`
         HistogramLUTItem is most useful when paired with an ImageItem.
-
     :class:`~pyqtgraph.ImageView`
         Widget containing a paired ImageItem and HistogramLUTItem.
-
     :class:`~pyqtgraph.HistogramLUTWidget`
         QWidget containing a HistogramLUTItem for widget-based layouts.
     """
@@ -112,18 +110,19 @@ class HistogramLUTItem(GraphicsWidget):
         self.gradient = GradientEditorItem(orientation=self.gradientPosition)
         self.gradient.loadPreset('grey')
 
-        ori = 'horizontal' if self.orientation == 'vertical' else 'vertical'
+        # LinearRegionItem orientation refers to the bounding lines
+        regionOrientation = 'horizontal' if self.orientation == 'vertical' else 'vertical'
         self.regions = [
             # single region for mono levelMode
-            LinearRegionItem([0, 1], ori, swapMode='block'),
+            LinearRegionItem([0], regionOrientation, swapMode='block'),
             # r/g/b/a regions for rgba levelMode
-            LinearRegionItem([0, 1], ori, swapMode='block', pen='r',
+            LinearRegionItem([0, 1], regionOrientation, swapMode='block', pen='r',
                              brush=fn.mkBrush((255, 50, 50, 50)), span=(0., 1/3.)),
-            LinearRegionItem([0, 1], ori, swapMode='block', pen='g',
+            LinearRegionItem([0, 1], regionOrientation, swapMode='block', pen='g',
                              brush=fn.mkBrush((50, 255, 50, 50)), span=(1/3., 2/3.)),
-            LinearRegionItem([0, 1], ori, swapMode='block', pen='b',
+            LinearRegionItem([0, 1], regionOrientation, swapMode='block', pen='b',
                              brush=fn.mkBrush((50, 50, 255, 80)), span=(2/3., 1.)),
-            LinearRegionItem([0, 1], ori, swapMode='block', pen='w',
+            LinearRegionItem([0, 1], regionOrientation, swapMode='block', pen='w',
                              brush=fn.mkBrush((255, 255, 255, 50)), span=(2/3., 1.))
         ]
         self.region = self.regions[0]  # for backward compatibility.
@@ -135,7 +134,7 @@ class HistogramLUTItem(GraphicsWidget):
             region.sigRegionChanged.connect(self.regionChanging)
             region.sigRegionChangeFinished.connect(self.regionChanged)
 
-        # grad position to axis orientation
+        # gradient position to axis orientation
         ax = {'left': 'right', 'right': 'left',
               'top': 'bottom', 'bottom': 'top'}[self.gradientPosition]
         self.axis = AxisItem(ax, linkView=self.vb, maxTickLength=-10, parent=self)
@@ -400,7 +399,7 @@ class HistogramLUTItem(GraphicsWidget):
 
         Options are 'mono' or 'rgba'.
         """
-        if mode not in ('mono', 'rgba'):
+        if mode not in {'mono', 'rgba'}:
             raise ValueError(f"Level mode must be one of {{'mono', 'rgba'}}, got {mode}")
 
         if mode == self.levelMode:
