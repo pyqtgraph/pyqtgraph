@@ -382,10 +382,12 @@ class HistogramLUTItem(GraphicsWidget):
         rgba : list, optional
             Sequence of (min, max) pairs for each channel for 'rgba' mode.
         """
+        if None in {min, max} and (rgba is None or None in rgba[0]):
+            raise ValueError("Must specify min and max levels")
+
         if self.levelMode == 'mono':
             if min is None:
                 min, max = rgba[0]
-            assert None not in (min, max)
             self.region.setRegion((min, max))
         else:
             if rgba is None:
@@ -399,8 +401,7 @@ class HistogramLUTItem(GraphicsWidget):
         Options are 'mono' or 'rgba'.
         """
         if mode not in ('mono', 'rgba'):
-            raise ValueError(
-                "Level mode must be one of {{'mono', 'rgba'}}, got {}".format(mode))
+            raise ValueError(f"Level mode must be one of {{'mono', 'rgba'}}, got {mode}")
 
         if mode == self.levelMode:
             return
@@ -444,7 +445,7 @@ class HistogramLUTItem(GraphicsWidget):
             self.regions[0].setVisible(True)
             self.gradient.show()
         else:
-            raise ValueError("Unknown level mode {}".format(self.levelMode))
+            raise ValueError(f"Unknown level mode {self.levelMode}")
 
     def saveState(self):
         return {
