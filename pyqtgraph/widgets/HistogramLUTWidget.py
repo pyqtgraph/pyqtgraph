@@ -35,7 +35,7 @@ class HistogramLUTWidget(GraphicsView):
         if self.orientation == 'vertical':
             return QtCore.QSize(115, 200)
         else:
-            return QtCore.QSize(115, 200)
+            return QtCore.QSize(200, 115)
 
     def __getattr__(self, attr):
         return getattr(self.item, attr)
