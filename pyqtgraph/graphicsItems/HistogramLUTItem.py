@@ -44,9 +44,6 @@ class HistogramLUTItem(GraphicsWidget):
     fillHistogram : bool, optional
         By default, the histogram is rendered with a fill. Performance may be improved
         by disabling the fill.
-    rgbHistogram : bool, optional
-        Sets whether the histogram is computed once over all channels of the image or
-        once per channel.
     levelMode : str, optional
 
         - "mono": only a single set of black/white level lines is drawn and the levels
@@ -83,13 +80,12 @@ class HistogramLUTItem(GraphicsWidget):
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
 
-    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False,
-                 levelMode='mono', gradientPosition='right', orientation='vertical'):
+    def __init__(self, image=None, fillHistogram=True, levelMode='mono',
+                 gradientPosition='right', orientation='vertical'):
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
         self.levelMode = levelMode
-        self.rgbHistogram = rgbHistogram
         self.orientation = orientation
         self.gradientPosition = gradientPosition
 
