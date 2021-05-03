@@ -296,7 +296,6 @@ class PlotItem(GraphicsWidget):
         ==============  ==========================================================================================
         """
         
-                
         if axisItems is None:
             axisItems = {}
         
@@ -1194,23 +1193,29 @@ class PlotItem(GraphicsWidget):
             for each axis where tick values are enabled. If only a single float value is given, it
             will be applied for both width and height.
         """
-        if selection is True:
+        if selection is True: # shortcut: enable all axes, creating a frame
             selection = (True, True, True, True)
-        elif selection is False:
+        elif selection is False: # shortcut: disable all axes
             selection = (False, False, False, False)
-        if showValues is True:
+        if showValues is True: # shortcut: defaults arrangement with labels at left and bottom
             showValues = (True, False, False, True)
-        elif showValues is False:
+        elif showValues is False: # shortcut: disable all labels
             showValues = (False, False, False, False)
-        elif showValues is None:
+        elif showValues is None: # leave labelling untouched
             showValues = (None, None, None, None)
         if size is None:
             size = (None, None)
         elif not isinstance(size, collections.abc.Sized):
             size = (size, size)
         for idx, key in enumerate(('left','top','right','bottom')):
-            if selection[idx] is True : self.showAxis(key)
-            if selection[idx] is False: self.hideAxis(key)
+            # configure what axes to show
+            if selection[idx] is True :
+                self.showAxis(key)
+            elif selection[idx] is False: 
+                self.hideAxis(key)
+            else:
+                pass # leave it as it is.
+            # configure style, even for axes that are not currently shown
             ax = self.getAxis(key)
             if showValues[idx] is True: 
                 ax.setStyle(showValues=True )
