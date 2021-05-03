@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-GraphicsWidget displaying an image histogram along with gradient editor. Can be used to adjust the appearance of images.
+GraphicsWidget displaying an image histogram along with gradient editor. Can be used to
+adjust the appearance of images.
 """
 
 
@@ -25,32 +26,59 @@ __all__ = ['HistogramLUTItem']
 
 class HistogramLUTItem(GraphicsWidget):
     """
-    This is a graphicsWidget which provides controls for adjusting the display of an image.
-    
+    :class:`~pyqtgraph.GraphicsWidget` with controls for adjusting the display of an
+    image.
+
     Includes:
 
-    - Image histogram 
-    - Movable region over histogram to select black/white levels
+    - Image histogram
+    - Movable region over the histogram to select black/white levels
     - Gradient editor to define color lookup table for single-channel images
-    
-    ================ ===========================================================
-    image            (:class:`~pyqtgraph.ImageItem` or ``None``) If *image* is
-                     provided, then the control will be automatically linked to
-                     the image and changes to the control will be immediately
-                     reflected in the image's appearance.
-    fillHistogram    (bool) By default, the histogram is rendered with a fill.
-                     For performance, set ``fillHistogram=False``
-    rgbHistogram     (bool) Sets whether the histogram is computed once over all
-                     channels of the image, or once per channel.
-    levelMode        'mono' or 'rgba'. If 'mono', then only a single set of
-                     black/white level lines is drawn, and the levels apply to
-                     all channels in the image. If 'rgba', then one set of
-                     levels is drawn for each channel.
-    gradientPosition 'right' (default) OR 'left'. Which side of the histogram to
-                     put the LUT gradient.
-    ================ ===========================================================
+
+    Parameters
+    ----------
+    image : pyqtgraph.ImageItem, optional
+        If provided, control will be automatically linked to the image and changes to
+        the control will be reflected in the image's appearance. This may also be set
+        via :meth:`setImageItem`.
+    fillHistogram : bool, optional
+        By default, the histogram is rendered with a fill. Performance may be improved
+        by disabling the fill.
+    rgbHistogram : bool, optional
+        Sets whether the histogram is computed once over all channels of the image or
+        once per channel.
+    levelMode : str, optional
+
+        - "mono": only a single set of black/white level lines is drawn and the levels
+          apply to all channels in the image.
+        - "rgba": one set of levels is drawn for each channel.
+
+    gradientPosition : str, optional
+        Position of the gradient editor relative to the histogram, either 'right' or
+        'left'.
+
+    Attributes
+    ----------
+    sigLookupTableChanged : signal
+        Emits the HistogramLUTItem itself when the gradient changes
+    sigLevelsChanged : signal
+        Emits the HistogramLUTItem itself while the movable region is changing
+    sigLevelChangeFinished : signal
+        Emits the HistogramLUTItem itself when the movable region is finished changing
+
+    See Also
+    --------
+    :class:`~pyqtgraph.ImageItem`
+        HistogramLUTItem is most useful when paired with an ImageItem
+
+    :class:`~pyqtgraph.ImageView`
+        ImageView is a convenience class that automatically displays a ImageItem and
+        HistogramLUTItem.
+
+    :class:`~pyqtgraph.HistogramLUTWidget`
+        QWidget containing a HistogramLUTItem for widget-based layouts.
     """
-    
+
     sigLookupTableChanged = QtCore.Signal(object)
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
@@ -65,8 +93,9 @@ class HistogramLUTItem(GraphicsWidget):
         
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
-        self.layout.setContentsMargins(1,1,1,1)
+        self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)
+
         self.vb = ViewBox(parent=self)
         self.vb.setMaximumWidth(152)
         self.vb.setMinimumWidth(45)
@@ -103,46 +132,61 @@ class HistogramLUTItem(GraphicsWidget):
         self.range = None
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
-        
+
         self.gradient.sigGradientChanged.connect(self.gradientChanged)
         self.vb.sigRangeChanged.connect(self.viewRangeChanged)
-        add = QtGui.QPainter.CompositionMode_Plus
+
+        comp = QtGui.QPainter.CompositionMode_Plus
         self.plots = [
             PlotCurveItem(pen=(200, 200, 200, 100)),  # mono
-            PlotCurveItem(pen=(255, 0, 0, 100), compositionMode=add),  # r
-            PlotCurveItem(pen=(0, 255, 0, 100), compositionMode=add),  # g
-            PlotCurveItem(pen=(0, 0, 255, 100), compositionMode=add),  # b
-            PlotCurveItem(pen=(200, 200, 200, 100), compositionMode=add),  # a
-            ]
-        
+            PlotCurveItem(pen=(255, 0, 0, 100), compositionMode=comp),  # r
+            PlotCurveItem(pen=(0, 255, 0, 100), compositionMode=comp),  # g
+            PlotCurveItem(pen=(0, 0, 255, 100), compositionMode=comp),  # b
+            PlotCurveItem(pen=(200, 200, 200, 100), compositionMode=comp),  # a
+        ]
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
             plot.setRotation(90)
             self.vb.addItem(plot)
-        
+
         self.fillHistogram(fillHistogram)
         self._showRegions()
-            
-        self.vb.addItem(self.plot)
+
         self.autoHistogramRange()
-        
+
         if image is not None:
             self.setImageItem(image)
-        
+
     def fillHistogram(self, fill=True, level=0.0, color=(100, 100, 200)):
+        """Control fill of the histogram curve(s).
+
+        Parameters
+        ----------
+        fill : bool, optional
+            Set whether or not the histogram should be filled.
+        level : float, optional
+            Set the fill level. See :meth:`PlotCurveItem.setFillLevel
+            <pyqtgraph.PlotCurveItem.setFillLevel>`. Only used if ``fill`` is True.
+        color : color, optional
+            Color to use for the fill when the histogram ``levelMode == "mono"``. See
+            :meth:`PlotCurveItem.setBrush <pyqtgraph.PlotCurveItem.setBrush>`.
+        """
         colors = [color, (255, 0, 0, 50), (0, 255, 0, 50), (0, 0, 255, 50), (255, 255, 255, 50)]
-        for i,plot in enumerate(self.plots):
+        for color, plot in zip(colors, self.plots):
             if fill:
                 plot.setFillLevel(level)
-                plot.setBrush(colors[i])
+                plot.setBrush(color)
             else:
                 plot.setFillLevel(None)
-        
+
     def paint(self, p, *args):
+        # paint the bounding edges of the region item and gradient item with lines
+        # connecting them
         if self.levelMode != 'mono' or not self.region.isVisible():
             return
-        
+
         pen = self.region.lines[0].pen
+
         rgn = self.getLevels()
         p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
         p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
@@ -169,33 +213,33 @@ class HistogramLUTItem(GraphicsWidget):
         self.vb.enableAutoRange(self.vb.XYAxes)
 
     def setImageItem(self, img):
-        """Set an ImageItem to have its levels and LUT automatically controlled
-        by this HistogramLUTItem.
+        """Set an ImageItem to have its levels and LUT automatically controlled by this
+        HistogramLUTItem.
         """
         self.imageItem = weakref.ref(img)
         img.sigImageChanged.connect(self.imageChanged)
         self._setImageLookupTable()
         self.regionChanged()
         self.imageChanged(autoLevel=True)
-        
+
     def viewRangeChanged(self):
         self.update()
-    
+
     def gradientChanged(self):
         if self.imageItem() is not None:
             self._setImageLookupTable()
-            
+
         self.lut = None
         self.sigLookupTableChanged.emit(self)
 
     def _setImageLookupTable(self):
         if self.gradient.isLookupTrivial():
-            self.imageItem().setLookupTable(None) #lambda x: x.astype(np.uint8))
+            self.imageItem().setLookupTable(None)
         else:
-            self.imageItem().setLookupTable(self.getLookupTable)  ## send function pointer, not the result
+            self.imageItem().setLookupTable(self.getLookupTable)
 
     def getLookupTable(self, img=None, n=None, alpha=None):
-        """Return a lookup table from the color gradient defined by this 
+        """Return a lookup table from the color gradient defined by this
         HistogramLUTItem.
         """
         if self.levelMode != 'mono':
@@ -223,7 +267,7 @@ class HistogramLUTItem(GraphicsWidget):
     def imageChanged(self, autoLevel=False, autoRange=False):
         if self.imageItem() is None:
             return
-            
+
         if self.levelMode == 'mono':
             for plt in self.plots[1:]:
                 plt.setVisible(False)
@@ -264,10 +308,10 @@ class HistogramLUTItem(GraphicsWidget):
                     self.plots[i].setVisible(False)
             # make sure we are displaying the correct number of channels
             self._showRegions()
-            
+
     def getLevels(self):
         """Return the min and max levels.
-        
+
         For rgba mode, this returns a list of the levels for each channel.
         """
         if self.levelMode == 'mono':
@@ -277,12 +321,19 @@ class HistogramLUTItem(GraphicsWidget):
             if nch is None:
                 nch = 3
             return [r.getRegion() for r in self.regions[1:nch+1]]
-        
+
     def setLevels(self, min=None, max=None, rgba=None):
         """Set the min/max (bright and dark) levels.
-        
-        Arguments may be *min* and *max* for single-channel data, or 
-        *rgba* = [(rmin, rmax), ...] for multi-channel data.
+
+        Parameters
+        ----------
+        min : float, optional
+            Minimum level for "mono" mode.
+        max : float, optional
+            Maximum level for "mono" mode.
+        rgba : list, optional
+            Sequence of (min, max) pairs for each channel in RGBA order, for "rgba"
+            mode.
         """
         if self.levelMode == 'mono':
             if min is None:
@@ -291,23 +342,26 @@ class HistogramLUTItem(GraphicsWidget):
             self.region.setRegion((min, max))
         else:
             if rgba is None:
-                raise TypeError("Must specify rgba argument when levelMode != 'mono'.")
-            for i, levels in enumerate(rgba):
-                self.regions[i+1].setRegion(levels)
-        
+                rgba = 4*[(min, max)]
+            for levels, region in zip(rgba, self.regions[1:]):
+                region.setRegion(levels)
+
     def setLevelMode(self, mode):
-        """ Set the method of controlling the image levels offered to the user. 
+        """Set the method of controlling the image levels offered to the user.
+
         Options are 'mono' or 'rgba'.
         """
-        assert mode in ('mono', 'rgba')
-        
+        if mode not in ('mono', 'rgba'):
+            raise ValueError(
+                "Level mode must be one of {{'mono', 'rgba'}}, got {}".format(mode))
+
         if mode == self.levelMode:
             return
-        
+
         oldLevels = self.getLevels()
         self.levelMode = mode
         self._showRegions()
-        
+
         # do our best to preserve old levels
         if mode == 'mono':
             levels = np.array(oldLevels).mean(axis=0)
@@ -315,18 +369,18 @@ class HistogramLUTItem(GraphicsWidget):
         else:
             levels = [oldLevels] * 4
             self.setLevels(rgba=levels)
-            
+
         # force this because calling self.setLevels might not set the imageItem
         # levels if there was no change to the region item
         self.imageItem().setLevels(self.getLevels())
-        
+
         self.imageChanged()
         self.update()
 
     def _showRegions(self):
         for i in range(len(self.regions)):
             self.regions[i].setVisible(False)
-            
+
         if self.levelMode == 'rgba':
             imax = 4
             if self.imageItem() is not None:
@@ -343,15 +397,15 @@ class HistogramLUTItem(GraphicsWidget):
             self.regions[0].setVisible(True)
             self.gradient.show()
         else:
-            raise ValueError("Unknown level mode %r" %  self.levelMode) 
-    
+            raise ValueError("Unknown level mode {}".format(self.levelMode))
+
     def saveState(self):
         return {
             'gradient': self.gradient.saveState(),
             'levels': self.getLevels(),
             'mode': self.levelMode,
         }
-    
+
     def restoreState(self, state):
         if 'mode' in state:
             self.setLevelMode(state['mode'])
