@@ -228,9 +228,7 @@ class EnumColorMapItem(ptree.types.GroupParameter):
         self.fieldName = name
         vals = opts.get('values', [])
         if isinstance(vals, list):
-            vals = OrderedDict([(v,str(v)) for v in vals])
-        childs = [{'name': v, 'type': 'color'} for v in vals]
-        
+            vals = OrderedDict([(v,str(v)) for v in vals])        
         childs = []
         for val,vname in vals.items():
             ch = ptree.Parameter.create(name=vname, type='color')
