@@ -114,7 +114,7 @@ class HistogramLUTItem(GraphicsWidget):
         regionOrientation = 'horizontal' if self.orientation == 'vertical' else 'vertical'
         self.regions = [
             # single region for mono levelMode
-            LinearRegionItem([0], regionOrientation, swapMode='block'),
+            LinearRegionItem([0, 1], regionOrientation, swapMode='block'),
             # r/g/b/a regions for rgba levelMode
             LinearRegionItem([0, 1], regionOrientation, swapMode='block', pen='r',
                              brush=fn.mkBrush((255, 50, 50, 50)), span=(0., 1/3.)),
