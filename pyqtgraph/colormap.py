@@ -409,7 +409,7 @@ class ColorMap(object):
         p1: QtCore.QPointF, default (0,0)
             Starting point (value 0) of the gradient.
         p2: QtCore.QPointF, default (dy,0)
-            End point (value 1) of the gradient. `dy` is the span of ``max(pos) - min(pos)``
+            End point (value 1) of the gradient. Default parameter `dy` is the span of ``max(pos) - min(pos)``
             over which the color map is defined, typically `dy=1`.
         """
         if p1 is None:
@@ -547,7 +547,7 @@ class ColorMap(object):
         list of QColor objects
             for `ColorMap.QCOLOR`:
 
-            Colors for each `data` value as Qcolor objects.
+            Colors for each `data` value as QColor objects.
         """
         if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
