@@ -46,7 +46,7 @@ class HistogramLUTItem(GraphicsWidget):
         by disabling the fill. Additional control over the fill is provided by
         :meth:`fillHistogram`.
     levelMode : str, optional
-        'mono'
+        'mono' (default)
             Only a single set of black/white level lines is drawn and the levels apply
             to all channels in the image.
         'rgba'
@@ -54,6 +54,9 @@ class HistogramLUTItem(GraphicsWidget):
     gradientPosition : str, optional
         Position of the gradient editor relative to the histogram, either 'right' or
         'left'.
+    orientation : str, optional
+        The orientation of the axis along which the histogram is displayed. Either
+        'vertical' (default) or 'horizontal'.
 
     Attributes
     ----------
