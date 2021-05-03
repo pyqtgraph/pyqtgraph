@@ -43,13 +43,14 @@ class HistogramLUTItem(GraphicsWidget):
         via :meth:`setImageItem`.
     fillHistogram : bool, optional
         By default, the histogram is rendered with a fill. Performance may be improved
-        by disabling the fill.
+        by disabling the fill. Additional control over the fill is provided by
+        :meth:`fillHistogram`.
     levelMode : str, optional
-
-        - "mono": only a single set of black/white level lines is drawn and the levels
-          apply to all channels in the image.
-        - "rgba": one set of levels is drawn for each channel.
-
+        'mono'
+            Only a single set of black/white level lines is drawn and the levels apply
+            to all channels in the image.
+        'rgba'
+            One set of levels is drawn for each channel.
     gradientPosition : str, optional
         Position of the gradient editor relative to the histogram, either 'right' or
         'left'.
@@ -66,11 +67,10 @@ class HistogramLUTItem(GraphicsWidget):
     See Also
     --------
     :class:`~pyqtgraph.ImageItem`
-        HistogramLUTItem is most useful when paired with an ImageItem
+        HistogramLUTItem is most useful when paired with an ImageItem.
 
     :class:`~pyqtgraph.ImageView`
-        ImageView is a convenience class that automatically displays a ImageItem and
-        HistogramLUTItem.
+        Widget containing a paired ImageItem and HistogramLUTItem.
 
     :class:`~pyqtgraph.HistogramLUTWidget`
         QWidget containing a HistogramLUTItem for widget-based layouts.
@@ -209,15 +209,12 @@ class HistogramLUTItem(GraphicsWidget):
 
         pen = self.region.lines[0].pen
 
-        rgn = self.getLevels()
-        if self.levelMode == 'rgba':
-            rgn = rgn[0]
-
+        mn, mx = self.getLevels()
         vbc = self.vb.viewRect().center()
         gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
         if self.orientation == 'vertical':
-            p1mn = self.vb.mapFromViewToItem(self, Point(vbc.x(), rgn[0])) + Point(0, 5)
-            p1mx = self.vb.mapFromViewToItem(self, Point(vbc.x(), rgn[1])) - Point(0, 5)
+            p1mn = self.vb.mapFromViewToItem(self, Point(vbc.x(), mn)) + Point(0, 5)
+            p1mx = self.vb.mapFromViewToItem(self, Point(vbc.x(), mx)) - Point(0, 5)
             if self.gradientPosition == 'right':
                 p2mn = gradRect.bottomLeft()
                 p2mx = gradRect.topLeft()
@@ -225,8 +222,8 @@ class HistogramLUTItem(GraphicsWidget):
                 p2mn = gradRect.bottomRight()
                 p2mx = gradRect.topRight()
         else:
-            p1mn = self.vb.mapFromViewToItem(self, Point(rgn[0], vbc.y())) - Point(5, 0)
-            p1mx = self.vb.mapFromViewToItem(self, Point(rgn[1], vbc.y())) + Point(5, 0)
+            p1mn = self.vb.mapFromViewToItem(self, Point(mn, vbc.y())) - Point(5, 0)
+            p1mx = self.vb.mapFromViewToItem(self, Point(mx, vbc.y())) + Point(5, 0)
             if self.gradientPosition == 'bottom':
                 p2mn = gradRect.topLeft()
                 p2mx = gradRect.topRight()
@@ -379,12 +376,11 @@ class HistogramLUTItem(GraphicsWidget):
         Parameters
         ----------
         min : float, optional
-            Minimum level for "mono" mode.
+            Minimum level.
         max : float, optional
-            Maximum level for "mono" mode.
+            Maximum level.
         rgba : list, optional
-            Sequence of (min, max) pairs for each channel in RGBA order, for "rgba"
-            mode.
+            Sequence of (min, max) pairs for each channel for 'rgba' mode.
         """
         if self.levelMode == 'mono':
             if min is None:
