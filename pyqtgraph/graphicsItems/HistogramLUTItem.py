@@ -82,37 +82,55 @@ class HistogramLUTItem(GraphicsWidget):
     sigLookupTableChanged = QtCore.Signal(object)
     sigLevelsChanged = QtCore.Signal(object)
     sigLevelChangeFinished = QtCore.Signal(object)
-    
-    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False, levelMode='mono', gradientPosition='right'):
+
+    def __init__(self, image=None, fillHistogram=True, rgbHistogram=False,
+                 levelMode='mono', gradientPosition='right', orientation='vertical'):
         GraphicsWidget.__init__(self)
         self.lut = None
         self.imageItem = lambda: None  # fake a dead weakref
         self.levelMode = levelMode
         self.rgbHistogram = rgbHistogram
+        self.orientation = orientation
         self.gradientPosition = gradientPosition
-        
+
+        if orientation == 'vertical' and gradientPosition not in {'right', 'left'}:
+            self.gradientPosition = 'right'
+        elif orientation == 'horizontal' and gradientPosition not in {'top', 'bottom'}:
+            self.gradientPosition = 'bottom'
+
         self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(1, 1, 1, 1)
         self.layout.setSpacing(0)
 
         self.vb = ViewBox(parent=self)
-        self.vb.setMaximumWidth(152)
-        self.vb.setMinimumWidth(45)
-        self.vb.setMouseEnabled(x=False, y=True)
-        self.gradient = GradientEditorItem()
-        self.gradient.setOrientation(gradientPosition)
+        if self.orientation == 'vertical':
+            self.vb.setMaximumWidth(152)
+            self.vb.setMinimumWidth(45)
+            self.vb.setMouseEnabled(x=False, y=True)
+        else:
+            self.vb.setMaximumHeight(152)
+            self.vb.setMinimumHeight(45)
+            self.vb.setMouseEnabled(x=True, y=False)
+
+        self.gradient = GradientEditorItem(orientation=self.gradientPosition)
         self.gradient.loadPreset('grey')
+
+        ori = 'horizontal' if self.orientation == 'vertical' else 'vertical'
         self.regions = [
-            LinearRegionItem([0, 1], 'horizontal', swapMode='block'),
-            LinearRegionItem([0, 1], 'horizontal', swapMode='block', pen='r',
+            # single region for mono levelMode
+            LinearRegionItem([0, 1], ori, swapMode='block'),
+            # r/g/b/a regions for rgba levelMode
+            LinearRegionItem([0, 1], ori, swapMode='block', pen='r',
                              brush=fn.mkBrush((255, 50, 50, 50)), span=(0., 1/3.)),
-            LinearRegionItem([0, 1], 'horizontal', swapMode='block', pen='g',
+            LinearRegionItem([0, 1], ori, swapMode='block', pen='g',
                              brush=fn.mkBrush((50, 255, 50, 50)), span=(1/3., 2/3.)),
-            LinearRegionItem([0, 1], 'horizontal', swapMode='block', pen='b',
+            LinearRegionItem([0, 1], ori, swapMode='block', pen='b',
                              brush=fn.mkBrush((50, 50, 255, 80)), span=(2/3., 1.)),
-            LinearRegionItem([0, 1], 'horizontal', swapMode='block', pen='w',
-                             brush=fn.mkBrush((255, 255, 255, 50)), span=(2/3., 1.))]
+            LinearRegionItem([0, 1], ori, swapMode='block', pen='w',
+                             brush=fn.mkBrush((255, 255, 255, 50)), span=(2/3., 1.))
+        ]
+        self.region = self.regions[0]  # for backward compatibility.
         for region in self.regions:
             region.setZValue(1000)
             self.vb.addItem(region)
@@ -120,16 +138,23 @@ class HistogramLUTItem(GraphicsWidget):
             region.lines[1].addMarker('|>', 0.5)
             region.sigRegionChanged.connect(self.regionChanging)
             region.sigRegionChangeFinished.connect(self.regionChanged)
-            
-        self.region = self.regions[0]  # for backward compatibility.
-        
-        self.axis = AxisItem('left', linkView=self.vb, maxTickLength=-10, parent=self)
-        self.layout.addItem(self.axis, 0, 0)
-        self.layout.addItem(self.vb, 0, 1)
-        pos = (0, 2) if gradientPosition == 'right' else (2, 0)
-        self.layout.addItem(self.axis, 0, pos[0])
-        self.layout.addItem(self.gradient, 0, pos[1])
-        self.range = None
+
+        # grad position to axis orientation
+        ax = {'left': 'right', 'right': 'left',
+              'top': 'bottom', 'bottom': 'top'}[self.gradientPosition]
+        self.axis = AxisItem(ax, linkView=self.vb, maxTickLength=-10, parent=self)
+
+        # axis / viewbox / gradient order in the grid
+        avg = (0, 1, 2) if self.gradientPosition in {'right', 'bottom'} else (2, 1, 0)
+        if self.orientation == 'vertical':
+            self.layout.addItem(self.axis, 0, avg[0])
+            self.layout.addItem(self.vb, 0, avg[1])
+            self.layout.addItem(self.gradient, 0, avg[2])
+        else:
+            self.layout.addItem(self.axis, avg[0], 0)
+            self.layout.addItem(self.vb, avg[1], 0)
+            self.layout.addItem(self.gradient, avg[2], 0)
+
         self.gradient.setFlag(self.gradient.ItemStacksBehindParent)
         self.vb.setFlag(self.gradient.ItemStacksBehindParent)
 
@@ -146,7 +171,8 @@ class HistogramLUTItem(GraphicsWidget):
         ]
         self.plot = self.plots[0]  # for backward compatibility.
         for plot in self.plots:
-            plot.setRotation(90)
+            if self.orientation == 'vertical':
+                plot.setRotation(90)
             self.vb.addItem(plot)
 
         self.fillHistogram(fillHistogram)
@@ -188,26 +214,55 @@ class HistogramLUTItem(GraphicsWidget):
         pen = self.region.lines[0].pen
 
         rgn = self.getLevels()
-        p1 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[0]))
-        p2 = self.vb.mapFromViewToItem(self, Point(self.vb.viewRect().center().x(), rgn[1]))
+        if self.levelMode == 'rgba':
+            rgn = rgn[0]
+
+        vbc = self.vb.viewRect().center()
         gradRect = self.gradient.mapRectToParent(self.gradient.gradRect.rect())
+        if self.orientation == 'vertical':
+            p1mn = self.vb.mapFromViewToItem(self, Point(vbc.x(), rgn[0])) + Point(0, 5)
+            p1mx = self.vb.mapFromViewToItem(self, Point(vbc.x(), rgn[1])) - Point(0, 5)
+            if self.gradientPosition == 'right':
+                p2mn = gradRect.bottomLeft()
+                p2mx = gradRect.topLeft()
+            else:
+                p2mn = gradRect.bottomRight()
+                p2mx = gradRect.topRight()
+        else:
+            p1mn = self.vb.mapFromViewToItem(self, Point(rgn[0], vbc.y())) - Point(5, 0)
+            p1mx = self.vb.mapFromViewToItem(self, Point(rgn[1], vbc.y())) + Point(5, 0)
+            if self.gradientPosition == 'bottom':
+                p2mn = gradRect.topLeft()
+                p2mx = gradRect.topRight()
+            else:
+                p2mn = gradRect.bottomLeft()
+                p2mx = gradRect.bottomRight()
+
         p.setRenderHint(QtGui.QPainter.Antialiasing)
         for pen in [fn.mkPen((0, 0, 0, 100), width=3), pen]:
             p.setPen(pen)
-            if self.gradientPosition == 'right':
-                p.drawLine(p1 + Point(0, 5), gradRect.bottomLeft())
-                p.drawLine(p2 - Point(0, 5), gradRect.topLeft())
+
+            # lines from the linear region item bounds to the gradient item bounds
+            p.drawLine(p1mn, p2mn)
+            p.drawLine(p1mx, p2mx)
+
+            # lines bounding the edges of the gradient item
+            if self.orientation == 'vertical':
+                p.drawLine(gradRect.topLeft(), gradRect.topRight())
+                p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
             else:
-                p.drawLine(p1 + Point(0, 5), gradRect.bottomRight())
-                p.drawLine(p2 - Point(0, 5), gradRect.topRight())
-            p.drawLine(gradRect.topLeft(), gradRect.topRight())
-            p.drawLine(gradRect.bottomLeft(), gradRect.bottomRight())
+                p.drawLine(gradRect.topLeft(), gradRect.bottomLeft())
+                p.drawLine(gradRect.topRight(), gradRect.bottomRight())
 
     def setHistogramRange(self, mn, mx, padding=0.1):
         """Set the Y range on the histogram plot. This disables auto-scaling."""
-        self.vb.enableAutoRange(self.vb.YAxis, False)
-        self.vb.setYRange(mn, mx, padding)
-        
+        if self.orientation == 'vertical':
+            self.vb.enableAutoRange(self.vb.YAxis, False)
+            self.vb.setYRange(mn, mx, padding)
+        else:
+            self.vb.enableAutoRange(self.vb.XAxis, False)
+            self.vb.setXRange(mn, mx, padding)
+
     def autoHistogramRange(self):
         """Enable auto-scaling on the histogram plot."""
         self.vb.enableAutoRange(self.vb.XYAxes)
