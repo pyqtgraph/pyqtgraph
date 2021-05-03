@@ -438,14 +438,11 @@ class GraphicsItem(object):
         """
         if relativeItem is None:
             relativeItem = self.parentItem()
-            
 
         tr = self.itemTransform(relativeItem)
         if isinstance(tr, tuple):  ## difference between pyside and pyqt
             tr = tr[0]
-        #vec = tr.map(Point(1,0)) - tr.map(Point(0,0))
         vec = tr.map(QtCore.QLineF(0,0,1,0))
-        #return Point(vec).angle(Point(1,0))
         return vec.angleTo(QtCore.QLineF(vec.p1(), vec.p1()+QtCore.QPointF(1,0)))
         
     #def itemChange(self, change, value):
@@ -556,6 +553,8 @@ class GraphicsItem(object):
         """
         Called whenever the view coordinates of the ViewBox containing this item have changed.
         """
+        # when this is called, _cachedView is not invalidated.
+        # this means that for functions overriding viewRangeChanged, viewRect() may be stale.
         pass
     
     def viewTransformChanged(self):

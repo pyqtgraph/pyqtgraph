@@ -17,7 +17,7 @@ import numpy as np
 #from numpy.linalg import norm
 from ..Point import Point
 from ..SRTTransform import SRTTransform
-from math import atan2, cos, sin, hypot, radians
+from math import atan2, cos, degrees, sin, hypot
 from .. import functions as fn
 from .GraphicsObject import GraphicsObject
 from .UIGraphicsItem import UIGraphicsItem
@@ -936,7 +936,7 @@ class ROI(GraphicsObject):
                 return
             
             ## determine new rotation angle, constrained if necessary
-            ang = newState['angle'] - lp0.angle(lp1)
+            ang = newState['angle'] - lp1.angle(lp0)
             if ang is None:  ## this should never happen..
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
@@ -972,7 +972,7 @@ class ROI(GraphicsObject):
             except OverflowError:
                 return
             
-            ang = newState['angle'] - lp0.angle(lp1)
+            ang = newState['angle'] - lp1.angle(lp0)
             if ang is None:
                 return
             if self.rotateSnap or (modifiers & QtCore.Qt.ControlModifier):
@@ -1663,12 +1663,11 @@ class LineROI(ROI):
         pos2 = Point(pos2)
         d = pos2-pos1
         l = d.length()
-        ang = Point(1, 0).angle(d)
-        ra = radians(ang if ang is not None else 0.)
+        ra = d.angle(Point(1, 0), units="radians")
         c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
         pos1 = pos1 + c
         
-        ROI.__init__(self, pos1, size=Point(l, width), angle=ang, **args)
+        ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
@@ -2359,7 +2358,7 @@ class RulerROI(LineSegmentROI):
 
         vec = Point(h2) - Point(h1)
         length = vec.length()
-        angle = vec.angle(Point(1, 0))
+        angle = Point(1, 0).angle(vec)
 
         pvec = p2 - p1
         pvecT = Point(pvec.y(), -pvec.x())

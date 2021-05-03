@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
+from .util.numba_helper import getNumbaFunctions
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
@@ -1115,8 +1116,13 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
 
         # don't copy if no change in dtype
         return data_out.astype(out_dtype, copy=False)
-    else:
-        return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
+
+    numba_fn = getNumbaFunctions()
+    if numba_fn and clip is not None:
+        # if we got here by makeARGB(), clip will not be None at this point
+        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
+
+    return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):

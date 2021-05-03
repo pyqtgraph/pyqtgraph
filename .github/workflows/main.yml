@@ -70,9 +70,9 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install --upgrade pip
-        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib
+        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
         pip install .
-        pip install pytest pytest-cov pytest-xdist coverage
+        pip install pytest
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -107,9 +107,7 @@ jobs:
       run: |
         mkdir $SCREENSHOT_DIR
         pytest pyqtgraph examples -v \
-          -n auto \
           --junitxml pytest.xml \
-          --cov pyqtgraph --cov-report=xml --cov-report=html
       shell: bash
     - name: Upload Screenshots
       uses: actions/upload-artifact@v2
