@@ -430,11 +430,12 @@ class ImageItem(GraphicsObject):
         levels = self.levels
         if image.dtype in (self._xp.ubyte, self._xp.uint16):
             image, levels, lut, augmented_alpha = self._try_combine_lut(image, levels, lut)
-            self.qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
+            qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
 
-            if self.qimage is not None:
+            if qimage is not None:
                 self._processingBuffer = None
                 self._displayBuffer = None
+                self.qimage = qimage
                 self._renderRequired = False
                 self._unrenderable = False
                 return
