@@ -420,19 +420,43 @@ class ImageItem(GraphicsObject):
         if image.ndim == 3 and image.shape[-1] == 1:
             image = image[..., 0]
 
+        # Assume images are in column-major order for backward compatibility
+        # (most images are in row-major order)
+        if self.axisOrder == 'col-major':
+            image = image.swapaxes(0, 1)
+
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
-        scale = None
         levels = self.levels
-        augmented_alpha = False
+        if image.dtype in (self._xp.ubyte, self._xp.uint16):
+            image, levels, lut, augmented_alpha = self._try_combine_lut(image, levels, lut)
+            qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
 
+        if qimage is not None:
+            self.qimage = qimage
+            self._processingBuffer = None
+            self._displayBuffer = None
+        else:
+            if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
+                self._buildQImageBuffer(image.shape)
+
+            fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
+            if self._xp == getCupy():
+                self._processingBuffer.get(out=self._displayBuffer)
+
+        self._renderRequired = False
+        self._unrenderable = False
+
+    def _try_combine_lut(self, image, levels, lut):
+        augmented_alpha = False
+        xp = self._xp
+
+        can_handle = False
         while True:
-            if image.dtype not in (self._xp.ubyte, self._xp.uint16):
-                break
             if levels is not None and levels.ndim != 1:
                 # can't handle multi-channel levels
                 break
-            if image.dtype == self._xp.uint16 and levels is None and \
+            if image.dtype == xp.uint16 and levels is None and \
                     image.ndim == 3 and image.shape[2] == 3:
                 # uint16 rgb can't be directly displayed, so make it
                 # pass through effective lut processing
@@ -441,106 +465,103 @@ class ImageItem(GraphicsObject):
                 # nothing to combine
                 break
 
-            # distinguish between lut for levels and colors
-            levels_lut = None
-            colors_lut = lut
-            lut = None
-
-            if self._effectiveLut is None:
-                eflsize = 2**(image.itemsize*8)
-                ind = self._xp.arange(eflsize)
-                if levels is None:
-                    info = numpy.iinfo(image.dtype)
-                    minlev, maxlev = info.min, info.max
-                else:
-                    minlev, maxlev = levels
-                levdiff = maxlev - minlev
-                levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-
-                if colors_lut is None:
-                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=self._xp.ubyte)
-
-                    if image.dtype == self._xp.ubyte:
-                        # uint8 image (always use efflut)
-                        efflut = levels_lut
-                        levels_lut = None
-                    else:
-                        efflut = None
-                else:
-                    num_colors = colors_lut.shape[0]
-                    effscale = num_colors / levdiff
-                    lutdtype = self._xp.min_scalar_type(num_colors - 1)
-                    levels_lut = fn.rescaleData(ind, scale=effscale,
-                                            offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
-
-                    if image.dtype == self._xp.ubyte or lutdtype != self._xp.ubyte:
-                        # combine if either:
-                        #   1) uint8 image (always use efflut)
-                        #   2) colors_lut has more entries than will fit within 8-bits
-                        efflut = colors_lut[levels_lut]
-                        levels_lut = None
-                        colors_lut = None
-                    else:
-                        # uint16 image with colors_lut <= 256 entries
-                        # don't combine, we will use QImage ColorTable
-                        efflut = None
-
-                self._effectiveLut = efflut, levels_lut, colors_lut
-
-            # possible combinations:
-            # 1)  ~None, None, None
-            # 2)  None, ~None, ~None    (uint16 images only)
-            # 3)  None, ~None, None     (uint16 images only)
-            lut, levels_lut, colors_lut = self._effectiveLut
-            levels = None
-
-            if levels_lut is not None:  # either combi 2 or 3
-                assert image.dtype == self._xp.uint16
-                assert levels_lut.dtype == self._xp.ubyte
-                assert colors_lut is None or colors_lut.shape[0] <= 256
-                image = levels_lut[image]
-                levels_lut = None
-
-                lut = colors_lut
-                colors_lut = None
-                # image is now uint8
-                # lut can be None or not None
-
-            # apply the effective lut early for the following types:
-            elif image.dtype == self._xp.uint16 and image.ndim == 2:
-                # 1) uint16 mono
-                if lut.ndim == 2:
-                    if lut.shape[1] == 3:   # rgb
-                        # convert rgb lut to rgba so that it is 32-bits
-                        lut = numpy.column_stack([lut, numpy.full(lut.shape[0], 255, dtype=numpy.uint8)])
-                        augmented_alpha = True
-                    if lut.shape[1] == 4:   # rgba
-                        lut = lut.view(numpy.uint32)
-                image = lut.ravel()[image]
-                lut = None
-                # now both levels and lut are None
-                if image.dtype == numpy.uint32:
-                    image = image.view(numpy.uint8).reshape(image.shape + (4,))
-            elif image.ndim == 3 and image.shape[2] == 3:
-                # 2) {uint8, uint16} rgb
-                # for rgb images, the lut will be 1d
-                image = lut.ravel()[image]
-                lut = None
-                # now both levels and lut are None
-
-            # when calling makeARGB() with lut and no levels, we need to
-            # explicitly set scale. This ensures that makeARGB() will skip
-            # applying levels.
-            if lut is not None:
-                scale = lut.shape[0] - 1
+            can_handle = True
             break
 
-        # Assume images are in column-major order for backward compatibility
-        # (most images are in row-major order)
-        if self.axisOrder == 'col-major':
-            image = image.swapaxes(0, 1)
+        if not can_handle:
+            return image, levels, lut, augmented_alpha
 
+        # distinguish between lut for levels and colors
+        levels_lut = None
+        colors_lut = lut
+        lut = None
+
+        if self._effectiveLut is None:
+            eflsize = 2**(image.itemsize*8)
+            ind = xp.arange(eflsize)
+            if levels is None:
+                info = numpy.iinfo(image.dtype)
+                minlev, maxlev = info.min, info.max
+            else:
+                minlev, maxlev = levels
+            levdiff = maxlev - minlev
+            levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
+
+            if colors_lut is None:
+                levels_lut = fn.rescaleData(ind, scale=255./levdiff,
+                                        offset=minlev, dtype=xp.ubyte)
+
+                if image.dtype == xp.ubyte:
+                    # uint8 image (always use efflut)
+                    efflut = levels_lut
+                    levels_lut = None
+                else:
+                    efflut = None
+            else:
+                num_colors = colors_lut.shape[0]
+                effscale = num_colors / levdiff
+                lutdtype = xp.min_scalar_type(num_colors - 1)
+                levels_lut = fn.rescaleData(ind, scale=effscale,
+                                        offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+
+                if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
+                    # combine if either:
+                    #   1) uint8 image (always use efflut)
+                    #   2) colors_lut has more entries than will fit within 8-bits
+                    efflut = colors_lut[levels_lut]
+                    levels_lut = None
+                    colors_lut = None
+                else:
+                    # uint16 image with colors_lut <= 256 entries
+                    # don't combine, we will use QImage ColorTable
+                    efflut = None
+
+            self._effectiveLut = efflut, levels_lut, colors_lut
+
+        # possible combinations:
+        # 1)  ~None, None, None
+        # 2)  None, ~None, ~None    (uint16 images only)
+        # 3)  None, ~None, None     (uint16 images only)
+        lut, levels_lut, colors_lut = self._effectiveLut
+        levels = None
+
+        if levels_lut is not None:  # either combi 2 or 3
+            assert image.dtype == xp.uint16
+            assert levels_lut.dtype == xp.ubyte
+            assert colors_lut is None or colors_lut.shape[0] <= 256
+            image = levels_lut[image]
+            levels_lut = None
+
+            lut = colors_lut
+            colors_lut = None
+            # image is now uint8
+            # lut can be None or not None
+
+        # apply the effective lut early for the following types:
+        elif image.dtype == xp.uint16 and image.ndim == 2:
+            # 1) uint16 mono
+            if lut.ndim == 2:
+                if lut.shape[1] == 3:   # rgb
+                    # convert rgb lut to rgba so that it is 32-bits
+                    lut = numpy.column_stack([lut, numpy.full(lut.shape[0], 255, dtype=numpy.uint8)])
+                    augmented_alpha = True
+                if lut.shape[1] == 4:   # rgba
+                    lut = lut.view(numpy.uint32)
+            image = lut.ravel()[image]
+            lut = None
+            # now both levels and lut are None
+            if image.dtype == numpy.uint32:
+                image = image.view(numpy.uint8).reshape(image.shape + (4,))
+        elif image.ndim == 3 and image.shape[2] == 3:
+            # 2) {uint8, uint16} rgb
+            # for rgb images, the lut will be 1d
+            image = lut.ravel()[image]
+            lut = None
+            # now both levels and lut are None
+
+        return image, levels, lut, augmented_alpha
+
+    def _try_make_qimage(self, image, levels, lut, augmented_alpha):
         ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
         is_passthru8 = ubyte_nolvl and lut is None
         is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
@@ -550,60 +571,51 @@ class ImageItem(GraphicsObject):
             hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
         is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
 
-        if is_passthru8 or is_indexed8 or can_grayscale16 or is_rgba64:
-            # bypass makeARGB for supported combinations
-            self._processingBuffer = None
-            self._displayBuffer = None
+        # bypass makeARGB for supported combinations
+        supported = is_passthru8 or is_indexed8 or can_grayscale16 or is_rgba64
+        if not supported:
+            return None
 
-            # worthwhile supporting non-contiguous arrays
-            image = numpy.ascontiguousarray(image)
+        # worthwhile supporting non-contiguous arrays
+        image = numpy.ascontiguousarray(image)
 
-            fmt = None
-            ctbl = None
-            if is_passthru8:
-                # both levels and lut are None
-                # these images are suitable for display directly
-                if image.ndim == 2:
-                    fmt = QtGui.QImage.Format.Format_Grayscale8
-                elif image.shape[2] == 3:
-                    fmt = QtGui.QImage.Format.Format_RGB888
-                elif image.shape[2] == 4:
-                    if augmented_alpha:
-                        fmt = QtGui.QImage.Format.Format_RGBX8888
-                    else:
-                        fmt = QtGui.QImage.Format.Format_RGBA8888
-            elif is_indexed8:
-                # levels and/or lut --> lut-only
-                fmt = QtGui.QImage.Format.Format_Indexed8
-                if lut.ndim == 1 or lut.shape[1] == 1:
-                    ctbl = [QtGui.qRgb(x,x,x) for x in lut.ravel().tolist()]
-                elif lut.shape[1] == 3:
-                    ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
-                elif lut.shape[1] == 4:
-                    ctbl = [QtGui.qRgba(*rgba) for rgba in lut.tolist()]
-            elif can_grayscale16:
-                # single channel uint16
-                # both levels and lut are None
-                fmt = QtGui.QImage.Format.Format_Grayscale16
-            elif is_rgba64:
-                # uint16 rgba
-                # both levels and lut are None
-                fmt = QtGui.QImage.Format.Format_RGBA64 # endian-independent
-            if fmt is None:
-                raise ValueError("unsupported image type")
-            self.qimage = fn._ndarray_to_qimage(image, fmt)
-            if ctbl is not None:
-                self.qimage.setColorTable(ctbl)
-        else:
-            if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
-                self._buildQImageBuffer(image.shape)
-
-            fn.makeARGB(image, lut=lut, levels=levels, scale=scale, output=self._processingBuffer)
-            if self._xp == getCupy():
-                self._processingBuffer.get(out=self._displayBuffer)
-
-        self._renderRequired = False
-        self._unrenderable = False
+        fmt = None
+        ctbl = None
+        if is_passthru8:
+            # both levels and lut are None
+            # these images are suitable for display directly
+            if image.ndim == 2:
+                fmt = QtGui.QImage.Format.Format_Grayscale8
+            elif image.shape[2] == 3:
+                fmt = QtGui.QImage.Format.Format_RGB888
+            elif image.shape[2] == 4:
+                if augmented_alpha:
+                    fmt = QtGui.QImage.Format.Format_RGBX8888
+                else:
+                    fmt = QtGui.QImage.Format.Format_RGBA8888
+        elif is_indexed8:
+            # levels and/or lut --> lut-only
+            fmt = QtGui.QImage.Format.Format_Indexed8
+            if lut.ndim == 1 or lut.shape[1] == 1:
+                ctbl = [QtGui.qRgb(x,x,x) for x in lut.ravel().tolist()]
+            elif lut.shape[1] == 3:
+                ctbl = [QtGui.qRgb(*rgb) for rgb in lut.tolist()]
+            elif lut.shape[1] == 4:
+                ctbl = [QtGui.qRgba(*rgba) for rgba in lut.tolist()]
+        elif can_grayscale16:
+            # single channel uint16
+            # both levels and lut are None
+            fmt = QtGui.QImage.Format.Format_Grayscale16
+        elif is_rgba64:
+            # uint16 rgba
+            # both levels and lut are None
+            fmt = QtGui.QImage.Format.Format_RGBA64 # endian-independent
+        if fmt is None:
+            raise ValueError("unsupported image type")
+        qimage = fn._ndarray_to_qimage(image, fmt)
+        if ctbl is not None:
+            qimage.setColorTable(ctbl)
+        return qimage
 
     def paint(self, p, *args):
         profile = debug.Profiler()
