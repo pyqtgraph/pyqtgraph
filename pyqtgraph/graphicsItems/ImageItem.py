@@ -430,19 +430,21 @@ class ImageItem(GraphicsObject):
         levels = self.levels
         if image.dtype in (self._xp.ubyte, self._xp.uint16):
             image, levels, lut, augmented_alpha = self._try_combine_lut(image, levels, lut)
-            qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
+            self.qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
 
-        if qimage is not None:
-            self.qimage = qimage
-            self._processingBuffer = None
-            self._displayBuffer = None
-        else:
-            if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
-                self._buildQImageBuffer(image.shape)
+            if self.qimage is not None:
+                self._processingBuffer = None
+                self._displayBuffer = None
+                self._renderRequired = False
+                self._unrenderable = False
+                return
 
-            fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
-            if self._xp == getCupy():
-                self._processingBuffer.get(out=self._displayBuffer)
+        if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
+            self._buildQImageBuffer(image.shape)
+
+        fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
+        if self._xp == getCupy():
+            self._processingBuffer.get(out=self._displayBuffer)
 
         self._renderRequired = False
         self._unrenderable = False
