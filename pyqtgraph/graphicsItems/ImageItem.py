@@ -416,6 +416,10 @@ class ImageItem(GraphicsObject):
         else:
             image = self.image
 
+        # Convert single-channel image to 2D array
+        if image.ndim == 3 and image.shape[-1] == 1:
+            image = image[..., 0]
+
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
         scale = None
@@ -504,7 +508,7 @@ class ImageItem(GraphicsObject):
                 # lut can be None or not None
 
             # apply the effective lut early for the following types:
-            elif image.dtype == self._xp.uint16 and (image.ndim == 2 or image.shape[2] == 1):
+            elif image.dtype == self._xp.uint16 and image.ndim == 2:
                 # 1) uint16 mono
                 if lut.ndim == 2:
                     if lut.shape[1] == 3:   # rgb
@@ -532,14 +536,10 @@ class ImageItem(GraphicsObject):
                 scale = lut.shape[0] - 1
             break
 
-        # Convert single-channel image to 2D array
-        if image.ndim == 3 and image.shape[-1] == 1:
-            image = image[..., 0]
-
         # Assume images are in column-major order for backward compatibility
         # (most images are in row-major order)
         if self.axisOrder == 'col-major':
-            image = image.transpose((1, 0, 2)[:image.ndim])
+            image = image.swapaxes(0, 1)
 
         ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
         is_passthru8 = ubyte_nolvl and lut is None
