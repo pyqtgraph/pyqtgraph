@@ -60,7 +60,6 @@ class ImageItem(GraphicsObject):
         self._displayBuffer = None
         self._renderRequired = True
         self._unrenderable = False
-        self._cupy = getCupy()
         self._xp = None  # either numpy or cupy, to match the image data
         self._defferedLevels = None
 
@@ -216,7 +215,7 @@ class ImageItem(GraphicsObject):
 
     def _buildQImageBuffer(self, shape):
         self._displayBuffer = numpy.empty(shape[:2] + (4,), dtype=numpy.ubyte)
-        if self._xp == self._cupy:
+        if self._xp == getCupy():
             self._processingBuffer = self._xp.empty(shape[:2] + (4,), dtype=self._xp.ubyte)
         else:
             self._processingBuffer = self._displayBuffer
@@ -273,7 +272,8 @@ class ImageItem(GraphicsObject):
                 return
         else:
             old_xp = self._xp
-            self._xp = self._cupy.get_array_module(image) if self._cupy else numpy
+            cp = getCupy()
+            self._xp = cp.get_array_module(image) if cp else numpy
             gotNewData = True
             processingSubstrateChanged = old_xp != self._xp
             if processingSubstrateChanged:
@@ -419,21 +419,18 @@ class ImageItem(GraphicsObject):
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
         levels = self.levels
-        if levels is not None and levels.ndim == 1 and image.dtype in (self._xp.ubyte, self._xp.uint16):
+        if levels is not None and lut is not None and levels.ndim == 1 and \
+                image.dtype in (self._xp.ubyte, self._xp.uint16):
             if self._effectiveLut is None:
                 eflsize = 2**(image.itemsize*8)
                 ind = self._xp.arange(eflsize)
                 minlev, maxlev = levels
                 levdiff = maxlev - minlev
                 levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
-                if lut is None:
-                    efflut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=self._xp.ubyte)
-                else:
-                    lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
-                    efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
-                                            offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
-                    efflut = lut[efflut]
+                lutdtype = self._xp.min_scalar_type(lut.shape[0] - 1)
+                efflut = fn.rescaleData(ind, scale=(lut.shape[0]-1)/levdiff,
+                                        offset=minlev, dtype=lutdtype, clip=(0, lut.shape[0]-1))
+                efflut = lut[efflut]
 
                 self._effectiveLut = efflut
             lut = self._effectiveLut
@@ -452,7 +449,7 @@ class ImageItem(GraphicsObject):
             self._buildQImageBuffer(image.shape)
 
         fn.makeARGB(image, lut=lut, levels=levels, output=self._processingBuffer)
-        if self._xp == self._cupy:
+        if self._xp == getCupy():
             self._processingBuffer.get(out=self._displayBuffer)
         self._renderRequired = False
         self._unrenderable = False
@@ -538,22 +535,23 @@ class ImageItem(GraphicsObject):
 
         kwds['bins'] = bins
 
+        cp = getCupy()
         if perChannel:
             hist = []
             for i in range(stepData.shape[-1]):
                 stepChan = stepData[..., i]
                 stepChan = stepChan[self._xp.isfinite(stepChan)]
                 h = self._xp.histogram(stepChan, **kwds)
-                if self._cupy:
-                    hist.append((self._cupy.asnumpy(h[1][:-1]), self._cupy.asnumpy(h[0])))
+                if cp:
+                    hist.append((cp.asnumpy(h[1][:-1]), cp.asnumpy(h[0])))
                 else:
                     hist.append((h[1][:-1], h[0]))
             return hist
         else:
             stepData = stepData[self._xp.isfinite(stepData)]
             hist = self._xp.histogram(stepData, **kwds)
-            if self._cupy:
-                return self._cupy.asnumpy(hist[1][:-1]), self._cupy.asnumpy(hist[0])
+            if cp:
+                return cp.asnumpy(hist[1][:-1]), cp.asnumpy(hist[0])
             else:
                 return hist[1][:-1], hist[0]
 

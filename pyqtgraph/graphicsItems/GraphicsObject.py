@@ -20,7 +20,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
         # fn.NAMED_COLOR_MANAGER.paletteChangeSignal.connect(self.styleChange)
-        fn.NAMED_COLOR_MANAGER.paletteHasChangedSignal.connect(self.styleHasChanged)
+        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
         
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)

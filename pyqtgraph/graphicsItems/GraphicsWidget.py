@@ -17,7 +17,7 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
-        fn.NAMED_COLOR_MANAGER.paletteHasChangedSignal.connect(self.styleHasChanged)
+        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
 
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()

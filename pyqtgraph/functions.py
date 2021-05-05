@@ -13,24 +13,26 @@ import re
 import struct
 import sys
 import warnings
+import math
 
 import numpy as np
 from .util.cupy_helper import getCupy
+from .util.numba_helper import getNumbaFunctions
 
 from . import debug, reload
 from .Qt import QtGui, QtCore, QT_LIB, QtVersion
 from . import Qt
-from .namedColorManager import NamedColorManager
-from .namedPen import NamedPen
-from .namedBrush import NamedBrush
+from .colorRegistry import ColorRegistry
 
 from .metaarray import MetaArray
 from collections import OrderedDict
-from .python2_3 import asUnicode, basestring
+from .python2_3 import asUnicode
 
 # legacy color definitions:
-# NamedColorManager now maintains the primary list of palette colors,
-# accessible through functions.NAMED_COLOR_MANAGER.colors().
+# ColorRegistry now maintains the primary list of palette colors,
+# accessible through functions.COLOR_REGISTRY.colors().
+# # NamedColorManager now maintains the primary list of palette colors,
+# # accessible through functions.NAMED_COLOR_MANAGER.colors().
 # For backwards compatibility, this dictionary is updated to contain the same information.
 #
 # For the user, colors and color palettes are most conveniently accessed through a Palette object.
@@ -47,7 +49,7 @@ Colors = {
     'l': QtGui.QColor(200,200,200,255),
     's': QtGui.QColor(100,100,150,255)
 }
-NAMED_COLOR_MANAGER = NamedColorManager( Colors )
+COLOR_REGISTRY = ColorRegistry( Colors )
 
 SI_PREFIXES = asUnicode('yzafpnµm kMGTPEZY')
 SI_PREFIXES_ASCII = 'yzafpnum kMGTPEZY'
@@ -70,19 +72,15 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
     
     if isinstance(x, decimal.Decimal):
         x = float(x)
-        
     try:
-        if np.isnan(x) or np.isinf(x):
+        if not math.isfinite(x):
             return(1, '')
     except:
-        print(x, type(x))
         raise
     if abs(x) < minVal:
         m = 0
-        x = 0
     else:
-        m = int(np.clip(np.floor(np.log(abs(x))/np.log(1000)), -9.0, 9.0))
-    
+        m = int(clip_scalar(math.floor(math.log(abs(x))/math.log(1000)), -9.0, 9.0))
     if m == 0:
         pref = ''
     elif m < -8 or m > 8:
@@ -94,7 +92,6 @@ def siScale(x, minVal=1e-25, allowUnicode=True):
             pref = SI_PREFIXES_ASCII[m+8]
     m1 = -3*m
     p = 10.**m1
-    
     return (p, pref)
 
 
@@ -227,7 +224,6 @@ def parseNamedColorSpecification(*args):
     check if args specify a NamedColor, looking for
     'name' or ('name', alpha) information.
     Returns:
-    None if invalid
     ('name', alpha) if a valid name and alpha value is given
     ('name', None)  if no alpha value is available
     ('', None)      if an empty name is given, indicating a blank color
@@ -251,47 +247,59 @@ def parseNamedColorSpecification(*args):
                 return None #numerical values not handled as NamedColor
     if len(args) == 2:
         if isinstance(arg[0], str):
+            alpha = arg[1]
+            if isinstance(alpha, float):
+                alpha = int(alpha*255) # convert to 0-255 integer
             return (arg[0], arg[1]) # return ('name', alpha) tuple
     return None # all other cases not handled as NamedColor
-            
 
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument types. Accepted arguments are:
+    Convenience function for constructing QColor from a variety of argument 
+    types. Accepted arguments are:
     
-    ================ ================================================
+    ================ ===========================================================
      'name'          any color name specifed in palette
+     ('name', alpha) color name from palette with specified opacity 0-255
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
      int             see :func:`intColor() <pyqtgraph.intColor>`
      (int, hues)     see :func:`intColor() <pyqtgraph.intColor>`
-     "#RGB"           hexadecimal strings; should begin with '#'
-     "#RGBA"          
-     "#RRGGBB"       
+     "#RGB"          hexadecimal strings prefixed with '#'
+     "#RGBA"         previously allowed use without prefix is deprecated and 
+     "#RRGGBB"       will be removed in 0.13
      "#RRGGBBAA"     
      QColor          QColor instance; makes a copy.
-    ================ ================================================
+    ================ ===========================================================
     """
     err = 'Not sure how to make a color from "%s"' % str(args)
     result = parseNamedColorSpecification(args) # check if this is a named palette color
-    if result is not None: # make a return palette color
+    if result is not None: # return palette color
         name, alpha = result
-        if name == '':
+        if name is None:
             return QtGui.QColor(0,0,0,0) # empty string means "no color"
         qcol = Colors[name]
-        if alpha is not None: qcol.setAlpha( alpha )
+        if alpha is not None: 
+            qcol = QtGui.QColor(qcol) # copy to avoid changing alpha of cached color
+            qcol.setAlphaF( alpha )
         return qcol
     if len(args) == 1:
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], str):
             c = args[0]
-            if c[0] == '#':
-                c = c[1:]
             if len(c) == 1:
                 try:
                     return Colors[c]
                 except KeyError:
                     raise ValueError('No color named "%s"' % c)
+            if c[0] == '#':
+                c = c[1:]
+            else:
+                warnings.warn(
+                    "Parsing of hex strings that do not start with '#' is"
+                    "deprecated and support will be removed in 0.13",
+                    DeprecationWarning, stacklevel=2
+                )
             if len(c) == 3:
                 r = int(c[0]*2, 16)
                 g = int(c[1]*2, 16)
@@ -312,6 +320,8 @@ def mkColor(*args):
                 g = int(c[2:4], 16)
                 b = int(c[4:6], 16)
                 a = int(c[6:8], 16)
+            else:
+                raise ValueError(f"Unknown how to convert string {c} to color")
         elif isinstance(args[0], QtGui.QColor):
             return QtGui.QColor(args[0])
         elif np.issubdtype(type(args[0]), np.floating):
@@ -319,10 +329,10 @@ def mkColor(*args):
             a = 255
         elif hasattr(args[0], '__len__'):
             if len(args[0]) == 3:
-                (r, g, b) = args[0]
+                r, g, b = args[0]
                 a = 255
             elif len(args[0]) == 4:
-                (r, g, b, a) = args[0]
+                r, g, b, a = args[0]
             elif len(args[0]) == 2:
                 return intColor(*args[0])
             else:
@@ -332,16 +342,13 @@ def mkColor(*args):
         else:
             raise TypeError(err)
     elif len(args) == 3:
-        (r, g, b) = args
+        r, g, b = args
         a = 255
     elif len(args) == 4:
-        (r, g, b, a) = args
+        r, g, b, a = args
     else:
         raise TypeError(err)
-    
-    args = [r,g,b,a]
-    args = [0 if np.isnan(a) or np.isinf(a) else a for a in args]
-    args = list(map(int, args))
+    args = [int(a) if np.isfinite(a) else 0 for a in (r, g, b, a)]
     return QtGui.QColor(*args)
 
 
@@ -353,53 +360,61 @@ def mkBrush(*args, **kargs):
     """
     while ( # unravel single element sublists
         isinstance(args, (tuple, list) )
-        and len(args) == 1 
+        and len(args) == 1
     ): 
         args = args[0]
     # now args is either a non-list entity, or a multi-element tuple
     # short-circuits:
-    if isinstance(args, NamedBrush):
-        return args # pass through predefined NamedPen directly
-    elif isinstance(args, QtGui.QBrush):
-        return QtGui.QBrush(args)  ## return a copy of this brush
-    elif isinstance(args, dict): 
+    if isinstance(args, QtGui.QBrush):
+        if hasattr(args,'registration'):
+            return args # pass through registered brush directly
+        return QtGui.QBrush(args)  # return a copy of an uregistered brush
+
+    if isinstance(args, dict): 
         return mkBrush(**args) # retry with kwargs assigned from dictionary
-    elif args is None:
-        return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
+
+    # if args is None:
+    #     return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
+
     # no short-circuit, continue parsing to construct QPen or NamedPen
     if 'hsv' in kargs: # hsv argument takes precedence
         qcol = hsvColor( *kargs['hsv'] )
-        qbrush = QtGui.QBrush(qcol)
-    else:
-        if 'color' in kargs:
-            args = kargs['color'] # 'color' KW-argument overrides unnamed arguments
-        if args is None:
-            return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
-        if args == () or args == []:
-            print('  functions: returning default color NamedBrush')
-            qbrush = NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
-        else:
-            result = parseNamedColorSpecification(args)
-            if result is not None: # make a NamedBrush
-                name, alpha = result
-                if name == '':
-                    return QtGui.QBrush( QtCore.Qt.NoBrush ) # empty string means "no brush"
-                qbrush = NamedBrush(name, manager=NAMED_COLOR_MANAGER, alpha=alpha)
-            else: # make a QBrush
-                qcol = mkColor(args)
-                qbrush = QtGui.QBrush(qcol)
-    # here we would apply additional style based on KW-arguments
-    return qbrush
+        return QtGui.QBrush(qcol)
+
+    if 'color' in kargs: # 'color' KW-argument overrides unnamed arguments
+        args = kargs['color'] 
+
+    if args is None: # explicit None means "no brush"
+        return QtGui.QBrush( QtCore.Qt.NoBrush )
+
+    if args == () or args == []:
+        # print('  functions: returning default color registered brush')
+        return COLOR_REGISTRY.getRegisteredBrush('gr_fg')
+        # return NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
+
+    # result = parseNamedColorSpecification(args)
+    # Do the the arguments make a suitable brush descriptor?
+    result = COLOR_REGISTRY.getRegisteredBrush(args)
+    if result is not None: 
+        # print( result, type(result) )
+        # print('setting hex:', result.color().name(), result.color().alpha() )
+        return result
+        
+    # Otherwise make a QBrush
+    qcol = mkColor(args)
+    return QtGui.QBrush(qcol)
 
 def mkPen(*args, **kargs):
     """
     Convenience function for constructing QPen. 
     
     Examples::
+        mkPen(QPen)
+        mkPen( ('r', width, alpha) )
         mkPen(color)
         mkPen(color, width=2)
         mkPen(cosmetic=False, width=4.5, color='r')
-        mkPen({'color': "FF0", width: 2})
+        mkPen({'color': "#FF0", width: 2})
         mkPen(None)   # (no pen)
         mkPen()       # default color
     
@@ -407,19 +422,22 @@ def mkPen(*args, **kargs):
     # print('mkPen called:',args,kargs)
     while ( # unravel single element sublists
         isinstance(args, (tuple, list) )
-        and len(args) == 1 
+        and len(args) == 1
     ): 
         args = args[0]
     # now args is either a non-list entity, or a multi-element tuple
     # short-circuits:
-    if isinstance(args, NamedPen):
-        return args # pass through predefined NamedPen directly
-    elif isinstance(args, QtGui.QPen):
+    if isinstance(args, QtGui.QPen):
+        if hasattr(args,'registration'):
+            return args # pass through registered pen directly
         return QtGui.QPen(args)  ## return a copy of this pen
+
     elif isinstance(args, dict): 
         return mkPen(**args) # retry with kwargs assigned from dictionary
-    elif args is None:
-        return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
+
+    # if args is None:
+    #     return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
+
     # no short-circuit, continue parsing to construct QPen or NamedPen
     width = kargs.get('width', 1) # width 1 unless specified otherwise
     if 'hsv' in kargs: # hsv argument takes precedence
@@ -431,14 +449,18 @@ def mkPen(*args, **kargs):
         if args is None:
             return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
         if args == () or args == []:
-            qpen = NamedPen( 'gr_fg', manager=NAMED_COLOR_MANAGER, width=width ) # default foreground color
+            # print('  functions: returning default color registered brush')
+            qpen = COLOR_REGISTRY.getRegisteredPen( ('gr_fg', width) ) # default foreground color
+            # return COLOR_REGISTRY.getRegisteredBrush('gr_fg')
         else:
-            result = parseNamedColorSpecification(args)
+            # result = parseNamedColorSpecification(args)
+            result = COLOR_REGISTRY.getRegisteredPen(args)
             if result is not None: # make a NamedPen
-                name, alpha = result
-                if name == '':
-                    return QtGui.QPen( QtCore.Qt.NoPen ) # empty string means "no pen"
-                qpen = NamedPen( name, manager=NAMED_COLOR_MANAGER, alpha=alpha, width=width )
+                qpen = result
+                # name, alpha = result
+                # if name == '':
+                #     return QtGui.QPen( QtCore.Qt.NoPen ) # empty string means "no pen"
+                # qpen = NamedPen( name, manager=NAMED_COLOR_MANAGER, alpha=alpha, width=width )
             else: # make a QPen
                 qcol = mkColor(args)
                 qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
@@ -516,16 +538,16 @@ def makeArrowPath(headLen=20, headWidth=None, tipAngle=20, tailLen=20, tailWidth
     If *tailLen* is None, no tail will be drawn.
     """
     if headWidth is None:
-        headWidth = headLen * np.tan(tipAngle * 0.5 * np.pi/180.)
+        headWidth = headLen * math.tan(math.radians(tipAngle * 0.5))
     path = QtGui.QPainterPath()
     path.moveTo(0,0)
     path.lineTo(headLen, -headWidth)
     if tailLen is None:
-        innerY = headLen - headWidth * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - headWidth * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, 0)
     else:
         tailWidth *= 0.5
-        innerY = headLen - (headWidth-tailWidth) * np.tan(baseAngle*np.pi/180.)
+        innerY = headLen - (headWidth-tailWidth) * math.tan(math.radians(baseAngle))
         path.lineTo(innerY, -tailWidth)
         path.lineTo(headLen + tailLen, -tailWidth)
         path.lineTo(headLen + tailLen, tailWidth)
@@ -542,7 +564,7 @@ def eq(a, b):
     
     1. Returns True if a IS b, even if a==b still evaluates to False.
     2. While a is b will catch the case with np.nan values, special handling is done for distinct
-       float('nan') instances using np.isnan.
+       float('nan') instances using math.isnan.
     3. Tests for equivalence using ==, but silently ignores some common exceptions that can occur
        (AtrtibuteError, ValueError).
     4. When comparing arrays, returns False if the array shapes are not the same.
@@ -556,7 +578,7 @@ def eq(a, b):
 
     # The above catches np.nan, but not float('nan')
     if isinstance(a, float) and isinstance(b, float):
-        if np.isnan(a) and np.isnan(b):
+        if math.isnan(a) and math.isnan(b):
             return True
 
     # Avoid comparing large arrays against scalars; this is expensive and we know it should return False.
@@ -1089,7 +1111,79 @@ def solveBilinearTransform(points1, points2):
         matrix[i] = numpy.linalg.solve(A, B[:,i])  ## solve Ax = B; x is one row of the desired transformation matrix
     
     return matrix
-    
+
+def clip_scalar(val, vmin, vmax):
+    """ convenience function to avoid using np.clip for scalar values """
+    return vmin if val < vmin else vmax if val > vmax else val
+
+def clip_array(arr, vmin, vmax, out=None):
+    # replacement for np.clip due to regression in
+    # performance since numpy 1.17
+    # https://github.com/numpy/numpy/issues/14281
+
+    if vmin is None and vmax is None:
+        # let np.clip handle the error
+        return np.clip(arr, vmin, vmax, out=out)
+
+    if vmin is None:
+        return np.core.umath.minimum(arr, vmax, out=out)
+    elif vmax is None:
+        return np.core.umath.maximum(arr, vmin, out=out)
+    elif sys.platform == 'win32':
+        # Windows umath.clip is slower than umath.maximum(umath.minimum)
+        if out is None:
+            out = np.empty_like(arr)
+        out = np.core.umath.minimum(arr, vmax, out=out)
+        return np.core.umath.maximum(out, vmin, out=out)
+    else:
+        return np.core.umath.clip(arr, vmin, vmax, out=out)
+
+
+def _rescaleData_nditer(data_in, scale, offset, work_dtype, out_dtype, clip):
+    """Refer to documentation for rescaleData()"""
+    data_out = np.empty_like(data_in, dtype=out_dtype)
+
+    # integer clip operations are faster than float clip operations
+    # so test to see if we can perform integer clipping
+    fits_int32 = False
+    if data_in.dtype.kind in 'ui' and out_dtype.kind in 'ui':
+        # estimate whether data range after rescale will fit within an int32.
+        # this means that the input dtype should be an 8-bit or 16-bit integer type.
+        # casting to an int32 will lose the fractional part, therefore the
+        # output dtype must be an integer kind.
+        lim_in = np.iinfo(data_in.dtype)
+        # convert numpy scalar to python scalar to avoid overflow warnings
+        lo = offset.item(0) if isinstance(offset, np.number) else offset
+        dst_bounds = scale * (lim_in.min - lo), scale * (lim_in.max - lo)
+        if dst_bounds[1] < dst_bounds[0]:
+            dst_bounds = dst_bounds[1], dst_bounds[0]
+        lim32 = np.iinfo(np.int32)
+        fits_int32 = lim32.min < dst_bounds[0] and dst_bounds[1] < lim32.max
+
+    it = np.nditer([data_in, data_out],
+            flags=['external_loop', 'buffered'],
+            op_flags=[['readonly'], ['writeonly', 'no_broadcast']],
+            op_dtypes=[None, work_dtype],
+            casting='unsafe',
+            buffersize=32768)
+
+    with it:
+        for x, y in it:
+            y[...] = x
+            y -= offset
+            y *= scale
+
+            # Clip before converting dtype to avoid overflow
+            if clip is not None:
+                if fits_int32:
+                    # converts to int32, clips back to float32
+                    np.core.umath.clip(y.astype(np.int32), clip[0], clip[1], out=y)
+                else:
+                    clip_array(y, clip[0], clip[1], out=y)
+
+    return data_out
+
+
 def rescaleData(data, scale, offset, dtype=None, clip=None):
     """Return data rescaled and optionally cast to a new dtype.
 
@@ -1098,32 +1192,48 @@ def rescaleData(data, scale, offset, dtype=None, clip=None):
         data => (data-offset) * scale
     """
     if dtype is None:
-        dtype = data.dtype
+        out_dtype = data.dtype
     else:
-        dtype = np.dtype(dtype)
-    
+        out_dtype = np.dtype(dtype)
+
+    if out_dtype.kind in 'ui':
+        lim = np.iinfo(out_dtype)
+        if clip is None:
+            # don't let rescale cause integer overflow
+            clip = lim.min, lim.max
+        clip = max(clip[0], lim.min), min(clip[1], lim.max)
+
+        # make clip limits integer-valued (no need to cast to int)
+        # this improves performance, especially on Windows
+        clip = [math.trunc(x) for x in clip]
+
     if np.can_cast(data, np.float32):
         work_dtype = np.float32
     else:
         work_dtype = np.float64
-    d2 = data.astype(work_dtype, copy=True)
-    d2 -= offset
-    d2 *= scale
 
-    # Clip before converting dtype to avoid overflow
-    if dtype.kind in 'ui':
-        lim = np.iinfo(dtype)
-        if clip is None:
-            # don't let rescale cause integer overflow
-            np.clip(d2, lim.min, lim.max, out=d2)
-        else:
-            np.clip(d2, max(clip[0], lim.min), min(clip[1], lim.max), out=d2)
-    else:
+    cp = getCupy()
+    if cp and cp.get_array_module(data) == cp:
+        # Cupy does not support nditer
+        # https://github.com/cupy/cupy/issues/5021
+
+        data_out = data.astype(work_dtype, copy=True)
+        data_out -= offset
+        data_out *= scale
+
+        # Clip before converting dtype to avoid overflow
         if clip is not None:
-            np.clip(d2, *clip, out=d2)
-    # don't copy if no change in dtype
-    data = d2.astype(dtype, copy=False)
-    return data
+            clip_array(data_out, clip[0], clip[1], out=data_out)
+
+        # don't copy if no change in dtype
+        return data_out.astype(out_dtype, copy=False)
+
+    numba_fn = getNumbaFunctions()
+    if numba_fn and clip is not None:
+        # if we got here by makeARGB(), clip will not be None at this point
+        return numba_fn.rescaleData(data, scale, offset, out_dtype, clip)
+
+    return _rescaleData_nditer(data, scale, offset, work_dtype, out_dtype, clip)
 
 
 def applyLookupTable(data, lut):
@@ -1300,44 +1410,95 @@ def makeARGB(data, lut=None, levels=None, scale=None, useRGBA=False, output=None
 
     # decide channel order
     if useRGBA:
-        order = [0,1,2,3] # array comes out RGBA
+        dst_order = [0, 1, 2, 3]    # R,G,B,A
+    elif sys.byteorder == 'little':
+        dst_order = [2, 1, 0, 3]    # B,G,R,A (ARGB32 little endian)
     else:
-        order = [2,1,0,3] # for some reason, the colors line up as BGR in the final image.
+        dst_order = [1, 2, 3, 0]    # A,R,G,B (ARGB32 big endian)
         
     # copy data into image array
-    if data.ndim == 2:
+    fastpath = try_fastpath_argb(xp, data, imgData, useRGBA)
+
+    if fastpath:
+        pass
+    elif data.ndim == 2:
         # This is tempting:
         #   imgData[..., :3] = data[..., xp.newaxis]
         # ..but it turns out this is faster:
         for i in range(3):
-            imgData[..., i] = data
+            imgData[..., dst_order[i]] = data
     elif data.shape[2] == 1:
         for i in range(3):
-            imgData[..., i] = data[..., 0]
+            imgData[..., dst_order[i]] = data[..., 0]
     else:
         for i in range(0, data.shape[2]):
-            imgData[..., i] = data[..., order[i]] 
+            imgData[..., dst_order[i]] = data[..., i]
         
     profile('reorder channels')
     
     # add opaque alpha channel if needed
-    if data.ndim == 2 or data.shape[2] == 3:
-        alpha = False
-        imgData[..., 3] = 255
-    else:
+    if data.ndim == 3 and data.shape[2] == 4:
         alpha = True
+    else:
+        alpha = False
+        if not fastpath:    # fastpath has already filled it in
+            imgData[..., dst_order[3]] = 255
 
     # apply nan mask through alpha channel
     if nanMask is not None:
         alpha = True
         # Workaround for https://github.com/cupy/cupy/issues/4693
         if xp == cp:
-            imgData[nanMask, :, 3] = 0
+            imgData[nanMask, :, dst_order[3]] = 0
         else:
-            imgData[nanMask, 3] = 0
+            imgData[nanMask, dst_order[3]] = 0
 
     profile('alpha channel')
     return imgData, alpha
+
+
+def try_fastpath_argb(xp, ain, aout, useRGBA):
+    # we only optimize for certain cases
+    # return False if we did not handle it
+    can_handle = xp is np and ain.dtype == xp.ubyte and ain.flags['C_CONTIGUOUS']
+    if not can_handle:
+        return False
+
+    nrows, ncols = ain.shape[:2]
+    nchans = 1 if ain.ndim == 2 else ain.shape[2]
+
+    Format = QtGui.QImage.Format
+
+    if nchans == 1:
+        in_fmt = Format.Format_Grayscale8
+    elif nchans == 3:
+        in_fmt = Format.Format_RGB888
+    else:
+        in_fmt = Format.Format_RGBA8888
+
+    if useRGBA:
+        out_fmt = Format.Format_RGBA8888
+    else:
+        out_fmt = Format.Format_ARGB32
+
+    if in_fmt == out_fmt:
+        aout[:] = ain
+        return True
+
+    npixels_chunk = 512*1024
+    batch = int(npixels_chunk / ncols / nchans)
+    batch = max(1, batch)
+    row_beg = 0
+    while row_beg < nrows:
+        row_end = min(row_beg + batch, nrows)
+        ain_view = ain[row_beg:row_end, ...]
+        aout_view = aout[row_beg:row_end, ...]
+        qimg = QtGui.QImage(ain_view, ncols, ain_view.shape[0], ain.strides[0], in_fmt)
+        qimg = qimg.convertToFormat(out_fmt)
+        aout_view[:] = imageToArray(qimg, copy=False, transpose=False)
+        row_beg = row_end
+
+    return True
 
 
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):

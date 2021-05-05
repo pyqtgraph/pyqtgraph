@@ -55,15 +55,18 @@ The following table represents the python environments we test in our CI system.
 | Qt-Bindings    | Python 3.7         | Python 3.8         | Python 3.9         |
 | :------------- | :----------------: | :----------------: | :----------------: |
 | PySide2-5.12   | :white_check_mark: | :x:                | :x:                |
-| PyQt5-5.12     | :white_check_mark: | :x:                | :x:                |
-| PySide2-5.15   | :x:                | :white_check_mark: | :x:                |
-| PyQt5-5.15     | :x:                | :white_check_mark: | :x:                |
-| PySide6-6.0    | :x:                | :x:                | :white_check_mark: |
-| PyQt6-6.0      | :x:                | :x:                | :white_check_mark: |
+| PyQt5-5.12     | :white_check_mark: |                    | :x:                |
+| PySide2-5.15   |                    | :white_check_mark: |                    |
+| PyQt5-5.15     |                    | :white_check_mark: |                    |
+| PySide6-6.0    |                    |                    | :white_check_mark: |
+| PyQt6-6.0      |                    |                    | :white_check_mark: |
+
+* :x: - Not compatible
+* :white_check_mark: - Tested
 
 Support
 -------
-  
+
 * Report issues on the [GitHub issue tracker](https://github.com/pyqtgraph/pyqtgraph/issues)
 * Post questions to the [mailing list / forum](https://groups.google.com/forum/?fromgroups#!forum/pyqtgraph) or [StackOverflow](https://stackoverflow.com/questions/tagged/pyqtgraph)
 
@@ -94,7 +97,8 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 
 * [ACQ4](https://github.com/acq4/acq4)
 * [Orange3](https://orangedatamining.com/)
-* [neurotic](neurotic)
+* [neurotic](https://neurotic.readthedocs.io)
+* [ephyviewer](https://ephyviewer.readthedocs.io)
 * [Joulescope](https://www.joulescope.com/)
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [argos](https://github.com/titusjan/argos)

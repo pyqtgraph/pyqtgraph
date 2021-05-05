@@ -4,6 +4,7 @@ from ..python2_3 import asUnicode
 import numpy as np
 from ..Point import Point
 from .. import debug as debug
+from math import ceil, floor, log, log10, isfinite
 import sys
 import weakref
 from .. import functions as fn
@@ -156,7 +157,7 @@ class AxisItem(GraphicsWidget):
         tickAlpha           (float or int or None) If None, pyqtgraph will draw the
                             ticks with the alpha it deems appropriate.  Otherwise, 
                             the alpha will be fixed at the value passed.  With int, 
-                            accepted values are [0..255].  With vaule of type
+                            accepted values are [0..255].  With value of type
                             float, accepted values are from [0..1].
         =================== =======================================================
 
@@ -513,7 +514,7 @@ class AxisItem(GraphicsWidget):
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
         Usually this is handled automatically by linking the axis to a ViewBox with :func:`linkToView <pyqtgraph.AxisItem.linkToView>`"""
-        if any(np.isinf((mn, mx))) or any(np.isnan((mn, mx))):
+        if not isfinite(mn) or not isfinite(mx):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoSIPrefix:
@@ -682,13 +683,13 @@ class AxisItem(GraphicsWidget):
             return []
 
         ## decide optimal minor tick spacing in pixels (this is just aesthetics)
-        optimalTickCount = max(2., np.log(size))
+        optimalTickCount = max(2., log(size))
 
         ## optimal minor tick spacing
         optimalSpacing = dif / optimalTickCount
 
         ## the largest power-of-10 spacing which is smaller than optimal
-        p10unit = 10 ** np.floor(np.log10(optimalSpacing))
+        p10unit = 10 ** floor(log10(optimalSpacing))
 
         ## Determine major/minor tick spacings which flank the optimal spacing.
         intervals = np.array([1., 2., 10., 20., 100.]) * p10unit
@@ -760,7 +761,7 @@ class AxisItem(GraphicsWidget):
             spacing, offset = tickLevels[i]
 
             ## determine starting tick
-            start = (np.ceil((minVal-offset) / spacing) * spacing) + offset
+            start = (ceil((minVal-offset) / spacing) * spacing) + offset
 
             ## determine number of ticks
             num = int((maxVal-start) / spacing) + 1
@@ -768,7 +769,7 @@ class AxisItem(GraphicsWidget):
             ## remove any ticks that were present in higher levels
             ## we assume here that if the difference between a tick value and a previously seen tick value
             ## is less than spacing/100, then they are 'equal' and we can ignore the new tick.
-            values = list(filter(lambda x: all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
+            values = list(filter(lambda x: np.all(np.abs(allValues-x) > spacing/self.scale*0.01), values))
             allValues = np.concatenate([allValues, values])
             ticks.append((spacing/self.scale, values))
 
@@ -797,8 +798,8 @@ class AxisItem(GraphicsWidget):
                 ticks.append((spacing, t))
 
         if len(ticks) < 3:
-            v1 = int(np.floor(minVal))
-            v2 = int(np.ceil(maxVal))
+            v1 = int(floor(minVal))
+            v2 = int(ceil(maxVal))
             #major = list(range(v1+1, v2))
 
             minor = []
@@ -824,7 +825,7 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickStrings(values, scale, spacing)
 
-        places = max(0, np.ceil(-np.log10(spacing*scale)))
+        places = max(0, ceil(-log10(spacing*scale)))
         strings = []
         for v in values:
             vs = v * scale
@@ -960,8 +961,6 @@ class AxisItem(GraphicsWidget):
         ## compute coordinates to draw ticks
         ## draw three different intervals, long ticks first
         tickSpecs = []
-        tickPen = self.pen() # generate alpha-adjusted pen for gridlines
-        orig_color = tickPen.color()
         for i in range(len(tickLevels)):
             tickPositions.append([])
             ticks = tickLevels[i][1]
@@ -971,9 +970,9 @@ class AxisItem(GraphicsWidget):
                 
             lineAlpha = self.style["tickAlpha"]
             if lineAlpha is None:
-                lineAlpha = 255 / (i+1)
-                if self.grid is not False:
-                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                lineAlpha = (255 * 2) // (i+2) #  (was 1/(i+1) falling too quickly over first steps
+                # if self.grid is not False:
+                #     lineAlpha *= self.grid/255. * fn.clip_scalar((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
             elif isinstance(lineAlpha, float):
                 lineAlpha *= 255
                 lineAlpha = max(0, int(round(lineAlpha)))
@@ -984,9 +983,11 @@ class AxisItem(GraphicsWidget):
             else:
                 raise TypeError("Line Alpha should be of type None, float or int")
             
-            color = tickPen.color() # this copy is independent from orig_color
-            color.setAlpha(int(lineAlpha))
-            tickPen.setColor(color)
+            # tickColor.setAlpha(int(lineAlpha)) # independent copy of color
+            tickPen = QtGui.QPen ( self.pen() )
+            tickColor = tickPen.color()
+            tickColor.setAlpha( int(lineAlpha) )
+            tickPen.setColor( tickColor )
             for v in ticks:
                 ## determine actual position to draw this tick
                 x = (v * xScale) - offset
@@ -1002,9 +1003,7 @@ class AxisItem(GraphicsWidget):
                 if self.grid is False:
                     p2[axis] += tickLength*tickDir
                 tickSpecs.append((tickPen, Point(p1), Point(p2)))
-        tickPen.setColor(orig_color) # restore
         profiler('compute ticks')
-
 
         if self.style['stopAxisAtTick'][0] is True:
             minTickPosition = min(map(min, tickPositions))
@@ -1023,7 +1022,6 @@ class AxisItem(GraphicsWidget):
                 stop = min(span[1].x(), maxTickPosition)
                 span[1].setX(stop)
         axisSpec = (self.pen(), span[0], span[1])
-
 
         textOffset = self.style['tickTextOffset'][axis]  ## spacing between axis and text
         #if self.style['autoExpandTextSpace'] is True:

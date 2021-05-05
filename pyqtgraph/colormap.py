@@ -1,9 +1,9 @@
 import numpy as np
 from .Qt import QtGui, QtCore
-from .python2_3 import basestring
 from .functions import mkColor, eq
 from os import path, listdir
-import collections
+from collections.abc import Callable, Sequence
+import warnings
 
 __all__ = ['ColorMap']
 
@@ -63,14 +63,14 @@ def get(name, source=None, skipCache=False):
     if not skipCache and name in _mapCache:
         return _mapCache[name]
     if source is None:
-        return _get_from_file(name)
+        return _getFromFile(name)
     elif source == 'matplotlib':
-        return _get_from_matplotlib(name)
+        return getFromMatplotlib(name)
     elif source == 'colorcet':
-        return _get_from_colorcet(name)
+        return getFromColorcet(name)
     return None
 
-def _get_from_file(name):
+def _getFromFile(name):
     filename = name
     if filename[0] !='.': # load from built-in directory
         dirname = path.dirname(__file__)
@@ -115,7 +115,7 @@ def _get_from_file(name):
     _mapCache[name] = cmap
     return cmap
 
-def _get_from_matplotlib(name):
+def getFromMatplotlib(name):
     """ import colormap from matplotlib definition """
     # inspired and informed by "mpl_cmaps_in_ImageItem.py", published by Sebastian Hoefer at 
     # https://github.com/honkomonk/pyqtgraph_sandbox/blob/master/mpl_cmaps_in_ImageItem.py
@@ -127,7 +127,7 @@ def _get_from_matplotlib(name):
     col_map = mpl_plt.get_cmap(name)
     if hasattr(col_map, '_segmentdata'): # handle LinearSegmentedColormap
         data = col_map._segmentdata
-        if ('red' in data) and isinstance(data['red'], collections.Sequence):
+        if ('red' in data) and isinstance(data['red'], Sequence):
             positions = set() # super-set of handle positions in individual channels
             for key in ['red','green','blue']:
                 for tup in data[key]:
@@ -143,7 +143,7 @@ def _get_from_matplotlib(name):
                 col_data[:,idx] = np.interp(col_data[:,3], positions, comp_vals)
             cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
         # some color maps (gnuplot in particular) are defined by RGB component functions:
-        elif ('red' in data) and isinstance(data['red'], collections.Callable):
+        elif ('red' in data) and isinstance(data['red'], Callable):
             col_data = np.zeros((64, 4))
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
@@ -157,7 +157,7 @@ def _get_from_matplotlib(name):
         _mapCache[name] = cmap
     return cmap
 
-def _get_from_colorcet(name):
+def getFromColorcet(name):
     """ import colormap from colorcet definition """
     try:
         import colorcet
@@ -229,15 +229,10 @@ class ColorMap(object):
         | 1.0  -> white
 
     The colors for intermediate values are determined by interpolating between 
-    the two nearest colors in either RGB or HSV color space.
+    the two nearest colors in RGB color space.
 
     To provide user-defined color mappings, see :class:`GradientWidget <pyqtgraph.GradientWidget>`.
     """
-
-    ## color interpolation modes
-    RGB = 1
-    HSV_POS = 2
-    HSV_NEG = 3
 
     ## mapping modes
     CLIP   = 1
@@ -251,60 +246,53 @@ class ColorMap(object):
     QCOLOR = 3
 
     enumMap = {
-        'rgb': RGB,
-        # 'hsv+': HSV_POS,
-        # 'hsv-': HSV_NEG,
-        # 'clip': CLIP,
-        # 'repeat': REPEAT,
+        'clip': CLIP,
+        'repeat': REPEAT,
+        'mirror': MIRROR,
+        'diverging': DIVERGING,
         'byte': BYTE,
         'float': FLOAT,
         'qcolor': QCOLOR,
     }
 
-    def __init__(self, pos, color, name=None, mode=None, mapping=None): #, names=None):
+    def __init__(self, pos, color, mapping=CLIP, mode=None, name=None): #, names=None):
         """
-        ===============     =================================================================
+        ===============     =======================================================================
         **Arguments:**
         pos                 Array of positions where each color is defined
         color               Array of colors.
                             Values are interpreted via 
                             :func:`mkColor() <pyqtgraph.mkColor>`.
-        mode                Array of color modes (ColorMap.RGB, HSV_POS, or HSV_NEG)
-                            indicating the color space that should be used when
-                            interpolating between stops. Note that the last mode value is
-                            ignored. By default, the mode is entirely RGB.
-        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR, or DIVERGING)
-                            controlling mapping of relative index to color. 
-                            CLIP maps colors to [0.0;1.0]
+        mapping             Mapping mode (ColorMap.CLIP, REPEAT, MIRROR or DIVERGING)
+                            controlling mapping of relative index to color. String representations
+                            'clip', 'repeat', 'mirror' or 'diverging' are also accepted.
+                            CLIP maps colors to [0.0;1.0] and is the default.
                             REPEAT maps colors to repeating intervals [0.0;1.0];[1.0-2.0],...
                             MIRROR maps colors to [0.0;-1.0] and [0.0;+1.0] identically
                             DIVERGING maps colors to [-1.0;+1.0]
-        ===============     =================================================================
+        ===============     =======================================================================
         """
         self.name = name # storing a name helps identify ColorMaps sampled by Palette
+        if mode is not None:
+            warnings.warn(
+                "'mode' argument is deprecated and does nothing.",
+                DeprecationWarning, stacklevel=2
+        )
+        if isinstance(mapping, str):
+            mapping = self.enumMap[mapping.lower()]
+
         self.pos = np.array(pos)
         order = np.argsort(self.pos)
         self.pos = self.pos[order]
         self.color = np.apply_along_axis(
-            func1d = lambda x: mkColor(x).getRgb(),
+            func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
             axis   = -1,
             arr    = color,
             )[order]
-        if mode is None:
-            mode = np.ones(len(pos))
-        self.mode = mode
 
-        if mapping is None:
-            self.mapping_mode = self.CLIP
-        elif mapping == self.REPEAT:
-            self.mapping_mode = self.REPEAT
-        elif mapping == self.DIVERGING:
-            self.mapping_mode = self.DIVERGING
-        elif mapping == self.MIRROR:
-            self.mapping_mode = self.MIRROR
-        else:
-            self.mapping_mode = self.CLIP
-        
+        self.mapping_mode = self.CLIP # default to CLIP mode
+        if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
+            self.mapping_mode = mapping # only allow defined values
         self.stopsCache = {}
     
     def __str__(self):
@@ -324,7 +312,7 @@ class ColorMap(object):
         except ValueError: pass
         return None
 
-    def map(self, data, mode='byte'):
+    def map(self, data, mode=BYTE):
         """
         Return an array of colors corresponding to the values in *data*. 
         Data must be either a scalar position or an array (any shape) of positions.
@@ -337,7 +325,7 @@ class ColorMap(object):
         qcolor      Values are returned as an array of QColor objects.
         =========== ===============================================================
         """
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
             
         if mode == self.QCOLOR:
@@ -345,9 +333,6 @@ class ColorMap(object):
         else:
             pos, color = self.getStops(mode)
 
-        # Interpolate
-        # TODO: is griddata faster?
-        #          interp = scipy.interpolate.griddata(pos, color, data)
         if np.isscalar(data):
             interp = np.empty((color.shape[1],), dtype=color.dtype)
         else:
@@ -407,7 +392,7 @@ class ColorMap(object):
     def getColors(self, mode=None):
         """Return list of all color stops converted to the specified mode.
         If mode is None, then no conversion is done."""
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
         
         color = self.color
@@ -426,11 +411,9 @@ class ColorMap(object):
         if mode not in self.stopsCache:
             color = self.color
             if mode == self.BYTE and color.dtype.kind == 'f':
-                color = (color * 255).astype(np.ubyte)
+                color = (color*255).astype(np.ubyte)
             elif mode == self.FLOAT and color.dtype.kind != 'f':
                 color = color.astype(float) / 255.
-        
-            ## to support HSV mode, we need to do a little more work..
             self.stopsCache[mode] = (self.pos, color)
         return self.stopsCache[mode]
 
@@ -449,7 +432,7 @@ class ColorMap(object):
                           See :func:`map() <pyqtgraph.ColorMap.map>`.
         ===============   =============================================================================
         """
-        if isinstance(mode, basestring):
+        if isinstance(mode, str):
             mode = self.enumMap[mode.lower()]
 
         if alpha is None:

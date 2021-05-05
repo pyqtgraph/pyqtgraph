@@ -43,8 +43,9 @@ class LinearRegionItem(GraphicsObject):
         **Arguments:**
         values          A list of the positions of the lines in the region. These are not
                         limits; limits can be set by specifying bounds.
-        orientation     Options are 'vertical' or 'horizontal', indicating the 
-                        The default is 'vertical', indicating that the 
+        orientation     Options are 'vertical' or 'horizontal'
+                        The default is 'vertical', indicating that the region is bounded
+                        by vertical lines.
         brush           Defines the brush that fills the region. Can be any arguments that
                         are valid for :func:`mkBrush <pyqtgraph.mkBrush>`. Default is
                         transparent blue.
@@ -114,13 +115,15 @@ class LinearRegionItem(GraphicsObject):
         self.lines[1].sigPositionChanged.connect(self._line1Moved)
             
         if brush is None:
-            brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
+            # brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
+            brush = ('gr_reg')
         self.setBrush(brush)
         
         if hoverBrush is None:
-            c = self.brush.color()
-            c.setAlpha(min(c.alpha() * 2, 255))
-            hoverBrush = fn.mkBrush(c)
+            hoverBrush = ('gr_reg', 200)
+            # c = self.brush.color()
+            # c.setAlpha(min(c.alpha() * 2, 255))
+            # hoverBrush = fn.mkBrush(c)
         self.setHoverBrush(hoverBrush)
         
         self.setMovable(movable)

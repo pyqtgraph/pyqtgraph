@@ -360,15 +360,7 @@ class ExampleLoader(QtGui.QMainWindow):
             fn = self.currentFile()
             if fn is None:
                 return
-            if sys.platform.startswith('win'):
-                args = [os.P_NOWAIT, sys.executable, '"'+sys.executable+'"', '"' + fn + '"']
-            else:
-                args = [os.P_NOWAIT, sys.executable, sys.executable, fn]
-            if env is None:
-                os.spawnl(*args)
-            else:
-                args.append(env)
-                os.spawnle(*args)
+            subprocess.Popen([sys.executable, fn], env=env)
 
     def showFile(self):
         fn = self.currentFile()
@@ -377,7 +369,8 @@ class ExampleLoader(QtGui.QMainWindow):
             return
         if os.path.isdir(fn):
             fn = os.path.join(fn, '__main__.py')
-        text = open(fn).read()
+        with open(fn, "r") as currentFile:
+            text = currentFile.read()
         self.ui.codeView.setPlainText(text)
         self.ui.loadedFileLabel.setText(fn)
         self.codeBtn.hide()
@@ -393,7 +386,6 @@ def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
     app.exec_()
-# or condition so pytest runs ExampleApp as part of test suite
+
 if __name__ == '__main__':
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        main()
+    main()

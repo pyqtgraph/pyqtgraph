@@ -75,7 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ax.setZValue(0.1)
 
         self.curves = []
-        curve = pg.PlotCurveItem(pen='p0', brush='p0') # ('p0',127))
+        curve = pg.PlotCurveItem(pen='p0', brush=('p0',127))
         curve.setFillLevel(0)
         self.curves.append( (1, 1, curve) ) # dataset 1, vertical offset 3        
         plt.addItem(curve)
@@ -101,7 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         plt.getAxis('left').setLabel('plot color')
         plt.getAxis('left').setGrid(0.5) # 63)
 
-        pen_list = [('p0',255),'p1','p2','p3','p4','p5','p6','p7'] # add right-side plots for each main color
+        pen_list = [('p0',2),('p1',2),('p2',2),('p3',2),('p4',2),('p5',2),('p6',2),('p7',2)] # add right-side plots for each main color
         for idx, pen in enumerate( pen_list ):
             curve = pg.PlotCurveItem(pen=pen)
             self.curves.append( (1+idx, idx, curve) ) # datasets 2+, vertical offset by index
@@ -231,9 +231,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def make_dark_QPalette(self):
         # color definitions match QDarkstyle
         BLACK      = QtGui.QColor('#000000')
-        BG_LIGHT   = QtGui.QColor('#505F69')
-        BG_NORMAL  = QtGui.QColor('#32414B')
-        BG_DARK    = QtGui.QColor('#19232D')
+        # BG_LIGHT   = QtGui.QColor('#505F69')
+        # BG_NORMAL  = QtGui.QColor('#32414B')
+        # BG_DARK    = QtGui.QColor('#19232D')
+        BG_LIGHT   = QtGui.QColor('#32414B')
+        BG_NORMAL  = QtGui.QColor('#212a31')
+        BG_DARK    = QtGui.QColor('#101518')
         FG_LIGHT   = QtGui.QColor('#F0F0F0')
         FG_NORMAL  = QtGui.QColor('#AAAAAA')
         FG_DARK    = QtGui.QColor('#787878')
@@ -296,22 +299,27 @@ class MainWindow(QtWidgets.QMainWindow):
         l_layout.setContentsMargins(0,0,0,0)
         l_layout.setSpacing(1)
         row_idx = 0
-        
-        label = QtWidgets.QLabel('Select a palette:')
+
+        label = QtWidgets.QLabel('System style:')
         l_layout.addWidget( label, row_idx,0, 1,2 )
+
+        label = QtWidgets.QLabel('Select a palette:')
+        l_layout.addWidget( label, row_idx,2, 1,2 )
         row_idx += 1
-        
+
+        btn = QtWidgets.QPushButton('dark GUI')
+        btn.setCheckable(True)
+        btn.setChecked(False)
+        btn.clicked.connect(self.handle_dark_button)
+
         box = QtWidgets.QComboBox()
         for text, identifier, args in self.palette_options:
             del identifier, args # not needed here
             box.addItem(text)
         box.activated.connect(self.handle_palette_select)
-        btn = QtWidgets.QPushButton('dark GUI')
-        btn.setCheckable(True)
-        btn.setChecked(False)
-        btn.clicked.connect(self.handle_dark_button)
-        l_layout.addWidget( box, row_idx,0, 1,2 )
-        l_layout.addWidget( btn, row_idx,3, 1,1 )
+
+        l_layout.addWidget( box, row_idx,2, 1,2 )
+        l_layout.addWidget( btn, row_idx,0, 1,2 )
         ui['dark'] = btn
         row_idx += 1
 

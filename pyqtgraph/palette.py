@@ -33,8 +33,8 @@ PALETTE_DEFINITIONS = {
         'col_gr1':'#19232D', 'col_gr2':'#32414B', 'col_gr3':'#505F69', # match QDarkStyle background colors 
         'col_gr4':'#787878', 'col_gr5':'#AAAAAA', 'col_gr6':'#F0F0F0', # match QDarkstyle foreground colors
         # --- functional colors ---
-        'gr_fg' : 'col_gr4', 'gr_bg' : 'col_gr1',
-        'gr_txt': 'col_gr5', 'gr_acc': '#1464A0',  #col_cyan',
+        'gr_fg' : 'col_gr4', 'gr_bg' : '#101518',
+        'gr_txt': 'col_gr5', 'gr_acc': '#1464A0', 
         'gr_hlt': 'col_white', 'gr_reg': ('#1464A0',100)
         # legacy colors:
         # 'b': 'col_l_blue'  , 'c': 'col_l_cyan', 'g': 'col_l_green', 
@@ -425,4 +425,4 @@ class Palette(object):
         Applies this palette to the overall PyQtGraph color scheme.
         This provides the palette to NamedColorManager, which triggers a global refresh of named colors
         """
-        fn.NAMED_COLOR_MANAGER.redefinePalette( colors=self.palette )
+        fn.COLOR_REGISTRY.redefinePalette( colors=self.palette )

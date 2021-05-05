@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.1.dev0'
+__version__ = '0.12.1'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -36,8 +36,6 @@ if 'linux' in sys.platform:  ## linux has numerous bugs in opengl implementation
     useOpenGL = False
 elif 'darwin' in sys.platform: ## openGL can have a major impact on mac, but also has serious bugs
     useOpenGL = False
-    if QtGui.QApplication.instance() is not None:
-        print('Warning: QApplication was created before pyqtgraph was imported; there may be problems.')
 else:
     useOpenGL = False  ## on windows there's a more even performance / bugginess tradeoff. 
                 
@@ -49,8 +47,6 @@ CONFIG_OPTIONS = {
     'background': 'k',        ## default background for GraphicsView
     'antialias': False,
     'editorCommand': None,  ## command used to invoke code editor from ConsoleWidgets
-    'useWeave': False,       ## Use weave to speed up some operations, if it is available
-    'weaveDebug': False,    ## Print full error message if weave compile fails
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
@@ -60,6 +56,7 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    'useNumba': False, # When True, use numba
 } 
 
 # def setConfigOption(opt, value):
@@ -232,6 +229,7 @@ from .graphicsItems.GraphicsWidgetAnchor import *
 from .graphicsItems.PlotCurveItem import * 
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.ColorBarItem import * 
 from .graphicsItems.MultiPlotItem import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
@@ -239,7 +237,8 @@ from .graphicsItems.LinearRegionItem import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.TargetItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.ScatterPlotWidget import * 
@@ -284,10 +283,8 @@ from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
 from .ThreadsafeTimer import *
-from .namedPen import *
-from .namedBrush import *
 from .palette import *
-from . import namedColorManager
+from . import colorRegistry
 
 
 def setConfigOption(opt, value):
@@ -298,7 +295,7 @@ def setConfigOption(opt, value):
 
     # Intercept background / foreground updates and manually apply them to the palette:
     if opt in ('background', 'foreground'):
-        color_dict = functions.NAMED_COLOR_MANAGER.colors()
+        color_dict = functions.COLOR_REGISTRY.colors()
         if value in color_dict:
             qcol = color_dict[value]
         else:
@@ -307,7 +304,7 @@ def setConfigOption(opt, value):
             color_dict['gr_bg'] = qcol
         elif opt == 'foreground':
             color_dict['gr_fg'] = qcol
-        functions.NAMED_COLOR_MANAGER.redefinePalette(colors=None)
+        functions.COLOR_REGISTRY.redefinePalette(colors=None)
 
     CONFIG_OPTIONS[opt] = value
 

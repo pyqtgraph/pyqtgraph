@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtCore, QtGui, QtWidgets
 HAVE_OPENGL = hasattr(QtWidgets, 'QOpenGLWidget')
-
+import math
 import warnings
 import numpy as np
 from .GraphicsObject import GraphicsObject
@@ -131,6 +131,8 @@ class PlotCurveItem(GraphicsObject):
         elif ax == 1:
             d = y
             d2 = x
+        else:
+            raise ValueError("Invalid axis value")
 
         ## If an orthogonal range is specified, mask the data now
         if orthoRange is not None:
@@ -149,7 +151,7 @@ class PlotCurveItem(GraphicsObject):
                 # All-NaN data is acceptable; Explicit numpy warning is not needed.
                 warnings.simplefilter("ignore")
                 b = (np.nanmin(d), np.nanmax(d))
-            if any(np.isinf(b)):
+            if math.isinf(b[0]) or math.isinf(b[1]):
                 mask = np.isfinite(d)
                 d = d[mask]
                 if len(d) == 0:

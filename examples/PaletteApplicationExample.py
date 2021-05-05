@@ -26,7 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         test_palette = pg.palette.get('system')
         
-        pg.palette.get('relaxed-dark').apply()
+        pg.palette.get('relaxed_dark').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
         gr_wid = pg.GraphicsLayoutWidget(show=True)

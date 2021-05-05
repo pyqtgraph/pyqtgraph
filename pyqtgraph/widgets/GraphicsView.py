@@ -7,10 +7,7 @@ Distributed under MIT/X11 license. See license.txt for more information.
 
 from ..Qt import QtCore, QtGui, QtWidgets, QT_LIB
 from ..Point import Point
-import sys, os
-from .FileDialog import FileDialog
 from ..GraphicsScene import GraphicsScene
-import numpy as np
 from .. import functions as fn
 from .. import debug as debug
 from .. import getConfigOption
@@ -124,8 +121,8 @@ class GraphicsView(QtGui.QGraphicsView):
         self.scaleCenter = False  ## should scaling center around view center (True) or mouse click (False)
         self.clickAccepted = False
 
-        # connect to style update signals from NamedColorManager:
-        fn.NAMED_COLOR_MANAGER.paletteHasChangedSignal.connect(self.styleHasChanged)
+        # connect to style update signals from ColorRegistry:
+        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
 
 
     def setAntialiasing(self, aa):
@@ -389,7 +386,7 @@ class GraphicsView(QtGui.QGraphicsView):
             return
         
         if ev.buttons() == QtCore.Qt.RightButton:
-            delta = Point(np.clip(delta[0], -50, 50), np.clip(-delta[1], -50, 50))
+            delta = Point(fn.clip_scalar(delta[0], -50, 50), fn.clip_scalar(-delta[1], -50, 50))
             scale = 1.01 ** delta
             self.scale(scale[0], scale[1], center=self.mapToScene(self.mousePressPos))
             self.sigDeviceRangeChanged.emit(self, self.range)
