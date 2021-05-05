@@ -47,13 +47,19 @@ class HistogramLUTItem(GraphicsWidget):
         :meth:`fillHistogram`.
     levelMode : str, optional
         'mono' (default)
-            Only a single set of black/white level lines is drawn and the levels apply
-            to all channels in the image.
+            One histogram with a :class:`~pyqtgraph.LinearRegionItem` is displayed to
+            control the black/white levels of the image. This option may be used for
+            color images, in which case the histogram and levels correspond to all
+            channels of the image.
         'rgba'
-            One set of levels is drawn for each channel.
+            A histogram and level control pair is provided for each image channel. The
+            alpha channel histogram and level control are only shown if the image
+            contains an alpha channel.
     gradientPosition : str, optional
-        Position of the gradient editor relative to the histogram, either 'right' or
-        'left'.
+        Position of the gradient editor relative to the histogram. Must be one of
+        {'right', 'left', 'top', 'bottom'}. 'right' and 'left' options should be used
+        with a 'vertical' orientation; 'top' and 'bottom' options are for 'horizontal'
+        orientation.
     orientation : str, optional
         The orientation of the axis along which the histogram is displayed. Either
         'vertical' (default) or 'horizontal'.
