@@ -52,10 +52,11 @@ win.setWindowTitle('pyqtgraph example: Non-uniform Image')
 
 p = cw.addPlot(title="Power Losses [W]", row=0, col=0)
 
-lut = pg.HistogramLUTItem()
+lut = pg.HistogramLUTItem(orientation="horizontal")
 
 p.setMouseEnabled(x=False, y=False)
 
+cw.nextRow()
 cw.addItem(lut)
 
 # load the gradient
