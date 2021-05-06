@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 import pytest
+
 import pyqtgraph as pg
 
 app = pg.mkQApp()
@@ -21,6 +23,21 @@ def test_PlotItem_shared_axis_items(orientation):
 
     with pytest.raises(RuntimeError):
         pi2.setAxisItems({orientation: ax1})
+
+
+def test_PlotItem_maxTraces():
+    item = pg.PlotItem()
+
+    curve1 = pg.PlotDataItem(np.random.normal(size=10))
+    item.addItem(curve1)
+    assert curve1.isVisible(), f"{curve1} should be visible"
+
+    item.ctrl.maxTracesCheck.setChecked(True)
+    item.ctrl.maxTracesSpin.setValue(0)
+    assert not curve1.isVisible(), f"{curve1} should not be visible"
+
+    item.ctrl.maxTracesCheck.setChecked(False)
+    assert curve1.isVisible(), f"{curve1} should be visible"
 
 
 def test_plotitem_menu_initialize():

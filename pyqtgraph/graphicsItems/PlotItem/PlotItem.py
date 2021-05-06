@@ -1003,20 +1003,19 @@ class PlotItem(GraphicsWidget):
         return self.ctrl.clipToViewCheck.isChecked()
 
     def updateDecimation(self):
-        if self.ctrl.maxTracesCheck.isChecked():
-            numCurves = self.ctrl.maxTracesSpin.value()
+        if not self.ctrl.maxTracesCheck.isChecked():
+            numCurves = len(self.curves)
         else:
-            numCurves = -1
-            
-        curves = self.curves[:]
-        split = len(curves) - numCurves
-        for curve in curves[split:]:
-            if numCurves != -1:
-                if self.ctrl.forgetTracesCheck.isChecked():
-                    curve.clear()
-                    self.removeItem(curve)
-                else:
-                    curve.hide()        
+            numCurves = self.ctrl.maxTracesSpin.value()
+
+        for i, curve in enumerate(self.curves):
+            if i < numCurves:
+                curve.show()
+            elif self.ctrl.forgetTracesCheck.isChecked():
+                curve.clear()
+                self.removeItem(curve)
+            else:
+                curve.hide()
       
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()
