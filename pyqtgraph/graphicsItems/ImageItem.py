@@ -481,7 +481,6 @@ class ImageItem(GraphicsObject):
 
         if self._effectiveLut is None:
             eflsize = 2**(image.itemsize*8)
-            ind = xp.arange(eflsize)
             if levels is None:
                 info = numpy.iinfo(image.dtype)
                 minlev, maxlev = info.min, info.max
@@ -491,33 +490,40 @@ class ImageItem(GraphicsObject):
             levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
 
             if colors_lut is None:
-                levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                        offset=minlev, dtype=xp.ubyte)
-
                 if image.dtype == xp.ubyte:
                     # uint8 image (always use efflut)
+                    ind = xp.arange(eflsize)
+                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
+                                            offset=minlev, dtype=xp.ubyte)
                     efflut = levels_lut
                     levels_lut = None
                 else:
-                    efflut = None
+                    # uint16 image with no colors_lut
+                    # rescale image data by computation instead of by memory lookup
+                    image = fn.rescaleData(image, scale=255./levdiff,
+                                        offset=minlev, dtype=xp.ubyte)
+                    return image, None, colors_lut, augmented_alpha
             else:
                 num_colors = colors_lut.shape[0]
                 effscale = num_colors / levdiff
                 lutdtype = xp.min_scalar_type(num_colors - 1)
-                levels_lut = fn.rescaleData(ind, scale=effscale,
-                                        offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
 
                 if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
                     # combine if either:
                     #   1) uint8 image (always use efflut)
                     #   2) colors_lut has more entries than will fit within 8-bits
+                    ind = xp.arange(eflsize)
+                    levels_lut = fn.rescaleData(ind, scale=effscale,
+                                    offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
                     efflut = colors_lut[levels_lut]
                     levels_lut = None
                     colors_lut = None
                 else:
                     # uint16 image with colors_lut <= 256 entries
                     # don't combine, we will use QImage ColorTable
-                    efflut = None
+                    image = fn.rescaleData(image, scale=effscale,
+                                    offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+                    return image, None, colors_lut, augmented_alpha
 
             self._effectiveLut = efflut, levels_lut, colors_lut
 
