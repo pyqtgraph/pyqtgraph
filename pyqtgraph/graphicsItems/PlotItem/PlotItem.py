@@ -238,6 +238,7 @@ class PlotItem(GraphicsWidget):
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
         
         self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
+        self.ctrl.forgetTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
         if labels is None:
@@ -1008,12 +1009,14 @@ class PlotItem(GraphicsWidget):
         else:
             numCurves = self.ctrl.maxTracesSpin.value()
 
-        for i, curve in enumerate(self.curves):
-            if i < numCurves:
-                curve.show()
-            elif self.ctrl.forgetTracesCheck.isChecked():
+        if self.ctrl.forgetTracesCheck.isChecked():
+            for curve in self.curves[:-numCurves]:
                 curve.clear()
                 self.removeItem(curve)
+
+        for i, curve in enumerate(reversed(self.curves)):
+            if i < numCurves:
+                curve.show()
             else:
                 curve.hide()
       

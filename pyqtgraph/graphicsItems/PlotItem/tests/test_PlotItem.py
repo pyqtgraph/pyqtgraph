@@ -30,14 +30,28 @@ def test_PlotItem_maxTraces():
 
     curve1 = pg.PlotDataItem(np.random.normal(size=10))
     item.addItem(curve1)
-    assert curve1.isVisible(), f"{curve1} should be visible"
+    assert curve1.isVisible(), "curve1 should be visible"
 
     item.ctrl.maxTracesCheck.setChecked(True)
     item.ctrl.maxTracesSpin.setValue(0)
-    assert not curve1.isVisible(), f"{curve1} should not be visible"
+    assert not curve1.isVisible(), "curve1 should not be visible"
 
     item.ctrl.maxTracesCheck.setChecked(False)
-    assert curve1.isVisible(), f"{curve1} should be visible"
+    assert curve1.isVisible(), "curve1 should be visible"
+
+    curve2 = pg.PlotDataItem(np.random.normal(size=10))
+    item.addItem(curve2)
+    assert curve2.isVisible(), "curve2 should be visible"
+
+    item.ctrl.maxTracesCheck.setChecked(True)
+    item.ctrl.maxTracesSpin.setValue(1)
+    assert curve2.isVisible(), "curve2 should be visible"
+    assert not curve1.isVisible(), "curve1 should not be visible"
+    assert curve1 in item.curves, "curve1 should be in the item's curves"
+
+    item.ctrl.forgetTracesCheck.setChecked(True)
+    assert curve2 in item.curves, "curve2 should be in the item's curves"
+    assert curve1 not in item.curves, "curve1 should not be in the item's curves"
 
 
 def test_plotitem_menu_initialize():
