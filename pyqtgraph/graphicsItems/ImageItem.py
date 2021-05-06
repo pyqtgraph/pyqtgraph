@@ -525,29 +525,13 @@ class ImageItem(GraphicsObject):
                                     offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
                     return image, None, colors_lut, augmented_alpha
 
-            self._effectiveLut = efflut, levels_lut, colors_lut
+            self._effectiveLut = efflut
 
-        # possible combinations:
-        # 1)  ~None, None, None
-        # 2)  None, ~None, ~None    (uint16 images only)
-        # 3)  None, ~None, None     (uint16 images only)
-        lut, levels_lut, colors_lut = self._effectiveLut
+        lut = self._effectiveLut
         levels = None
 
-        if levels_lut is not None:  # either combi 2 or 3
-            assert image.dtype == xp.uint16
-            assert levels_lut.dtype == xp.ubyte
-            assert colors_lut is None or colors_lut.shape[0] <= 256
-            image = levels_lut[image]
-            levels_lut = None
-
-            lut = colors_lut
-            colors_lut = None
-            # image is now uint8
-            # lut can be None or not None
-
         # apply the effective lut early for the following types:
-        elif image.dtype == xp.uint16 and image.ndim == 2:
+        if image.dtype == xp.uint16 and image.ndim == 2:
             # 1) uint16 mono
             if lut.ndim == 2:
                 if lut.shape[1] == 3:   # rgb
