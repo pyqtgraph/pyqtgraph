@@ -490,15 +490,15 @@ class ImageItem(GraphicsObject):
             levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
 
             if colors_lut is None:
-                if image.dtype == xp.ubyte:
-                    # uint8 image (always use efflut)
+                if image.dtype == xp.ubyte and image.ndim == 2:
+                    # uint8 mono image
                     ind = xp.arange(eflsize)
                     levels_lut = fn.rescaleData(ind, scale=255./levdiff,
                                             offset=minlev, dtype=xp.ubyte)
                     efflut = levels_lut
                     levels_lut = None
                 else:
-                    # uint16 image with no colors_lut
+                    # uint16 mono, uint8 rgb, uint16 rgb
                     # rescale image data by computation instead of by memory lookup
                     image = fn.rescaleData(image, scale=255./levdiff,
                                         offset=minlev, dtype=xp.ubyte)
@@ -510,7 +510,7 @@ class ImageItem(GraphicsObject):
 
                 if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
                     # combine if either:
-                    #   1) uint8 image (always use efflut)
+                    #   1) uint8 mono image
                     #   2) colors_lut has more entries than will fit within 8-bits
                     ind = xp.arange(eflsize)
                     levels_lut = fn.rescaleData(ind, scale=effscale,
@@ -545,12 +545,6 @@ class ImageItem(GraphicsObject):
             # now both levels and lut are None
             if image.dtype == numpy.uint32:
                 image = image.view(numpy.uint8).reshape(image.shape + (4,))
-        elif image.ndim == 3 and image.shape[2] == 3:
-            # 2) {uint8, uint16} rgb
-            # for rgb images, the lut will be 1d
-            image = lut.ravel()[image]
-            lut = None
-            # now both levels and lut are None
 
         return image, levels, lut, augmented_alpha
 
