@@ -22,6 +22,13 @@
       </property>
      </widget>
     </item>
+    <item row="9" column="2" colspan="2">
+     <widget class="QCheckBox" name="numbaCheck">
+      <property name="text">
+       <string>Use Numba if available</string>
+      </property>
+     </widget>
+    </item>
     <item row="8" column="0" colspan="2">
      <widget class="QCheckBox" name="downsampleCheck">
       <property name="text">
