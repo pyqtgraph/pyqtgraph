@@ -110,7 +110,7 @@ def _getFromFile(name):
         # end of line reading loop
     # end of open
     cmap = ColorMap( name=name,
-        pos=np.linspace(0.0, 1.0, len(color_list)), 
+        pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
     _mapCache[name] = cmap
     return cmap
