@@ -9,6 +9,10 @@ try:
 except ImportError:
     cp = None
 
+try:
+    import numba
+except ImportError:
+    numba = None
 
 def renderQImage(*args, **kwargs):
     imgitem = pg.ImageItem(axisOrder='row-major')
@@ -16,6 +20,16 @@ def renderQImage(*args, **kwargs):
         kwargs['autoLevels'] = False
     imgitem.setImage(*args, **kwargs)
     imgitem.render()
+
+
+def prime_numba():
+    shape = (64, 64)
+    lut_small = np.random.randint(256, size=(256,3), dtype=np.uint8)
+    lut_big = np.random.randint(65536, size=(512,3), dtype=np.uint16)
+    for lut in [lut_small, lut_big]:
+        renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20,220), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250,3000), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.float64), levels=(-4.0,4.0), lut=lut)
 
 
 class _TimeSuite(object):
@@ -32,7 +46,11 @@ class _TimeSuite(object):
         self.float_data, self.uint16_data, self.uint8_data, self.uint16_lut, self.uint8_lut = self._create_data(
             size, np
         )
-        renderQImage(self.uint16_data["data"])  # prime the cpu
+        if numba is not None:
+            # ensure JIT compilation
+            pg.setConfigOption("useNumba", True)
+            prime_numba()
+            pg.setConfigOption("useNumba", False)
         if cp:
             renderQimage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
 
@@ -63,23 +81,29 @@ class _TimeSuite(object):
         return float_data, uint16_data, uint8_data, uint16_lut, uint8_lut
 
 
-def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
+def make_test(dtype, kind, use_levels, lut_name, func_name):
     def time_test(self):
         data = getattr(self, dtype + "_data")
         levels = data["levels"] if use_levels else None
         lut = getattr(self, lut_name + "_lut", None) if lut_name is not None else None
-        for _ in range(10):
+        if kind == "numba":
+            pg.setConfigOption("useNumba", True)
+        for _ in range(1):
             img_data = data["data"]
-            if use_cupy:
+            if kind == "cupy":
                 img_data = cp.asarray(img_data)
             renderQImage(img_data, lut=lut, levels=levels)
+        if kind == "numba":
+            pg.setConfigOption("useNumba", False)
 
     time_test.__name__ = func_name
     return time_test
 
 
-for cupy in [True, False]:
-    if cupy and cp is None:
+for kind in ["cupy", "numba", "numpy"]:
+    if kind == "cupy" and cp is None:
+        continue
+    if kind == "numba" and numba is None:
         continue
     for dtype in ["float", "uint16", "uint8"]:
         for levels in [True, False]:
@@ -87,39 +111,9 @@ for cupy in [True, False]:
                 continue
             for lutname in [None, "uint8", "uint16"]:
                 name = (
-                    f'time_10x_renderImageItem_{"cupy" if cupy else ""}{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
+                    f'time_1x_renderImageItem_{kind}_{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
                 )
-                setattr(_TimeSuite, name, make_test(dtype, cupy, levels, lutname, name))
-
-
-class Time0256Suite(_TimeSuite):
-    def __init__(self):
-        self.size = 256
-        super(Time0256Suite, self).__init__()
-
-
-class Time0512Suite(_TimeSuite):
-    def __init__(self):
-        self.size = 512
-        super(Time0512Suite, self).__init__()
-
-
-class Time1024Suite(_TimeSuite):
-    def __init__(self):
-        self.size = 1024
-        super(Time1024Suite, self).__init__()
-
-
-class Time2048Suite(_TimeSuite):
-    def __init__(self):
-        self.size = 2048
-        super(Time2048Suite, self).__init__()
-
-
-class Time3072Suite(_TimeSuite):
-    def __init__(self):
-        self.size = 3072
-        super(Time3072Suite, self).__init__()
+                setattr(_TimeSuite, name, make_test(dtype, kind, levels, lutname, name))
 
 
 class Time4096Suite(_TimeSuite):
