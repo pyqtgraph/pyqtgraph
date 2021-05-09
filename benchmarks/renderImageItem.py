@@ -25,7 +25,7 @@ def renderQImage(*args, **kwargs):
 def prime_numba():
     shape = (64, 64)
     lut_small = np.random.randint(256, size=(256,3), dtype=np.uint8)
-    lut_big = np.random.randint(65536, size=(512,3), dtype=np.uint16)
+    lut_big = np.random.randint(256, size=(512,3), dtype=np.uint8)
     for lut in [lut_small, lut_big]:
         renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20,220), lut=lut)
         renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250,3000), lut=lut)
