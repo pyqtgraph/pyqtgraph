@@ -102,6 +102,7 @@ def test_specification_formats():
 
     assert len(reg.registered_objects) == len(obj_list)
     obj_list = [] # delete all objects
+    print('remaining registered objects:', reg.registered_objects )
     assert len(reg.registered_objects) == 0 # cleared by finalize calls
 
 def test_mkColor_edge_case_specifications():
