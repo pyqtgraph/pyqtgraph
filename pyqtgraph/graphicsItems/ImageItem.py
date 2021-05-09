@@ -482,7 +482,7 @@ class ImageItem(GraphicsObject):
         if self._effectiveLut is None:
             eflsize = 2**(image.itemsize*8)
             if levels is None:
-                info = numpy.iinfo(image.dtype)
+                info = xp.iinfo(image.dtype)
                 minlev, maxlev = info.min, info.max
             else:
                 minlev, maxlev = levels
@@ -536,24 +536,26 @@ class ImageItem(GraphicsObject):
             if lut.ndim == 2:
                 if lut.shape[1] == 3:   # rgb
                     # convert rgb lut to rgba so that it is 32-bits
-                    lut = numpy.column_stack([lut, numpy.full(lut.shape[0], 255, dtype=numpy.uint8)])
+                    lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
                     augmented_alpha = True
                 if lut.shape[1] == 4:   # rgba
-                    lut = lut.view(numpy.uint32)
+                    lut = lut.view(xp.uint32)
             image = lut.ravel()[image]
             lut = None
             # now both levels and lut are None
-            if image.dtype == numpy.uint32:
-                image = image.view(numpy.uint8).reshape(image.shape + (4,))
+            if image.dtype == xp.uint32:
+                image = image.view(xp.uint8).reshape(image.shape + (4,))
 
         return image, levels, lut, augmented_alpha
 
     def _try_make_qimage(self, image, levels, lut, augmented_alpha):
-        ubyte_nolvl = image.dtype == numpy.ubyte and levels is None
+        xp = self._xp
+
+        ubyte_nolvl = image.dtype == xp.ubyte and levels is None
         is_passthru8 = ubyte_nolvl and lut is None
         is_indexed8 = ubyte_nolvl and image.ndim == 2 and \
             lut is not None and lut.shape[0] <= 256
-        is_passthru16 = image.dtype == numpy.uint16 and levels is None and lut is None
+        is_passthru16 = image.dtype == xp.uint16 and levels is None and lut is None
         can_grayscale16 = is_passthru16 and image.ndim == 2 and \
             hasattr(QtGui.QImage.Format, 'Format_Grayscale16')
         is_rgba64 = is_passthru16 and image.ndim == 3 and image.shape[2] == 4
@@ -562,6 +564,9 @@ class ImageItem(GraphicsObject):
         supported = is_passthru8 or is_indexed8 or can_grayscale16 or is_rgba64
         if not supported:
             return None
+
+        if self._xp == getCupy():
+            image = image.get()
 
         # worthwhile supporting non-contiguous arrays
         image = numpy.ascontiguousarray(image)
