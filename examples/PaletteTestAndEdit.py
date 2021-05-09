@@ -7,7 +7,6 @@ Update a simple plot as rapidly as possible to measure speed.
 ## Add path to library (just for examples; you do not need this)
 import initExample
 
-import qdarkstyle
 import numpy as np
 
 from pyqtgraph.Qt import mkQApp, QtCore, QtGui, QtWidgets
