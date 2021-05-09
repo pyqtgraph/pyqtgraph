@@ -107,6 +107,7 @@ def test_specification_formats():
     assert (
         len(reg.registered_objects) == 0 or # All cleared by finalize calls, except that 
         len(reg.registered_objects) == 1    # PySide seems to be left with one surviving reference
+    )
 
 def test_mkColor_edge_case_specifications():
     color = fn.mkColor(1e129)
