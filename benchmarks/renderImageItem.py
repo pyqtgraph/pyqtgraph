@@ -14,8 +14,6 @@ def renderQImage(*args, **kwargs):
     imgitem = pg.ImageItem(axisOrder='row-major')
     if 'autoLevels' not in kwargs:
         kwargs['autoLevels'] = False
-    if 'output' in kwargs:
-        kwargs.pop('output')
     imgitem.setImage(*args, **kwargs)
     imgitem.render()
 
@@ -28,18 +26,14 @@ class _TimeSuite(object):
         self.uint8_lut = None
         self.uint16_data = None
         self.uint16_lut = None
-        self.output = None
-        self.cupy_output = None
 
     def setup(self):
         size = (self.size, self.size)
         self.float_data, self.uint16_data, self.uint8_data, self.uint16_lut, self.uint8_lut = self._create_data(
             size, np
         )
-        self.output = np.zeros(size + (4,), dtype=np.ubyte)
         renderQImage(self.uint16_data["data"])  # prime the cpu
         if cp:
-            self.cupy_output = cp.zeros(size + (4,), dtype=cp.ubyte)
             renderQimage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
 
 
@@ -76,15 +70,9 @@ def make_test(dtype, use_cupy, use_levels, lut_name, func_name):
         lut = getattr(self, lut_name + "_lut", None) if lut_name is not None else None
         for _ in range(10):
             img_data = data["data"]
-            output = self.output
             if use_cupy:
                 img_data = cp.asarray(img_data)
-                output = self.cupy_output
-            renderQImage(
-                img_data, lut=lut, levels=levels, output=output,
-            )
-            if use_cupy:
-                output.get(out=self.output)
+            renderQImage(img_data, lut=lut, levels=levels)
 
     time_test.__name__ = func_name
     return time_test
