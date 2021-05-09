@@ -9,7 +9,7 @@ class TextItem(GraphicsObject):
     """
     GraphicsItem displaying unscaled text (the text will always appear normal even inside a scaled ViewBox). 
     """
-    def __init__(self, text='', color=(200,200,200), html=None, anchor=(0,0),
+    def __init__(self, text='', color='gr_txt', html=None, anchor=(0,0),
                  border=None, fill=None, angle=0, rotateAxis=None):
         """
         ==============  =================================================================================
@@ -50,8 +50,10 @@ class TextItem(GraphicsObject):
         self._lastTransform = None
         self._lastScene = None
         self._bounds = QtCore.QRectF()
+        # self.color = None
+        self.setColor(color)
         if html is None:
-            self.setColor(color)
+            # self.setColor(color)
             self.setText(text)
         else:
             self.setHtml(html)
@@ -66,6 +68,7 @@ class TextItem(GraphicsObject):
         This method sets the plain text of the item; see also setHtml().
         """
         if color is not None:
+            self.color = color
             self.setColor(color)
         self.setPlainText(text)
 
@@ -214,3 +217,9 @@ class TextItem(GraphicsObject):
         self.setTransform(t)
         self._lastTransform = pt
         self.updateTextPos()
+        
+    def styleHasChanged(self):
+        """ overridden to mnanually refresh color """
+        if self.color is not None:
+            self.textItem.setDefaultTextColor(self.color)
+        super().styleHasChanged()

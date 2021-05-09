@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Update a simple plot as rapidly as possible to measure speed.
+Apply various palettes to an existing plot
 """
 
 ## Add path to library (just for examples; you do not need this)
@@ -24,8 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('pyqtgraph example: Palette application test')
         self.resize(600,600)
         
-        test_palette = pg.palette.get('system')
-        
+        # test_palette = pg.palette.get('system')
         pg.palette.get('relaxed_dark').apply()
 
         main_layout = QtWidgets.QGridLayout( main_wid )
@@ -45,10 +44,12 @@ class MainWindow(QtWidgets.QMainWindow):
             ('legacy fg/bg 1', 1,3, self.handle_button_leg1 ),
             ('legacy fg/bg 2', 1,4, self.handle_button_leg2 ),
             ('apply <mono green>', 2,2, self.handle_button_mono1 ),
-            ('apply <mono amber>', 2,3, self.handle_button_mono2 ),
-            ('apply <mono blue>' , 2,4, self.handle_button_mono3 ),
-            ('apply <relaxed-dark>' , 3,2, self.handle_button_pal2 ),
-            ('apply <relaxed-light>', 3,3, self.handle_button_pal3 )
+            ('apply <mono amber>', 3,2, self.handle_button_mono2 ),
+            # ('apply <mono blue>' , 2,4, self.handle_button_mono3 ),
+            ('apply <relaxed-dark>' , 2,3, self.handle_button_pal2 ),
+            ('apply <relaxed-light>', 2,4, self.handle_button_pal3 ),
+            ('apply <pastels>'      , 3,3, self.handle_button_pal4 ),
+            ('apply <synthwave>'    , 3,4, self.handle_button_pal5 ),
         )
         for text, row, col, func in palette_buttons:
             btn = QtWidgets.QPushButton(text)
@@ -70,12 +71,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #     symbol='o', symbolSize=10, symbolPen='gr_fg', symbolBrush=('y',127), 
         #     hoverable=True, hoverPen='w', hoverBrush='w')
         self.curve1 = pg.ScatterPlotItem(
-            symbol='o', symbolSize=12, symbolPen='gr_fg', symbolBrush=('y',127), 
+            symbol='o', symbolSize=12, symbolPen='p1', symbolBrush=('p2',127), 
             hoverable=True, hoverPen='gr_acc', hoverBrush='gr_reg')
         # self.curve1.setHoverable(True)
         self.plt.addItem(self.curve1)
         
-        self.curve2 = pg.PlotCurveItem(pen='l', brush='d')
+        self.curve2 = pg.PlotCurveItem(pen='p3', brush=('p3',128))
         self.curve2.setFillLevel(0)
         self.plt.addItem(self.curve2)
         self.show()
@@ -83,9 +84,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pal_1 = pg.palette.get('legacy')
         self.pal_2 = pg.palette.get('relaxed_dark')
         self.pal_3 = pg.palette.get('relaxed_light')
-        self.mpal_1 = pg.palette.make_monochrome('green')
-        self.mpal_2 = pg.palette.make_monochrome('amber')
-        self.mpal_3 = pg.palette.make_monochrome('blue')
+        self.pal_4 = pg.palette.get('pastels')
+        self.pal_5 = pg.palette.get('synthwave')
+        self.mpal_1 = pg.palette.get('monochrome','green')
+        self.mpal_2 = pg.palette.get('monochrome','amber')
 
         self.lastTime = time()
         self.fps = None
@@ -119,6 +121,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """ apply palette 1 on request """
         self.pal_3.apply()
 
+    def handle_button_pal4(self):
+        """ apply palette 1 on request """
+        self.pal_4.apply()
+
+    def handle_button_pal5(self):
+        """ apply palette 1 on request """
+        self.pal_5.apply()
+
     def handle_button_mono1(self):
         """ apply monochrome palette 1 on request """
         self.mpal_1.apply()
@@ -127,18 +137,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """ apply monochrome palette 2 on request """
         self.mpal_2.apply()
 
-    def handle_button_mono3(self):
-        """ apply monochrome palette 3 on request """
-        self.mpal_3.apply()
-
     def handle_button_leg1(self):
         """ test legacy background / foreground overrides """
-        pg.setConfigOption('background', '#ff0000')
+        pg.setConfigOption('background', '#800000')
         pg.setConfigOption('foreground', '#0000ff')
 
     def handle_button_leg2(self):
         """ test legacy background / foreground overrides """
-        pg.setConfigOption('background', '#0000ff')
+        pg.setConfigOption('background', '#8080ff')
         pg.setConfigOption('foreground', '#ff0000')
 
     def timed_update(self):

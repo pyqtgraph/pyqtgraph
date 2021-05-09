@@ -1,139 +1,106 @@
 from . import Qt
 from .Qt import QtCore, QtGui, QtWidgets
 
+import numpy as np
+import math
+
 from . import functions as fn # namedColorManager
 from . import colormap
 
 __all__ = ['Palette']
 
 #### todo list ####
-# define legacy colors for relaxed-dark
 # find color definitions for relaxed-light
-# define color names for relaxed palettes
-# enable color adjustment in PaletteTestandEdit.py!
 
 PALETTE_DEFINITIONS = {
     'legacy': {
         'colormap_sampling' : None,
+        # --- monochrome ramp ---
+        'm0':'#000000', 'm1':'#1e1e1e',
+        'm2':'#353535', 'm3':'#4e4e4e',
+        'm4':'#696969', 'm5':'#858585',
+        'm6':'#a2a2a2', 'm7':'#c0c0c0',
+        'm8':'#dfdfdf', 'm9':'#ffffff',
+        # --- legacy colors ---
         'b': (  0,  0,255,255), 'g': (  0,255,  0,255), 'r': (255,  0,  0,255), 
         'c': (  0,255,255,255), 'm': (255,  0,255,255), 'y': (255,255,  0,255),
         'k': (  0,  0,  0,255), 'w': (255,255,255,255),
         'd': (150,150,150,255), 'l': (200,200,200,255), 's': (100,100,150,255),
+        # --- manually assigned plot colors ---
+        'p0':'l', 'p1':'y', 'p2':'r', 'p3':'m',
+        'p4':'b', 'p5':'c', 'p6':'g', 'p7':'d',
         # --- functional colors ---
         'gr_fg' : 'd', 'gr_bg' : 'k',
         'gr_txt': 'd', 'gr_acc': (200,200,100,255),
-        'gr_hlt': 'r', 'gr_reg': (  0,  0,255,100),
-        # --- manually assigned plot colors ---
-        'p0':'l', 'p1':'y', 'p2':'r', 'p3':'m',
-        'p4':'b', 'p5':'c', 'p6':'g', 'p7':'d'
+        'gr_hlt': 'r', 'gr_reg': (  0,  0,255,100)
     },
     'relaxed_dark':{
-        'colormap_sampling': ('CET-C6', 0.430, -0.125),
-        'col_black' :'#000000', 'col_white' :'#FFFFFF',
-        'col_gr1':'#19232D', 'col_gr2':'#32414B', 'col_gr3':'#505F69', # match QDarkStyle background colors 
-        'col_gr4':'#787878', 'col_gr5':'#AAAAAA', 'col_gr6':'#F0F0F0', # match QDarkstyle foreground colors
+        'colormap_sampling': ('CET-C6', 0.450, -0.125),
+        # --- extra warm (CIElab A=3 B=3) monochrome ramp ---
+        'm0':'#1a120e', 'm1':'#2e2624',
+        'm2':'#443c39', 'm3':'#5c5350',
+        'm4':'#746b68', 'm5':'#8e8481',
+        'm6':'#a89e9b', 'm7':'#c4b9b6',
+        'm8':'#dfd5d2', 'm9':'#fcf1ee',
         # --- functional colors ---
-        'gr_fg' : 'col_gr4', 'gr_bg' : '#101518',
-        'gr_txt': 'col_gr5', 'gr_acc': '#1464A0', 
-        'gr_hlt': 'col_white', 'gr_reg': ('#1464A0',100)
+        'gr_fg':'m5', 'gr_bg':'m0', 'gr_txt':'m7',
+        'gr_acc':'#ffa84c', 'gr_hlt':'#4cb2ff', 'gr_reg': ('#b36b1e',160),
+        # --- legacy colors ---
+        'b':'p6', 'c':'p0', 'g':'p1', 'y':'p2', 'r':'p4' ,'m':'p5',
+        'k':'m0', 'd':'m3', 'l':'m6', 'w': 'm9',
+        's': 'gr_hlt'
+    },
+    'relaxed_light':{
+        'colormap_sampling': ('CET-C1', 0.640, -0.125),
+        # --- slightly warm (CIElab A=1 B=2) monochrome ramp ---
+        'm0':'#100c08', 'm1':'#262321',
+        'm2':'#3d3a37', 'm3':'#55524f',
+        'm4':'#6f6b68', 'm5':'#8a8683',
+        'm6':'#a5a19e', 'm7':'#c2bdba',
+        'm8':'#dfdbd8', 'm9':'#fdf8f5',
+        # --- functional colors ---
+        'gr_fg' : 'm5', 'gr_bg' : 'm9', #'#101518',
+        'gr_txt': 'm2', 'gr_acc': '#ad5a00', 
+        'gr_hlt': '#0080ff', 'gr_reg': ('#b36b1e',160),
         # legacy colors:
-        # 'b': 'col_l_blue'  , 'c': 'col_l_cyan', 'g': 'col_l_green', 
-        # 'y': 'col_l_yellow', 'r': 'col_l_red' , 'm': 'col_l_violet',
-        # 'k': 'col_black'   , 'w': 'col_white',
-        # 'd': 'col_gr2'     , 'l': 'col_gr4'   , 's': 'col_l_sky'
+        'b':'p7', 'c':'p0', 'g':'#509d46', 'y':'p1', 'r':'p3' ,'m':'p5',
+        'k':'m0', 'd':'m3', 'l':'m6', 'w': 'm9', 
+        's': 'gr_hlt'
+    },
+    'pastels':{
+        'colormap_sampling': ('CET-C7', 0.060, +0.125),
+        # --- slightly warm (CIElab A=1 B=2) monochrome ramp ---
+        'm0':'#100c08', 'm1':'#262321',
+        'm2':'#3d3a37', 'm3':'#55524f',
+        'm4':'#6f6b68', 'm5':'#8a8683',
+        'm6':'#a5a19e', 'm7':'#c2bdba',
+        'm8':'#dfdbd8', 'm9':'#fdf8f5',
+        # --- functional colors ---
+        'gr_fg' : 'm6', 'gr_bg' : 'm9', #'#101518',
+        'gr_txt': 'm3', 'gr_acc': '#e07050', 
+        'gr_hlt': '#e03020', 'gr_reg': ('#ffc0b0',160),
+        # legacy colors:
+        'b':'p3', 'c':'p4', 'g':'p5', 'y':'p6', 'r':'p1' ,'m':'p2',
+        'k':'m0', 'd':'m3', 'l':'m6', 'w': 'm9', 
+        's': 'gr_hlt'
     },
     'synthwave':{
         'colormap_sampling': ('CET-L8', 0.275, 0.100),
-        'col_black' :'#000000', 'col_white' :'#FFFFFF',
-        'col_gr1':'#19232D', 'col_gr2':'#32414B', 'col_gr3':'#505F69', # match QDarkStyle background colors 
-        'col_gr4':'#787878', 'col_gr5':'#AAAAAA', 'col_gr6':'#F0F0F0', # match QDarkstyle foreground colors
+        # --- cool monochrome ramp with no true black ---
+        'm0':'#16212a', 'm1':'#27353e',
+        'm2':'#3c4a54', 'm3':'#51606a',
+        'm4':'#687782', 'm5':'#808f9a',
+        'm6':'#98a8b3', 'm7':'#b1c1cd',
+        'm8':'#cbdce7', 'm9':'#e6f2ff',
         # --- functional colors ---
-        'gr_fg' : 'col_gr4', 'gr_bg' : 'col_gr1',
-        'gr_txt': 'col_gr5', 'gr_acc': '#1464A0',  #col_cyan',
-        'gr_hlt': 'col_white', 'gr_reg': ('#1464A0',100)
+        'gr_fg' : '#599FA6', 'gr_bg' : 'm0',
+        'gr_txt': '#00E0FF', 'gr_acc': '#40B0BF',
+        'gr_hlt': '#00E0FF', 'gr_reg': ('#599CA6',170),
         # legacy colors:
-        # 'b': 'col_l_blue'  , 'c': 'col_l_cyan', 'g': 'col_l_green', 
-        # 'y': 'col_l_yellow', 'r': 'col_l_red' , 'm': 'col_l_violet',
-        # 'k': 'col_black'   , 'w': 'col_white',
-        # 'd': 'col_gr2'     , 'l': 'col_gr4'   , 's': 'col_l_sky'
+        'b':'#398bfc', 'c':'gr_txt', 'g':'#39fc49', 'y':'p7', 'r':'p4' , 'm':'p1',
+        'k':'m0' , 'd': 'm3', 'l': 'm6', 'w':'m9', 's': 'gr_hlt'
     }
-
 }
-
-# RELAXED_RAW = { # "fresh" raw colors:
-#     'col_orange':'#A64D21', 'col_l_orange':'#D98A62', 'col_d_orange':'#732E0B',
-#     'col_red'   :'#B32424', 'col_l_red'   :'#E66767', 'col_d_red'   :'#800D0D',
-#     'col_purple':'#991F66', 'col_l_purple':'#D956A3', 'col_d_purple':'#660A31',
-#     'col_violet':'#7922A6', 'col_l_violet':'#BC67E6', 'col_d_violet':'#5A0C80',
-#     'col_indigo':'#5F29CC', 'col_l_indigo':'#9673FF', 'col_d_indigo':'#380E8C',
-#     'col_blue'  :'#2447B3', 'col_l_blue'  :'#6787E6', 'col_d_blue'  :'#0D2980',
-#     'col_sky'   :'#216AA6', 'col_l_sky'   :'#77ADD9', 'col_d_sky'   :'#0B4473',
-#     'col_cyan'  :'#1C8C8C', 'col_l_cyan'  :'#73BFBF', 'col_d_cyan'  :'#095959',
-#     'col_green' :'#1F9952', 'col_l_green' :'#7ACC9C', 'col_d_green' :'#0A6630',
-#     'col_grass' :'#7AA621', 'col_l_grass' :'#BCD982', 'col_d_grass' :'#50730B',
-#     'col_yellow':'#BFB226', 'col_l_yellow':'#F2E985', 'col_d_yellow':'#80760D',
-#     'col_gold'  :'#A67A21', 'col_l_gold'  :'#D9B46C', 'col_d_gold'  :'#73500B',
-#     # 'col_black' :'#000000', 'col_gr1'     :'#242429', 'col_gr2'     :'#44444D',
-#     'col_black' :'#000000', 'col_gr1'     :'#161619', 'col_gr2'     :'#43434D',
-#     'col_gr3'   :'#70707F', 'col_gr4'     :'#9D9DB2', 'col_gr5'     :'#C9C9E5',
-#     'col_white' :'#FFFFFF'
-# }
-# RELAXED_DARK_FUNC= { # functional colors:
-#     'gr_fg'  : 'col_gr5', 
-#     'gr_bg'  : 'col_gr1',
-#     'gr_txt' : 'col_gr5', 
-#     'gr_acc' : 'col_cyan',
-#     'gr_hlt' : 'col_white',
-#     'gr_reg' : ('col_cyan',100),
-#     # legacy colors:
-#     'b': 'col_l_blue'  , 'c': 'col_l_cyan', 'g': 'col_l_green', 
-#     'y': 'col_l_yellow', 'r': 'col_l_red' , 'm': 'col_l_violet',
-#     'k': 'col_black'   , 'w': 'col_white',
-#     'd': 'col_gr2'     , 'l': 'col_gr4'   , 's': 'col_l_sky'
-# }
-# RELAXED_DARK_PLOT = [ # plot / accent colors:
-#     'col_l_sky'   , 
-#     'col_l_indigo', 
-#     'col_l_purple', 
-#     'col_l_red'   ,
-#     'col_l_gold'  , 
-#     'col_l_grass' ,
-#     'col_l_cyan'  , 
-#     'col_l_blue'  ,
-#     'col_l_violet',
-#     'col_l_orange', 
-#     'col_l_yellow', 
-#     'col_l_green' 
-# ]
-
-# RELAXED_LIGHT_FUNC= { # functional colors:
-#     'gr_fg'  : 'col_gr1', 
-#     'gr_bg'  : 'col_gr5',
-#     'gr_txt' : 'col_black', 
-#     'gr_acc' : 'col_orange',
-#     'gr_reg' : ('col_blue',100),
-#     # legacy colors:
-#     'b': 'col_blue'  , 'c': 'col_cyan', 'g': 'col_green', 
-#     'y': 'col_yellow', 'r': 'col_red' , 'm': 'col_violet',
-#     'k': 'col_black'   , 'w': 'col_white',
-#     'd': 'col_gr2'     , 'l': 'col_gr4'   , 's': 'col_sky'
-# }
-# RELAXED_LIGHT_PLOT = [ # plot / accent colors:
-#     'col_sky'   , 
-#     'col_indigo', 
-#     'col_purple', 
-#     'col_red'   ,
-#     'col_gold'  , 
-#     'col_grass' ,
-#     'col_cyan'  , 
-#     'col_blue'  ,
-#     'col_violet',
-#     'col_orange', 
-#     'col_yellow', 
-#     'col_green' 
-# ]
-
-
 
 def identifier_to_QColor( identifier, color_dict=None ):
     """ 
@@ -231,14 +198,16 @@ class Palette(object):
     """
     def __init__(self, cmap=None, colors=None ):
         super().__init__()
-        self.palette  = { # populate dictionary of QColors with legacy defaults
-            'b': QtGui.QColor(  0,  0,255,255), 'g': QtGui.QColor(  0,255,  0,255), 
-            'r': QtGui.QColor(255,  0,  0,255), 'c': QtGui.QColor(  0,255,255,255),
-            'm': QtGui.QColor(255,  0,255,255), 'y': QtGui.QColor(255,255,  0,255),
-            'k': QtGui.QColor(  0,  0,  0,255), 'w': QtGui.QColor(255,255,255,255),
-            'd': QtGui.QColor(150,150,150,255), 'l': QtGui.QColor(200,200,200,255), 
-            's': QtGui.QColor(100,100,150,255)
-        }
+        self.palette = fn.COLOR_REGISTRY.defaultColors()
+        # self.palette  = { # populate dictionary of QColors with legacy defaults
+        #     'b': QtGui.QColor(  0,  0,255,255), 'g': QtGui.QColor(  0,255,  0,255), 
+        #     'r': QtGui.QColor(255,  0,  0,255), 'c': QtGui.QColor(  0,255,255,255),
+        #     'm': QtGui.QColor(255,  0,255,255), 'y': QtGui.QColor(255,255,  0,255),
+        #     'k': QtGui.QColor(  0,  0,  0,255), 'w': QtGui.QColor(255,255,255,255),
+        #     'd': QtGui.QColor(150,150,150,255), 'l': QtGui.QColor(200,200,200,255), 
+        #     's': QtGui.QColor(100,100,150,255)
+        # }
+        # self.addDefaultRamp()
         self.dark = None # is initially set when assigning system palette
         self.emulateSystem()
         self.cmap = None
@@ -261,6 +230,12 @@ class Palette(object):
             key = 'p'+str(idx)
             return self.palette.get(key,None)
         return None
+
+    def __setitem__(self, key, color):
+        """ Convenient shorthand access to palette colors """
+        if not isinstance(color, QtGui.QColor):
+            color = QtGui.QColor(color)
+            self.palette[key] = color 
         
     def colorMap(self):
         """
@@ -286,9 +261,12 @@ class Palette(object):
                        Color values > 1. and < 0. wrap around!
         =============  ===============================================================================
         """
-        valid = prefix[0]=='p' or ( len(prefix)>=3 and prefix[:3]=='col')
-        if not valid:
-            raise ValueError("'prefix' of plot color needs to start with 'p'.")
+        if not (
+            prefix[0]=='p' or
+            prefix[0]=='m' or
+            ( len(prefix)>=3 and prefix[:3]=='col')
+        ):
+            raise ValueError("'prefix' of plot color needs to start with 'p', 'm' or 'col'.")
         if cmap is None: 
             cmap = self.cmap
         if isinstance(cmap, str):
@@ -324,6 +302,13 @@ class Palette(object):
                 bg_tuple = col.getRgb()
                 self.dark = bool( sum( bg_tuple[:3] ) < 3 * 127 ) # dark mode?
             self.palette[key] = col
+            
+    def addDefaultRamp(self):
+        """
+        Adds a default ramp of grays m0 to m9,
+        linearized according to CIElab lightness value
+        """
+        
 
     def emulateSystem(self):
         """
@@ -346,8 +331,10 @@ class Palette(object):
             ('gr_bg' , None, QtGui.QPalette.Base),       # background color for e.g. text entry
             ('gr_fg' , None, QtGui.QPalette.WindowText), # overall foreground text color
             ('gr_txt', None, QtGui.QPalette.Text),       # foreground color used with Base
-            ('gr_reg',  100, QtGui.QPalette.AlternateBase), # alternating row background color
+            ('gr_reg',  128, QtGui.QPalette.AlternateBase), # alternating row background color
             ('gr_acc', None, QtGui.QPalette.Link),       # color of unvisited hyperlink
+            # ('gr_reg',  128, QtGui.QPalette.Highlight), # alternating row background color
+            # ('gr_acc', None, QtGui.QPalette.Highlight),       # color of unvisited hyperlink
             ('gr_hlt', None, QtGui.QPalette.Highlight),  # color to indicate a selected item
             ('ui_wind', None, QtGui.QPalette.Window),    # a general background color
             ('ui_text', None, QtGui.QPalette.WindowText) #  overall foreground text color
@@ -355,7 +342,7 @@ class Palette(object):
             qcol = qPalette.color(col_grp, col_role)
             if alpha is not None: qcol.setAlpha(alpha)
             colors[key] = qcol
-        self.add(colors)
+        self.add(colors)        
         colors = {
             'b': QtCore.Qt.blue  , 'c': QtCore.Qt.cyan, 'g': QtCore.Qt.green  , 
             'y': QtCore.Qt.yellow, 'r': QtCore.Qt.red , 'm': QtCore.Qt.magenta,
@@ -384,42 +371,42 @@ class Palette(object):
                         'green', 'amber', 'blue'
                         or a tuple of relative R,G,B contributions in range 0.0 to 1.0
         ==============  =================================================================
-    """    
+    """
+        print('preparing monochrome map for',str(color))
         cmap = colormap.makeMonochrome(color)
         if cmap is None: 
             raise ValueError("Failed to generate color for '"+str(color)+"'")
         self.sampleColorMap( cmap=cmap, start=1.0, step=-1/8 ) # assign bright to dark, don't go all the way to background.
         # define colors 'm0' (near-black) to 'm8' (near-white):
-        self.sampleColorMap( n_colors=9, cmap=cmap, step=1/8, prefix='col_m' ) 
+        self.sampleColorMap( n_colors=10, cmap=cmap, step=1/9, prefix='m' ) 
         colors =  {
-            'gr_bg' : 'col_m0', 'gr_fg' : 'col_m4',
-            'gr_txt': 'col_m5', 'gr_acc': 'col_m6',
-            'gr_hlt': 'col_m7', 'gr_reg': ('col_m1', 30),
-            'k': 'col_m0', 'd': 'col_m1', 's': 'col_m3', 'l': 'col_m6', 'w': 'col_m7'
-        }
-        self.add( colors )
+            'gr_bg' : 'm0', 'gr_fg' : 'm4',
+            'gr_txt': 'm6', 'gr_acc': 'm6',
+            'gr_hlt': 'm8', 'gr_reg': ('m1',192),
+            'k': 'm0', 'd': 'm1', 's': 'm3', 'l': 'm6', 'w': 'm9'
+        }        
+        self.add( colors )        
         # make a dictionary of plot colors (except darkest and lightest) to emulate primary colors:
-        avail  = { key: self.palette[key] for key in ('p0','p1','p2','p3','p4','p5','p6') }
         needed = { # int RGB colors that we are looking to emulate:
-            'b': (  0,  0,255), 'c': (  0,255,255), 'g': (  0,255,  0),
-            'y': (255,255,  0), 'r': (255,  0,  0), 'm': (255,  0,255)
+            'b': np.array((  0,  0,255)), 'c': np.array((  0,160,160)), 
+            'g': np.array((  0,255,  0)), 'y': np.array((160,160,  0)),
+            'r': np.array((255,  0,  0)), 'm': np.array((160,  0,160))
         }
+        
+        # project legacy colors onto monochrome reference to assigne them somewhat logically
+        ref_color = np.array( self.palette['m5'].getRgb()[:3] )
+        brightness = [
+            (np.sum( ref_color * needed[key] ), key) 
+            for key in needed
+        ]
+        brightness = sorted(brightness, key=lambda brightness: brightness[0])
+        # print( brightness )
+        avail = ('m3','m4','m5','m6','m7','m8')
         colors = {}
-        for nd_key in needed:
-            nd_tup = needed[nd_key] # int RGB tuple to be represented
-            best_dist = 1e10
-            best_key = None
-            for av_key in avail:
-                av_tup = avail[av_key].getRgb() # returns (R,G,B,A) tuple
-                sq_dist = (nd_tup[0]-av_tup[0])**2 + (nd_tup[1]-av_tup[1])**2 + (nd_tup[2]-av_tup[2])**2
-                if sq_dist < best_dist:
-                    best_dist = sq_dist
-                    best_key  = av_key
-            # print('assigning',nd_key,'as',best_key,':',avail[best_key].getRgb() )
-            colors[nd_key] = avail[best_key]
-            del avail[best_key] # remove from available list
+        for idx, (value, key) in enumerate(brightness):
+            colors[key] = avail[idx]
         self.add( colors )
-
+        
     def apply(self):
         """
         Applies this palette to the overall PyQtGraph color scheme.

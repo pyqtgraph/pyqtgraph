@@ -28,7 +28,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.palette_options = (
             ('system', 'system', []),
             ('legacy', 'legacy', []),
-            ('relaxed (dark)', 'relaxed_dark', []),
+            ('relaxed (dark)' , 'relaxed_dark',  []),
+            ('relaxed (light)', 'relaxed_light', []),
+            ('pastels (light)', 'pastels', []),
             ('mono green', 'monochrome', ['green']),
             ('mono amber', 'monochrome', ['amber']),
             ('mono blue' , 'monochrome', ['blue' ]),
@@ -81,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
         plt.addItem(curve)
         curve = pg.ScatterPlotItem(
             symbol='o', size=5, pen='p0', brush='p0', # ('p0',127),
-            hoverable=True, hoverPen='gr_hlt', hoverBrush='gr_fg')
+            hoverable=True, hoverPen='gr_acc', hoverBrush='gr_reg')
         self.curves.append( (1, 1, curve) ) # dataset 1, vertical offset 2
         plt.addItem(curve)
 
@@ -108,6 +110,18 @@ class MainWindow(QtWidgets.QMainWindow):
             plt.addItem(curve)
         item = pg.LinearRegionItem( values=(4, 8), orientation='vertical' )
         plt.addItem(item)
+        
+        col_list = [
+            ('k','black'),('b','blue'),('c','cyan'),('g','green'),('y','yellow'),
+            ('r','red'),('m','magenta'),('w','white')]
+        for idx in range(10):
+            name = 'm{:d}'.format(idx)
+            col_list.append( (name, '## '+name+' ##') )
+
+        for idx, (color,text) in enumerate( col_list ):
+            text_item = pg.TextItem(text, color=color, anchor=(1,0))
+            text_item.setPos( self.num_points, 7.7 - idx/3 ) 
+            plt.addItem(text_item)       
 
         self.show()
 
@@ -186,7 +200,25 @@ class MainWindow(QtWidgets.QMainWindow):
     def handle_color_update(self):
         """ figure out what color field was updated """
         source = self.sender()
-        print('color update requested by field',source)
+        key = self.ui['color_key_from_widget'][source]
+        requested = source.text()
+        if len(requested) < 1:
+            value = 0x808080
+        else:
+            if requested[0] == '#': 
+                requested = requested[1:]
+            try:
+                value = int(requested,16)
+            except ValueError:
+                value = 0x808080
+        color = '#{:06x}'.format(value)
+        print('color value is',color)
+        # source.setText(color)
+        self.open_palette[key] = color
+        self.update_color_fields(self.open_palette)
+        self.open_palette.apply()
+        
+        print('color update requested for',key)
 
     def handle_update_button(self, active):
         """ start/stop timer """
@@ -234,12 +266,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # BG_LIGHT   = QtGui.QColor('#505F69')
         # BG_NORMAL  = QtGui.QColor('#32414B')
         # BG_DARK    = QtGui.QColor('#19232D')
-        BG_LIGHT   = QtGui.QColor('#32414B')
-        BG_NORMAL  = QtGui.QColor('#212a31')
-        BG_DARK    = QtGui.QColor('#101518')
-        FG_LIGHT   = QtGui.QColor('#F0F0F0')
-        FG_NORMAL  = QtGui.QColor('#AAAAAA')
-        FG_DARK    = QtGui.QColor('#787878')
+        BG_LIGHT   = QtGui.QColor('#505354') # #32414B
+        BG_NORMAL  = QtGui.QColor('#2e3132') # #212a31
+        BG_DARK    = QtGui.QColor('#0e1112') # #10151
+        FG_LIGHT   = QtGui.QColor('#f0f4f5') # #F0F0F0
+        FG_NORMAL  = QtGui.QColor('#d4d8d9') # #AAAAAA
+        FG_DARK    = QtGui.QColor('#b8bcbd') # #787878
         SEL_LIGHT  = QtGui.QColor('#148CD2')
         SEL_NORMAL = QtGui.QColor('#1464A0')
         SEL_DARK   = QtGui.QColor('#14506E')
@@ -252,7 +284,7 @@ class MainWindow(QtWidgets.QMainWindow):
             qpal.setColor( ptype, QtGui.QPalette.AlternateBase, BG_DARK )
             qpal.setColor( ptype, QtGui.QPalette.ToolTipBase, BG_LIGHT )
             qpal.setColor( ptype, QtGui.QPalette.ToolTipText, FG_LIGHT )
-            qpal.setColor( ptype, QtGui.QPalette.Button, BG_DARK )
+            qpal.setColor( ptype, QtGui.QPalette.Button, BG_NORMAL )
             qpal.setColor( ptype, QtGui.QPalette.ButtonText, FG_LIGHT )
             qpal.setColor( ptype, QtGui.QPalette.Link, SEL_NORMAL )
             qpal.setColor( ptype, QtGui.QPalette.LinkVisited, FG_NORMAL )
@@ -362,6 +394,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lab  = QtWidgets.QLabel(text)
             lab.setAlignment(QtCore.Qt.AlignCenter)
             edt = QtWidgets.QLineEdit()
+            edt.editingFinished.connect(self.handle_color_update)
             row = row_idx + pos[0]
             col = 2 * pos[1]  # 0 or 2
             l_layout.addWidget( lab, row,col+0, 1,1 )

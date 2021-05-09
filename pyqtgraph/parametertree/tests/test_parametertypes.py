@@ -4,7 +4,7 @@ import pytest
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.parametertree as pt
 import pyqtgraph as pg
-from pyqtgraph.python2_3 import asUnicode
+# from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.functions import eq
 import numpy as np
 
@@ -45,8 +45,9 @@ def test_types():
 
     all_objs = {
         'int0': 0, 'int':7, 'float': -0.35, 'bigfloat': 1e129, 'npfloat': np.float64(5), 
-        'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True, 
-        'complex': 5+3j, 'str': '#xxx', 'unicode': asUnicode('µ'), 
+        'npint': np.int64(5),'npinf': np.inf, 'npnan': np.nan, 'bool': True,
+        # 'complex': 5+3j, 'str': '#xxx', 'unicode': asUnicode('µ'),
+        'complex': 5+3j, 'str': '#xxx', 'unicode': 'µ',
         'list': [1,2,3], 'dict': {'1': 2}, 'color': pg.mkColor('k'), 
         'brush': pg.mkBrush('k'), 'pen': pg.mkPen('k'), 'none': None
     }
@@ -59,20 +60,22 @@ def test_types():
 
     # int
     types = ['int0', 'int', 'float', 'bigfloat', 'npfloat', 'npint', 'bool']
-    inttyps = int if sys.version[0] >= '3' else (int, long) 
-    check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    # inttyps = int if sys.version[0] >= '3' else (int, long) 
+    # check_param_types(param.child('int'), inttyps, int, 0, all_objs, types)
+    check_param_types(param.child('int'), int, int, 0, all_objs, types)
     
     # str  (should be able to make a string out of any type)
     types = all_objs.keys()
-    strtyp = str if sys.version[0] >= '3' else unicode
-    check_param_types(param.child('str'), strtyp, asUnicode, '', all_objs, types)
+    # strtyp = str if sys.version[0] >= '3' else unicode
+    # check_param_types(param.child('str'), strtyp, asUnicode, '', all_objs, types)
+    check_param_types(param.child('str'), str, str, '', all_objs, types)
     
     # bool  (should be able to make a boolean out of any type?)
     types = all_objs.keys()
     check_param_types(param.child('bool'), bool, bool, False, all_objs, types)
 
     # color
-    types = ['color', 'int0', 'int', 'float', 'npfloat', 'npint', 'list']
+    types = ['color', 'int0', 'int', 'float', 'npfloat', 'bigfloat', 'npint', 'list', 'str']
     init = QtGui.QColor(128, 128, 128, 255)
     check_param_types(param.child('color'), QtGui.QColor, pg.mkColor, init, all_objs, types)
 
@@ -124,6 +127,9 @@ def check_param_types(param, types, map_func, init, objs, keys):
         except Exception as exc:
             raise Exception("Setting %s parameter value to %r raised %r." % (param, v, exc))
         
+        print('failing test for',k,'with value',v,':', param)
+        print('keys:', keys)
+        print('k in keys:', (k in keys) )
         raise Exception("Setting %s parameter value to %r should have raised an exception." % (param, v))
         
         

@@ -116,11 +116,11 @@ class LinearRegionItem(GraphicsObject):
             
         if brush is None:
             # brush = QtGui.QBrush(QtGui.QColor(0, 0, 255, 50))
-            brush = ('gr_reg')
+            brush = ('gr_reg',128)
         self.setBrush(brush)
         
         if hoverBrush is None:
-            hoverBrush = ('gr_reg', 200)
+            hoverBrush = ('gr_reg')
             # c = self.brush.color()
             # c.setAlpha(min(c.alpha() * 2, 255))
             # hoverBrush = fn.mkBrush(c)
