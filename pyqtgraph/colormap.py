@@ -169,11 +169,7 @@ def getFromMatplotlib(name):
             col_data[:,-1] = np.linspace(0., 1., 64)
             for idx, key in enumerate(['red','green','blue']):
                 col_data[:,idx] = np.clip( data[key](col_data[:,-1]), 0, 1)
-<<<<<<< HEAD
-            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)  
-=======
-            cm = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
->>>>>>> upstream/master
+            cmap = ColorMap(pos=col_data[:,-1], color=255*col_data[:,:3]+0.5)
     elif hasattr(col_map, 'colors'): # handle ListedColormap
         col_data = np.array(col_map.colors)
         cmap = ColorMap( name=name,
