@@ -14,8 +14,6 @@ from .. import getConfigOption
 
 __all__ = ['GraphicsView']
 
-DEBUG = False
-
 
 class GraphicsView(QtGui.QGraphicsView):
     """Re-implementation of QGraphicsView that removes scrollbars and allows unambiguous control of the 
@@ -143,13 +141,8 @@ class GraphicsView(QtGui.QGraphicsView):
             # background = getConfigOption('background')
             background = 'gr_bg' # default graphics background color
         self._background = background # maintained for compatibility
-        if DEBUG: print('  GraphicsView: Generating BG brush for', self._background)
         self._bgBrush = fn.mkBrush(self._background)
-        if DEBUG: print('  GraphicsView: Background color: ',self._bgBrush.color().name(), self._bgBrush.color().alpha())
         self.setBackgroundBrush( self._bgBrush )
-        # testBrush = QtGui.QBrush( QtGui.QColor('#000000') )
-        # print('  test brush style:',testBrush.style() )
-        # self.setBackgroundBrush( testBrush )
     
     def paintEvent(self, ev):
         self.scene().prepareForPaint()
@@ -158,8 +151,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def render(self, *args, **kwds):
         self.scene().prepareForPaint()
         return super().render(*args, **kwds)
-        
-    
+
     def close(self):
         self.centralWidget = None
         self.scene().clear()
@@ -184,8 +176,7 @@ class GraphicsView(QtGui.QGraphicsView):
     def keyPressEvent(self, ev):
         self.scene().keyPressEvent(ev)  ## bypass view, hand event directly to scene
                                         ## (view likes to eat arrow key events)
-        
-        
+
     def setCentralItem(self, item):
         return self.setCentralWidget(item)
         
@@ -306,9 +297,8 @@ class GraphicsView(QtGui.QGraphicsView):
         range = QtCore.QRectF(tl.x(), tl.y(), w, h)
         GraphicsView.setRange(self, range, padding=0)
         self.sigScaleChanged.connect(image.setScaledMode)
-        
-        
-        
+
+
     def lockXRange(self, v1):
         if not v1 in self.lockedViewports:
             self.lockedViewports.append(v1)
@@ -415,4 +405,3 @@ class GraphicsView(QtGui.QGraphicsView):
         """ called to trigger redraw after all named colors have been updated """
         self.setBackgroundBrush( self._bgBrush )
         # self.update()
-        if DEBUG: print('  Background update and redraw after style change:', self)

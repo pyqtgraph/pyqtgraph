@@ -3,7 +3,7 @@ from .GraphicsItem import GraphicsItem
 from .. import functions as fn
 
 __all__ = ['GraphicsWidget']
-DEBUG = False
+DEBUG_REDRAW = False
 
 class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     
@@ -63,4 +63,4 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         """ called to trigger redraw after all named colors have been updated """
         # self._boundingRect = None
         self.update()
-        if DEBUG: print('  GraphicsWidget: redraw after style change:', self)
+        if DEBUG_REDRAW: print('  GraphicsWidget: redraw after style change:', self)

@@ -2,7 +2,6 @@ from . import Qt
 from .Qt import QtCore, QtGui, QtWidgets
 
 import numpy as np
-import math
 
 from . import functions as fn # namedColorManager
 from . import colormap

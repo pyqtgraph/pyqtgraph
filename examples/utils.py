@@ -23,8 +23,8 @@ examples = OrderedDict([
     ('Remote Plotting', 'RemoteSpeedTest.py'),
     ('Scrolling plots', 'scrollingPlots.py'),
     ('Color Maps', 'colorMaps.py'),
-    ('Palette tester','PaletteTestAndEdit.py'),
-    ('Palette adjustment','PaletteApplicationExample.py'),
+    ('Palette demonstration','PaletteDemonstration.py'),
+    ('Palette editor','PaletteEditor.py'),
     ('HDF5 big data', 'hdf5.py'),
     ('Demos', OrderedDict([
         ('Optics', 'optics_demos.py'),

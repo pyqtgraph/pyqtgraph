@@ -21,8 +21,6 @@ from ..python2_3 import basestring
 
 
 __all__ = ['ScatterPlotItem', 'SpotItem']
-DEBUG = False
-
 
 # When pxMode=True for ScatterPlotItem, QPainter.drawPixmap is used for drawing, which
 # has multiple type signatures. One takes int coordinates of source and target
@@ -267,7 +265,7 @@ class SymbolAtlas(object):
         images = []
         data = []
         for key, style in styles.items():
-            if DEBUG: print('\nrender:', style[2].color().name(), style[3].color().name(), style)
+            # print('\nrender:', style[2].color().name(), style[3].color().name(), style)
             img = renderSymbol(*style)
             arr = fn.imageToArray(img, copy=False, transpose=False)
             images.append(img)  # keep these to delay garbage collection
@@ -1273,11 +1271,6 @@ class ScatterPlotItem(GraphicsObject):
                    
     def styleHasChanged(self):
         """ overridden to trigger symbol atlas refresh """
-        if DEBUG:
-            print('  ScatterPlotItem: style update!')
-            print('  pens:',self.data['pen'] )
-            print('  default pen  :', self.opts[ 'pen' ].color().name(), self.opts[ 'pen' ] )
-            print('  default brush:', self.opts['brush'].color().name(), self.opts['brush'] )
         self.fragmentAtlas.clear()
         self.data['sourceRect'] = (0, 0, 0, 0)
         self.updateSpots(self.data)

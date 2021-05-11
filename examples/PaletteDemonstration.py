@@ -18,10 +18,11 @@ class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        pg.setConfigOption('imageAxisOrder', 'row-major')
 
         main_wid = QtWidgets.QWidget()
         self.setCentralWidget(main_wid)
-        self.setWindowTitle('pyqtgraph example: Palette application test')
+        self.setWindowTitle('pyqtgraph example: Palette demonstration')
         self.resize(600,600)
         
         # test_palette = pg.palette.get('system')
@@ -45,7 +46,6 @@ class MainWindow(QtWidgets.QMainWindow):
             ('legacy fg/bg 2', 1,4, self.handle_button_leg2 ),
             ('apply <mono green>', 2,2, self.handle_button_mono1 ),
             ('apply <mono amber>', 3,2, self.handle_button_mono2 ),
-            # ('apply <mono blue>' , 2,4, self.handle_button_mono3 ),
             ('apply <relaxed-dark>' , 2,3, self.handle_button_pal2 ),
             ('apply <relaxed-light>', 2,4, self.handle_button_pal3 ),
             ('apply <pastels>'      , 3,3, self.handle_button_pal4 ),
@@ -66,14 +66,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data1 = +3 + np.random.normal(size=(15)) #500))
         self.data2 = -3 + np.random.normal(size=(15)) #500))
 
-        # self.curve1 = pg.PlotDataItem(
-        #     pen='r', 
-        #     symbol='o', symbolSize=10, symbolPen='gr_fg', symbolBrush=('y',127), 
-        #     hoverable=True, hoverPen='w', hoverBrush='w')
         self.curve1 = pg.ScatterPlotItem(
             symbol='o', symbolSize=12, symbolPen='p1', symbolBrush=('p2',127), 
             hoverable=True, hoverPen='gr_acc', hoverBrush='gr_reg')
-        # self.curve1.setHoverable(True)
         self.plt.addItem(self.curve1)
         
         self.curve2 = pg.PlotCurveItem(pen='p3', brush=('p3',128))
@@ -99,7 +94,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def testSignal(self, val):
         """ demonstrate use of PaletteChanged signal """
         print('"Palette changed" signal was received with value', val)
-        
 
     def handle_button_timer_on(self):
         """ (re-)activate timer """
@@ -169,9 +163,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plt.setTitle('%0.2f fps' % self.fps)
         QtWidgets.QApplication.processEvents()  ## force complete redraw for every plot
 
-mkQApp("Palette test application")
+mkQApp("Palette test and design application")
 main_window = MainWindow()
 
 ## Start Qt event loop
 if __name__ == '__main__':
-    QtWidgets.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 from pyqtgraph import functions as fn
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtGui
 
 import pytest
 

@@ -984,7 +984,7 @@ class AxisItem(GraphicsWidget):
                 raise TypeError("Line Alpha should be of type None, float or int")
             
             # tickColor.setAlpha(int(lineAlpha)) # independent copy of color
-            tickPen = QtGui.QPen ( self.pen() )
+            tickPen = QtGui.QPen( self.pen() )
             tickColor = tickPen.color()
             tickColor.setAlpha( int(lineAlpha) )
             tickPen.setColor( tickColor )

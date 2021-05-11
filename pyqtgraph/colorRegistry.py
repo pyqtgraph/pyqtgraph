@@ -7,7 +7,6 @@ import collections
 import warnings
 
 __all__ = ['ColorRegistry']
-DEBUG = False
 
 DEFAULT_COLORS = {
     'b': QtGui.QColor(  0,  0,255,255),
@@ -17,8 +16,6 @@ DEFAULT_COLORS = {
     'm': QtGui.QColor(255,  0,255,255),
     'y': QtGui.QColor(255,255,  0,255),
     'k': QtGui.QColor(  0,  0,  0,255),
-    # 'd': QtGui.QColor(150,150,150,255),
-    # 'l': QtGui.QColor(200,200,200,255),
     'w': QtGui.QColor(255,255,255,255),
     's': QtGui.QColor(100,100,150,255),
     'gr_acc':QtGui.QColor(200,200,100,255), # graphical accent color: pastel yellow
@@ -53,11 +50,10 @@ for key, col in [ # add functional colors
 
 del key, col # let the linter know that we are done with these
 
-
 def _expand_rgba_hex_string(hex):
     """ normalize hex string formats and extract alpha when present """
     length = len(hex)
-    if length < 4: return None, None
+    if length < 4   : return None, None
     if hex[0] != '#': return None, None
     if length == 4:
         alpha = 255
@@ -83,7 +79,6 @@ class ColorRegistry(QtCore.QObject):
     Instantiated by 'functions.py' and retrievable as functions.COLOR_REGISTRY
     """
     paletteHasChangedSignal = QtCore.Signal() # equated to pyqtSignal in qt.py for PyQt
-    
     _registrationGenerator = itertools.count()
 
     def __init__(self, color_dic):
@@ -106,12 +101,11 @@ class ColorRegistry(QtCore.QObject):
         name = alpha = None
         if color is None or isinstance( color, str):
             name = color
-        # elif hasattr( color, '__len__'):
         elif isinstance( color, (collections.abc.Sequence, np.ndarray) ): # list-like, not a dictionary
             length = len(color)
             if length == 0: 
                 return False
-            if length >= 1: 
+            if length >= 1:
                 name  = color[0]
                 # if color id is list-like, the first element needs to be str or None
                 if not ( color is None or isinstance(name,str) ): return False
@@ -121,7 +115,6 @@ class ColorRegistry(QtCore.QObject):
         if name is not None:
             # if not isinstance(name,str): return False # pen id has to be str or a list-like starting with str
             if len(name) < 1: name = None # map '' to None
-            # elif name[0] == '#': return False # strings that start with # are explicit rgb codes
         if alpha is not None: alpha = int(alpha)
         return (name, alpha)
 
@@ -133,7 +126,6 @@ class ColorRegistry(QtCore.QObject):
         name = width = alpha = None
         if pen is None or isinstance( pen, str):
             name = pen
-        # elif hasattr( pen, '__len__'):
         elif isinstance( pen, (collections.abc.Sequence, np.ndarray) ):  # list-like, not a dictionary
             length = len(pen)
             if length == 0:
@@ -149,7 +141,6 @@ class ColorRegistry(QtCore.QObject):
         if name  is not None:
             if type(name) != str: return False # pen id has to be str or a list-like starting with str
             if len(name) < 1 : name = None # map '' to None
-            # elif name[0] == '#'   : return False # strings that start with # are explicit rgb codes
         if width is not None: width = int(width)
         if alpha is not None: alpha = int(alpha)
         return (name, width, alpha)
@@ -171,7 +162,8 @@ class ColorRegistry(QtCore.QObject):
             name, alpha_from_hex = _expand_rgba_hex_string( name )
             if name is None: return None
             if alpha is None and alpha_from_hex is not None:
-                alpha = alpha_from_hex
+                # alpha = alpha_from_hex
+                desc = (name, alpha_from_hex) # handle extended 4 bytes rgba hex strings
             # print('preparing hex color:',name)
             skipCache = True
             register  = False
@@ -204,7 +196,8 @@ class ColorRegistry(QtCore.QObject):
             name, alpha_from_hex = _expand_rgba_hex_string( name )
             if name is None: return None
             if alpha is None and alpha_from_hex is not None:
-                alpha = alpha_from_hex
+                # alpha = alpha_from_hex
+                desc = (name, width, alpha_from_hex) # handle extended 4 bytes rgba hex strings
             # print('preparing hex pen:',name)
             skipCache = True
             register  = False
@@ -232,19 +225,20 @@ class ColorRegistry(QtCore.QObject):
         if desc is False: return None # not a valid brush id
         name, alpha = desc
         if name is None:
-            # print('returning blank brush!')
             return QtGui.QBrush( QtCore.Qt.NoBrush ) 
         if name[0] == '#': # skip cache and registry for fixed hex colors
-            # print('preparing hex brush:',name)
+            name, alpha_from_hex = _expand_rgba_hex_string( name )
+            if name is None: return None
+            if alpha is None and alpha_from_hex is not None:
+                # alpha = alpha_from_hex
+                desc = (name, alpha_from_hex) # handle extended 4 bytes rgba hex strings
             skipCache = True
             register  = False
         elif name not in self.color_dic:
             warnings.warn('Unknown color identifier '+str(name)+' enocuntered in brush descriptor.')
             return None # unknown color identifier
         if not skipCache and desc in self.brush_cache:
-            # print('using cached brush', desc)
             return self.brush_cache[desc]
-        # print('making brush!')
         qbrush = QtGui.QBrush(QtCore.Qt.SolidPattern) # make sure this brush fills once color is set
         self._update_QBrush(qbrush,desc)
         if register: self.register( qbrush, desc ) # register for updates on palette change
@@ -298,7 +292,6 @@ class ColorRegistry(QtCore.QObject):
             if alpha is not None: qcol.setAlpha(alpha)
             qbrush.setColor(qcol)
         # print('= hex:', qbrush.color().name(), qbrush.color().alpha() )
-        
 
     def register(self, obj, desc):
         """
@@ -323,7 +316,6 @@ class ColorRegistry(QtCore.QObject):
         del self.registered_objects[registration]
         del obj, desc
 
-
     def colors(self):
         """ return current list of colors """
         return self.color_dic # it would be safer (but slower) to provide only a copy
@@ -331,7 +323,6 @@ class ColorRegistry(QtCore.QObject):
     def defaultColors(self):
         """ return a copy of the default color dictionary """
         return DEFAULT_COLORS.copy()
-    
 
     def redefinePalette(self, colors=None):
         """ 
@@ -342,13 +333,13 @@ class ColorRegistry(QtCore.QObject):
             for key in DEFAULT_COLORS:
                 if key not in colors:
                     raise ValueError("Palette definition is missing '"+str(key)+"'")
-            if DEBUG: print('  ColorRegistry: Setting palette, all color definitions are present.')
             self.color_dic.clear()
             self.color_dic.update(colors)
 
         # notifies named color objects of new assignments:
-        for key in self.registered_objects:
-            ref, desc = self.registered_objects[key]
+        # for key in self.registered_objects:
+        for ref, desc in self.registered_objects.values():
+            # ref, desc = self.registered_objects[key]
             obj = ref()
             # print('updating', obj)
             if obj is None:

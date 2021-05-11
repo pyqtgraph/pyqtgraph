@@ -5,7 +5,7 @@ from .GraphicsItem import GraphicsItem
 from .. import functions as fn
 
 __all__ = ['GraphicsObject']
-DEBUG = False
+DEBUG_REDRAW = False
     
 class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
     """
@@ -19,7 +19,6 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         QtGui.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
-        # fn.NAMED_COLOR_MANAGER.paletteChangeSignal.connect(self.styleChange)
         fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
         
     def itemChange(self, change, value):
@@ -43,15 +42,9 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
 
         return ret
 
-
-    # @QT_CORE_SLOT(dict)
-    # def styleChange(self, color_dict):
-    #     """ stub function called after Palette.apply(), specific reactions to palette redefinitions execute here """
-    #     print('style change request:', self, type(color_dict))
-        
     @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
     def styleHasChanged(self):
         """ called to trigger redraw after all named colors have been updated """
         # self._boundingRect = None
         self.update()
-        if DEBUG: print('  GraphicsObject: redraw after style change:', self)
+        if DEBUG_REDRAW: print('  GraphicsObject: redraw after style change:', self)

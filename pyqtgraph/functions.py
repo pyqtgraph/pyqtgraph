@@ -222,44 +222,10 @@ class Color(QtGui.QColor):
 def colorRegistry():
     """ Returns the ColorRegistry object managing registered colors """
     return COLOR_REGISTRY
-    
-# def parseNamedColorSpecification(*args):
-#     """ 
-#     check if args specify a NamedColor, looking for
-#     'name' or ('name', alpha) information.
-#     Returns:
-#     ('name', alpha) if a valid name and alpha value is given
-#     ('name', None)  if no alpha value is available
-#     ('', None)      if an empty name is given, indicating a blank color
-#     None            if the specification does not match a NamedColor
-#     """
-#     while len(args) <= 1:
-#         if len(args) == 0:
-#             return None
-#         if len(args) == 1:
-#             arg = args[0]
-#             if isinstance(arg, str):
-#                 if len(arg) == 0:
-#                     return ('', None) # valid, but blank
-#                 if arg[0] == '#':
-#                     return None # hexadecimal string not handled as NamedColor
-#                 if arg in Colors:
-#                     return (arg, None) # valid name, no alpha given
-#             if isinstance(arg, (tuple, list)):
-#                 args = arg # promote to top level
-#             else:
-#                 return None #numerical values not handled as NamedColor
-#     if len(args) == 2:
-#         if isinstance(arg[0], str):
-#             alpha = arg[1]
-#             if isinstance(alpha, float):
-#                 alpha = int(alpha*255) # convert to 0-255 integer
-#             return (arg[0], arg[1]) # return ('name', alpha) tuple
-#     return None # all other cases not handled as NamedColor
 
 def mkColor(*args):
     """
-    Convenience function for constructing QColor from a variety of argument 
+    Convenience function for constructing QColor from a variety of argument
     types. Accepted arguments are:
     
     ================ ===========================================================
@@ -423,7 +389,7 @@ def mkBrush(*args, **kargs):
 
 def mkPen(*args, **kargs):
     """
-    Convenience function for constructing QPen. 
+    Convenience function for constructing QPen.
     
     Examples::
         mkPen(QPen)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Update a simple plot as rapidly as possible to measure speed.
+Adjust color palettes and apply them to a running plot
 """
 
 ## Add path to library (just for examples; you do not need this)
@@ -13,19 +13,18 @@ from pyqtgraph.Qt import mkQApp, QtCore, QtGui, QtWidgets
 from pyqtgraph.ptime import time
 import pyqtgraph as pg
 
-
 class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        pg.setConfigOption('imageAxisOrder', 'row-major')
         
-        force_dark = True # start in dark mode on Windows
-
-        self.setWindowTitle('pyqtgraph example: Palette application test')
+        force_dark = False # start in forced dark mode?
+        self.setWindowTitle('pyqtgraph example: Palette editor')
         self.resize(600,600)
 
         self.palette_options = (
-            ('system', 'system', []),
+            ('system (reapply to update)', 'system', []),
             ('legacy', 'legacy', []),
             ('relaxed (dark)' , 'relaxed_dark',  []),
             ('relaxed (light)', 'relaxed_light', []),
@@ -38,8 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.colormap_options = (
             'CET-C1', 'CET-C2','CET-C6','CET-C7', 'CET-R2', 'CET-R4',
-            'CET-L8', 'CET-L16', 'none'
-            # , 'none', 'CET-C1', 'CET-C2', 'CET-C3', 'CET-C4', 'CET-C5', 'CET-C6', 'CET-C7', 'CET-CBC1', 'CET-CBC2'
+            'CET-L8', 'CET-L16', 'CET-CBC1', 'CET-CBC2', 'none'
         )
 
         app = QtWidgets.QApplication.instance()
@@ -50,10 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         app.setStyle("Fusion")
         
         self.ui = self.prepare_ui() # relocate long-winded window layout
-        # dictionary self.ui contains references to:
-        # 'sample_start' QLineEdit for start of colormap sampling
-        # 'sample_step'  QLineEdit for step of colormap sampling
-        # 'dark'         QPushButton for toggling dark / standard GUI
+        # dictionary self.ui contains references to UI elements
 
         if force_dark:
             self.ui['dark'].setChecked(True)
@@ -63,8 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.open_palette.apply()
         self.update_color_fields( self.open_palette )
 
-        self.num_points = 30
-        
+        self.num_points = 30        
         # configure overview plot with four colors:
         plt = self.ui['plot1']
         plt.enableAutoRange(False)
@@ -81,8 +75,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.curves.append( (1, 1, curve) ) # dataset 1, vertical offset 3        
         plt.addItem(curve)
         curve = pg.ScatterPlotItem(
-            symbol='o', size=5, pen='p0', brush='p0', # ('p0',127),
-            hoverable=True, hoverPen='gr_acc', hoverBrush='gr_reg')
+            symbol='o', size=5, pen='p0', brush=('p0',127),
+            hoverable=True, hoverPen='gr_acc', hoverBrush='p0')
         self.curves.append( (1, 1, curve) ) # dataset 1, vertical offset 2
         plt.addItem(curve)
 
@@ -110,6 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
         item = pg.LinearRegionItem( values=(4, 8), orientation='vertical' )
         plt.addItem(item)
         
+        # show off some color text:
         col_list = [
             ('k','black'),('b','blue'),('c','cyan'),('g','green'),('y','yellow'),
             ('r','red'),('m','magenta'),('w','white')]
@@ -135,7 +130,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data[0,:] = np.arange( self.data.shape[1] ) # used as x data
         self.phases = np.zeros(9)
         self.timed_update()
-
 
     ### handle GUI interaction ###############################################
     def update_color_fields(self, pal):
@@ -240,7 +234,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.phases += self.speed * np.random.normal(1, 1, size=9)
         for idx in range(1, self.data.shape[0]):
             self.data[idx, :-1] = self.data[idx, 1:] # roll
-            # self.data[idx, -1] = np.random.normal()
         self.data[1:, -1] = 0.5 * np.sin( self.phases[1:] )
         xdata = self.data[0,:]
         for idx, offset, curve in self.curves:
@@ -254,23 +247,20 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             s = np.clip(dt*3., 0, 1)
             self.fps = self.fps * (1-s) + (1.0/dt) * s
-        self.ui['plot2'].setTitle('%0.2f fps' % self.fps)
+        self.ui['plot2'].setTitle('%0.1f fps' % self.fps)
         QtWidgets.QApplication.processEvents()  ## force complete redraw for every plot
         
 
     ### Qt color definitions for dark palette on Windows #####################
     def make_dark_QPalette(self):
-        # color definitions match QDarkstyle
+        """ manually define a dark mode palette """
         BLACK      = QtGui.QColor('#000000')
-        # BG_LIGHT   = QtGui.QColor('#505F69')
-        # BG_NORMAL  = QtGui.QColor('#32414B')
-        # BG_DARK    = QtGui.QColor('#19232D')
-        BG_LIGHT   = QtGui.QColor('#505354') # #32414B
-        BG_NORMAL  = QtGui.QColor('#2e3132') # #212a31
-        BG_DARK    = QtGui.QColor('#0e1112') # #10151
-        FG_LIGHT   = QtGui.QColor('#f0f4f5') # #F0F0F0
-        FG_NORMAL  = QtGui.QColor('#d4d8d9') # #AAAAAA
-        FG_DARK    = QtGui.QColor('#b8bcbd') # #787878
+        BG_LIGHT   = QtGui.QColor('#505354')
+        BG_NORMAL  = QtGui.QColor('#2e3132')
+        BG_DARK    = QtGui.QColor('#0e1112')
+        FG_LIGHT   = QtGui.QColor('#f0f4f5')
+        FG_NORMAL  = QtGui.QColor('#d4d8d9')
+        FG_DARK    = QtGui.QColor('#b8bcbd')
         SEL_LIGHT  = QtGui.QColor('#148CD2')
         SEL_NORMAL = QtGui.QColor('#1464A0')
         SEL_DARK   = QtGui.QColor('#14506E')
@@ -331,14 +321,14 @@ class MainWindow(QtWidgets.QMainWindow):
         l_layout.setSpacing(1)
         row_idx = 0
 
-        label = QtWidgets.QLabel('System style:')
+        label = QtWidgets.QLabel('Override system style:')
         l_layout.addWidget( label, row_idx,0, 1,2 )
 
         label = QtWidgets.QLabel('Select a palette:')
         l_layout.addWidget( label, row_idx,2, 1,2 )
         row_idx += 1
 
-        btn = QtWidgets.QPushButton('dark GUI')
+        btn = QtWidgets.QPushButton('Apply dark GUI')
         btn.setCheckable(True)
         btn.setChecked(False)
         btn.clicked.connect(self.handle_dark_button)
@@ -423,11 +413,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return ui
 
-
-
-mkQApp("Palette test application")
+mkQApp("Palette editor")
 main_window = MainWindow()
 
 ## Start Qt event loop
 if __name__ == '__main__':
-    QtWidgets.QApplication.instance().exec_()
+    pg.mkQApp().exec_()

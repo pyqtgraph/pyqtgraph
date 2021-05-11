@@ -529,7 +529,7 @@ class PlotCurveItem(GraphicsObject):
                 p.setPen(sp)
                 p.drawPath(path)
 
-        if isinstance(self.opts.get('pen'), QtGui.QPen): # subclass NamedPen also triggers this
+        if isinstance(self.opts.get('pen'), QtGui.QPen):
             cp = self.opts['pen']
         else:
             cp = fn.mkPen(self.opts['pen'])
