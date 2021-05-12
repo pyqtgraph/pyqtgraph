@@ -426,6 +426,7 @@ class ImageItem(GraphicsObject):
             image = image.swapaxes(0, 1)
 
         levels = self.levels
+        augmented_alpha = False
 
         if image.dtype.kind == 'f':
             image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
