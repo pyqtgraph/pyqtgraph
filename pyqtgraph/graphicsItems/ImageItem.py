@@ -599,6 +599,22 @@ class ImageItem(GraphicsObject):
         xp = self._xp
         augmented_alpha = False
 
+        # if lut is 1d, then lut[image] is fastest
+        # if lut is 2d, then lut.take(image, axis=0) is faster than lut[image]
+
+        if not image.flags.c_contiguous:
+            image = lut.take(image, axis=0)
+
+            # if lut had dimensions (N, 1), then our resultant image would
+            # have dimensions (h, w, 1)
+            if image.ndim == 3 and image.shape[-1] == 1:
+                image = image[..., 0]
+
+            return image, augmented_alpha
+
+        # if we are contiguous, we can take a faster codepath where we
+        # ensure that the lut is 1d
+
         if lut.ndim == 2:
             if lut.shape[1] == 3:   # rgb
                 # convert rgb lut to rgba so that it is 32-bits
@@ -606,10 +622,6 @@ class ImageItem(GraphicsObject):
                 augmented_alpha = True
             if lut.shape[1] == 4:   # rgba
                 lut = lut.view(xp.uint32)
-
-        # we are adding a 3rd dimension to a mono image
-        # with the assumption that the 1st two axes are in C-order
-        image = xp.ascontiguousarray(image)
 
         image = lut.ravel()[image]
         lut = None
