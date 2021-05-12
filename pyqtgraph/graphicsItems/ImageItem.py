@@ -540,6 +540,11 @@ class ImageItem(GraphicsObject):
                     augmented_alpha = True
                 if lut.shape[1] == 4:   # rgba
                     lut = lut.view(xp.uint32)
+
+            # we are adding a 3rd dimension to a mono image
+            # with the assumption that the 1st two axes are in C-order
+            image = xp.ascontiguousarray(image)
+
             image = lut.ravel()[image]
             lut = None
             # now both levels and lut are None
