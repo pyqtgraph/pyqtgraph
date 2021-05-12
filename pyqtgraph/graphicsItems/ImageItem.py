@@ -425,20 +425,27 @@ class ImageItem(GraphicsObject):
         if self.axisOrder == 'col-major':
             image = image.swapaxes(0, 1)
 
+        levels = self.levels
+
+        if image.dtype.kind == 'f':
+            image, levels, lut, augmented_alpha = self._try_rescale_float(image, levels, lut)
+            # if we succeeded, we will have an uint8 image with levels None.
+            # lut if not None will have <= 256 entries
+
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
-        levels = self.levels
-        if image.dtype in (self._xp.ubyte, self._xp.uint16):
+        elif image.dtype in (self._xp.ubyte, self._xp.uint16):
             image, levels, lut, augmented_alpha = self._try_combine_lut(image, levels, lut)
-            qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
 
-            if qimage is not None:
-                self._processingBuffer = None
-                self._displayBuffer = None
-                self.qimage = qimage
-                self._renderRequired = False
-                self._unrenderable = False
-                return
+        qimage = self._try_make_qimage(image, levels, lut, augmented_alpha)
+
+        if qimage is not None:
+            self._processingBuffer = None
+            self._displayBuffer = None
+            self.qimage = qimage
+            self._renderRequired = False
+            self._unrenderable = False
+            return
 
         if self._processingBuffer is None or self._processingBuffer.shape[:2] != image.shape[:2]:
             self._buildQImageBuffer(image.shape)
@@ -449,6 +456,56 @@ class ImageItem(GraphicsObject):
 
         self._renderRequired = False
         self._unrenderable = False
+
+    def _try_rescale_float(self, image, levels, lut):
+        xp = self._xp
+        augmented_alpha = False
+
+        can_handle = False
+        while True:
+            if levels is None or levels.ndim != 1:
+                # float images always need levels
+                # can't handle multi-channel levels
+                break
+
+            # awkward, but fastest numpy native nan evaluation
+            if xp.isnan(image.min()):
+                # don't handle images with nans
+                # this should be an uncommon case
+                break
+
+            can_handle = True
+            break
+
+        if not can_handle:
+            return image, levels, lut, augmented_alpha
+
+        # Decide on maximum scaled value
+        if lut is not None:
+            scale = lut.shape[0]
+            num_colors = lut.shape[0]
+        else:
+            scale = 255.
+            num_colors = 256
+        dtype = xp.min_scalar_type(num_colors-1)
+
+        minVal, maxVal = levels
+        if minVal == maxVal:
+            maxVal = xp.nextafter(maxVal, 2*maxVal)
+        rng = maxVal - minVal
+        rng = 1 if rng == 0 else rng
+        image = fn.rescaleData(image, scale/rng, offset=minVal, dtype=dtype, clip=(0, num_colors-1))
+
+        levels = None
+
+        # Note: compared to makeARGB(), we have already clipped the data to range
+
+        if image.dtype == xp.uint16 and image.ndim == 2:
+            image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
+            lut = None
+
+        # image is now of type uint8
+        return image, levels, lut, augmented_alpha
 
     def _try_combine_lut(self, image, levels, lut):
         augmented_alpha = False
@@ -532,26 +589,34 @@ class ImageItem(GraphicsObject):
 
         # apply the effective lut early for the following types:
         if image.dtype == xp.uint16 and image.ndim == 2:
-            # 1) uint16 mono
-            if lut.ndim == 2:
-                if lut.shape[1] == 3:   # rgb
-                    # convert rgb lut to rgba so that it is 32-bits
-                    lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
-                    augmented_alpha = True
-                if lut.shape[1] == 4:   # rgba
-                    lut = lut.view(xp.uint32)
-
-            # we are adding a 3rd dimension to a mono image
-            # with the assumption that the 1st two axes are in C-order
-            image = xp.ascontiguousarray(image)
-
-            image = lut.ravel()[image]
+            image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
             lut = None
-            # now both levels and lut are None
-            if image.dtype == xp.uint32:
-                image = image.view(xp.uint8).reshape(image.shape + (4,))
 
         return image, levels, lut, augmented_alpha
+
+    def _apply_lut_for_uint16_mono(self, image, lut):
+        xp = self._xp
+        augmented_alpha = False
+
+        if lut.ndim == 2:
+            if lut.shape[1] == 3:   # rgb
+                # convert rgb lut to rgba so that it is 32-bits
+                lut = xp.column_stack([lut, xp.full(lut.shape[0], 255, dtype=xp.uint8)])
+                augmented_alpha = True
+            if lut.shape[1] == 4:   # rgba
+                lut = lut.view(xp.uint32)
+
+        # we are adding a 3rd dimension to a mono image
+        # with the assumption that the 1st two axes are in C-order
+        image = xp.ascontiguousarray(image)
+
+        image = lut.ravel()[image]
+        lut = None
+        # now both levels and lut are None
+        if image.dtype == xp.uint32:
+            image = image.view(xp.uint8).reshape(image.shape + (4,))
+
+        return image, augmented_alpha
 
     def _try_make_qimage(self, image, levels, lut, augmented_alpha):
         xp = self._xp
