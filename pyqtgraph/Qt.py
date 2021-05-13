@@ -273,6 +273,13 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     QtGui.QApplication.setGraphicsSystem = None
 
 
+if QT_LIB in [PYQT5, PYSIDE2]:
+    # Some constructs are getting deprecated in Qt6
+    # recreate the Qt6 structure
+
+    QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
+
+
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
