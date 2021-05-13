@@ -119,4 +119,4 @@ t.timeout.connect(updateImage)
 t.start(50)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

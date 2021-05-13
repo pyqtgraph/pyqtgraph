@@ -92,4 +92,4 @@ r = pg.PolyLineROI([(0,0), (10, 10)])
 pw.addItem(r)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

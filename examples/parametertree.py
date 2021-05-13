@@ -179,4 +179,4 @@ s = p.saveState()
 p.restoreState(s)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

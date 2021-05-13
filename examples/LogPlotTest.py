@@ -31,4 +31,4 @@ p5.setLogMode(x=True, y=False)
 
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

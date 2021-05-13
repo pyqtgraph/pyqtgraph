@@ -27,4 +27,4 @@ btn.sigColorChanging.connect(change)
 btn.sigColorChanged.connect(done)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -760,4 +760,4 @@ if __name__ == '__main__':
     win.show()
     win.resize(1100,700)
 
-    app.exec_()
+    pg.exec()

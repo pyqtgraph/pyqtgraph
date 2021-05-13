@@ -49,4 +49,4 @@ b1 = QtGui.QPushButton("Button")
 w.setItemWidget(i1, 1, b1)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

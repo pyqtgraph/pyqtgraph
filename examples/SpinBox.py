@@ -129,4 +129,4 @@ layout.addWidget(changedLabel, 2, 1)
 
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

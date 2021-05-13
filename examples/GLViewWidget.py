@@ -28,4 +28,4 @@ ax2.setParentItem(b)
 b.translate(1,1,1)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()
