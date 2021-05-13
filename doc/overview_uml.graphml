@@ -15,7 +15,8 @@
   <graph edgedefault="directed" id="G">
     <data key="d0" xml:space="preserve"/>
     <node id="n0">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/widgets/imageview.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Widget used for display and analysis of image data.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="78.0" width="90.998046875" x="-1257.6248759920632" y="-417.1874999999999"/>
@@ -33,7 +34,9 @@ view
       </data>
     </node>
     <node id="n1">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicsview.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsView class provides a widget for 
+displaying the contents of a QGraphicsScene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="59.0" width="115.74658203125" x="-1061.2184283544145" y="-534.1874999999999"/>
@@ -48,7 +51,9 @@ view
       </data>
     </node>
     <node id="n2">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicsscene.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsScene class provides a surface for 
+managing a large number of 2D graphical items.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="72.0" width="121.7197265625" x="-845.4176936073908" y="-538.6874999999999"/>
@@ -64,7 +69,9 @@ views()</y:MethodLabel>
       </data>
     </node>
     <node id="n3">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicsitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsItem class is the base class for all 
+graphical items in a QGraphicsScene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="59.0" width="113.404296875" x="-646.219253782242" y="-538.6874999999999"/>
@@ -79,7 +86,9 @@ views()</y:MethodLabel>
       </data>
     </node>
     <node id="n4">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicsobject.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsObject class provides a base class for all 
+graphics items that require signals, slots and properties.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="127.0517578125" x="-449.9819955977183" y="-390.6875000000001"/>
@@ -94,7 +103,12 @@ views()</y:MethodLabel>
       </data>
     </node>
     <node id="n5">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/widgets/graphicsview.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Re-implementation of QGraphicsView that removes scrollbars and allows 
+unambiguous control of the viewed coordinate range. 
+
+Also automatically creates a GraphicsScene and a central QGraphicsWidget 
+that is automatically scaled to the full view geometry.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="48.0" width="105.0380859375" x="-1055.8641803075395" y="-402.1874999999999"/>
@@ -109,7 +123,9 @@ views()</y:MethodLabel>
       </data>
     </node>
     <node id="n6">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/graphicsobject.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Extension of QGraphicsObject with some useful 
+methods (provided by GraphicsItem)]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="116.34326171875" x="-647.688736204117" y="-260.6874999999999"/>
@@ -128,7 +144,11 @@ view
       </data>
     </node>
     <node id="n7">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/scatterplotitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Displays a set of x/y points. 
+
+Instances of this class are created automatically as part of 
+PlotDataItem; these rarely need to be instantiated directly.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="115.6259765625" x="-900.1142907521081" y="-115.68750000000011"/>
@@ -147,7 +167,11 @@ view
       </data>
     </node>
     <node id="n8">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotcurveitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Class representing a single plot curve. 
+
+Instances of this class are created automatically as part of 
+PlotDataItem; these rarely need to be instantiated directly.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="108.61181640625" x="-609.957290891617" y="-120.68750000000011"/>
@@ -166,7 +190,8 @@ view
       </data>
     </node>
     <node id="n9">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/imageitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[GraphicsObject displaying an image. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="84.55419921875" x="-1021.7159840417285" y="-115.68750000000011"/>
@@ -185,7 +210,11 @@ view
       </data>
     </node>
     <node id="n10">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[GraphicsItem for displaying plot curves, scatter plots, or both. 
+
+While it is possible to use PlotCurveItem or ScatterPlotItem 
+individually, this class provides a unified interface to both.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="61.0" width="100.43603515625" x="-747.4408201187376" y="-132.6875000000001"/>
@@ -201,7 +230,12 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n11">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/widgets/graphicslayoutwidget.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Convenience class consisting of a GraphicsView with a 
+single GraphicsLayout as its central item.
+
+Most of the methods provided by GraphicsLayout are 
+also available through GraphicsLayoutWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="48.0" width="163.83642578125" x="-1085.2633502294145" y="-271.1874999999999"/>
@@ -216,7 +250,10 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n12">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/graphicsitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Abstract class providing useful methods to GraphicsObject 
+and GraphicsWidget. (This is required because we cannot 
+have multiple inheritance with QObject subclasses.)]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="102.69580078125" x="-640.865005735367" y="-390.1875000000001"/>
@@ -231,7 +268,10 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n13">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicslayoutitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsLayoutItem class can 
+be inherited to allow your custom 
+items to be managed by layouts.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="158.294921875" x="-272.24595811631957" y="-390.6875000000001"/>
@@ -246,7 +286,9 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n14">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicswidget.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsWidget class is the base class for 
+all widget items in a QGraphicsScene. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="129.654296875" x="-451.2832651289683" y="-260.6874999999999"/>
@@ -261,7 +303,10 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n15">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicslayout.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsLayout class provides 
+the base class for all layouts in 
+Graphics View.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="128.49267578125" x="-257.34483506944457" y="-260.6874999999999"/>
@@ -276,7 +321,10 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n16">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qgraphicsgridlayout.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QGraphicsGridLayout class provides 
+a grid layout for managing widgets in 
+Graphics View.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="156.9365234375" x="-271.56675889756957" y="-122.1875"/>
@@ -291,7 +339,11 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n17">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/widgets/plotwidget.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[A subclass of GraphicsView with a single PlotItem displayed. 
+
+Most of the methods provided by PlotItem are also available 
+through PlotWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="48.0" width="85.82373046875" x="-827.4696955605158" y="-276.1874999999999"/>
@@ -306,7 +358,9 @@ scatter</y:AttributeLabel>
       </data>
     </node>
     <node id="n18">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsscene/graphicsscene.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[xtension of QGraphicsScene that implements a 
+complete, parallel mouse event system. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="111.01123046875" x="-840.0634455605158" y="-390.1875000000001"/>
@@ -325,7 +379,11 @@ view
       </data>
     </node>
     <node id="n19">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/graphicswidget.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Extends QGraphicsWidget with several helpful methods and 
+workarounds for PyQt bugs. 
+
+Most of the extra functionality is inherited from GraphicsItem.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="118.94580078125" x="-445.9290170820933" y="-120.68750000000011"/>
@@ -344,7 +402,11 @@ view
       </data>
     </node>
     <node id="n20">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/viewbox.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Box that allows internal scaling/panning of children by mouse drag. 
+
+This class is usually created automatically as part of a PlotItem or 
+Canvas or with GraphicsLayout.addViewBox().]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="70.31640625" x="-590.809585813492" y="27.312499999999886"/>
@@ -363,10 +425,16 @@ view
       </data>
     </node>
     <node id="n21">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/graphicslayout.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[Used for laying out GraphicsWidgets 
+in a grid. 
+
+This is usually created automatically 
+as part of a GraphicsWindow or 
+GraphicsLayoutWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="49.0" width="117.7841796875" x="-251.99058702256957" y="16.312499999999886"/>
+          <y:Geometry height="48.0" width="117.7841796875" x="-251.99058702256957" y="16.812499999999886"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="107.7841796875" x="5.0" xml:space="preserve" y="3.0">GraphicsLayout<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -378,7 +446,8 @@ view
       </data>
     </node>
     <node id="n22">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotitem.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[GraphicsWidget implementing a standard 2D plotting area with axes.]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="63.0" width="69.57373046875" x="-421.2429819258433" y="9.312499999999886"/>
@@ -394,7 +463,9 @@ vb</y:AttributeLabel>
       </data>
     </node>
     <node id="n23">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qpaintdevice.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QPaintDevice class is the base class of objects that 
+can be painted on with QPainter. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="102.75927734375" x="-1054.7247760106645" y="-734.1874999999999"/>
@@ -409,7 +480,8 @@ vb</y:AttributeLabel>
       </data>
     </node>
     <node id="n24">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qwidget.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QWidget class is the base class of all user interface objects. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="70.7607421875" x="-1038.7255084325395" y="-634.1874999999999"/>
@@ -424,7 +496,8 @@ vb</y:AttributeLabel>
       </data>
     </node>
     <node id="n25">
-      <data key="d4" xml:space="preserve"/>
+      <data key="d4" xml:space="preserve"><![CDATA[https://doc.qt.io/qt-5/qobject.html]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[The QObject class is the base class of all Qt objects. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="27.0" width="68.158203125" x="-623.596206907242" y="-734.1874999999999"/>
@@ -772,8 +845,8 @@ vb</y:AttributeLabel>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="58.868033859190994" sy="11.907898579055185" tx="78.48966383934021" ty="0.0">
-            <y:Point x="-91.94474283854174" y="19.312499999999773"/>
-            <y:Point x="-86.94474283854174" y="-77.00000000000011"/>
+            <y:Point x="-68.02598537139716" y="19.312499999999773"/>
+            <y:Point x="-68.02598537139716" y="-77.00000000000011"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
