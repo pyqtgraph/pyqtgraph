@@ -99,5 +99,4 @@ if __name__ == '__main__':
         
     b.sigStateChanged.connect(fn)
         
-    app.exec_()
-        
+    app.exec() if hasattr(app, 'exec') else app.exec_()
