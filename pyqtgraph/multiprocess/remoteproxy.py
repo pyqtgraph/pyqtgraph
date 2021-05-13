@@ -505,7 +505,8 @@ class RemoteEventHandler(object):
             if exc is not None:
                 # PySide6 6.1.0 does an attribute lookup for feature testing
                 # in such a case, failure is normal 
-                if excStr[-1] not in ["AttributeError: 'function' object has no attribute 'im_func'\n"]:
+                normal = ["AttributeError"]
+                if not any(excStr[-1].startswith(x) for x in normal):
                     warnings.warn("===== Remote process raised exception on request: =====", RemoteExceptionWarning)
                     warnings.warn(''.join(excStr), RemoteExceptionWarning)
                     warnings.warn("===== Local Traceback to request follows: =====", RemoteExceptionWarning)
