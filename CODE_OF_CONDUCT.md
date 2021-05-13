@@ -51,9 +51,7 @@ Examples of unacceptable behavior include:
 ## Where does this code of conduct apply
 
 This Code of Conduct applies within all online community spaces, official organized meetups, and when an individual is
-officially representing the community in public spaces. Examples of representing our community include using an official
-e-mail address, posting via an official social media account, or acting as an appointed representative at an online or
-offline event.
+officially representing the community in public spaces, online or offline.
 
 ## What to do in case of violations
 
@@ -92,7 +90,9 @@ or harmful.
 
 Community leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits,
 issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for
-moderation decisions when appropriate.
+moderation decisions when appropriate. This removal should be as transparent as possible, with information available in
+the same scope of context as the original moderated content, linking to an incident report, the acting moderators,
+and/or this document as appropriate.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
@@ -122,13 +122,14 @@ case. Resolutions might include:
 A response must be sent within one week to the person who filed the report with either a resolution or an explanation of
 why the situation is not yet resolved.
 
-A Code of Conduct transparency report will then be published with anonymized information about any violations that might
-have occurred. This report should be handled with care not to divulge personally identifying information about victims,
-reporters, and violators, and should serve as a means to ensure that members will be comfortable reporting violations
-and that our community will be kept accountable for supporting and encouraging safe spaces.
+A Code of Conduct transparency report will then be published
+to [the PyQtGraph users' list](https://groups.google.com/g/pyqtgraph) with anonymized information about any violations
+that might have occurred. This report should be handled with care not to divulge personally identifying information
+about victims, reporters, and violators, and should serve as a means to ensure that members will be comfortable
+reporting violations and that our community will be kept accountable for supporting and encouraging safe spaces.
 
 ## Attribution
 
 This Code of Conduct is adapted from
-the [Contributor Covenant, version 2.0][https://www.contributor-covenant.org/version/2/0/code_of_conduct.html] and
+the [Contributor Covenant, version 2.0](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html) and
 the [PuPPy Code of Conduct](https://www.pspython.com/pages/code-of-conduct/).
