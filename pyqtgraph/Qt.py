@@ -334,10 +334,6 @@ if QT_LIB == PYSIDE6:
                 self.setColorAt(pos, color)
         QtGui.QGradient.setStops = __setStops
 
-    if not hasattr(QtWidgets.QApplication, 'exec'):
-        # PySide6 6.0 forwards compatibility to PySide6 6.1
-        QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
-
 
 if QT_LIB == PYQT6:
     # module.Class.EnumClass.Enum -> module.Class.Enum
