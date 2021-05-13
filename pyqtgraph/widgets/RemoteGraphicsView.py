@@ -100,7 +100,8 @@ class RemoteGraphicsView(QtGui.QWidget):
         return args
 
     def serialize_mouse_event(self, ev):
-        lpos, gpos = ev.localPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
         typ, btn, btns, mods = self.serialize_mouse_enum(
             ev.type(), ev.button(), ev.buttons(), ev.modifiers())
         return (typ, lpos, gpos, btn, btns, mods)
@@ -137,7 +138,11 @@ class RemoteGraphicsView(QtGui.QWidget):
         return super().wheelEvent(ev)
 
     def enterEvent(self, ev):
-        lws = ev.localPos(), ev.windowPos(), ev.screenPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        wpos = ev.scenePosition() if hasattr(ev, 'scenePosition') else ev.windowPos()
+        gpos = ev.globalPosition() if hasattr(ev, 'globalPosition') else ev.screenPos()
+
+        lws = lpos, wpos, gpos
         self._view.enterEvent(lws, _callSync='off')
         return super().enterEvent(ev)
         
