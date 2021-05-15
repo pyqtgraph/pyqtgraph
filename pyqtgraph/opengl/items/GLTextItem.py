@@ -28,19 +28,15 @@ class GLTextItem(GLGraphicsItem):
         ====================  ==================================================
         **Arguments:**
         ------------------------------------------------------------------------
-        pos                   (N,3) array of floats specifying point locations.
-        color                 (N,4) array of floats (0.0-1.0) or
+        pos                   (3,) array of floats specifying text location.
+        color                 (4,) array of floats (0.0-1.0) or
                               tuple of floats specifying
                               a single color for the entire item.
-        width                 float specifying line width
-        antialias             enables smooth line drawing
-        mode                  'lines': Each pair of vertexes draws a single line
-                                       segment.
-                              'line_strip': All vertexes are drawn as a
-                                            continuous set of line segments.
+        text                  String to display.
+        font                  GLUT font. (Default: GLUT_BITMAP_HELVETICA_18)
         ====================  ==================================================
         """
-        args = ['pos', 'text', 'color','font']
+        args = ['pos', 'color', 'text', 'font']
         for k in kwds.keys():
             if k not in args:
                 raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
