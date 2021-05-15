@@ -25,33 +25,21 @@ __all__ = ['ImageItem']
 class ImageItem(GraphicsObject):
     """
     **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
-
-    GraphicsObject displaying an image. Optimized for rapid update, such as video display. This
-    item displays either a 2D numpy array (height, width) or a 3D array (height, width, RGBa). 
-    This array is optionally scaled (see :func:`~pyqtgraph.ImageItem.setLevels`) and/or colored
-    with a lookup table (see :func:`~pyqtgraph.ImageItem.setLookupTable` before display.
-
-    ImageItem implements :func:`~pyqtgraph.ImageItem.setPos` and
-    :func:`~pyqtgraph.ImageItem.setScale` methods like its :class:`QGraphicsItem` base class, which
-    set a position (in plot coordinates) and scaling that persist over repeated assignment of
-    image data, independent of size.
-    
-    An image can be placed into a plot area of a given extent directly through the
-    :func:`~pyqtgraph.ImageItem.setRect` method or the ``rect`` keyword during initialization
-    or call to :func:`~pyqtgraph.ImageItem.setImage`.
-
-    ImageItem is frequently used in conjunction with :class:`~pyqtgraph.ColorBarItem` to provide
-    a color map display and interactive level adjustments, or with
-    :class:`~pyqtgraph.HistogramLUTItem` or :class:`~pyqtgraph.HistogramLUTWidget` for a full a GUI
-    to control the levels and lookup table used to display the image.
     """
+    # Overall description of ImageItem (including examples) moved to documentation text
 
     sigImageChanged = QtCore.Signal()
     sigRemoveRequested = QtCore.Signal(object)  # self; emitted when 'remove' is selected from context menu
 
     def __init__(self, image=None, **kargs):
         """
-        See :func:`setImage <pyqtgraph.ImageItem.setImage>` for all allowed initialization arguments.
+        See :func:`~pyqtgraph.ImageItem.setOpts` for further keyword arguments and 
+        and :func:`~pyqtgraph.ImageItem.setImage` for information on supported formats.
+
+        Parameters
+        ----------
+            image: array 
+                Image data
         """
         GraphicsObject.__init__(self)
         self.menu = None
@@ -71,6 +59,8 @@ class ImageItem(GraphicsObject):
         self._defferedLevels = None
 
         self.axisOrder = getConfigOption('imageAxisOrder')
+        self._dataTransform = self._inverseDataTransform = None
+        self._update_data_transforms( self.axisOrder ) # install initial transforms
 
         # In some cases, we use a modified lookup table to handle both rescaling
         # and LUT more efficiently
@@ -86,25 +76,33 @@ class ImageItem(GraphicsObject):
             self.setOpts(**kargs)
 
     def setCompositionMode(self, mode):
-        """Change the composition mode of the item (see QPainter::CompositionMode
-        in the Qt documentation). This is useful when overlaying multiple ImageItems.
+        """
+        Change the composition mode of the item to `mode`, used when overlaying multiple ImageItems.
+        See ``QPainter::CompositionMode`` in the Qt documentation for details. 
 
-        ============================================  ============================================================
-        **Most common arguments:**
-        QtGui.QPainter.CompositionMode_SourceOver     Default; image replaces the background if it
-                                                      is opaque. Otherwise, it uses the alpha channel to blend
-                                                      the image with the background.
-        QtGui.QPainter.CompositionMode_Overlay        The image color is mixed with the background color to
-                                                      reflect the lightness or darkness of the background.
-        QtGui.QPainter.CompositionMode_Plus           Both the alpha and color of the image and background pixels
-                                                      are added together.
-        QtGui.QPainter.CompositionMode_Multiply       The output is the image color multiplied by the background.
-        ============================================  ============================================================
+        Most common arguments:
+        
+        - ``QtGui.QPainter.CompositionMode_SourceOver``:
+            (Default) Image replaces the background if it is opaque. 
+            Otherwise the alpha channel controls the visibility of the background.
+
+        - ``QtGui.QPainter.CompositionMode_Overlay``:
+            The image color is mixed with the background color to reflect the lightness or darkness of the background.
+        
+        - ``QtGui.QPainter.CompositionMode_Plus``:
+            Both the alpha and color of the image and background pixels are added together.
+
+        - ``QtGui.QPainter.CompositionMode_Multiply``:
+            The output is the image color multiplied by the background.
         """
         self.paintMode = mode
         self.update()
 
     def setBorder(self, b):
+        """
+        Defines the border drawn around the image. Accepts all arguments supported by 
+        :func:`~pyqtgraph.functions.mkPen`.
+        """
         self.border = fn.mkPen(b)
         self.update()
 
@@ -132,13 +130,18 @@ class ImageItem(GraphicsObject):
 
     def setLevels(self, levels, update=True):
         """
-        Set image scaling levels. Can be one of:
-
-        * [blackLevel, whiteLevel]
-        * [[minRed, maxRed], [minGreen, maxGreen], [minBlue, maxBlue]]
-
-        Only the first format is compatible with lookup tables. See :func:`makeARGB <pyqtgraph.makeARGB>`
-        for more details on how levels are applied.
+        Sets image scaling levels. 
+        See :func:`makeARGB <pyqtgraph.makeARGB>` for more details on how levels are applied.
+        
+        Parameters
+        ----------
+            levels: list_like
+                - [`blackLevel`, `whiteLevel`] 
+                  sets black and white levels for monochrome data and can be used with a lookup table.
+                - [[`minR`, `maxR`], [`minG`, `maxG`], [`minB`, `maxB`]] 
+                  sets individual scaling for RGB values. Not compatible with lookup tables.
+            update: bool, optional
+                Controls if image immediately updates to reflect the new levels.
         """
         if self._xp is None:
             self.levels = levels
@@ -152,18 +155,22 @@ class ImageItem(GraphicsObject):
             self.updateImage()
 
     def getLevels(self):
+        """
+        Returns the list representing the current level settings. See :func:`~setLevels`.
+        When ``autoLevels`` is active, the format is [`blackLevel`, `whiteLevel`].
+        """
         return self.levels
-        #return self.whiteLevel, self.blackLevel
 
     def setLookupTable(self, lut, update=True):
         """
-        Set the lookup table (numpy array) to use for this image. (see
-        :func:`makeARGB <pyqtgraph.makeARGB>` for more information on how this is used).
-        Optionally, lut can be a callable that accepts the current image as an
+        Sets lookup table `lut` to use for false color display of a monochrome image. See :func:`makeARGB <pyqtgraph.makeARGB>` for more 
+        information on how this is used. Optionally, `lut` can be a callable that accepts the current image as an
         argument and returns the lookup table to use.
 
-        Ordinarily, this table is supplied by a :class:`HistogramLUTItem <pyqtgraph.HistogramLUTItem>`
-        or :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
+        Ordinarily, this table is supplied by a :class:`~pyqtgraph.HistogramLUTItem`,
+        :class:`~pyqtgraph.GradientEditorItem` or :class:`~pyqtgraph.ColorBarItem`.
+        
+        Setting `update` to False avoids an immediate image update.
         """
         if lut is not self.lut:
             self.lut = lut
@@ -171,22 +178,57 @@ class ImageItem(GraphicsObject):
             if update:
                 self.updateImage()
 
-    def setAutoDownsample(self, ads):
+    def setAutoDownsample(self, active=True):
         """
-        Set the automatic downsampling mode for this ImageItem.
+        Controls automatic downsampling for this ImageItem.
 
-        Added in version 0.9.9
+        If active is `True`, the image is automatically downsampled to match the
+        screen resolution. This improves performance for large images and
+        reduces aliasing. If autoDownsample is not specified, then ImageItem will
+        choose whether to downsample the image based on its size.
+        `False` disables automatic downsampling.
         """
-        self.autoDownsample = ads
+        self.autoDownsample = active
         self._renderRequired = True
         self.update()
 
     def setOpts(self, update=True, **kargs):
+        """
+        Sets display and processing options for this ImageItem. :func:`~pyqtgraph.ImageItem.__init__` and 
+        :func:`~pyqtgraph.ImageItem.setImage` support all keyword arguments listed here.
+
+        Parameters
+        ----------
+            autoDownsample: bool
+                See :func:`~pyqtgraph.ImageItem.setAutoDownsample`.
+            axisOrder: str
+                | `'col-major'`: The shape of the array represents (width, height) of the image. This is the default.
+                | `'row-major'`: The shape of the array represents (height, width).
+            border: bool
+                Sets a pen to draw to draw an image border. See :func:`~pyqtgraph.ImageItem.setBorder`.
+            compositionMode:
+                See :func:`~pyqtgraph.ImageItem.setCompositionMode`
+            lut: array
+                Sets a color lookup table to use when displaying the image.
+                See :func:`~pyqtgraph.ImageItem.setLookupTable`.
+            levels: list_like, usally [`min`, `max`]
+                Sets minimum and maximum values to use when rescaling the image data. By default, these will be set to 
+                the estimated minimum and maximum values in the image. If the image array has dtype uint8, no rescaling
+                is necessary. See :func:`~pyqtgraph.ImageItem.setLevels`.
+            opacity: float, 0.0-1.0
+                Overall opacity for an RGB image.
+            rect: QRectF, QRect or array_like of floats (`x`,`y`,`w`,`h`)
+                Displays the current image within the specified rectangle in plot coordinates.
+                See :func:`~pyqtgraph.ImageItem.setRect`.
+            update : bool, optional
+                Controls if image immediately updates to reflect the new options.
+        """
         if 'axisOrder' in kargs:
-            val = kargs['axisOrder']
+            val = kargs['axisOrder']            
             if val not in ('row-major', 'col-major'):
-                raise ValueError('axisOrder must be either "row-major" or "col-major"')
+                raise ValueError("axisOrder must be either 'row-major' or 'col-major'")
             self.axisOrder = val
+            self._update_data_transforms(self.axisOrder) # update cached transforms 
         if 'lut' in kargs:
             self.setLookupTable(kargs['lut'], update=update)
         if 'levels' in kargs:
@@ -212,9 +254,13 @@ class ImageItem(GraphicsObject):
     def setRect(self, *args):
         """
         setRect(rect) or setRect(x,y,w,h)
-        Scale and translate the image such that it is displayed within `rect` in plot coordinates.
-        Rectangle `rect` can be a QRect or QRectF, or `x`, `y`, `w` and `h` parameters of the target
-        rectangle can be given individually or as a tuple or list.
+        
+        Sets translation and scaling of this ImageItem to display the current image within the rectangle, given
+        as ``QtCore.QRect`` or ``QtCore.QRectF`` `rect`, or described by parameters `x, y, w, h`, defining starting 
+        position, width and height.
+
+        This method cannot be used before an image is assigned.
+        See the :ref:`examples <ImageItem_examples>` for how to manually assign transformations.
         """
         rect = None
         if len(args) == 4:
@@ -227,79 +273,15 @@ class ImageItem(GraphicsObject):
                 rect = QtCore.QRectF( *arg ) # unpack (x,y,w,h) for QRectF
         if rect is None:
             raise ValueError("setRect argument must be a QRectF, QRect, or x,y,w,h")
-
-        self.setPos(rect.left(), rect.top()) # if translation is included in transform, then it adds to the offset set by setPos 
         tr = QtGui.QTransform()
-        # tr.translate(rect.left(), rect.top())
+        tr.translate(rect.left(), rect.top())
         tr.scale(rect.width() / self.width(), rect.height() / self.height())
         self.setTransform(tr)
 
-    # manually inherit setPos to add it to the documentation in the proper place
-    # we might also want to allow positions given as tuples for consistency with other methods
-    def setPos(self, *args):
-        """
-        setPos(pos) or setPos(x,y)
-        Sets the position of the image corner to pos, given in plot coordinates.
-
-        Parameters
-        ----------
-        pos: QPointF
-            Image position
-        x,y : floats
-            Image position
-        """
-        super().setPos(*args)
-
-    
-    def setScale(self, scale):
-        """
-        Sets a persistent scaling of the displayed image
-        
-        Parameters
-        ----------
-        scale: float or array_like (scale_x, scale_y)
-            single scaling factor or separate factors for `x` and `y` directions
-        """
-        # separate x and y scaling is not directly provided by inherited setScale
-        if hasattr(scale,'__len__') and len(scale) == 2:
-            tr = QtGui.QTransform()
-            tr.scale(scale[0], scale[1])
-            self.setTransform(tr)
-            return
-        super().setScale(scale)
-        
-    # def setOrigin(self, point, scale=None):
-    #     """
-    #     Translate the image such that the origin of the coordinate system is given by point in terms of image pixels.
-    #     By default, PyQtGraph places the image such that the origin is at the bottom left of the image. 
-    #     When plotting matrix elements or adressing image pixels (rather than positions), it may be convenient to place 
-    #     the origin at (0.5, 0.5), the center of the first pixel.
-        
-    #     Parameters
-    #     ----------
-    #     point: QtCore.Pointf or tuple (x,y) of float
-    #         Location of axis origin in terms of image pixels
-    #     scale: float or tuple (scale_x, scale_y) of float
-    #         Pixel size in plot coordinates, non-square sizes can be given as a tuple.
-    #     """
-    #     if isinstance(point, (QtCore.QPointF, QtCore.QPoint)):
-    #         x = point.x()
-    #         y = point.y()
-    #     else:
-    #         x, y = point # extract from tuple
-    #     tr = QtGui.QTransform()
-    #     tr.translate(-x, -y)
-    #     if scale is not None:
-    #         if hasattr(scale,'__len__') and len(scale) == 2:
-    #             scale_x = scale[0]
-    #             scale_y = scale[1]
-    #         else:
-    #             scale_x = float(scale)
-    #             scale_y = scale_x
-    #         tr.scale(scale_x, scale_y)
-    #     self.setTransform(tr)
-
     def clear(self):
+        """
+        Clears the assigned image.
+        """
         self.image = None
         self.prepareGeometryChange()
         self.informViewBoundsChanged()
@@ -315,50 +297,52 @@ class ImageItem(GraphicsObject):
 
     def setImage(self, image=None, autoLevels=None, **kargs):
         """
-        Update the image displayed by this item. For more information on how the image
-        is processed before displaying, see :func:`makeARGB <pyqtgraph.makeARGB>`
-
-        =================  =========================================================================
-        **Arguments:**
-        image              (numpy array) Specifies the image data. May be 2D (width, height) or
-                           3D (width, height, RGBa). The array dtype must be integer or floating
-                           point of any bit depth. For 3D arrays, the third dimension must
-                           be of length 3 (RGB) or 4 (RGBA). See *notes* below.
-        rect               (QRectF, QRect or array_like of floats (x,y,w,h))
-                           Sets position and scaling to display the image within a rectangle of
-                           width `w` and height `h`, starting at position `x`, `y`.
-        autoLevels         (bool) If True, this forces the image to automatically select
-                           levels based on the maximum and minimum values in the data.
-                           By default, this argument is true unless the levels argument is
-                           given.
-        lut                (numpy array) The color lookup table to use when displaying the image.
-                           See :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`.
-        levels             (min, max) The minimum and maximum values to use when rescaling the image
-                           data. By default, this will be set to the minimum and maximum values
-                           in the image. If the image array has dtype uint8, no rescaling is necessary.
-        opacity            (float 0.0-1.0)
-        compositionMode    See :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
-        border             Sets the pen used when drawing the image border. Default is None.
-        autoDownsample     (bool) If True, the image is automatically downsampled to match the
-                           screen resolution. This improves performance for large images and
-                           reduces aliasing. If autoDownsample is not specified, then ImageItem will
-                           choose whether to downsample the image based on its size.
-        =================  =========================================================================
-
-
-        **Notes:**
-
-        For backward compatibility, image data is assumed to be in column-major order (column, row).
-        However, most image data is stored in row-major order (row, column) and will need to be
-        transposed before calling setImage()::
+        Updates the image displayed by this ImageItem. For more information on how the image
+        is processed before displaying, see :func:`~pyqtgraph.makeARGB>`.
+        
+        For backward compatibility, image data is assumed to be in column-major order (column, row) by default.
+        However, most data is stored in row-major order (row, column). It can either be transposed before assignment::
 
             imageitem.setImage(imagedata.T)
+        
+        or the interpretation of the data can be changed locally through the ``axisOrder`` keyword or by changing the 
+        `imageAxisOrder` :ref:`global configuration option <apiref_config>`.
+        
+        All keywords supported by :func:`~pyqtgraph.ImageItem.setOpts` are also allowed here.
 
-        This requirement can be changed by calling ``image.setOpts(axisOrder='row-major')`` or
-        by changing the ``imageAxisOrder`` :ref:`global configuration option <apiref_config>`.
+        Parameters
+        ----------
+        image: array
+            Image data given as NumPy array with an integer or floating
+            point dtype of any bit depth. A 2-dimensional array describes single-valued (monochromatic) data.
+            A 3-dimensional array is used to give individual color components. The third dimension must
+            be of length 3 (RGB) or 4 (RGBA).
 
+        rect: QRectF, QRect or list_like of floats (`x, y, w, h`), optional
+            If given, sets translation and scaling to display the image within the specified rectangle. See 
+            :func:`~pyqtgraph.ImageItem.setRect`.
 
+        autoLevels: bool, optional
+            If True, ImageItem will automatically select levels based on the maximum and minimum values encountered 
+            in the data. For performance reasons, this search subsamples the images and may miss individual bright or
+            or dark points in the data set.
+            
+            If False, the search will be omitted.
+            
+            The default is `False` if a ``levels`` keyword argument is given, and `True` otherwise.
         """
+        # lut                (numpy array) The color lookup table to use when displaying the image.
+        #                    See :func:`setLookupTable <pyqtgraph.ImageItem.setLookupTable>`.
+        # levels             (min, max) The minimum and maximum values to use when rescaling the image
+        #                    data. By default, this will be set to the minimum and maximum values
+        #                    in the image. If the image array has dtype uint8, no rescaling is necessary.
+        # opacity            (float 0.0-1.0)
+        # compositionMode    See :func:`setCompositionMode <pyqtgraph.ImageItem.setCompositionMode>`
+        # border             Sets the pen used when drawing the image border. Default is None.
+        # autoDownsample     (bool) If True, the image is automatically downsampled to match the
+        #                    screen resolution. This improves performance for large images and
+        #                    reduces aliasing. If autoDownsample is not specified, then ImageItem will
+        #                    choose whether to downsample the image based on its size.
         profile = debug.Profiler()
 
         gotNewData = False
@@ -421,45 +405,71 @@ class ImageItem(GraphicsObject):
             self._defferedLevels = None
             self.setLevels((levels))
 
+    def _update_data_transforms(self, axisOrder='col-major'):
+        """ Sets up the transforms needed to map between input array and display """
+        self._dataTransform = QtGui.QTransform()
+        self._inverseDataTransform = QtGui.QTransform()
+        if self.axisOrder == 'row-major': # transpose both
+            self._dataTransform.scale(1, -1)
+            self._dataTransform.rotate(-90)
+            self._inverseDataTransform.scale(1, -1)
+            self._inverseDataTransform.rotate(-90)
+
+        
     def dataTransform(self):
-        """Return the transform that maps from this image's input array to its
+        """
+        Returns the transform that maps from this image's input array to its
         local coordinate system.
 
         This transform corrects for the transposition that occurs when image data
         is interpreted in row-major order.
+        
+        :meta private:
         """
         # Might eventually need to account for downsampling / clipping here
-        tr = QtGui.QTransform()
-        if self.axisOrder == 'row-major':
-            # transpose
-            tr.scale(1, -1)
-            tr.rotate(-90)
-        return tr
+        # transforms are updated in setOpts call.
+        return self._dataTransform
+        # tr = QtGui.QTransform()
+        # if self.axisOrder == 'row-major':
+        #     # transpose
+        #     tr.scale(1, -1)
+        #     tr.rotate(-90)
+        # return tr
 
     def inverseDataTransform(self):
         """Return the transform that maps from this image's local coordinate
         system to its input array.
 
         See dataTransform() for more information.
+
+        :meta private:
         """
-        tr = QtGui.QTransform()
-        if self.axisOrder == 'row-major':
-            # transpose
-            tr.scale(1, -1)
-            tr.rotate(-90)
-        return tr
+        # transforms are updated in setOpts call.
+        return self._inverseDataTransform
+        # tr = QtGui.QTransform()
+        # if self.axisOrder == 'row-major':
+        #     # transpose
+        #     tr.scale(1, -1)
+        #     tr.rotate(-90)
+        # return tr
 
     def mapToData(self, obj):
-        tr = self.inverseDataTransform()
-        return tr.map(obj)
+        return self._inverseDataTransform.map(obj)
+        # tr = self.inverseDataTransform()
+        # return tr.map(obj)
 
     def mapFromData(self, obj):
-        tr = self.dataTransform()
-        return tr.map(obj)
+        return self._dataTransform.map(obj)
+        # tr = self.dataTransform()
+        # return tr.map(obj)
 
     def quickMinMax(self, targetSize=1e6):
         """
-        Estimate the min/max values of the image data by subsampling.
+        Estimates the min/max values of the image data by subsampling.
+        Subsampling is performed at regular strides chosen to evaluate a number of samples
+        equal to or less than `targetSize`.
+        
+        Returns (`min`, `max`).
         """
         data = self.image
         while data.size > targetSize:
@@ -570,33 +580,36 @@ class ImageItem(GraphicsObject):
             p.drawRect(self.boundingRect())
 
     def save(self, fileName, *args):
-        """Save this image to file. Note that this saves the visible image (after scale/color changes), not the original data."""
+        """
+        Saves this image to file. Note that this saves the visible image (after scale/color changes), not the 
+        original data.
+        """
         if self._renderRequired:
             self.render()
         self.qimage.save(fileName, *args)
 
     def getHistogram(self, bins='auto', step='auto', perChannel=False, targetImageSize=200,
                      targetHistogramSize=500, **kwds):
-        """Returns x and y arrays containing the histogram values for the current image.
+        """
+        Returns `x` and `y` arrays containing the histogram values for the current image.
         For an explanation of the return format, see numpy.histogram().
 
-        The *step* argument causes pixels to be skipped when computing the histogram to save time.
-        If *step* is 'auto', then a step is chosen such that the analyzed data has
-        dimensions roughly *targetImageSize* for each axis.
+        The `step` argument causes pixels to be skipped when computing the histogram to save time.
+        If `step` is 'auto', then a step is chosen such that the analyzed data has
+        dimensions approximating `targetImageSize` for each axis.
 
-        The *bins* argument and any extra keyword arguments are passed to
-        self.xp.histogram(). If *bins* is 'auto', then a bin number is automatically
+        The `bins` argument and any extra keyword arguments are passed to
+        ``self.xp.histogram()``. If `bins` is `auto`, a bin number is automatically
         chosen based on the image characteristics:
 
-        * Integer images will have approximately *targetHistogramSize* bins,
+        * Integer images will have approximately `targetHistogramSize` bins,
           with each bin having an integer width.
-        * All other types will have *targetHistogramSize* bins.
+        * All other types will have `targetHistogramSize` bins.
 
-        If *perChannel* is True, then the histogram is computed once per channel
+        If `perChannel` is `True`, then a histogram is computed for each channel, 
         and the output is a list of the results.
-
-        This method is also used when automatically computing levels.
         """
+        # This method is also used when automatically computing levels.
         if self.image is None or self.image.size == 0:
             return None, None
         if step == 'auto':
@@ -652,10 +665,10 @@ class ImageItem(GraphicsObject):
 
     def setPxMode(self, b):
         """
-        Set whether the item ignores transformations and draws directly to screen pixels.
+        Sets whether the item ignores transformations and draws directly to screen pixels.
         If True, the item will not inherit any scale or rotation transformations from its
         parent items, but its position will be transformed as usual.
-        (see GraphicsItem::ItemIgnoresTransformations in the Qt documentation)
+        (see ``GraphicsItem::ItemIgnoresTransformations`` in the Qt documentation)
         """
         self.setFlag(self.ItemIgnoresTransformations, b)
 
@@ -670,7 +683,9 @@ class ImageItem(GraphicsObject):
         return QtGui.QPixmap.fromImage(self.qimage)
 
     def pixelSize(self):
-        """return scene-size of a single pixel in the image"""
+        """
+        Returns the scene-size of a single pixel in the image
+        """
         br = self.sceneBoundingRect()
         if self.image is None:
             return 1,1

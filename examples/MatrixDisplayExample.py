@@ -7,7 +7,7 @@ import initExample
 
 import numpy as np
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtWidgets, mkQApp
+from pyqtgraph.Qt import QtWidgets, mkQApp, QtGui
 
 class MainWindow(QtWidgets.QMainWindow):
     """ example application main window """
@@ -26,27 +26,33 @@ class MainWindow(QtWidgets.QMainWindow):
         ])
         columns = ["A", "B", "C"]
 
-        # create correlation matrix image with correct orientation:
-        correlogram = pg.ImageItem(axisOrder='row-major')
-        correlogram.setPos( -0.5, -0.5 ) # place image so that axis origin is at the center of the corner element
+        pg.setConfigOption('imageAxisOrder', 'row-major') # Switch default order to Row-major
+        
+        correlogram = pg.ImageItem()
+        # create transform to center the corner element on the origin, for any assigned image:
+        tr = QtGui.QTransform().translate(-0.5, -0.5) 
+        correlogram.setTransform(tr)
         correlogram.setImage(corrMatrix)
 
-        plotItem = gr_wid.addPlot()         # add PlotItem to the main GraphicsLayoutWidget
-        plotItem.getViewBox().invertY(True) # orient y axis to run top-to-bottom
-        plotItem.setDefaultPadding(0.0)     # plot without padding data range
-        plotItem.addItem(correlogram)       # display correlogram
-        # show full frame, label tick marks at top and left sides, with some extra space for labels
+        plotItem = gr_wid.addPlot()      # add PlotItem to the main GraphicsLayoutWidget
+        plotItem.invertY(True)           # orient y axis to run top-to-bottom
+        plotItem.setDefaultPadding(0.0)  # plot without padding data range
+        plotItem.addItem(correlogram)    # display correlogram
+        
+        # show full frame, label tick marks at top and left sides, with some extra space for labels:
         plotItem.showAxes( True, showValues=(True, True, False, False), size=20 )
 
         # define major tick marks and labels:
         ticks = [ (idx, label) for idx, label in enumerate( columns ) ]
         for side in ('left','top','right','bottom'):
-            plotItem.getAxis(side).setTicks( (ticks, []) ) # add list of major ticks and no minor ticks
+            plotItem.getAxis(side).setTicks( (ticks, []) ) # add list of major ticks; no minor ticks
         plotItem.getAxis('bottom').setHeight(10) # include some additional space at bottom of figure
 
-        colorMap = pg.colormap.get("CET-D1")     # choose a perceptually uniform, diverging color map
-        bar = pg.ColorBarItem( values=(-1,1), cmap=colorMap) # generate an adjustabled color bar, initially spanning -1 to 1
-        bar.setImageItem(correlogram, insert_in=plotItem)    # link color bar and color map to correlogram, and show it in plotItem
+        colorMap = pg.colormap.get("CET-D1")     # choose perceptually uniform, diverging color map
+        # generate an adjustabled color bar, initially spanning -1 to 1:
+        bar = pg.ColorBarItem( values=(-1,1), cmap=colorMap) 
+        # link color bar and color map to correlogram, and show it in plotItem:
+        bar.setImageItem(correlogram, insert_in=plotItem)    
 
 mkQApp("Correlation matrix display")
 main_window = MainWindow()
