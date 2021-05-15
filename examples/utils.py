@@ -14,6 +14,7 @@ examples = OrderedDict([
     ('Image Analysis', 'imageAnalysis.py'),
     ('Matrix Display', 'MatrixDisplayExample.py'),
     ('Color Maps', 'colorMaps.py'),
+    ('Color Gradient Plots', 'ColorGradientPlots.py'),
     ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),
