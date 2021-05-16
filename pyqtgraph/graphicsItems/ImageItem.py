@@ -499,8 +499,6 @@ class ImageItem(GraphicsObject):
 
         levels = None
 
-        # Note: compared to makeARGB(), we have already clipped the data to range
-
         if image.dtype == xp.uint16 and image.ndim == 2:
             image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
             lut = None
@@ -537,65 +535,66 @@ class ImageItem(GraphicsObject):
         colors_lut = lut
         lut = None
 
-        if self._effectiveLut is None:
-            eflsize = 2**(image.itemsize*8)
-            if levels is None:
-                info = xp.iinfo(image.dtype)
-                minlev, maxlev = info.min, info.max
-            else:
-                minlev, maxlev = levels
-            levdiff = maxlev - minlev
-            levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
+        eflsize = 2**(image.itemsize*8)
+        if levels is None:
+            info = xp.iinfo(image.dtype)
+            minlev, maxlev = info.min, info.max
+        else:
+            minlev, maxlev = levels
+        levdiff = maxlev - minlev
+        levdiff = 1 if levdiff == 0 else levdiff  # don't allow division by 0
 
-            if colors_lut is None:
-                if image.dtype == xp.ubyte and image.ndim == 2:
-                    # uint8 mono image
-                    ind = xp.arange(eflsize)
-                    levels_lut = fn.rescaleData(ind, scale=255./levdiff,
-                                            offset=minlev, dtype=xp.ubyte)
-                    efflut = levels_lut
-                    levels_lut = None
-                else:
-                    # uint16 mono, uint8 rgb, uint16 rgb
-                    # rescale image data by computation instead of by memory lookup
-                    image = fn.rescaleData(image, scale=255./levdiff,
+        if colors_lut is None:
+            if image.dtype == xp.ubyte and image.ndim == 2:
+                # uint8 mono image
+                ind = xp.arange(eflsize)
+                levels_lut = fn.rescaleData(ind, scale=255./levdiff,
                                         offset=minlev, dtype=xp.ubyte)
-                    return image, None, colors_lut, augmented_alpha
+                # image data is not scaled. instead, levels_lut is used
+                # as (grayscale) Indexed8 ColorTable to get the same effect.
+                # due to the small size of the input to rescaleData(), we
+                # do not bother caching the result
+                return image, None, levels_lut, augmented_alpha
             else:
-                num_colors = colors_lut.shape[0]
-                effscale = num_colors / levdiff
-                lutdtype = xp.min_scalar_type(num_colors - 1)
+                # uint16 mono, uint8 rgb, uint16 rgb
+                # rescale image data by computation instead of by memory lookup
+                image = fn.rescaleData(image, scale=255./levdiff,
+                                    offset=minlev, dtype=xp.ubyte)
+                return image, None, colors_lut, augmented_alpha
+        else:
+            num_colors = colors_lut.shape[0]
+            effscale = num_colors / levdiff
+            lutdtype = xp.min_scalar_type(num_colors - 1)
 
-                if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
-                    # combine if either:
-                    #   1) uint8 mono image
-                    #   2) colors_lut has more entries than will fit within 8-bits
+            if image.dtype == xp.ubyte or lutdtype != xp.ubyte:
+                # combine if either:
+                #   1) uint8 mono image
+                #   2) colors_lut has more entries than will fit within 8-bits
+                if self._effectiveLut is None:
                     ind = xp.arange(eflsize)
                     levels_lut = fn.rescaleData(ind, scale=effscale,
                                     offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
                     efflut = colors_lut[levels_lut]
                     levels_lut = None
                     colors_lut = None
-                else:
-                    # uint16 image with colors_lut <= 256 entries
-                    # don't combine, we will use QImage ColorTable
-                    image = fn.rescaleData(image, scale=effscale,
-                                    offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
-                    return image, None, colors_lut, augmented_alpha
+                    self._effectiveLut = efflut
+                efflut = self._effectiveLut
 
-            self._effectiveLut = efflut
-
-        lut = self._effectiveLut
-        levels = None
-
-        # apply the effective lut early for the following types:
-        if image.dtype == xp.uint16 and image.ndim == 2:
-            image, augmented_alpha = self._apply_lut_for_uint16_mono(image, lut)
-            lut = None
-
-        return image, levels, lut, augmented_alpha
+                # apply the effective lut early for the following types:
+                if image.dtype == xp.uint16 and image.ndim == 2:
+                    image, augmented_alpha = self._apply_lut_for_uint16_mono(image, efflut)
+                    efflut = None
+                return image, None, efflut, augmented_alpha
+            else:
+                # uint16 image with colors_lut <= 256 entries
+                # don't combine, we will use QImage ColorTable
+                image = fn.rescaleData(image, scale=effscale,
+                                offset=minlev, dtype=lutdtype, clip=(0, num_colors-1))
+                return image, None, colors_lut, augmented_alpha
 
     def _apply_lut_for_uint16_mono(self, image, lut):
+        # Note: compared to makeARGB(), we have already clipped the data to range
+
         xp = self._xp
         augmented_alpha = False
 
