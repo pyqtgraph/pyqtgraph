@@ -262,8 +262,10 @@ class ImageItem(GraphicsObject):
         This method cannot be used before an image is assigned.
         See the :ref:`examples <ImageItem_examples>` for how to manually set transformations.
         """
-        if isinstance(args, (QtCore.QRectF, QtCore.QRect)):
-            rect = args # use QRectF or QRect directly
+        if len(args) == 0:
+            self.resetTransform() # reset scaling and rotation when called without argument
+        if isinstance(args[0], (QtCore.QRectF, QtCore.QRect)):
+            rect = args[0] # use QRectF or QRect directly
         else:
             if hasattr(args[0],'__len__'):
                 args = args[0] # promote tuple or list of values

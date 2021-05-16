@@ -157,6 +157,45 @@ def test_ImageItem_axisorder():
         test_ImageItem(transpose=True)
     finally:
         pg.setConfigOptions(imageAxisOrder=origMode)
+        
+def test_setRect():    
+    def transforms_are_the_same(tr1, tr2):
+        dic = { # there seems to be no easy way to get the matrix in one call:
+            'tr11': ( tr1.m11(), tr2.m11() ),
+            'tr12': ( tr1.m12(), tr2.m12() ),
+            'tr13': ( tr1.m13(), tr2.m13() ),
+            'tr21': ( tr1.m21(), tr2.m21() ),
+            'tr22': ( tr1.m22(), tr2.m22() ),
+            'tr23': ( tr1.m23(), tr2.m23() ),
+            'tr31': ( tr1.m31(), tr2.m31() ),
+            'tr32': ( tr1.m32(), tr2.m32() ),
+            'tr33': ( tr1.m33(), tr2.m33() )
+        }
+        for key, values in dic.items():
+            val1, val2 = values
+            if val1 != val2:
+                print(key,'mismatch:', val1,'!=',val2 )
+                return False
+        return True
+    
+    tr = QtGui.QTransform() # construct a reference transform
+    tr.scale(2, 4)          # scale 2x2 image to 4x8
+    tr.translate(-1, -1)    # after shifting by -1, -1 
+    # the transformed 2x2 image would cover (-2,-4) to (2,4).
+    # Now have setRect construct the same transform:
+    imgitem = pg.ImageItem(np.eye(2), rect=(-2,-4, 4,8) ) # test tuple of floats
+    assert transforms_are_the_same(tr, imgitem.transform())
+
+    imgitem = pg.ImageItem(np.eye(2), rect=QtCore.QRectF(-2,-4, 4,8) ) # test QRectF
+    assert transforms_are_the_same(tr, imgitem.transform())
+    
+    imgitem = pg.ImageItem(np.eye(2))
+    imgitem.setRect(-2,-4, 4,8) # test individual parameters
+    assert transforms_are_the_same(tr, imgitem.transform())
+
+    imgitem = pg.ImageItem(np.eye(2))
+    imgitem.setRect(QtCore.QRect(-2,-4, 4,8)) # test QRect argument
+    assert transforms_are_the_same(tr, imgitem.transform())
 
 
 def test_dividebyzero():
