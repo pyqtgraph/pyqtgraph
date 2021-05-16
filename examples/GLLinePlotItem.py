@@ -41,4 +41,4 @@ for i in range(n):
     w.addItem(plt)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

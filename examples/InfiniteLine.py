@@ -82,4 +82,4 @@ p1.addItem(lr)
 label = pg.InfLineLabel(lr.lines[1], "region 1", position=0.95, rotateAxis=(1,0), anchor=(1, 1))
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

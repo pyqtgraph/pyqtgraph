@@ -80,4 +80,4 @@ p.axes['bottom']['item'].setZValue(1000)
 p.axes['left']['item'].setZValue(1000)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

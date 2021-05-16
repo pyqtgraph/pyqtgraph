@@ -91,4 +91,4 @@ for map_name in list_of_maps:
 lw.setFixedHeight(num_bars * (height+5) )
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

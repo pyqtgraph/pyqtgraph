@@ -107,4 +107,4 @@ depthSpin.valueChanged.connect(update)
 update()
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

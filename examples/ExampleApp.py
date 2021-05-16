@@ -385,7 +385,7 @@ class ExampleLoader(QtGui.QMainWindow):
 def main():
     app = pg.mkQApp()
     loader = ExampleLoader()
-    app.exec_()
+    pg.exec()
 
 if __name__ == '__main__':
     main()
