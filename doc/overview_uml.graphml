@@ -405,21 +405,19 @@ view
       <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/viewbox.html]]></data>
       <data key="d5" xml:space="preserve"><![CDATA[Box that allows internal scaling/panning of children by mouse drag. 
 
+addItem() will add a graphics item (e.g. a PlotDataItem) to the scene.
+
 This class is usually created automatically as part of a PlotItem or 
 Canvas or with GraphicsLayout.addViewBox().]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="70.31640625" x="-590.809585813492" y="27.312499999999886"/>
+          <y:Geometry height="60.0" width="100.43603515625" x="-609.957290891617" y="27.812499999999886"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="60.31640625" x="5.0" xml:space="preserve" y="3.0">ViewBox<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
-          <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="true" stereotype="" use3DEffect="false">
-            <y:AttributeLabel xml:space="preserve">graphicsView
-imageItem
-scene
-view
-</y:AttributeLabel>
-            <y:MethodLabel xml:space="preserve"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="60.31640625" x="20.059814453125" xml:space="preserve" y="3.0">ViewBox<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
+            <y:AttributeLabel xml:space="preserve"/>
+            <y:MethodLabel xml:space="preserve">addItem(item)</y:MethodLabel>
           </y:UML>
         </y:UMLClassNode>
       </data>
@@ -447,18 +445,21 @@ GraphicsLayoutWidget.]]></data>
     </node>
     <node id="n22">
       <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotitem.html]]></data>
-      <data key="d5" xml:space="preserve"><![CDATA[GraphicsWidget implementing a standard 2D plotting area with axes.]]></data>
+      <data key="d5" xml:space="preserve"><![CDATA[GraphicsWidget implementing a standard 2D plotting area with axes.
+
+addItem() will call ViewBox.addItem(), which will add the graphics item
+to the scene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="78.0" width="69.57373046875" x="-421.2429819258433" y="9.312499999999886"/>
+          <y:Geometry height="101.55077658303458" width="90.998046875" x="-431.9551401289683" y="9.312499999999886"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="59.57373046875" x="5.0" xml:space="preserve" y="3.0">PlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="59.57373046875" x="15.712158203125" xml:space="preserve" y="3.0">PlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
             <y:AttributeLabel xml:space="preserve">items
 layout
 vb</y:AttributeLabel>
-            <y:MethodLabel xml:space="preserve"/>
+            <y:MethodLabel xml:space="preserve">addItem(item)</y:MethodLabel>
           </y:UML>
         </y:UMLClassNode>
       </data>
@@ -832,9 +833,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-45.46460357378396" sy="31.216683519810942" tx="0.0" ty="0.0">
-            <y:Point x="-1291.1666666666667" y="-279.0"/>
-            <y:Point x="-1113.375" y="-14.187500000000227"/>
+          <y:Path sx="45.518521581816" sy="29.465649274634416" tx="-50.21679708779368" ty="-15.532406513860437">
+            <y:Point x="-1134.7895101553167" y="-280.8840621266428"/>
+            <y:Point x="-1086.9981302270012" y="-27.375934886499635"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -858,7 +859,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="34.77634637394482" sy="8.280531561867003" tx="-78.48966383934021" ty="0.0">
+          <y:Path sx="45.47834150870831" sy="0.0" tx="-78.48966383934021" ty="0.0">
             <y:Point x="-312.278076171875" y="29.862963342658517"/>
             <y:Point x="-298.94474283854174" y="-80.00000000000011"/>
           </y:Path>
@@ -871,9 +872,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-31.863771468873892" sy="29.29446256366713" tx="0.0" ty="0.0">
+          <y:Path sx="-45.45355161143306" sy="20.052089411067044" tx="0.0" ty="0.0">
             <y:Point x="-462.0" y="70.40583034647557"/>
-            <y:Point x="-492.5" y="40.812499999999886"/>
+            <y:Point x="-492.5" y="44.580624253285464"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -907,10 +908,10 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="-81.89348628248263" sy="12.854686676639005" tx="0.0" ty="0.0">
-            <y:Point x="-1117.5962727864585" y="-185.6875"/>
-            <y:Point x="-1139.0208333333335" y="-10.041874999999436"/>
-            <y:Point x="-918.3749999999999" y="95.31249999999977"/>
-            <y:Point x="-395.6870751544767" y="116.97921445639179"/>
+            <y:Point x="-1177.886260839027" y="-199.81796594982075"/>
+            <y:Point x="-1157.8614545997614" y="-22.288278823177507"/>
+            <y:Point x="-886.3459438470727" y="115.09515232974888"/>
+            <y:Point x="-383.44067133129863" y="134.8778046594981"/>
             <y:Point x="-280.0711111111109" y="40.812499999999886"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
@@ -938,7 +939,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="45.48293019334642" sy="14.906944582646474" tx="0.0" ty="0.0">
-            <y:Point x="-1132.3749999999998" y="-320.6874999999999"/>
+            <y:Point x="-1122.0126583034646" y="-328.22374850657104"/>
             <y:Point x="-1110.3749999999998" y="-160.6875"/>
             <y:Point x="-1054.3700706845239" y="-102.18750000000011"/>
           </y:Path>
@@ -1010,7 +1011,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-34.77105259895325" sy="0.0" tx="0.0" ty="0.0">
+          <y:Path sx="-45.5054641108988" sy="-14.181728410555756" tx="0.0" ty="0.0">
             <y:Point x="-461.16666666666674" y="-3.0235364396653495"/>
             <y:Point x="-492.9701314217442" y="-207.44427718040617"/>
           </y:Path>
