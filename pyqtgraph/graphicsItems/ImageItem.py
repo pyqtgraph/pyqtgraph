@@ -264,6 +264,7 @@ class ImageItem(GraphicsObject):
         """
         if len(args) == 0:
             self.resetTransform() # reset scaling and rotation when called without argument
+            return
         if isinstance(args[0], (QtCore.QRectF, QtCore.QRect)):
             rect = args[0] # use QRectF or QRect directly
         else:
