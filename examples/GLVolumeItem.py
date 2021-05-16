@@ -18,8 +18,6 @@ w.opts['distance'] = 200
 w.show()
 w.setWindowTitle('pyqtgraph example: GLVolumeItem')
 
-#b = gl.GLBoxItem()
-#w.addItem(b)
 g = gl.GLGridItem()
 g.scale(10, 10, 1)
 w.addItem(g)
@@ -32,13 +30,20 @@ def psi(i, j, k, offset=(50,50,100)):
     th = np.arctan2(z, np.hypot(x, y))
     r = np.sqrt(x**2 + y**2 + z **2)
     a0 = 2
-    ps = (1./81.) * 1./(6.*np.pi)**0.5 * (1./a0)**(3/2) * (r/a0)**2 * np.exp(-r/(3*a0)) * (3 * np.cos(th)**2 - 1)
-    return ps
+    return (
+        (1.0 / 81.0)
+        * 1.0 / (6.0 * np.pi) ** 0.5
+        * (1.0 / a0) ** (3 / 2)
+        * (r / a0) ** 2
+        * np.exp(-r / (3 * a0))
+        * (3 * np.cos(th) ** 2 - 1)
+    )
 
 
 data = np.fromfunction(psi, (100,100,200))
-positive = np.log(fn.clip_array(data, np.finfo(data.dtype).eps, data.max())**2)
-negative = np.log(fn.clip_array(-data, -np.finfo(data.dtype).eps, -data.min())**2)
+with np.errstate(divide = 'ignore'):
+    positive = np.log(fn.clip_array(data, 0, data.max())**2)
+    negative = np.log(fn.clip_array(-data, 0, -data.min())**2)
 
 d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
 d2[..., 0] = positive * (255./positive.max())
