@@ -19,14 +19,14 @@
       <data key="d5" xml:space="preserve"><![CDATA[Widget used for display and analysis of image data.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="78.0" width="90.998046875" x="-1257.6248759920632" y="-417.1874999999999"/>
+          <y:Geometry height="78.0" width="90.998046875" x="-1381.6248759920632" y="-569.1874999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="76.896484375" x="7.05078125" xml:space="preserve" y="3.0">ImageView<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
             <y:AttributeLabel xml:space="preserve">graphicsView
-imageItem
 view
+imageItem
 </y:AttributeLabel>
             <y:MethodLabel xml:space="preserve"/>
           </y:UML>
@@ -39,7 +39,7 @@ view
 displaying the contents of a QGraphicsScene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="59.0" width="115.74658203125" x="-1061.2184283544145" y="-534.1874999999999"/>
+          <y:Geometry height="59.0" width="115.74658203125" x="-1185.2184283544145" y="-686.1874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="105.74658203125" x="5.0" xml:space="preserve" y="3.0">QGraphicsView<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -56,7 +56,7 @@ displaying the contents of a QGraphicsScene.]]></data>
 managing a large number of 2D graphical items.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="72.0" width="121.7197265625" x="-845.4176936073908" y="-538.6874999999999"/>
+          <y:Geometry height="72.0" width="121.7197265625" x="-969.4176936073908" y="-690.6874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="111.7197265625" x="5.0" xml:space="preserve" y="3.0">QGraphicsScene<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -74,7 +74,7 @@ views()</y:MethodLabel>
 graphical items in a QGraphicsScene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="59.0" width="113.404296875" x="-646.219253782242" y="-538.6874999999999"/>
+          <y:Geometry height="59.0" width="113.404296875" x="-770.219253782242" y="-690.6874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="103.404296875" x="5.0" xml:space="preserve" y="3.0">QGraphicsItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -91,7 +91,7 @@ graphical items in a QGraphicsScene.]]></data>
 graphics items that require signals, slots and properties.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="127.0517578125" x="-449.9819955977183" y="-390.6875000000001"/>
+          <y:Geometry height="27.0" width="127.0517578125" x="-573.9819955977183" y="-542.6875000000001"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="117.0517578125" x="5.0" xml:space="preserve" y="3.0">QGraphicsObject<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -111,7 +111,7 @@ Also automatically creates a GraphicsScene and a central QGraphicsWidget
 that is automatically scaled to the full view geometry.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="48.0" width="105.0380859375" x="-1055.8641803075395" y="-402.1874999999999"/>
+          <y:Geometry height="48.0" width="105.0380859375" x="-1179.8641803075395" y="-554.1874999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="95.0380859375" x="5.0" xml:space="preserve" y="3.0">GraphicsView<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -128,7 +128,7 @@ that is automatically scaled to the full view geometry.]]></data>
 methods (provided by GraphicsItem)]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="116.34326171875" x="-647.688736204117" y="-260.6874999999999"/>
+          <y:Geometry height="27.0" width="116.34326171875" x="-966.7294611855158" y="11.312500000000114"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="106.34326171875" x="5.0" xml:space="preserve" y="3.0">GraphicsObject<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -151,7 +151,7 @@ Instances of this class are created automatically as part of
 PlotDataItem; these rarely need to be instantiated directly.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="115.6259765625" x="-900.1142907521081" y="-115.68750000000011"/>
+          <y:Geometry height="27.0" width="115.6259765625" x="-1185.1581256200395" y="156.3124999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="105.6259765625" x="5.0" xml:space="preserve" y="3.0">ScatterPlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -174,7 +174,7 @@ Instances of this class are created automatically as part of
 PlotDataItem; these rarely need to be instantiated directly.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="108.61181640625" x="-609.957290891617" y="-120.68750000000011"/>
+          <y:Geometry height="27.0" width="108.61181640625" x="-738.045181516617" y="156.3124999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="98.61181640625" x="5.0" xml:space="preserve" y="3.0">PlotCurveItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -194,7 +194,7 @@ view
       <data key="d5" xml:space="preserve"><![CDATA[GraphicsObject displaying an image. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="84.55419921875" x="-1021.7159840417285" y="-115.68750000000011"/>
+          <y:Geometry height="27.0" width="84.55419921875" x="-1378.4029521639382" y="156.3124999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="74.55419921875" x="5.0" xml:space="preserve" y="3.0">ImageItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -217,7 +217,7 @@ While it is possible to use PlotCurveItem or ScatterPlotItem
 individually, this class provides a unified interface to both.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="61.0" width="100.43603515625" x="-747.4408201187376" y="-132.6875000000001"/>
+          <y:Geometry height="61.0" width="100.43603515625" x="-958.7758479042658" y="139.3124999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="90.43603515625" x="5.0" xml:space="preserve" y="3.0">PlotDataItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -238,7 +238,7 @@ Most of the methods provided by GraphicsLayout are
 also available through GraphicsLayoutWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="48.0" width="163.83642578125" x="-1085.2633502294145" y="-271.1874999999999"/>
+          <y:Geometry height="48.0" width="163.83642578125" x="-1209.2633502294145" y="-423.1874999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="153.83642578125" x="5.0" xml:space="preserve" y="3.0">GraphicsLayoutWidget<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -256,7 +256,7 @@ and GraphicsWidget. (This is required because we cannot
 have multiple inheritance with QObject subclasses.)]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="102.69580078125" x="-640.865005735367" y="-390.1875000000001"/>
+          <y:Geometry height="27.0" width="102.69580078125" x="-764.865005735367" y="-542.1875000000001"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="92.69580078125" x="5.0" xml:space="preserve" y="3.0">GraphicsItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -274,7 +274,7 @@ be inherited to allow your custom
 items to be managed by layouts.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="158.294921875" x="-272.24595811631957" y="-390.6875000000001"/>
+          <y:Geometry height="27.0" width="158.294921875" x="-396.24595811631957" y="-542.6875000000001"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="148.294921875" x="5.0" xml:space="preserve" y="3.0">QGraphicsLayoutItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -291,7 +291,7 @@ items to be managed by layouts.]]></data>
 all widget items in a QGraphicsScene. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="129.654296875" x="-451.2832651289683" y="-260.6874999999999"/>
+          <y:Geometry height="27.0" width="129.654296875" x="-575.2832651289683" y="-412.6874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="119.654296875" x="5.0" xml:space="preserve" y="3.0">QGraphicsWidget<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -309,7 +309,7 @@ the base class for all layouts in
 Graphics View.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="128.49267578125" x="-257.34483506944457" y="-260.6874999999999"/>
+          <y:Geometry height="27.0" width="128.49267578125" x="-381.34483506944457" y="-412.6874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="118.49267578125" x="5.0" xml:space="preserve" y="3.0">QGraphicsLayout<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -327,7 +327,7 @@ a grid layout for managing widgets in
 Graphics View.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="156.9365234375" x="-271.56675889756957" y="-122.1875"/>
+          <y:Geometry height="27.0" width="156.9365234375" x="-395.56675889756957" y="-274.1875"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="146.9365234375" x="5.0" xml:space="preserve" y="3.0">QGraphicsGridLayout<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -346,7 +346,7 @@ Most of the methods provided by PlotItem are also available
 through PlotWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="48.0" width="85.82373046875" x="-827.4696955605158" y="-276.1874999999999"/>
+          <y:Geometry height="48.0" width="85.82373046875" x="-951.4696955605158" y="-428.1874999999999"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="75.82373046875" x="5.0" xml:space="preserve" y="3.0">PlotWidget<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -363,7 +363,7 @@ through PlotWidget.]]></data>
 complete, parallel mouse event system. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="111.01123046875" x="-840.0634455605158" y="-390.1875000000001"/>
+          <y:Geometry height="27.0" width="111.01123046875" x="-964.0634455605158" y="-542.1875000000001"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="101.01123046875" x="5.0" xml:space="preserve" y="3.0">GraphicsScene<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -386,7 +386,7 @@ workarounds for PyQt bugs.
 Most of the extra functionality is inherited from GraphicsItem.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="118.94580078125" x="-445.9290170820933" y="-120.68750000000011"/>
+          <y:Geometry height="27.0" width="118.94580078125" x="-569.9290170820933" y="-272.6875000000001"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="108.94580078125" x="5.0" xml:space="preserve" y="3.0">GraphicsWidget<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -405,13 +405,13 @@ view
       <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/viewbox.html]]></data>
       <data key="d5" xml:space="preserve"><![CDATA[Box that allows internal scaling/panning of children by mouse drag. 
 
-addItem() will add a graphics item (e.g. a PlotDataItem) to the scene.
+addItem() will add a graphics item to the scene.
 
 This class is usually created automatically as part of a PlotItem or 
 Canvas or with GraphicsLayout.addViewBox().]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="60.0" width="100.43603515625" x="-609.957290891617" y="27.812499999999886"/>
+          <y:Geometry height="60.0" width="100.43603515625" x="-733.957290891617" y="-124.18750000000011"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="60.31640625" x="20.059814453125" xml:space="preserve" y="3.0">ViewBox<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -432,7 +432,7 @@ as part of a GraphicsWindow or
 GraphicsLayoutWidget.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="48.0" width="117.7841796875" x="-251.99058702256957" y="16.812499999999886"/>
+          <y:Geometry height="48.0" width="117.7841796875" x="-375.99058702256957" y="-135.1875000000001"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="107.7841796875" x="5.0" xml:space="preserve" y="3.0">GraphicsLayout<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -452,14 +452,15 @@ addItem() will call ViewBox.addItem(), which will add
 the graphics item to the scene.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="101.55077658303458" width="90.998046875" x="-431.9551401289683" y="9.312499999999886"/>
+          <y:Geometry height="101.55077658303458" width="90.998046875" x="-555.9551401289683" y="-142.6875000000001"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="59.57373046875" x="15.712158203125" xml:space="preserve" y="3.0">PlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
-            <y:AttributeLabel xml:space="preserve">items
+            <y:AttributeLabel xml:space="preserve">vb
 layout
-vb</y:AttributeLabel>
+items
+</y:AttributeLabel>
             <y:MethodLabel xml:space="preserve">addItem(item)</y:MethodLabel>
           </y:UML>
         </y:UMLClassNode>
@@ -471,7 +472,7 @@ vb</y:AttributeLabel>
 can be painted on with QPainter. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="102.75927734375" x="-1054.7247760106645" y="-734.1874999999999"/>
+          <y:Geometry height="27.0" width="102.75927734375" x="-1178.7247760106645" y="-886.1874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="92.75927734375" x="5.0" xml:space="preserve" y="3.0">QPaintDevice<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -487,7 +488,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d5" xml:space="preserve"><![CDATA[The QWidget class is the base class of all user interface objects. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="70.7607421875" x="-1038.7255084325395" y="-634.1874999999999"/>
+          <y:Geometry height="27.0" width="70.7607421875" x="-1162.7255084325395" y="-786.1874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="60.7607421875" x="5.0" xml:space="preserve" y="3.0">QWidget<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -503,7 +504,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d5" xml:space="preserve"><![CDATA[The QObject class is the base class of all Qt objects. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="27.0" width="68.158203125" x="-623.596206907242" y="-734.1874999999999"/>
+          <y:Geometry height="27.0" width="68.158203125" x="-747.596206907242" y="-886.1874999999999"/>
           <y:Fill color="#E5F2DA" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="58.158203125" x="5.0" xml:space="preserve" y="3.0">QObject<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -574,8 +575,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="57.89011522762132" sy="12.537281979376408" tx="-60.8275922572916" ty="-20.148849611770515">
-            <y:Point x="-898.075439453125" y="-492.15021802062347"/>
-            <y:Point x="-876.5" y="-516.6874999999999"/>
+            <y:Point x="-1022.075439453125" y="-644.1502180206235"/>
+            <y:Point x="-1000.5" y="-668.6874999999999"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -587,8 +588,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="62.55783032614079" sy="10.020833333333258" tx="-56.72855839271347" ty="-16.4705962294737">
-            <y:Point x="-692.5" y="-492.66666666666663"/>
-            <y:Point x="-674.1666666666667" y="-519.6580962294736"/>
+            <y:Point x="-816.5" y="-644.6666666666666"/>
+            <y:Point x="-798.1666666666667" y="-671.6580962294736"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -622,7 +623,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="45.49944353103638" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="-1091.950439453125" y="-393.5596917157257"/>
+            <y:Point x="-1250.0" y="-535.4999999999999"/>
+            <y:Point x="-1201.950439453125" y="-542.5596917157256"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -689,7 +691,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="-50.19324315836343" sy="19.431038768363038" tx="57.78010964393616" ty="0.0">
-            <y:Point x="-767.176457403274" y="-82.75646123163708"/>
+            <y:Point x="-1002.0" y="189.24353876836292"/>
+            <y:Point x="-1032.0" y="169.8124999999999"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -701,7 +704,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="50.19148242473602" sy="0.0" tx="-54.289509415626526" ty="0.0">
-            <y:Point x="-627.1764574032741" y="-102.18750000000011"/>
+            <y:Point x="-804.0" y="163.8124999999999"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -801,7 +804,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="52.52121525083248" sy="14.284399099254927" tx="0.0" ty="0.0">
-            <y:Point x="-880.375" y="-385.7422565809748"/>
+            <y:Point x="-1004.375" y="-537.7422565809748"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -834,9 +837,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="45.518521581816" sy="29.465649274634416" tx="-50.21679708779368" ty="-15.532406513860437">
-            <y:Point x="-1134.7895101553167" y="-280.8840621266428"/>
-            <y:Point x="-1086.9981302270012" y="-27.375934886499635"/>
+          <y:Path sx="45.49453223276669" sy="18.974273373775418" tx="-50.21679708779368" ty="-15.532406513860437">
+            <y:Point x="-1226.7895101553167" y="-456.8840621266428"/>
+            <y:Point x="-1171.9981302270012" y="-179.37593488649964"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -848,8 +851,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="58.868033859190994" sy="11.907898579055185" tx="78.48966383934021" ty="0.0">
-            <y:Point x="-67.6347308911104" y="19.312499999999773"/>
-            <y:Point x="-61.634730891110394" y="-82.65218637992848"/>
+            <y:Point x="-191.6347308911104" y="-132.68750000000023"/>
+            <y:Point x="-185.6347308911104" y="-234.65218637992848"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -861,8 +864,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="45.49944353103638" sy="0.0" tx="-78.48966383934021" ty="0.0">
-            <y:Point x="-306.278076171875" y="36.500621646123236"/>
-            <y:Point x="-298.94474283854174" y="-80.00000000000011"/>
+            <y:Point x="-430.278076171875" y="-115.49937835387676"/>
+            <y:Point x="-422.94474283854174" y="-232.0000000000001"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -873,9 +876,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-45.45355161143306" sy="20.052089411067044" tx="0.0" ty="0.0">
-            <y:Point x="-462.0" y="70.40583034647557"/>
-            <y:Point x="-492.5" y="44.580624253285464"/>
+          <y:Path sx="-45.512836063221584" sy="-12.611593722643732" tx="0.0" ty="0.0">
+            <y:Point x="-586.0" y="-113.41937574671454"/>
+            <y:Point x="-616.5" y="-113.41937574671454"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -908,12 +911,12 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-81.89348628248263" sy="12.854686676639005" tx="0.0" ty="0.0">
-            <y:Point x="-1177.886260839027" y="-199.81796594982075"/>
-            <y:Point x="-1157.8614545997614" y="-22.288278823177507"/>
-            <y:Point x="-886.3459438470727" y="115.09515232974888"/>
-            <y:Point x="-383.44067133129863" y="134.8778046594981"/>
-            <y:Point x="-280.0711111111109" y="40.812499999999886"/>
+          <y:Path sx="81.90869511737537" sy="12.803242349247455" tx="0.0" ty="0.0">
+            <y:Point x="-996.886260839027" y="-315.81796594982075"/>
+            <y:Point x="-966.0" y="-98.49999999999989"/>
+            <y:Point x="-739.8614545997614" y="-22.12219534050189"/>
+            <y:Point x="-439.0711111111109" y="-17.12219534050189"/>
+            <y:Point x="-393.0711111111109" y="-111.18750000000011"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -924,11 +927,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-42.913400998454335" sy="12.915834437511307" tx="0.0" ty="0.0">
-            <y:Point x="-1002.7421061197917" y="-163.0"/>
-            <y:Point x="-1035.375" y="-55.18750000000023"/>
-            <y:Point x="-630.0" y="-27.66666666666663"/>
-            <y:Point x="-436.6738590203107" y="-10.130465949820746"/>
+          <y:Path sx="42.91275852770491" sy="15.998615036193598" tx="0.0" ty="0.0">
+            <y:Point x="-699.7421061197917" y="-347.0"/>
+            <y:Point x="-560.6738590203107" y="-162.13046594982075"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -939,10 +940,10 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="45.48293019334642" sy="14.906944582646474" tx="0.0" ty="0.0">
-            <y:Point x="-1122.0126583034646" y="-328.22374850657104"/>
-            <y:Point x="-1110.3749999999998" y="-160.6875"/>
-            <y:Point x="-1054.3700706845239" y="-102.18750000000011"/>
+          <y:Path sx="45.50988771893003" sy="31.81387839199732" tx="0.0" ty="0.0">
+            <y:Point x="-1252.0126583034646" y="-434.22374850657104"/>
+            <y:Point x="-1259.0126583034646" y="-145.4999999999999"/>
+            <y:Point x="-1289.4157249813984" y="89.50000000000011"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -975,7 +976,7 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
-            <y:Point x="-830.1666666666667" y="-234.1875000000001"/>
+            <y:Point x="-954.1666666666667" y="-386.1875000000001"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="none"/>
@@ -987,8 +988,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="-56.69973197493232" sy="18.886227744976793" tx="61.05783032614079" ty="-22.957627118644208">
-            <y:Point x="-680.5" y="-495.3012722550231"/>
-            <y:Point x="-698.5" y="-518.0"/>
+            <y:Point x="-804.5" y="-647.3012722550232"/>
+            <y:Point x="-822.5" y="-670.0"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -1000,8 +1001,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="-60.85035893026043" sy="25.31381586543165" tx="57.90989072624984" ty="-15.454366660497726">
-            <y:Point x="-881.075439453125" y="-484.37368413456824"/>
-            <y:Point x="-907.075439453125" y="-511.0"/>
+            <y:Point x="-1005.075439453125" y="-636.3736841345683"/>
+            <y:Point x="-1031.075439453125" y="-663.0"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -1012,10 +1013,9 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-45.51626194989154" sy="-15.56026693287707" tx="58.152265191078186" ty="0.0">
-            <y:Point x="-460.0" y="16.5"/>
-            <y:Point x="-472.0" y="-123.5"/>
-            <y:Point x="-494.0" y="-210.5"/>
+          <y:Path sx="-45.54388330853169" sy="16.41211170848294" tx="58.152265191078186" ty="0.0">
+            <y:Point x="-600.0" y="-61.59416965352443"/>
+            <y:Point x="-672.0407249813987" y="6.5"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
