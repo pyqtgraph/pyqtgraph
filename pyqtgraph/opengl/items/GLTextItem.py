@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Tuple, Union
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 import numpy as np
@@ -7,16 +7,17 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 class GLTextItem(GLGraphicsItem):
     """Draws text in 3D."""
 
-    pos:Union[np.ndarray, List[float]] = np.array([0.0, 0.0, 0.0])
-    color:np.ndarray = np.array([1.0, 1.0, 1.0, 1.0])
-    text:str = ''
-    font = GLUT_BITMAP_HELVETICA_18
-
     def __init__(self, **kwds):
         """All keyword arguments are passed to setData()"""
         GLGraphicsItem.__init__(self)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
+
+        self.pos:Union[np.ndarray, List[float], Tuple[float, ...]] = np.array([0.0, 0.0, 0.0])
+        self.color:Union[np.ndarray, List[float], Tuple[float, ...]] = np.array([1.0, 1.0, 1.0, 1.0])
+        self.text:str = ''
+        self.font = GLUT_BITMAP_HELVETICA_18
+
         self.setData(**kwds)
         glutInit()
     
