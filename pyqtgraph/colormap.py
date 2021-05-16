@@ -189,7 +189,7 @@ def getFromColorcet(name):
     for hex_str in color_strings:
         if hex_str[0] != '#': continue
         if len(hex_str) != 7:
-            raise ValueError('Invalid color string '+str(hex_str)+' in colorcet import.')
+            raise ValueError(f"Invalid color string '{hex_str}' in colorcet import.")
         color_tuple = tuple( bytes.fromhex( hex_str[1:] ) )
         color_list.append( color_tuple )
     if len(color_list) == 0:
@@ -202,36 +202,45 @@ def getFromColorcet(name):
     
 def makeMonochrome(color='green'):
     """
-    Returns a ColorMap object imitating a monochrome computer screen
-    ===============  =================================================================
-    **Arguments:**
-    color            Primary color description. Can be one of predefined identifiers
-                    'green', 'amber', 'blue', 'red', 'lavender', 'pink'
-                    or a tuple of relative R,G,B contributions in range 0.0 to 1.0
-    ===============  =================================================================
+    Returns a ColorMap object imitating a monochrome computer screen.
+
+    Parameters
+    ----------
+    color: str of tuple of floats
+        Primary color description. Can be one of predefined identifiers
+        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
+        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
     """
-    name = 'monochrome-'+str(color)
+    name = f'monochrome-{color}' # if needed, this automatically stringifies numerical tuples
     stops   = np.array([0.000, 0.167, 0.247, 0.320, 0.411, 0.539, 0.747, 1.000])
     active  = np.array([   16,    72,   113,   147,   177,   205,   231,   255])
     leakage = np.array([    0,     1,     7,    21,    45,    80,   127,   191])
     delta_arr = active - leakage
     predefined = {
         'green': (0.00, 1.00, 0.33), 'amber'   : (1.00, 0.50, 0.00),
-        'blue' : (0.00, 0.50, 1.00), 'red'     :  (1.00, 0.10, 0.00),
+        'blue' : (0.00, 0.50, 1.00), 'red'     : (1.00, 0.10, 0.00),
         'pink' : (1.00, 0.10, 0.50), 'lavender': (0.67, 0.33, 1.00)
     }
     if color in predefined: color = predefined[color]
     if not isinstance(color, tuple):
-        definitions = ["'"+key+"'" for key in predefined]
+        definitions = [f"'{key}'" for key in predefined]
         raise ValueError("'color' needs to be an (R,G,B) tuple of floats or one of "+definitions.join(', ') )
     r, g, b = color
-    color_list = []
-    for leak, delta in zip(leakage, delta_arr):
-        color_tuple = (
+    
+    color_list = [
+        (
             r * delta + leak,
             g * delta + leak,
-            b * delta + leak )
-        color_list.append(color_tuple)
+            b * delta + leak
+        ) for leak, delta in zip(leakage, delta_arr)
+    ]
+    # color_list = []
+    # for leak, delta in zip(leakage, delta_arr):
+    #     color_tuple = (
+    #         r * delta + leak,
+    #         g * delta + leak,
+    #         b * delta + leak )
+    #     color_list.append(color_tuple)
     cmap = ColorMap(name=name, pos=stops, color=color_list )
     return cmap
 
@@ -330,7 +339,7 @@ class ColorMap(object):
         if mapping in [self.CLIP, self.REPEAT, self.DIVERGING, self.MIRROR]:
             self.mapping_mode = mapping # only allow defined values
         else:
-            raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
+            raise ValueError(f"Undefined mapping type '{mapping}'")
         self.stopsCache = {}
     
     def __str__(self):

@@ -19,7 +19,7 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
         QtGui.QGraphicsObject.__init__(self, *args)
         self.setFlag(self.ItemSendsGeometryChanges)
         GraphicsItem.__init__(self)
-        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
+        fn.COLOR_REGISTRY.graphStyleChanged.connect(self.updateGraphStyle)
         
     def itemChange(self, change, value):
         ret = super().itemChange(change, value)
@@ -42,9 +42,9 @@ class GraphicsObject(GraphicsItem, QtGui.QGraphicsObject):
 
         return ret
 
-    @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
-    def styleHasChanged(self):
-        """ called to trigger redraw after all named colors have been updated """
+    # Slot for graphStyleChanged signal emitted by ColorRegistry, omitted decorator: @QtCore.Slot()
+    def updateGraphStyle(self):
+        """ called to trigger redraw after all registered colors have been updated """
         # self._boundingRect = None
         self.update()
         if DEBUG_REDRAW: print('  GraphicsObject: redraw after style change:', self)

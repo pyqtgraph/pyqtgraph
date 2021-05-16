@@ -1212,9 +1212,9 @@ class AxisItem(GraphicsWidget):
             return
         return lv.mouseClickEvent(event)
         
-    def styleHasChanged(self):
+    def updateGraphStyle(self):
         """ self.picture needs to be invalidated to initiate full redraw """
         self.picture = None
         self.labelStyle['color'] = self._textPen.color().name()
         self._updateLabel()
-        super().styleHasChanged()
+        super().updateGraphStyle()

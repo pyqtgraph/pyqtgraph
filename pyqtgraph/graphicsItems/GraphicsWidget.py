@@ -17,7 +17,7 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         """
         QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
-        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
+        fn.COLOR_REGISTRY.graphStyleChanged.connect(self.updateGraphStyle)
 
         ## done by GraphicsItem init
         #GraphicsScene.registerObject(self)  ## workaround for pyqt bug in graphicsscene.items()
@@ -58,9 +58,9 @@ class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
         #print "shape:", p.boundingRect()
         return p
 
-    @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
-    def styleHasChanged(self):
-        """ called to trigger redraw after all named colors have been updated """
+    # Slot for graphStyleChanged signal emitted by ColorRegistry, omitted decorator: @QtCore.Slot()
+    def updateGraphStyle(self):
+        """ called to trigger redraw after all registered colors have been updated """
         # self._boundingRect = None
         self.update()
         if DEBUG_REDRAW: print('  GraphicsWidget: redraw after style change:', self)

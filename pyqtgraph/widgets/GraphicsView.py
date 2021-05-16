@@ -120,7 +120,7 @@ class GraphicsView(QtGui.QGraphicsView):
         self.clickAccepted = False
 
         # connect to style update signals from ColorRegistry:
-        fn.COLOR_REGISTRY.paletteHasChangedSignal.connect(self.styleHasChanged)
+        fn.COLOR_REGISTRY.graphStyleChanged.connect(self.updateGraphStyle)
 
 
     def setAntialiasing(self, aa):
@@ -400,8 +400,8 @@ class GraphicsView(QtGui.QGraphicsView):
     def dragEnterEvent(self, ev):
         ev.ignore()  ## not sure why, but for some reason this class likes to consume drag events
 
-    @QtCore.Slot() # qt.py equates this to pyqtSlot for PyQt
-    def styleHasChanged(self):
-        """ called to trigger redraw after all named colors have been updated """
+    # Slot for graphStyleChanged signal emitted by ColorRegistry, omitted decorator: @QtCore.Slot()
+    def updateGraphStyle(self):
+        """ called to trigger redraw after all registered colors have been updated """
         self.setBackgroundBrush( self._bgBrush )
         # self.update()

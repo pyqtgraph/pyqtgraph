@@ -1269,12 +1269,12 @@ class ScatterPlotItem(GraphicsObject):
         return any(self.opts['hover' + opt.title()] != _DEFAULT_STYLE[opt]
                    for opt in ['symbol', 'size', 'pen', 'brush'])
                    
-    def styleHasChanged(self):
+    def updateGraphStyle(self):
         """ overridden to trigger symbol atlas refresh """
         self.fragmentAtlas.clear()
         self.data['sourceRect'] = (0, 0, 0, 0)
         self.updateSpots(self.data)
-        super().styleHasChanged()
+        super().updateGraphStyle()
 
 
 

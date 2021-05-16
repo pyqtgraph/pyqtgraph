@@ -143,14 +143,14 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
     def itemRect(self):
         return self.item.mapRectToParent(self.item.boundingRect())
 
-    def styleHasChanged(self):
+    def updateGraphStyle(self):
         """ overridden to update color without changing the text """
         if self._hex_color_override is not None:
             return # nothing to do, overridden text color will not change.
         color_opt = self._brush.color().name() # get updated color
         full = "<span style='color: {:s}; {:s}'>{:s}</span>".format(color_opt, '; '.join(self.optlist), self.text)
         self.item.setHtml(full)
-        super().styleHasChanged()
+        super().updateGraphStyle()
 
     #def paint(self, p, *args):
         #p.setPen(fn.mkPen('r'))

@@ -78,7 +78,7 @@ class ColorRegistry(QtCore.QObject):
     Typically instantiated by functions.py as COLOR_REGISTRY
     Instantiated by 'functions.py' and retrievable as functions.COLOR_REGISTRY
     """
-    paletteHasChangedSignal = QtCore.Signal() # equated to pyqtSignal in qt.py for PyQt
+    graphStyleChanged = QtCore.Signal() # equated to pyqtSignal in qt.py for PyQt
     _registrationGenerator = itertools.count()
 
     def __init__(self, color_dic):
@@ -168,7 +168,7 @@ class ColorRegistry(QtCore.QObject):
             skipCache = True
             register  = False
         elif name not in self.color_dic:
-            warnings.warn('Unknown color identifier '+str(name)+' enocuntered.')
+            warnings.warn(f"Unknown color identifier '{name}' encountered.")
             return None # unknown color identifier
         if not skipCache and desc in self.color_cache:
             return self.color_cache[desc]
@@ -202,7 +202,7 @@ class ColorRegistry(QtCore.QObject):
             skipCache = True
             register  = False
         elif name not in self.color_dic:
-            warnings.warn('Unknown color identifier '+str(name)+' enocuntered in pen descriptor.')
+            warnings.warn(f"Unknown color identifier '{name}' encountered in pen descriptor.")
             return None # unknown color identifier
         if not skipCache and desc in self.pen_cache:
             return self.pen_cache[desc]
@@ -235,7 +235,7 @@ class ColorRegistry(QtCore.QObject):
             skipCache = True
             register  = False
         elif name not in self.color_dic:
-            warnings.warn('Unknown color identifier '+str(name)+' enocuntered in brush descriptor.')
+            warnings.warn(f"Unknown color identifier '{name}' encountered in brush descriptor.")
             return None # unknown color identifier
         if not skipCache and desc in self.brush_cache:
             return self.brush_cache[desc]
@@ -311,10 +311,10 @@ class ColorRegistry(QtCore.QObject):
         """
         Removes obj (QColor, QPen or QBrush) from the registry, usually called by finalize on deletion
         """
-        obj, desc = self.registered_objects[registration]
+        # obj, desc = self.registered_objects[registration]
         # print('unregistering', registration, '(',str(obj),'):',str(desc))
+        # del obj, desc
         del self.registered_objects[registration]
-        del obj, desc
 
     def colors(self):
         """ return current list of colors """
@@ -326,24 +326,23 @@ class ColorRegistry(QtCore.QObject):
 
     def redefinePalette(self, colors=None):
         """ 
-        Update list of named colors if 'colors' dictionary is given
+        Update list of registered colors if 'colors' dictionary is given
         Emits paletteHasChanged signals to color objects and widgets, even if color_dict is None 
         """
         if colors is not None:
             for key in DEFAULT_COLORS:
                 if key not in colors:
-                    raise ValueError("Palette definition is missing '"+str(key)+"'")
+                    raise ValueError(f"Palette definition is missing '{key}'")
             self.color_dic.clear()
             self.color_dic.update(colors)
 
-        # notifies named color objects of new assignments:
-        # for key in self.registered_objects:
+        # notifies registerd color objects of new assignments:
         for ref, desc in self.registered_objects.values():
             # ref, desc = self.registered_objects[key]
             obj = ref()
             # print('updating', obj)
             if obj is None:
-                warnings.warn('Expired object with descriptor '+str(desc)+' remains in color registry.', RuntimeWarning)
+                warnings.warn(f"Expired object with descriptor '{desc})' remains in color registry.", RuntimeWarning)
             elif isinstance(obj, QtGui.QColor):
                 self._update_QColor(obj, desc)
             elif isinstance(obj, QtGui.QPen):
@@ -351,4 +350,4 @@ class ColorRegistry(QtCore.QObject):
             elif isinstance(obj, QtGui.QBrush):
                 self._update_QBrush(obj, desc)
         # notify all graphics widgets that redraw is required:
-        self.paletteHasChangedSignal.emit()
+        self.graphStyleChanged.emit()

@@ -184,7 +184,8 @@ class Palette(object):
     Primary colors:
       'b', 'c', 'g', 'y', 'r', 'm'
     Gray scale:
-      'k', 'd', 'l', 'w'  ranging from black to white
+      'm0' to 'm9'  ranging from black to white
+      'k', 'd', 'l', 'w'  black, dark gray, light gray and white, typically parts of the 'm0' to 'm9' range
       's' slate gray
     System colors:
       'gr_bg', 'gr_fg', 'gr_txt'  graph background, foreground and text colors
@@ -219,6 +220,7 @@ class Palette(object):
         if colors is not None:
             # print('color dictionary:', colors)
             self.add(colors) # override specified colors
+        # todo: add a monochrome ramp and sample 'mono' colors from that
             
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
@@ -273,7 +275,7 @@ class Palette(object):
         if cmap is None:
             raise ValueError("Please specify 'cmap' parameter when no default colormap is available.")
         if not isinstance( cmap, colormap.ColorMap ):
-            raise ValueError("Failed to obtain ColorMap object for 'cmap' = '+str(cmap).")
+            raise ValueError(f"Failed to obtain ColorMap object for 'cmap' = '{cmap}'.")
             
         if prefix == 'p':
             self.cmap = cmap # replace default color map
@@ -307,7 +309,9 @@ class Palette(object):
         Adds a default ramp of grays m0 to m9,
         linearized according to CIElab lightness value
         """
-        
+        pass
+        # todo: define based on start, intermediate, end colors
+        # to give grays with different warmth and range of contrast
 
     def emulateSystem(self):
         """
@@ -394,16 +398,17 @@ class Palette(object):
         
         # project legacy colors onto monochrome reference to assigne them somewhat logically
         ref_color = np.array( self.palette['m5'].getRgb()[:3] )
-        brightness = [
+        brightness = [ # estimate brightness of wanted colors "projected" into monochrome color space
             (np.sum( ref_color * needed[key] ), key) 
             for key in needed
         ]
         brightness = sorted(brightness, key=lambda brightness: brightness[0])
         # print( brightness )
-        avail = ('m3','m4','m5','m6','m7','m8')
-        colors = {}
-        for idx, (value, key) in enumerate(brightness):
-            colors[key] = avail[idx]
+        choice = ('m3','m4','m5','m6','m7','m8') # 6 candidates for 6 needed colors
+        colors = {
+            key: choice[idx] # assign in order of dark to bright
+            for idx, (_, key) in enumerate(brightness)
+        }
         self.add( colors )
         
     def apply(self):

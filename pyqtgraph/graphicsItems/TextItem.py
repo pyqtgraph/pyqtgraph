@@ -221,8 +221,8 @@ class TextItem(GraphicsObject):
         self._lastTransform = pt
         self.updateTextPos()
         
-    def styleHasChanged(self):
+    def updateGraphStyle(self):
         """ overridden to mnanually refresh color """
         if self._color is not None:
             self.textItem.setDefaultTextColor(self._color)
-        super().styleHasChanged()
+        super().updateGraphStyle()

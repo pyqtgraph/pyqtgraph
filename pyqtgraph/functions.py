@@ -32,8 +32,6 @@ from .python2_3 import asUnicode
 # legacy color definitions:
 # ColorRegistry now maintains the primary list of palette colors,
 # accessible through functions.COLOR_REGISTRY.colors().
-# # NamedColorManager now maintains the primary list of palette colors,
-# # accessible through functions.NAMED_COLOR_MANAGER.colors().
 # For backwards compatibility, this dictionary is updated to contain the same information.
 #
 # For the user, colors and color palettes are most conveniently accessed through a Palette object.
@@ -229,7 +227,7 @@ def mkColor(*args):
     types. Accepted arguments are:
     
     ================ ===========================================================
-     'name'          any color name specifed in palette
+     'name'          any color name specifed in active palette
      ('name', alpha) color name from palette with specified opacity 0-255
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
@@ -258,9 +256,10 @@ def mkColor(*args):
             return args # pass through registered pen directly
         return QtGui.QColor(args)  ## return a copy of this color
 
-    err = 'Could not create a color from {:s}(type: {:s})'.format(str(args), str(type(args)))
+    # no short-circuit, continue parsing to construct a QPen and register it if appropriate
+    err = f'Could not create a color from {args} (type: {type(args)})'
     result = COLOR_REGISTRY.getRegisteredColor(args)
-    if result is not None: # make a NamedPen
+    if result is not None: # return this color if we got one.
         return result
     
     # print('trying extra methods on',args)
@@ -359,7 +358,7 @@ def mkBrush(*args, **kargs):
     # if args is None:
     #     return QtGui.QBrush( QtCore.Qt.NoBrush ) # explicit None means "no brush"
 
-    # no short-circuit, continue parsing to construct QPen or NamedPen
+    # no short-circuit, continue parsing to construct a QBrush and register it if appropriate
     if 'hsv' in kargs: # hsv argument takes precedence
         qcol = hsvColor( *kargs['hsv'] )
         return QtGui.QBrush(qcol)
@@ -373,9 +372,7 @@ def mkBrush(*args, **kargs):
     if args == () or args == []:
         # print('  functions: returning default color registered brush')
         return COLOR_REGISTRY.getRegisteredBrush('gr_fg')
-        # return NamedBrush( 'gr_fg', manager=NAMED_COLOR_MANAGER ) # default foreground color
 
-    # result = parseNamedColorSpecification(args)
     # Do the the arguments make a suitable brush descriptor?
     result = COLOR_REGISTRY.getRegisteredBrush(args)
     if result is not None: 
@@ -421,7 +418,7 @@ def mkPen(*args, **kargs):
     # if args is None:
     #     return QtGui.QPen( QtCore.Qt.NoPen ) # explicit None means "no pen"
 
-    # no short-circuit, continue parsing to construct QPen or NamedPen
+    # no short-circuit, continue parsing to construct a QPen and register it if appropriate
     width = kargs.get('width', 1) # width 1 unless specified otherwise
     if 'hsv' in kargs: # hsv argument takes precedence
         qcol = hsvColor( *kargs['hsv'] )
@@ -436,9 +433,9 @@ def mkPen(*args, **kargs):
             qpen = COLOR_REGISTRY.getRegisteredPen( ('gr_fg', width) ) # default foreground color
         else:
             result = COLOR_REGISTRY.getRegisteredPen(args)
-            if result is not None: # make a NamedPen
+            if result is not None: # return this pen if we got one
                 qpen = result
-            else: # make a QPen
+            else: # make a regular QPen
                 qcol = mkColor(args)
                 qpen = QtGui.QPen(QtGui.QBrush(qcol), width)
     # now apply styles according to kw arguments:
@@ -446,7 +443,7 @@ def mkPen(*args, **kargs):
     dash = kargs.get('dash', None)
     cosmetic = kargs.get('cosmetic', True)
     if qpen is None:
-        raise ValueError('Failed to construct QPen from arguments '+str(args)+','+str(kargs) )
+        raise ValueError("Failed to construct QPen from arguments '{args}','{kargs}'." )
     qpen.setCosmetic(cosmetic)
     if style is not None:
         qpen.setStyle(style)
