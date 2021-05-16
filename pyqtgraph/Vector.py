@@ -40,6 +40,9 @@ class Vector(QtGui.QVector3D):
                 if len(vals) != 3:
                     raise Exception('Cannot init Vector with sequence of length %d' % len(args[0]))
                 initArgs = vals
+            elif isinstance(args[0], QtGui.QVector3D):
+                # PySide6 6.1 does not accept initialization from QVector3D
+                initArgs = args[0].x(), args[0].y(), args[0].z()
         elif len(args) == 2:
             initArgs = (args[0], args[1], 0)
         QtGui.QVector3D.__init__(self, *initArgs)

@@ -13,6 +13,7 @@ examples = OrderedDict([
     ('Timestamps on x axis', 'DateAxisItem.py'),
     ('Image Analysis', 'imageAnalysis.py'),
     ('Color Maps', 'colorMaps.py'),
+    ('Color Gradient Plots', 'ColorGradientPlots.py'),
     ('ViewBox Features', Namespace(filename='ViewBoxFeatures.py', recommended=True)),
     ('Dock widgets', 'dockarea.py'),
     ('Console', 'ConsoleWidget.py'),

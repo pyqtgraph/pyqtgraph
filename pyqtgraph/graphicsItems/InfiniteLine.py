@@ -26,7 +26,7 @@ class InfiniteLine(GraphicsObject):
     sigDragged(self)
     sigPositionChangeFinished(self)
     sigPositionChanged(self)
-    sigclicked(self, ev)
+    sigClicked(self, ev)
     =============================== ===================================================
     """
 

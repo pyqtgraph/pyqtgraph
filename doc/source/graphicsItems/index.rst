@@ -12,6 +12,7 @@ Contents:
     plotdataitem
     plotitem
     imageitem
+    colorbaritem
     pcolormeshitem
     graphitem
     viewbox
