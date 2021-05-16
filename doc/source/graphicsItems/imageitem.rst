@@ -9,8 +9,8 @@ lookup table (see :func:`~pyqtgraph.ImageItem.setLookupTable`.
 
 Data is provided as a NumPy array with an ordering of either
 
-    - `col-major`, where the shape of the array represents (width, height) or
-    - `row-major`, where the shape of the array represents (height, width).
+    * `col-major`, where the shape of the array represents (width, height) or
+    * `row-major`, where the shape of the array represents (height, width).
 
 While `col-major` is the default, `row-major` ordering typically has the best performance. In either ordering, 
 a third dimension can be added to the array to hold individual
@@ -36,20 +36,18 @@ to control the levels and lookup table used to display the image.
 
 If performance is critial, the following points may be worth investigating:
 
-- Use row-major ordering and C-contiguous image data.
-- Manually provide ``level`` information to avoid autoLevels sampling of the image.
-- Prefer `float32` to `float64` for floating point data, avoid NaN values.
-- Use lookup tables with <= 256 entries for false color images.
-- Avoid individual level adjustments RGB components.
-- Use the latest version of NumPy. Notably, SIMD code added in version 1.20 significantly improved performance on Linux platforms.
-- Enable Numba with ``pyqtgraph.setConfigOption('useNumba', True)``, although the JIT compilation will only accelerate repeated image display.
+    * Use row-major ordering and C-contiguous image data.
+    * Manually provide ``level`` information to avoid autoLevels sampling of the image.
+    * Prefer `float32` to `float64` for floating point data, avoid NaN values.
+    * Use lookup tables with <= 256 entries for false color images.
+    * Avoid individual level adjustments RGB components.
+    * Use the latest version of NumPy. Notably, SIMD code added in version 1.20 significantly improved performance on Linux platforms.
+    * Enable Numba with ``pyqtgraph.setConfigOption('useNumba', True)``, although the JIT compilation will only accelerate repeated image display.
 
 .. _ImageItem_examples:
 
 Examples
 --------
-
-Blah
 
 .. literalinclude:: ../images/gen_example_imageitem_transform.py
     :lines: 19-28

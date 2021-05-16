@@ -255,12 +255,12 @@ class ImageItem(GraphicsObject):
         """
         setRect(rect) or setRect(x,y,w,h)
         
-        Sets translation and scaling of this ImageItem to display the current image within the rectangle, given
+        Sets translation and scaling of this ImageItem to display the current image within the rectangle given
         as ``QtCore.QRect`` or ``QtCore.QRectF`` `rect`, or described by parameters `x, y, w, h`, defining starting 
         position, width and height.
 
         This method cannot be used before an image is assigned.
-        See the :ref:`examples <ImageItem_examples>` for how to manually assign transformations.
+        See the :ref:`examples <ImageItem_examples>` for how to manually set transformations.
         """
         rect = None
         if len(args) == 4:
