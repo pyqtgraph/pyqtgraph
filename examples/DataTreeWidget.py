@@ -43,4 +43,4 @@ tree.resize(600,600)
 
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

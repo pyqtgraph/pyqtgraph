@@ -59,4 +59,4 @@ ax = gl.GLAxisItem()
 w.addItem(ax)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -273,13 +273,6 @@ if QT_LIB in [PYQT5, PYQT6, PYSIDE2, PYSIDE6]:
     QtGui.QApplication.setGraphicsSystem = None
 
 
-if QT_LIB in [PYQT5, PYSIDE2]:
-    # Some constructs are getting deprecated in Qt6
-    # recreate the Qt6 structure
-
-    QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
-
-
 if QT_LIB in [PYQT6, PYSIDE6]:
     # We're using Qt6 which has a different structure so we're going to use a shim to
     # recreate the Qt5 structure
@@ -333,10 +326,6 @@ if QT_LIB == PYSIDE6:
             for pos, color in stops:
                 self.setColorAt(pos, color)
         QtGui.QGradient.setStops = __setStops
-
-    if not hasattr(QtWidgets.QApplication, 'exec'):
-        # PySide6 6.0 forwards compatibility to PySide6 6.1
-        QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
 
 
 if QT_LIB == PYQT6:
@@ -450,3 +439,9 @@ def mkQApp(name=None):
     if name is not None:
         QAPP.setApplicationName(name)
     return QAPP
+
+
+# exec() is used within _loadUiType, so we define as exec_() here and rename in pg namespace
+def exec_():
+    app = mkQApp()
+    return app.exec() if hasattr(app, 'exec') else app.exec_()

@@ -114,4 +114,4 @@ def imageHoverEvent(event):
 img.hoverEvent = imageHoverEvent
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

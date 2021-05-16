@@ -151,4 +151,4 @@ fc.connectTerminals(fNode['dataOut'], v2Node['data'])
 fc.connectTerminals(fNode['dataOut'], fc['dataOut'])
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

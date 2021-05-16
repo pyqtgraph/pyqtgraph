@@ -163,7 +163,7 @@ try:
     print("test complete")
     sys.stdout.flush()
     pg.Qt.QtCore.QTimer.singleShot(1000, pg.Qt.QtWidgets.QApplication.quit)
-    pg.Qt.QtWidgets.QApplication.instance().exec_()
+    pg.exec()
     names = [x for x in dir({1}) if not x.startswith('_')]
     for name in names:
         delattr({1}, name)
