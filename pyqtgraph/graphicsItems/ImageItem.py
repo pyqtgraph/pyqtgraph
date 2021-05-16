@@ -262,17 +262,12 @@ class ImageItem(GraphicsObject):
         This method cannot be used before an image is assigned.
         See the :ref:`examples <ImageItem_examples>` for how to manually set transformations.
         """
-        rect = None
-        if len(args) == 4:
-            rect = QtCore.QRectF( *args ) # QRectF(x,y,w,h)
-        elif len(args) == 1:
-            arg = args[0]
-            if isinstance(arg, (QtCore.QRectF, QtCore.QRect)):
-                rect = arg # use QRectF directly
-            elif hasattr(arg,'__len__') and len(arg) == 4:
-                rect = QtCore.QRectF( *arg ) # unpack (x,y,w,h) for QRectF
-        if rect is None:
-            raise ValueError("setRect argument must be a QRectF, QRect, or x,y,w,h")
+        if isinstance(args, (QtCore.QRectF, QtCore.QRect)):
+            rect = args # use QRectF or QRect directly
+        else:
+            if hasattr(args[0],'__len__'):
+                args = args[0] # promote tuple or list of values
+            rect = QtCore.QRectF( *args ) # QRectF(x,y,w,h), but also accepts other initializers
         tr = QtGui.QTransform()
         tr.translate(rect.left(), rect.top())
         tr.scale(rect.width() / self.width(), rect.height() / self.height())
