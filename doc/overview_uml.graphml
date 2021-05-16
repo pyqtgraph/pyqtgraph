@@ -457,8 +457,8 @@ the graphics item to the scene.]]></data>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="59.57373046875" x="15.712158203125" xml:space="preserve" y="3.0">PlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
-            <y:AttributeLabel xml:space="preserve">layout
-items
+            <y:AttributeLabel xml:space="preserve">items
+layout
 vb</y:AttributeLabel>
             <y:MethodLabel xml:space="preserve">addItem(item)</y:MethodLabel>
           </y:UML>
@@ -848,8 +848,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d10">
         <y:SplineEdge>
           <y:Path sx="58.868033859190994" sy="11.907898579055185" tx="78.48966383934021" ty="0.0">
-            <y:Point x="-90.6347308911104" y="19.312499999999773"/>
-            <y:Point x="-90.6347308911104" y="-82.65218637992848"/>
+            <y:Point x="-67.6347308911104" y="19.312499999999773"/>
+            <y:Point x="-61.634730891110394" y="-82.65218637992848"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -860,8 +860,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="45.52084116477562" sy="-15.29872777439676" tx="-78.48966383934021" ty="0.0">
-            <y:Point x="-312.278076171875" y="19.500621646123236"/>
+          <y:Path sx="45.49944353103638" sy="0.0" tx="-78.48966383934021" ty="0.0">
+            <y:Point x="-306.278076171875" y="36.500621646123236"/>
             <y:Point x="-298.94474283854174" y="-80.00000000000011"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
@@ -1008,18 +1008,14 @@ can be painted on with QPainter. ]]></data>
         </y:SplineEdge>
       </data>
     </edge>
-    <edge id="e42" source="n22" target="n3">
+    <edge id="e42" source="n22" target="n6">
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="45.49944353103638" sy="0.0" tx="56.72960619069613" ty="-19.240117095230403">
-            <y:Point x="-300.79579450418146" y="64.80270011947448"/>
-            <y:Point x="-242.38986857825557" y="97.773787335723"/>
-            <y:Point x="-165.14332138590203" y="108.13612903225817"/>
-            <y:Point x="-68.11412186379903" y="46.90410991636793"/>
-            <y:Point x="-54.92568697729962" y="-199.90802867383502"/>
-            <y:Point x="-72.82427718040617" y="-372.2997132616487"/>
-            <y:Point x="-209.41878136200717" y="-495.7057825567502"/>
+          <y:Path sx="-45.51626194989154" sy="-15.56026693287707" tx="58.152265191078186" ty="0.0">
+            <y:Point x="-460.0" y="16.5"/>
+            <y:Point x="-472.0" y="-123.5"/>
+            <y:Point x="-494.0" y="-210.5"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
