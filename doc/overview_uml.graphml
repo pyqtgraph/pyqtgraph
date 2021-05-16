@@ -359,7 +359,7 @@ through PlotWidget.]]></data>
     </node>
     <node id="n18">
       <data key="d4" xml:space="preserve"><![CDATA[https://pyqtgraph.readthedocs.io/en/latest/graphicsscene/graphicsscene.html]]></data>
-      <data key="d5" xml:space="preserve"><![CDATA[xtension of QGraphicsScene that implements a 
+      <data key="d5" xml:space="preserve"><![CDATA[Extension of QGraphicsScene that implements a 
 complete, parallel mouse event system. ]]></data>
       <data key="d6">
         <y:UMLClassNode>
@@ -450,12 +450,13 @@ GraphicsLayoutWidget.]]></data>
       <data key="d5" xml:space="preserve"><![CDATA[GraphicsWidget implementing a standard 2D plotting area with axes.]]></data>
       <data key="d6">
         <y:UMLClassNode>
-          <y:Geometry height="63.0" width="69.57373046875" x="-421.2429819258433" y="9.312499999999886"/>
+          <y:Geometry height="78.0" width="69.57373046875" x="-421.2429819258433" y="9.312499999999886"/>
           <y:Fill color="#E5E5F4" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.310546875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="59.57373046875" x="5.0" xml:space="preserve" y="3.0">PlotItem<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
           <y:UML clipContent="true" constraint="" hasDetailsColor="false" omitDetails="false" stereotype="" use3DEffect="false">
-            <y:AttributeLabel xml:space="preserve">layout
+            <y:AttributeLabel xml:space="preserve">items
+layout
 vb</y:AttributeLabel>
             <y:MethodLabel xml:space="preserve"/>
           </y:UML>
@@ -857,8 +858,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="34.77634637394482" sy="6.688121646123349" tx="-78.48966383934021" ty="0.0">
-            <y:Point x="-312.278076171875" y="19.500621646123236"/>
+          <y:Path sx="34.77634637394482" sy="8.280531561867003" tx="-78.48966383934021" ty="0.0">
+            <y:Point x="-312.278076171875" y="29.862963342658517"/>
             <y:Point x="-298.94474283854174" y="-80.00000000000011"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
@@ -870,8 +871,8 @@ can be painted on with QPainter. ]]></data>
       <data key="d8" xml:space="preserve"/>
       <data key="d10">
         <y:SplineEdge>
-          <y:Path sx="-31.863771468873892" sy="23.66091207065422" tx="0.0" ty="0.0">
-            <y:Point x="-462.0" y="55.33333333333337"/>
+          <y:Path sx="-31.863771468873892" sy="29.29446256366713" tx="0.0" ty="0.0">
+            <y:Point x="-462.0" y="70.40583034647557"/>
             <y:Point x="-492.5" y="40.812499999999886"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
@@ -908,8 +909,9 @@ can be painted on with QPainter. ]]></data>
           <y:Path sx="-81.89348628248263" sy="12.854686676639005" tx="0.0" ty="0.0">
             <y:Point x="-1117.5962727864585" y="-185.6875"/>
             <y:Point x="-1139.0208333333335" y="-10.041874999999436"/>
-            <y:Point x="-918.3749999999999" y="84.31249999999989"/>
-            <y:Point x="-272.281005859375" y="95.31249999999977"/>
+            <y:Point x="-918.3749999999999" y="95.31249999999977"/>
+            <y:Point x="-395.6870751544767" y="116.97921445639179"/>
+            <y:Point x="-280.0711111111109" y="40.812499999999886"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -924,7 +926,7 @@ can be painted on with QPainter. ]]></data>
             <y:Point x="-1002.7421061197917" y="-163.0"/>
             <y:Point x="-1035.375" y="-55.18750000000023"/>
             <y:Point x="-630.0" y="-27.66666666666663"/>
-            <y:Point x="-461.16666666666674" y="4.0"/>
+            <y:Point x="-436.6738590203107" y="-10.130465949820746"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
@@ -998,6 +1000,19 @@ can be painted on with QPainter. ]]></data>
           <y:Path sx="-60.85035893026043" sy="25.31381586543165" tx="57.90989072624984" ty="-15.454366660497726">
             <y:Point x="-881.075439453125" y="-484.37368413456824"/>
             <y:Point x="-907.075439453125" y="-511.0"/>
+          </y:Path>
+          <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
+          <y:Arrows source="white_diamond" target="none"/>
+        </y:SplineEdge>
+      </data>
+    </edge>
+    <edge id="e42" source="n22" target="n6">
+      <data key="d8" xml:space="preserve"/>
+      <data key="d10">
+        <y:SplineEdge>
+          <y:Path sx="-34.77105259895325" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="-461.16666666666674" y="-3.0235364396653495"/>
+            <y:Point x="-492.9701314217442" y="-207.44427718040617"/>
           </y:Path>
           <y:LineStyle color="#B8B8B8" type="line" width="1.0"/>
           <y:Arrows source="white_diamond" target="none"/>
