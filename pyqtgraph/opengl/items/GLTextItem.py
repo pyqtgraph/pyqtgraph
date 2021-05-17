@@ -2,6 +2,7 @@ from typing import List, Tuple, Union
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 import numpy as np
+import pyqtgraph.functions as fn
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 class GLTextItem(GLGraphicsItem):
@@ -58,6 +59,7 @@ class GLTextItem(GLGraphicsItem):
                     elif isinstance(value, (tuple, list)):
                         if len(value) != 4:
                             raise Exception('"len(color)" must be 4.')
+                    value = fn.glColor(value)
                 elif arg == 'font':
                     if value not in [
                         GLUT_BITMAP_8_BY_13,
@@ -83,6 +85,8 @@ class GLTextItem(GLGraphicsItem):
         if len(self.text) < 1:
             return
         self.setupGLState()
+
+        print(self.color)
 
         glColor4d(*self.color)
         glRasterPos3d(float(self.pos[0]), float(self.pos[1]), float(self.pos[2]))

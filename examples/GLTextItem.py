@@ -20,7 +20,7 @@ txtitem1 = gl.GLTextItem(pos=(0.0, 0.0, 0.0), text='text1')
 gvw.addItem(txtitem1)
 
 txtitem2 = gl.GLTextItem()
-txtitem2.setData(pos=(1.0, -1.0, 2.0), color=(0.5, 1.0, 0.5, 1.0), text='text2')
+txtitem2.setData(pos=(1.0, -1.0, 2.0), color=(127, 255, 127, 255), text='text2')
 gvw.addItem(txtitem2)
 
 if __name__ == '__main__':
