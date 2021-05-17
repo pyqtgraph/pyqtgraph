@@ -13,9 +13,9 @@ class GLTextItem(GLGraphicsItem):
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
 
-        self.pos:Union[np.ndarray, List[float], Tuple[float, ...]] = np.array([0.0, 0.0, 0.0])
-        self.color:Union[np.ndarray, List[float], Tuple[float, ...]] = np.array([1.0, 1.0, 1.0, 1.0])
-        self.text:str = ''
+        self.pos = np.array([0.0, 0.0, 0.0])
+        self.color = (1.0, 1.0, 1.0, 1.0)
+        self.text = ''
         self.font = GLUT_BITMAP_HELVETICA_18
 
         self.setData(**kwds)
