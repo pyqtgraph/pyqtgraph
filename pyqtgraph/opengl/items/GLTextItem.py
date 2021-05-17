@@ -84,7 +84,7 @@ class GLTextItem(GLGraphicsItem):
             return
         self.setupGLState()
 
-        glColor4d(float(self.color[0]), float(self.color[1]), float(self.color[2]), float(self.color[3]))
+        glColor4d(*self.color)
         glRasterPos3d(float(self.pos[0]), float(self.pos[1]), float(self.pos[2]))
         for char in self.text:
             glutBitmapCharacter(self.font, ord(char))
