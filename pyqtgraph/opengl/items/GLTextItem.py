@@ -86,8 +86,6 @@ class GLTextItem(GLGraphicsItem):
             return
         self.setupGLState()
 
-        print(self.color)
-
         glColor4d(*self.color)
         glRasterPos3d(float(self.pos[0]), float(self.pos[1]), float(self.pos[2]))
         for char in self.text:
