@@ -16,6 +16,14 @@ gvw = gl.GLViewWidget()
 gvw.show()
 gvw.setWindowTitle('pyqtgraph example: GLTextItem')
 
+griditem = gl.GLGridItem()
+griditem.setSize(10, 10)
+griditem.setSpacing(1, 1)
+gvw.addItem(griditem)
+
+axisitem = gl.GLAxisItem()
+gvw.addItem(axisitem)
+
 txtitem1 = gl.GLTextItem(pos=(0.0, 0.0, 0.0), text='text1')
 gvw.addItem(txtitem1)
 
