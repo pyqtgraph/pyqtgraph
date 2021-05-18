@@ -52,7 +52,7 @@ class _TimeSuite(object):
             prime_numba()
             pg.setConfigOption("useNumba", False)
         if cp:
-            renderQimage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
+            renderQImage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
 
 
     @staticmethod
