@@ -88,11 +88,10 @@ def make_test(dtype, kind, use_levels, lut_name, func_name):
         lut = getattr(self, lut_name + "_lut", None) if lut_name is not None else None
         if kind == "numba":
             pg.setConfigOption("useNumba", True)
-        for _ in range(1):
-            img_data = data["data"]
-            if kind == "cupy":
-                img_data = cp.asarray(img_data)
-            renderQImage(img_data, lut=lut, levels=levels)
+        img_data = data["data"]
+        if kind == "cupy":
+            img_data = cp.asarray(img_data)
+        renderQImage(img_data, lut=lut, levels=levels)
         if kind == "numba":
             pg.setConfigOption("useNumba", False)
 
