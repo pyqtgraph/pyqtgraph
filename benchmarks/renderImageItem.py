@@ -29,7 +29,7 @@ def prime_numba():
     for lut in [lut_small, lut_big]:
         renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20,220), lut=lut)
         renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250,3000), lut=lut)
-        renderQImage(np.zeros(shape, dtype=np.float64), levels=(-4.0,4.0), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.float32), levels=(-4.0,4.0), lut=lut)
 
 
 class _TimeSuite(object):
@@ -58,7 +58,7 @@ class _TimeSuite(object):
     @staticmethod
     def _create_data(size, xp):
         float_data = {
-            "data": xp.random.normal(size=size),
+            "data": xp.random.normal(size=size).astype("float32"),
             "levels": [-4.0, 4.0],
         }
         uint16_data = {
