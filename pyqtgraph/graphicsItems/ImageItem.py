@@ -174,7 +174,7 @@ class ImageItem(GraphicsObject):
         if substrate == cupy and not isinstance(data, cupy.ndarray):
             data = cupy.asarray(data)
         elif substrate == numpy:
-            if isinstance(data, cupy.ndarray):
+            if cupy is not None and isinstance(data, cupy.ndarray):
                 data = data.get()
             else:
                 data = numpy.asarray(data)
