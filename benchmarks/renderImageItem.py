@@ -54,8 +54,24 @@ class _TimeSuite(object):
             prime_numba()
             pg.setConfigOption("useNumba", False)
         if cp:
+            _d1, _d2, _d3, self.cupy_uint16_lut, self.cupy_uint8_lut = self._create_data(size, cp)
             renderQImage(cp.asarray(self.uint16_data["data"]))  # prime the gpu
 
+    @property
+    def numba_uint16_lut(self):
+        return self.uint16_lut
+
+    @property
+    def numba_uint8_lut(self):
+        return self.uint8_lut
+
+    @property
+    def numpy_uint16_lut(self):
+        return self.uint16_lut
+
+    @property
+    def numpy_uint8_lut(self):
+        return self.uint8_lut
 
     @staticmethod
     def _create_data(size, xp):
@@ -87,15 +103,12 @@ def make_test(dtype, kind, use_levels, lut_name, func_name):
     def time_test(self):
         data = getattr(self, dtype + "_data")
         levels = data["levels"] if use_levels else None
-        lut = getattr(self, lut_name + "_lut", None) if lut_name is not None else None
-        if kind == "numba":
-            pg.setConfigOption("useNumba", True)
+        lut = getattr(self, f"{kind}_{lut_name}_lut", None) if lut_name is not None else None
+        pg.setConfigOption("useNumba", kind == "numba")
         img_data = data["data"]
         if kind == "cupy":
             img_data = cp.asarray(img_data)
         renderQImage(img_data, lut=lut, levels=levels)
-        if kind == "numba":
-            pg.setConfigOption("useNumba", False)
 
     time_test.__name__ = func_name
     return time_test
