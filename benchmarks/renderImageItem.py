@@ -37,11 +37,14 @@ def prime_numba():
 class _TimeSuite(object):
     def __init__(self):
         super(_TimeSuite, self).__init__()
+        self.size = None
         self.float_data = None
         self.uint8_data = None
         self.uint8_lut = None
         self.uint16_data = None
         self.uint16_lut = None
+        self.cupy_uint16_lut = None
+        self.cupy_uint8_lut = None
 
     def setup(self):
         size = (self.size, self.size)
@@ -114,23 +117,23 @@ def make_test(dtype, kind, use_levels, lut_name, func_name):
     return time_test
 
 
-for kind in ["cupy", "numba", "numpy"]:
-    if kind == "cupy" and cp is None:
+for option in ["cupy", "numba", "numpy"]:
+    if option == "cupy" and cp is None:
         continue
-    if kind == "numba" and numba is None:
+    if option == "numba" and numba is None:
         continue
-    for dtype in ["float", "uint16", "uint8"]:
-        for levels in [True, False]:
-            if dtype == "float" and not levels:
+    for data_type in ["float", "uint16", "uint8"]:
+        for lvls in [True, False]:
+            if data_type == "float" and not lvls:
                 continue
             for lutname in [None, "uint8", "uint16"]:
                 name = (
-                    f'time_1x_renderImageItem_{kind}_{dtype}_{"" if levels else "no"}levels_{lutname or "no"}lut'
+                    f'time_1x_renderImageItem_{option}_{data_type}_{"" if lvls else "no"}levels_{lutname or "no"}lut'
                 )
-                setattr(_TimeSuite, name, make_test(dtype, kind, levels, lutname, name))
+                setattr(_TimeSuite, name, make_test(data_type, option, lvls, lutname, name))
 
 
 class Time4096Suite(_TimeSuite):
     def __init__(self):
-        self.size = 4096
         super(Time4096Suite, self).__init__()
+        self.size = 4096
