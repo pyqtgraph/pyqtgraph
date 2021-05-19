@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 
 import pyqtgraph as pg
@@ -14,6 +15,7 @@ try:
 except ImportError:
     numba = None
 
+
 def renderQImage(*args, **kwargs):
     imgitem = pg.ImageItem(axisOrder='row-major')
     if 'autoLevels' not in kwargs:
@@ -24,12 +26,12 @@ def renderQImage(*args, **kwargs):
 
 def prime_numba():
     shape = (64, 64)
-    lut_small = np.random.randint(256, size=(256,3), dtype=np.uint8)
-    lut_big = np.random.randint(256, size=(512,3), dtype=np.uint8)
+    lut_small = np.random.randint(256, size=(256, 3), dtype=np.uint8)
+    lut_big = np.random.randint(256, size=(512, 3), dtype=np.uint8)
     for lut in [lut_small, lut_big]:
-        renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20,220), lut=lut)
-        renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250,3000), lut=lut)
-        renderQImage(np.zeros(shape, dtype=np.float32), levels=(-4.0,4.0), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.uint8), levels=(20, 220), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.uint16), levels=(250, 3000), lut=lut)
+        renderQImage(np.zeros(shape, dtype=np.float32), levels=(-4.0, 4.0), lut=lut)
 
 
 class _TimeSuite(object):
