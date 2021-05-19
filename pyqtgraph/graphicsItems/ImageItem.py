@@ -159,10 +159,26 @@ class ImageItem(GraphicsObject):
         or :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
         """
         if lut is not self.lut:
+            if self._xp is not None:
+                lut = self._ensure_proper_substrate(lut, self._xp)
             self.lut = lut
             self._effectiveLut = None
             if update:
                 self.updateImage()
+
+    @staticmethod
+    def _ensure_proper_substrate(data, substrate):
+        if data is None or isinstance(data, Callable) or isinstance(data, substrate.ndarray):
+            return data
+        cupy = getCupy()
+        if substrate == cupy and not isinstance(data, cupy.ndarray):
+            data = cupy.asarray(data)
+        elif substrate == numpy:
+            if isinstance(data, cupy.ndarray):
+                data = data.get()
+            else:
+                data = numpy.asarray(data)
+        return data
 
     def setAutoDownsample(self, ads):
         """
@@ -393,6 +409,7 @@ class ImageItem(GraphicsObject):
 
         # Request a lookup table if this image has only one channel
         if self.image.ndim == 2 or self.image.shape[2] == 1:
+            self.lut = self._ensure_proper_substrate(self.lut, self._xp)
             if isinstance(self.lut, Callable):
                 lut = self.lut(self.image)
             else:
