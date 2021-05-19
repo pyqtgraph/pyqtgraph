@@ -703,7 +703,7 @@ class ImageItem(GraphicsObject):
             fmt = QtGui.QImage.Format.Format_RGBA64 # endian-independent
         if fmt is None:
             raise ValueError("unsupported image type")
-        qimage = fn._ndarray_to_qimage(image, fmt)
+        qimage = fn.ndarray_to_qimage(image, fmt)
         if ctbl is not None:
             qimage.setColorTable(ctbl)
         return qimage

@@ -1390,7 +1390,7 @@ def try_fastpath_argb(xp, ain, aout, useRGBA):
     return True
 
 
-def _ndarray_to_qimage(arr, fmt):
+def ndarray_to_qimage(arr, fmt):
     """
     Low level function to encapsulate QImage creation differences between bindings.
     "arr" is assumed to be C-contiguous. 
@@ -1508,7 +1508,7 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     profile("copy")
 
-    return _ndarray_to_qimage(imgData, imgFormat)
+    return ndarray_to_qimage(imgData, imgFormat)
 
 
 def imageToArray(img, copy=False, transpose=True):
