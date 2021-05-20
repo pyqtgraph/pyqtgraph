@@ -421,8 +421,9 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         Pos may be a Vector or an (N,3) array of locations
         """
         cam = self.cameraPosition()
-        if isinstance(pos, np.ndarray):            
-            cam = np.array((cam.x(), cam.y(), cam.z()))  
+        if isinstance(pos, np.ndarray):
+            if isinstance(cam, QtGui.QVector3D):            
+                cam = np.array((cam.x(), cam.y(), cam.z()))  
             cam = cam.reshape((1,) * (pos.ndim - 1) + (3,))
             dist = ((pos-cam)**2).sum(axis=-1)**0.5
         else:
