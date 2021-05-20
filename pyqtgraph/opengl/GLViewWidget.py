@@ -423,7 +423,7 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         cam = self.cameraPosition()
         if isinstance(pos, np.ndarray):
             # cam = np.array(cam).reshape((1,) * (pos.ndim - 1) + (3,)) # not properly converted to numpy arrays
-            cam = np.array((cam[0], cam[1], cam[2]))  # j2y
+            cam = np.array((cam[0], cam[1], cam[2]))  
             cam = cam.reshape((1,) * (pos.ndim - 1) + (3,))
             dist = ((pos-cam)**2).sum(axis=-1)**0.5
         else:
