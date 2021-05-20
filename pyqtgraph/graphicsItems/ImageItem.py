@@ -411,7 +411,7 @@ class ImageItem(GraphicsObject):
         if self.image.ndim == 2 or self.image.shape[2] == 1:
             self.lut = self._ensure_proper_substrate(self.lut, self._xp)
             if isinstance(self.lut, Callable):
-                lut = self.lut(self.image)
+                lut = self._ensure_proper_substrate(self.lut(self.image), self._xp)
             else:
                 lut = self.lut
         else:
