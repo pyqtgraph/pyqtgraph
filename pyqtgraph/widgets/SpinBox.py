@@ -223,6 +223,10 @@ class SpinBox(QtGui.QAbstractSpinBox):
 
             if 'format' not in opts:
                 self.opts['format'] = asUnicode("{value:d}{suffixGap}{suffix}")
+
+        if self.opts['dec']:
+            if self.opts.get('minStep') is None:
+                self.opts['minStep'] = self.opts['step']
         
         if 'delay' in opts:
             self.proxy.setDelay(opts['delay'])
