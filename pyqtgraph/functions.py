@@ -1390,6 +1390,47 @@ def try_fastpath_argb(xp, ain, aout, useRGBA):
     return True
 
 
+def ndarray_to_qimage(arr, fmt):
+    """
+    Low level function to encapsulate QImage creation differences between bindings.
+    "arr" is assumed to be C-contiguous. 
+    """
+
+    # C++ QImage has two kind of constructors
+    # - QImage(const uchar*, ...)
+    # - QImage(uchar*, ...)
+    # If the const constructor is used, subsequently calling any non-const method
+    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+
+    if QT_LIB.startswith('PyQt'):
+        if QtCore.PYQT_VERSION == 0x60000:
+            # PyQt5          -> const
+            # PyQt6 >= 6.0.1 -> const
+            # PyQt6 == 6.0.0 -> non-const
+            img_ptr = Qt.sip.voidptr(arr)
+        else:
+            # PyQt5          -> non-const
+            # PyQt6 >= 6.0.1 -> non-const
+            img_ptr = int(Qt.sip.voidptr(arr))  # or arr.ctypes.data
+    else:
+        # bindings that support ndarray
+        # PyQt5          -> const
+        # PyQt6 >= 6.0.1 -> const
+        # PySide2        -> non-const
+        # PySide6        -> non-const
+        img_ptr = arr
+
+    h, w = arr.shape[:2]
+    bytesPerLine = arr.strides[0]
+    qimg = QtGui.QImage(img_ptr, w, h, bytesPerLine, fmt)
+
+    # Note that the bindings that support ndarray directly already hold a reference
+    # to it. The manual reference below is only needed for those bindings that take
+    # in a raw pointer.
+    qimg.data = arr
+    return qimg
+
+
 def makeQImage(imgData, alpha=None, copy=True, transpose=True):
     """
     Turn an ARGB array into QImage.
@@ -1467,34 +1508,8 @@ def makeQImage(imgData, alpha=None, copy=True, transpose=True):
         
     profile("copy")
 
-    # C++ QImage has two kind of constructors
-    # - QImage(const uchar*, ...)
-    # - QImage(uchar*, ...)
-    # If the const constructor is used, subsequently calling any non-const method
-    # will trigger the COW mechanism, i.e. a copy is made under the hood.
+    return ndarray_to_qimage(imgData, imgFormat)
 
-    if QT_LIB.startswith('PyQt'):
-        if QtCore.PYQT_VERSION == 0x60000:
-            # PyQt5          -> const
-            # PyQt6 >= 6.0.1 -> const
-            # PyQt6 == 6.0.0 -> non-const
-            img_ptr = Qt.sip.voidptr(imgData)
-        else:
-            # PyQt5          -> non-const
-            # PyQt6 >= 6.0.1 -> non-const
-            img_ptr = int(Qt.sip.voidptr(imgData))  # or imgData.ctypes.data
-    else:
-        # bindings that support ndarray
-        # PyQt5          -> const
-        # PyQt6 >= 6.0.1 -> const
-        # PySide2        -> non-const
-        # PySide6        -> non-const
-        img_ptr = imgData
-
-    img = QtGui.QImage(img_ptr, imgData.shape[1], imgData.shape[0], imgFormat)
-                
-    img.data = imgData
-    return img
 
 def imageToArray(img, copy=False, transpose=True):
     """
