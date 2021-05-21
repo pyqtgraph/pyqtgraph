@@ -53,12 +53,6 @@ class GLTextItem(GLGraphicsItem):
                         if len(value) != 3:
                             raise Exception('"len(pos)" must be 3.')
                 elif arg == 'color':
-                    if isinstance(value, np.ndarray):
-                        if value.shape != (4,):
-                            raise Exception('"color.shape" must be (4,).')
-                    elif isinstance(value, (tuple, list)):
-                        if len(value) != 4:
-                            raise Exception('"len(color)" must be 4.')
                     value = fn.glColor(value)
                 elif arg == 'font':
                     if value not in [
