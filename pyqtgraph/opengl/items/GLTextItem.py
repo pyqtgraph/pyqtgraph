@@ -1,8 +1,6 @@
-from typing import List, Tuple, Union
 from OpenGL.GL import *
-from OpenGL.GLUT import *
 import numpy as np
-import pyqtgraph.functions as fn
+from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 class GLTextItem(GLGraphicsItem):
@@ -15,12 +13,11 @@ class GLTextItem(GLGraphicsItem):
         self.setGLOptions(glopts)
 
         self.pos = np.array([0.0, 0.0, 0.0])
-        self.color = (1.0, 1.0, 1.0, 1.0)
+        self.color = QtCore.Qt.white
         self.text = ''
-        self.font = GLUT_BITMAP_HELVETICA_18
+        self.font = QtGui.QFont('Helvetica', 16)
 
         self.setData(**kwds)
-        glutInit()
     
     def setData(self, **kwds):
         """
@@ -31,11 +28,9 @@ class GLTextItem(GLGraphicsItem):
         **Arguments:**
         ------------------------------------------------------------------------
         pos                   (3,) array of floats specifying text location.
-        color                 (4,) array of floats (0.0-1.0) or
-                              tuple of floats specifying
-                              a single color for the entire item.
+        color                 QColor or array of ints [R,G,B] or [R,G,B,A]. (Default: Qt.white)
         text                  String to display.
-        font                  GLUT font. (Default: GLUT_BITMAP_HELVETICA_18)
+        font                  QFont (Default: QFont('Helvetica', 16))
         ====================  ==================================================
         """
         args = ['pos', 'color', 'text', 'font']
@@ -53,25 +48,22 @@ class GLTextItem(GLGraphicsItem):
                         if len(value) != 3:
                             raise Exception('"len(pos)" must be 3.')
                 elif arg == 'color':
-                    value = fn.glColor(value)
+                    if isinstance(value, QtGui.QColor):
+                        pass
+                    elif isinstance(value, (tuple, list, np.ndarray)):
+                        if isinstance(value, np.ndarray):
+                            if len(value.shape) != 1:
+                                raise Exception('"color.shape" must be (3,) or (4,).')
+                        value_len = len(value)
+                        if value_len == 3:
+                            value = QtGui.QColor(value[0], value[1], value[2])
+                        elif value_len == 4:
+                            value = QtGui.QColor(value[0], value[1], value[2], value[3])
+                        else:
+                            raise Exception('"len(color)" must be 3 or 4.')
                 elif arg == 'font':
-                    if value not in [
-                        GLUT_BITMAP_8_BY_13,
-                        GLUT_BITMAP_9_BY_15,
-                        GLUT_BITMAP_TIMES_ROMAN_10,
-                        GLUT_BITMAP_TIMES_ROMAN_24,
-                        GLUT_BITMAP_HELVETICA_10,
-                        GLUT_BITMAP_HELVETICA_12,
-                        GLUT_BITMAP_HELVETICA_18
-                    ]:
-                        raise Exception('"font" must be ' \
-                            '"GLUT_BITMAP_8_BY_13", ' \
-                            '"GLUT_BITMAP_9_BY_15", ' \
-                            '"GLUT_BITMAP_TIMES_ROMAN_10", ' \
-                            '"GLUT_BITMAP_TIMES_ROMAN_24", ' \
-                            '"GLUT_BITMAP_HELVETICA_10", ' \
-                            '"GLUT_BITMAP_HELVETICA_12", or ' \
-                            '"GLUT_BITMAP_HELVETICA_18".')
+                    if isinstance(value, QtGui.QFont) is False:
+                        raise Exception('"font" must be QFont.')
                 setattr(self, arg, value)
         self.update()
     
@@ -80,7 +72,34 @@ class GLTextItem(GLGraphicsItem):
             return
         self.setupGLState()
 
-        glColor4d(*self.color)
-        glRasterPos3d(float(self.pos[0]), float(self.pos[1]), float(self.pos[2]))
-        for char in self.text:
-            glutBitmapCharacter(self.font, ord(char))
+        modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+        projection = glGetDoublev(GL_PROJECTION_MATRIX)
+        viewport = glGetIntegerv(GL_VIEWPORT)
+
+        text_pos = self.__project(self.pos, modelview, projection, viewport)
+        text_pos[1] = viewport[3] - text_pos[1]
+        
+        painter = QtGui.QPainter(self.view())
+        painter.setPen(self.color)
+        painter.setFont(self.font)
+        painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
+        painter.drawText(text_pos[0], text_pos[1], self.text)
+        painter.end()
+    
+    def __project(self, obj_pos, modelview, projection, viewport):
+        obj_vec = np.append(np.array(obj_pos), [1.0])
+
+        view_vec = np.matmul(modelview.T, obj_vec)
+        proj_vec = np.matmul(projection.T, view_vec)
+
+        if proj_vec[3] == 0.0:
+            return
+        
+        proj_vec[0:3] /= proj_vec[3]
+
+        return np.array([
+            viewport[0] + (1.0 + proj_vec[0]) * viewport[2] / 2.0,
+            viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2.0,
+            (1.0 + proj_vec[2]) / 2.0
+        ])
+    
