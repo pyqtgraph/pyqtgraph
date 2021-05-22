@@ -516,7 +516,7 @@ class ImageItem(GraphicsObject):
         fn_numba = fn.getNumbaFunctions()
         if xp == numpy and image.flags.c_contiguous and dtype == xp.uint16 and fn_numba is not None:
             lut, augmented_alpha = self._convert_2dlut_to_1dlut(lut)
-            image = fn_numba.rescale_and_lookup1d(image, scale/rng, minVal, (0, num_colors-1), lut)
+            image = fn_numba.rescale_and_lookup1d(image, scale/rng, minVal, lut)
             if image.dtype == xp.uint32:
                 image = image[..., xp.newaxis].view(xp.uint8)
             return image, None, None, augmented_alpha
