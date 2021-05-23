@@ -65,6 +65,7 @@ class PlotCurveItem(GraphicsObject):
             'connect': 'all',
             'mouseWidth': 8, # width of shape responding to mouse click
             'compositionMode': None,
+            'skipFiniteCheck': True
         }
         if 'pen' not in kargs:
             self.opts['pen'] = fn.mkPen('w')
@@ -336,6 +337,11 @@ class PlotCurveItem(GraphicsObject):
                         connectivity, specify an array of boolean values.
         compositionMode See :func:`setCompositionMode
                         <pyqtgraph.PlotCurveItem.setCompositionMode>`.
+        skipFiniteCheck Optimization parameter that can speed up plot time by
+                        telling the painter to not check and compensate for NaN
+                        values.  If set to True, and NaN values exist, the data
+                        may not be displayed or your plot will take a
+                        significant performance hit.  Defaults to False.
         =============== ========================================================
 
         If non-keyword arguments are used, they will be interpreted as
@@ -372,6 +378,7 @@ class PlotCurveItem(GraphicsObject):
                 raise Exception("Plot data must be 1D ndarray.")
             if data.dtype.kind == 'c':
                 raise Exception("Can not plot complex data types.")
+
 
         profiler("data checks")
 
@@ -421,6 +428,8 @@ class PlotCurveItem(GraphicsObject):
         if 'antialias' in kargs:
             self.opts['antialias'] = kargs['antialias']
 
+        self.opts['skipFiniteCheck'] = kargs.get('skipFiniteCheck', False)
+
         profiler('set')
         self.update()
         profiler('update')
@@ -458,10 +467,12 @@ class PlotCurveItem(GraphicsObject):
                 y[0] = self.opts['fillLevel']
                 y[-1] = self.opts['fillLevel']
 
-        path = fn.arrayToQPath(x, y, connect=self.opts['connect'])
-
-        return path
-
+        return fn.arrayToQPath(
+            x,
+            y,
+            connect=self.opts['connect'],
+            finiteCheck=not self.opts['skipFiniteCheck']
+        )
 
     def getPath(self):
         if self.path is None:

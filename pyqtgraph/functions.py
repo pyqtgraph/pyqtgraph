@@ -1678,7 +1678,7 @@ def downsample(data, n, axis=0, xvals='subsample'):
         return MetaArray(d2, info=info)
 
 
-def arrayToQPath(x, y, connect='all'):
+def arrayToQPath(x, y, connect='all', finiteCheck=True):
     """Convert an array of x,y coordinats to QPainterPath as efficiently as possible.
     The *connect* argument may be 'all', indicating that each point should be
     connected to the next; 'pairs', indicating that each pair of points
@@ -1735,7 +1735,7 @@ def arrayToQPath(x, y, connect='all'):
     # Qt version 5.12.3; these must now be manually cleaned out.
     isfinite = None
     qtver = [int(x) for x in QtVersion.split('.')]
-    if qtver >= [5, 12, 3]:
+    if qtver >= [5, 12, 3] and finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
         if not np.all(isfinite):
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
