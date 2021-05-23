@@ -1719,9 +1719,7 @@ def arrayToQPath(x, y, connect='all'):
     ## see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
 
     ## All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
-
     path = QtGui.QPainterPath()
-
     n = x.shape[0]
 
     backstore = bytearray(4 + n*20 + 8)
@@ -1751,9 +1749,15 @@ def arrayToQPath(x, y, connect='all'):
                 idx[:first] = first
                 arr[:] = arr[:][idx]
 
+
     # decide which points are connected by lines
     if eq(connect, 'all'):
-        arr[:]['c'] = 1
+        polygon = arrayToQPolygonF(
+            arr['x'],
+            arr['y']
+        )
+        path.addPolygon(polygon)
+        return path
     elif eq(connect, 'pairs'):
         arr[:]['c'][::2] = 0
         arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
@@ -1785,8 +1789,61 @@ def arrayToQPath(x, y, connect='all'):
         buf = QtCore.QByteArray(path.strn)
     ds = QtCore.QDataStream(buf)
     ds >> path
-
     return path
+
+def arrayToQPolygonF(x, y):
+    """
+    Utility function to convert two 1D-NumPy arrays representing curve data
+    (X-axis, Y-axis data) into a single open polygon (QtGui.PolygonF) object.
+    
+    Thanks to PythonQwt for making this code available
+    
+    License/copyright: MIT License © Pierre Raybaut 2020.
+
+    Parameters
+    ----------
+    x : np.array
+        x-axis coordinates for data to be plotted, must have have ndim of 1
+    y : np.array
+        y-axis coordinates for data to be plotted, must have ndim of 1 and 
+        be the same length as x
+    
+    Returns
+    -------
+    QPolygonF
+        Open QPolygonF object that represents the path looking to be plotted
+    
+    Raises
+    ------
+    ValueError
+        When xdata or ydata does not meet the required criteria
+    """
+    if not (
+        x.size == y.size == x.shape[0] == y.shape[0]
+    ):
+        raise ValueError("Arguments must be 1D and the same size")
+    size = x.size
+    if QtVersion.startswith("5"):
+        polyline = QtGui.QPolygonF(size)
+    else:
+        polyline = QtGui.QPolygonF()
+        if QT_LIB == "PySide6":
+            polyline.resize(size)
+        else:
+            polyline.fill(QtCore.QPointF(), size)
+    nbytes = 2 * size * 8
+    if QT_LIB == "PySide2":
+        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
+    elif QT_LIB == "PySide6":
+        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
+    else:
+        buffer = polyline.data()
+        buffer.setsize(nbytes)
+
+    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
+    memory[:, 0] = x
+    memory[:, 1] = y
+    return polyline
 
 #def isosurface(data, level):
     #"""
