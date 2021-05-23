@@ -78,6 +78,8 @@ class GLTextItem(GLGraphicsItem):
 
         text_pos = self.__project(self.pos, modelview, projection, viewport)
         text_pos[1] = viewport[3] - text_pos[1]
+
+        text_pos /= self.view().devicePixelRatio()
         
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
