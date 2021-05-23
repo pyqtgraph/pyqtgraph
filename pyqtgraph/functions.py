@@ -214,7 +214,7 @@ def mkColor(*args):
     types. Accepted arguments are:
     
     ================ ================================================
-     'c'             one of: r, g, b, c, m, y, k, w                      
+     'c'             one of: r, g, b, c, m, y, k, w
      R, G, B, [A]    integers 0-255
      (R, G, B, [A])  tuple of integers 0-255
      float           greyscale, 0.0-1.0
@@ -372,6 +372,161 @@ def hsvColor(hue, sat=1.0, val=1.0, alpha=1.0):
     c = QtGui.QColor()
     c.setHsvF(hue, sat, val, alpha)
     return c
+    
+# Matrices and math taken from "CIELab Color Space" by Gernot Hoffmann
+# http://docs-hoffmann.de/cielab03022003.pdf
+MATRIX_XYZ_FROM_RGB = np.array( (
+    ( 0.4124, 0.3576, 0.1805),
+    ( 0.2126, 0.7152, 0.0722),
+    ( 0.0193, 0.1192, 0.9505) ) )
+    
+MATRIX_RGB_FROM_XYZ = np.array( (
+    ( 3.2410,-1.5374,-0.4985),
+    (-0.9692, 1.8760, 0.0416),
+    ( 0.0556,-0.2040, 1.0570) ) )
+
+VECTOR_XYZn = np.array( ( 0.9505, 1.0000, 1.0891) ) # white reference at illuminat D65
+
+def CIELabColor(L, a, b, alpha=1.0):
+    """
+    Generates as QColor from CIE L*a*b* values.
+    
+    Parameters
+    ----------
+    L: float
+        Lightness value ranging from 0 to 100
+    a, b: float
+        (green/red) and (blue/yellow) coordinates.
+    alpha: float, optional
+        Opacity, ranging from 0 to 1
+    """ 
+    vec_Lab = np.array([L, a, b])
+    # convert to tristimulus XYZ values
+    vec_XYZ = np.full(3, ( L +16)/116 )  # Y1 = (L+16)/116
+    vec_XYZ[0] += a / 500                # X1 = (L+16)/116 + a/500
+    vec_XYZ[2] -= b / 200                # Z1 = (L+16)/116 - b/200 
+    for idx, val in enumerate(vec_XYZ):
+        if val > 0.20689: # 6.9456e-7:
+            vec_XYZ[idx] = vec_XYZ[idx]**3
+        else:
+            vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
+    vec_XYZ = VECTOR_XYZn * vec_XYZ # apply white reference
+    # print(f'XYZ: {vec_XYZ}')
+
+    # convert XYZ to linear RGB
+    vec_RGB =  MATRIX_RGB_FROM_XYZ @ vec_XYZ
+    # gamma-encode linear RGB
+    arr_sRGB = np.zeros(3)
+    for idx, val in enumerate( vec_RGB[:3] ):
+        if val > 0.0031308: # (t) RGB value for linear/exponential transition
+            arr_sRGB[idx] = 1.055 * val**(1/2.4) - 0.055
+        else:
+            arr_sRGB[idx] = 12.92 * val # (s)
+    arr_sRGB = clip_array( arr_sRGB, 0.0, 1.0 ) # avoid QColor errors
+    qcol = QtGui.QColor()
+    qcol.setRgbF( *arr_sRGB )
+    if alpha < 1.0: qcol.setAlpha(alpha)
+    return qcol
+
+def colorCIELab(qcol):
+    """
+    Describes a QColor by an array of CIE L*a*b* values.
+    
+    Parameters
+    ----------
+    qcol: QColor
+        QColor to be converted
+    alpha: Boolean, optional
+        If set to true, the returned tuple will include the alpha value 
+
+    Returns NumPy array `[L, a, b]`.
+    """
+    srgb = qcol.getRgbF()[:3] # get sRGB values from QColor
+    # convert gamma-encoded sRGB to linear:
+    vec_RGB = np.zeros(3)
+    for idx, val in enumerate( srgb ):
+        if val > (12.92 * 0.0031308): # coefficients (s) * (t)
+            vec_RGB[idx] = ((val+0.055)/1.055)**2.4
+        else:
+            vec_RGB[idx] = val / 12.92 # (s) coefficient
+    # converted linear RGB to tristimulus XYZ:
+    vec_XYZ = MATRIX_XYZ_FROM_RGB @ vec_RGB
+    # print(f'XYZ: {vec_XYZ}')
+    # normalize with white reference and convert to L*a*b* values
+    vec_XYZ1 = vec_XYZ / VECTOR_XYZn 
+    for idx, val in enumerate(vec_XYZ1):
+        if val > 0.008856:
+            vec_XYZ1[idx] = vec_XYZ1[idx]**(1/3)
+        else:
+            vec_XYZ1[idx] = 7.787*vec_XYZ1[idx] + 16/116
+            #   vec_XYZ[idx] = (vec_XYZ[idx] - 16/116) / 7.787
+    vec_Lab = np.array([
+        116 * vec_XYZ1[1] - 16,              # Y1
+        500 * (vec_XYZ1[0] - vec_XYZ1[1]),   # X1 - Y1
+        200 * (vec_XYZ1[1] - vec_XYZ1[2])] ) # Y1 - Z1
+    return vec_Lab
+
+def colorDistance(colors, metric='CIE76'):
+    """
+    Returns the perceptual distances between a sequence of QColors.
+
+    Parameters
+    ----------
+    colors: list of QColor
+    metric: string, optional
+        Metric used to determined the difference. Only 'CIE76' is supported at this time,
+        where a distance of 2.3 is considered a "just noticeable difference".
+        The default may change as more metrics become available.
+    
+    Returns 
+    -------
+    List containing the `N-1` sequential distances between `N` colors.
+    """
+    metric = metric.upper()
+    if len(colors) < 1: return np.array([], dtype=np.float)
+    if metric == 'CIE76':
+        dist = []
+        lab1 = None
+        for col in colors:
+            lab2 = colorCIELab(col)
+            if lab1 is None: #initialize on first element
+                lab1 = lab2 
+                continue
+            dE = math.sqrt( np.sum( (lab1-lab2)**2 ) )
+            dist.append(dE)
+            lab1 = lab2
+        return np.array(dist)
+    raise ValueError(f'Metric {metric} is not available.')
+    
+def makeMonochrome2(color='green'):
+    """
+    Returns a ColorMap object imitating a monochrome computer screen.
+
+    Parameters
+    ----------
+    color: str of tuple of floats
+        Primary color description. Can be one of predefined identifiers
+        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
+        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
+    """
+    name='dummy'
+    h_val = 0.35 # hue value
+    s_val = 0.60
+    l_min = 0.05
+    l_max = 0.98
+    l_vals = np.linspace(l_min, l_max, num=10)
+    qcol = QtGui.QColor()
+    color_list = []
+    for l_val in l_vals:
+        qcol.setHslF( h_val, s_val, l_val )
+        # print(l_val, qcol.name(), qcol.getRgbF() )
+        color_list.append( qcol.getRgb()[:3] )
+        
+        
+    # print(color_list)
+    stops = np.linspace(0.0, 1.0, num=10)
+    cmap = ColorMap(name=name, pos=stops, color=color_list )
+    return cmap
 
     
 def colorTuple(c):

@@ -1,6 +1,6 @@
 import numpy as np
 from .Qt import QtGui, QtCore
-from .functions import mkColor, eq
+from .functions import mkColor, eq, colorDistance
 from os import path, listdir
 from collections.abc import Callable, Sequence
 import warnings
@@ -129,7 +129,9 @@ def _getFromFile(name):
     cm = ColorMap(
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
+    if cm is not None:
+        cm.name = name
+        _mapCache[name] = cm
     return cm
 
 def getFromMatplotlib(name):
@@ -173,6 +175,7 @@ def getFromMatplotlib(name):
         col_data = np.array(col_map.colors)
         cm = ColorMap(pos=np.linspace(0.0, 1.0, col_data.shape[0]), color=255*col_data[:,:3]+0.5 )
     if cm is not None:
+        cm.name = name
         _mapCache[name] = cm
     return cm
 
@@ -195,8 +198,85 @@ def getFromColorcet(name):
     cm = ColorMap(
         pos=np.linspace(0.0, 1.0, len(color_list)),
         color=color_list) #, names=color_names)
-    _mapCache[name] = cm
+    if cm is not None:
+        cm.name = name
+        _mapCache[name] = cm
     return cm
+    
+def makeMonochrome(color='green'):
+    """
+    Returns a ColorMap object with a dark to bright ramp and adjustable tint.
+    
+    In addition to neutral, warm or cold grays, imitations of monochrome computer monitors are also
+    available. The following predefined color ramps are available:
+    `neutral`, `warm`, `cool`, `green`, `amber`, `blue`, `red`, `pink`, `lavender`.
+    
+    The ramp can also be specifiedby a tuple of float values in the range of 0 to 1.
+    In this case `(h, s, l0, l1)` describe hue, saturation, minimum lightness and maximum lightness
+    within the HSL color space. The values `l0` and `l1` can be omitted. They default to 
+    `l0=0.0` and `l1=1.0` in this case.
+
+    Parameters
+    ----------
+    color: str or tuple of floats
+        Color description. Can be one of the predefined identifiers, or a tuple
+        `(h, s, l0, l1)`, `(h, s)` or (`h`).
+        'green', 'amber', 'blue', 'red', 'lavender', 'pink'
+        or a tuple of relative ``(R,G,B)`` contributions in range 0.0 to 1.0
+    """
+    name=f'Monochrome {color}'
+    defaults = {
+        'neutral': (0.00, 0.00, 0.00, 1.00),
+        'warm'   : (0.10, 0.08, 0.00, 0.95),
+        'cool'   : (0.60, 0.08, 0.00, 0.95),
+        'green'  : (0.35, 0.55, 0.02, 0.90),
+        'amber'  : (0.09, 0.80, 0.02, 0.80),
+        'blue'   : (0.58, 0.85, 0.02, 0.95),
+        'red'    : (0.01, 0.60, 0.02, 0.90),
+        'pink'   : (0.93, 0.65, 0.02, 0.95),
+        'lavender': (0.75, 0.50, 0.02, 0.90)
+    }
+    if isinstance(color, str):
+        if color in defaults:
+            h_val, s_val, l_min, l_max = defaults[color]
+        else:
+            valid = ','.join(defaults.keys())
+            raise ValueError(f"Undefined color descriptor '{color}', known values are:\n{valid}")
+    else:
+        s_val = 0.70 # set up default values
+        l_min = 0.00
+        l_max = 1.00
+        if not hasattr(color,'__len__'):
+            h_val = float(color)
+        elif len(color) == 1:
+            h_val = color[0]
+        elif len(color) == 2:
+            h_val, s_val = color
+        elif len(color) == 4:
+            h_val, s_val, l_min, l_max = color
+        else:
+            raise ValueError(f"Invalid color descriptor '{color}'")
+    l_vals = np.linspace(l_min, l_max, num=10)
+    color_list = []
+    for l_val in l_vals:
+        qcol = QtGui.QColor()
+        qcol.setHslF( h_val, s_val, l_val )
+        color_list.append( qcol )
+    return ColorMap( None, color_list, name=name, linearize=True )
+
+def testBarData(length=768, width=32):
+    """ 
+    Returns an NumPy array that represents a modulated color bar ranging from 0 to 1.
+    This is used to judge the perceived variation of the color gradient
+    """
+    # gradient   = np.linspace(0.05, 0.95, length)
+    gradient   = np.linspace(0.00, 1.00, length)
+    modulation = -0.04 * np.sin( (np.pi/4) * np.arange(length) )
+    data = np.zeros( (length, width) )
+    for idx in range(width):
+        data[:,idx] = gradient + (idx/(width-1)) * modulation
+    np.clip(data, 0.0, 1.0)
+    return data
 
 
 class ColorMap(object):
@@ -238,14 +318,14 @@ class ColorMap(object):
         'qcolor': QCOLOR,
     }
 
-    def __init__(self, pos, color, mapping=CLIP, mode=None): #, names=None):
+    def __init__(self, pos, color, mapping=CLIP, mode=None, linearize=False, name=''):
         """
         __init__(pos, color, mapping=ColorMap.CLIP)
         
         Parameters
         ----------
-        pos: array_like of float in range 0 to 1
-            Assigned positions of specified colors
+        pos: array_like of float in range 0 to 1, or None
+            Assigned positions of specified colors. `None` sets equal spacing.
         color: array_like of colors
             List of colors, interpreted via :func:`mkColor() <pyqtgraph.mkColor>`.
         mapping: str or int, optional
@@ -255,24 +335,35 @@ class ColorMap(object):
             The default of `ColorMap.CLIP` continues to show
             the colors assigned to 0 and 1 for all values below or above this range, respectively.
         """
+        self.name = name # storing a name helps identify ColorMaps sampled by Palette
         if mode is not None:
             warnings.warn(
                 "'mode' argument is deprecated and does nothing.",
                 DeprecationWarning, stacklevel=2
         )
-        self.pos = np.array(pos)
-        order = np.argsort(self.pos)
-        self.pos = self.pos[order]
-        self.color = np.apply_along_axis(
-            func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
-            axis   = -1,
-            arr    = color,
-            )[order]
+        if pos is None:
+            order = range(len(color))
+            self.pos = np.linspace(0.0, 1.0, num=len(color))
+        else:
+            self.pos = np.array(pos)
+            order = np.argsort(self.pos)
+            self.pos = self.pos[order]
         
+        self.color = np.zeros( (len(color), 4) ) # stores float rgba values
+        for cnt, idx in enumerate(order):
+            self.color[cnt] = mkColor(color[idx]).getRgbF()
+        # self.color = np.apply_along_axis(
+        #     func1d = lambda x: np.uint8( mkColor(x).getRgb() ), # cast RGB integer values to uint8
+        #     axis   = -1,
+        #     arr    = color,
+        #     )[order]
+        
+        # print('colors:', self.color )
         self.mapping_mode = self.CLIP # default to CLIP mode   
         if mapping is not None:
             self.setMappingMode( mapping )
         self.stopsCache = {}
+        if linearize: self.linearize()
 
     def setMappingMode(self, mapping):
         """
@@ -294,6 +385,12 @@ class ColorMap(object):
             self.mapping_mode = mapping # only allow defined values
         else:
             raise ValueError("Undefined mapping type '{:s}'".format(str(mapping)) )
+            
+    def __str__(self):
+        """ provide human-readable identifier """
+        if self.name is None:
+            return 'unnamed ColorMap({:d})'.format(len(self.pos))
+        return "ColorMap({:d}):'{:s}'".format(len(self.pos),self.name)
 
     def __getitem__(self, key):
         """ Convenient shorthand access to palette colors """
@@ -305,6 +402,20 @@ class ColorMap(object):
             return self.mapToQColor(float_idx)
         except ValueError: pass
         return None
+
+    def linearize(self):
+        """
+        Adjusts the positions assigned to color stops to approximately equalize the perceived color difference
+        for a fixed step.
+        """
+        colors = self.getColors(mode=self.QCOLOR)
+        distances = colorDistance(colors)
+        positions = np.insert( np.cumsum(distances), 0, 0.0 )
+        # positions /= positions[-1] # normalize last value to 1.0
+        # print('Distances:', distances)
+        # print('Positions:', positions)
+        self.pos = positions / positions[-1] # normalize last value to 1.0
+        self.stopsCache = {}
 
     def reverse(self):
         """
