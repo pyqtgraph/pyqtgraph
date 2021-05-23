@@ -58,4 +58,4 @@ lines = np.array([
 g.setData(pos=pos, adj=adj, pen=lines, size=1, symbol=symbols, pxMode=False)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

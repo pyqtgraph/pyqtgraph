@@ -55,4 +55,4 @@ plt.addItem(item)
 plt.setWindowTitle('pyqtgraph example: customGraphicsItem')
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -33,6 +33,34 @@ def test_useCupy_can_be_set_after_init():
         pg.setConfigOption("useCupy", prev_setting)
 
 
+@pytest.mark.skipif(cupy is None, reason="CuPy unavailable to test")
+def test_ensuring_substrate():
+    prev_setting = pg.getConfigOption("useCupy")
+    try:
+        pg.setConfigOption("useCupy", True)
+        ii = pg.ImageItem()
+
+        data = cupy.random.randint(0, 255, size=(32, 32)).astype(cupy.uint8)
+        assert data is ii._ensure_proper_substrate(data, cupy)
+        assert isinstance(ii._ensure_proper_substrate(data, cupy), cupy.ndarray)
+        assert data is not ii._ensure_proper_substrate(data, np)
+        assert isinstance(ii._ensure_proper_substrate(data, np), np.ndarray)
+
+        data = np.random.randint(0, 255, size=(32, 32)).astype(np.uint8)
+        assert data is ii._ensure_proper_substrate(data, np)
+        assert isinstance(ii._ensure_proper_substrate(data, np), np.ndarray)
+        assert data is not ii._ensure_proper_substrate(data, cupy)
+        assert isinstance(ii._ensure_proper_substrate(data, cupy), cupy.ndarray)
+
+        data = range(0, 255)
+        assert data is not ii._ensure_proper_substrate(data, np)
+        assert isinstance(ii._ensure_proper_substrate(data, np), np.ndarray)
+        assert data is not ii._ensure_proper_substrate(data, cupy)
+        assert isinstance(ii._ensure_proper_substrate(data, cupy), cupy.ndarray)
+    finally:
+        pg.setConfigOption("useCupy", prev_setting)
+
+
 def test_ImageItem(transpose=False):
     w = pg.GraphicsLayoutWidget()
     w.show()

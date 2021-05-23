@@ -59,4 +59,4 @@ vb.autoRange()
 hist.setImageItem(img)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

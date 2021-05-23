@@ -142,4 +142,4 @@ curve.setHDF5(f['data'])
 plt.addItem(curve)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()
