@@ -423,9 +423,6 @@ class GLViewWidget(QtWidgets.QOpenGLWidget):
         cam = self.cameraPosition()
         if isinstance(pos, np.ndarray):
             cam = np.array(cam).reshape((1,)*(pos.ndim-1)+(3,))
-            # if isinstance(cam, QtGui.QVector3D):
-            #     cam = np.array((cam.x(), cam.y(), cam.z()))
-            cam = cam.reshape((1,)*(pos.ndim-1)+(3,))
             dist = ((pos-cam)**2).sum(axis=-1)**0.5
         else:
             dist = (pos-cam).length()
