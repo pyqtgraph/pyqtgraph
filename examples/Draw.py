@@ -43,4 +43,4 @@ img.setDrawKernel(kern, mask=kern, center=(1,1), mode='add')
 img.setLevels([0, 10])
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

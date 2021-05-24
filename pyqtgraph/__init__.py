@@ -4,13 +4,14 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.1.dev0'
+__version__ = '0.12.1'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
 ## 'Qt' is a local module; it is intended mainly to cover up the differences
 ## between PyQt4 and PySide.
 from .Qt import QtGui, mkQApp
+from .Qt import exec_ as exec
 
 ## not really safe--If we accidentally create another QApplication, the process hangs (and it is very difficult to trace the cause)
 #if QtGui.QApplication.instance() is None:
@@ -56,6 +57,7 @@ CONFIG_OPTIONS = {
                                  # The default is 'col-major' for backward compatibility, but this may
                                  # change in the future.
     'useCupy': False,  # When True, attempt to use cupy ( currently only with ImageItem and related functions )
+    'useNumba': False, # When True, use numba
 } 
 
 
@@ -223,6 +225,7 @@ from .graphicsItems.GraphicsWidgetAnchor import *
 from .graphicsItems.PlotCurveItem import * 
 from .graphicsItems.ButtonItem import * 
 from .graphicsItems.GradientEditorItem import * 
+from .graphicsItems.ColorBarItem import * 
 from .graphicsItems.MultiPlotItem import * 
 from .graphicsItems.ErrorBarItem import * 
 from .graphicsItems.IsocurveItem import * 
@@ -230,7 +233,8 @@ from .graphicsItems.LinearRegionItem import *
 from .graphicsItems.FillBetweenItem import * 
 from .graphicsItems.LegendItem import * 
 from .graphicsItems.ScatterPlotItem import * 
-from .graphicsItems.ItemGroup import * 
+from .graphicsItems.ItemGroup import *
+from .graphicsItems.TargetItem import * 
 
 from .widgets.MultiPlotWidget import * 
 from .widgets.MultiAxisPlotWidget import *

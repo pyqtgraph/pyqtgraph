@@ -69,7 +69,7 @@ params = [
         {'name': 'List', 'type': 'list', 'values': [1,2,3], 'value': 2},
         {'name': 'Named List', 'type': 'list', 'values': {"one": 1, "two": "twosies", "three": [3,3,3]}, 'value': 2},
         {'name': 'Boolean', 'type': 'bool', 'value': True, 'tip': "This is a checkbox"},
-        {'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "This is a color button"},
+        {'name': 'Color', 'type': 'color', 'value': "#FF0", 'tip': "This is a color button"},
         {'name': 'Gradient', 'type': 'colormap'},
         {'name': 'Subgroup', 'type': 'group', 'children': [
             {'name': 'Sub-param 1', 'type': 'int', 'value': 10},
@@ -82,7 +82,7 @@ params = [
         {'name': 'Units + SI prefix', 'type': 'float', 'value': 1.2e-6, 'step': 1e-6, 'siPrefix': True, 'suffix': 'V'},
         {'name': 'Limits (min=7;max=15)', 'type': 'int', 'value': 11, 'limits': (7, 15), 'default': -6},
         {'name': 'Int suffix', 'type': 'int', 'value': 9, 'suffix': 'V'},
-        {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'siPrefix': True, 'suffix': 'Hz'},
+        {'name': 'DEC stepping', 'type': 'float', 'value': 1.2e6, 'dec': True, 'step': 1, 'minStep': 1.0e-12, 'siPrefix': True, 'suffix': 'Hz'},
         
     ]},
     {'name': 'Save/Restore functionality', 'type': 'group', 'children': [
@@ -179,4 +179,4 @@ s = p.saveState()
 p.restoreState(s)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -56,7 +56,7 @@ def update():
         p2 = pts[i+1]
         v2 = p2 - p1
         t = p1 - pts[0]
-        r = v2.angle(v1)
+        r = v1.angle(v2)
         s = v2.length() / l1
         trs.append(pg.SRTTransform({'pos': t, 'scale': (s, s), 'angle': r}))
 
@@ -107,4 +107,4 @@ depthSpin.valueChanged.connect(update)
 update()
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

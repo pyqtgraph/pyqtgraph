@@ -58,7 +58,7 @@ installedFrontends = sorted([
 
 darwin_opengl_broken = (platform.system() == "Darwin" and
             tuple(map(int, platform.mac_ver()[0].split("."))) >= (10, 16) and
-            (sys.version_info <= (3, 8, 7) or (3, 9) <= sys.version_info < (3, 9, 1)))
+            sys.version_info < (3, 9, 1))
 
 darwin_opengl_reason = ("pyopenGL cannot find openGL library on big sur: "
                         "https://github.com/python/cpython/pull/21241")
@@ -163,7 +163,7 @@ try:
     print("test complete")
     sys.stdout.flush()
     pg.Qt.QtCore.QTimer.singleShot(1000, pg.Qt.QtWidgets.QApplication.quit)
-    pg.Qt.QtWidgets.QApplication.instance().exec_()
+    pg.exec()
     names = [x for x in dir({1}) if not x.startswith('_')]
     for name in names:
         delattr({1}, name)

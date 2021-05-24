@@ -48,7 +48,7 @@ l.addWidget(w4, 1, 0)
 l.addWidget(label, 1, 1)
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()
 
 
 

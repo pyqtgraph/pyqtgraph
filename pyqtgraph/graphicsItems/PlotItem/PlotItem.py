@@ -238,6 +238,7 @@ class PlotItem(GraphicsWidget):
         self.ctrl.averageGroup.toggled.connect(self.avgToggled)
         
         self.ctrl.maxTracesCheck.toggled.connect(self.updateDecimation)
+        self.ctrl.forgetTracesCheck.toggled.connect(self.updateDecimation)
         self.ctrl.maxTracesSpin.valueChanged.connect(self.updateDecimation)
         
         if labels is None:
@@ -372,7 +373,7 @@ class PlotItem(GraphicsWidget):
         if y is not None:
             self.ctrl.yGridCheck.setChecked(y)
         if alpha is not None:
-            v = np.clip(alpha, 0, 1)*self.ctrl.gridAlphaSlider.maximum()
+            v = fn.clip_scalar(alpha, 0., 1.)*self.ctrl.gridAlphaSlider.maximum()
             self.ctrl.gridAlphaSlider.setValue(v)
         
     def close(self):
@@ -1003,20 +1004,21 @@ class PlotItem(GraphicsWidget):
         return self.ctrl.clipToViewCheck.isChecked()
 
     def updateDecimation(self):
-        if self.ctrl.maxTracesCheck.isChecked():
-            numCurves = self.ctrl.maxTracesSpin.value()
+        if not self.ctrl.maxTracesCheck.isChecked():
+            numCurves = len(self.curves)
         else:
-            numCurves = -1
-            
-        curves = self.curves[:]
-        split = len(curves) - numCurves
-        for curve in curves[split:]:
-            if numCurves != -1:
-                if self.ctrl.forgetTracesCheck.isChecked():
-                    curve.clear()
-                    self.removeItem(curve)
-                else:
-                    curve.hide()        
+            numCurves = self.ctrl.maxTracesSpin.value()
+
+        if self.ctrl.forgetTracesCheck.isChecked():
+            for curve in self.curves[:-numCurves]:
+                curve.clear()
+                self.removeItem(curve)
+
+        for i, curve in enumerate(reversed(self.curves)):
+            if i < numCurves:
+                curve.show()
+            else:
+                curve.hide()
       
     def updateAlpha(self, *args):
         (alpha, auto) = self.alphaState()

@@ -87,4 +87,4 @@ pw3.addItem(line)
 line.setBounds([0,200])
 
 if __name__ == '__main__':
-    pg.mkQApp().exec_()
+    pg.exec()

@@ -12,6 +12,7 @@ Contents:
     plotdataitem
     plotitem
     imageitem
+    colorbaritem
     pcolormeshitem
     graphitem
     viewbox
@@ -46,3 +47,4 @@ Contents:
     uigraphicsitem
     graphicswidgetanchor
     dateaxisitem
+    targetitem

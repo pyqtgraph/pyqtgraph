@@ -458,7 +458,7 @@ def startQtEventLoop(name, port, authkey, ppid, debug=False):
     global HANDLER
     HANDLER = RemoteQtEventHandler(conn, name, ppid, debug=debug)
     HANDLER.startEventTimer()
-    app.exec_()
+    app.exec() if hasattr(app, 'exec') else app.exec_()
 
 import threading
 class FileForwarder(threading.Thread):
@@ -489,12 +489,12 @@ class FileForwarder(threading.Thread):
             while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    cprint.cout(self.color, line, -1)
+                    cprint.cout(self.color, line.decode('utf8'), -1)
         elif self.output == 'stderr' and self.color is not False:
             while not self.finish.is_set():
                 line = self.input.readline()
                 with self.lock:
-                    cprint.cerr(self.color, line, -1)
+                    cprint.cerr(self.color, line.decode('utf8'), -1)
         else:
             if isinstance(self.output, str):
                 self.output = getattr(sys, self.output)

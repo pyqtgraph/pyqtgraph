@@ -198,7 +198,7 @@ class Dock(QtGui.QWidget, DockDrop):
         self.drag.setMimeData(mime)
         self.widgetArea.setStyleSheet(self.dragStyle)
         self.update()
-        action = self.drag.exec_() if hasattr(self.drag, 'exec_') else self.drag.exec()
+        action = self.drag.exec() if hasattr(self.drag, 'exec') else self.drag.exec_()
         self.updateStyle()
 
     def float(self):
@@ -329,13 +329,15 @@ class DockLabel(VerticalLabel):
         self.updateStyle()
 
     def mousePressEvent(self, ev):
-        self.pressPos = ev.localPos()
+        lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+        self.pressPos = lpos
         self.mouseMoved = False
         ev.accept()
 
     def mouseMoveEvent(self, ev):
         if not self.mouseMoved:
-            self.mouseMoved = (ev.localPos() - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance()
+            lpos = ev.position() if hasattr(ev, 'position') else ev.localPos()
+            self.mouseMoved = (lpos - self.pressPos).manhattanLength() > QtGui.QApplication.startDragDistance()
 
         if self.mouseMoved and ev.buttons() == QtCore.Qt.LeftButton:
             self.dock.startDrag()

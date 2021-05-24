@@ -1,3 +1,4 @@
+from math import hypot
 from ..Qt import QtGui, QtCore
 from .. import functions as fn
 import numpy as np
@@ -135,7 +136,7 @@ class ArrowItem(QtGui.QGraphicsPathItem):
         pad = 0
         if self.opts['pxMode']:
             br = self.boundingRect()
-            pad += (br.width()**2 + br.height()**2) ** 0.5
+            pad += hypot(br.width(), br.height())
         pen = self.pen()
         if pen.isCosmetic():
             pad += max(1, pen.width()) * 0.7072
