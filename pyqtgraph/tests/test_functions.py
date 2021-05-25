@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
+from pyqtgraph.functions import arrayToQPath
 
 import numpy as np
 import pytest
@@ -245,3 +246,74 @@ def test_siParse(s, suffix, expected):
     else:
         with pytest.raises(expected):
             pg.siParse(s, suffix=suffix)
+
+
+QT_LIB = pg.Qt.QT_LIB
+MoveToElement = pg.QtGui.QPainterPath.ElementType.MoveToElement
+LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
+@pytest.mark.parametrize(
+    "x, y, connect, expected", [
+        (
+            np.arange(6), np.arange(0, -6, step=-1), 'all', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
+            )
+        ), 
+        (
+            np.arange(6), np.arange(0, -6, step=-1), 'pairs', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (MoveToElement, 4.0, -4.0),
+                (LineToElement, 5.0, -5.0),
+            )
+        ),
+        (
+            np.arange(5), np.arange(0, -5, step=-1), 'pairs', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement, 2.0, -2.0),
+                (LineToElement, 3.0, -3.0),
+                (MoveToElement, 4.0, -4.0)
+            ) 
+        ),
+        (
+            np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement if QT_LIB in ["PyQt5", "PySide2"] else LineToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            ) 
+        ),
+        (
+            np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
+                (MoveToElement, 0.0, 0.0),
+                (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
+                (MoveToElement if QT_LIB in ["PyQt5", "PySide2"] else LineToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            )
+        ),
+        (
+            np.arange(5), np.arange(0, -5, step=-1), np.array([0, 1, 0, 1, 0]), (
+                (MoveToElement, 0.0, 0.0),
+                (MoveToElement, 1.0, -1.0),
+                (LineToElement, 2.0, -2.0),
+                (MoveToElement, 3.0, -3.0),
+                (LineToElement, 4.0, -4.0)
+            )
+        )
+    ]
+)
+def test_arrayToQPath(x, y, connect, expected):
+    path = arrayToQPath(x, y, connect=connect)
+    for i, (x, y) in enumerate(zip(x.tolist(), y.tolist())):
+        element = path.elementAt(i)
+        assert expected[i] == (element.type, element.x, element.y)
+

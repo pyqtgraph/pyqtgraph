@@ -1752,9 +1752,9 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
                 idx[:first] = first
                 arr[:] = arr[:][idx]
 
-
     # decide which points are connected by lines
-    if eq(connect, 'all'):
+    if eq(connect, 'all') or (eq(connect, 'finite') and QT_LIB in ["PySide6", "PyQt6"]):
+        # turns out with Qt6 we can give the QPolygonF NaN values and it works out!
         polygon = arrayToQPolygonF(
             arr['x'],
             arr['y']
