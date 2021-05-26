@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore, QT_LIB
 
-__all__ = ['BusyCursor']
+__all__ = ["BusyCursor"]
 
 
 class BusyCursor(object):
@@ -13,6 +13,7 @@ class BusyCursor(object):
 
     May be nested. If called from a non-gui thread, then the cursor will not be affected.
     """
+
     active = []
     nesting_count = 0
 
@@ -20,7 +21,7 @@ class BusyCursor(object):
         app = QtCore.QCoreApplication.instance()
         isGuiThread = (app is not None) and (QtCore.QThread.currentThread() == app.thread())
         if isGuiThread and QtGui.QApplication.instance() is not None:
-            if QT_LIB == 'PySide':
+            if QT_LIB == "PySide":
                 # pass CursorShape rather than QCursor for PySide
                 # see https://bugreports.qt.io/browse/PYSIDE-243
                 QtGui.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
