@@ -153,6 +153,24 @@ def check_getArrayRegion(roi, name, testResize=True, transpose=False):
 
     win.hide()
 
+
+def test_mouseClickEvent():
+    plt = pg.GraphicsView()
+    plt.show()
+    resizeWindow(plt, 200, 200)
+    vb = pg.ViewBox()
+    plt.scene().addItem(vb)
+    vb.resize(200, 200)
+    QtTest.QTest.qWaitForWindowExposed(plt)
+    QtTest.QTest.qWait(100)
+
+    roi = pg.RectROI((0, 0), (10, 20), removable=True)
+    vb.addItem(roi)
+    app.processEvents()
+
+    mouseClick(plt, roi.mapToScene(pg.Point(2, 2)), QtCore.Qt.LeftButton)
+
+
 def test_PolyLineROI():
     rois = [
         (pg.PolyLineROI([[0, 0], [10, 0], [0, 15]], closed=True, pen=0.3), 'closed'),
