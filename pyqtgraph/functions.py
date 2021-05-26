@@ -14,11 +14,8 @@ import struct
 import sys
 import warnings
 import math
-import functools
-import itertools
 
 import numpy as np
-from numpy.lib import recfunctions as rfn
 from .util.cupy_helper import getCupy
 from .util.numba_helper import getNumbaFunctions
 
@@ -1743,18 +1740,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         path.addPolygon(polygon)
         return path
     elif eq(connect, 'pairs'):
-        xs = arr['x'].tolist()
-        ys = arr['y'].tolist()
- 
-        lineTo = path.lineTo
-        moveTo = path.moveTo
-        for elementType, x, y in zip(
-            itertools.cycle((moveTo, lineTo)),
-            xs,
-            ys
-        ):
-            elementType(x, y)
-        return path
+        arr[:]['c'][::2] = 0
+        arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
