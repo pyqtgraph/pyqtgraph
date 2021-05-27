@@ -1744,8 +1744,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         path.addPolygon(polygon)
         return path
     elif eq(connect, 'pairs'):
-        arr[:]['c'][::2] = 0
-        arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
+        if qt6:
+            nans = np.broadcast_to(np.nan, (n // 2, 1))
+            if n % 2 == 0:
+                xs = np.column_stack([arr['x'].reshape((-1, 2)), nans]).ravel()
+                ys = np.column_stack([arr['y'].reshape((-1, 2)), nans]).ravel()
+            else: 
+                xs = np.column_stack([arr['x'][:-1].reshape((-1, 2)), nans]).ravel()
+                ys = np.column_stack([arr['y'][:-1].reshape((-1, 2)), nans]).ravel()
+            polygon = arrayToQPolygonF(xs, ys)
+            path.addPolygon(polygon)
+            return path
+        else:
+            arr[:]['c'][::2] = 0
+            arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif eq(connect, 'finite'):
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
