@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from copy import deepcopy
-from pyqtgraph.functions import arrayToQPath
-
+from contextlib import suppress
+from pyqtgraph.functions import arrayToQPath, eq
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
@@ -286,8 +286,8 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
             np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, 1.0, -1.0),
-                (MoveToElement if QT_LIB in ["PyQt5", "PySide2"] else LineToElement, 3.0, -3.0),
+                (LineToElement, 2.0, np.nan) if qt6 else (LineToElement, 1.0, -1.0),
+                (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             ) 
         ),
@@ -295,8 +295,8 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
             np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, 1.0, -1.0),
-                (MoveToElement if QT_LIB in ["PyQt5", "PySide2"] else LineToElement, 3.0, -3.0),
+                (LineToElement, np.nan, -2.0) if qt6 else (LineToElement, 1.0, -1.0),
+                (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             )
         ),
@@ -311,9 +311,14 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
         )
     ]
 )
-def test_arrayToQPath(x, y, connect, expected):
-    path = arrayToQPath(x, y, connect=connect)
-    for i, (x, y) in enumerate(zip(x.tolist(), y.tolist())):
+def test_arrayToQPath(xs, ys, connect, expected):
+    path = arrayToQPath(xs, ys, connect=connect)
+    for i in range(path.elementCount()):
+        with suppress(NameError):
+            # nan elements add two line-segments, for simplicity of test config
+            # we can ignore the second segment
+            if (eq(element.x, np.nan) or eq(element.y, np.nan)):
+                continue
         element = path.elementAt(i)
         assert expected[i] == (element.type, element.x, element.y)
 

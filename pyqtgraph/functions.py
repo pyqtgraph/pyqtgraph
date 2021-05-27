@@ -1716,7 +1716,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     # Qt version 5.12.3; these must now be manually cleaned out.
     isfinite = None
     qtver = [int(x) for x in QtVersion.split('.')]
-    if qtver >= [5, 12, 3] and finiteCheck:
+    qt6 = qtver[0] == 6
+
+    if eq(connect, 'finite') and qt6:
+        # we must preserve NaN values here
+        pass
+    elif qtver >= [5, 12, 3] and finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
         if not np.all(isfinite):
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
@@ -1731,8 +1736,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
                 arr[:] = arr[:][idx]
 
     # decide which points are connected by lines
-    if eq(connect, 'all') or (eq(connect, 'finite') and QT_LIB in ["PySide6", "PyQt6"]):
-        # turns out with Qt6 we can give the QPolygonF NaN values and it works out!
+    if eq(connect, 'all'):
         polygon = arrayToQPolygonF(
             arr['x'],
             arr['y']
@@ -1747,9 +1751,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        if isfinite is None:
+        if qt6:
+            # look for the first finite element.
             isfinite = np.isfinite(x) & np.isfinite(y)
-        arr[1:]['c'] = isfinite[:-1]
+            argNaNs = np.argwhere(isfinite)
+            first = 0 if len(argNaNs) == 0 else argNaNs.item(0)
+
+            # if found, use the portion of the array from that point on
+            polygon = arrayToQPolygonF(x[first:], y[first:])
+            path.addPolygon(polygon)
+            return path
+        else:
+            if isfinite is None:
+                isfinite = np.isfinite(x) & np.isfinite(y)
+            arr[1:]['c'] = isfinite[:-1]
     elif isinstance(connect, np.ndarray):
         arr[1:]['c'] = connect[:-1]
     else:
