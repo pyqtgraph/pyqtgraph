@@ -13,7 +13,7 @@ angles = [
 def test_Point_angle(p1, p2, angle):
 	p1 = pg.Point(*p1)
 	p2 = pg.Point(*p2)
-	assert p1.angle(p2) == angle
+	assert p2.angle(p1) == angle
 
 
 inits = [
