@@ -1,16 +1,19 @@
 import pyqtgraph as pg
+from math import isclose
 
 app = pg.mkQApp()
 
 
 def test_AxisItem_stopAxisAtTick(monkeypatch):
     def test_bottom(p, axisSpec, tickSpecs, textSpecs):
-        assert view.mapToView(axisSpec[1]).x() == 0.25
-        assert view.mapToView(axisSpec[2]).x() == 0.75
+        viewPixelSize = view.viewPixelSize()
+        assert isclose(view.mapToView(axisSpec[1]).x(), 0.25, abs_tol=viewPixelSize[0])
+        assert isclose(view.mapToView(axisSpec[2]).x(), 0.75, abs_tol=viewPixelSize[0])
 
     def test_left(p, axisSpec, tickSpecs, textSpecs):
-        assert view.mapToView(axisSpec[1]).y() == 0.875
-        assert view.mapToView(axisSpec[2]).y() == 0.125
+        viewPixelSize = view.viewPixelSize()
+        assert isclose(view.mapToView(axisSpec[1]).y(), 0.875, abs_tol=viewPixelSize[1])
+        assert isclose(view.mapToView(axisSpec[2]).y(), 0.125, abs_tol=viewPixelSize[1])
 
     plot = pg.PlotWidget()
     view = plot.plotItem.getViewBox()
