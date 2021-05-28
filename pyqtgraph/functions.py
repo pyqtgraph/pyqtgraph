@@ -1703,10 +1703,26 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     path = QtGui.QPainterPath()
     n = x.shape[0]
 
-    backstore = bytearray(4 + n*20 + 8)
-    arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
-        count=n, offset=4)
-    struct.pack_into('>i', backstore, 0, n)
+    connect_array = None
+    if isinstance(connect, np.ndarray):
+        # make connect argument contain only str type
+        connect_array, connect = connect, 'array'
+
+    qtver = [int(x) for x in QtVersion.split('.')]
+    qt6 = qtver[0] == 6
+
+    use_qpolygonf = connect == 'all' or (qt6 and connect in ['pairs', 'finite'])
+
+    if use_qpolygonf:
+        backstore = create_qpolygonf(n)
+        arr = np.frombuffer(ndarray_from_qpolygonf(backstore), dtype=[('x', 'f8'), ('y', 'f8')])
+    else:
+        backstore = bytearray(4 + n*20 + 8)
+        arr = np.frombuffer(backstore, dtype=[('c', '>i4'), ('x', '>f8'), ('y', '>f8')],
+            count=n, offset=4)
+        struct.pack_into('>i', backstore, 0, n)
+        # cStart, fillRule (Qt.OddEvenFill)
+        struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
     # Fill array with vertex values
     arr['x'] = x
@@ -1715,10 +1731,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     # inf/nans completely prevent the plot from being displayed starting on 
     # Qt version 5.12.3; these must now be manually cleaned out.
     isfinite = None
-    qtver = [int(x) for x in QtVersion.split('.')]
-    qt6 = qtver[0] == 6
 
-    if eq(connect, 'finite') and qt6:
+    if connect == 'finite' and qt6:
         # we must preserve NaN values here
         pass
     elif qtver >= [5, 12, 3] and finiteCheck:
@@ -1736,29 +1750,23 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
                 arr[:] = arr[:][idx]
 
     # decide which points are connected by lines
-    if eq(connect, 'all'):
-        polygon = arrayToQPolygonF(
-            arr['x'],
-            arr['y']
-        )
-        path.addPolygon(polygon)
+    if connect == 'all':
+        path.addPolygon(backstore)
         return path
-    elif eq(connect, 'pairs'):
+    elif connect == 'pairs':
         if qt6:
+            if n % 2 == 1:
+                arr = arr[:-1]
             nans = np.broadcast_to(np.nan, (n // 2, 1))
-            if n % 2 == 0:
-                xs = np.column_stack([arr['x'].reshape((-1, 2)), nans]).ravel()
-                ys = np.column_stack([arr['y'].reshape((-1, 2)), nans]).ravel()
-            else: 
-                xs = np.column_stack([arr['x'][:-1].reshape((-1, 2)), nans]).ravel()
-                ys = np.column_stack([arr['y'][:-1].reshape((-1, 2)), nans]).ravel()
+            xs = np.column_stack([arr['x'].reshape((-1, 2)), nans]).ravel()
+            ys = np.column_stack([arr['y'].reshape((-1, 2)), nans]).ravel()
             polygon = arrayToQPolygonF(xs, ys)
             path.addPolygon(polygon)
             return path
         else:
-            arr[:]['c'][::2] = 0
-            arr[:]['c'][1::2] = 1  # connect every 2nd point to every 1st one
-    elif eq(connect, 'finite'):
+            arr['c'][::2] = 0
+            arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
+    elif connect == 'finite':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
@@ -1769,23 +1777,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
             argNaNs = np.argwhere(isfinite)
             first = 0 if len(argNaNs) == 0 else argNaNs.item(0)
 
-            # if found, use the portion of the array from that point on
-            polygon = arrayToQPolygonF(x[first:], y[first:])
-            path.addPolygon(polygon)
+            # if found, set first element to first found finite element
+            arr[0] = arr[first]
+            path.addPolygon(backstore)
             return path
         else:
             if isfinite is None:
                 isfinite = np.isfinite(x) & np.isfinite(y)
             arr[1:]['c'] = isfinite[:-1]
-    elif isinstance(connect, np.ndarray):
-        arr[1:]['c'] = connect[:-1]
+    elif connect == 'array':
+        arr[1:]['c'] = connect_array[:-1]
     else:
         raise Exception('connect argument must be "all", "pairs", "finite", or array')
 
     arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
-
-    # cStart, fillRule (Qt.OddEvenFill)
-    struct.pack_into('>ii', backstore, 4+n*20, 0, 0)
 
     # create QDataStream object and stream into QPainterPath
     path.strn = backstore
@@ -1798,6 +1803,29 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     ds = QtCore.QDataStream(buf)
     ds >> path
     return path
+
+def ndarray_from_qpolygonf(polyline):
+    nbytes = 2 * len(polyline) * 8
+    if QT_LIB == "PySide2":
+        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
+    elif QT_LIB == "PySide6":
+        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
+    else:
+        buffer = polyline.data()
+        buffer.setsize(nbytes)
+    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
+    return memory
+
+def create_qpolygonf(size):
+    if QtVersion.startswith("5"):
+        polyline = QtGui.QPolygonF(size)
+    else:
+        polyline = QtGui.QPolygonF()
+        if QT_LIB == "PySide6":
+            polyline.resize(size)
+        else:
+            polyline.fill(QtCore.QPointF(), size)
+    return polyline
 
 def arrayToQPolygonF(x, y):
     """
@@ -1831,24 +1859,8 @@ def arrayToQPolygonF(x, y):
     ):
         raise ValueError("Arguments must be 1D and the same size")
     size = x.size
-    if QtVersion.startswith("5"):
-        polyline = QtGui.QPolygonF(size)
-    else:
-        polyline = QtGui.QPolygonF()
-        if QT_LIB == "PySide6":
-            polyline.resize(size)
-        else:
-            polyline.fill(QtCore.QPointF(), size)
-    nbytes = 2 * size * 8
-    if QT_LIB == "PySide2":
-        buffer = Qt.shiboken2.VoidPtr(polyline.data(), nbytes, True)
-    elif QT_LIB == "PySide6":
-        buffer = Qt.shiboken6.VoidPtr(polyline.data(), nbytes, True)
-    else:
-        buffer = polyline.data()
-        buffer.setsize(nbytes)
-
-    memory = np.frombuffer(buffer, np.double).reshape((-1, 2))
+    polyline = create_qpolygonf(size)
+    memory = ndarray_from_qpolygonf(polyline)
     memory[:, 0] = x
     memory[:, 1] = y
     return polyline
