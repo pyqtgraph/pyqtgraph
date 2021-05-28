@@ -64,10 +64,10 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        pip install --upgrade pip
-        pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
-        pip install .
-        pip install pytest
+        python -m pip install --upgrade pip
+        python -m pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
+        python -m pip install .
+        python -m pip install pytest
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
       run: |
@@ -75,14 +75,14 @@ jobs:
         sudo apt-get install -y libxkbcommon-x11-0 x11-utils
         sudo apt-get install --no-install-recommends -y libyaml-dev libegl1-mesa libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0
         sudo apt-get install -y libopengl0
-        pip install pytest-xvfb
+        python -m pip install pytest-xvfb
     - name: 'Debug Info'
       run: |
         echo python location: `which python`
         echo python version: `python --version`
         echo pytest location: `which pytest`
         echo installed packages
-        pip list
+        python -m pip list
         echo pyqtgraph system info
         python -c "import pyqtgraph as pg; pg.systemInfo()"
       shell: bash
