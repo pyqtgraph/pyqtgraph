@@ -34,7 +34,7 @@ def buildFileList(examples, files=None):
 
 
 path = os.path.abspath(os.path.dirname(__file__))
-files = [("Example App", "test_ExampleApp.py")]
+files = [("Example App", "RunExampleApp.py")]
 for ex in [utils.examples, utils.others]:
     files = buildFileList(ex, files)
 files = sorted(set(files))
