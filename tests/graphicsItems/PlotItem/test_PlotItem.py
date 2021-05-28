@@ -15,7 +15,7 @@ def test_PlotItem_shared_axis_items(orientation):
 
     layout = pg.GraphicsLayoutWidget()
 
-    pi1 = layout.addPlot(axisItems={orientation: ax1})
+    _ = layout.addPlot(axisItems={orientation: ax1})
 
     pi2 = layout.addPlot()
     # left or bottom replaces, right or top adds new

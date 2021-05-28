@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-import pytest
 from pyqtgraph.parametertree import Parameter
 
 
@@ -23,7 +21,6 @@ def test_parameter_hasdefault():
     # default specified as None
     p = Parameter(default=None, **opts)
     assert not p.hasDefault()
-
 
 
 def test_unpack_parameter():

@@ -62,7 +62,7 @@ def crashtest():
             except KeyboardInterrupt:
                 print("Caught interrupt; send another to exit.")
                 try:
-                    for i in range(100):
+                    for _ in range(100):
                         QtTest.QTest.qWait(100)
                 except KeyboardInterrupt:
                     thread.terminate()
@@ -95,7 +95,7 @@ def createWidget():
     p('create widget')
     global widgets, allWidgets
     if len(widgets) > 50:
-        return
+        return None
     widget = randItem(widgetTypes)()
     widget.setWindowTitle(widget.__class__.__name__)
     widgets.append(widget)
@@ -153,8 +153,3 @@ def addReference():
     obj2 = randItem(widgets)
     p('    %s -> %s' % (obj1, obj2))    
     obj1._testref = obj2
-    
-
-        
-if __name__ == '__main__':
-    test_stability()

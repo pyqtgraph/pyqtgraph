@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 import numpy as np
 import pytest
 import pyqtgraph as pg

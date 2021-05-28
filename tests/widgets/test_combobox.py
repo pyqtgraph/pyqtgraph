@@ -8,10 +8,10 @@ def test_combobox():
     cb.setValue(2)
     assert str(cb.currentText()) == 'b'
     assert cb.value() == 2
-    
+
     # Clear item list; value should be None
     cb.clear()
-    assert cb.value() == None
+    assert cb.value() is None
     
     # Reset item list; value should be set automatically
     cb.setItems(items)
@@ -33,12 +33,3 @@ def test_combobox():
     
     cb.setItemValue('c', 7)
     assert cb.value() == 7
-    
-    
-if __name__ == '__main__':
-    cb = pg.ComboBox()
-    cb.show()
-    cb.setItems({'': None, 'a': 1, 'b': 2, 'c': 3})
-    def fn(ind):
-        print("New value: %s" % cb.value())
-    cb.currentIndexChanged.connect(fn)

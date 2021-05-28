@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pyqtgraph as pg
-import gc, os
+import os
 import pytest
 
 

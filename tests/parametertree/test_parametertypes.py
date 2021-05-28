@@ -1,6 +1,4 @@
-# ~*~ coding: utf8 ~*~
 import sys
-import pytest
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph.parametertree as pt
 import pyqtgraph as pg

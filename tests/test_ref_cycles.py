@@ -26,10 +26,7 @@ def mkrefs(*objs):
     """
     allObjs = {}
     for obj in objs:
-        if isinstance(obj, pg.QtCore.QObject):
-            obj = qObjectTree(obj)
-        else:
-            obj = [obj]
+        obj = qObjectTree(obj) if isinstance(obj, pg.QtCore.QObject) else [obj]
         for o in obj:
             allObjs[id(o)] = o
     return [weakref.ref(obj) for obj in allObjs.values()]
@@ -51,7 +48,7 @@ def test_PlotWidget():
         # return weakrefs to a bunch of objects that should die when the scope exits.
         return mkrefs(w, c, data, w.plotItem, w.plotItem.vb, w.plotItem.getMenu(), w.plotItem.getAxis('left'))
     
-    for i in range(5):
+    for _ in range(5):
         assert_alldead(mkobjs())
 
 def test_GraphicsWindow():
@@ -63,7 +60,7 @@ def test_GraphicsWindow():
         v1 = w.addViewBox()
         return mkrefs(w, p1, v1)
     
-    for i in range(5):
+    for _ in range(5):
         assert_alldead(mkobjs())
 
 def test_ImageView():
@@ -74,13 +71,5 @@ def test_ImageView():
         
         return mkrefs(iv, iv.imageItem, iv.view, iv.ui.histogram, data)
 
-    for i in range(5):
+    for _ in range(5):
         assert_alldead(mkobjs())
-
-
-
-
-    
-    
-if __name__ == '__main__':
-    ot = test_PlotItem()

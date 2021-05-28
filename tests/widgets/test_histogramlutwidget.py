@@ -41,4 +41,4 @@ def testHistogramLUTWidget():
     w.setImageItem(img)
     
     QtGui.QApplication.processEvents()
-    
+    win.close()

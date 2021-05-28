@@ -2,7 +2,7 @@
 import time
 import pytest
 
-from pyqtgraph.Qt import QtCore, QtGui, QtTest
+from pyqtgraph.Qt import QtGui, QtTest
 import numpy as np
 import pyqtgraph as pg
 from tests.image_testing import assertImageApproved, TransposedImageItem
@@ -188,7 +188,6 @@ def test_ImageItem_axisorder():
 
 
 def test_dividebyzero():
-    import pyqtgraph as pg
     im = pg.image(pg.np.random.normal(size=(100,100)))
     im.imageItem.setAutoDownsample(True)
     im.view.setRange(xRange=[-5+25, 5e+25],yRange=[-5e+25, 5e+25])

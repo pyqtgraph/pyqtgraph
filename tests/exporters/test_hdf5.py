@@ -5,7 +5,6 @@ from pyqtgraph.exporters import HDF5Exporter
 import numpy as np
 from numpy.testing import assert_equal
 import h5py
-import os
 
 
 @pytest.fixture

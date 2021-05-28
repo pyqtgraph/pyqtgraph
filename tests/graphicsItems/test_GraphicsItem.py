@@ -1,11 +1,8 @@
 import weakref
-try:
-    import faulthandler
-    faulthandler.enable()
-except ImportError:
-    pass
-
 import pyqtgraph as pg
+import faulthandler
+faulthandler.enable()
+
 pg.mkQApp()
 
 def test_getViewWidget():

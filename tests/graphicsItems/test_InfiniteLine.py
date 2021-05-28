@@ -48,7 +48,7 @@ def test_InfiniteLine():
     px = pg.Point(-0.5, -1.0 / 3**0.5)
     assert br.containsPoint(pos + 5 * px, QtCore.Qt.OddEvenFill)
     assert not br.containsPoint(pos + 7 * px, QtCore.Qt.OddEvenFill)
-    
+    plt.close()
 
 def test_mouseInteraction():
     # disable delay of mouse move events because events is called immediately in test
@@ -96,7 +96,4 @@ def test_mouseInteraction():
     assert hline2.mouseHovering == False
     mouseDrag(plt, pos, pos2, QtCore.Qt.LeftButton)
     assert hline2.value() == -1
-
-
-if __name__ == '__main__':
-    test_mouseInteraction()
+    plt.close()

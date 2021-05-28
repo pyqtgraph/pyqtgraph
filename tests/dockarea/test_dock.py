@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-#try:
-#    from PyQt5 import sip
-#except ImportError:
-#    import sip
-#    sip.setapi('QString', 1)
-
 import pyqtgraph as pg
 pg.mkQApp()
 

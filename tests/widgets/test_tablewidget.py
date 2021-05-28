@@ -117,12 +117,3 @@ def test_TableWidget():
     assert isinstance(item.value, float)
     assert isinstance(item.index, int)
     assert item.text() == ("%d %f" % (item.index, item.value))
-    
-
-
-if __name__ == '__main__':
-    w = pg.TableWidget(editable=True)
-    w.setData(listOfTuples)
-    w.resize(600, 600)
-    w.show()
-

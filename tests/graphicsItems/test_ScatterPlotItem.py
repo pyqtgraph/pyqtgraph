@@ -5,7 +5,6 @@ import numpy as np
 
 def test_scatterplotitem():
     app = pg.mkQApp()
-    app.processEvents()
 
     plot = pg.PlotWidget()
     # set view range equal to its bounding rect.
@@ -99,7 +98,4 @@ def test_init_spots():
     assert spots[1].pen() == pg.mkPen(None)
     assert spots[1].brush() == pg.mkBrush(None)
     assert spots[1].data() == 'zzz'
-
-
-if __name__ == '__main__':
-    test_scatterplotitem()
+    plot.close()

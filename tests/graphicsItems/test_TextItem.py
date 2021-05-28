@@ -1,4 +1,3 @@
-import pytest
 import pyqtgraph as pg
 
 app = pg.mkQApp()

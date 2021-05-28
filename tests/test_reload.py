@@ -1,6 +1,5 @@
 import os, sys, shutil, time
 import pyqtgraph as pg
-import pyqtgraph.reload
 import pytest
 
 

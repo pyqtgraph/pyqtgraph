@@ -27,6 +27,7 @@ def test_Vector_init():
     v = pg.Vector([0, 1])
     assert v.z() == 0
     v = pg.Vector([0, 1, 2])
+    assert v.z() == 2
 
     # QSizeF
     v = pg.Vector(QtCore.QSizeF(1, 2))
@@ -45,7 +46,7 @@ def test_Vector_init():
     assert v == qv
 
     with pytest.raises(Exception):
-        v = pg.Vector(1, 2, 3, 4)
+        _ = pg.Vector(1, 2, 3, 4)
 
 
 def test_Vector_interface():
@@ -59,7 +60,7 @@ def test_Vector_interface():
     assert v[0] == -1
     assert v[2] == 0
     with pytest.raises(IndexError):
-        x = v[4]
+        _ = v[4]
 
     assert v[1] == 2
     v[1] = 5

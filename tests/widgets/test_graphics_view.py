@@ -1,10 +1,9 @@
-from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 
+app = pg.mkQApp()
 
 def test_basics_graphics_view():
-    app = pg.mkQApp()
     view = pg.GraphicsView()
     background_role = view.backgroundRole()
     assert background_role == QtGui.QPalette.Window
@@ -39,11 +38,11 @@ def test_basics_graphics_view():
     # --------------------------------------
     aliasing = QtGui.QPainter.Antialiasing
     # Default is set to `False`
-    assert not view.renderHints() & aliasing == aliasing
+    assert view.renderHints() & aliasing != aliasing
     view.setAntialiasing(True)
     assert view.renderHints() & aliasing == aliasing
     view.setAntialiasing(False)
-    assert not view.renderHints() & aliasing == aliasing
+    assert view.renderHints() & aliasing != aliasing
 
     # Enable mouse
     # --------------------------------------

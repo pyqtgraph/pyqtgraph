@@ -30,7 +30,3 @@ def test_PlotCurveItem():
     assertImageApproved(p, 'plotcurveitem/connectarray', "Plot curve with connection array.")
 
     p.close()
-
-
-if __name__ == '__main__':
-    test_PlotCurveItem()

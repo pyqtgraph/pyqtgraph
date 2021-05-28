@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 import pyqtgraph as pg
-import pytest
 
 app = pg.mkQApp()
 
