@@ -1757,10 +1757,10 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         if qt6:
             if n % 2 == 1:
                 arr = arr[:-1]
-            nans = np.broadcast_to(np.nan, (n // 2, 1))
-            xs = np.column_stack([arr['x'].reshape((-1, 2)), nans]).ravel()
-            ys = np.column_stack([arr['y'].reshape((-1, 2)), nans]).ravel()
-            polygon = arrayToQPolygonF(xs, ys)
+            polygon = create_qpolygonf(n // 2 * 3)
+            dst = ndarray_from_qpolygonf(polygon).reshape((-1, 6))   # x0, y0, x1, y1, nan, nan
+            dst[:, :4] = np.frombuffer(arr, dtype=np.double).reshape((-1, 4))   # x0, y0, x1, y1
+            dst[:, 4:] = np.nan
             path.addPolygon(polygon)
             return path
         else:
