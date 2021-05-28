@@ -795,17 +795,28 @@ class ROI(GraphicsObject):
         self.mouseDragHandler.mouseDragEvent(ev)
 
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            ev.accept()
-            self.cancelMove()
-        if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
-            self.raiseContextMenu(ev)
-            ev.accept()
-        elif ev.button() & self.acceptedMouseButtons() > 0:
-            ev.accept()
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            if ev.button() == QtCore.Qt.RightButton and self.isMoving:
+                ev.accept()
+                self.cancelMove()
+            if ev.button() == QtCore.Qt.RightButton and self.contextMenuEnabled():
+                self.raiseContextMenu(ev)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()
 
     def _moveStarted(self):
         self.isMoving = True
@@ -1400,18 +1411,29 @@ class Handle(UIGraphicsItem):
         self.update()
 
     def mouseClickEvent(self, ev):
-        ## right-click cancels drag
-        if ev.button() == QtCore.Qt.RightButton and self.isMoving:
-            self.isMoving = False  ## prevents any further motion
-            self.movePoint(self.startPos, finish=True)
-            ev.accept()
-        elif ev.button() & self.acceptedMouseButtons():
-            ev.accept()
-            if ev.button() == QtCore.Qt.RightButton and self.deletable:
-                self.raiseContextMenu(ev)
-            self.sigClicked.emit(self, ev)
-        else:
-            ev.ignore()        
+        with warnings.catch_warnings():
+            # warning present on pyqt5 5.12 + python 3.8
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    ".*Implicit conversion to integers using __int__ is "
+                    "deprecated, and may be removed in a future version of "
+                    "Python."
+                ),
+                category=DeprecationWarning
+            )
+            ## right-click cancels drag
+            if ev.button() == QtCore.Qt.RightButton and self.isMoving:
+                self.isMoving = False  ## prevents any further motion
+                self.movePoint(self.startPos, finish=True)
+                ev.accept()
+            elif ev.button() & self.acceptedMouseButtons():
+                ev.accept()
+                if ev.button() == QtCore.Qt.RightButton and self.deletable:
+                    self.raiseContextMenu(ev)
+                self.sigClicked.emit(self, ev)
+            else:
+                ev.ignore()        
                 
     def buildMenu(self):
         menu = QtGui.QMenu()
