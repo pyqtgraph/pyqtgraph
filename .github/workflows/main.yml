@@ -64,9 +64,9 @@ jobs:
       shell: cmd
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         python -m pip install ${{ matrix.qt-version }} numpy${{ matrix.numpy-version }} scipy pyopengl h5py matplotlib numba
-        python -m pip install .
+        python -m pip install --use-feature=in-tree-build .
         python -m pip install pytest
     - name: "Install Linux VirtualDisplay"
       if: runner.os == 'Linux'
