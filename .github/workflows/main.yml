@@ -40,11 +40,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Checkout test-data
-      uses: actions/checkout@v2
-      with:
-        repository: pyqtgraph/test-data
-        path: .pyqtgraph/test-data
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -106,7 +101,7 @@ jobs:
     - name: Run Tests
       run: |
         mkdir $SCREENSHOT_DIR
-        pytest pyqtgraph examples -v \
+        pytest tests examples -v \
           --junitxml pytest.xml \
       shell: bash
     - name: Upload Screenshots
