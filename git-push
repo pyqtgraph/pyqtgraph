@@ -1,2 +1,0 @@
-COMMIT=$1
-git add . && git commit -m "$COMMIT" && git remote -v && git push origin exostriker_branch
