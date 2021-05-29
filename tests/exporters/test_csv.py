@@ -4,7 +4,6 @@ CSV export test
 from __future__ import division, print_function, absolute_import
 import pyqtgraph as pg
 import csv
-import os
 import tempfile
 
 app = pg.mkQApp()
@@ -15,9 +14,6 @@ def approxeq(a, b):
 
 
 def test_CSVExporter():
-    tempfilename = tempfile.NamedTemporaryFile(suffix='.csv').name
-    print("using %s as a temporary file" % tempfilename)
-
     plt = pg.plot()
     y1 = [1,3,2,3,1,6,9,8,4,2]
     plt.plot(y=y1, name='myPlot')
@@ -31,11 +27,10 @@ def test_CSVExporter():
     plt.plot(x=x3, y=y3, stepMode="center")
 
     ex = pg.exporters.CSVExporter(plt.plotItem)
-    ex.export(fileName=tempfilename)
-
-    with open(tempfilename, 'r') as csv_file:
-        r = csv.reader(csv_file)
-        lines = [line for line in r]
+    with tempfile.NamedTemporaryFile(mode="w+t", suffix='.csv', encoding="utf-8", delete=False) as tf:
+        print("using %s as a temporary file" % tf.name)
+        ex.export(fileName=tf.name)
+        lines = [line for line in csv.reader(tf)]
     header = lines.pop(0)
     assert header == ['myPlot_x', 'myPlot_y', 'x0001', 'y0001', 'x0002', 'y0002']
 
@@ -49,4 +44,3 @@ def test_CSVExporter():
 
         assert (i >= len(x3) and vals[4] == '') or approxeq(float(vals[4]), x3[i])
         assert (i >= len(y3) and vals[5] == '') or approxeq(float(vals[5]), y3[i])
-    os.unlink(tempfilename)
