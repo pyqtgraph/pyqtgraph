@@ -1,18 +1,10 @@
-"""
-SVG export test
-"""
-from __future__ import division, print_function, absolute_import
 import pyqtgraph as pg
-import tempfile
-import os
 
 
 app = pg.mkQApp()
 
 
-def test_plotscene():
-    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
-    print("using %s as a temporary file" % tempfilename)
+def test_plotscene(tmpdir):
     pg.setConfigOption('foreground', (0,0,0))
     w = pg.GraphicsLayoutWidget()
     w.show()        
@@ -25,15 +17,13 @@ def test_plotscene():
     app.processEvents()
     
     ex = pg.exporters.SVGExporter(w.scene())
-    ex.export(fileName=tempfilename)
+
+    tf = tmpdir.join("expot.svg")
+    ex.export(fileName=tf)
     # clean up after the test is done
-    os.unlink(tempfilename)
     w.close()
 
-def test_simple():
-    tempfilename = tempfile.NamedTemporaryFile(suffix='.svg').name
-    print("using %s as a temporary file" % tempfilename)
-    
+def test_simple(tmpdir):    
     view = pg.GraphicsView()
     view.show()
 
@@ -78,5 +68,5 @@ def test_simple():
     grp2.addItem(rect3)
 
     ex = pg.exporters.SVGExporter(scene)
-    ex.export(fileName=tempfilename)
-    os.unlink(tempfilename)
+    tf = tmpdir.join("expot.svg")
+    ex.export(fileName=tf)
