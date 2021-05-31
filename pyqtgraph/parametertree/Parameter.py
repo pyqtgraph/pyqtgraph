@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from .. import functions as fn
 from ..Qt import QtGui, QtCore
 import os, weakref, re
@@ -6,6 +7,8 @@ from collections import OrderedDict
 from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
+import inspect
+import typing as t
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
@@ -99,6 +102,29 @@ class Parameter(QtCore.QObject):
         #except KeyError:
             #pass
         #return QtCore.QObject.__new__(cls, *args, **opts)
+
+    RUN_BTN = 'button'
+    """Indicator for `interactive` parameter which runs the function on pressing a button parameter"""
+    RUN_CHANGED = 'changed'
+    """
+    Indicator for `interactive` parameter which runs the function every time one `sigValueChanged` is emitted from
+    any of the parameters
+    """
+    RUN_CHANGING = 'changing'
+    """
+    Indicator for `interactive` parameter which runs the function every time one `sigValueChanging` is emitted from
+    any of the parameters
+    """
+    RUN_DEFAULT = RUN_CHANGED
+    """Default behavior for running"""
+
+    RUN_TITLE_FMT = None
+    """
+    Formatter to create a parameter title from its name when using `Parameter.interact. If not *None*, must be
+    a callable of the form (name: str) -> str 
+    """
+
+
     
     @staticmethod
     def create(**opts):
@@ -580,7 +606,110 @@ class Parameter(QtCore.QObject):
         for chOpts in children:
             #print self, "Add child:", type(chOpts), id(chOpts)
             self.addChild(chOpts)
-        
+
+    def interact_deco(self, childrenOnly=False, **opts):
+        """
+        Decorator version of `Parameter.interact`. All options are forwarded there, except for `func` so it can be
+        wrapped. Intended to be called using a GroupParameter, and the interactive parameter will be added
+        as a child
+        """
+        def wrapper(func):
+            host = self.interact(func, **opts)
+            if childrenOnly:
+                for ch in host:
+                    self.addChild(ch)
+            else:
+                self.addChild(host)
+            return func
+        return wrapper
+
+    @classmethod
+    def interact(cls, func, runOpts=None, ignores=None, deferred=None, **overrides):
+        """
+        Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
+        provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
+
+        ==============  ========================================================================
+        **Arguments:**
+        func            function with which to interact
+        runOpts         How the function should be run. Can be one or more of Parameter.<RUN_BTN, CHANGED, or CHANGING>.
+                        If *None*, defaults to Parmeter.RUN_DEFAULT which can be set by the user.
+        ignores         Names of function arguments which shouldn't have parameters created
+        deferred        function arguments whose values should come from function evaluations rather than Parameters.
+                          This is helpful for providing external variables as function arguments.
+        overrides       Override descriptions to provide additional parameter options for each argument
+        ==============  ========================================================================
+        """
+        if runOpts is None:
+            runOpts = cls.RUN_DEFAULT
+        hostParamOpts = dict(type='group', name=func.__name__)
+        if cls.RUN_TITLE_FMT is not None:
+            hostParamOpts['title'] = cls.RUN_TITLE_FMT(hostParamOpts['name'])
+        hostParam = Parameter.create(**hostParamOpts)
+        funcParams = inspect.signature(func).parameters
+
+        if deferred is None:
+            deferred = {}
+        # Values can't come both from deferred and overrides/params, so ensure they don't get created
+        if ignores is None:
+            ignores = []
+        ignores = list(ignores) + list(deferred)
+
+        def runFunc(**extra):
+            kwargs = {p.name(): p.value() for p in hostParam if p.name() in funcParams}
+            for kk, vv in deferred.items():
+                kwargs[kk] = vv()
+            kwargs.update(**extra)
+            return func(**kwargs)
+
+        def runFunc_changing(_param, value):
+            return runFunc(**{_param.name(): value})
+
+        # Make pyqtgraph parameters from each parameter
+        for name, param in funcParams.items():
+            # Make sure args without defaults have overrides
+            required = param.default is param.empty
+            if required and name not in overrides and name not in deferred:
+                raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
+                                 f' with no default or deferred value provided.')
+            if name in ignores:
+                # Don't make a parameter for this child
+                # However, make sure to recycle their values if provided
+                if name in overrides:
+                    # Use default arg to avoid loop binding issue
+                    deferred.setdefault(name, lambda _n=name: overrides[_n])
+                continue
+
+            pgDict = overrides.get(name, {})
+            if not isinstance(pgDict, dict):
+                pgDict = {'value': pgDict}
+            pgDict['name'] = name
+            if cls.RUN_TITLE_FMT and 'title' not in pgDict:
+                pgDict['title'] = cls.RUN_TITLE_FMT(name)
+            if not required:
+                # Maybe the user never specified type and value, since they can come directly from the default
+                default = param.default
+                pgDict.setdefault('value', default)
+            # Maybe override was a value without a type, prefer this over signature value when it exists
+            pgDict.setdefault('type', type(pgDict['value']).__name__)
+
+            child = hostParam.addChild(pgDict)
+            if cls.RUN_CHANGED in runOpts:
+                child.sigValueChanged.connect(runFunc)
+            if cls.RUN_CHANGING in runOpts:
+                child.sigValueChanging.connect(runFunc_changing)
+
+        ret = hostParam
+        if cls.RUN_BTN in runOpts or not hostParam.hasChildren():
+            # Add an extra button child which can activate the function
+            name = 'Run' if hostParam.hasChildren() else func.__name__
+            child = cls.create(name=name, type='action')
+            # Return just the button if no other params were allowed
+            if not hostParam.hasChildren():
+                ret = child
+            hostParam.addChild(child)
+            child.sigActivated.connect(runFunc)
+        return ret
         
     def insertChild(self, pos, child, autoIncrementName=None):
         """
