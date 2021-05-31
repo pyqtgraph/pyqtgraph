@@ -613,21 +613,19 @@ class Parameter(QtCore.QObject):
         as a child
         """
         def wrapper(func):
-            host = self.interact(func, **opts)
             if childrenOnly:
-                for ch in host:
-                    self.addChild(ch)
-            else:
+                opts.update(parent=self)
+            host = self.interact(func, **opts)
+            if not childrenOnly:
                 self.addChild(host)
             return func
         return wrapper
 
     @classmethod
-    def interact(cls, func, runOpts=None, ignores=None, deferred=None, **overrides):
+    def interact(cls, func, runOpts=None, ignores=None, deferred=None, parent=None, runFunc=None, **overrides):
         """
         Interacts with a function by making Parameters for each argument. if any non-defaults exist, a value must be
         provided for them in `descrs`. If this value should *not* be made into a parameter, include its name in `ignores`.
-
         ==============  ========================================================================
         **Arguments:**
         func            function with which to interact
@@ -636,15 +634,34 @@ class Parameter(QtCore.QObject):
         ignores         Names of function arguments which shouldn't have parameters created
         deferred        function arguments whose values should come from function evaluations rather than Parameters.
                           This is helpful for providing external variables as function arguments.
-        overrides       Override descriptions to provide additional parameter options for each argument
+        parent          Parent in which to add arguemnt Parameters. If *None*, a new group parameter is created.
+        runFunc         Often, override or decorator functions will use a definition only accepting kwargs and pass them
+                        to a different function. When this is the case, pass the raw, undecorated version to `interact`
+                        and pass the function to run with the arguments here. I.e. use `runFunc` in the following
+                        scenario:
+                        ```
+                        def a(x=5, y=6):
+                            return x + y
+
+                        def aWithLog(**kwargs):
+                            print('Running A')
+                            return a(**kwargs)
+
+                        param = Parameter.interact(a, runFunc=aWithLog)
+                        ```
+        overrides       Override descriptions to provide additional parameter options for each argument. Moreover,
+                        extra parameters can be defined here if the original function allowed **kwargs. Each override
+                        can be a value (e.g. 5) or a dict specification of a parameter
+                        (e.g. dict(type='list', limits=[0, 10, 20]))
         ==============  ========================================================================
         """
         if runOpts is None:
             runOpts = cls.RUN_DEFAULT
-        hostParamOpts = dict(type='group', name=func.__name__)
-        if cls.RUN_TITLE_FMT is not None:
-            hostParamOpts['title'] = cls.RUN_TITLE_FMT(hostParamOpts['name'])
-        hostParam = Parameter.create(**hostParamOpts)
+        if parent is None:
+            parentOpts = dict(type='group', name=func.__name__)
+            if cls.RUN_TITLE_FMT is not None:
+                parentOpts['title'] = cls.RUN_TITLE_FMT(parentOpts['name'])
+            parent = Parameter.create(**parentOpts)
         funcParams = inspect.signature(func).parameters
 
         if deferred is None:
@@ -654,20 +671,37 @@ class Parameter(QtCore.QObject):
             ignores = []
         ignores = list(ignores) + list(deferred)
 
+        toExec = runFunc or func
         def runFunc(**extra):
-            kwargs = {p.name(): p.value() for p in hostParam if p.name() in funcParams}
+            kwargs = {p.name(): p.value() for p in parent if p.name() in checkNames}
             for kk, vv in deferred.items():
                 kwargs[kk] = vv()
             kwargs.update(**extra)
-            return func(**kwargs)
+            return toExec(**kwargs)
 
         def runFunc_changing(_param, value):
             return runFunc(**{_param.name(): value})
 
         # Make pyqtgraph parameters from each parameter
-        for name, param in funcParams.items():
+        # Use list instead of funcParams.items() so kwargs can add to the iterable
+        checkNames = list(funcParams)
+        ii = 0
+        while ii < len(checkNames):
+            name = checkNames[ii]
+            ii += 1
+            # May be none if this is an override name after function accepted kwargs
+            param = funcParams.get(name)
+            # Kwargs will be the last item encountered, so the only extra terms to go through are what aren't already
+            # children
+            if param and param.kind is param.VAR_KEYWORD:
+                # Pretend any unhandled overrides should be used as if they were keyword arguments
+                # 'set' would work nicer than list comprehension, but doesn't preserve definition order
+                notInSignature = [n for n in overrides if n not in parent.names]
+                checkNames.extend(notInSignature)
+                continue
+
             # Make sure args without defaults have overrides
-            required = param.default is param.empty
+            required = param is not None and param.default is param.empty
             if required and name not in overrides and name not in deferred:
                 raise ValueError(f'Cannot interact with "{func} since it has required parameter "{name}"'
                                  f' with no default or deferred value provided.')
@@ -685,28 +719,28 @@ class Parameter(QtCore.QObject):
             pgDict['name'] = name
             if cls.RUN_TITLE_FMT and 'title' not in pgDict:
                 pgDict['title'] = cls.RUN_TITLE_FMT(name)
-            if not required:
+            if param and not required:
                 # Maybe the user never specified type and value, since they can come directly from the default
                 default = param.default
                 pgDict.setdefault('value', default)
             # Maybe override was a value without a type, prefer this over signature value when it exists
             pgDict.setdefault('type', type(pgDict['value']).__name__)
 
-            child = hostParam.addChild(pgDict)
+            child = parent.addChild(pgDict)
             if cls.RUN_CHANGED in runOpts:
                 child.sigValueChanged.connect(runFunc)
             if cls.RUN_CHANGING in runOpts:
                 child.sigValueChanging.connect(runFunc_changing)
 
-        ret = hostParam
-        if cls.RUN_BTN in runOpts or not hostParam.hasChildren():
+        ret = parent
+        if cls.RUN_BTN in runOpts or not parent.hasChildren():
             # Add an extra button child which can activate the function
-            name = 'Run' if hostParam.hasChildren() else func.__name__
+            name = 'Run' if parent.hasChildren() else func.__name__
             child = cls.create(name=name, type='action')
             # Return just the button if no other params were allowed
-            if not hostParam.hasChildren():
+            if not parent.hasChildren():
                 ret = child
-            hostParam.addChild(child)
+            parent.addChild(child)
             child.sigActivated.connect(runFunc)
         return ret
         

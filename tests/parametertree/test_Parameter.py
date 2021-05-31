@@ -108,3 +108,31 @@ def test_interact():
         assert value == (5, 20)
     finally:
         p.RUN_DEFAULT = oldDflt
+
+    @retain
+    def kwargTest(a, b=5, **c):
+        return a + b - c.get('test', None)
+    host = p.interact(kwargTest, a=10, test=3)
+    for ch in 'a', 'b', 'test':
+        assert ch in host.names
+    host.child('Run').activate()
+    assert value == 12
+
+    host = Parameter.create(name='test deco', type='group')
+    @host.interact_deco()
+    @retain
+    def a(x=5):
+        return x
+    assert 'a' in host.names
+    assert 'x' in host.child('a').names
+    host.child('a', 'Run').activate()
+    assert value == 5
+
+    @host.interact_deco(childrenOnly=True, runOpts=p.RUN_CHANGED)
+    @retain
+    def b(y=6):
+        return y
+    assert 'b' not in host.names
+    assert 'y' in host.names
+    host['y'] = 7
+    assert value == 7
