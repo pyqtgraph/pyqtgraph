@@ -121,6 +121,6 @@ Here is a partial listing of some of the applications that make use of PyQtGraph
 * [rapidtide](https://rapidtide.readthedocs.io/en/latest/)
 * [argos](https://github.com/titusjan/argos)
 * [PySpectra](http://hasyweb.desy.de/services/computing/Spock/node138.html)
-* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3ah)
+* [Semi-Supervised Semantic Annotator](https://gitlab.com/ficsresearch/s3a)
 
 Do you use PyQtGraph in your own project, and want to add it to the list?  Submit a pull request to update this listing!
