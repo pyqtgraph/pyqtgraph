@@ -136,3 +136,14 @@ def test_interact():
     assert 'y' in host.names
     host['y'] = 7
     assert value == 7
+
+    def raw(x=5):
+        return x
+
+    @retain
+    def override(**kwargs):
+        return raw(**kwargs)
+    host = p.interact(raw, runFunc=override, runOpts=p.RUN_CHANGED)
+    assert 'x' in host.names
+    host['x'] = 100
+    assert value == 100
