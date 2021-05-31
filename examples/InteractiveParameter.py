@@ -78,4 +78,5 @@ tree = ParameterTree()
 tree.setParameters(host)
 
 tree.show()
-app.exec()
+if __name__ == '__main__':
+    pg.exec()
