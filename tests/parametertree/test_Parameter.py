@@ -59,10 +59,8 @@ def test_interact():
     def a(x, y=5):
         return x, y
 
-    try:
+    with pytest.raises(ValueError):
         Parameter.interact(a)
-    except ValueError:
-        pass
 
     host = Parameter.interact(a, x=10)
     for child in 'x', 'y':

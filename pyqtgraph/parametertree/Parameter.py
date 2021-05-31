@@ -8,7 +8,6 @@ from ..python2_3 import asUnicode, basestring
 from .ParameterItem import ParameterItem
 import warnings
 import inspect
-import typing as t
 
 PARAM_TYPES = {}
 PARAM_NAMES = {}
