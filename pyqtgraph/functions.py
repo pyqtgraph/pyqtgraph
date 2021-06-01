@@ -1708,8 +1708,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # make connect argument contain only str type
         connect_array, connect = connect, 'array'
 
-    qtver = [int(x) for x in QtVersion.split('.')]
-    qt6 = qtver[0] == 6
+    qt6 = QtVersion.startswith("6")
 
     use_qpolygonf = connect == 'all' or (qt6 and connect in ['pairs', 'finite'])
 
@@ -1731,7 +1730,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     # inf/nans completely prevent the plot from being displayed starting on 
     # Qt version 5.12.3; these must now be manually cleaned out.
     isfinite = None
-
+    qtver = [int(x) for x in QtVersion.split('.')]
     if connect == 'finite' and qt6:
         # we must preserve NaN values here
         pass
@@ -1794,7 +1793,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     # create QDataStream object and stream into QPainterPath
     path.strn = backstore
-    if QT_LIB == "PyQt6":
+    if QT_LIB == "PyQt6" and QtCore.PYQT_VERSION < 0x60101:
         # due to issue detailed here:
         # https://www.riverbankcomputing.com/pipermail/pyqt/2021-May/043942.html
         buf = QtCore.QByteArray(path.strn, len(path.strn))
