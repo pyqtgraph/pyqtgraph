@@ -1659,18 +1659,32 @@ class LineROI(ROI):
     
     """
     def __init__(self, pos1, pos2, width, **args):
-        pos1 = Point(pos1)
-        pos2 = Point(pos2)
-        d = pos2-pos1
-        l = d.length()
-        ra = Point(1, 0).angle(d, units="radians")
-        c = Point(-width/2. * sin(ra), -width/2. * cos(ra))
-        pos1 = pos1 + c
-        
-        ROI.__init__(self, pos1, size=Point(l, width), angle=degrees(ra), **args)
+		from math import sin, cos, atan
+		pos1 = pg.Point(pos1)
+		pos2 = pg.Point(pos2)
+		ang = atan((float(pos2.y())-pos1.y())/(pos2.x()-pos1.x()))
+		ra = ang
+		deg =ang / np.pi * 180.
+		l = (pos2.x()-pos1.x())/cos(ra)
+		c = pg.Point(width/2. * sin(ra), -width/2. * cos(ra))
+		pos1 = pos1 + c
+		
+		ROI.__init__(self, pos1, size=Point(l, width), angle=deg, **args)
         self.addScaleRotateHandle([0, 0.5], [1, 0.5])
         self.addScaleRotateHandle([1, 0.5], [0, 0.5])
         self.addScaleHandle([0.5, 1], [0.5, 0.5])
+    
+    def _rect_to_line_roi(self,pos,size,angle):
+		from math import cos, sin
+		l, width = size
+		ra = angle * np.pi / 180.
+		c = pg.Point(width/2. * sin(ra), -width/2. * cos(ra))
+		pos1 = pos - c
+		pos2 = pos1 + pg.Point(l*cos(ra), l*sin(ra))
+		return [[pos1.x(),pos1.y()], [pos2.x(),pos2.y()], width]
+    
+    def get_roi(self):
+        return self._rect_to_line_roi(self.pos(),self.size(),self.angle())
 
 
 class MultiRectROI(QtGui.QGraphicsObject):
