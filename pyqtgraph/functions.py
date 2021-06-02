@@ -1518,7 +1518,6 @@ def imageToArray(img, copy=False, transpose=True):
     the QImage is collected before the array, there may be trouble).
     The array will have shape (width, height, (b,g,r,a)).
     """
-    fmt = img.format()
     img_ptr = img.bits()
 
     if QT_LIB.startswith('PyQt'):
@@ -1537,8 +1536,6 @@ def imageToArray(img, copy=False, transpose=True):
 
     arr = np.frombuffer(img_ptr, dtype=np.ubyte)
     arr = arr.reshape(img.height(), img.width(), 4)
-    if fmt == img.Format_RGB32:
-        arr[...,3] = 255
     
     if copy:
         arr = arr.copy()
