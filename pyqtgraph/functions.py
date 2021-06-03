@@ -1755,6 +1755,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
 
     use_qpolygonf = connect == 'all'
 
+    isfinite = None
+    if connect == 'finite':
+        isfinite = np.isfinite(x) & np.isfinite(y)
+        if not finiteCheck:
+            # if user specified to skip finite check, then that forces use_qpolygonf
+            use_qpolygonf = True
+        else:
+            # otherwise use a heuristic
+            # if non-finite aren't that many, then use_qpolyponf
+            nonfinite_cnt = n - np.sum(isfinite)
+            if nonfinite_cnt / n < 2 / 100:
+                use_qpolygonf = True
+                finiteCheck = False
+
     if use_qpolygonf:
         backstore = create_qpolygonf(n)
         arr = np.frombuffer(ndarray_from_qpolygonf(backstore), dtype=[('x', 'f8'), ('y', 'f8')])
@@ -1774,9 +1788,9 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     # this behavior started in Qt 5.12.3 and was introduced in this commit
     # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
     # We therefore replace non-finite values 
-    isfinite = None
     if finiteCheck:
-        isfinite = np.isfinite(x) & np.isfinite(y)
+        if isfinite is None:
+            isfinite = np.isfinite(x) & np.isfinite(y)
         if not np.all(isfinite):
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
             mask = ~isfinite
@@ -1801,9 +1815,53 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        if isfinite is None:
-            isfinite = np.isfinite(x) & np.isfinite(y)
-        arr[1:]['c'] = isfinite[:-1]
+        if not use_qpolygonf:
+            arr[1:]['c'] = isfinite[:-1]
+        else:
+            sidx = np.nonzero(~isfinite)[0] + 1
+            chunks = np.split(arr, sidx)    # note: the chunks are views
+
+            # create a single polygon able to hold the largest chunk
+            maxlen = max(len(chunk) for chunk in chunks)
+            subpoly = create_qpolygonf(maxlen)
+            subarr = np.frombuffer(ndarray_from_qpolygonf(subpoly), dtype=arr.dtype)
+
+            # resize and fill do not change the capacity
+            if hasattr(subpoly, 'resize'):
+                subpoly_resize = subpoly.resize
+            else:
+                # PyQt will be less efficient
+                subpoly_resize = lambda n, v=QtCore.QPointF() : subpoly.fill(v, n)
+
+            # notes:
+            # - we backfill the non-finite in order to get the same image as the
+            #   old codepath on the CI. somehow P1--P2 gets rendered differently
+            #   from P1--P2--P2
+            # - we do not generate MoveTo(s) that are not followed by a LineTo,
+            #   thus the QPainterPath can be different from the old codepath's
+
+            # all chunks except the last chunk have a trailing non-finite
+            for chunk in chunks[:-1]:
+                lc = len(chunk)
+                if lc <= 1:
+                    # len 1 means we have a string of non-finite
+                    continue
+                subpoly_resize(lc)
+                subarr[:lc] = chunk
+                subarr[lc-1] = subarr[lc-2] # fill non-finite with its neighbour
+                path.addPolygon(subpoly)
+
+            # handle last chunk, which is either all-finite or empty
+            for chunk in chunks[-1:]:
+                lc = len(chunk)
+                if lc <= 1:
+                    # can't draw a line with just 1 point
+                    continue
+                subpoly_resize(lc)
+                subarr[:lc] = chunk
+                path.addPolygon(subpoly)
+
+            return path
     elif connect == 'array':
         arr[1:]['c'] = connect_array[:-1]
     else:
