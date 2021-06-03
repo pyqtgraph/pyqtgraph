@@ -1423,10 +1423,6 @@ def ndarray_to_qimage(arr, fmt):
     h, w = arr.shape[:2]
     bytesPerLine = arr.strides[0]
     qimg = QtGui.QImage(img_ptr, w, h, bytesPerLine, fmt)
-
-    # Note that the bindings that support ndarray directly already hold a reference
-    # to it. The manual reference below is only needed for those bindings that take
-    # in a raw pointer.
     qimg.data = arr
     return qimg
 
