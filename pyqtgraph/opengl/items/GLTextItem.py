@@ -37,7 +37,7 @@ class GLTextItem(GLGraphicsItem):
         args = ['pos', 'color', 'text', 'font']
         for k in kwds.keys():
             if k not in args:
-                raise Exception('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
+                raise ArgumentError('Invalid keyword argument: %s (allowed arguments are %s)' % (k, str(args)))
         for arg in args:
             if arg in kwds:
                 value = kwds[arg]
