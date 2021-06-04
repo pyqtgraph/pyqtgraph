@@ -249,7 +249,6 @@ def test_siParse(s, suffix, expected):
             pg.siParse(s, suffix=suffix)
 
 
-qt6 = pg.Qt.QtVersion.startswith("6")
 MoveToElement = pg.QtGui.QPainterPath.ElementType.MoveToElement
 LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
 @pytest.mark.parametrize(
@@ -268,9 +267,9 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
             np.arange(6), np.arange(0, -6, step=-1), 'pairs', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, np.nan, np.nan) if qt6 else (MoveToElement, 2.0, -2.0),
+                (MoveToElement, 2.0, -2.0),
                 (LineToElement, 3.0, -3.0),
-                (LineToElement, np.nan, np.nan) if qt6 else (MoveToElement, 4.0, -4.0),
+                (MoveToElement, 4.0, -4.0),
                 (LineToElement, 5.0, -5.0),
             )
         ),
@@ -278,16 +277,16 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
             np.arange(5), np.arange(0, -5, step=-1), 'pairs', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, np.nan, np.nan) if qt6 else (MoveToElement, 2.0, -2.0),
+                (MoveToElement, 2.0, -2.0),
                 (LineToElement, 3.0, -3.0),
-                (LineToElement, np.nan, np.nan) if qt6 else (MoveToElement, 4.0, -4.0)
+                (MoveToElement, 4.0, -4.0)
             ) 
         ),
         (
             np.arange(5), np.array([0, -1, np.NaN, -3, -4]), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, 2.0, np.nan) if qt6 else (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             ) 
@@ -296,7 +295,7 @@ LineToElement = pg.QtGui.QPainterPath.ElementType.LineToElement
             np.array([0, 1, np.NaN, 3, 4]), np.arange(0, -5, step=-1), 'finite', (
                 (MoveToElement, 0.0, 0.0),
                 (LineToElement, 1.0, -1.0),
-                (LineToElement, np.nan, -2.0) if qt6 else (LineToElement, 1.0, -1.0),
+                (LineToElement, 1.0, -1.0),
                 (MoveToElement, 3.0, -3.0),
                 (LineToElement, 4.0, -4.0)
             )

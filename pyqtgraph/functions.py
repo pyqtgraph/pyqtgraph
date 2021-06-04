@@ -1708,9 +1708,7 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         # make connect argument contain only str type
         connect_array, connect = connect, 'array'
 
-    qt6 = QtVersion.startswith("6")
-
-    use_qpolygonf = connect == 'all' or (qt6 and connect in ['pairs', 'finite'])
+    use_qpolygonf = connect == 'all'
 
     if use_qpolygonf:
         backstore = create_qpolygonf(n)
@@ -1727,14 +1725,12 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
     arr['x'] = x
     arr['y'] = y
 
-    # inf/nans completely prevent the plot from being displayed starting on 
-    # Qt version 5.12.3; these must now be manually cleaned out.
+    # the presence of inf/nans result in an empty QPainterPath being generated
+    # this behavior started in Qt 5.12.3 and was introduced in this commit
+    # https://github.com/qt/qtbase/commit/c04bd30de072793faee5166cff866a4c4e0a9dd7
+    # We therefore replace non-finite values 
     isfinite = None
-    qtver = [int(x) for x in QtVersion.split('.')]
-    if connect == 'finite' and qt6:
-        # we must preserve NaN values here
-        pass
-    elif qtver >= [5, 12, 3] and finiteCheck:
+    if finiteCheck:
         isfinite = np.isfinite(x) & np.isfinite(y)
         if not np.all(isfinite):
             # credit: Divakar https://stackoverflow.com/a/41191127/643629
@@ -1753,41 +1749,20 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
         path.addPolygon(backstore)
         return path
     elif connect == 'pairs':
-        if qt6:
-            if n % 2 == 1:
-                arr = arr[:-1]
-            polygon = create_qpolygonf(n // 2 * 3)
-            dst = ndarray_from_qpolygonf(polygon).reshape((-1, 6))   # x0, y0, x1, y1, nan, nan
-            dst[:, :4] = np.frombuffer(arr, dtype=np.double).reshape((-1, 4))   # x0, y0, x1, y1
-            dst[:, 4:] = np.nan
-            path.addPolygon(polygon)
-            return path
-        else:
-            arr['c'][::2] = 0
-            arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
+        arr['c'][::2] = 0
+        arr['c'][1::2] = 1  # connect every 2nd point to every 1st one
     elif connect == 'finite':
         # Let's call a point with either x or y being nan is an invalid point.
         # A point will anyway not connect to an invalid point regardless of the
         # 'c' value of the invalid point. Therefore, we should set 'c' to 0 for
         # the next point of an invalid point.
-        if qt6:
-            # look for the first finite element.
+        if isfinite is None:
             isfinite = np.isfinite(x) & np.isfinite(y)
-            argNaNs = np.argwhere(isfinite)
-            first = 0 if len(argNaNs) == 0 else argNaNs.item(0)
-
-            # if found, set first element to first found finite element
-            arr[0] = arr[first]
-            path.addPolygon(backstore)
-            return path
-        else:
-            if isfinite is None:
-                isfinite = np.isfinite(x) & np.isfinite(y)
-            arr[1:]['c'] = isfinite[:-1]
+        arr[1:]['c'] = isfinite[:-1]
     elif connect == 'array':
         arr[1:]['c'] = connect_array[:-1]
     else:
-        raise Exception('connect argument must be "all", "pairs", "finite", or array')
+        raise ValueError('connect argument must be "all", "pairs", "finite", or array')
 
     arr[0]['c'] = 0  # the first vertex has no previous vertex to connect
 
