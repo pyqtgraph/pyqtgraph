@@ -1679,27 +1679,60 @@ def downsample(data, n, axis=0, xvals='subsample'):
 
 
 def arrayToQPath(x, y, connect='all', finiteCheck=True):
-    """Convert an array of x,y coordinates to QPainterPath as efficiently as
+    """
+    Convert an array of x,y coordinates to QPainterPath as efficiently as
     possible. The *connect* argument may be 'all', indicating that each point
     should be connected to the next; 'pairs', indicating that each pair of
     points should be connected, or an array of int32 values (0 or 1) indicating
     connections.
+    
+    Parameters
+    ----------
+    x : (N,) ndarray
+        x-values to be plotted
+    y : (N,) ndarray
+        y-values to be plotted, must be same length as `x`
+    connect : {'all', 'pairs', 'finite', (N,) ndarray}, optional
+        Argument detailing how to connect the points in the path. `all` will 
+        have sequential points being connected.  `pairs` generates lines
+        between every other point.  `finite` only connects points that are
+        finite.  If an ndarray is passed, containing int32 values of 0 or 1,
+        only values with 1 will connect to the previous point.  Def
+    finiteCheck : bool, default Ture
+        When false, the check for finite values will be skipped, which can
+        improve performance. If finite values are present in `x` or `y`,
+        an empty QPainterPath will be generated.
+    
+    Returns
+    -------
+    QPainterPath
+        QPainterPath object to be drawn
+    
+    Raises
+    ------
+    ValueError
+        Raised when the connect argument has an invalid value placed within.
+
+    Notes
+    -----
+    A QPainterPath is generated through one of two ways.  When the connect
+    parameter is 'all', a QPolygonF object is created, and
+    ``QPainterPath.addPolygon()`` is called.  For other connect parameters
+    a ``QDataStream`` object is created and the QDataStream >> QPainterPath
+    operator is used to pass the data.  The memory format is as follows
+
+    numVerts(i4)
+    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
+    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
+    ...
+    cStart(i4)   fillRule(i4)
+    
+    see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
+
+    All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
+    This binary format may change in future versions of Qt
     """
 
-    # Create all vertices in path. The method used below creates a binary format so that all
-    # vertices can be read in at once. This binary format may change in future versions of Qt,
-
-    # Speed this up using >> operator
-    # Format is:
-    #    numVerts(i4)
-    #    0(i4)   x(f8)   y(f8)    <-- 0 means this vertex does not connect
-    #    1(i4)   x(f8)   y(f8)    <-- 1 means this vertex connects to the previous vertex
-    #    ...
-    #    cStart(i4)   fillRule(i4)
-    #
-    # see: https://github.com/qt/qtbase/blob/dev/src/gui/painting/qpainterpath.cpp
-
-    # All values are big endian--pack using struct.pack('>d') or struct.pack('>i')
     path = QtGui.QPainterPath()
     n = x.shape[0]
 
