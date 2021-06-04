@@ -2,6 +2,7 @@ from OpenGL.GL import *
 import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
+import pyqtgraph.functions as fn
 
 class GLTextItem(GLGraphicsItem):
     """Draws text in 3D."""
@@ -18,7 +19,7 @@ class GLTextItem(GLGraphicsItem):
         self.font = QtGui.QFont('Helvetica', 16)
 
         self.setData(**kwds)
-    
+
     def setData(self, **kwds):
         """
         Update the data displayed by this item. All arguments are optional;
@@ -43,30 +44,18 @@ class GLTextItem(GLGraphicsItem):
                 if arg == 'pos':
                     if isinstance(value, np.ndarray):
                         if value.shape != (3,):
-                            raise Exception('"pos.shape" must be (3,).')
+                            raise ValueError('"pos.shape" must be (3,).')
                     elif isinstance(value, (tuple, list)):
                         if len(value) != 3:
-                            raise Exception('"len(pos)" must be 3.')
+                            raise ValueError('"len(pos)" must be 3.')
                 elif arg == 'color':
-                    if isinstance(value, QtGui.QColor):
-                        pass
-                    elif isinstance(value, (tuple, list, np.ndarray)):
-                        if isinstance(value, np.ndarray):
-                            if len(value.shape) != 1:
-                                raise Exception('"color.shape" must be (3,) or (4,).')
-                        value_len = len(value)
-                        if value_len == 3:
-                            value = QtGui.QColor(value[0], value[1], value[2])
-                        elif value_len == 4:
-                            value = QtGui.QColor(value[0], value[1], value[2], value[3])
-                        else:
-                            raise Exception('"len(color)" must be 3 or 4.')
+                    value = fn.mkColor(value)
                 elif arg == 'font':
                     if isinstance(value, QtGui.QFont) is False:
-                        raise Exception('"font" must be QFont.')
+                        raise TypeError('"font" must be QFont.')
                 setattr(self, arg, value)
         self.update()
-    
+
     def paint(self):
         if len(self.text) < 1:
             return
@@ -80,14 +69,14 @@ class GLTextItem(GLGraphicsItem):
         text_pos[1] = viewport[3] - text_pos[1]
 
         text_pos /= self.view().devicePixelRatio()
-        
+
         painter = QtGui.QPainter(self.view())
         painter.setPen(self.color)
         painter.setFont(self.font)
         painter.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing)
         painter.drawText(text_pos[0], text_pos[1], self.text)
         painter.end()
-    
+
     def __project(self, obj_pos, modelview, projection, viewport):
         obj_vec = np.append(np.array(obj_pos), [1.0])
 
@@ -96,7 +85,7 @@ class GLTextItem(GLGraphicsItem):
 
         if proj_vec[3] == 0.0:
             return
-        
+
         proj_vec[0:3] /= proj_vec[3]
 
         return np.array([
@@ -104,4 +93,3 @@ class GLTextItem(GLGraphicsItem):
             viewport[1] + (1.0 + proj_vec[1]) * viewport[3] / 2.0,
             (1.0 + proj_vec[2]) / 2.0
         ])
-    
