@@ -4,6 +4,8 @@ from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph.functions as fn
 
+__all__ = ['GLTextItem']
+
 class GLTextItem(GLGraphicsItem):
     """Draws text in 3D."""
 
