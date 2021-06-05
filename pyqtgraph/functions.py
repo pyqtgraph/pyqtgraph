@@ -1768,6 +1768,8 @@ def arrayToQPath(x, y, connect='all', finiteCheck=True):
             if nonfinite_cnt / n < 2 / 100:
                 use_qpolygonf = True
                 finiteCheck = False
+            if nonfinite_cnt == 0:
+                connect = 'all'
 
     if use_qpolygonf:
         backstore = create_qpolygonf(n)
